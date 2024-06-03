@@ -3,19 +3,10 @@ This module is the main entry point for the SysManage agent that will run
 on all clients.  It connects back to the server and communicates
 bidirectionally over WebSockets.
 """
-import asyncio
-import websockets
-
-async def handler(websocket):
-    while True:
-        message = await websocket.recv()
-        print(message)
-
-async def main():
-    url = "ws://api.sysmanage.com:6443/agent/connect"
-    async with websockets.connect(url) as ws:
-        await handler(ws)
-        await asyncio.Future()
+from websockets.sync.client import connect
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    with connect("wss://api.sysmanage.org:6443/agent/connect") as websocket:
+        websocket.send("Hello world!")
+        message = websocket.recv()
+        print(f"Received: {message}")
