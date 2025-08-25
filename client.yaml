@@ -1,0 +1,48 @@
+# SysManage Agent Configuration
+# This file contains the configuration for the sysmanage-agent client
+
+# Server connection settings
+server:
+  # Hostname or IP address of the SysManage server
+  hostname: "localhost"
+  
+  # Port number for the SysManage server
+  port: 6443
+  
+  # Use HTTPS for secure communication (recommended for production)
+  use_https: true
+  
+  # API endpoint path (empty for direct access to endpoints)
+  api_path: ""
+
+# Client identification settings
+client:
+  # Optional: Override the system hostname detection
+  # If not specified, the agent will auto-detect the system hostname
+  # hostname_override: "my-custom-hostname"
+  
+  # Registration retry settings
+  registration_retry_interval: 30  # seconds between registration attempts
+  max_registration_retries: 10     # maximum number of retry attempts (-1 for infinite)
+
+# Logging configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log to file (optional)
+  # file: "/var/log/sysmanage-agent.log"
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# WebSocket connection settings (for real-time communication)
+websocket:
+  # Auto-reconnect on connection loss
+  auto_reconnect: true
+  
+  # Reconnection interval in seconds
+  reconnect_interval: 5
+  
+  # Ping interval to keep connection alive
+  ping_interval: 30
