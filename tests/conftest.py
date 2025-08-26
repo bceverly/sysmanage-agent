@@ -14,14 +14,15 @@ if "aiohttp" not in sys.modules:
     sys.modules["aiohttp.ClientSession"] = MagicMock()
     sys.modules["aiohttp.ClientError"] = Exception
 
-from main import SysManageAgent
+# Import after mocking to avoid import errors
+from main import SysManageAgent  # pylint: disable=wrong-import-position
 
 
 @pytest.fixture
 def agent():
     """Create a SysManage agent instance for testing."""
     # Create a simple client.yaml file for testing
-    with open("/tmp/test_client.yaml", "w") as f:
+    with open("/tmp/test_client.yaml", "w", encoding="utf-8") as f:
         f.write(
             """
 server:
