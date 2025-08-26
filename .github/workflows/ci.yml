@@ -6,10 +6,15 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
@@ -70,6 +75,8 @@ jobs:
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - uses: actions/checkout@v4
@@ -113,6 +120,8 @@ jobs:
   build-test:
     name: Build and Integration Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [test, lint]
     
     steps:
