@@ -13,6 +13,7 @@ import json
 
 try:
     import aiohttp
+
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
@@ -62,7 +63,7 @@ class ClientRegistration:
         """Get comprehensive system information for registration."""
         hostname = self.get_hostname()
         ipv4, ipv6 = self.get_ip_addresses()
-        
+
         return {
             "hostname": hostname,
             "fqdn": hostname,  # For compatibility with server's Host model
@@ -73,13 +74,13 @@ class ClientRegistration:
             "platform_version": platform.version(),
             "architecture": platform.architecture()[0],
             "processor": platform.processor(),
-            "active": True  # Mark as active when registering
+            "active": True,  # Mark as active when registering
         }
 
     async def register_with_server(self) -> bool:
         """
         Register the client with the SysManage server.
-        
+
         Returns:
             True if registration successful, False otherwise
         """
@@ -87,12 +88,12 @@ class ClientRegistration:
             self.logger.warning("aiohttp not available, skipping registration")
             self.registered = True  # Pretend we're registered for now
             return True
-            
+
         server_url = self.config.get_server_rest_url()
         registration_url = f"{server_url}/host/register"
-        
+
         system_info = self.get_system_info()
-        
+
         self.logger.info(f"Attempting to register with server at {registration_url}")
         self.logger.debug(f"Registration data: {system_info}")
 
@@ -101,20 +102,22 @@ class ClientRegistration:
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-            
+
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
                     registration_url,
                     json=system_info,
-                    headers={'Content-Type': 'application/json'}
+                    headers={"Content-Type": "application/json"},
                 ) as response:
-                    
+
                     if response.status in [200, 201]:
                         response_data = await response.json()
                         self.registration_data = response_data
                         self.registered = True
-                        self.logger.info(f"Successfully registered with server. Host ID: {response_data.get('id')}")
+                        self.logger.info(
+                            f"Successfully registered with server. Host ID: {response_data.get('id')}"
+                        )
                         return True
                     elif response.status == 409:
                         # Host already exists - this is OK
@@ -123,40 +126,48 @@ class ClientRegistration:
                         return True
                     else:
                         error_text = await response.text()
-                        self.logger.error(f"Registration failed with status {response.status}: {error_text}")
+                        self.logger.error(
+                            f"Registration failed with status {response.status}: {error_text}"
+                        )
                         return False
-                        
-        except Exception as e:  # Catch all since aiohttp.ClientError might not be available
+
+        except (
+            Exception
+        ) as e:  # Catch all since aiohttp.ClientError might not be available
             self.logger.error(f"Error during registration: {e}")
             return False
 
     async def register_with_retry(self) -> bool:
         """
         Register with server using configured retry settings.
-        
+
         Returns:
             True if registration eventually succeeds, False if max retries exceeded
         """
         retry_interval = self.config.get_registration_retry_interval()
         max_retries = self.config.get_max_registration_retries()
-        
+
         attempt = 0
         while max_retries == -1 or attempt < max_retries:
             attempt += 1
-            
-            self.logger.info(f"Registration attempt {attempt}" + 
-                           (f" of {max_retries}" if max_retries != -1 else ""))
-            
+
+            self.logger.info(
+                f"Registration attempt {attempt}"
+                + (f" of {max_retries}" if max_retries != -1 else "")
+            )
+
             if await self.register_with_server():
                 return True
-                
+
             if max_retries != -1 and attempt >= max_retries:
                 self.logger.error(f"Failed to register after {max_retries} attempts")
                 return False
-                
-            self.logger.warning(f"Registration failed, retrying in {retry_interval} seconds...")
+
+            self.logger.warning(
+                f"Registration failed, retrying in {retry_interval} seconds..."
+            )
             await asyncio.sleep(retry_interval)
-        
+
         return False
 
     def is_registered(self) -> bool:
@@ -170,5 +181,5 @@ class ClientRegistration:
     def get_host_id(self) -> Optional[int]:
         """Get the host ID from registration data."""
         if self.registration_data:
-            return self.registration_data.get('id')
+            return self.registration_data.get("id")
         return None
