@@ -7,6 +7,7 @@ SysManage server using WebSockets with concurrent send/receive operations.
 import asyncio
 import json
 import logging
+import platform
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
@@ -38,8 +39,8 @@ class SysManageAgent:
         # Get server URL from config
         self.server_url = self.config.get_server_url()
 
-        self.logger.info(f"SysManage Agent initialized with ID: {self.agent_id}")
-        self.logger.info(f"Server URL: {self.server_url}")
+        self.logger.info("SysManage Agent initialized with ID: %s", self.agent_id)
+        self.logger.info("Server URL: %s", self.server_url)
 
     def setup_logging(self):
         """Setup logging based on configuration."""
@@ -92,9 +93,9 @@ class SysManageAgent:
         if self.websocket:
             try:
                 await self.websocket.send(json.dumps(message))
-                self.logger.debug(f"Sent message: {message['message_type']}")
+                self.logger.debug("Sent message: %s", message["message_type"])
             except Exception as e:
-                self.logger.error(f"Failed to send message: {e}")
+                self.logger.error("Failed to send message: %s", e)
 
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server."""
@@ -104,7 +105,7 @@ class SysManageAgent:
         parameters = command_data.get("parameters", {})
 
         self.logger.info(
-            f"Received command: {command_type} with parameters: {parameters}"
+            "Received command: %s with parameters: %s", command_type, parameters
         )
 
         try:
@@ -235,7 +236,7 @@ class SysManageAgent:
         try:
             while self.running:
                 message = await self.websocket.recv()
-                self.logger.debug(f"Received: {message}")
+                self.logger.debug("Received: %s", message)
 
                 try:
                     data = json.loads(message)
@@ -251,20 +252,20 @@ class SysManageAgent:
                         await self.send_message(pong)
                     elif message_type == "ack":
                         self.logger.debug(
-                            f"Server acknowledged message: {data.get('message_id')}"
+                            "Server acknowledged message: %s", data.get("message_id")
                         )
                     else:
-                        self.logger.warning(f"Unknown message type: {message_type}")
+                        self.logger.warning("Unknown message type: %s", message_type)
 
                 except json.JSONDecodeError:
-                    self.logger.error(f"Invalid JSON received: {message}")
+                    self.logger.error("Invalid JSON received: %s", message)
                 except Exception as e:
-                    self.logger.error(f"Error processing message: {e}")
+                    self.logger.error("Error processing message: %s", e)
 
         except websockets.exceptions.ConnectionClosed:
             self.logger.info("Connection to server closed")
         except Exception as e:
-            self.logger.error(f"Message receiver error: {e}")
+            self.logger.error("Message receiver error: %s", e)
 
     async def message_sender(self):
         """Handle periodic outgoing messages to server."""
@@ -283,7 +284,7 @@ class SysManageAgent:
                     heartbeat = self.create_heartbeat_message()
                     await self.send_message(heartbeat)
             except Exception as e:
-                self.logger.error(f"Message sender error: {e}")
+                self.logger.error("Message sender error: %s", e)
                 break
 
     async def run(self):
@@ -291,11 +292,11 @@ class SysManageAgent:
         system_info = self.registration.get_system_info()
 
         self.logger.info("SysManage Agent starting")
-        self.logger.info(f"Agent ID: {self.agent_id}")
-        self.logger.info(f"Hostname: {system_info['hostname']}")
-        self.logger.info(f"Platform: {system_info['platform']}")
-        self.logger.info(f"IPv4: {system_info['ipv4']}")
-        self.logger.info(f"IPv6: {system_info['ipv6']}")
+        self.logger.info("Agent ID: %s", self.agent_id)
+        self.logger.info("Hostname: %s", system_info["hostname"])
+        self.logger.info("Platform: %s", system_info["platform"])
+        self.logger.info("IPv4: %s", system_info["ipv4"])
+        self.logger.info("IPv6: %s", system_info["ipv6"])
 
         # Attempt registration with server
         self.logger.info("Registering with SysManage server...")
@@ -319,11 +320,14 @@ class SysManageAgent:
 
             except websockets.exceptions.ConnectionClosed:
                 self.logger.warning(
-                    f"Connection lost, attempting to reconnect in {reconnect_interval} seconds..."
+                    "Connection lost, attempting to reconnect in %s seconds...",
+                    reconnect_interval,
                 )
             except Exception as e:
                 self.logger.error(
-                    f"Connection error: {e}, retrying in {reconnect_interval} seconds..."
+                    "Connection error: %s, retrying in %s seconds...",
+                    e,
+                    reconnect_interval,
                 )
 
             self.running = False
