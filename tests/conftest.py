@@ -44,7 +44,7 @@ websocket:
 """
         )
         temp_config_path = f.name
-    
+
     try:
         agent_instance = SysManageAgent(temp_config_path)
         yield agent_instance
