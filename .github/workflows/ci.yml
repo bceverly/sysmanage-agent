@@ -28,7 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -66,8 +66,9 @@ jobs:
         python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         flags: agent
         name: agent-coverage-python${{ matrix.python-version }}
@@ -110,7 +111,7 @@ jobs:
         python -m safety check
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -160,7 +161,7 @@ jobs:
         tar -czf sysmanage-agent.tar.gz dist/
 
     - name: Upload distribution package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: sysmanage-agent-package
         path: sysmanage-agent.tar.gz
