@@ -22,8 +22,8 @@ def test_config_manager_basic():
         f.flush()
 
         config = ConfigManager(f.name)
-        assert config.get("server.hostname") == "test.example.com"
-        assert config.get("server.port") == 8443
+        assert config.get("server.hostname") == "test.example.com"  # nosec B101
+        assert config.get("server.port") == 8443  # nosec B101
 
         os.unlink(f.name)
 
@@ -37,8 +37,8 @@ def test_config_manager_defaults():
         f.flush()
 
         config = ConfigManager(f.name)
-        assert config.get_log_level() == "INFO"
-        assert config.get_registration_retry_interval() == 30
+        assert config.get_log_level() == "INFO"  # nosec B101
+        assert config.get_registration_retry_interval() == 30  # nosec B101
 
         os.unlink(f.name)
 
@@ -60,22 +60,22 @@ def test_config_manager_url_building():
 
         config = ConfigManager(f.name)
         url = config.get_server_url()
-        assert url == "wss://secure.example.com:8443/api/agent/connect"
+        assert url == "wss://secure.example.com:8443/api/agent/connect"  # nosec B101
 
         rest_url = config.get_server_rest_url()
-        assert rest_url == "https://secure.example.com:8443/api"
+        assert rest_url == "https://secure.example.com:8443/api"  # nosec B101
 
         os.unlink(f.name)
 
 
 def test_import_main_module():
     """Test that main module can be imported."""
-    assert hasattr(main, "SysManageAgent")
+    assert hasattr(main, "SysManageAgent")  # nosec B101
 
 
 def test_import_registration_module():
     """Test that registration module can be imported."""
-    assert hasattr(registration, "ClientRegistration")
+    assert hasattr(registration, "ClientRegistration")  # nosec B101
 
 
 def test_agent_basic_creation():
@@ -90,8 +90,8 @@ def test_agent_basic_creation():
             # Mock logging to avoid setup issues
             with unittest.mock.patch("main.logging"):
                 agent = SysManageAgent(f.name)
-                assert agent.config is not None
-                assert agent.agent_id is not None
-                assert len(agent.agent_id) == 36  # UUID4 length
+                assert agent.config is not None  # nosec B101
+                assert agent.agent_id is not None  # nosec B101
+                assert len(agent.agent_id) == 36  # UUID4 length  # nosec B101
         finally:
             os.unlink(f.name)

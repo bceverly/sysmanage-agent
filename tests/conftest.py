@@ -4,6 +4,8 @@ Pytest configuration and shared fixtures for SysManage agent tests.
 
 import asyncio
 import sys
+import tempfile
+import os
 from unittest.mock import Mock, AsyncMock, MagicMock
 
 import pytest
@@ -21,8 +23,8 @@ from main import SysManageAgent  # pylint: disable=wrong-import-position
 @pytest.fixture
 def agent():
     """Create a SysManage agent instance for testing."""
-    # Create a simple client.yaml file for testing
-    with open("/tmp/test_client.yaml", "w", encoding="utf-8") as f:
+    # Create a secure temporary file for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(
             """
 server:
@@ -41,7 +43,15 @@ websocket:
   ping_interval: 5
 """
         )
-    return SysManageAgent("/tmp/test_client.yaml")
+        temp_config_path = f.name
+    
+    try:
+        agent_instance = SysManageAgent(temp_config_path)
+        yield agent_instance
+    finally:
+        # Clean up temporary file
+        if os.path.exists(temp_config_path):
+            os.unlink(temp_config_path)
 
 
 @pytest.fixture
