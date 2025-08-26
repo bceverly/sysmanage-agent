@@ -22,22 +22,22 @@ class SysManageAgent:
     def __init__(self, config_file: str = "client.yaml"):
         # Load configuration
         self.config = ConfigManager(config_file)
-        
+
         # Setup logging
         self.setup_logging()
         self.logger = logging.getLogger(__name__)
-        
+
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
         self.websocket = None
         self.running = False
-        
+
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
-        
+
         # Get server URL from config
         self.server_url = self.config.get_server_url()
-        
+
         self.logger.info(f"SysManage Agent initialized with ID: {self.agent_id}")
         self.logger.info(f"Server URL: {self.server_url}")
 
@@ -46,21 +46,20 @@ class SysManageAgent:
         log_level = self.config.get_log_level()
         log_format = self.config.get_log_format()
         log_file = self.config.get_log_file()
-        
+
         # Configure logging
         logging.basicConfig(
             level=getattr(logging, log_level.upper()),
             format=log_format,
-            filename=log_file
+            filename=log_file,
         )
-        
+
         # Also log to console if file logging is enabled
         if log_file:
             console_handler = logging.StreamHandler()
             console_handler.setLevel(getattr(logging, log_level.upper()))
             console_handler.setFormatter(logging.Formatter(log_format))
             logging.getLogger().addHandler(console_handler)
-
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
@@ -104,7 +103,9 @@ class SysManageAgent:
         command_type = command_data.get("command_type")
         parameters = command_data.get("parameters", {})
 
-        self.logger.info(f"Received command: {command_type} with parameters: {parameters}")
+        self.logger.info(
+            f"Received command: {command_type} with parameters: {parameters}"
+        )
 
         try:
             if command_type == "execute_shell":
@@ -249,7 +250,9 @@ class SysManageAgent:
                         )
                         await self.send_message(pong)
                     elif message_type == "ack":
-                        self.logger.debug(f"Server acknowledged message: {data.get('message_id')}")
+                        self.logger.debug(
+                            f"Server acknowledged message: {data.get('message_id')}"
+                        )
                     else:
                         self.logger.warning(f"Unknown message type: {message_type}")
 
@@ -286,7 +289,7 @@ class SysManageAgent:
     async def run(self):
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
-        
+
         self.logger.info("SysManage Agent starting")
         self.logger.info(f"Agent ID: {self.agent_id}")
         self.logger.info(f"Hostname: {system_info['hostname']}")
@@ -303,7 +306,7 @@ class SysManageAgent:
         self.logger.info("Registration successful, starting WebSocket connection...")
 
         reconnect_interval = self.config.get_reconnect_interval()
-        
+
         while True:
             try:
                 async with websockets.connect(self.server_url) as websocket:
@@ -315,12 +318,16 @@ class SysManageAgent:
                     await asyncio.gather(self.message_sender(), self.message_receiver())
 
             except websockets.exceptions.ConnectionClosed:
-                self.logger.warning(f"Connection lost, attempting to reconnect in {reconnect_interval} seconds...")
+                self.logger.warning(
+                    f"Connection lost, attempting to reconnect in {reconnect_interval} seconds..."
+                )
             except Exception as e:
-                self.logger.error(f"Connection error: {e}, retrying in {reconnect_interval} seconds...")
+                self.logger.error(
+                    f"Connection error: {e}, retrying in {reconnect_interval} seconds..."
+                )
 
             self.running = False
-            
+
             # Only reconnect if auto-reconnect is enabled
             if self.config.should_auto_reconnect():
                 await asyncio.sleep(reconnect_interval)

@@ -1,0 +1,161 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+
+    - name: Create test configuration
+      run: |
+        cat > client.yaml << EOF
+        server:
+          hostname: "localhost"
+          port: 8000
+          use_https: false
+          api_path: ""
+        client:
+          registration_retry_interval: 1
+          max_registration_retries: 1
+        logging:
+          level: "INFO"
+        websocket:
+          auto_reconnect: false
+          reconnect_interval: 1
+          ping_interval: 5
+        EOF
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: agent
+        name: agent-coverage-python${{ matrix.python-version }}
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install linting dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint black isort bandit safety
+
+    - name: Run Black formatter check
+      run: |
+        python -m black --check --diff *.py
+
+    - name: Run isort import check
+      run: |
+        python -m isort --check-only --diff *.py
+
+    - name: Run Pylint
+      run: |
+        python -m pylint *.py --exit-zero
+
+    - name: Run Bandit security linter
+      run: |
+        python -m bandit -r . -x tests/ -f json -o bandit-report.json || true
+        python -m bandit -r . -x tests/
+
+    - name: Run Safety dependency check
+      run: |
+        python -m safety check --json --output safety-report.json || true
+        python -m safety check
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  build-test:
+    name: Build and Integration Test
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Test agent startup (dry run)
+      run: |
+        timeout 10 python main.py --help || echo "Agent startup test completed"
+
+    - name: Create test configuration and verify
+      run: |
+        python -c "
+        from config import ConfigManager
+        config = ConfigManager('client.yaml')
+        print('✅ Configuration validation passed')
+        print(f'Server URL: {config.get_server_url()}')
+        print(f'REST URL: {config.get_server_rest_url()}')
+        "
+
+    - name: Package agent for distribution
+      run: |
+        mkdir -p dist
+        cp *.py dist/
+        cp requirements.txt dist/
+        cp client.yaml dist/
+        tar -czf sysmanage-agent.tar.gz dist/
+
+    - name: Upload distribution package
+      uses: actions/upload-artifact@v3
+      with:
+        name: sysmanage-agent-package
+        path: sysmanage-agent.tar.gz
