@@ -9,10 +9,10 @@ from unittest.mock import Mock, AsyncMock, MagicMock
 import pytest
 
 # Mock the aiohttp module if not available
-if 'aiohttp' not in sys.modules:
-    sys.modules['aiohttp'] = MagicMock()
-    sys.modules['aiohttp.ClientSession'] = MagicMock()
-    sys.modules['aiohttp.ClientError'] = Exception
+if "aiohttp" not in sys.modules:
+    sys.modules["aiohttp"] = MagicMock()
+    sys.modules["aiohttp.ClientSession"] = MagicMock()
+    sys.modules["aiohttp.ClientError"] = Exception
 
 from main import SysManageAgent
 
@@ -21,8 +21,9 @@ from main import SysManageAgent
 def agent():
     """Create a SysManage agent instance for testing."""
     # Create a simple client.yaml file for testing
-    with open('/tmp/test_client.yaml', 'w') as f:
-        f.write("""
+    with open("/tmp/test_client.yaml", "w") as f:
+        f.write(
+            """
 server:
   hostname: "test.example.com"
   port: 8000
@@ -37,7 +38,8 @@ websocket:
   auto_reconnect: false
   reconnect_interval: 1
   ping_interval: 5
-""")
+"""
+        )
     return SysManageAgent("/tmp/test_client.yaml")
 
 
