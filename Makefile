@@ -59,7 +59,7 @@ format: $(VENV)/bin/activate clean-whitespace
 # Python tests
 test: $(VENV)/bin/activate clean-whitespace
 	@echo "=== Running Agent Tests ==="
-	@$(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov-report=term-missing --cov-report=html
+	@$(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=config --cov=registration --cov-report=term-missing --cov-report=html
 	@echo "✅ Tests completed"
 
 # Clean artifacts

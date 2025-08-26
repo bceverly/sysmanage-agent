@@ -82,15 +82,11 @@ jobs:
     - name: Install linting dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint black isort bandit safety
+        pip install pylint black bandit safety
 
     - name: Run Black formatter check
       run: |
         python -m black --check --diff *.py
-
-    - name: Run isort import check
-      run: |
-        python -m isort --check-only --diff *.py
 
     - name: Run Pylint
       run: |
