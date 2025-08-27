@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ko\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr ""
+
+msgid "Connecting to server"
+msgstr ""
+
+msgid "Connected to server successfully"
+msgstr ""
+
+msgid "Connection failed"
+msgstr ""
+
+msgid "Disconnected from server"
+msgstr ""
+
+msgid "Reconnecting to server"
+msgstr ""
+
+# Configuration
+msgid "Loading configuration"
+msgstr ""
+
+msgid "Configuration loaded successfully"
+msgstr ""
+
+msgid "Configuration error"
+msgstr ""
+
+msgid "Invalid server URL"
+msgstr ""
+
+# System information
+msgid "Gathering system information"
+msgstr ""
+
+msgid "System information collected"
+msgstr ""
+
+msgid "Failed to collect system information"
+msgstr ""
+
+# Command execution
+msgid "Executing command"
+msgstr ""
+
+msgid "Command executed successfully"
+msgstr ""
+
+msgid "Command execution failed"
+msgstr ""
+
+msgid "Command not permitted"
+msgstr ""
+
+# File operations
+msgid "File not found"
+msgstr ""
+
+msgid "Permission denied"
+msgstr ""
+
+msgid "File operation completed"
+msgstr ""
+
+# Service management
+msgid "Service started"
+msgstr ""
+
+msgid "Service stopped"
+msgstr ""
+
+msgid "Service installation completed"
+msgstr ""
+
+msgid "Service removal completed"
+msgstr ""
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr ""
+
+msgid "Network error"
+msgstr ""
+
+msgid "Authentication failed"
+msgstr ""
+
+msgid "Invalid response from server"
+msgstr ""

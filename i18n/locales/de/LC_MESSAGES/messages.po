@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: de\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "SysManage Agent wird gestartet"
+
+msgid "Connecting to server"
+msgstr "Verbindung zum Server wird hergestellt"
+
+msgid "Connected to server successfully"
+msgstr "Erfolgreich mit dem Server verbunden"
+
+msgid "Connection failed"
+msgstr "Verbindung fehlgeschlagen"
+
+msgid "Disconnected from server"
+msgstr "Vom Server getrennt"
+
+msgid "Reconnecting to server"
+msgstr "Neuverbindung zum Server"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "Konfiguration wird geladen"
+
+msgid "Configuration loaded successfully"
+msgstr "Konfiguration erfolgreich geladen"
+
+msgid "Configuration error"
+msgstr "Konfigurationsfehler"
+
+msgid "Invalid server URL"
+msgstr "Ungültige Server-URL"
+
+# System information
+msgid "Gathering system information"
+msgstr "Systeminformationen werden gesammelt"
+
+msgid "System information collected"
+msgstr "Systeminformationen gesammelt"
+
+msgid "Failed to collect system information"
+msgstr "Sammeln von Systeminformationen fehlgeschlagen"
+
+# Command execution
+msgid "Executing command"
+msgstr "Befehl wird ausgeführt"
+
+msgid "Command executed successfully"
+msgstr "Befehl erfolgreich ausgeführt"
+
+msgid "Command execution failed"
+msgstr "Befehlsausführung fehlgeschlagen"
+
+msgid "Command not permitted"
+msgstr "Befehl nicht erlaubt"
+
+# File operations
+msgid "File not found"
+msgstr "Datei nicht gefunden"
+
+msgid "Permission denied"
+msgstr "Berechtigung verweigert"
+
+msgid "File operation completed"
+msgstr "Dateioperation abgeschlossen"
+
+# Service management
+msgid "Service started"
+msgstr "Dienst gestartet"
+
+msgid "Service stopped"
+msgstr "Dienst gestoppt"
+
+msgid "Service installation completed"
+msgstr "Dienstinstallation abgeschlossen"
+
+msgid "Service removal completed"
+msgstr "Dienstentfernung abgeschlossen"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "Ein unerwarteter Fehler ist aufgetreten"
+
+msgid "Network error"
+msgstr "Netzwerkfehler"
+
+msgid "Authentication failed"
+msgstr "Authentifizierung fehlgeschlagen"
+
+msgid "Invalid response from server"
+msgstr "Ungültige Antwort vom Server"
