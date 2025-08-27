@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "Iniciando Agente SysManage"
+
+msgid "Connecting to server"
+msgstr "Conectando al servidor"
+
+msgid "Connected to server successfully"
+msgstr "Conectado al servidor exitosamente"
+
+msgid "Connection failed"
+msgstr "Conexión fallida"
+
+msgid "Disconnected from server"
+msgstr "Desconectado del servidor"
+
+msgid "Reconnecting to server"
+msgstr "Reconectando al servidor"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "Cargando configuración"
+
+msgid "Configuration loaded successfully"
+msgstr "Configuración cargada exitosamente"
+
+msgid "Configuration error"
+msgstr "Error de configuración"
+
+msgid "Invalid server URL"
+msgstr "URL del servidor inválida"
+
+# System information
+msgid "Gathering system information"
+msgstr "Recopilando información del sistema"
+
+msgid "System information collected"
+msgstr "Información del sistema recopilada"
+
+msgid "Failed to collect system information"
+msgstr "Error al recopilar información del sistema"
+
+# Command execution
+msgid "Executing command"
+msgstr "Ejecutando comando"
+
+msgid "Command executed successfully"
+msgstr "Comando ejecutado exitosamente"
+
+msgid "Command execution failed"
+msgstr "Ejecución del comando fallida"
+
+msgid "Command not permitted"
+msgstr "Comando no permitido"
+
+# File operations
+msgid "File not found"
+msgstr "Archivo no encontrado"
+
+msgid "Permission denied"
+msgstr "Permiso denegado"
+
+msgid "File operation completed"
+msgstr "Operación de archivo completada"
+
+# Service management
+msgid "Service started"
+msgstr "Servicio iniciado"
+
+msgid "Service stopped"
+msgstr "Servicio detenido"
+
+msgid "Service installation completed"
+msgstr "Instalación del servicio completada"
+
+msgid "Service removal completed"
+msgstr "Eliminación del servicio completada"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "Ocurrió un error inesperado"
+
+msgid "Network error"
+msgstr "Error de red"
+
+msgid "Authentication failed"
+msgstr "Autenticación fallida"
+
+msgid "Invalid response from server"
+msgstr "Respuesta inválida del servidor"
