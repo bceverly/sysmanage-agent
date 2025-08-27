@@ -431,6 +431,46 @@ All messages use JSON format with the following structure:
 - Configuration management
 - Service integration
 
+## Internationalization (i18n)
+
+The SysManage Agent supports multiple languages for user-facing messages and logs:
+
+### Supported Languages
+- **English** (en) - Default
+- **French** (fr) - Français  
+- **Japanese** (ja) - 日本語
+
+### Translation Files Location
+
+```
+i18n/locales/
+├── en/LC_MESSAGES/messages.po
+├── fr/LC_MESSAGES/messages.po
+└── ja/LC_MESSAGES/messages.po
+```
+
+### Adding New Languages
+
+1. **Create translation file**: Add new `.po` file in `i18n/locales/{language}/LC_MESSAGES/messages.po`
+2. **Translate messages**: Update all `msgstr` entries with appropriate translations
+3. **Compile translation**: Run `msgfmt messages.po -o messages.mo` in the LC_MESSAGES directory
+4. **Set language**: Use `set_language('{language}')` in your agent configuration
+
+### Using Translations in Code
+
+```python
+from i18n import _
+
+# Simple message translation
+logger.info(_("Starting SysManage Agent"))
+
+# Message with parameters (handled by logging framework)
+logger.info(_("Connected to server successfully"))
+```
+
+### Language Detection
+The agent uses the system default language (English) but can be configured to use specific languages through the configuration system.
+
 ## Contributing
 
 1. Fork the repository

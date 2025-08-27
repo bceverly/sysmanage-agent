@@ -15,6 +15,7 @@ import websockets
 
 from config import ConfigManager
 from registration import ClientRegistration
+from i18n import _
 
 
 class SysManageAgent:
@@ -39,7 +40,7 @@ class SysManageAgent:
         # Get server URL from config
         self.server_url = self.config.get_server_url()
 
-        self.logger.info("SysManage Agent initialized with ID: %s", self.agent_id)
+        self.logger.info("%s ID: %s", _("Starting SysManage Agent"), self.agent_id)
         self.logger.info("Server URL: %s", self.server_url)
 
     def setup_logging(self):
@@ -291,7 +292,7 @@ class SysManageAgent:
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
 
-        self.logger.info("SysManage Agent starting")
+        self.logger.info(_("Starting SysManage Agent"))
         self.logger.info("Agent ID: %s", self.agent_id)
         self.logger.info("Hostname: %s", system_info["hostname"])
         self.logger.info("Platform: %s", system_info["platform"])
@@ -313,7 +314,7 @@ class SysManageAgent:
                 async with websockets.connect(self.server_url) as websocket:
                     self.websocket = websocket
                     self.running = True
-                    self.logger.info("Connected to SysManage server via WebSocket")
+                    self.logger.info(_("Connected to server successfully"))
 
                     # Run sender and receiver concurrently
                     await asyncio.gather(self.message_sender(), self.message_receiver())

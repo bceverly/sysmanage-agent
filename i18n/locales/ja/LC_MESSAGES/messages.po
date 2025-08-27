@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "SysManageエージェントを開始しています"
+
+msgid "Connecting to server"
+msgstr "サーバーに接続しています"
+
+msgid "Connected to server successfully"
+msgstr "サーバーに正常に接続されました"
+
+msgid "Connection failed"
+msgstr "接続に失敗しました"
+
+msgid "Disconnected from server"
+msgstr "サーバーから切断されました"
+
+msgid "Reconnecting to server"
+msgstr "サーバーに再接続しています"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "設定を読み込んでいます"
+
+msgid "Configuration loaded successfully"
+msgstr "設定が正常に読み込まれました"
+
+msgid "Configuration error"
+msgstr "設定エラー"
+
+msgid "Invalid server URL"
+msgstr "無効なサーバーURL"
+
+# System information
+msgid "Gathering system information"
+msgstr "システム情報を収集しています"
+
+msgid "System information collected"
+msgstr "システム情報が収集されました"
+
+msgid "Failed to collect system information"
+msgstr "システム情報の収集に失敗しました"
+
+# Command execution
+msgid "Executing command"
+msgstr "コマンドを実行しています"
+
+msgid "Command executed successfully"
+msgstr "コマンドが正常に実行されました"
+
+msgid "Command execution failed"
+msgstr "コマンドの実行に失敗しました"
+
+msgid "Command not permitted"
+msgstr "コマンドは許可されていません"
+
+# File operations
+msgid "File not found"
+msgstr "ファイルが見つかりません"
+
+msgid "Permission denied"
+msgstr "アクセス許可が拒否されました"
+
+msgid "File operation completed"
+msgstr "ファイル操作が完了しました"
+
+# Service management
+msgid "Service started"
+msgstr "サービスが開始されました"
+
+msgid "Service stopped"
+msgstr "サービスが停止されました"
+
+msgid "Service installation completed"
+msgstr "サービスのインストールが完了しました"
+
+msgid "Service removal completed"
+msgstr "サービスの削除が完了しました"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "予期しないエラーが発生しました"
+
+msgid "Network error"
+msgstr "ネットワークエラー"
+
+msgid "Authentication failed"
+msgstr "認証に失敗しました"
+
+msgid "Invalid response from server"
+msgstr "サーバーからの無効な応答"

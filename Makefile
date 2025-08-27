@@ -1,14 +1,14 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format run stop
+.PHONY: test lint clean setup install-dev help format-python run stop
 
 # Default target
 help:
 	@echo "SysManage Agent - Available targets:"
 	@echo "  make test          - Run all unit tests"
 	@echo "  make lint          - Run Python linting"
-	@echo "  make format        - Format Python code"
+	@echo "  make format-python - Format Python code"
 	@echo "  make setup         - Install development dependencies"
 	@echo "  make clean         - Clean test artifacts and cache"
 	@echo "  make install-dev   - Install development tools"
@@ -45,13 +45,13 @@ clean-whitespace:
 lint: $(VENV)/bin/activate clean-whitespace
 	@echo "=== Python Linting ==="
 	@echo "Running Black code formatter check..."
-	@$(PYTHON) -m black --check --diff . || (echo "Run 'make format' to fix formatting"; exit 1)
+	@$(PYTHON) -m black --check --diff . || (echo "Run 'make format-python' to fix formatting"; exit 1)
 	@echo "Running pylint..."
 	@$(PYTHON) -m pylint main.py tests/ --rcfile=.pylintrc || true
 	@echo "✅ Python linting completed"
 
 # Format Python code
-format: $(VENV)/bin/activate clean-whitespace
+format-python: $(VENV)/bin/activate clean-whitespace
 	@echo "Formatting Python code..."
 	@$(PYTHON) -m black .
 	@echo "✅ Code formatting completed"
