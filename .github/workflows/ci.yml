@@ -107,7 +107,7 @@ jobs:
         python -m safety check
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -155,7 +155,7 @@ jobs:
         tar -czf sysmanage-agent.tar.gz dist/
 
     - name: Upload distribution package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: sysmanage-agent-package
         path: sysmanage-agent.tar.gz
