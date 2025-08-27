@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="sysmanage-logo.svg" alt="SysManage" width="300"/>
+  <img src="sysmanage-logo.svg" alt="SysManage" width="330"/>
 </div>
 
 # SysManage Agent
