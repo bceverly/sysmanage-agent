@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="sysmanage-logo.svg" alt="SysManage" width="300"/>
+</div>
+
 # SysManage Agent
 
 [![CI/CD Pipeline](https://github.com/bceverly/sysmanage-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/bceverly/sysmanage-agent/actions/workflows/ci.yml)
