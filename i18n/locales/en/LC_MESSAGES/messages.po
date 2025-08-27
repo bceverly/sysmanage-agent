@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "Starting SysManage Agent"
+
+msgid "Connecting to server"
+msgstr "Connecting to server"
+
+msgid "Connected to server successfully"
+msgstr "Connected to server successfully"
+
+msgid "Connection failed"
+msgstr "Connection failed"
+
+msgid "Disconnected from server"
+msgstr "Disconnected from server"
+
+msgid "Reconnecting to server"
+msgstr "Reconnecting to server"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "Loading configuration"
+
+msgid "Configuration loaded successfully"
+msgstr "Configuration loaded successfully"
+
+msgid "Configuration error"
+msgstr "Configuration error"
+
+msgid "Invalid server URL"
+msgstr "Invalid server URL"
+
+# System information
+msgid "Gathering system information"
+msgstr "Gathering system information"
+
+msgid "System information collected"
+msgstr "System information collected"
+
+msgid "Failed to collect system information"
+msgstr "Failed to collect system information"
+
+# Command execution
+msgid "Executing command"
+msgstr "Executing command"
+
+msgid "Command executed successfully"
+msgstr "Command executed successfully"
+
+msgid "Command execution failed"
+msgstr "Command execution failed"
+
+msgid "Command not permitted"
+msgstr "Command not permitted"
+
+# File operations
+msgid "File not found"
+msgstr "File not found"
+
+msgid "Permission denied"
+msgstr "Permission denied"
+
+msgid "File operation completed"
+msgstr "File operation completed"
+
+# Service management
+msgid "Service started"
+msgstr "Service started"
+
+msgid "Service stopped"
+msgstr "Service stopped"
+
+msgid "Service installation completed"
+msgstr "Service installation completed"
+
+msgid "Service removal completed"
+msgstr "Service removal completed"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "An unexpected error occurred"
+
+msgid "Network error"
+msgstr "Network error"
+
+msgid "Authentication failed"
+msgstr "Authentication failed"
+
+msgid "Invalid response from server"
+msgstr "Invalid response from server"
