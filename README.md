@@ -21,22 +21,26 @@ SysManage Agent is a headless Python application designed to be installed on rem
 
 - 🔄 **Real-time Communication**: WebSocket-based connection for instant responsiveness
 - 🖥️ **Cross-platform Support**: Linux, Windows, macOS, FreeBSD, OpenBSD
-- 🔐 **Secure by Design**: Encrypted communication, no inbound ports required
+- 🔐 **Secure by Design**: Encrypted communication with HMAC validation, no inbound ports required
 - 📊 **System Monitoring**: CPU, memory, disk, network metrics collection
 - ⚡ **Command Execution**: Remote command execution with security controls
 - 🔧 **Package Management**: Remote software installation and updates
 - 💓 **Health Monitoring**: Automatic heartbeat and status reporting
 - 🌍 **Multi-language Support**: Native support for 11 languages
 - 🏃‍♂️ **Lightweight**: Minimal resource footprint and dependencies
+- 🔍 **Auto-Discovery**: Automatically discover and configure with SysManage servers on the network
+- ⚙️ **Remote Configuration**: Receive and apply configuration updates from the server
 
 ## Architecture
 
 The agent operates as a persistent service that:
-1. Connects to SysManage Server via secure WebSocket
-2. Registers itself with system information (hostname, IP, platform)
-3. Sends periodic heartbeat messages
-4. Listens for commands and executes them securely
-5. Reports command results and system status back to server
+1. **Auto-discovers** SysManage servers on the network (if no configuration exists)
+2. **Connects** to SysManage Server via secure WebSocket with authentication tokens
+3. **Registers** itself with system information (hostname, IP, platform)
+4. **Monitors** system health and sends periodic heartbeat messages
+5. **Listens** for commands and configuration updates from the server
+6. **Executes** commands securely with validation and resource limits
+7. **Reports** command results and system status back to server with message integrity validation
 
 ### Internationalization
 
@@ -104,7 +108,49 @@ pip install git+https://github.com/bceverly/sysmanage-agent.git
 
 ## Configuration
 
-### 1. Server Configuration
+### Auto-Discovery (Recommended for New Deployments)
+
+SysManage Agent includes automatic server discovery that eliminates the need for manual configuration in most scenarios:
+
+#### How Auto-Discovery Works
+
+1. **No Configuration Required**: If no configuration file exists, the agent automatically attempts to discover SysManage servers on the network
+2. **Network Scanning**: The agent:
+   - Sends UDP broadcast discovery requests to port 31337 on common network ranges
+   - Listens for server announcement broadcasts on port 31338
+   - Evaluates discovered servers using a scoring system (SSL preference, local network preference)
+3. **Automatic Configuration**: Once a server is discovered, the agent:
+   - Receives default configuration parameters from the server
+   - Writes a complete configuration file automatically
+   - Starts normal operation using the discovered settings
+4. **Fallback**: If auto-discovery fails, manual configuration is still supported
+
+#### Required Network Ports
+
+For auto-discovery to work, ensure the following ports are available:
+
+**Agent Ports (Outbound)**:
+- **UDP 31337** - Send discovery requests to servers
+- **UDP 31338** - Listen for server announcements  
+- **TCP 6443** (or server port) - HTTPS connections to discovered server
+
+**Server Ports (Inbound)**:
+- **UDP 31337** - Server discovery beacon service
+- **TCP 6443** (or configured port) - HTTPS API and WebSocket connections
+
+#### Discovery Process Flow
+
+```
+Auto-Discovery Process:
+1. Agent starts → No config file found
+2. Agent broadcasts: "Looking for SysManage server" → Port 31337
+3. Server responds: "SysManage server available + configuration" → Agent  
+4. Agent evaluates servers and selects the best one
+5. Agent writes configuration file with discovered settings
+6. Agent connects via WebSocket using auto-generated configuration
+```
+
+### 1. Manual Server Configuration (Alternative)
 
 Create `/etc/sysmanage-agent.yaml` (Linux/macOS) or `C:\sysmanage-agent.yaml` (Windows):
 
@@ -462,8 +508,16 @@ The SysManage Agent supports multiple languages for user-facing messages and log
 
 ### Supported Languages
 - **English** (en) - Default
-- **French** (fr) - Français  
+- **Spanish** (es) - Español
+- **French** (fr) - Français
+- **German** (de) - Deutsch
+- **Italian** (it) - Italiano
+- **Portuguese** (pt) - Português
+- **Dutch** (nl) - Nederlands
 - **Japanese** (ja) - 日本語
+- **Simplified Chinese** (zh_CN) - 简体中文
+- **Korean** (ko) - 한국어
+- **Russian** (ru) - Русский
 
 ### Translation Files Location
 

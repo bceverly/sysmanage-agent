@@ -7,31 +7,46 @@ SysManage server using WebSockets with concurrent send/receive operations.
 import asyncio
 import json
 import logging
+import os
 import platform
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
+
 import websockets
+import yaml
 
 from config import ConfigManager
 from registration import ClientRegistration
 from i18n import _, set_language
+from discovery import discovery_client
 
 
 class SysManageAgent:
     """Main agent class for SysManage fleet management."""
 
     def __init__(self, config_file: str = "client.yaml"):
-        # Load configuration
-        self.config = ConfigManager(config_file)
+        # Try to discover server if no config file exists
+        self.config_file = config_file
+        # Setup basic logging first
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+        if not self.try_load_config(config_file):
+            self.logger.info("No configuration found, attempting auto-discovery...")
+            if not self.auto_discover_and_configure():
+                raise RuntimeError(
+                    "Unable to configure agent: no config file and auto-discovery failed"
+                )
+
+        # Load configuration (now guaranteed to exist)
+        self.config = ConfigManager(self.config_file)
 
         # Set language from configuration
         configured_language = self.config.get_language()
         set_language(configured_language)
 
-        # Setup logging
+        # Setup proper logging with config
         self.setup_logging()
-        self.logger = logging.getLogger(__name__)
 
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
@@ -46,6 +61,54 @@ class SysManageAgent:
 
         self.logger.info("%s ID: %s", _("Starting SysManage Agent"), self.agent_id)
         self.logger.info("Server URL: %s", self.server_url)
+
+    def try_load_config(self, config_file: str) -> bool:
+        """Try to load configuration file."""
+        return os.path.exists(config_file)
+
+    def auto_discover_and_configure(self) -> bool:
+        """Auto-discover server and create configuration."""
+
+        # Setup basic logging for discovery process
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        )
+        logger = logging.getLogger(__name__)
+
+        logger.info("Starting auto-discovery process...")
+
+        try:
+            # Discover servers
+            discovered_servers = asyncio.run(discovery_client.discover_servers())
+
+            if not discovered_servers:
+                logger.error("No SysManage servers found on the network")
+                return False
+
+            # Select best server
+            best_server = discovery_client.select_best_server(discovered_servers)
+            if not best_server:
+                logger.error("Unable to select a server from discovered servers")
+                return False
+
+            logger.info("Selected server at %s", best_server.get("server_ip"))
+
+            # Create configuration from discovery
+            config_data = discovery_client.create_agent_config_from_discovery(
+                best_server
+            )
+
+            # Write configuration file
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+
+            logger.info("Configuration written to %s", self.config_file)
+            return True
+
+        except Exception as e:
+            logger.error("Auto-discovery failed: %s", e)
+            return False
 
     def setup_logging(self):
         """Setup logging based on configuration."""
