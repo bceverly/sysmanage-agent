@@ -56,7 +56,7 @@ The SysManage Agent supports multiple languages for logging and system messages.
 | Korean | `ko` | ✅ Complete |
 | Russian | `ru` | ✅ Complete |
 
-The agent automatically detects the system locale and uses the appropriate language for log messages and system output. Language can also be configured manually in the agent configuration file.
+The agent uses the language specified in the configuration file for log messages and system output. If no language is specified, it defaults to English.
 
 ## Prerequisites
 
@@ -139,6 +139,10 @@ logging:
   level: "INFO"                      # DEBUG, INFO, WARNING, ERROR, CRITICAL
   file: "/var/log/sysmanage-agent.log"  # Linux/macOS
   # file: "C:\logs\sysmanage-agent.log"  # Windows
+
+# Internationalization
+i18n:
+  language: "en"                     # Agent language: en, es, fr, de, it, pt, nl, ja, zh_CN, ko, ru
 ```
 
 ### 2. Environment Variables (Alternative)
