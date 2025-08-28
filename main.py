@@ -15,7 +15,7 @@ import websockets
 
 from config import ConfigManager
 from registration import ClientRegistration
-from i18n import _
+from i18n import _, set_language
 
 
 class SysManageAgent:
@@ -24,6 +24,10 @@ class SysManageAgent:
     def __init__(self, config_file: str = "client.yaml"):
         # Load configuration
         self.config = ConfigManager(config_file)
+
+        # Set language from configuration
+        configured_language = self.config.get_language()
+        set_language(configured_language)
 
         # Setup logging
         self.setup_logging()

@@ -25,6 +25,12 @@ client:
   registration_retry_interval: 30  # seconds between registration attempts
   max_registration_retries: 10     # maximum number of retry attempts (-1 for infinite)
 
+# Internationalization settings
+i18n:
+  # Language/locale for agent messages and logging
+  # Supported languages: en, es, fr, de, it, pt, nl, ja, zh_CN, ko, ru
+  language: "en"
+
 # Logging configuration
 logging:
   # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL

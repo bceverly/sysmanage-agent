@@ -68,6 +68,10 @@ class ConfigManager:
         """Get WebSocket configuration section."""
         return self.get("websocket", {})
 
+    def get_i18n_config(self) -> Dict[str, Any]:
+        """Get internationalization configuration section."""
+        return self.get("i18n", {})
+
     def get_server_url(self) -> str:
         """Build the complete server WebSocket URL."""
         server_config = self.get_server_config()
@@ -131,3 +135,7 @@ class ConfigManager:
     def get_ping_interval(self) -> int:
         """Get WebSocket ping interval in seconds."""
         return self.get("websocket.ping_interval", 30)
+
+    def get_language(self) -> str:
+        """Get configured language/locale."""
+        return self.get("i18n.language", "en")
