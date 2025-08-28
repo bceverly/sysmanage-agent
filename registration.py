@@ -8,8 +8,7 @@ import platform
 import logging
 import asyncio
 import ssl
-from typing import Dict, Any, Optional, Tuple
-import json
+from typing import Any, Dict, Optional, Tuple
 
 try:
     import aiohttp
@@ -47,7 +46,7 @@ class ClientRegistration:
                 s.connect(("8.8.8.8", 80))
                 ipv4 = s.getsockname()[0]
         except Exception as e:
-            self.logger.debug(f"Could not determine IPv4 address: {e}")
+            self.logger.debug("Could not determine IPv4 address: %s", e)
 
         try:
             # Get IPv6 address by connecting to a remote host
@@ -55,7 +54,7 @@ class ClientRegistration:
                 s.connect(("2001:4860:4860::8888", 80))
                 ipv6 = s.getsockname()[0]
         except Exception as e:
-            self.logger.debug(f"Could not determine IPv6 address: {e}")
+            self.logger.debug("Could not determine IPv6 address: %s", e)
 
         return ipv4, ipv6
 
@@ -94,8 +93,8 @@ class ClientRegistration:
 
         system_info = self.get_system_info()
 
-        self.logger.info(f"Attempting to register with server at {registration_url}")
-        self.logger.debug(f"Registration data: {system_info}")
+        self.logger.info("Attempting to register with server at %s", registration_url)
+        self.logger.debug("Registration data: %s", system_info)
 
         try:
             # Create SSL context that doesn't verify certificates (for development)
@@ -116,25 +115,27 @@ class ClientRegistration:
                         self.registration_data = response_data
                         self.registered = True
                         self.logger.info(
-                            f"Successfully registered with server. Host ID: {response_data.get('id')}"
+                            "Successfully registered with server. Host ID: %s",
+                            response_data.get("id"),
                         )
                         return True
-                    elif response.status == 409:
+                    if response.status == 409:
                         # Host already exists - this is OK
                         self.logger.info("Host already registered with server")
                         self.registered = True
                         return True
-                    else:
-                        error_text = await response.text()
-                        self.logger.error(
-                            f"Registration failed with status {response.status}: {error_text}"
-                        )
-                        return False
+                    error_text = await response.text()
+                    self.logger.error(
+                        "Registration failed with status %s: %s",
+                        response.status,
+                        error_text,
+                    )
+                    return False
 
         except (
             Exception
         ) as e:  # Catch all since aiohttp.ClientError might not be available
-            self.logger.error(f"Error during registration: {e}")
+            self.logger.error("Error during registration: %s", e)
             return False
 
     async def register_with_retry(self) -> bool:
@@ -152,19 +153,21 @@ class ClientRegistration:
             attempt += 1
 
             self.logger.info(
-                f"Registration attempt {attempt}"
-                + (f" of {max_retries}" if max_retries != -1 else "")
+                "Registration attempt %s%s",
+                attempt,
+                # pylint: disable-next=consider-using-f-string
+                (" of %s" % max_retries if max_retries != -1 else ""),
             )
 
             if await self.register_with_server():
                 return True
 
             if max_retries != -1 and attempt >= max_retries:
-                self.logger.error(f"Failed to register after {max_retries} attempts")
+                self.logger.error("Failed to register after %s attempts", max_retries)
                 return False
 
             self.logger.warning(
-                f"Registration failed, retrying in {retry_interval} seconds..."
+                "Registration failed, retrying in %s seconds...", retry_interval
             )
             await asyncio.sleep(retry_interval)
 

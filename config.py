@@ -4,8 +4,9 @@ Reads YAML configuration files and provides configuration data.
 """
 
 import os
+from typing import Any, Dict, Optional
+
 import yaml
-from typing import Dict, Any, Optional
 
 
 class ConfigManager:
@@ -27,9 +28,9 @@ class ConfigManager:
             with open(self.config_file, "r", encoding="utf-8") as file:
                 self.config_data = yaml.safe_load(file) or {}
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML in configuration file: {e}")
+            raise ValueError(f"Invalid YAML in configuration file: {e}") from e
         except Exception as e:
-            raise RuntimeError(f"Failed to load configuration file: {e}")
+            raise RuntimeError(f"Failed to load configuration file: {e}") from e
 
     def get(self, key_path: str, default: Any = None) -> Any:
         """
