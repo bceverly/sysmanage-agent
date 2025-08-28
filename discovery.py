@@ -25,9 +25,16 @@ class ServerDiscoveryClient:
     Uses UDP broadcast/multicast to find available servers.
     """
 
-    def __init__(self, discovery_port: int = 31337, broadcast_port: int = 31338):
+    def __init__(
+        self,
+        discovery_port: int = 31337,
+        broadcast_port: int = 31338,
+        bind_address: str = "127.0.0.1",
+    ):
         self.discovery_port = discovery_port
         self.broadcast_port = broadcast_port
+        # Security: Default to localhost only. Set to "0.0.0.0" in config only if needed for multi-network discovery
+        self.bind_address = bind_address
         self.hostname = platform.node()
 
     async def discover_servers(self, timeout: int = 10) -> List[Dict[str, Any]]:
@@ -150,14 +157,16 @@ class ServerDiscoveryClient:
         servers = []
 
         try:
-            # Create UDP socket for listening
+            # Create UDP socket for listening - bind to specific address for security
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(("", self.broadcast_port))
+            sock.bind((self.bind_address, self.broadcast_port))
             sock.settimeout(0.5)
 
             logger.debug(
-                "Listening for server announcements on port %s", self.broadcast_port
+                "Listening for server announcements on %s:%s",
+                self.bind_address,
+                self.broadcast_port,
             )
 
             start_time = asyncio.get_event_loop().time()
@@ -393,5 +402,22 @@ class ServerDiscoveryClient:
         return unique_servers
 
 
-# Global instance
-discovery_client = ServerDiscoveryClient()
+# Global instance with configurable but secure defaults
+try:
+    from config import ConfigManager
+
+    config = ConfigManager()
+    bind_address = config.get(
+        "discovery.bind_address", "127.0.0.1"
+    )  # Secure default: localhost only
+    discovery_port = config.get("discovery.port", 31337)
+    broadcast_port = config.get("discovery.broadcast_port", 31338)
+
+    discovery_client = ServerDiscoveryClient(
+        discovery_port=discovery_port,
+        broadcast_port=broadcast_port,
+        bind_address=bind_address,
+    )
+except Exception:
+    # Fallback to secure defaults if config loading fails
+    discovery_client = ServerDiscoveryClient(bind_address="127.0.0.1")
