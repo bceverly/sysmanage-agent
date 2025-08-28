@@ -1,12 +1,5 @@
 [bandit]
 # Bandit configuration for SysManage Agent
-# B101: assert_used - Skip for pytest-based projects where assert is standard
+# Skip B101 (assert_used) for pytest-based projects where assert is standard
 skips = B101
-
-# Additional exclusions
 exclude_dirs = tests
-
-# Severity levels
-# Low level issues can be acceptable for this project
-confidence = HIGH
-severity = MEDIUM
