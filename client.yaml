@@ -4,13 +4,16 @@
 # Server connection settings
 server:
   # Hostname or IP address of the SysManage server
-  hostname: "localhost"
+  hostname: "api.sysmanage.org"
   
   # Port number for the SysManage server
   port: 6443
   
   # Use HTTPS for secure communication (recommended for production)
   use_https: true
+  
+  # Set to false for self-signed certificates (development only)
+  verify_ssl: false
   
   # API endpoint path (empty for direct access to endpoints)
   api_path: ""
