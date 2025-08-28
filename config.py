@@ -140,3 +140,7 @@ class ConfigManager:
     def get_language(self) -> str:
         """Get configured language/locale."""
         return self.get("i18n.language", "en")
+
+    def should_verify_ssl(self) -> bool:
+        """Check if SSL certificates should be verified."""
+        return self.get("server.verify_ssl", True)

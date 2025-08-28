@@ -9,10 +9,13 @@ import json
 import logging
 import os
 import platform
+import socket
+import ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
 
+import aiohttp
 import websockets
 import yaml
 
@@ -330,7 +333,7 @@ class SysManageAgent:
                 except Exception as e:
                     self.logger.error("Error processing message: %s", e)
 
-        except websockets.exceptions.ConnectionClosed:
+        except websockets.ConnectionClosed:
             self.logger.info("Connection to server closed")
         except Exception as e:
             self.logger.error("Message receiver error: %s", e)
@@ -355,6 +358,41 @@ class SysManageAgent:
                 self.logger.error("Message sender error: %s", e)
                 break
 
+    async def get_auth_token(self) -> str:
+        """Get authentication token for WebSocket connection."""
+        server_config = self.config.get_server_config()
+        hostname = server_config.get("hostname", "localhost")
+        port = server_config.get("port", 8000)
+        use_https = server_config.get("use_https", False)
+
+        # Build auth URL
+        protocol = "https" if use_https else "http"
+        auth_url = f"{protocol}://{hostname}:{port}/agent/auth"
+
+        # Set up SSL context if needed
+        ssl_context = None
+        if use_https:
+            ssl_context = ssl.create_default_context()
+            if not self.config.should_verify_ssl():
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+
+        # Get hostname to send in header
+        system_hostname = socket.gethostname()
+
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            headers = {"x-agent-hostname": system_hostname}
+
+            async with session.post(auth_url, headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data.get("connection_token", "")
+
+                raise ConnectionError(
+                    f"Failed to get auth token: HTTP {response.status}"
+                )
+
     async def run(self):
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
@@ -378,7 +416,24 @@ class SysManageAgent:
 
         while True:
             try:
-                async with websockets.connect(self.server_url) as websocket:
+                # Get authentication token
+                auth_token = await self.get_auth_token()
+                self.logger.info("Got authentication token for WebSocket connection")
+
+                # Add token to WebSocket URL
+                websocket_url = f"{self.server_url}?token={auth_token}"
+
+                # Create SSL context based on configuration
+                ssl_context = None
+                if self.server_url.startswith("wss://"):
+                    ssl_context = ssl.create_default_context()
+                    if not self.config.should_verify_ssl():
+                        ssl_context.check_hostname = False
+                        ssl_context.verify_mode = ssl.CERT_NONE
+
+                async with websockets.connect(
+                    websocket_url, ssl=ssl_context
+                ) as websocket:
                     self.websocket = websocket
                     self.running = True
                     self.logger.info(_("Connected to server successfully"))
@@ -386,7 +441,7 @@ class SysManageAgent:
                     # Run sender and receiver concurrently
                     await asyncio.gather(self.message_sender(), self.message_receiver())
 
-            except websockets.exceptions.ConnectionClosed:
+            except websockets.ConnectionClosed:
                 self.logger.warning(
                     "Connection lost, attempting to reconnect in %s seconds...",
                     reconnect_interval,
