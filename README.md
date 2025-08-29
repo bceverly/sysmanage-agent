@@ -26,7 +26,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - ⚡ **Command Execution**: Remote command execution with security controls
 - 🔧 **Package Management**: Remote software installation and updates
 - 💓 **Health Monitoring**: Automatic heartbeat and status reporting
-- 🌍 **Multi-language Support**: Native support for 11 languages
+- 🌍 **Multi-language Support**: Native support for 12 languages
 - 🏃‍♂️ **Lightweight**: Minimal resource footprint and dependencies
 - 🔍 **Auto-Discovery**: Automatically discover and configure with SysManage servers on the network
 - ⚙️ **Remote Configuration**: Receive and apply configuration updates from the server
@@ -57,6 +57,7 @@ The SysManage Agent supports multiple languages for logging and system messages.
 | Dutch | `nl` | ✅ Complete |
 | Japanese | `ja` | ✅ Complete |
 | Simplified Chinese | `zh_CN` | ✅ Complete |
+| Traditional Chinese | `zh_TW` | ✅ Complete |
 | Korean | `ko` | ✅ Complete |
 | Russian | `ru` | ✅ Complete |
 
@@ -274,7 +275,7 @@ logging:
 
 # Internationalization
 i18n:
-  language: "en"                     # Agent language: en, es, fr, de, it, pt, nl, ja, zh_CN, ko, ru
+  language: "en"                     # Agent language: en, es, fr, de, it, pt, nl, ja, zh_CN, zh_TW, ko, ru
 ```
 
 ### 2. Environment Variables (Alternative)
@@ -667,6 +668,7 @@ The SysManage Agent supports multiple languages for user-facing messages and log
 - **Dutch** (nl) - Nederlands
 - **Japanese** (ja) - 日本語
 - **Simplified Chinese** (zh_CN) - 简体中文
+- **Traditional Chinese** (zh_TW) - 繁體中文
 - **Korean** (ko) - 한국어
 - **Russian** (ru) - Русский
 

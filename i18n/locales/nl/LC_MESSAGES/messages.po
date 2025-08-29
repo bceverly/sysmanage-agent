@@ -5,101 +5,101 @@ msgstr ""
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
-msgstr ""
+msgstr "SysManage Agent wordt gestart"
 
 msgid "Connecting to server"
-msgstr ""
+msgstr "Verbinding maken met server"
 
 msgid "Connected to server successfully"
-msgstr ""
+msgstr "Succesvol verbonden met server"
 
 msgid "Connection failed"
-msgstr ""
+msgstr "Verbinding mislukt"
 
 msgid "Disconnected from server"
-msgstr ""
+msgstr "Verbinding met server verbroken"
 
 msgid "Reconnecting to server"
-msgstr ""
+msgstr "Opnieuw verbinden met server"
 
 # Configuration
 msgid "Loading configuration"
-msgstr ""
+msgstr "Configuratie laden"
 
 msgid "Configuration loaded successfully"
-msgstr ""
+msgstr "Configuratie succesvol geladen"
 
 msgid "Configuration error"
-msgstr ""
+msgstr "Configuratiefout"
 
 msgid "Invalid server URL"
-msgstr ""
+msgstr "Ongeldige server-URL"
 
 # System information
 msgid "Gathering system information"
-msgstr ""
+msgstr "Systeeminformatie verzamelen"
 
 msgid "System information collected"
-msgstr ""
+msgstr "Systeeminformatie verzameld"
 
 msgid "Failed to collect system information"
-msgstr ""
+msgstr "Verzamelen van systeeminformatie mislukt"
 
 # Command execution
 msgid "Executing command"
-msgstr ""
+msgstr "Opdracht uitvoeren"
 
 msgid "Command executed successfully"
-msgstr ""
+msgstr "Opdracht succesvol uitgevoerd"
 
 msgid "Command execution failed"
-msgstr ""
+msgstr "Uitvoeren van opdracht mislukt"
 
 msgid "Command not permitted"
-msgstr ""
+msgstr "Opdracht niet toegestaan"
 
 # File operations
 msgid "File not found"
-msgstr ""
+msgstr "Bestand niet gevonden"
 
 msgid "Permission denied"
-msgstr ""
+msgstr "Toegang geweigerd"
 
 msgid "File operation completed"
-msgstr ""
+msgstr "Bestandsoperatie voltooid"
 
 # Service management
 msgid "Service started"
-msgstr ""
+msgstr "Service gestart"
 
 msgid "Service stopped"
-msgstr ""
+msgstr "Service gestopt"
 
 msgid "Service installation completed"
-msgstr ""
+msgstr "Service-installatie voltooid"
 
 msgid "Service removal completed"
-msgstr ""
+msgstr "Service-verwijdering voltooid"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr ""
+msgstr "Er is een onverwachte fout opgetreden"
 
 msgid "Network error"
-msgstr ""
+msgstr "Netwerkfout"
 
 msgid "Authentication failed"
-msgstr ""
+msgstr "Authenticatie mislukt"
 
 msgid "Invalid response from server"
-msgstr ""
+msgstr "Ongeldige reactie van server"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "Initiële OS-versiegegevens verzenden..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "Initiële gegevens succesvol verzonden"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "Verzenden van initiële gegevens mislukt: %s"

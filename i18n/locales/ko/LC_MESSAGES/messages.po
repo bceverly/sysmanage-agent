@@ -5,101 +5,101 @@ msgstr ""
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
-msgstr ""
+msgstr "SysManage 에이전트를 시작하고 있습니다"
 
 msgid "Connecting to server"
-msgstr ""
+msgstr "서버에 연결 중입니다"
 
 msgid "Connected to server successfully"
-msgstr ""
+msgstr "서버에 성공적으로 연결되었습니다"
 
 msgid "Connection failed"
-msgstr ""
+msgstr "연결에 실패했습니다"
 
 msgid "Disconnected from server"
-msgstr ""
+msgstr "서버와의 연결이 끊어졌습니다"
 
 msgid "Reconnecting to server"
-msgstr ""
+msgstr "서버에 재연결 중입니다"
 
 # Configuration
 msgid "Loading configuration"
-msgstr ""
+msgstr "구성을 로드하고 있습니다"
 
 msgid "Configuration loaded successfully"
-msgstr ""
+msgstr "구성이 성공적으로 로드되었습니다"
 
 msgid "Configuration error"
-msgstr ""
+msgstr "구성 오류"
 
 msgid "Invalid server URL"
-msgstr ""
+msgstr "잘못된 서버 URL"
 
 # System information
 msgid "Gathering system information"
-msgstr ""
+msgstr "시스템 정보를 수집하고 있습니다"
 
 msgid "System information collected"
-msgstr ""
+msgstr "시스템 정보가 수집되었습니다"
 
 msgid "Failed to collect system information"
-msgstr ""
+msgstr "시스템 정보 수집에 실패했습니다"
 
 # Command execution
 msgid "Executing command"
-msgstr ""
+msgstr "명령을 실행하고 있습니다"
 
 msgid "Command executed successfully"
-msgstr ""
+msgstr "명령이 성공적으로 실행되었습니다"
 
 msgid "Command execution failed"
-msgstr ""
+msgstr "명령 실행에 실패했습니다"
 
 msgid "Command not permitted"
-msgstr ""
+msgstr "명령이 허용되지 않습니다"
 
 # File operations
 msgid "File not found"
-msgstr ""
+msgstr "파일을 찾을 수 없습니다"
 
 msgid "Permission denied"
-msgstr ""
+msgstr "권한이 거부되었습니다"
 
 msgid "File operation completed"
-msgstr ""
+msgstr "파일 작업이 완료되었습니다"
 
 # Service management
 msgid "Service started"
-msgstr ""
+msgstr "서비스가 시작되었습니다"
 
 msgid "Service stopped"
-msgstr ""
+msgstr "서비스가 중지되었습니다"
 
 msgid "Service installation completed"
-msgstr ""
+msgstr "서비스 설치가 완료되었습니다"
 
 msgid "Service removal completed"
-msgstr ""
+msgstr "서비스 제거가 완료되었습니다"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr ""
+msgstr "예상치 못한 오류가 발생했습니다"
 
 msgid "Network error"
-msgstr ""
+msgstr "네트워크 오류"
 
 msgid "Authentication failed"
-msgstr ""
+msgstr "인증에 실패했습니다"
 
 msgid "Invalid response from server"
-msgstr ""
+msgstr "서버로부터 잘못된 응답"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "초기 데이터 업데이트가 성공적으로 전송되었습니다"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"

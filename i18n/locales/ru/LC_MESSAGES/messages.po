@@ -5,101 +5,101 @@ msgstr ""
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
-msgstr ""
+msgstr "Запуск агента SysManage"
 
 msgid "Connecting to server"
-msgstr ""
+msgstr "Подключение к серверу"
 
 msgid "Connected to server successfully"
-msgstr ""
+msgstr "Успешно подключен к серверу"
 
 msgid "Connection failed"
-msgstr ""
+msgstr "Ошибка подключения"
 
 msgid "Disconnected from server"
-msgstr ""
+msgstr "Отключен от сервера"
 
 msgid "Reconnecting to server"
-msgstr ""
+msgstr "Переподключение к серверу"
 
 # Configuration
 msgid "Loading configuration"
-msgstr ""
+msgstr "Загрузка конфигурации"
 
 msgid "Configuration loaded successfully"
-msgstr ""
+msgstr "Конфигурация успешно загружена"
 
 msgid "Configuration error"
-msgstr ""
+msgstr "Ошибка конфигурации"
 
 msgid "Invalid server URL"
-msgstr ""
+msgstr "Неверный URL сервера"
 
 # System information
 msgid "Gathering system information"
-msgstr ""
+msgstr "Сбор системной информации"
 
 msgid "System information collected"
-msgstr ""
+msgstr "Системная информация собрана"
 
 msgid "Failed to collect system information"
-msgstr ""
+msgstr "Ошибка сбора системной информации"
 
 # Command execution
 msgid "Executing command"
-msgstr ""
+msgstr "Выполнение команды"
 
 msgid "Command executed successfully"
-msgstr ""
+msgstr "Команда выполнена успешно"
 
 msgid "Command execution failed"
-msgstr ""
+msgstr "Ошибка выполнения команды"
 
 msgid "Command not permitted"
-msgstr ""
+msgstr "Команда не разрешена"
 
 # File operations
 msgid "File not found"
-msgstr ""
+msgstr "Файл не найден"
 
 msgid "Permission denied"
-msgstr ""
+msgstr "Доступ запрещен"
 
 msgid "File operation completed"
-msgstr ""
+msgstr "Операция с файлом завершена"
 
 # Service management
 msgid "Service started"
-msgstr ""
+msgstr "Служба запущена"
 
 msgid "Service stopped"
-msgstr ""
+msgstr "Служба остановлена"
 
 msgid "Service installation completed"
-msgstr ""
+msgstr "Установка службы завершена"
 
 msgid "Service removal completed"
-msgstr ""
+msgstr "Удаление службы завершено"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr ""
+msgstr "Произошла неожиданная ошибка"
 
 msgid "Network error"
-msgstr ""
+msgstr "Ошибка сети"
 
 msgid "Authentication failed"
-msgstr ""
+msgstr "Ошибка аутентификации"
 
 msgid "Invalid response from server"
-msgstr ""
+msgstr "Неверный ответ от сервера"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "Отправка начальных данных версии ОС..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "Начальные обновления данных успешно отправлены"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "Ошибка отправки начальных обновлений данных: %s"
