@@ -93,3 +93,13 @@ msgstr "Autenticazione fallita"
 
 msgid "Invalid response from server"
 msgstr ""
+
+# OS Version Update Messages
+msgid "Sending initial OS version data..."
+msgstr ""
+
+msgid "Initial data updates sent successfully"
+msgstr ""
+
+msgid "Failed to send initial data updates: %s"
+msgstr ""
