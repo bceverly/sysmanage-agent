@@ -372,7 +372,7 @@ class TestCertificateStoreError:
             # Create read-only directory to simulate permission error
             read_only_dir = Path(temp_dir) / "readonly"
             read_only_dir.mkdir()
-            os.chmod(read_only_dir, 0o555)  # Read and execute only
+            os.chmod(read_only_dir, 0o555)  # Read and execute only  # nosec B103
 
             cert_data = {
                 "certificate": "CERT",
@@ -395,7 +395,7 @@ class TestCertificateStoreError:
             # Clean up - restore permissions first
             read_only_dir = Path(temp_dir) / "readonly"
             if read_only_dir.exists():
-                os.chmod(read_only_dir, 0o755)
+                os.chmod(read_only_dir, 0o755)  # nosec B103
             shutil.rmtree(temp_dir)
 
 
