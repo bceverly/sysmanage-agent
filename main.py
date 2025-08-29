@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import platform
+import random
 import socket
 import ssl
 import uuid
@@ -55,7 +56,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
         self.websocket = None
+        self.connected = False
         self.running = False
+        self.connection_failures = 0
 
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
@@ -170,12 +173,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def send_message(self, message: Dict[str, Any]):
         """Send a message to the server."""
-        if self.websocket:
-            try:
-                await self.websocket.send(json.dumps(message))
-                self.logger.debug("Sent message: %s", message["message_type"])
-            except Exception as e:
-                self.logger.error("Failed to send message: %s", e)
+        if not self.connected or not self.websocket:
+            self.logger.warning("Cannot send message: not connected to server")
+            return False
+
+        try:
+            await self.websocket.send(json.dumps(message))
+            self.logger.debug("Sent message: %s", message["message_type"])
+            return True
+        except websockets.ConnectionClosed:
+            self.logger.warning("Connection closed while sending message")
+            self.connected = False
+            self.websocket = None
+            return False
+        except Exception as e:
+            self.logger.error("Failed to send message: %s", e)
+            # Assume connection is broken on any send failure
+            self.connected = False
+            self.websocket = None
+            return False
 
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server."""
@@ -393,8 +409,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except websockets.ConnectionClosed:
             self.logger.info("Connection to server closed")
+            self.connected = False
+            self.websocket = None
         except Exception as e:
             self.logger.error("Message receiver error: %s", e)
+            self.connected = False
+            self.websocket = None
 
     async def message_sender(self):
         """Handle periodic outgoing messages to server."""
@@ -598,7 +618,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         self.logger.info("Starting WebSocket connection...")
 
-        reconnect_interval = self.config.get_reconnect_interval()
+        base_reconnect_interval = self.config.get_reconnect_interval()
 
         while True:
             try:
@@ -631,7 +651,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     websocket_url, ssl=ssl_context
                 ) as websocket:
                     self.websocket = websocket
+                    self.connected = True
                     self.running = True
+                    self.connection_failures = (
+                        0  # Reset failure count on successful connection
+                    )
                     self.logger.info(_("Connected to server successfully"))
 
                     # Send OS version data immediately after connection
@@ -641,21 +665,32 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     await asyncio.gather(self.message_sender(), self.message_receiver())
 
             except websockets.ConnectionClosed:
-                self.logger.warning(
-                    "Connection lost, attempting to reconnect in %s seconds...",
-                    reconnect_interval,
-                )
+                self.logger.warning("WebSocket connection closed by server")
             except Exception as e:
-                self.logger.error(
-                    "Connection error: %s, retrying in %s seconds...",
-                    e,
-                    reconnect_interval,
-                )
+                self.logger.error("Connection error: %s", e)
 
+            # Clean up connection state
+            self.connected = False
+            self.websocket = None
             self.running = False
+            self.connection_failures += 1
 
             # Only reconnect if auto-reconnect is enabled
             if self.config.should_auto_reconnect():
+                # Calculate exponential backoff with jitter
+                reconnect_interval = min(
+                    base_reconnect_interval * (2 ** min(self.connection_failures, 6)),
+                    300,
+                )
+                # Add jitter to prevent thundering herd
+                jitter = random.uniform(0.5, 1.5)
+                reconnect_interval *= jitter
+
+                self.logger.info(
+                    "Reconnecting in %.1f seconds (attempt %d)",
+                    reconnect_interval,
+                    self.connection_failures + 1,
+                )
                 await asyncio.sleep(reconnect_interval)
             else:
                 self.logger.info("Auto-reconnect disabled, exiting...")

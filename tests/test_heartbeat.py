@@ -64,6 +64,7 @@ i18n:
         ):
             agent = SysManageAgent(agent_config)
             agent.websocket = AsyncMock()
+            agent.connected = True  # Set connected flag for tests
             agent.logger = Mock()
             return agent
 
@@ -103,22 +104,28 @@ i18n:
         """Test successful message sending."""
         test_message = {"message_type": "heartbeat", "data": {}}
 
-        await mock_agent.send_message(test_message)
+        result = await mock_agent.send_message(test_message)
 
+        # Should return True on success
+        assert result is True
         mock_agent.websocket.send.assert_called_once()
         mock_agent.logger.debug.assert_called_with("Sent message: %s", "heartbeat")
 
     @pytest.mark.asyncio
     async def test_send_message_failure(self, mock_agent):
         """Test message sending failure."""
-        mock_agent.websocket.send.side_effect = Exception("Connection error")
+        error = Exception("Connection error")
+        mock_agent.websocket.send.side_effect = error
         test_message = {"message_type": "heartbeat", "data": {}}
 
-        await mock_agent.send_message(test_message)
+        result = await mock_agent.send_message(test_message)
 
-        mock_agent.logger.error.assert_called_with(
-            "Failed to send message: %s", mock_agent.websocket.send.side_effect
-        )
+        # Should return False on failure
+        assert result is False
+        mock_agent.logger.error.assert_called_with("Failed to send message: %s", error)
+        # Connection should be marked as disconnected
+        assert mock_agent.connected is False
+        assert mock_agent.websocket is None
 
     @pytest.mark.asyncio
     async def test_send_message_no_websocket(self, mock_agent):
@@ -126,9 +133,13 @@ i18n:
         mock_agent.websocket = None
         test_message = {"message_type": "heartbeat", "data": {}}
 
-        await mock_agent.send_message(test_message)
+        result = await mock_agent.send_message(test_message)
 
-        # Should not raise an exception, just do nothing
+        # Should return False and log warning
+        assert result is False
+        mock_agent.logger.warning.assert_called_with(
+            "Cannot send message: not connected to server"
+        )
         mock_agent.logger.debug.assert_not_called()
         mock_agent.logger.error.assert_not_called()
 

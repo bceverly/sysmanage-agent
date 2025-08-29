@@ -184,6 +184,7 @@ i18n:
 
             agent = SysManageAgent(str(config_file))
             agent.websocket = AsyncMock()
+            agent.connected = True  # Set connected flag
             agent.logger = Mock()
 
             await agent.send_initial_data_updates()
