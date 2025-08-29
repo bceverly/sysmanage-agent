@@ -151,11 +151,16 @@ class SysManageAgent:
 
     def create_heartbeat_message(self):
         """Create heartbeat message."""
+        # Include system info in heartbeat to allow server to recreate deleted hosts
+        system_info = self.registration.get_system_info()
         return self.create_message(
             "heartbeat",
             {
                 "agent_status": "healthy",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
+                "hostname": system_info["hostname"],
+                "ipv4": system_info["ipv4"],
+                "ipv6": system_info["ipv6"],
             },
         )
 
@@ -167,6 +172,8 @@ class SysManageAgent:
                 self.logger.debug("Sent message: %s", message["message_type"])
             except Exception as e:
                 self.logger.error("Failed to send message: %s", e)
+                # Re-raise the exception to trigger reconnection
+                raise
 
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server."""
@@ -325,6 +332,16 @@ class SysManageAgent:
                         self.logger.debug(
                             "Server acknowledged message: %s", data.get("message_id")
                         )
+                    elif message_type == "error":
+                        # Handle error messages from server
+                        error_data = data.get("data", {})
+                        error_code = error_data.get("error_code", "unknown")
+                        error_message = error_data.get("error_message", "No error message provided")
+                        self.logger.error("Server error [%s]: %s", error_code, error_message)
+
+                        # If it's a host not approved error, log more specific message
+                        if error_code == "host_not_approved":
+                            self.logger.warning("Host registration is pending approval. WebSocket connection will be closed.")
                     else:
                         self.logger.warning("Unknown message type: %s", message_type)
 

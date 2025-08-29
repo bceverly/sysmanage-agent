@@ -36,7 +36,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 The agent operates as a persistent service that:
 1. **Auto-discovers** SysManage servers on the network (if no configuration exists)
 2. **Connects** to SysManage Server via secure WebSocket with authentication tokens
-3. **Registers** itself with system information (hostname, IP, platform)
+3. **Registers** itself with system information (hostname, IP, platform) and awaits administrator approval
 4. **Monitors** system health and sends periodic heartbeat messages
 5. **Listens** for commands and configuration updates from the server
 6. **Executes** commands securely with validation and resource limits
@@ -378,6 +378,21 @@ df -h /var/log
 - **Command Validation**: All incoming commands validated before execution
 - **Resource Limits**: Built-in timeouts and resource constraints
 - **Audit Logging**: All actions logged for security auditing
+
+### Agent Approval Process
+
+SysManage implements a manual approval system to ensure only authorized agents can connect:
+
+- **Initial Registration**: When the agent first connects, it registers with the server but is placed in "pending" status
+- **Connection Blocked**: Agents with "pending" or "rejected" status cannot establish WebSocket connections for monitoring
+- **Administrator Approval Required**: A system administrator must manually approve each new agent through the SysManage web interface
+- **Approval Workflow**: 
+  1. Agent registers and shows up as "pending" in the server's Hosts page
+  2. Administrator reviews and approves or rejects the agent
+  3. Once approved, the agent can establish full WebSocket connectivity
+- **Re-approval**: If an approved agent is deleted from the server and reconnects, it will require re-approval
+
+**Important**: The agent will continue attempting to connect even while in pending status, but will only be able to complete the full connection process once approved by an administrator.
 
 ### Best Practices
 1. **Dedicated User**: Run agent as dedicated system user, not root
