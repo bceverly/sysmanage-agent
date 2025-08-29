@@ -209,6 +209,7 @@ i18n:
 
             agent = SysManageAgent(str(config_file))
             agent.websocket = AsyncMock()
+            agent.connected = True  # Set connected flag
             agent.logger = Mock()
 
             result = await agent.update_os_version()
@@ -254,6 +255,7 @@ i18n:
 
             agent = SysManageAgent(str(config_file))
             agent.websocket = AsyncMock()
+            agent.connected = True  # Set connected flag
             agent.logger = Mock()
 
             # Create command message
