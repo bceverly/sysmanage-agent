@@ -17,73 +17,73 @@ msgid "Connection failed"
 msgstr "Connessione fallita"
 
 msgid "Disconnected from server"
-msgstr ""
+msgstr "Disconnesso dal server"
 
 msgid "Reconnecting to server"
-msgstr ""
+msgstr "Riconnessione al server"
 
 # Configuration
 msgid "Loading configuration"
-msgstr ""
+msgstr "Caricamento configurazione"
 
 msgid "Configuration loaded successfully"
-msgstr ""
+msgstr "Configurazione caricata con successo"
 
 msgid "Configuration error"
-msgstr ""
+msgstr "Errore di configurazione"
 
 msgid "Invalid server URL"
-msgstr ""
+msgstr "URL del server non valido"
 
 # System information
 msgid "Gathering system information"
-msgstr ""
+msgstr "Raccolta informazioni di sistema"
 
 msgid "System information collected"
-msgstr ""
+msgstr "Informazioni di sistema raccolte"
 
 msgid "Failed to collect system information"
-msgstr ""
+msgstr "Errore nella raccolta delle informazioni di sistema"
 
 # Command execution
 msgid "Executing command"
-msgstr ""
+msgstr "Esecuzione comando"
 
 msgid "Command executed successfully"
-msgstr ""
+msgstr "Comando eseguito con successo"
 
 msgid "Command execution failed"
-msgstr ""
+msgstr "Esecuzione comando fallita"
 
 msgid "Command not permitted"
-msgstr ""
+msgstr "Comando non permesso"
 
 # File operations
 msgid "File not found"
-msgstr ""
+msgstr "File non trovato"
 
 msgid "Permission denied"
-msgstr ""
+msgstr "Permesso negato"
 
 msgid "File operation completed"
-msgstr ""
+msgstr "Operazione file completata"
 
 # Service management
 msgid "Service started"
-msgstr ""
+msgstr "Servizio avviato"
 
 msgid "Service stopped"
-msgstr ""
+msgstr "Servizio fermato"
 
 msgid "Service installation completed"
-msgstr ""
+msgstr "Installazione servizio completata"
 
 msgid "Service removal completed"
-msgstr ""
+msgstr "Rimozione servizio completata"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr ""
+msgstr "Si è verificato un errore imprevisto"
 
 msgid "Network error"
 msgstr "Errore di rete"
@@ -92,14 +92,14 @@ msgid "Authentication failed"
 msgstr "Autenticazione fallita"
 
 msgid "Invalid response from server"
-msgstr ""
+msgstr "Risposta non valida dal server"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "Invio dati iniziali versione OS..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "Aggiornamenti dati iniziali inviati con successo"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "Errore nell'invio degli aggiornamenti dati iniziali: %s"

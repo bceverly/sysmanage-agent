@@ -1,105 +1,105 @@
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
-"Language: zh_CN\n"
+"Language: zh_TW\n"
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
-msgstr "正在启动 SysManage 代理"
+msgstr "正在啟動 SysManage 代理"
 
 msgid "Connecting to server"
-msgstr "正在连接服务器"
+msgstr "正在連接伺服器"
 
 msgid "Connected to server successfully"
-msgstr "成功连接到服务器"
+msgstr "成功連接到伺服器"
 
 msgid "Connection failed"
-msgstr "连接失败"
+msgstr "連接失敗"
 
 msgid "Disconnected from server"
-msgstr "与服务器断开连接"
+msgstr "與伺服器斷開連接"
 
 msgid "Reconnecting to server"
-msgstr "正在重新连接服务器"
+msgstr "正在重新連接伺服器"
 
 # Configuration
 msgid "Loading configuration"
-msgstr "正在加载配置"
+msgstr "正在載入配置"
 
 msgid "Configuration loaded successfully"
-msgstr "配置加载成功"
+msgstr "配置載入成功"
 
 msgid "Configuration error"
-msgstr "配置错误"
+msgstr "配置錯誤"
 
 msgid "Invalid server URL"
-msgstr "无效的服务器 URL"
+msgstr "無效的伺服器 URL"
 
 # System information
 msgid "Gathering system information"
-msgstr "正在收集系统信息"
+msgstr "正在收集系統資訊"
 
 msgid "System information collected"
-msgstr "系统信息收集完成"
+msgstr "系統資訊收集完成"
 
 msgid "Failed to collect system information"
-msgstr "收集系统信息失败"
+msgstr "收集系統資訊失敗"
 
 # Command execution
 msgid "Executing command"
-msgstr "正在执行命令"
+msgstr "正在執行命令"
 
 msgid "Command executed successfully"
-msgstr "命令执行成功"
+msgstr "命令執行成功"
 
 msgid "Command execution failed"
-msgstr "命令执行失败"
+msgstr "命令執行失敗"
 
 msgid "Command not permitted"
-msgstr "命令不被允许"
+msgstr "命令不被允許"
 
 # File operations
 msgid "File not found"
-msgstr "找不到文件"
+msgstr "找不到檔案"
 
 msgid "Permission denied"
-msgstr "访问被拒绝"
+msgstr "存取被拒絕"
 
 msgid "File operation completed"
-msgstr "文件操作完成"
+msgstr "檔案操作完成"
 
 # Service management
 msgid "Service started"
-msgstr "服务已启动"
+msgstr "服務已啟動"
 
 msgid "Service stopped"
-msgstr "服务已停止"
+msgstr "服務已停止"
 
 msgid "Service installation completed"
-msgstr "服务安装完成"
+msgstr "服務安裝完成"
 
 msgid "Service removal completed"
-msgstr "服务移除完成"
+msgstr "服務移除完成"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr "发生意外错误"
+msgstr "發生意外錯誤"
 
 msgid "Network error"
-msgstr "网络错误"
+msgstr "網路錯誤"
 
 msgid "Authentication failed"
-msgstr "身份验证失败"
+msgstr "驗證失敗"
 
 msgid "Invalid response from server"
-msgstr "来自服务器的无效响应"
+msgstr "來自伺服器的無效回應"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr "正在发送初始操作系统版本数据..."
+msgstr "正在傳送初始作業系統版本資料..."
 
 msgid "Initial data updates sent successfully"
-msgstr "初始数据更新发送成功"
+msgstr "初始資料更新傳送成功"
 
 msgid "Failed to send initial data updates: %s"
-msgstr "发送初始数据更新失败：%s"
+msgstr "傳送初始資料更新失敗：%s"

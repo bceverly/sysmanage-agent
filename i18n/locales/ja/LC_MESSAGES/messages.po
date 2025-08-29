@@ -95,10 +95,10 @@ msgid "Invalid response from server"
 msgstr "サーバーからの無効な応答"
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "初期OSバージョンデータを送信しています..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "初期データ更新が正常に送信されました"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "初期データ更新の送信に失敗しました: %s"

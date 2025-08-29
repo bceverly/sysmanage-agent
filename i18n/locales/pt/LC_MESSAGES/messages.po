@@ -5,101 +5,101 @@ msgstr ""
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
-msgstr ""
+msgstr "Iniciando Agente SysManage"
 
 msgid "Connecting to server"
-msgstr ""
+msgstr "Conectando ao servidor"
 
 msgid "Connected to server successfully"
-msgstr ""
+msgstr "Conectado ao servidor com sucesso"
 
 msgid "Connection failed"
-msgstr ""
+msgstr "Falha na conexão"
 
 msgid "Disconnected from server"
-msgstr ""
+msgstr "Desconectado do servidor"
 
 msgid "Reconnecting to server"
-msgstr ""
+msgstr "Reconectando ao servidor"
 
 # Configuration
 msgid "Loading configuration"
-msgstr ""
+msgstr "Carregando configuração"
 
 msgid "Configuration loaded successfully"
-msgstr ""
+msgstr "Configuração carregada com sucesso"
 
 msgid "Configuration error"
-msgstr ""
+msgstr "Erro de configuração"
 
 msgid "Invalid server URL"
-msgstr ""
+msgstr "URL do servidor inválida"
 
 # System information
 msgid "Gathering system information"
-msgstr ""
+msgstr "Coletando informações do sistema"
 
 msgid "System information collected"
-msgstr ""
+msgstr "Informações do sistema coletadas"
 
 msgid "Failed to collect system information"
-msgstr ""
+msgstr "Falha ao coletar informações do sistema"
 
 # Command execution
 msgid "Executing command"
-msgstr ""
+msgstr "Executando comando"
 
 msgid "Command executed successfully"
-msgstr ""
+msgstr "Comando executado com sucesso"
 
 msgid "Command execution failed"
-msgstr ""
+msgstr "Falha na execução do comando"
 
 msgid "Command not permitted"
-msgstr ""
+msgstr "Comando não permitido"
 
 # File operations
 msgid "File not found"
-msgstr ""
+msgstr "Arquivo não encontrado"
 
 msgid "Permission denied"
-msgstr ""
+msgstr "Permissão negada"
 
 msgid "File operation completed"
-msgstr ""
+msgstr "Operação de arquivo concluída"
 
 # Service management
 msgid "Service started"
-msgstr ""
+msgstr "Serviço iniciado"
 
 msgid "Service stopped"
-msgstr ""
+msgstr "Serviço parado"
 
 msgid "Service installation completed"
-msgstr ""
+msgstr "Instalação do serviço concluída"
 
 msgid "Service removal completed"
-msgstr ""
+msgstr "Remoção do serviço concluída"
 
 # Error messages
 msgid "An unexpected error occurred"
-msgstr ""
+msgstr "Ocorreu um erro inesperado"
 
 msgid "Network error"
-msgstr ""
+msgstr "Erro de rede"
 
 msgid "Authentication failed"
-msgstr ""
+msgstr "Autenticação falhou"
 
 msgid "Invalid response from server"
-msgstr ""
+msgstr "Resposta inválida do servidor"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
-msgstr ""
+msgstr "Enviando dados iniciais da versão do SO..."
 
 msgid "Initial data updates sent successfully"
-msgstr ""
+msgstr "Atualizações de dados iniciais enviadas com sucesso"
 
 msgid "Failed to send initial data updates: %s"
-msgstr ""
+msgstr "Falha ao enviar atualizações de dados iniciais: %s"
