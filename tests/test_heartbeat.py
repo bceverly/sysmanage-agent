@@ -50,7 +50,18 @@ i18n:
     @pytest.fixture
     def mock_agent(self, agent_config):
         """Create a mock SysManage agent."""
-        with patch("main.ClientRegistration"), patch("main.set_language"):
+        mock_registration = Mock()
+        mock_registration.get_system_info.return_value = {
+            "hostname": "test-host.example.com",
+            "platform": "Linux",
+            "ipv4": "192.168.1.100",
+            "ipv6": "2001:db8::1",
+            "architecture": "x86_64",
+            "processor": "Intel Core i7",
+        }
+        with patch("main.ClientRegistration", return_value=mock_registration), patch(
+            "main.set_language"
+        ):
             agent = SysManageAgent(agent_config)
             agent.websocket = AsyncMock()
             agent.logger = Mock()
@@ -65,6 +76,10 @@ i18n:
         assert "timestamp" in message
         assert message["data"]["agent_status"] == "healthy"
         assert isinstance(message["data"]["timestamp"], str)
+        # Check for new fields added to support host recreation
+        assert message["data"]["hostname"] == "test-host.example.com"
+        assert message["data"]["ipv4"] == "192.168.1.100"
+        assert message["data"]["ipv6"] == "2001:db8::1"
 
     def test_create_message_structure(self, mock_agent):
         """Test general message creation structure."""
