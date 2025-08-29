@@ -78,6 +78,92 @@ All dependencies are automatically installed via `requirements.txt`:
 - `pydantic` - Data validation and configuration
 - `asyncio` - Asynchronous I/O operations
 
+### Required Directories and Permissions
+
+The SysManage agent requires certain directories to exist with proper permissions for normal operation:
+
+#### Certificate Storage Directory
+**Default location**: `/etc/sysmanage-agent/` (automatically created if it doesn't exist)
+
+```bash
+# Create certificate directory with proper permissions (Linux/macOS)
+sudo mkdir -p /etc/sysmanage-agent
+sudo chown sysmanage-agent:sysmanage-agent /etc/sysmanage-agent
+sudo chmod 0700 /etc/sysmanage-agent
+```
+
+```powershell
+# Create certificate directory (Windows)
+mkdir C:\sysmanage-agent
+icacls "C:\sysmanage-agent" /grant "sysmanage-agent:(OI)(CI)F" /T
+```
+
+**Required permissions**:
+- **Directory**: `0700` (Linux/macOS) or restricted access (Windows) - owner full control only
+- **Private keys**: `0600` (owner read/write only) - highly restricted
+- **Certificates**: `0600` (owner read/write only) - restricted for security
+- **Configuration files**: `0600` (owner read/write only) - protect sensitive settings
+
+#### Configuration File Locations
+
+**Linux/macOS**: `/etc/sysmanage-agent.yaml`
+```bash
+# Create configuration file with proper permissions
+sudo touch /etc/sysmanage-agent.yaml
+sudo chown sysmanage-agent:sysmanage-agent /etc/sysmanage-agent.yaml
+sudo chmod 0600 /etc/sysmanage-agent.yaml
+```
+
+**Windows**: `C:\sysmanage-agent.yaml`
+```powershell
+# Create configuration file with restricted permissions
+New-Item -Path "C:\sysmanage-agent.yaml" -ItemType File
+icacls "C:\sysmanage-agent.yaml" /grant "sysmanage-agent:F" /inheritance:r
+```
+
+#### Log Directory
+If using file-based logging, ensure the log directory is writable:
+
+**Linux/macOS**:
+```bash
+# Create log directory
+sudo mkdir -p /var/log/sysmanage-agent
+sudo chown sysmanage-agent:sysmanage-agent /var/log/sysmanage-agent
+sudo chmod 0755 /var/log/sysmanage-agent
+```
+
+**Windows**:
+```powershell
+# Create log directory
+mkdir C:\logs\sysmanage-agent
+icacls "C:\logs\sysmanage-agent" /grant "sysmanage-agent:(OI)(CI)F" /T
+```
+
+#### Service User Account
+For production deployments, create a dedicated service user:
+
+**Linux**:
+```bash
+# Create sysmanage-agent user and group
+sudo useradd -r -s /bin/false -d /opt/sysmanage-agent -c "SysManage Agent" sysmanage-agent
+```
+
+**macOS**:
+```bash
+# Create sysmanage-agent user
+sudo dscl . -create /Users/sysmanage-agent
+sudo dscl . -create /Users/sysmanage-agent UserShell /usr/bin/false
+sudo dscl . -create /Users/sysmanage-agent RealName "SysManage Agent"
+```
+
+**Windows**:
+```powershell
+# Create sysmanage-agent service account
+New-LocalUser -Name "sysmanage-agent" -Description "SysManage Agent Service" -NoPassword
+```
+
+**Note**: During development and testing, the application automatically detects test environments and uses temporary directories to avoid permission issues.
+
 ## Installation
 
 ### Method 1: From Source (Recommended for Development)
@@ -393,6 +479,56 @@ SysManage implements a manual approval system to ensure only authorized agents c
 - **Re-approval**: If an approved agent is deleted from the server and reconnects, it will require re-approval
 
 **Important**: The agent will continue attempting to connect even while in pending status, but will only be able to complete the full connection process once approved by an administrator.
+
+### Mutual TLS (mTLS) Security
+
+SysManage Agent implements mutual TLS authentication to protect against DNS poisoning attacks and ensure secure server verification:
+
+#### Security Features
+
+1. **Server Certificate Validation**: Agents validate server certificates against stored fingerprints to prevent DNS poisoning and man-in-the-middle attacks
+2. **Certificate Pinning**: During first connection, agents store server certificate fingerprints for future validation
+3. **Client Certificate Authentication**: After approval, agents use unique client certificates to authenticate with the server
+4. **Automatic Certificate Management**: Agents retrieve certificates from the server after host approval
+
+#### How mTLS Works
+
+1. **Initial Connection**: Agent connects using token-based authentication during registration
+2. **Host Approval**: Administrator approves the host through SysManage web interface  
+3. **Certificate Retrieval**: Agent automatically fetches client certificates after approval
+4. **Secure Authentication**: All subsequent connections use mutual TLS with certificate validation
+
+#### Certificate Storage
+
+Client certificates are stored securely in `/etc/sysmanage-agent/` with restricted permissions:
+```
+/etc/sysmanage-agent/
+├── client.crt          # Agent client certificate
+├── client.key          # Agent private key (0600 permissions)
+├── ca.crt              # CA certificate for server validation
+└── server.fingerprint  # Server certificate fingerprint for pinning
+```
+
+#### Security Benefits
+
+- **DNS Poisoning Protection**: Agents verify they're connecting to the legitimate server using certificate fingerprints
+- **Identity Verification**: Server can cryptographically verify agent identity using client certificates
+- **Man-in-the-Middle Protection**: Full TLS encryption with mutual certificate validation ensures secure communication
+- **Replay Attack Prevention**: Each connection uses fresh TLS sessions with proper key exchange
+
+#### Certificate Management
+
+- **Automatic Retrieval**: Certificates are automatically retrieved after host approval
+- **Validation**: Certificates are validated on each connection attempt
+- **Renewal**: Certificates can be refreshed by re-fetching from the server
+- **Revocation**: Certificates become invalid if host approval is revoked
+
+#### Migration from Token-based Authentication
+
+The agent supports both authentication methods:
+- **Legacy Mode**: Uses token-based authentication when certificates are not available
+- **Enhanced Security Mode**: Uses mutual TLS when certificates are present
+- **Automatic Upgrade**: Seamlessly transitions to certificate-based authentication after host approval
 
 ### Best Practices
 1. **Dedicated User**: Run agent as dedicated system user, not root

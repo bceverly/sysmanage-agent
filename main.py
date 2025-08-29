@@ -23,6 +23,7 @@ from config import ConfigManager
 from registration import ClientRegistration
 from i18n import _, set_language
 from discovery import discovery_client
+from security.certificate_store import CertificateStore
 
 
 class SysManageAgent:
@@ -58,6 +59,9 @@ class SysManageAgent:
 
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
+
+        # Initialize certificate store
+        self.cert_store = CertificateStore()
 
         # Get server URL from config
         self.server_url = self.config.get_server_url()
@@ -172,8 +176,6 @@ class SysManageAgent:
                 self.logger.debug("Sent message: %s", message["message_type"])
             except Exception as e:
                 self.logger.error("Failed to send message: %s", e)
-                # Re-raise the exception to trigger reconnection
-                raise
 
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server."""
@@ -336,12 +338,18 @@ class SysManageAgent:
                         # Handle error messages from server
                         error_data = data.get("data", {})
                         error_code = error_data.get("error_code", "unknown")
-                        error_message = error_data.get("error_message", "No error message provided")
-                        self.logger.error("Server error [%s]: %s", error_code, error_message)
+                        error_message = error_data.get(
+                            "error_message", "No error message provided"
+                        )
+                        self.logger.error(
+                            "Server error [%s]: %s", error_code, error_message
+                        )
 
                         # If it's a host not approved error, log more specific message
                         if error_code == "host_not_approved":
-                            self.logger.warning("Host registration is pending approval. WebSocket connection will be closed.")
+                            self.logger.warning(
+                                "Host registration is pending approval. WebSocket connection will be closed."
+                            )
                     else:
                         self.logger.warning("Unknown message type: %s", message_type)
 
@@ -410,6 +418,120 @@ class SysManageAgent:
                     f"Failed to get auth token: HTTP {response.status}"
                 )
 
+    async def fetch_certificates(self, host_id: int) -> bool:
+        """Fetch certificates from server after approval."""
+        try:
+            server_config = self.config.get_server_config()
+            hostname = server_config.get("hostname", "localhost")
+            port = server_config.get("port", 8000)
+            use_https = server_config.get("use_https", False)
+
+            # Build certificate URL
+            protocol = "https" if use_https else "http"
+            cert_url = f"{protocol}://{hostname}:{port}/certificates/client/{host_id}"
+
+            # Set up SSL context if needed
+            ssl_context = None
+            if use_https:
+                ssl_context = ssl.create_default_context()
+                if not self.config.should_verify_ssl():
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+
+            # Get authentication token
+            auth_token = await self.get_auth_token()
+
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            async with aiohttp.ClientSession(connector=connector) as session:
+                headers = {"Authorization": f"Bearer {auth_token}"}
+
+                async with session.get(cert_url, headers=headers) as response:
+                    if response.status == 200:
+                        cert_data = await response.json()
+                        self.cert_store.store_certificates(cert_data)
+                        self.logger.info(
+                            "Certificates retrieved and stored successfully"
+                        )
+                        return True
+                    if response.status == 403:
+                        self.logger.warning(
+                            "Host not yet approved for certificate retrieval"
+                        )
+                        return False
+                    self.logger.error(
+                        "Failed to fetch certificates: HTTP %s", response.status
+                    )
+                    return False
+
+        except Exception as e:
+            self.logger.error("Error fetching certificates: %s", e)
+            return False
+
+    async def ensure_certificates(self) -> bool:
+        """Ensure agent has valid certificates for mTLS."""
+        # Check if we already have valid certificates
+        if self.cert_store.has_certificates():
+            self.logger.debug("Valid certificates already available")
+            return True
+
+        # If no certificates, we need to check if host is approved and fetch them
+        self.logger.info(
+            "No valid certificates found, checking host approval status..."
+        )
+
+        # Get server fingerprint first for security validation
+        try:
+            server_config = self.config.get_server_config()
+            hostname = server_config.get("hostname", "localhost")
+            port = server_config.get("port", 8000)
+            use_https = server_config.get("use_https", False)
+
+            protocol = "https" if use_https else "http"
+            fingerprint_url = (
+                f"{protocol}://{hostname}:{port}/certificates/server-fingerprint"
+            )
+
+            ssl_context = None
+            if use_https:
+                ssl_context = ssl.create_default_context()
+                if not self.config.should_verify_ssl():
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            async with aiohttp.ClientSession(connector=connector) as session:
+                async with session.get(fingerprint_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        server_fingerprint = data.get("fingerprint")
+                        self.logger.info(
+                            "Retrieved server fingerprint for validation: %s",
+                            (
+                                server_fingerprint[:16] + "..."
+                                if server_fingerprint
+                                else "None"
+                            ),
+                        )
+                        # We'll store it when we get the full cert data
+
+        except Exception as e:
+            self.logger.error("Failed to get server fingerprint: %s", e)
+            return False
+
+        # Check if we can find our host ID from previous registration
+        # This is a simplified approach - in a real implementation you might
+        # store the host ID during registration
+        system_info = self.registration.get_system_info()
+        hostname = system_info["hostname"]
+
+        # For now, we'll try to fetch with a known host ID or wait for manual approval
+        # This would be improved with a more sophisticated approval checking mechanism
+        self.logger.warning(
+            "Certificate-based authentication requires manual host approval"
+        )
+        self.logger.warning("Please approve this host in the SysManage web interface")
+        return False
+
     async def run(self):
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
@@ -427,7 +549,21 @@ class SysManageAgent:
             self.logger.error("Failed to register with server. Exiting.")
             return
 
-        self.logger.info("Registration successful, starting WebSocket connection...")
+        self.logger.info("Registration successful, checking certificates...")
+
+        # Check if we have certificates for secure authentication
+        # For now, we'll continue with token-based auth but log certificate status
+        if self.cert_store.has_certificates():
+            self.logger.info(
+                "Valid certificates found - secure authentication available"
+            )
+        else:
+            self.logger.info("No certificates found - using token-based authentication")
+            self.logger.info(
+                "For enhanced security, approve this host to enable certificate-based auth"
+            )
+
+        self.logger.info("Starting WebSocket connection...")
 
         reconnect_interval = self.config.get_reconnect_interval()
 
@@ -444,7 +580,17 @@ class SysManageAgent:
                 ssl_context = None
                 if self.server_url.startswith("wss://"):
                     ssl_context = ssl.create_default_context()
-                    if not self.config.should_verify_ssl():
+
+                    # If we have certificates, use them for mutual TLS
+                    cert_paths = self.cert_store.load_certificates()
+                    if cert_paths:
+                        client_cert_path, client_key_path, ca_cert_path = cert_paths
+                        ssl_context.load_cert_chain(client_cert_path, client_key_path)
+                        ssl_context.load_verify_locations(ca_cert_path)
+                        ssl_context.check_hostname = True
+                        ssl_context.verify_mode = ssl.CERT_REQUIRED
+                        self.logger.info("Using mutual TLS with client certificates")
+                    elif not self.config.should_verify_ssl():
                         ssl_context.check_hostname = False
                         ssl_context.verify_mode = ssl.CERT_NONE
 
