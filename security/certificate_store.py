@@ -28,16 +28,28 @@ class CertificateStore:
             config_dir = tempfile.mkdtemp(prefix="sysmanage_agent_test_certs_")
 
         self.config_dir = Path(config_dir)
-        self.config_dir.mkdir(parents=True, exist_ok=True)
+
+        # Try to create the system directory, fall back to local directory if permission denied
+        try:
+            self.config_dir.mkdir(parents=True, exist_ok=True)
+            os.chmod(self.config_dir, 0o700)
+        except PermissionError:
+            # Fall back to local directory in the same location as the running script
+            import sys
+
+            script_dir = Path(sys.argv[0]).parent.resolve()
+            fallback_dir = script_dir / ".sysmanage-agent"
+
+            print(f"⚠️  Cannot access {config_dir}, falling back to {fallback_dir}")
+            self.config_dir = fallback_dir
+            self.config_dir.mkdir(parents=True, exist_ok=True)
+            os.chmod(self.config_dir, 0o700)
 
         # Certificate file paths
         self.client_cert_path = self.config_dir / "client.crt"
         self.client_key_path = self.config_dir / "client.key"
         self.ca_cert_path = self.config_dir / "ca.crt"
         self.server_fingerprint_path = self.config_dir / "server.fingerprint"
-
-        # Set restrictive permissions on config directory
-        os.chmod(self.config_dir, 0o700)
 
     def store_certificates(self, cert_data: Dict[str, str]) -> None:
         """

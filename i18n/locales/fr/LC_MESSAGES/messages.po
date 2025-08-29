@@ -93,3 +93,13 @@ msgstr "Échec de l'authentification"
 
 msgid "Invalid response from server"
 msgstr "Réponse invalide du serveur"
+
+# OS Version Update Messages
+msgid "Sending initial OS version data..."
+msgstr "Envoi des données initiales de version du système d'exploitation..."
+
+msgid "Initial data updates sent successfully"
+msgstr "Données initiales envoyées avec succès"
+
+msgid "Failed to send initial data updates: %s"
+msgstr "Échec de l'envoi des données initiales : %s"

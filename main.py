@@ -26,7 +26,7 @@ from discovery import discovery_client
 from security.certificate_store import CertificateStore
 
 
-class SysManageAgent:
+class SysManageAgent:  # pylint: disable=too-many-public-methods
     """Main agent class for SysManage fleet management."""
 
     def __init__(self, config_file: str = "client.yaml"):
@@ -201,6 +201,8 @@ class SysManageAgent:
                 result = await self.restart_service(parameters)
             elif command_type == "reboot_system":
                 result = await self.reboot_system()
+            elif command_type == "update_os_version":
+                result = await self.update_os_version()
             else:
                 result = {
                     "success": False,
@@ -308,6 +310,37 @@ class SysManageAgent:
 
             return {"success": True, "result": "Reboot scheduled"}
         except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def send_initial_data_updates(self):
+        """Send initial data updates after WebSocket connection."""
+        try:
+            self.logger.info(_("Sending initial OS version data..."))
+
+            # Send OS version data
+            os_info = self.registration.get_os_version_info()
+            os_message = self.create_message("os_version_update", os_info)
+            await self.send_message(os_message)
+
+            self.logger.info(_("Initial data updates sent successfully"))
+        except Exception as e:
+            self.logger.error(_("Failed to send initial data updates: %s"), e)
+
+    async def update_os_version(self) -> Dict[str, Any]:
+        """Gather and send updated OS version information to the server."""
+        try:
+            # Get fresh OS version info
+            os_info = self.registration.get_os_version_info()
+
+            # Create OS version message
+            os_message = self.create_message("os_version_update", os_info)
+
+            # Send OS version update to server
+            await self.send_message(os_message)
+
+            return {"success": True, "result": "OS version information sent"}
+        except Exception as e:
+            self.logger.error("Failed to update OS version: %s", e)
             return {"success": False, "error": str(e)}
 
     async def message_receiver(self):
@@ -600,6 +633,9 @@ class SysManageAgent:
                     self.websocket = websocket
                     self.running = True
                     self.logger.info(_("Connected to server successfully"))
+
+                    # Send OS version data immediately after connection
+                    await self.send_initial_data_updates()
 
                     # Run sender and receiver concurrently
                     await asyncio.gather(self.message_sender(), self.message_receiver())

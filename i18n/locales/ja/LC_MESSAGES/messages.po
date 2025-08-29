@@ -93,3 +93,12 @@ msgstr "認証に失敗しました"
 
 msgid "Invalid response from server"
 msgstr "サーバーからの無効な応答"
+# OS Version Update Messages
+msgid "Sending initial OS version data..."
+msgstr ""
+
+msgid "Initial data updates sent successfully"
+msgstr ""
+
+msgid "Failed to send initial data updates: %s"
+msgstr ""

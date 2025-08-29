@@ -58,8 +58,8 @@ class ClientRegistration:
 
         return ipv4, ipv6
 
-    def get_system_info(self) -> Dict[str, Any]:
-        """Get comprehensive system information for registration."""
+    def get_basic_registration_info(self) -> Dict[str, Any]:
+        """Get minimal system information for initial registration."""
         hostname = self.get_hostname()
         ipv4, ipv6 = self.get_ip_addresses()
 
@@ -68,13 +68,57 @@ class ClientRegistration:
             "fqdn": hostname,  # For compatibility with server's Host model
             "ipv4": ipv4,
             "ipv6": ipv6,
+            "active": True,  # Mark as active when registering
+        }
+
+    def get_os_version_info(self) -> Dict[str, Any]:
+        """Get comprehensive OS version information as separate data."""
+        # Get CPU architecture (x86_64, arm64, aarch64, riscv64, etc.)
+        machine_arch = platform.machine()
+
+        # Get detailed OS information
+        os_info = {}
+        try:
+            # Try to get Linux distribution info if available
+            if hasattr(platform, "freedesktop_os_release"):
+                os_release = platform.freedesktop_os_release()
+                os_info["distribution"] = os_release.get("NAME", "")
+                os_info["distribution_version"] = os_release.get("VERSION_ID", "")
+                os_info["distribution_codename"] = os_release.get(
+                    "VERSION_CODENAME", ""
+                )
+        except (AttributeError, OSError):
+            pass
+
+        # For macOS, get additional version info
+        if platform.system() == "Darwin":
+            mac_ver = platform.mac_ver()
+            os_info["mac_version"] = mac_ver[0] if mac_ver[0] else ""
+
+        # For Windows, get additional version info
+        if platform.system() == "Windows":
+            win_ver = platform.win32_ver()
+            os_info["windows_version"] = win_ver[0] if win_ver[0] else ""
+            os_info["windows_service_pack"] = win_ver[1] if win_ver[1] else ""
+
+        return {
             "platform": platform.system(),
             "platform_release": platform.release(),
             "platform_version": platform.version(),
             "architecture": platform.architecture()[0],
             "processor": platform.processor(),
-            "active": True,  # Mark as active when registering
+            "machine_architecture": machine_arch,  # CPU architecture
+            "python_version": platform.python_version(),
+            "os_info": os_info,
         }
+
+    def get_system_info(self) -> Dict[str, Any]:
+        """Get comprehensive system information (legacy method for compatibility)."""
+        basic_info = self.get_basic_registration_info()
+        os_info = self.get_os_version_info()
+
+        # Merge for backward compatibility
+        return {**basic_info, **os_info}
 
     async def register_with_server(self) -> bool:
         """
@@ -91,10 +135,15 @@ class ClientRegistration:
         server_url = self.config.get_server_rest_url()
         registration_url = f"{server_url}/host/register"
 
-        system_info = self.get_system_info()
+        # Use minimal registration data
+        basic_info = self.get_basic_registration_info()
 
         self.logger.info("Attempting to register with server at %s", registration_url)
-        self.logger.debug("Registration data: %s", system_info)
+        self.logger.info("=== Minimal Registration Data Being Sent ===")
+        for key, value in basic_info.items():
+            self.logger.info("  %s: %s", key, value)
+        self.logger.info("=== End Registration Data ===")
+        self.logger.debug("Registration data: %s", basic_info)
 
         try:
             # Create SSL context that doesn't verify certificates (for development)
@@ -106,7 +155,7 @@ class ClientRegistration:
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
                     registration_url,
-                    json=system_info,
+                    json=basic_info,
                     headers={"Content-Type": "application/json"},
                 ) as response:
 
