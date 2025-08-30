@@ -219,6 +219,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 result = await self.reboot_system()
             elif command_type == "update_os_version":
                 result = await self.update_os_version()
+            elif command_type == "update_hardware":
+                result = await self.update_hardware()
             else:
                 result = {
                     "success": False,
@@ -357,6 +359,23 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             return {"success": True, "result": "OS version information sent"}
         except Exception as e:
             self.logger.error("Failed to update OS version: %s", e)
+            return {"success": False, "error": str(e)}
+
+    async def update_hardware(self) -> Dict[str, Any]:
+        """Gather and send updated hardware information to the server."""
+        try:
+            # Get fresh hardware info
+            hardware_info = self.registration.get_hardware_info()
+
+            # Create hardware message
+            hardware_message = self.create_message("hardware_update", hardware_info)
+
+            # Send hardware update to server
+            await self.send_message(hardware_message)
+
+            return {"success": True, "result": "Hardware information sent"}
+        except Exception as e:
+            self.logger.error("Failed to update hardware: %s", e)
             return {"success": False, "error": str(e)}
 
     async def message_receiver(self):
