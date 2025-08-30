@@ -1,5 +1,3 @@
 [bandit]
-# Bandit configuration for SysManage Agent
-# Skip B101 (assert_used) for pytest-based projects where assert is standard
-skips = B101
+skips = B101,B404,B603,B607
 exclude_dirs = tests

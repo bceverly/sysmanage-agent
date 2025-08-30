@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import platform
-import random
+import secrets
 import socket
 import ssl
 import uuid
@@ -701,8 +701,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     base_reconnect_interval * (2 ** min(self.connection_failures, 6)),
                     300,
                 )
-                # Add jitter to prevent thundering herd
-                jitter = random.uniform(0.5, 1.5)
+                # Add jitter to prevent thundering herd (using secrets for cryptographic randomness)
+                jitter = 0.5 + (secrets.randbelow(1000) / 1000.0)  # 0.5 to 1.5
                 reconnect_interval *= jitter
 
                 self.logger.info(
