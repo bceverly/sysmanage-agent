@@ -365,6 +365,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             # Send OS version data
             os_info = self.registration.get_os_version_info()
+            # Add hostname to OS data for server processing
+            system_info = self.registration.get_system_info()
+            os_info["hostname"] = system_info["hostname"]
             os_message = self.create_message("os_version_update", os_info)
             await self.send_message(os_message)
 
@@ -396,6 +399,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         try:
             # Get fresh OS version info
             os_info = self.registration.get_os_version_info()
+            # Add hostname to OS data for server processing
+            system_info = self.registration.get_system_info()
+            os_info["hostname"] = system_info["hostname"]
 
             # Create OS version message
             os_message = self.create_message("os_version_update", os_info)

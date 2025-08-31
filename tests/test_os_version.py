@@ -92,7 +92,7 @@ i18n:
 
             system_info = mock_registration.get_system_info()
 
-            assert system_info["platform"] == "Darwin"
+            assert system_info["platform"] == "macOS"
             assert system_info["machine_architecture"] == "arm64"
             assert system_info["os_info"]["mac_version"] == "14.1.1"
 
@@ -205,6 +205,9 @@ i18n:
                 "python_version": "3.11.5",
                 "architecture": "64bit",
             }
+            mock_registration.get_system_info.return_value = {
+                "hostname": "test-host.example.com"
+            }
             mock_reg_class.return_value = mock_registration
 
             agent = SysManageAgent(str(config_file))
@@ -223,6 +226,7 @@ i18n:
             assert sent_data["message_type"] == "os_version_update"
             assert sent_data["data"]["platform"] == "Linux"
             assert sent_data["data"]["machine_architecture"] == "x86_64"
+            assert sent_data["data"]["hostname"] == "test-host.example.com"
 
     @pytest.mark.asyncio
     async def test_handle_update_os_version_command(self, tmp_path):
@@ -243,13 +247,16 @@ i18n:
 
             mock_registration = Mock()
             mock_registration.get_os_version_info.return_value = {
-                "platform": "Darwin",
+                "platform": "macOS",
                 "machine_architecture": "arm64",
                 "os_info": {},
-                "platform_release": "23.1.0",
+                "platform_release": "Sonoma 14.1",
                 "processor": "arm",
                 "architecture": "64bit",
                 "python_version": "3.11.5",
+            }
+            mock_registration.get_system_info.return_value = {
+                "hostname": "test-host.example.com"
             }
             mock_reg_class.return_value = mock_registration
 
