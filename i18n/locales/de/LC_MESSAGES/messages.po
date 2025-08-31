@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: de\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "SysManage Agent wird gestartet"
 
-msgid "Connecting to server"
-msgstr "Verbindung zum Server wird hergestellt"
-
-msgid "Connected to server successfully"
-msgstr "Erfolgreich mit dem Server verbunden"
-
-msgid "Connection failed"
-msgstr "Verbindung fehlgeschlagen"
-
-msgid "Disconnected from server"
-msgstr "Vom Server getrennt"
-
-msgid "Reconnecting to server"
-msgstr "Neuverbindung zum Server"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "Konfiguration wird geladen"
-
-msgid "Configuration loaded successfully"
-msgstr "Konfiguration erfolgreich geladen"
-
-msgid "Configuration error"
-msgstr "Konfigurationsfehler"
-
-msgid "Invalid server URL"
-msgstr "Ungültige Server-URL"
-
-# System information
-msgid "Gathering system information"
-msgstr "Systeminformationen werden gesammelt"
-
-msgid "System information collected"
-msgstr "Systeminformationen gesammelt"
-
-msgid "Failed to collect system information"
-msgstr "Sammeln von Systeminformationen fehlgeschlagen"
-
-# Command execution
-msgid "Executing command"
-msgstr "Befehl wird ausgeführt"
-
-msgid "Command executed successfully"
-msgstr "Befehl erfolgreich ausgeführt"
-
-msgid "Command execution failed"
-msgstr "Befehlsausführung fehlgeschlagen"
-
-msgid "Command not permitted"
-msgstr "Befehl nicht erlaubt"
-
-# File operations
-msgid "File not found"
-msgstr "Datei nicht gefunden"
-
-msgid "Permission denied"
-msgstr "Berechtigung verweigert"
-
-msgid "File operation completed"
-msgstr "Dateioperation abgeschlossen"
-
-# Service management
-msgid "Service started"
-msgstr "Dienst gestartet"
-
-msgid "Service stopped"
-msgstr "Dienst gestoppt"
-
-msgid "Service installation completed"
-msgstr "Dienstinstallation abgeschlossen"
-
-msgid "Service removal completed"
-msgstr "Dienstentfernung abgeschlossen"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "Ein unerwarteter Fehler ist aufgetreten"
-
-msgid "Network error"
-msgstr "Netzwerkfehler"
-
-msgid "Authentication failed"
-msgstr "Authentifizierung fehlgeschlagen"
-
-msgid "Invalid response from server"
-msgstr "Ungültige Antwort vom Server"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "Sende initiale OS-Versionsdaten..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "Sende initiale OS-Versionsdaten..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "Initiale Datenaktualisierungen erfolgreich gesendet"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "Erfolgreich mit dem Server verbunden"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "Verbindung zum Server wird hergestellt"
+
+#~ msgid "Connection failed"
+#~ msgstr "Verbindung fehlgeschlagen"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "Vom Server getrennt"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "Neuverbindung zum Server"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "Konfiguration wird geladen"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "Konfiguration erfolgreich geladen"
+
+#~ msgid "Configuration error"
+#~ msgstr "Konfigurationsfehler"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "Ungültige Server-URL"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "Systeminformationen werden gesammelt"
+
+#~ msgid "System information collected"
+#~ msgstr "Systeminformationen gesammelt"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "Sammeln von Systeminformationen fehlgeschlagen"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "Befehl wird ausgeführt"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "Befehl erfolgreich ausgeführt"
+
+#~ msgid "Command execution failed"
+#~ msgstr "Befehlsausführung fehlgeschlagen"
+
+#~ msgid "Command not permitted"
+#~ msgstr "Befehl nicht erlaubt"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "Datei nicht gefunden"
+
+#~ msgid "Permission denied"
+#~ msgstr "Berechtigung verweigert"
+
+#~ msgid "File operation completed"
+#~ msgstr "Dateioperation abgeschlossen"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "Dienst gestartet"
+
+#~ msgid "Service stopped"
+#~ msgstr "Dienst gestoppt"
+
+#~ msgid "Service installation completed"
+#~ msgstr "Dienstinstallation abgeschlossen"
+
+#~ msgid "Service removal completed"
+#~ msgstr "Dienstentfernung abgeschlossen"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "Ein unerwarteter Fehler ist aufgetreten"
+
+#~ msgid "Network error"
+#~ msgstr "Netzwerkfehler"
+
+#~ msgid "Authentication failed"
+#~ msgstr "Authentifizierung fehlgeschlagen"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "Ungültige Antwort vom Server"

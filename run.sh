@@ -26,9 +26,76 @@ check_agent_running() {
     return 1  # Agent is not running
 }
 
+# Function to check for running agent processes
+check_existing_processes() {
+    local found_processes=false
+    
+    # Check for agent processes by pattern (cross-platform approach)
+    local agent_pids=""
+    if command -v pgrep >/dev/null 2>&1; then
+        # Use pgrep if available (Linux, modern macOS, some BSD)
+        agent_pids=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+    else
+        # Fallback: use ps and grep for older systems
+        agent_pids=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+    fi
+    
+    if [ -n "$agent_pids" ]; then
+        echo "⚠️  Found existing agent processes:"
+        echo "$agent_pids" | while read pid; do
+            if [ -n "$pid" ]; then
+                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | head -c 80)
+                if [ -z "$cmd" ]; then
+                    # Fallback for systems where ps -p doesn't work the same way
+                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | head -c 80)
+                fi
+                echo "   PID $pid: $cmd"
+            fi
+        done
+        found_processes=true
+    fi
+    
+    # Check PID file
+    if [ -f "logs/agent.pid" ]; then
+        local pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
+        if [ -n "$pid_file_pid" ] && kill -0 "$pid_file_pid" 2>/dev/null; then
+            echo "⚠️  Found agent process from PID file (PID: $pid_file_pid)"
+            found_processes=true
+        fi
+    fi
+    
+    if [ "$found_processes" = true ]; then
+        echo "Attempting to stop existing processes..."
+        return 0  # Found processes
+    else
+        echo "No existing SysManage Agent processes found"
+        return 1  # No processes found
+    fi
+}
+
 # Stop any existing agent
-echo "Stopping any existing SysManage Agent processes..."
-./stop.sh >/dev/null 2>&1
+if check_existing_processes; then
+    ./stop.sh
+    sleep 2
+    
+    # Verify they were stopped
+    if check_existing_processes >/dev/null 2>&1; then
+        echo "❌ ERROR: Failed to stop existing agent processes. Please manually stop them before continuing."
+        echo ""
+        echo "To manually check for agent processes:"
+        echo "  ps -ef | grep 'python3.*main.py'"
+        echo ""
+        echo "To manually kill all agent processes:"
+        if command -v pkill >/dev/null 2>&1; then
+            echo "  pkill -f 'python3.*main.py'"
+        else
+            echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+        fi
+        exit 1
+    else
+        echo "✅ Successfully stopped existing processes"
+    fi
+fi
 
 # Check for Python 3
 if ! command -v python3 >/dev/null 2>&1; then
@@ -66,11 +133,51 @@ fi
 HOSTNAME=$(python3 -c "import socket; print(socket.getfqdn())" 2>/dev/null || echo "unknown")
 PLATFORM=$(python3 -c "import platform; print(platform.system())" 2>/dev/null || echo "unknown")
 
+# Function to get configuration value from client.yaml
+get_config_value() {
+    local key=$1
+    local config_file="client.yaml"
+    
+    if [ -f "$config_file" ]; then
+        python3 -c "
+import yaml
+import sys
+try:
+    with open('$config_file', 'r') as f:
+        config = yaml.safe_load(f)
+    keys = '$key'.split('.')
+    value = config
+    for k in keys:
+        value = value[k]
+    print(value)
+except:
+    sys.exit(1)
+" 2>/dev/null
+    else
+        return 1
+    fi
+}
+
 # Get server configuration from client.yaml if it exists
 if [ -f "client.yaml" ]; then
-    SERVER_HOST=$(python3 -c "import yaml; print(yaml.safe_load(open('client.yaml'))['server']['hostname'])" 2>/dev/null || echo "unknown")
-    SERVER_PORT=$(python3 -c "import yaml; print(yaml.safe_load(open('client.yaml'))['server']['port'])" 2>/dev/null || echo "unknown")
-    USE_HTTPS=$(python3 -c "import yaml; print('https' if yaml.safe_load(open('client.yaml'))['server']['use_https'] else 'http')" 2>/dev/null || echo "unknown")
+    SERVER_HOST=$(get_config_value "server.hostname")
+    if [ $? -ne 0 ] || [ -z "$SERVER_HOST" ]; then
+        SERVER_HOST="unknown"
+    fi
+    
+    SERVER_PORT=$(get_config_value "server.port")
+    if [ $? -ne 0 ] || [ -z "$SERVER_PORT" ]; then
+        SERVER_PORT="unknown"
+    fi
+    
+    USE_HTTPS_BOOL=$(get_config_value "server.use_https")
+    if [ $? -ne 0 ] || [ -z "$USE_HTTPS_BOOL" ]; then
+        USE_HTTPS="unknown"
+    elif [ "$USE_HTTPS_BOOL" = "True" ] || [ "$USE_HTTPS_BOOL" = "true" ]; then
+        USE_HTTPS="https"
+    else
+        USE_HTTPS="http"
+    fi
 else
     echo "⚠️  WARNING: client.yaml configuration file not found!"
     SERVER_HOST="unknown"

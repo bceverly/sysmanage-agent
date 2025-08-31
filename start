@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Cross-platform launcher for SysManage Agent
+# Detects platform and runs appropriate start script
+
+# Detect platform
+case "$(uname -s)" in
+    CYGWIN*|MINGW*|MSYS*)
+        echo "Windows platform detected, using run.cmd"
+        exec ./run.cmd "$@"
+        ;;
+    *)
+        echo "Unix-like platform detected, using run.sh"
+        exec ./run.sh "$@"
+        ;;
+esac

@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: ko\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "SysManage 에이전트를 시작하고 있습니다"
 
-msgid "Connecting to server"
-msgstr "서버에 연결 중입니다"
-
-msgid "Connected to server successfully"
-msgstr "서버에 성공적으로 연결되었습니다"
-
-msgid "Connection failed"
-msgstr "연결에 실패했습니다"
-
-msgid "Disconnected from server"
-msgstr "서버와의 연결이 끊어졌습니다"
-
-msgid "Reconnecting to server"
-msgstr "서버에 재연결 중입니다"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "구성을 로드하고 있습니다"
-
-msgid "Configuration loaded successfully"
-msgstr "구성이 성공적으로 로드되었습니다"
-
-msgid "Configuration error"
-msgstr "구성 오류"
-
-msgid "Invalid server URL"
-msgstr "잘못된 서버 URL"
-
-# System information
-msgid "Gathering system information"
-msgstr "시스템 정보를 수집하고 있습니다"
-
-msgid "System information collected"
-msgstr "시스템 정보가 수집되었습니다"
-
-msgid "Failed to collect system information"
-msgstr "시스템 정보 수집에 실패했습니다"
-
-# Command execution
-msgid "Executing command"
-msgstr "명령을 실행하고 있습니다"
-
-msgid "Command executed successfully"
-msgstr "명령이 성공적으로 실행되었습니다"
-
-msgid "Command execution failed"
-msgstr "명령 실행에 실패했습니다"
-
-msgid "Command not permitted"
-msgstr "명령이 허용되지 않습니다"
-
-# File operations
-msgid "File not found"
-msgstr "파일을 찾을 수 없습니다"
-
-msgid "Permission denied"
-msgstr "권한이 거부되었습니다"
-
-msgid "File operation completed"
-msgstr "파일 작업이 완료되었습니다"
-
-# Service management
-msgid "Service started"
-msgstr "서비스가 시작되었습니다"
-
-msgid "Service stopped"
-msgstr "서비스가 중지되었습니다"
-
-msgid "Service installation completed"
-msgstr "서비스 설치가 완료되었습니다"
-
-msgid "Service removal completed"
-msgstr "서비스 제거가 완료되었습니다"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "예상치 못한 오류가 발생했습니다"
-
-msgid "Network error"
-msgstr "네트워크 오류"
-
-msgid "Authentication failed"
-msgstr "인증에 실패했습니다"
-
-msgid "Invalid response from server"
-msgstr "서버로부터 잘못된 응답"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "초기 데이터 업데이트가 성공적으로 전송되었습니다"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "서버에 성공적으로 연결되었습니다"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "서버에 연결 중입니다"
+
+#~ msgid "Connection failed"
+#~ msgstr "연결에 실패했습니다"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "서버와의 연결이 끊어졌습니다"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "서버에 재연결 중입니다"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "구성을 로드하고 있습니다"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "구성이 성공적으로 로드되었습니다"
+
+#~ msgid "Configuration error"
+#~ msgstr "구성 오류"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "잘못된 서버 URL"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "시스템 정보를 수집하고 있습니다"
+
+#~ msgid "System information collected"
+#~ msgstr "시스템 정보가 수집되었습니다"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "시스템 정보 수집에 실패했습니다"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "명령을 실행하고 있습니다"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "명령이 성공적으로 실행되었습니다"
+
+#~ msgid "Command execution failed"
+#~ msgstr "명령 실행에 실패했습니다"
+
+#~ msgid "Command not permitted"
+#~ msgstr "명령이 허용되지 않습니다"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "파일을 찾을 수 없습니다"
+
+#~ msgid "Permission denied"
+#~ msgstr "권한이 거부되었습니다"
+
+#~ msgid "File operation completed"
+#~ msgstr "파일 작업이 완료되었습니다"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "서비스가 시작되었습니다"
+
+#~ msgid "Service stopped"
+#~ msgstr "서비스가 중지되었습니다"
+
+#~ msgid "Service installation completed"
+#~ msgstr "서비스 설치가 완료되었습니다"
+
+#~ msgid "Service removal completed"
+#~ msgstr "서비스 제거가 완료되었습니다"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "예상치 못한 오류가 발생했습니다"
+
+#~ msgid "Network error"
+#~ msgstr "네트워크 오류"
+
+#~ msgid "Authentication failed"
+#~ msgstr "인증에 실패했습니다"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "서버로부터 잘못된 응답"

@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Cross-platform launcher for SysManage Agent
+# Detects platform and runs appropriate stop script
+
+# Detect platform
+case "$(uname -s)" in
+    CYGWIN*|MINGW*|MSYS*)
+        echo "Windows platform detected, using stop.cmd"
+        exec ./stop.cmd "$@"
+        ;;
+    *)
+        echo "Unix-like platform detected, using stop.sh"
+        exec ./stop.sh "$@"
+        ;;
+esac

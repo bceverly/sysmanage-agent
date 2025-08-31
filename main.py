@@ -37,10 +37,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         if not self.try_load_config(config_file):
-            self.logger.info("No configuration found, attempting auto-discovery...")
+            self.logger.info(_("No configuration found, attempting auto-discovery..."))
             if not self.auto_discover_and_configure():
                 raise RuntimeError(
-                    "Unable to configure agent: no config file and auto-discovery failed"
+                    _(
+                        "Unable to configure agent: no config file and auto-discovery failed"
+                    )
                 )
 
         # Load configuration (now guaranteed to exist)
@@ -174,7 +176,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def send_message(self, message: Dict[str, Any]):
         """Send a message to the server."""
         if not self.connected or not self.websocket:
-            self.logger.warning("Cannot send message: not connected to server")
+            self.logger.warning(_("Cannot send message: not connected to server"))
             return False
 
         try:
@@ -340,6 +342,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             os_message = self.create_message("os_version_update", os_info)
             await self.send_message(os_message)
 
+            self.logger.info(_("Sending initial hardware data..."))
+
+            # Send hardware data
+            hardware_info = self.registration.get_hardware_info()
+            # Add hostname to hardware data for server processing
+            system_info = self.registration.get_system_info()
+            hardware_info["hostname"] = system_info["hostname"]
+            self.logger.info("Hardware info keys: %s", list(hardware_info.keys()))
+            self.logger.info(
+                "Storage devices count: %s",
+                len(hardware_info.get("storage_devices", [])),
+            )
+            self.logger.info(
+                "Network interfaces count: %s",
+                len(hardware_info.get("network_interfaces", [])),
+            )
+            hardware_message = self.create_message("hardware_update", hardware_info)
+            await self.send_message(hardware_message)
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -366,6 +387,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         try:
             # Get fresh hardware info
             hardware_info = self.registration.get_hardware_info()
+            # Add hostname to hardware data for server processing
+            system_info = self.registration.get_system_info()
+            hardware_info["hostname"] = system_info["hostname"]
 
             # Create hardware message
             hardware_message = self.create_message("hardware_update", hardware_info)
@@ -616,26 +640,30 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self.logger.info("IPv6: %s", system_info["ipv6"])
 
         # Attempt registration with server
-        self.logger.info("Registering with SysManage server...")
+        self.logger.info(_("Registering with SysManage server..."))
         if not await self.registration.register_with_retry():
-            self.logger.error("Failed to register with server. Exiting.")
+            self.logger.error(_("Failed to register with server. Exiting."))
             return
 
-        self.logger.info("Registration successful, checking certificates...")
+        self.logger.info(_("Registration successful, checking certificates..."))
 
         # Check if we have certificates for secure authentication
         # For now, we'll continue with token-based auth but log certificate status
         if self.cert_store.has_certificates():
             self.logger.info(
-                "Valid certificates found - secure authentication available"
+                _("Valid certificates found - secure authentication available")
             )
         else:
-            self.logger.info("No certificates found - using token-based authentication")
             self.logger.info(
-                "For enhanced security, approve this host to enable certificate-based auth"
+                _("No certificates found - using token-based authentication")
+            )
+            self.logger.info(
+                _(
+                    "For enhanced security, approve this host to enable certificate-based auth"
+                )
             )
 
-        self.logger.info("Starting WebSocket connection...")
+        self.logger.info(_("Starting WebSocket connection..."))
 
         base_reconnect_interval = self.config.get_reconnect_interval()
 

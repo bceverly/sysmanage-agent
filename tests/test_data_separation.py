@@ -4,7 +4,6 @@ Test data separation functionality - minimal registration vs comprehensive OS da
 
 # pylint: disable=duplicate-code
 
-import json
 from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
@@ -168,7 +167,7 @@ i18n:
             "main.set_language"
         ):
 
-            # Mock OS version data
+            # Mock OS version and hardware data
             mock_registration = Mock()
             mock_registration.get_os_version_info.return_value = {
                 "platform": "Linux",
@@ -180,23 +179,56 @@ i18n:
                 "architecture": "64bit",
                 "os_info": {"distribution": "Ubuntu"},
             }
+            mock_registration.get_hardware_info.return_value = {
+                "cpu_vendor": "Intel",
+                "cpu_model": "Core i7",
+                "memory_total_mb": 16384,
+                "storage_devices": [],
+                "network_interfaces": [],
+            }
+            mock_registration.get_system_info.return_value = {
+                "hostname": "test-host",
+                "fqdn": "test-host.example.com",
+                "ipv4": "192.168.1.100",
+                "ipv6": None,
+                "platform": "Linux",
+            }
             mock_reg_class.return_value = mock_registration
 
             agent = SysManageAgent(str(config_file))
-            agent.websocket = AsyncMock()
+
+            # Mock the send_message method directly to track calls
+            sent_messages = []
+
+            async def mock_send_message(message):
+                sent_messages.append(message)
+                return True
+
+            agent.send_message = mock_send_message
             agent.connected = True  # Set connected flag
             agent.logger = Mock()
 
             await agent.send_initial_data_updates()
 
-            # Verify OS version message was sent
-            agent.websocket.send.assert_called_once()
-            sent_data = json.loads(agent.websocket.send.call_args[0][0])
+            # Verify both OS version and hardware messages were sent (2 calls)
+            assert len(sent_messages) == 2
 
-            assert sent_data["message_type"] == "os_version_update"
-            assert sent_data["data"]["platform"] == "Linux"
-            assert sent_data["data"]["machine_architecture"] == "x86_64"
-            assert sent_data["data"]["os_info"]["distribution"] == "Ubuntu"
+            # Check the first call (OS version message)
+            os_call_data = sent_messages[0]
+
+            assert os_call_data["message_type"] == "os_version_update"
+            assert os_call_data["data"]["platform"] == "Linux"
+            assert os_call_data["data"]["machine_architecture"] == "x86_64"
+            assert os_call_data["data"]["os_info"]["distribution"] == "Ubuntu"
+
+            # Check the second call (hardware message)
+            hardware_call_data = sent_messages[1]
+
+            assert hardware_call_data["message_type"] == "hardware_update"
+            assert hardware_call_data["data"]["cpu_vendor"] == "Intel"
+            assert hardware_call_data["data"]["cpu_model"] == "Core i7"
+            assert hardware_call_data["data"]["memory_total_mb"] == 16384
+            assert hardware_call_data["data"]["hostname"] == "test-host"
 
     @pytest.mark.asyncio
     async def test_registration_uses_minimal_data_only(self, mock_registration):

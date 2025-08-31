@@ -16,7 +16,9 @@ class TestServerDiscoveryClient:
     def setup_method(self):
         """Set up test fixtures."""
         # pylint: disable-next=attribute-defined-outside-init
-        self.client = ServerDiscoveryClient(discovery_port=31337, broadcast_port=31338)
+        self.client = ServerDiscoveryClient(
+            discovery_port_arg=31337, broadcast_port_arg=31338
+        )
 
     @pytest.mark.asyncio
     async def test_discover_servers_no_servers(self):
