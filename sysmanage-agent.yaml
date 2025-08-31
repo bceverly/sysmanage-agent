@@ -53,5 +53,5 @@ websocket:
   # Reconnection interval in seconds
   reconnect_interval: 5
   
-  # Ping interval to keep connection alive
-  ping_interval: 30
+  # Ping interval to keep connection alive (reduced for faster server restart detection)
+  ping_interval: 10

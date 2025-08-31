@@ -158,6 +158,32 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         system_info = self.registration.get_system_info()
         return self.create_message("system_info", system_info)
 
+    async def _check_server_health(self) -> bool:
+        """Check if server is available by testing the root endpoint."""
+        try:
+            # Build health check URL (use HTTP endpoint, not WebSocket)
+            http_url = self.config.get_server_rest_url()
+
+            # Create SSL context if needed
+            ssl_context = None
+            if http_url.startswith("https://"):
+                ssl_context = ssl.create_default_context()
+                if not self.config.should_verify_ssl():
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
+
+            async with aiohttp.ClientSession(
+                connector=connector, timeout=timeout
+            ) as session:
+                async with session.get(f"{http_url}/") as response:
+                    return response.status == 200
+        except Exception as e:
+            self.logger.debug("Server health check failed: %s", e)
+            return False
+
     def create_heartbeat_message(self):
         """Create heartbeat message."""
         # Include system info in heartbeat to allow server to recreate deleted hosts
@@ -669,6 +695,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         while True:
             try:
+                # Check if server is available before attempting connection
+                if not await self._check_server_health():
+                    self.logger.warning(
+                        "Server health check failed, waiting before retry..."
+                    )
+                    await asyncio.sleep(5)
+                    continue
+
                 # Get authentication token
                 auth_token = await self.get_auth_token()
                 self.logger.info("Got authentication token for WebSocket connection")
