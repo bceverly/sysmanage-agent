@@ -30,7 +30,7 @@ from security.certificate_store import CertificateStore
 class SysManageAgent:  # pylint: disable=too-many-public-methods
     """Main agent class for SysManage fleet management."""
 
-    def __init__(self, config_file: str = "client.yaml"):
+    def __init__(self, config_file: str = "sysmanage-agent.yaml"):
         # Try to discover server if no config file exists
         self.config_file = config_file
         # Setup basic logging first

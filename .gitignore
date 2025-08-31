@@ -165,3 +165,7 @@ cython_debug/
 
 # Git commit fix script
 fix-commits.sh
+
+# Local configuration files
+sysmanage-agent.yaml
+client.yaml
