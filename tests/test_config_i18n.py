@@ -217,11 +217,12 @@ class TestConfigValidation:
         with pytest.raises(ValueError, match="Invalid YAML"):
             ConfigManager(str(config_file))
 
-    def test_missing_config_file(self):
+    def test_missing_config_file(self, tmp_path):
         """Test handling of missing configuration file."""
         # Use absolute path to avoid falling back to local config
+        nonexistent_file = tmp_path / "nonexistent_file.yaml"
         with pytest.raises(FileNotFoundError):
-            ConfigManager("/tmp/nonexistent_file.yaml")
+            ConfigManager(str(nonexistent_file))
 
     def test_empty_config_file(self, tmp_path):
         """Test handling of empty configuration file."""
