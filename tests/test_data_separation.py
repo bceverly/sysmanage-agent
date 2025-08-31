@@ -318,14 +318,14 @@ i18n:
     def test_architecture_specific_separation(self, mock_registration):
         """Test data separation works correctly for different architectures."""
         architectures = [
-            ("x86_64", "Linux"),
-            ("arm64", "Darwin"),
-            ("aarch64", "Linux"),
-            ("riscv64", "Linux"),
-            ("AMD64", "Windows"),
+            ("x86_64", "Linux", "Linux"),
+            ("arm64", "Darwin", "macOS"),
+            ("aarch64", "Linux", "Linux"),
+            ("riscv64", "Linux", "Linux"),
+            ("AMD64", "Windows", "Windows"),
         ]
 
-        for arch, platform in architectures:
+        for arch, platform, expected_platform in architectures:
             with patch.object(
                 mock_registration, "get_hostname", return_value=f"{arch}-host"
             ), patch.object(
@@ -345,4 +345,4 @@ i18n:
 
                 # OS info should capture architecture-specific details
                 assert os_info["machine_architecture"] == arch
-                assert os_info["platform"] == platform
+                assert os_info["platform"] == expected_platform

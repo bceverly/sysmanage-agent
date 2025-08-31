@@ -31,8 +31,10 @@ class TestOSInfoCollector:
     @patch("platform.processor")
     @patch("platform.architecture")
     @patch("platform.python_version")
+    @patch("platform.mac_ver")
     def test_get_basic_platform_info(  # pylint: disable=too-many-positional-arguments
         self,
+        mock_mac_ver,
         mock_python_version,
         mock_architecture,
         mock_processor,
@@ -51,11 +53,12 @@ class TestOSInfoCollector:
         mock_processor.return_value = "arm"
         mock_architecture.return_value = ("64bit", "")
         mock_python_version.return_value = "3.11.5"
+        mock_mac_ver.return_value = ("14.5", ("", "", ""), "arm64")
 
         result = os_collector.get_os_version_info()
 
-        assert result["platform"] == "Darwin"
-        assert result["platform_release"] == "23.5.0"
+        assert result["platform"] == "macOS"
+        assert result["platform_release"] == "Sonoma 14.5"
         assert result["platform_version"] == "Darwin Kernel Version 23.5.0"
         assert result["machine_architecture"] == "arm64"
         assert result["processor"] == "arm"
@@ -88,7 +91,7 @@ class TestOSInfoCollector:
 
             result = os_collector.get_os_version_info()
 
-            assert result["platform"] == "Darwin"
+            assert result["platform"] == "macOS"
             assert "os_info" in result
             assert result["os_info"]["mac_version"] == "14.0"
 
