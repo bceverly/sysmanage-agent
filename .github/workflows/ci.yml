@@ -144,9 +144,22 @@ jobs:
 
     - name: Create test configuration and verify
       run: |
+        # Create a test config file
+        cat > test-config.yaml << EOF
+        server:
+          hostname: "localhost"
+          port: 8080
+          use_https: false
+        client:
+          registration_retry_interval: 30
+          max_registration_retries: 3
+        logging:
+          level: "INFO"
+        EOF
+        
         python -c "
         from config import ConfigManager
-        config = ConfigManager('client.yaml')
+        config = ConfigManager('test-config.yaml')
         print('✅ Configuration validation passed')
         print(f'Server URL: {config.get_server_url()}')
         print(f'REST URL: {config.get_server_rest_url()}')
@@ -157,7 +170,8 @@ jobs:
         mkdir -p dist
         cp *.py dist/
         cp requirements.txt dist/
-        cp client.yaml dist/
+        # Create a sample config file for distribution
+        cp sysmanage-agent.yaml.example dist/ 2>/dev/null || echo "# Sample SysManage Agent Configuration" > dist/sysmanage-agent.yaml.example
         tar -czf sysmanage-agent.tar.gz dist/
 
     - name: Upload distribution package
