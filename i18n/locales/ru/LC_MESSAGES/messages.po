@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "Запуск агента SysManage"
 
-msgid "Connecting to server"
-msgstr "Подключение к серверу"
-
-msgid "Connected to server successfully"
-msgstr "Успешно подключен к серверу"
-
-msgid "Connection failed"
-msgstr "Ошибка подключения"
-
-msgid "Disconnected from server"
-msgstr "Отключен от сервера"
-
-msgid "Reconnecting to server"
-msgstr "Переподключение к серверу"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "Загрузка конфигурации"
-
-msgid "Configuration loaded successfully"
-msgstr "Конфигурация успешно загружена"
-
-msgid "Configuration error"
-msgstr "Ошибка конфигурации"
-
-msgid "Invalid server URL"
-msgstr "Неверный URL сервера"
-
-# System information
-msgid "Gathering system information"
-msgstr "Сбор системной информации"
-
-msgid "System information collected"
-msgstr "Системная информация собрана"
-
-msgid "Failed to collect system information"
-msgstr "Ошибка сбора системной информации"
-
-# Command execution
-msgid "Executing command"
-msgstr "Выполнение команды"
-
-msgid "Command executed successfully"
-msgstr "Команда выполнена успешно"
-
-msgid "Command execution failed"
-msgstr "Ошибка выполнения команды"
-
-msgid "Command not permitted"
-msgstr "Команда не разрешена"
-
-# File operations
-msgid "File not found"
-msgstr "Файл не найден"
-
-msgid "Permission denied"
-msgstr "Доступ запрещен"
-
-msgid "File operation completed"
-msgstr "Операция с файлом завершена"
-
-# Service management
-msgid "Service started"
-msgstr "Служба запущена"
-
-msgid "Service stopped"
-msgstr "Служба остановлена"
-
-msgid "Service installation completed"
-msgstr "Установка службы завершена"
-
-msgid "Service removal completed"
-msgstr "Удаление службы завершено"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "Произошла неожиданная ошибка"
-
-msgid "Network error"
-msgstr "Ошибка сети"
-
-msgid "Authentication failed"
-msgstr "Ошибка аутентификации"
-
-msgid "Invalid response from server"
-msgstr "Неверный ответ от сервера"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "Отправка начальных данных версии ОС..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "Отправка начальных данных версии ОС..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "Начальные обновления данных успешно отправлены"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Ошибка отправки начальных обновлений данных: %s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "Успешно подключен к серверу"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "Подключение к серверу"
+
+#~ msgid "Connection failed"
+#~ msgstr "Ошибка подключения"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "Отключен от сервера"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "Переподключение к серверу"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "Загрузка конфигурации"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "Конфигурация успешно загружена"
+
+#~ msgid "Configuration error"
+#~ msgstr "Ошибка конфигурации"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "Неверный URL сервера"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "Сбор системной информации"
+
+#~ msgid "System information collected"
+#~ msgstr "Системная информация собрана"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "Ошибка сбора системной информации"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "Выполнение команды"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "Команда выполнена успешно"
+
+#~ msgid "Command execution failed"
+#~ msgstr "Ошибка выполнения команды"
+
+#~ msgid "Command not permitted"
+#~ msgstr "Команда не разрешена"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "Файл не найден"
+
+#~ msgid "Permission denied"
+#~ msgstr "Доступ запрещен"
+
+#~ msgid "File operation completed"
+#~ msgstr "Операция с файлом завершена"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "Служба запущена"
+
+#~ msgid "Service stopped"
+#~ msgstr "Служба остановлена"
+
+#~ msgid "Service installation completed"
+#~ msgstr "Установка службы завершена"
+
+#~ msgid "Service removal completed"
+#~ msgstr "Удаление службы завершено"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "Произошла неожиданная ошибка"
+
+#~ msgid "Network error"
+#~ msgstr "Ошибка сети"
+
+#~ msgid "Authentication failed"
+#~ msgstr "Ошибка аутентификации"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "Неверный ответ от сервера"

@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: pt\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "Iniciando Agente SysManage"
 
-msgid "Connecting to server"
-msgstr "Conectando ao servidor"
-
-msgid "Connected to server successfully"
-msgstr "Conectado ao servidor com sucesso"
-
-msgid "Connection failed"
-msgstr "Falha na conexão"
-
-msgid "Disconnected from server"
-msgstr "Desconectado do servidor"
-
-msgid "Reconnecting to server"
-msgstr "Reconectando ao servidor"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "Carregando configuração"
-
-msgid "Configuration loaded successfully"
-msgstr "Configuração carregada com sucesso"
-
-msgid "Configuration error"
-msgstr "Erro de configuração"
-
-msgid "Invalid server URL"
-msgstr "URL do servidor inválida"
-
-# System information
-msgid "Gathering system information"
-msgstr "Coletando informações do sistema"
-
-msgid "System information collected"
-msgstr "Informações do sistema coletadas"
-
-msgid "Failed to collect system information"
-msgstr "Falha ao coletar informações do sistema"
-
-# Command execution
-msgid "Executing command"
-msgstr "Executando comando"
-
-msgid "Command executed successfully"
-msgstr "Comando executado com sucesso"
-
-msgid "Command execution failed"
-msgstr "Falha na execução do comando"
-
-msgid "Command not permitted"
-msgstr "Comando não permitido"
-
-# File operations
-msgid "File not found"
-msgstr "Arquivo não encontrado"
-
-msgid "Permission denied"
-msgstr "Permissão negada"
-
-msgid "File operation completed"
-msgstr "Operação de arquivo concluída"
-
-# Service management
-msgid "Service started"
-msgstr "Serviço iniciado"
-
-msgid "Service stopped"
-msgstr "Serviço parado"
-
-msgid "Service installation completed"
-msgstr "Instalação do serviço concluída"
-
-msgid "Service removal completed"
-msgstr "Remoção do serviço concluída"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "Ocorreu um erro inesperado"
-
-msgid "Network error"
-msgstr "Erro de rede"
-
-msgid "Authentication failed"
-msgstr "Autenticação falhou"
-
-msgid "Invalid response from server"
-msgstr "Resposta inválida do servidor"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "Enviando dados iniciais da versão do SO..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "Enviando dados iniciais da versão do SO..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "Atualizações de dados iniciais enviadas com sucesso"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Falha ao enviar atualizações de dados iniciais: %s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "Conectado ao servidor com sucesso"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "Conectando ao servidor"
+
+#~ msgid "Connection failed"
+#~ msgstr "Falha na conexão"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "Desconectado do servidor"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "Reconectando ao servidor"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "Carregando configuração"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "Configuração carregada com sucesso"
+
+#~ msgid "Configuration error"
+#~ msgstr "Erro de configuração"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "URL do servidor inválida"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "Coletando informações do sistema"
+
+#~ msgid "System information collected"
+#~ msgstr "Informações do sistema coletadas"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "Falha ao coletar informações do sistema"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "Executando comando"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "Comando executado com sucesso"
+
+#~ msgid "Command execution failed"
+#~ msgstr "Falha na execução do comando"
+
+#~ msgid "Command not permitted"
+#~ msgstr "Comando não permitido"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "Arquivo não encontrado"
+
+#~ msgid "Permission denied"
+#~ msgstr "Permissão negada"
+
+#~ msgid "File operation completed"
+#~ msgstr "Operação de arquivo concluída"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "Serviço iniciado"
+
+#~ msgid "Service stopped"
+#~ msgstr "Serviço parado"
+
+#~ msgid "Service installation completed"
+#~ msgstr "Instalação do serviço concluída"
+
+#~ msgid "Service removal completed"
+#~ msgstr "Remoção do serviço concluída"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "Ocorreu um erro inesperado"
+
+#~ msgid "Network error"
+#~ msgstr "Erro de rede"
+
+#~ msgid "Authentication failed"
+#~ msgstr "Autenticação falhou"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "Resposta inválida do servidor"

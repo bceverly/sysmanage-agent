@@ -27,14 +27,14 @@ class ServerDiscoveryClient:
 
     def __init__(
         self,
-        discovery_port: int = 31337,
-        broadcast_port: int = 31338,
-        bind_address: str = "127.0.0.1",
+        discovery_port_arg: int = 31337,
+        broadcast_port_arg: int = 31338,
+        bind_address_arg: str = "127.0.0.1",
     ):
-        self.discovery_port = discovery_port
-        self.broadcast_port = broadcast_port
+        self.discovery_port = discovery_port_arg
+        self.broadcast_port = broadcast_port_arg
         # Security: Default to localhost only. Set to "0.0.0.0" in config only if needed for multi-network discovery
-        self.bind_address = bind_address
+        self.bind_address = bind_address_arg
         self.hostname = platform.node()
 
     async def discover_servers(self, timeout: int = 10) -> List[Dict[str, Any]]:
@@ -278,13 +278,13 @@ class ServerDiscoveryClient:
 
         # Use provided default config if available
         if "default_config" in server_info:
-            config = server_info["default_config"].copy()
+            agent_config = server_info["default_config"].copy()
             # Override server hostname with discovered IP
-            config["server"]["hostname"] = server_ip
-            return config
+            agent_config["server"]["hostname"] = server_ip
+            return agent_config
 
         # Create basic configuration
-        config = {
+        agent_config = {
             "server": {
                 "hostname": server_ip,
                 "port": server_data.get("api_port", 8000),
@@ -310,7 +310,7 @@ class ServerDiscoveryClient:
             "i18n": {"language": "en"},
         }
 
-        return config
+        return agent_config
 
     def _get_broadcast_addresses(self) -> List[str]:
         """Get list of broadcast addresses to try."""
@@ -414,10 +414,10 @@ try:
     broadcast_port = config.get("discovery.broadcast_port", 31338)
 
     discovery_client = ServerDiscoveryClient(
-        discovery_port=discovery_port,
-        broadcast_port=broadcast_port,
-        bind_address=bind_address,
+        discovery_port_arg=discovery_port,
+        broadcast_port_arg=broadcast_port,
+        bind_address_arg=bind_address,
     )
 except Exception:
     # Fallback to secure defaults if config loading fails
-    discovery_client = ServerDiscoveryClient(bind_address="127.0.0.1")
+    discovery_client = ServerDiscoveryClient(bind_address_arg="127.0.0.1")

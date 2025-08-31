@@ -9,6 +9,31 @@ echo "Stopping SysManage Agent..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Function to get configuration value from client.yaml
+get_config_value() {
+    local key=$1
+    local config_file="client.yaml"
+    
+    if [ -f "$config_file" ]; then
+        python3 -c "
+import yaml
+import sys
+try:
+    with open('$config_file', 'r') as f:
+        config = yaml.safe_load(f)
+    keys = '$key'.split('.')
+    value = config
+    for k in keys:
+        value = value[k]
+    print(value)
+except:
+    sys.exit(1)
+" 2>/dev/null
+    else
+        return 1
+    fi
+}
+
 # Function to kill process by PID file
 kill_by_pidfile() {
     local pidfile=$1
@@ -57,12 +82,27 @@ kill_by_pidfile() {
 kill_by_pattern() {
     local pattern="python3.*main.py"
     
-    local pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$) # Exclude this script's PID
+    # Cross-platform process finding
+    local pids=""
+    if command -v pgrep >/dev/null 2>&1; then
+        # Use pgrep if available (Linux, modern macOS, some BSD)
+        pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$) # Exclude this script's PID
+    else
+        # Fallback: use ps and grep for older systems
+        pids=$(ps -ef 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+    fi
+    
     if [ -n "$pids" ]; then
-        echo "Found SysManage Agent processes, stopping them..."
+        local pid_count=$(echo "$pids" | wc -l)
+        echo "Found $pid_count SysManage Agent process(es), stopping them..."
         echo "$pids" | while read pid; do
             if [ -n "$pid" ]; then
-                echo "Stopping agent process (PID: $pid)..."
+                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | head -c 60)
+                if [ -z "$cmd" ]; then
+                    # Fallback for systems where ps -p doesn't work the same way
+                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | head -c 60)
+                fi
+                echo "  Stopping PID $pid: $cmd"
                 kill "$pid" 2>/dev/null
             fi
         done
@@ -70,10 +110,17 @@ kill_by_pattern() {
         # Wait a moment
         sleep 2
         
-        # Force kill if still running
-        local remaining_pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$)
+        # Force kill if still running - check again with same cross-platform approach
+        local remaining_pids=""
+        if command -v pgrep >/dev/null 2>&1; then
+            remaining_pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$)
+        else
+            remaining_pids=$(ps -ef 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+        fi
+        
         if [ -n "$remaining_pids" ]; then
-            echo "Force stopping remaining agent processes..."
+            local remaining_count=$(echo "$remaining_pids" | wc -l)
+            echo "⚠️  $remaining_count agent process(es) still running, force stopping..."
             echo "$remaining_pids" | while read pid; do
                 if [ -n "$pid" ]; then
                     kill -9 "$pid" 2>/dev/null
@@ -108,7 +155,14 @@ fi
 
 # Final verification
 sleep 1
-remaining_processes=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$ | wc -l)
+
+# Cross-platform process count check
+remaining_processes=0
+if command -v pgrep >/dev/null 2>&1; then
+    remaining_processes=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$ | wc -l)
+else
+    remaining_processes=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | wc -l)
+fi
 
 if [ "$remaining_processes" -eq 0 ]; then
     echo ""
@@ -118,10 +172,14 @@ else
     echo "⚠️  Warning: $remaining_processes agent process(es) may still be running"
     echo ""
     echo "To manually check for agent processes:"
-    echo "  ps aux | grep 'python3.*main.py'"
+    echo "  ps -ef | grep 'python3.*main.py'"
     echo ""
     echo "To manually kill all agent processes:"
-    echo "  pkill -f 'python3.*main.py'"
+    if command -v pkill >/dev/null 2>&1; then
+        echo "  pkill -f 'python3.*main.py'"
+    else
+        echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+    fi
 fi
 
 echo ""

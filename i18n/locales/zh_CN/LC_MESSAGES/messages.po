@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: zh_CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "正在启动 SysManage 代理"
 
-msgid "Connecting to server"
-msgstr "正在连接服务器"
-
-msgid "Connected to server successfully"
-msgstr "成功连接到服务器"
-
-msgid "Connection failed"
-msgstr "连接失败"
-
-msgid "Disconnected from server"
-msgstr "与服务器断开连接"
-
-msgid "Reconnecting to server"
-msgstr "正在重新连接服务器"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "正在加载配置"
-
-msgid "Configuration loaded successfully"
-msgstr "配置加载成功"
-
-msgid "Configuration error"
-msgstr "配置错误"
-
-msgid "Invalid server URL"
-msgstr "无效的服务器 URL"
-
-# System information
-msgid "Gathering system information"
-msgstr "正在收集系统信息"
-
-msgid "System information collected"
-msgstr "系统信息收集完成"
-
-msgid "Failed to collect system information"
-msgstr "收集系统信息失败"
-
-# Command execution
-msgid "Executing command"
-msgstr "正在执行命令"
-
-msgid "Command executed successfully"
-msgstr "命令执行成功"
-
-msgid "Command execution failed"
-msgstr "命令执行失败"
-
-msgid "Command not permitted"
-msgstr "命令不被允许"
-
-# File operations
-msgid "File not found"
-msgstr "找不到文件"
-
-msgid "Permission denied"
-msgstr "访问被拒绝"
-
-msgid "File operation completed"
-msgstr "文件操作完成"
-
-# Service management
-msgid "Service started"
-msgstr "服务已启动"
-
-msgid "Service stopped"
-msgstr "服务已停止"
-
-msgid "Service installation completed"
-msgstr "服务安装完成"
-
-msgid "Service removal completed"
-msgstr "服务移除完成"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "发生意外错误"
-
-msgid "Network error"
-msgstr "网络错误"
-
-msgid "Authentication failed"
-msgstr "身份验证失败"
-
-msgid "Invalid response from server"
-msgstr "来自服务器的无效响应"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "正在发送初始操作系统版本数据..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "正在发送初始操作系统版本数据..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "初始数据更新发送成功"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "发送初始数据更新失败：%s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "成功连接到服务器"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "正在连接服务器"
+
+#~ msgid "Connection failed"
+#~ msgstr "连接失败"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "与服务器断开连接"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "正在重新连接服务器"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "正在加载配置"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "配置加载成功"
+
+#~ msgid "Configuration error"
+#~ msgstr "配置错误"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "无效的服务器 URL"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "正在收集系统信息"
+
+#~ msgid "System information collected"
+#~ msgstr "系统信息收集完成"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "收集系统信息失败"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "正在执行命令"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "命令执行成功"
+
+#~ msgid "Command execution failed"
+#~ msgstr "命令执行失败"
+
+#~ msgid "Command not permitted"
+#~ msgstr "命令不被允许"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "找不到文件"
+
+#~ msgid "Permission denied"
+#~ msgstr "访问被拒绝"
+
+#~ msgid "File operation completed"
+#~ msgstr "文件操作完成"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "服务已启动"
+
+#~ msgid "Service stopped"
+#~ msgstr "服务已停止"
+
+#~ msgid "Service installation completed"
+#~ msgstr "服务安装完成"
+
+#~ msgid "Service removal completed"
+#~ msgstr "服务移除完成"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "发生意外错误"
+
+#~ msgid "Network error"
+#~ msgstr "网络错误"
+
+#~ msgid "Authentication failed"
+#~ msgstr "身份验证失败"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "来自服务器的无效响应"

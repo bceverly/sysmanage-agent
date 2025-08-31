@@ -6,12 +6,17 @@ for secure communication with the SysManage server.
 """
 
 import hashlib
-import json
 import os
+import sys
+import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 from cryptography import x509
-from cryptography.hazmat.primitives import serialization
+from i18n import _
+
+# Import used for certificate parsing if needed in the future
+# from cryptography.hazmat.primitives import serialization
 
 
 class CertificateStore:
@@ -20,11 +25,7 @@ class CertificateStore:
     def __init__(self, config_dir: str = "/etc/sysmanage-agent"):
         """Initialize certificate store with config directory."""
         # Use a safe default path for testing only if using the default production path
-        import os
-
         if "PYTEST_CURRENT_TEST" in os.environ and config_dir == "/etc/sysmanage-agent":
-            import tempfile
-
             config_dir = tempfile.mkdtemp(prefix="sysmanage_agent_test_certs_")
 
         self.config_dir = Path(config_dir)
@@ -35,12 +36,14 @@ class CertificateStore:
             os.chmod(self.config_dir, 0o700)
         except PermissionError:
             # Fall back to local directory in the same location as the running script
-            import sys
-
             script_dir = Path(sys.argv[0]).parent.resolve()
             fallback_dir = script_dir / ".sysmanage-agent"
 
-            print(f"⚠️  Cannot access {config_dir}, falling back to {fallback_dir}")
+            print(
+                _(
+                    "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+                ).format(config_dir=config_dir, fallback_dir=fallback_dir)
+            )
             self.config_dir = fallback_dir
             self.config_dir.mkdir(parents=True, exist_ok=True)
             os.chmod(self.config_dir, 0o700)
@@ -60,22 +63,22 @@ class CertificateStore:
                       ca_certificate, and server_fingerprint
         """
         # Store client certificate
-        with open(self.client_cert_path, "w") as f:
+        with open(self.client_cert_path, "w", encoding="utf-8") as f:
             f.write(cert_data["certificate"])
         os.chmod(self.client_cert_path, 0o644)
 
         # Store client private key with restrictive permissions
-        with open(self.client_key_path, "w") as f:
+        with open(self.client_key_path, "w", encoding="utf-8") as f:
             f.write(cert_data["private_key"])
         os.chmod(self.client_key_path, 0o600)
 
         # Store CA certificate
-        with open(self.ca_cert_path, "w") as f:
+        with open(self.ca_cert_path, "w", encoding="utf-8") as f:
             f.write(cert_data["ca_certificate"])
         os.chmod(self.ca_cert_path, 0o644)
 
         # Store server fingerprint
-        with open(self.server_fingerprint_path, "w") as f:
+        with open(self.server_fingerprint_path, "w", encoding="utf-8") as f:
             f.write(cert_data["server_fingerprint"])
         os.chmod(self.server_fingerprint_path, 0o644)
 
@@ -106,7 +109,7 @@ class CertificateStore:
         if not self.server_fingerprint_path.exists():
             return None
 
-        with open(self.server_fingerprint_path, "r") as f:
+        with open(self.server_fingerprint_path, "r", encoding="utf-8") as f:
             return f.read().strip()
 
     def validate_server_certificate(self, cert_der: bytes) -> bool:
@@ -137,12 +140,10 @@ class CertificateStore:
             with open(self.client_cert_path, "rb") as f:
                 cert = x509.load_pem_x509_certificate(f.read())
 
-            from datetime import datetime, timezone
-
             now = datetime.now(timezone.utc)
 
             # Check if certificate is within validity period
-            return now >= cert.not_valid_before_utc and now <= cert.not_valid_after_utc
+            return cert.not_valid_before_utc <= now <= cert.not_valid_after_utc
 
         except Exception:
             return False

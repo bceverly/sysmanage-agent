@@ -1,105 +1,169 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-30 16:13-0400\n"
 "Language: nl\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: main.py:40
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:43
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
+#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "SysManage Agent wordt gestart"
 
-msgid "Connecting to server"
-msgstr "Verbinding maken met server"
-
-msgid "Connected to server successfully"
-msgstr "Succesvol verbonden met server"
-
-msgid "Connection failed"
-msgstr "Verbinding mislukt"
-
-msgid "Disconnected from server"
-msgstr "Verbinding met server verbroken"
-
-msgid "Reconnecting to server"
-msgstr "Opnieuw verbinden met server"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "Configuratie laden"
-
-msgid "Configuration loaded successfully"
-msgstr "Configuratie succesvol geladen"
-
-msgid "Configuration error"
-msgstr "Configuratiefout"
-
-msgid "Invalid server URL"
-msgstr "Ongeldige server-URL"
-
-# System information
-msgid "Gathering system information"
-msgstr "Systeeminformatie verzamelen"
-
-msgid "System information collected"
-msgstr "Systeeminformatie verzameld"
-
-msgid "Failed to collect system information"
-msgstr "Verzamelen van systeeminformatie mislukt"
-
-# Command execution
-msgid "Executing command"
-msgstr "Opdracht uitvoeren"
-
-msgid "Command executed successfully"
-msgstr "Opdracht succesvol uitgevoerd"
-
-msgid "Command execution failed"
-msgstr "Uitvoeren van opdracht mislukt"
-
-msgid "Command not permitted"
-msgstr "Opdracht niet toegestaan"
-
-# File operations
-msgid "File not found"
-msgstr "Bestand niet gevonden"
-
-msgid "Permission denied"
-msgstr "Toegang geweigerd"
-
-msgid "File operation completed"
-msgstr "Bestandsoperatie voltooid"
-
-# Service management
-msgid "Service started"
-msgstr "Service gestart"
-
-msgid "Service stopped"
-msgstr "Service gestopt"
-
-msgid "Service installation completed"
-msgstr "Service-installatie voltooid"
-
-msgid "Service removal completed"
-msgstr "Service-verwijdering voltooid"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "Er is een onverwachte fout opgetreden"
-
-msgid "Network error"
-msgstr "Netwerkfout"
-
-msgid "Authentication failed"
-msgstr "Authenticatie mislukt"
-
-msgid "Invalid response from server"
-msgstr "Ongeldige reactie van server"
+#: main.py:177
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
+#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "Initiële OS-versiegegevens verzenden..."
 
+# OS Version Update Messages
+#: main.py:343
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "Initiële OS-versiegegevens verzenden..."
+
+#: main.py:362
 msgid "Initial data updates sent successfully"
 msgstr "Initiële gegevens succesvol verzonden"
 
+#: main.py:364
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
+
+#: main.py:641
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:643
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:646
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:651
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:653
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:655
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:658
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:698
+msgid "Connected to server successfully"
+msgstr "Succesvol verbonden met server"
+
+#: client_registration.py:22
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#: security/certificate_store.py:41
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "Verbinding maken met server"
+
+#~ msgid "Connection failed"
+#~ msgstr "Verbinding mislukt"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "Verbinding met server verbroken"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "Opnieuw verbinden met server"
+
+# Configuration
+#~ msgid "Loading configuration"
+#~ msgstr "Configuratie laden"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "Configuratie succesvol geladen"
+
+#~ msgid "Configuration error"
+#~ msgstr "Configuratiefout"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "Ongeldige server-URL"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "Systeeminformatie verzamelen"
+
+#~ msgid "System information collected"
+#~ msgstr "Systeeminformatie verzameld"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "Verzamelen van systeeminformatie mislukt"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "Opdracht uitvoeren"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "Opdracht succesvol uitgevoerd"
+
+#~ msgid "Command execution failed"
+#~ msgstr "Uitvoeren van opdracht mislukt"
+
+#~ msgid "Command not permitted"
+#~ msgstr "Opdracht niet toegestaan"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "Bestand niet gevonden"
+
+#~ msgid "Permission denied"
+#~ msgstr "Toegang geweigerd"
+
+#~ msgid "File operation completed"
+#~ msgstr "Bestandsoperatie voltooid"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "Service gestart"
+
+#~ msgid "Service stopped"
+#~ msgstr "Service gestopt"
+
+#~ msgid "Service installation completed"
+#~ msgstr "Service-installatie voltooid"
+
+#~ msgid "Service removal completed"
+#~ msgstr "Service-verwijdering voltooid"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "Er is een onverwachte fout opgetreden"
+
+#~ msgid "Network error"
+#~ msgstr "Netwerkfout"
+
+#~ msgid "Authentication failed"
+#~ msgstr "Authenticatie mislukt"
+
+#~ msgid "Invalid response from server"
+#~ msgstr "Ongeldige reactie van server"
