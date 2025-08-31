@@ -3,6 +3,7 @@ Tests for the OS information collection module.
 """
 
 import json
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -92,17 +93,9 @@ class TestOSInfoCollector:
             assert result["os_info"]["mac_version"] == "14.0"
 
     @patch("platform.system")
-    @patch("platform.freedesktop_os_release")
-    def test_get_linux_details_success(
-        self, mock_os_release, mock_system, os_collector
-    ):
+    def test_get_linux_details_success(self, mock_system, os_collector):
         """Test Linux-specific details collection."""
         mock_system.return_value = "Linux"
-        mock_os_release.return_value = {
-            "NAME": "Ubuntu",
-            "VERSION_ID": "22.04",
-            "VERSION_CODENAME": "jammy",
-        }
 
         with patch("platform.release") as mock_release, patch(
             "platform.version"
@@ -121,21 +114,33 @@ class TestOSInfoCollector:
             mock_architecture.return_value = ("64bit", "ELF")
             mock_python_version.return_value = "3.10.6"
 
-            result = os_collector.get_os_version_info()
+            # Mock freedesktop_os_release only if it exists in this Python version
+            if sys.version_info >= (3, 10):
+                with patch(
+                    "platform.freedesktop_os_release",
+                    return_value={
+                        "NAME": "Ubuntu",
+                        "VERSION_ID": "22.04",
+                        "VERSION_CODENAME": "jammy",
+                    },
+                ):
+                    result = os_collector.get_os_version_info()
 
-            assert result["platform"] == "Linux"
-            assert "os_info" in result
-            assert result["os_info"]["distribution"] == "Ubuntu"
-            assert result["os_info"]["distribution_version"] == "22.04"
+                    assert result["platform"] == "Linux"
+                    assert "os_info" in result
+                    assert result["os_info"]["distribution"] == "Ubuntu"
+                    assert result["os_info"]["distribution_version"] == "22.04"
+            else:
+                # For Python < 3.10, just verify basic functionality
+                result = os_collector.get_os_version_info()
+
+                assert result["platform"] == "Linux"
+                assert "os_info" in result
 
     @patch("platform.system")
-    @patch("platform.freedesktop_os_release")
-    def test_get_linux_details_file_not_found(
-        self, mock_os_release, mock_system, os_collector
-    ):
+    def test_get_linux_details_file_not_found(self, mock_system, os_collector):
         """Test Linux details when os-release file is not found."""
         mock_system.return_value = "Linux"
-        mock_os_release.side_effect = OSError("File not found")
 
         with patch("platform.release") as mock_release, patch(
             "platform.version"
@@ -154,11 +159,24 @@ class TestOSInfoCollector:
             mock_architecture.return_value = ("64bit", "ELF")
             mock_python_version.return_value = "3.10.6"
 
-            result = os_collector.get_os_version_info()
+            # Mock freedesktop_os_release only if it exists in this Python version
+            if sys.version_info >= (3, 10):
+                with patch(
+                    "platform.freedesktop_os_release",
+                    side_effect=OSError("File not found"),
+                ):
+                    result = os_collector.get_os_version_info()
 
-            assert result["platform"] == "Linux"
-            # os_info should still be present but without distribution info
-            assert "os_info" in result
+                    assert result["platform"] == "Linux"
+                    # os_info should still be present but without distribution info
+                    assert "os_info" in result
+            else:
+                # For Python < 3.10, just verify basic functionality
+                result = os_collector.get_os_version_info()
+
+                assert result["platform"] == "Linux"
+                # os_info should still be present
+                assert "os_info" in result
 
     @patch("platform.system")
     @patch("platform.win32_ver")

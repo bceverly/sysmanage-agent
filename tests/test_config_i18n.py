@@ -219,8 +219,9 @@ class TestConfigValidation:
 
     def test_missing_config_file(self):
         """Test handling of missing configuration file."""
+        # Use absolute path to avoid falling back to local config
         with pytest.raises(FileNotFoundError):
-            ConfigManager("nonexistent_file.yaml")
+            ConfigManager("/tmp/nonexistent_file.yaml")
 
     def test_empty_config_file(self, tmp_path):
         """Test handling of empty configuration file."""

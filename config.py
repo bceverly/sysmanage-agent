@@ -12,16 +12,46 @@ import yaml
 class ConfigManager:
     """Manages configuration for the SysManage Agent."""
 
-    def __init__(self, config_file: str = "client.yaml"):
-        self.config_file = config_file
+    def __init__(self, config_file: str = "sysmanage-agent.yaml"):
+        # Determine config file path with security priority
+        self.config_file = self._determine_config_path(config_file)
         self.config_data: Dict[str, Any] = {}
         self.load_config()
+
+    def _determine_config_path(self, default_filename: str) -> str:
+        """
+        Determine configuration file path with security priority.
+
+        Priority order (security-first):
+        1. If absolute path provided (e.g., for tests), use it directly
+        2. /etc/sysmanage-agent.yaml (system config)
+        3. ./sysmanage-agent.yaml (local config)
+        4. Fallback to provided filename for backward compatibility
+        """
+        # If absolute path provided (tests, explicit config), use it directly
+        if os.path.isabs(default_filename):
+            return default_filename
+
+        system_config = "/etc/sysmanage-agent.yaml"
+        local_config = "./sysmanage-agent.yaml"
+
+        if os.path.exists(system_config):
+            return system_config
+        elif os.path.exists(local_config):
+            return local_config
+        elif os.path.exists(default_filename):
+            # Backward compatibility - warn but allow
+            return default_filename
+        else:
+            # Default to system location for error message clarity
+            return system_config
 
     def load_config(self) -> None:
         """Load configuration from YAML file."""
         if not os.path.exists(self.config_file):
             raise FileNotFoundError(
-                f"Configuration file '{self.config_file}' not found"
+                f"Configuration file '{self.config_file}' not found. "
+                f"Expected locations: /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
             )
 
         try:
