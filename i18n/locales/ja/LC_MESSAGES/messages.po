@@ -170,3 +170,52 @@ msgstr ""
 
 msgid "Sending initial user access data..."
 msgstr "初期ユーザーアクセスデータを送信中..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "ソフトウェアインベントリを収集中"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりました"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "ソフトウェアインベントリの収集に失敗しました：%s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "ソフトウェアインベントリでサポートされていないプラットフォーム：%s"
+
+msgid "Detected package managers: %s"
+msgstr "検出されたパッケージマネージャー：%s"
+
+msgid "Collecting apt packages"
+msgstr "aptパッケージを収集中"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "aptパッケージの収集に失敗しました：%s"
+
+msgid "Collecting snap packages"
+msgstr "snapパッケージを収集中"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "snapパッケージの収集に失敗しました：%s"
+
+msgid "Collecting flatpak packages"
+msgstr "flatpakパッケージを収集中"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "flatpakパッケージの収集に失敗しました：%s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Homebrewパッケージを収集中"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Homebrewパッケージの収集に失敗しました：%s"
+
+msgid "Collecting macOS Applications"
+msgstr "macOSアプリケーションを収集中"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "macOSアプリケーションの収集に失敗しました：%s"
+
+msgid "Sending initial software inventory data..."
+msgstr "初期ソフトウェアインベントリデータを送信中..."

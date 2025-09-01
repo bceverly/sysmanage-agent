@@ -13,6 +13,7 @@ from hardware_collection import HardwareCollector
 from os_info_collection import OSInfoCollector
 from network_utils import NetworkUtils
 from user_access_collection import UserAccessCollector
+from software_inventory_collection import SoftwareInventoryCollector
 
 try:
     import aiohttp
@@ -37,6 +38,7 @@ class ClientRegistration:
         self.os_info_collector = OSInfoCollector()
         self.network_utils = NetworkUtils(config_manager)
         self.user_access_collector = UserAccessCollector()
+        self.software_inventory_collector = SoftwareInventoryCollector()
 
     def _create_basic_registration_dict(
         self, hostname: str, ipv4: str, ipv6: str
@@ -67,6 +69,10 @@ class ClientRegistration:
     def get_user_access_info(self) -> Dict[str, Any]:
         """Get comprehensive user and group access information."""
         return self.user_access_collector.get_access_info()
+
+    def get_software_inventory_info(self) -> Dict[str, Any]:
+        """Get comprehensive software inventory information."""
+        return self.software_inventory_collector.get_software_inventory()
 
     def get_system_info(self) -> Dict[str, Any]:
         """Get comprehensive system information (legacy method for compatibility)."""

@@ -9,10 +9,10 @@ echo "Stopping SysManage Agent..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Function to get configuration value from client.yaml
+# Function to get configuration value from sysmanage-agent.yaml
 get_config_value() {
     local key=$1
-    local config_file="client.yaml"
+    local config_file="sysmanage-agent.yaml"
     
     if [ -f "$config_file" ]; then
         python3 -c "

@@ -44,7 +44,7 @@ jobs:
 
     - name: Create test configuration
       run: |
-        cat > client.yaml << EOF
+        cat > sysmanage-agent.yaml << EOF
         server:
           hostname: "localhost"
           port: 8000

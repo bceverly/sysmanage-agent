@@ -105,3 +105,52 @@ msgid "Failed to send initial data updates: %s"
 msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
 msgid "Sending initial user access data..."
 msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र कर रहे हैं"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "सॉफ़्टवेयर इन्वेंटरी संग्रह पूर्ण: %d पैकेज मिले"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+
+msgid "Detected package managers: %s"
+msgstr "पहचाने गए पैकेज प्रबंधक: %s"
+
+msgid "Collecting apt packages"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+msgid "Collecting snap packages"
+msgstr "snap पैकेज एकत्र कर रहे हैं"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "snap पैकेज एकत्र करना विफल: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "flatpak पैकेज एकत्र कर रहे हैं"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "flatpak पैकेज एकत्र करना विफल: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Homebrew पैकेज एकत्र कर रहे हैं"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "macOS एप्लिकेशन एकत्र कर रहे हैं"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "प्रारंभिक सॉफ्टवेयर सूची डेटा भेज रहे हैं..."

@@ -105,3 +105,52 @@ msgid "Failed to send initial data updates: %s"
 msgstr "Failed to send initial data updates: %s"
 msgid "Sending initial user access data..."
 msgstr "Sending initial user access data..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "Collecting software inventory"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "Software inventory collection completed: %d packages found"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "Failed to collect software inventory: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "Unsupported platform for software inventory: %s"
+
+msgid "Detected package managers: %s"
+msgstr "Detected package managers: %s"
+
+msgid "Collecting apt packages"
+msgstr "Collecting apt packages"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "Failed to collect apt packages: %s"
+
+msgid "Collecting snap packages"
+msgstr "Collecting snap packages"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "Failed to collect snap packages: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "Collecting flatpak packages"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "Failed to collect flatpak packages: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Collecting Homebrew packages"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Failed to collect Homebrew packages: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "Collecting macOS Applications"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "Failed to collect macOS applications: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "Sending initial software inventory data..."

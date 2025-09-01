@@ -51,4 +51,4 @@ The `start` and `stop` scripts (without extensions) automatically detect your pl
 
 ## Configuration
 
-All platforms use the same `client.yaml` configuration file format. The agent automatically adapts to platform-specific requirements while maintaining consistent behavior across all supported systems.
+All platforms use the same `sysmanage-agent.yaml` configuration file format. The agent automatically adapts to platform-specific requirements while maintaining consistent behavior across all supported systems.

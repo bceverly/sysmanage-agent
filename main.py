@@ -413,6 +413,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             )
             await self.send_message(user_access_message)
 
+            self.logger.info(_("Sending initial software inventory data..."))
+
+            # Send software inventory data
+            software_info = self.registration.get_software_inventory_info()
+            # Add hostname to software inventory data for server processing
+            system_info = self.registration.get_system_info()
+            software_info["hostname"] = system_info["hostname"]
+            self.logger.info(
+                "Software inventory info keys: %s", list(software_info.keys())
+            )
+            self.logger.info(
+                "Software packages count: %s",
+                software_info.get("total_packages", 0),
+            )
+            software_message = self.create_message(
+                "software_inventory_update", software_info
+            )
+            await self.send_message(software_message)
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)

@@ -170,3 +170,52 @@ msgstr ""
 
 msgid "Sending initial user access data..."
 msgstr "Invio dati iniziali di accesso utente..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "Raccolta inventario software"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "Raccolta inventario software completata: %d pacchetti trovati"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "Errore nella raccolta dell'inventario software: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "Piattaforma non supportata per l'inventario software: %s"
+
+msgid "Detected package managers: %s"
+msgstr "Gestori di pacchetti rilevati: %s"
+
+msgid "Collecting apt packages"
+msgstr "Raccolta pacchetti apt"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "Errore nella raccolta dei pacchetti apt: %s"
+
+msgid "Collecting snap packages"
+msgstr "Raccolta pacchetti snap"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "Errore nella raccolta dei pacchetti snap: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "Raccolta pacchetti flatpak"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "Errore nella raccolta dei pacchetti flatpak: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Raccolta pacchetti Homebrew"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Errore nella raccolta dei pacchetti Homebrew: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "Raccolta applicazioni macOS"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "Errore nella raccolta delle applicazioni macOS: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "Invio dei dati iniziali dell'inventario software..."

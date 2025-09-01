@@ -170,3 +170,52 @@ msgstr ""
 
 msgid "Sending initial user access data..."
 msgstr "Versturen initiële gebruikerstoegang gegevens..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "Software-inventaris verzamelen"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "Software-inventaris verzameling voltooid: %d pakketten gevonden"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "Niet-ondersteund platform voor software-inventaris: %s"
+
+msgid "Detected package managers: %s"
+msgstr "Gedetecteerde pakketbeheerders: %s"
+
+msgid "Collecting apt packages"
+msgstr "Apt-pakketten verzamelen"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+msgid "Collecting snap packages"
+msgstr "Snap-pakketten verzamelen"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "Fout bij verzamelen snap-pakketten: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "Flatpak-pakketten verzamelen"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "Fout bij verzamelen flatpak-pakketten: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Homebrew-pakketten verzamelen"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "macOS-applicaties verzamelen"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "Initiële software-inventarisgegevens verzenden..."

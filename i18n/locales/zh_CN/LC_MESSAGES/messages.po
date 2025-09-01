@@ -170,3 +170,52 @@ msgstr ""
 
 msgid "Sending initial user access data..."
 msgstr "正在发送初始用户访问数据..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "正在收集软件清单"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "软件清单收集完成：找到 %d 个软件包"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "收集软件清单失败：%s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "软件清单不支持的平台：%s"
+
+msgid "Detected package managers: %s"
+msgstr "检测到的包管理器：%s"
+
+msgid "Collecting apt packages"
+msgstr "正在收集 apt 软件包"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+msgid "Collecting snap packages"
+msgstr "正在收集 snap 软件包"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "收集 snap 软件包失败：%s"
+
+msgid "Collecting flatpak packages"
+msgstr "正在收集 flatpak 软件包"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "收集 flatpak 软件包失败：%s"
+
+msgid "Collecting Homebrew packages"
+msgstr "正在收集 Homebrew 软件包"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "收集 Homebrew 软件包失败：%s"
+
+msgid "Collecting macOS Applications"
+msgstr "正在收集 macOS 应用程序"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+msgid "Sending initial software inventory data..."
+msgstr "正在发送初始软件清单数据..."
