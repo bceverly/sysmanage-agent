@@ -18,7 +18,7 @@ class TestAgentHeartbeat:
     @pytest.fixture
     def agent_config(self, tmp_path):
         """Create a temporary config file for testing."""
-        config_file = tmp_path / "test_client.yaml"
+        config_file = tmp_path / "test_sysmanage_agent.yaml"
         config_content = """
 server:
   hostname: "test-server.example.com"
@@ -248,7 +248,7 @@ class TestSystemInfoMessage:
     def mock_agent_with_registration(self, tmp_path, mock_registration):
         """Create a mock agent with registration handler."""
         # Create a temporary config file
-        config_file = tmp_path / "test_client.yaml"
+        config_file = tmp_path / "test_sysmanage_agent.yaml"
         config_content = """
 server:
   hostname: "test-server.example.com"

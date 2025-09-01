@@ -170,3 +170,52 @@ msgstr ""
 
 msgid "Sending initial user access data..."
 msgstr "초기 사용자 액세스 데이터 전송 중..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "소프트웨어 인벤토리 수집 중"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "소프트웨어 인벤토리 수집 완료: %d개 패키지 발견"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "소프트웨어 인벤토리 수집 실패: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
+
+msgid "Detected package managers: %s"
+msgstr "감지된 패키지 매니저: %s"
+
+msgid "Collecting apt packages"
+msgstr "apt 패키지 수집 중"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "apt 패키지 수집 실패: %s"
+
+msgid "Collecting snap packages"
+msgstr "snap 패키지 수집 중"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "snap 패키지 수집 실패: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "flatpak 패키지 수집 중"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "flatpak 패키지 수집 실패: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Homebrew 패키지 수집 중"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Homebrew 패키지 수집 실패: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "macOS 애플리케이션 수집 중"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "macOS 애플리케이션 수집 실패: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "초기 소프트웨어 인벤토리 데이터 전송 중..."

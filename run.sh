@@ -133,10 +133,10 @@ fi
 HOSTNAME=$(python3 -c "import socket; print(socket.getfqdn())" 2>/dev/null || echo "unknown")
 PLATFORM=$(python3 -c "import platform; print(platform.system())" 2>/dev/null || echo "unknown")
 
-# Function to get configuration value from client.yaml
+# Function to get configuration value from sysmanage-agent.yaml
 get_config_value() {
     local key=$1
-    local config_file="client.yaml"
+    local config_file="sysmanage-agent.yaml"
     
     if [ -f "$config_file" ]; then
         python3 -c "
@@ -158,8 +158,8 @@ except:
     fi
 }
 
-# Get server configuration from client.yaml if it exists
-if [ -f "client.yaml" ]; then
+# Get server configuration from sysmanage-agent.yaml if it exists
+if [ -f "sysmanage-agent.yaml" ]; then
     SERVER_HOST=$(get_config_value "server.hostname")
     if [ $? -ne 0 ] || [ -z "$SERVER_HOST" ]; then
         SERVER_HOST="unknown"
@@ -179,7 +179,7 @@ if [ -f "client.yaml" ]; then
         USE_HTTPS="http"
     fi
 else
-    echo "⚠️  WARNING: client.yaml configuration file not found!"
+    echo "⚠️  WARNING: sysmanage-agent.yaml configuration file not found!"
     SERVER_HOST="unknown"
     SERVER_PORT="unknown"
     USE_HTTPS="unknown"

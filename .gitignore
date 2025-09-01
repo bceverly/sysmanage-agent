@@ -168,4 +168,4 @@ fix-commits.sh
 
 # Local configuration files
 sysmanage-agent.yaml
-client.yaml
+sysmanage-agent.yaml

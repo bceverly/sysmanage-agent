@@ -105,3 +105,52 @@ msgid "Failed to send initial data updates: %s"
 msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
 msgid "Sending initial user access data..."
 msgstr "إرسال بيانات وصول المستخدم الأولية..."
+
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "جمع جرد البرمجيات"
+
+msgid "Software inventory collection completed: %d packages found"
+msgstr "اكتمل جمع جرد البرمجيات: تم العثور على %d حزمة"
+
+msgid "Failed to collect software inventory: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+msgid "Unsupported platform for software inventory: %s"
+msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+
+msgid "Detected package managers: %s"
+msgstr "مديري الحزم المكتشفة: %s"
+
+msgid "Collecting apt packages"
+msgstr "جمع حزم apt"
+
+msgid "Failed to collect apt packages: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+msgid "Collecting snap packages"
+msgstr "جمع حزم snap"
+
+msgid "Failed to collect snap packages: %s"
+msgstr "فشل في جمع حزم snap: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "جمع حزم flatpak"
+
+msgid "Failed to collect flatpak packages: %s"
+msgstr "فشل في جمع حزم flatpak: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "جمع حزم Homebrew"
+
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "فشل في جمع حزم Homebrew: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "جمع تطبيقات macOS"
+
+msgid "Failed to collect macOS applications: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+msgid "Sending initial software inventory data..."
+msgstr "إرسال بيانات جرد البرامج الأولية..."
