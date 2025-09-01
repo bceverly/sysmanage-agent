@@ -1,0 +1,107 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hi\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "सिस्टम प्रबंधन एजेंट शुरू कर रहे हैं"
+
+msgid "Connecting to server"
+msgstr "सर्वर से कनेक्ट कर रहे हैं"
+
+msgid "Connected to server successfully"
+msgstr "सर्वर से सफलतापूर्वक कनेक्ट हो गए"
+
+msgid "Connection failed"
+msgstr "कनेक्शन विफल"
+
+msgid "Disconnected from server"
+msgstr "सर्वर से डिस्कनेक्ट हो गए"
+
+msgid "Reconnecting to server"
+msgstr "सर्वर से पुनः कनेक्ट कर रहे हैं"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "कॉन्फ़िगरेशन लोड कर रहे हैं"
+
+msgid "Configuration loaded successfully"
+msgstr "कॉन्फ़िगरेशन सफलतापूर्वक लोड हुई"
+
+msgid "Configuration error"
+msgstr "कॉन्फ़िगरेशन त्रुटि"
+
+msgid "Invalid server URL"
+msgstr "अमान्य सर्वर URL"
+
+# System information
+msgid "Gathering system information"
+msgstr "सिस्टम जानकारी एकत्रित कर रहे हैं"
+
+msgid "System information collected"
+msgstr "सिस्टम जानकारी एकत्रित की गई"
+
+msgid "Failed to collect system information"
+msgstr "सिस्टम जानकारी एकत्रित करना विफल"
+
+# Command execution
+msgid "Executing command"
+msgstr "कमांड निष्पादित कर रहे हैं"
+
+msgid "Command executed successfully"
+msgstr "कमांड सफलतापूर्वक निष्पादित हुई"
+
+msgid "Command execution failed"
+msgstr "कमांड निष्पादन विफल"
+
+msgid "Command not permitted"
+msgstr "कमांड की अनुमति नहीं है"
+
+# File operations
+msgid "File not found"
+msgstr "फ़ाइल नहीं मिली"
+
+msgid "Permission denied"
+msgstr "अनुमति अस्वीकृत"
+
+msgid "File operation completed"
+msgstr "फ़ाइल ऑपरेशन पूर्ण"
+
+# Service management
+msgid "Service started"
+msgstr "सेवा शुरू की गई"
+
+msgid "Service stopped"
+msgstr "सेवा बंद की गई"
+
+msgid "Service installation completed"
+msgstr "सेवा स्थापना पूर्ण"
+
+msgid "Service removal completed"
+msgstr "सेवा हटाना पूर्ण"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "एक अप्रत्याशित त्रुटि हुई"
+
+msgid "Network error"
+msgstr "नेटवर्क त्रुटि"
+
+msgid "Authentication failed"
+msgstr "प्रमाणीकरण विफल"
+
+msgid "Invalid response from server"
+msgstr "सर्वर से अमान्य प्रतिक्रिया"
+
+# OS Version Update Messages
+msgid "Sending initial OS version data..."
+msgstr "प्रारंभिक OS संस्करण डेटा भेज रहे हैं..."
+
+msgid "Initial data updates sent successfully"
+msgstr "प्रारंभिक डेटा अपडेट सफलतापूर्वक भेजे गए"
+
+msgid "Failed to send initial data updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgid "Sending initial user access data..."
+msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
