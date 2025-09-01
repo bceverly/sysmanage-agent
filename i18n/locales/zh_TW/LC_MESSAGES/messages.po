@@ -103,3 +103,5 @@ msgstr "初始資料更新傳送成功"
 
 msgid "Failed to send initial data updates: %s"
 msgstr "傳送初始資料更新失敗：%s"
+msgid "Sending initial user access data..."
+msgstr "正在發送初始使用者存取資料..."

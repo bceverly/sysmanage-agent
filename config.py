@@ -37,14 +37,13 @@ class ConfigManager:
 
         if os.path.exists(system_config):
             return system_config
-        elif os.path.exists(local_config):
+        if os.path.exists(local_config):
             return local_config
-        elif os.path.exists(default_filename):
+        if os.path.exists(default_filename):
             # Backward compatibility - warn but allow
             return default_filename
-        else:
-            # Default to system location for error message clarity
-            return system_config
+        # Default to system location for error message clarity
+        return system_config
 
     def load_config(self) -> None:
         """Load configuration from YAML file."""
