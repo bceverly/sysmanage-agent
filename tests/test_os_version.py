@@ -57,8 +57,8 @@ i18n:
         ), patch(
             "platform.python_version", return_value="3.11.5"
         ), patch(
-            "platform.freedesktop_os_release",
-            side_effect=AttributeError("Not available"),
+            "os_info_collection.OSInfoCollector._get_linux_distribution_info",
+            return_value=("Linux", "5.15.0-88-generic"),
         ):
 
             system_info = mock_registration.get_system_info()
