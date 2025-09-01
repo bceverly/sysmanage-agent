@@ -12,6 +12,7 @@ from i18n import _
 from hardware_collection import HardwareCollector
 from os_info_collection import OSInfoCollector
 from network_utils import NetworkUtils
+from user_access_collection import UserAccessCollector
 
 try:
     import aiohttp
@@ -35,6 +36,7 @@ class ClientRegistration:
         self.hardware_collector = HardwareCollector()
         self.os_info_collector = OSInfoCollector()
         self.network_utils = NetworkUtils(config_manager)
+        self.user_access_collector = UserAccessCollector()
 
     def _create_basic_registration_dict(
         self, hostname: str, ipv4: str, ipv6: str
@@ -61,6 +63,10 @@ class ClientRegistration:
     def get_hardware_info(self) -> Dict[str, Any]:
         """Get comprehensive hardware information formatted for database storage."""
         return self.hardware_collector.get_hardware_info()
+
+    def get_user_access_info(self) -> Dict[str, Any]:
+        """Get comprehensive user and group access information."""
+        return self.user_access_collector.get_access_info()
 
     def get_system_info(self) -> Dict[str, Any]:
         """Get comprehensive system information (legacy method for compatibility)."""

@@ -167,3 +167,6 @@ msgstr ""
 
 #~ msgid "Invalid response from server"
 #~ msgstr "Ongeldige reactie van server"
+
+msgid "Sending initial user access data..."
+msgstr "Versturen initiële gebruikerstoegang gegevens..."

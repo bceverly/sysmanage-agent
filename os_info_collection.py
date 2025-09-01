@@ -5,7 +5,6 @@ Handles platform-specific OS version and architecture information gathering.
 
 import platform
 import logging
-import re
 from typing import Any, Dict
 
 
@@ -50,8 +49,7 @@ class OSInfoCollector:
                         return (
                             f"{self.macos_version_names[major_version]} {mac_version}"
                         )
-                    else:
-                        return f"{self.macos_version_names[major_version]} {mac_ver[0]}"
+                    return f"{self.macos_version_names[major_version]} {mac_ver[0]}"
 
             # Fallback to original version if we can't map it
             return darwin_version

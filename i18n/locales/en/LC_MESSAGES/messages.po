@@ -103,3 +103,5 @@ msgstr "Initial data updates sent successfully"
 
 msgid "Failed to send initial data updates: %s"
 msgstr "Failed to send initial data updates: %s"
+msgid "Sending initial user access data..."
+msgstr "Sending initial user access data..."

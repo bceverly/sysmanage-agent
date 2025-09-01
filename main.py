@@ -249,6 +249,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 result = await self.update_os_version()
             elif command_type == "update_hardware":
                 result = await self.update_hardware()
+            elif command_type == "update_user_access":
+                result = await self.update_user_access()
             else:
                 result = {
                     "success": False,
@@ -390,6 +392,27 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             hardware_message = self.create_message("hardware_update", hardware_info)
             await self.send_message(hardware_message)
 
+            self.logger.info(_("Sending initial user access data..."))
+
+            # Send user access data
+            user_access_info = self.registration.get_user_access_info()
+            # Add hostname to user access data for server processing
+            system_info = self.registration.get_system_info()
+            user_access_info["hostname"] = system_info["hostname"]
+            self.logger.info("User access info keys: %s", list(user_access_info.keys()))
+            self.logger.info(
+                "Users count: %s",
+                user_access_info.get("total_users", 0),
+            )
+            self.logger.info(
+                "Groups count: %s",
+                user_access_info.get("total_groups", 0),
+            )
+            user_access_message = self.create_message(
+                "user_access_update", user_access_info
+            )
+            await self.send_message(user_access_message)
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -432,6 +455,28 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             return {"success": True, "result": "Hardware information sent"}
         except Exception as e:
             self.logger.error("Failed to update hardware: %s", e)
+            return {"success": False, "error": str(e)}
+
+    async def update_user_access(self) -> Dict[str, Any]:
+        """Gather and send updated user access information to the server."""
+        try:
+            # Get fresh user access info
+            user_access_info = self.registration.get_user_access_info()
+            # Add hostname to user access data for server processing
+            system_info = self.registration.get_system_info()
+            user_access_info["hostname"] = system_info["hostname"]
+
+            # Create user access message
+            user_access_message = self.create_message(
+                "user_access_update", user_access_info
+            )
+
+            # Send user access update to server
+            await self.send_message(user_access_message)
+
+            return {"success": True, "result": "User access information sent"}
+        except Exception as e:
+            self.logger.error("Failed to update user access: %s", e)
             return {"success": False, "error": str(e)}
 
     async def message_receiver(self):
@@ -504,12 +549,21 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         while self.running:
             try:
                 await asyncio.sleep(ping_interval)
-                if self.running:
+                if self.running and self.connected:
                     heartbeat = self.create_heartbeat_message()
-                    await self.send_message(heartbeat)
+                    success = await self.send_message(heartbeat)
+                    if not success:
+                        self.logger.warning("Heartbeat failed, connection may be lost")
+                        # Don't break, let the connection handling in run() deal with it
+                        return
+            except asyncio.CancelledError:
+                # Graceful shutdown - re-raise to propagate cancellation
+                self.logger.debug("Message sender cancelled")
+                raise
             except Exception as e:
                 self.logger.error("Message sender error: %s", e)
-                break
+                # Don't break the loop on non-critical errors, but return to trigger reconnection
+                return
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
@@ -734,8 +788,16 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         ssl_context.check_hostname = False
                         ssl_context.verify_mode = ssl.CERT_NONE
 
+                # Set up WebSocket connection with proper timeouts and ping/pong
+                ping_interval = self.config.get_ping_interval()
+                ping_timeout = ping_interval / 2  # Half of ping interval for timeout
+
                 async with websockets.connect(
-                    websocket_url, ssl=ssl_context
+                    websocket_url,
+                    ssl=ssl_context,
+                    ping_interval=ping_interval,
+                    ping_timeout=ping_timeout,
+                    close_timeout=10,
                 ) as websocket:
                     self.websocket = websocket
                     self.connected = True
@@ -748,11 +810,38 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     # Send OS version data immediately after connection
                     await self.send_initial_data_updates()
 
-                    # Run sender and receiver concurrently
-                    await asyncio.gather(self.message_sender(), self.message_receiver())
+                    # Run sender and receiver concurrently with proper error handling
+                    try:
+                        sender_task = asyncio.create_task(self.message_sender())
+                        receiver_task = asyncio.create_task(self.message_receiver())
+
+                        # Wait for either task to complete (which indicates an error or disconnection)
+                        done, pending = await asyncio.wait(
+                            [sender_task, receiver_task],
+                            return_when=asyncio.FIRST_COMPLETED,
+                        )
+
+                        # Cancel any remaining tasks
+                        for task in pending:
+                            task.cancel()
+                            try:
+                                await task
+                            except asyncio.CancelledError:
+                                pass
+
+                        # Check if any task had an exception
+                        for task in done:
+                            if task.exception():
+                                raise task.exception()
+
+                    except asyncio.CancelledError:
+                        self.logger.debug("Connection tasks cancelled")
+                        raise
 
             except websockets.ConnectionClosed:
                 self.logger.warning("WebSocket connection closed by server")
+            except websockets.InvalidStatusCode as e:
+                self.logger.error("WebSocket connection rejected: %s", e)
             except Exception as e:
                 self.logger.error("Connection error: %s", e)
 
@@ -761,6 +850,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.websocket = None
             self.running = False
             self.connection_failures += 1
+
+            self.logger.info(
+                "Connection attempt %d failed, current failure count: %d",
+                self.connection_failures,
+                self.connection_failures,
+            )
 
             # Only reconnect if auto-reconnect is enabled
             if self.config.should_auto_reconnect():

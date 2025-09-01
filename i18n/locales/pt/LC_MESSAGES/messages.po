@@ -167,3 +167,6 @@ msgstr ""
 
 #~ msgid "Invalid response from server"
 #~ msgstr "Resposta inválida do servidor"
+
+msgid "Sending initial user access data..."
+msgstr "Enviando dados iniciais de acesso de usuários..."

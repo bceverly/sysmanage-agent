@@ -167,3 +167,6 @@ msgstr ""
 
 #~ msgid "Invalid response from server"
 #~ msgstr "サーバーからの無効な応答"
+
+msgid "Sending initial user access data..."
+msgstr "初期ユーザーアクセスデータを送信中..."

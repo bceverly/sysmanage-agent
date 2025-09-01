@@ -167,3 +167,6 @@ msgstr ""
 
 #~ msgid "Invalid response from server"
 #~ msgstr "来自服务器的无效响应"
+
+msgid "Sending initial user access data..."
+msgstr "正在发送初始用户访问数据..."
