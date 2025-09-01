@@ -26,7 +26,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - ⚡ **Command Execution**: Remote command execution with security controls
 - 🔧 **Package Management**: Remote software installation and updates
 - 💓 **Health Monitoring**: Automatic heartbeat and status reporting
-- 🌍 **Multi-language Support**: Native support for 12 languages
+- 🌍 **Multi-language Support**: Native support for 14 languages
 - 🏃‍♂️ **Lightweight**: Minimal resource footprint and dependencies
 - 🔍 **Auto-Discovery**: Automatically discover and configure with SysManage servers on the network
 - ⚙️ **Remote Configuration**: Receive and apply configuration updates from the server
@@ -60,6 +60,8 @@ The SysManage Agent supports multiple languages for logging and system messages.
 | Traditional Chinese | `zh_TW` | ✅ Complete |
 | Korean | `ko` | ✅ Complete |
 | Russian | `ru` | ✅ Complete |
+| Arabic | `ar` | ✅ Complete |
+| Hindi | `hi` | ✅ Complete |
 
 The agent uses the language specified in the configuration file for log messages and system output. If no language is specified, it defaults to English.
 
@@ -275,7 +277,7 @@ logging:
 
 # Internationalization
 i18n:
-  language: "en"                     # Agent language: en, es, fr, de, it, pt, nl, ja, zh_CN, zh_TW, ko, ru
+  language: "en"                     # Agent language: en, es, fr, de, it, pt, nl, ja, zh_CN, zh_TW, ko, ru, ar, hi
 ```
 
 ### 2. Environment Variables (Alternative)
@@ -671,14 +673,27 @@ The SysManage Agent supports multiple languages for user-facing messages and log
 - **Traditional Chinese** (zh_TW) - 繁體中文
 - **Korean** (ko) - 한국어
 - **Russian** (ru) - Русский
+- **Arabic** (ar) - العربية
+- **Hindi** (hi) - हिन्दी
 
 ### Translation Files Location
 
 ```
 i18n/locales/
 ├── en/LC_MESSAGES/messages.po
+├── es/LC_MESSAGES/messages.po
 ├── fr/LC_MESSAGES/messages.po
-└── ja/LC_MESSAGES/messages.po
+├── de/LC_MESSAGES/messages.po
+├── it/LC_MESSAGES/messages.po
+├── pt/LC_MESSAGES/messages.po
+├── nl/LC_MESSAGES/messages.po
+├── ja/LC_MESSAGES/messages.po
+├── zh_CN/LC_MESSAGES/messages.po
+├── zh_TW/LC_MESSAGES/messages.po
+├── ko/LC_MESSAGES/messages.po
+├── ru/LC_MESSAGES/messages.po
+├── ar/LC_MESSAGES/messages.po
+└── hi/LC_MESSAGES/messages.po
 ```
 
 ### Adding New Languages

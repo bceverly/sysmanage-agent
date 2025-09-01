@@ -1,0 +1,107 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+
+# Agent startup and connection
+msgid "Starting SysManage Agent"
+msgstr "بدء تشغيل وكيل إدارة النظام"
+
+msgid "Connecting to server"
+msgstr "الاتصال بالخادم"
+
+msgid "Connected to server successfully"
+msgstr "تم الاتصال بالخادم بنجاح"
+
+msgid "Connection failed"
+msgstr "فشل الاتصال"
+
+msgid "Disconnected from server"
+msgstr "انقطع الاتصال مع الخادم"
+
+msgid "Reconnecting to server"
+msgstr "إعادة الاتصال بالخادم"
+
+# Configuration
+msgid "Loading configuration"
+msgstr "تحميل التكوين"
+
+msgid "Configuration loaded successfully"
+msgstr "تم تحميل التكوين بنجاح"
+
+msgid "Configuration error"
+msgstr "خطأ في التكوين"
+
+msgid "Invalid server URL"
+msgstr "رابط الخادم غير صحيح"
+
+# System information
+msgid "Gathering system information"
+msgstr "جمع معلومات النظام"
+
+msgid "System information collected"
+msgstr "تم جمع معلومات النظام"
+
+msgid "Failed to collect system information"
+msgstr "فشل في جمع معلومات النظام"
+
+# Command execution
+msgid "Executing command"
+msgstr "تنفيذ الأمر"
+
+msgid "Command executed successfully"
+msgstr "تم تنفيذ الأمر بنجاح"
+
+msgid "Command execution failed"
+msgstr "فشل تنفيذ الأمر"
+
+msgid "Command not permitted"
+msgstr "الأمر غير مسموح"
+
+# File operations
+msgid "File not found"
+msgstr "الملف غير موجود"
+
+msgid "Permission denied"
+msgstr "الإذن مرفوض"
+
+msgid "File operation completed"
+msgstr "تمت عملية الملف"
+
+# Service management
+msgid "Service started"
+msgstr "تم بدء الخدمة"
+
+msgid "Service stopped"
+msgstr "تم إيقاف الخدمة"
+
+msgid "Service installation completed"
+msgstr "تم تثبيت الخدمة"
+
+msgid "Service removal completed"
+msgstr "تم إزالة الخدمة"
+
+# Error messages
+msgid "An unexpected error occurred"
+msgstr "حدث خطأ غير متوقع"
+
+msgid "Network error"
+msgstr "خطأ في الشبكة"
+
+msgid "Authentication failed"
+msgstr "فشل المصادقة"
+
+msgid "Invalid response from server"
+msgstr "استجابة غير صحيحة من الخادم"
+
+# OS Version Update Messages
+msgid "Sending initial OS version data..."
+msgstr "إرسال بيانات إصدار نظام التشغيل الأولية..."
+
+msgid "Initial data updates sent successfully"
+msgstr "تم إرسال تحديثات البيانات الأولية بنجاح"
+
+msgid "Failed to send initial data updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgid "Sending initial user access data..."
+msgstr "إرسال بيانات وصول المستخدم الأولية..."
