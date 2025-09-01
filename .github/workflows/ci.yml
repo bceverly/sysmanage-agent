@@ -66,13 +66,13 @@ jobs:
         python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short
 
     - name: Upload coverage to Codecov
-      if: ${{ secrets.CODECOV_TOKEN != '' }}
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         flags: agent
         name: agent-coverage-python${{ matrix.python-version }}
+        fail_ci_if_error: false
       continue-on-error: true
 
   lint:
