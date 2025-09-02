@@ -1304,7 +1304,7 @@ class HardwareCollector:
         """Determine if a BSD filesystem should be skipped from storage inventory."""
         # Skip special/virtual filesystems
         skip_devices = ["tmpfs", "kernfs", "procfs", "mfs", "fdesc"]
-        skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]
+        skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]  # nosec B108
 
         device_lower = device_name.lower()
         mount_lower = mount_point.lower()

@@ -41,9 +41,9 @@ class NetworkUtils:
                         fqdn = socket.getfqdn(hostname)
                         if fqdn and fqdn != "localhost" and fqdn != hostname:
                             hostname = fqdn
-                    except:
+                    except (socket.error, OSError):
                         pass
-            except:
+            except (socket.error, OSError):
                 pass
 
         # If still no good hostname, try reading from system files (Unix/Linux/BSD)
@@ -61,7 +61,7 @@ class NetworkUtils:
                         file_hostname = f.read().strip()
                         if file_hostname:
                             hostname = file_hostname
-            except:
+            except (OSError, IOError):
                 pass
 
         # If still no hostname, use the IP-based approach as fallback
@@ -74,9 +74,9 @@ class NetworkUtils:
                     if local_ip:
                         try:
                             hostname = socket.gethostbyaddr(local_ip)[0]
-                        except:
+                        except (socket.error, OSError):
                             hostname = f"host-{local_ip.replace('.', '-')}"
-            except:
+            except (socket.error, OSError):
                 pass
 
         # Final fallback
