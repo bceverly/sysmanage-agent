@@ -188,6 +188,20 @@ source .venv/bin/activate  # Linux/macOS (On OpenBSD: . .venv/bin/activate)
 pip install -r requirements.txt
 ```
 
+#### OpenBSD-Specific Installation Notes
+
+OpenBSD requires special handling due to cryptography package build dependencies:
+
+```bash
+# On OpenBSD, use the simplified requirements file to avoid build issues
+pip install -r requirements-openbsd.txt
+
+# Or run the agent using the run script which automatically detects OpenBSD
+./run.sh
+```
+
+**Note**: The `run.sh` script automatically detects OpenBSD and uses `requirements-openbsd.txt` which excludes packages that require Rust/cryptography compilation.
+
 ### Method 2: Direct Installation
 
 ```bash
