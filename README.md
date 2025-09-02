@@ -73,6 +73,103 @@ The agent uses the language specified in the configuration file for log messages
 - **Network**: Outbound HTTPS access to SysManage Server
 - **Privileges**: Administrative rights for system management tasks
 
+### Platform-Specific Installation Instructions
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Update package manager
+sudo apt update
+
+# Install Python 3.9+
+sudo apt install python3.9 python3.9-venv python3.9-dev python3-pip
+
+# Install build tools for cryptography packages
+sudo apt install build-essential libffi-dev libssl-dev pkg-config
+
+# Install Rust (required for cryptography)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+```
+
+#### Linux (CentOS/RHEL/Fedora)
+```bash
+# Install Python 3.9+
+sudo dnf install python3.9 python3.9-devel python3-pip
+
+# Install build tools
+sudo dnf groupinstall "Development Tools"
+sudo dnf install libffi-devel openssl-devel pkg-config
+
+# Install Rust (required for cryptography)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+```
+
+#### macOS
+```bash
+# Install Homebrew (if not already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Python 3.9+
+brew install python@3.9
+
+# Install Rust (required for cryptography)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Build tools are included with Xcode Command Line Tools
+xcode-select --install
+```
+
+#### Windows
+```powershell
+# Install Python 3.9+ from https://python.org/downloads/
+# Make sure to check "Add Python to PATH" during installation
+
+# Install Rust from https://rustup.rs/
+# Download and run rustup-init.exe
+
+# Install Git for Windows (includes build tools)
+# Download from https://git-scm.com/download/win
+
+# Optional: Install Windows Build Tools for native packages
+npm install --global windows-build-tools
+```
+
+#### FreeBSD
+```bash
+# Update package manager
+sudo pkg update
+
+# Install Python 3.9+
+sudo pkg install python39 py39-pip
+
+# Install build tools and Rust
+sudo pkg install rust gcc cmake make pkg-config
+
+# Set up environment
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### OpenBSD
+```bash
+# Update package manager
+sudo pkg_add -u
+
+# Install Python 3.9+
+sudo pkg_add python-3.9 py3-pip
+
+# Install build tools and Rust (REQUIRED for cryptography packages)
+sudo pkg_add rust gcc cmake gmake pkg-config
+
+# Set up environment
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile
+source ~/.profile
+```
+
+**Important for OpenBSD**: Rust is absolutely required for building cryptography packages. The agent uses certificate-based authentication which requires cryptography support for security.
+
 ### Dependencies
 All dependencies are automatically installed via `requirements.txt`:
 - `websockets` - WebSocket client communication
@@ -80,6 +177,10 @@ All dependencies are automatically installed via `requirements.txt`:
 - `psutil` - System information gathering
 - `pydantic` - Data validation and configuration
 - `asyncio` - Asynchronous I/O operations
+- **Security dependencies** (require Rust compiler):
+  - `cryptography` - Certificate validation and mTLS authentication
+  - `safety` - Security vulnerability scanning
+  - `bandit` - Security linting
 
 ### Required Directories and Permissions
 
@@ -190,20 +291,24 @@ pip install -r requirements.txt
 
 #### OpenBSD-Specific Installation Notes
 
-OpenBSD requires Rust for cryptography packages used in secure certificate handling:
+OpenBSD users should follow the platform-specific instructions above, which include installing Rust. The key steps are:
 
 ```bash
-# Install Rust compiler (required for cryptography packages)
-pkg_add rust
+# Install all required packages including Rust
+sudo pkg_add python-3.9 py3-pip rust gcc cmake gmake pkg-config
 
-# Then install normally
+# Set up Rust environment
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile
+source ~/.profile
+
+# Then install Python dependencies
 pip install -r requirements.txt
 
 # Or run the agent using the run script which automatically detects Rust availability
 ./run.sh
 ```
 
-**Important Security Note**: The agent requires cryptography support for secure certificate-based authentication. If Rust is not available, the script will fall back to a limited mode with reduced security features. For production deployments, always install Rust first with `pkg_add rust`.
+**Important Security Note**: The agent requires cryptography support for secure certificate-based authentication. Rust is mandatory for building these security packages. The run script will automatically detect if Rust is available and use appropriate installation methods.
 
 ### Method 2: Direct Installation
 
