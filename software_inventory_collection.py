@@ -124,6 +124,7 @@ class SoftwareInventoryCollector:
             "scoop": ["scoop"],
             # BSD package managers
             "pkg": ["pkg"],
+            "pkg_info": ["pkg_info"],  # OpenBSD package manager
             "ports": ["make"],  # FreeBSD ports
         }
 
@@ -140,10 +141,21 @@ class SoftwareInventoryCollector:
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system PATH."""
         try:
-            subprocess.run(
-                [command, "--version"], capture_output=True, timeout=5, check=False
-            )
-            return True
+            # Special case for pkg_info which doesn't support --version
+            if command == "pkg_info":
+                result = subprocess.run(
+                    [command], capture_output=True, timeout=5, check=False
+                )
+                # pkg_info returns usage info when run without arguments
+                return result.returncode in [
+                    0,
+                    1,
+                ]  # Accept both success and usage error
+            else:
+                subprocess.run(
+                    [command, "--version"], capture_output=True, timeout=5, check=False
+                )
+                return True
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
 
@@ -208,6 +220,8 @@ class SoftwareInventoryCollector:
 
         if "pkg" in managers:
             self._collect_pkg_packages()
+        if "pkg_info" in managers:
+            self._collect_pkg_info_packages()
         if "ports" in managers:
             self._collect_ports_packages()
 
@@ -768,6 +782,35 @@ class SoftwareInventoryCollector:
 
         except Exception as e:
             logger.error(_("Failed to collect BSD pkg packages: %s"), str(e))
+
+    def _collect_pkg_info_packages(self):
+        """Collect packages from OpenBSD pkg_info."""
+        try:
+            logger.debug(_("Collecting OpenBSD pkg_info packages"))
+
+            # Use pkg_info -a to list all installed packages
+            result = subprocess.run(
+                ["pkg_info", "-a"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode == 0 and result.stdout.strip():
+                source_name = "openbsd_packages"
+                self._parse_pkg_output(result.stdout, source_name)
+                logger.debug(_("Successfully collected OpenBSD packages"))
+            else:
+                logger.warning(
+                    _("No OpenBSD pkg_info output found. Return code: %d"),
+                    result.returncode,
+                )
+                if result.stderr:
+                    logger.warning(_("pkg_info stderr: %s"), result.stderr)
+
+        except Exception as e:
+            logger.error(_("Failed to collect OpenBSD pkg_info packages: %s"), str(e))
 
     def _parse_pkg_output(self, output: str, source_name: str):
         """Parse output from BSD pkg commands (both FreeBSD and OpenBSD)."""
