@@ -45,10 +45,10 @@ check_existing_processes() {
         echo "⚠️  Found existing agent processes:"
         echo "$agent_pids" | while read pid; do
             if [ -n "$pid" ]; then
-                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | head -c 80)
+                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
                 if [ -z "$cmd" ]; then
                     # Fallback for systems where ps -p doesn't work the same way
-                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | head -c 80)
+                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
                 fi
                 echo "   PID $pid: $cmd"
             fi
@@ -76,7 +76,7 @@ check_existing_processes() {
 
 # Stop any existing agent
 if check_existing_processes; then
-    ./stop.sh
+    sh ./stop.sh
     sleep 2
     
     # Verify they were stopped
@@ -151,13 +151,21 @@ fi
 HOSTNAME=$(python3 -c "import socket; print(socket.getfqdn())" 2>/dev/null || echo "unknown")
 PLATFORM=$(python3 -c "import platform; print(platform.system())" 2>/dev/null || echo "unknown")
 
-# Function to get configuration value from sysmanage-agent.yaml
+# Function to get configuration value from config file with priority
 get_config_value() {
     local key=$1
-    local config_file="sysmanage-agent.yaml"
+    local config_file=""
     
-    if [ -f "$config_file" ]; then
-        python3 -c "
+    # Use same priority as ConfigManager: /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml
+    if [ -f "/etc/sysmanage-agent.yaml" ]; then
+        config_file="/etc/sysmanage-agent.yaml"
+    elif [ -f "./sysmanage-agent.yaml" ]; then
+        config_file="./sysmanage-agent.yaml"
+    else
+        return 1
+    fi
+    
+    python3 -c "
 import yaml
 import sys
 try:
@@ -171,13 +179,18 @@ try:
 except:
     sys.exit(1)
 " 2>/dev/null
-    else
-        return 1
-    fi
 }
 
-# Get server configuration from sysmanage-agent.yaml if it exists
-if [ -f "sysmanage-agent.yaml" ]; then
+# Determine which config file to use and get server configuration
+CONFIG_FILE=""
+if [ -f "/etc/sysmanage-agent.yaml" ]; then
+    CONFIG_FILE="/etc/sysmanage-agent.yaml"
+elif [ -f "./sysmanage-agent.yaml" ]; then
+    CONFIG_FILE="./sysmanage-agent.yaml"
+fi
+
+if [ -n "$CONFIG_FILE" ]; then
+    echo "Using configuration file: $CONFIG_FILE"
     SERVER_HOST=$(get_config_value "server.hostname")
     if [ $? -ne 0 ] || [ -z "$SERVER_HOST" ]; then
         SERVER_HOST="unknown"
@@ -197,7 +210,7 @@ if [ -f "sysmanage-agent.yaml" ]; then
         USE_HTTPS="http"
     fi
 else
-    echo "⚠️  WARNING: sysmanage-agent.yaml configuration file not found!"
+    echo "⚠️  WARNING: Configuration file not found! Expected /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
     SERVER_HOST="unknown"
     SERVER_PORT="unknown"
     USE_HTTPS="unknown"

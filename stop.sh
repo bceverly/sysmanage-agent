@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # SysManage Agent Stop Script
 # Stops the SysManage agent daemon
@@ -6,16 +6,24 @@
 echo "Stopping SysManage Agent..."
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Function to get configuration value from sysmanage-agent.yaml
+# Function to get configuration value from config file with priority
 get_config_value() {
     local key=$1
-    local config_file="sysmanage-agent.yaml"
+    local config_file=""
     
-    if [ -f "$config_file" ]; then
-        python3 -c "
+    # Use same priority as ConfigManager: /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml
+    if [ -f "/etc/sysmanage-agent.yaml" ]; then
+        config_file="/etc/sysmanage-agent.yaml"
+    elif [ -f "./sysmanage-agent.yaml" ]; then
+        config_file="./sysmanage-agent.yaml"
+    else
+        return 1
+    fi
+    
+    python3 -c "
 import yaml
 import sys
 try:
@@ -29,9 +37,6 @@ try:
 except:
     sys.exit(1)
 " 2>/dev/null
-    else
-        return 1
-    fi
 }
 
 # Function to kill process by PID file
@@ -97,10 +102,10 @@ kill_by_pattern() {
         echo "Found $pid_count SysManage Agent process(es), stopping them..."
         echo "$pids" | while read pid; do
             if [ -n "$pid" ]; then
-                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | head -c 60)
+                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-60)
                 if [ -z "$cmd" ]; then
                     # Fallback for systems where ps -p doesn't work the same way
-                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | head -c 60)
+                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-60)
                 fi
                 echo "  Stopping PID $pid: $cmd"
                 kill "$pid" 2>/dev/null
