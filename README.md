@@ -155,13 +155,13 @@ source ~/.bashrc
 #### OpenBSD
 ```bash
 # Update package manager
-sudo pkg_add -u
+doas pkg_add -u
 
 # Install Python 3.9+
-sudo pkg_add python-3.9 py3-pip
+doas pkg_add python-3.9 py3-pip
 
 # Install build tools and Rust (REQUIRED for cryptography packages)
-sudo pkg_add rust gcc cmake gmake pkg-config
+doas pkg_add rust gcc cmake gmake pkgconf
 
 # Set up environment
 echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile
@@ -295,7 +295,7 @@ OpenBSD users should follow the platform-specific instructions above, which incl
 
 ```bash
 # Install all required packages including Rust
-sudo pkg_add python-3.9 py3-pip rust gcc cmake gmake pkg-config
+doas pkg_add python-3.9 py3-pip rust gcc cmake gmake pkgconf
 
 # Set up Rust environment
 echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile
