@@ -281,7 +281,7 @@ class UpdateDetector:
 
             if result.returncode == 0:
                 return "security" in result.stdout.lower()
-        except Exception:
+        except (subprocess.SubprocessError, OSError):
             pass
         return False
 
@@ -300,7 +300,7 @@ class UpdateDetector:
                 match = re.search(r"Size:\s+(\d+)", result.stdout)
                 if match:
                     return int(match.group(1))
-        except Exception:
+        except (subprocess.SubprocessError, OSError):
             pass
         return None
 
