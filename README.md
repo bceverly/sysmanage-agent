@@ -180,7 +180,7 @@ cd sysmanage-agent
 python3 -m venv .venv
 
 # Activate virtual environment
-source .venv/bin/activate  # Linux/macOS
+source .venv/bin/activate  # Linux/macOS (On OpenBSD: . .venv/bin/activate)
 # OR
 .venv\Scripts\activate     # Windows
 
