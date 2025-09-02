@@ -190,17 +190,20 @@ pip install -r requirements.txt
 
 #### OpenBSD-Specific Installation Notes
 
-OpenBSD requires special handling due to cryptography package build dependencies:
+OpenBSD requires Rust for cryptography packages used in secure certificate handling:
 
 ```bash
-# On OpenBSD, use the simplified requirements file to avoid build issues
-pip install -r requirements-openbsd.txt
+# Install Rust compiler (required for cryptography packages)
+pkg_add rust
 
-# Or run the agent using the run script which automatically detects OpenBSD
+# Then install normally
+pip install -r requirements.txt
+
+# Or run the agent using the run script which automatically detects Rust availability
 ./run.sh
 ```
 
-**Note**: The `run.sh` script automatically detects OpenBSD and uses `requirements-openbsd.txt` which excludes packages that require Rust/cryptography compilation.
+**Important Security Note**: The agent requires cryptography support for secure certificate-based authentication. If Rust is not available, the script will fall back to a limited mode with reduced security features. For production deployments, always install Rust first with `pkg_add rust`.
 
 ### Method 2: Direct Installation
 

@@ -127,10 +127,20 @@ if [ -f "requirements.txt" ]; then
     if ! python3 -c "import websockets, yaml, aiohttp" >/dev/null 2>&1; then
         echo "Installing required Python packages..."
         
-        # Use OpenBSD-specific requirements to avoid cryptography build issues
-        if [ "$(uname)" = "OpenBSD" ] && [ -f "requirements-openbsd.txt" ]; then
-            echo "Detected OpenBSD - using simplified requirements to avoid build issues..."
-            pip3 install -r requirements-openbsd.txt
+        # Check if we're on OpenBSD and if Rust is available
+        if [ "$(uname)" = "OpenBSD" ]; then
+            if command -v rustc >/dev/null 2>&1; then
+                echo "Detected OpenBSD with Rust - using full requirements.txt..."
+                pip3 install -r requirements.txt
+            elif [ -f "requirements-openbsd.txt" ]; then
+                echo "Detected OpenBSD without Rust - using simplified requirements..."
+                echo "⚠️  WARNING: Running without full cryptography support may reduce security!"
+                echo "   To get full security features, install Rust with: pkg_add rust"
+                pip3 install -r requirements-openbsd.txt
+            else
+                echo "Attempting to install full requirements (may fail without Rust)..."
+                pip3 install -r requirements.txt
+            fi
         else
             pip3 install -r requirements.txt
         fi
