@@ -734,43 +734,99 @@ class SoftwareInventoryCollector:
         pass
 
     def _collect_pkg_packages(self):
-        """Collect packages from FreeBSD pkg."""
+        """Collect packages from FreeBSD/OpenBSD pkg."""
         try:
-            logger.debug(_("Collecting FreeBSD pkg packages"))
+            logger.debug(_("Collecting BSD pkg packages"))
 
+            # Try FreeBSD style first: pkg info -a
             result = subprocess.run(
                 ["pkg", "info", "-a"],
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
-            if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line:
-                        # Format: package-version comment
-                        match = re.match(
-                            r"^([^-]+(?:-[^0-9][^-]*)*)-([0-9][^\s]*)\s+(.*)$", line
-                        )
-                        if match:
-                            package_name = match.group(1)
-                            version = match.group(2)
-                            description = match.group(3)
+            if result.returncode == 0 and result.stdout.strip():
+                source_name = "freebsd_packages"
+                self._parse_pkg_output(result.stdout, source_name)
+            else:
+                # Try OpenBSD style: pkg_info -a
+                result = subprocess.run(
+                    ["pkg_info", "-a"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    check=False,
+                )
 
-                            package = {
-                                "package_name": package_name,
-                                "version": version,
-                                "description": description,
-                                "package_manager": "pkg",
-                                "source": "freebsd_packages",
-                                "is_system_package": False,
-                                "is_user_installed": True,
-                            }
-
-                            self.collected_packages.append(package)
+                if result.returncode == 0 and result.stdout.strip():
+                    source_name = "openbsd_packages"
+                    self._parse_pkg_output(result.stdout, source_name)
+                else:
+                    logger.warning(_("No BSD package manager output found"))
 
         except Exception as e:
-            logger.error(_("Failed to collect FreeBSD pkg packages: %s"), str(e))
+            logger.error(_("Failed to collect BSD pkg packages: %s"), str(e))
+
+    def _parse_pkg_output(self, output: str, source_name: str):
+        """Parse output from BSD pkg commands (both FreeBSD and OpenBSD)."""
+        for line in output.strip().split("\n"):
+            if line:
+                # Format: package-version comment
+                match = re.match(
+                    r"^([^-]+(?:-[^0-9][^-]*)*)-([0-9][^\s]*)\s+(.*)$", line
+                )
+                if match:
+                    package_name = match.group(1)
+                    version = match.group(2)
+                    description = match.group(3)
+
+                    package = {
+                        "package_name": package_name,
+                        "version": version,
+                        "description": description,
+                        "package_manager": "pkg",
+                        "source": source_name,
+                        "is_system_package": self._is_bsd_system_package(package_name),
+                        "is_user_installed": True,
+                    }
+
+                    self.collected_packages.append(package)
+
+    def _is_bsd_system_package(self, package_name: str) -> bool:
+        """Determine if a BSD package is a system package."""
+        system_prefixes = [
+            "base-",
+            "lib",
+            "perl",
+            "python",
+            "ruby",
+            "tcl",
+            "tk",
+            "gettext",
+            "glib",
+            "gtk",
+            "qt",
+            "mesa",
+            "xorg",
+            "freetype",
+            "fontconfig",
+            "expat",
+            "libxml",
+            "openssl",
+            "curl",
+            "wget",
+            "automake",
+            "autoconf",
+            "libtool",
+            "pkgconf",
+            "cmake",
+            "gmake",
+            "gcc",
+        ]
+        package_lower = package_name.lower()
+        return any(package_lower.startswith(prefix) for prefix in system_prefixes)
 
     def _collect_ports_packages(self):
         """Collect packages from FreeBSD ports."""

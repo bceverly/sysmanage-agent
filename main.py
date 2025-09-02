@@ -25,6 +25,7 @@ from registration import ClientRegistration
 from i18n import _, set_language
 from discovery import discovery_client
 from security.certificate_store import CertificateStore
+from update_detection import UpdateDetector
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods
@@ -251,6 +252,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 result = await self.update_hardware()
             elif command_type == "update_user_access":
                 result = await self.update_user_access()
+            elif command_type == "check_updates":
+                result = await self.check_updates()
+            elif command_type == "apply_updates":
+                result = await self.apply_updates(parameters)
             else:
                 result = {
                     "success": False,
@@ -732,6 +737,95 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         )
         self.logger.warning("Please approve this host in the SysManage web interface")
         return False
+
+    async def check_updates(self) -> Dict[str, Any]:
+        """Check for available updates for installed packages."""
+        try:
+            # Initialize update detector
+            update_detector = UpdateDetector()
+
+            # Get available updates
+            update_info = update_detector.get_available_updates()
+
+            # Add hostname to update data for server processing
+            system_info = self.registration.get_system_info()
+            update_info["hostname"] = system_info["hostname"]
+
+            self.logger.info(
+                "Update check completed: %d updates found",
+                update_info.get("total_updates", 0),
+            )
+
+            # Create update message
+            update_message = self.create_message("update_check_result", update_info)
+
+            # Send update information to server
+            await self.send_message(update_message)
+
+            return {"success": True, "result": "Update check completed"}
+        except Exception as e:
+            self.logger.error("Failed to check updates: %s", e)
+            return {"success": False, "error": str(e)}
+
+    async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply updates for specified packages."""
+        try:
+            package_names = parameters.get("package_names", [])
+            package_managers = parameters.get("package_managers")
+
+            if not package_names:
+                return {"success": False, "error": "No packages specified for update"}
+
+            # Initialize update detector
+            update_detector = UpdateDetector()
+
+            # First, get current updates to verify packages exist
+            update_info = update_detector.get_available_updates()
+            available_packages = [
+                u["package_name"] for u in update_info["available_updates"]
+            ]
+
+            # Filter to only valid package names
+            valid_packages = [pkg for pkg in package_names if pkg in available_packages]
+            invalid_packages = [
+                pkg for pkg in package_names if pkg not in available_packages
+            ]
+
+            if invalid_packages:
+                self.logger.warning("Invalid packages requested: %s", invalid_packages)
+
+            if not valid_packages:
+                return {"success": False, "error": "No valid packages found for update"}
+
+            # Apply updates
+            update_results = update_detector.apply_updates(
+                valid_packages, package_managers
+            )
+
+            # Add hostname to result data
+            system_info = self.registration.get_system_info()
+            update_results["hostname"] = system_info["hostname"]
+
+            self.logger.info(
+                "Update application completed: %d updated, %d failed",
+                len(update_results.get("updated_packages", [])),
+                len(update_results.get("failed_packages", [])),
+            )
+
+            # Create update result message
+            update_message = self.create_message("update_apply_result", update_results)
+
+            # Send update results to server
+            await self.send_message(update_message)
+
+            return {
+                "success": True,
+                "result": "Updates applied",
+                "details": update_results,
+            }
+        except Exception as e:
+            self.logger.error("Failed to apply updates: %s", e)
+            return {"success": False, "error": str(e)}
 
     async def run(self):
         """Main agent execution loop."""
