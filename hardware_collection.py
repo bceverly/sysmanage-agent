@@ -1176,7 +1176,7 @@ class HardwareCollector:
                 cpu_info["cores"] = cpu_info.get("threads", 0)
 
             # Try to get CPU frequency (may not be available)
-            for freq_key in ["hw.cpuspeed", "hw.clockrate"]:
+            for freq_key in ["hw.cpuspeed", "hw.clockrate", "machdep.tsc_freq"]:
                 result = subprocess.run(
                     ["sysctl", "-n", freq_key],
                     capture_output=True,
@@ -1185,8 +1185,29 @@ class HardwareCollector:
                     check=False,
                 )
                 if result.returncode == 0:
-                    cpu_info["frequency_mhz"] = int(result.stdout.strip())
+                    freq_value = result.stdout.strip()
+                    if freq_key == "machdep.tsc_freq":
+                        # TSC frequency is in Hz, convert to MHz
+                        cpu_info["frequency_mhz"] = int(int(freq_value) // 1000000)
+                    else:
+                        # hw.cpuspeed and hw.clockrate are typically in MHz
+                        cpu_info["frequency_mhz"] = int(freq_value)
                     break
+
+            # If no frequency found from sysctl, try to extract from CPU model
+            if "frequency_mhz" not in cpu_info and "model" in cpu_info:
+                import re
+
+                model = cpu_info["model"]
+                # Look for patterns like "@ 1.90GHz" or "1900MHz" in CPU model
+                ghz_match = re.search(r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE)
+                if ghz_match:
+                    freq_ghz = float(ghz_match.group(1))
+                    cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
+                else:
+                    mhz_match = re.search(r"(\d+)\s*MHz", model, re.IGNORECASE)
+                    if mhz_match:
+                        cpu_info["frequency_mhz"] = int(mhz_match.group(1))
 
         except Exception as e:
             cpu_info["error"] = f"Failed to get BSD CPU info: {str(e)}"
@@ -1231,19 +1252,23 @@ class HardwareCollector:
                 lines = result.stdout.strip().split("\n")[1:]  # Skip header
                 for line in lines:
                     parts = line.split()
-                    if len(parts) >= 6 and not parts[0].startswith("/dev/"):
-                        continue  # Skip non-device filesystems
-
                     if len(parts) >= 6:
+                        device_name = parts[0]
+                        mount_point = parts[5] if len(parts) > 5 else ""
+
+                        # Skip special filesystems that shouldn't be considered storage
+                        if self._should_skip_bsd_filesystem(device_name, mount_point):
+                            continue
+
                         device_info = {
-                            "name": parts[0],
+                            "name": device_name,
                             "size": parts[1],
                             "used": parts[2],
                             "available": parts[3],
-                            "mount_point": parts[5] if len(parts) > 5 else "",
-                            "type": "unknown",  # df doesn't show filesystem type
-                            "is_physical": self._is_physical_volume_generic(
-                                parts[0], parts[5] if len(parts) > 5 else ""
+                            "mount_point": mount_point,
+                            "type": "unknown",  # Will be updated from mount command
+                            "is_physical": self._is_physical_volume_bsd(
+                                device_name, mount_point
                             ),
                         }
                         storage_devices.append(device_info)
@@ -1274,6 +1299,69 @@ class HardwareCollector:
             )
 
         return storage_devices
+
+    def _should_skip_bsd_filesystem(self, device_name: str, mount_point: str) -> bool:
+        """Determine if a BSD filesystem should be skipped from storage inventory."""
+        # Skip special/virtual filesystems
+        skip_devices = ["tmpfs", "kernfs", "procfs", "mfs", "fdesc"]
+        skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]
+
+        device_lower = device_name.lower()
+        mount_lower = mount_point.lower()
+
+        # Skip by device type
+        for skip_dev in skip_devices:
+            if skip_dev in device_lower:
+                return True
+
+        # Skip by mount point
+        for skip_mount in skip_mounts:
+            if mount_lower == skip_mount:
+                return True
+
+        return False
+
+    def _is_physical_volume_bsd(self, device_name: str, mount_point: str) -> bool:
+        """Determine if a BSD storage device is physical or logical."""
+        device_lower = device_name.lower()
+
+        # Physical device patterns for BSD systems
+        # OpenBSD: wd (IDE/SATA), sd (SCSI/SATA/USB), cd (CD-ROM)
+        # FreeBSD: ada (SATA), da (SCSI/USB), cd (CD-ROM)
+        physical_patterns = [
+            "/dev/wd",  # OpenBSD IDE/SATA drives
+            "/dev/sd",  # OpenBSD/FreeBSD SCSI/SATA/USB drives
+            "/dev/ada",  # FreeBSD SATA drives
+            "/dev/da",  # FreeBSD SCSI/USB drives
+            "/dev/cd",  # CD/DVD drives
+            "/dev/nvd",  # NVMe drives
+        ]
+
+        # Logical volume patterns
+        logical_patterns = [
+            "tmpfs",
+            "mfs",
+            "procfs",
+            "kernfs",
+            "devfs",
+        ]
+
+        # Check for logical volumes first
+        for pattern in logical_patterns:
+            if pattern in device_lower:
+                return False
+
+        # Check for physical devices
+        for pattern in physical_patterns:
+            if device_lower.startswith(pattern):
+                return True
+
+        # Network mounts are logical
+        if ":/" in device_name:  # NFS-style mounts
+            return False
+
+        # Default to physical for /dev/ devices, logical for everything else
+        return device_name.startswith("/dev/")
 
     def _get_bsd_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""

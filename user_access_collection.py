@@ -27,6 +27,8 @@ class UserAccessCollector:
             return self._get_macos_users()
         if self.system_platform == "Windows":
             return self._get_windows_users()
+        if self.system_platform in ["FreeBSD", "OpenBSD", "NetBSD"]:
+            return self._get_bsd_users()
 
         self.logger.warning(
             "Unsupported platform for user collection: %s", self.system_platform
@@ -41,6 +43,8 @@ class UserAccessCollector:
             return self._get_macos_groups()
         if self.system_platform == "Windows":
             return self._get_windows_groups()
+        if self.system_platform in ["FreeBSD", "OpenBSD", "NetBSD"]:
+            return self._get_bsd_groups()
 
         self.logger.warning(
             "Unsupported platform for group collection: %s", self.system_platform
@@ -449,6 +453,75 @@ class UserAccessCollector:
 
         except Exception as e:
             self.logger.error("Failed to collect Windows groups: %s", e)
+
+        return groups
+
+    def _get_bsd_users(self) -> List[Dict[str, Any]]:
+        """Get BSD user accounts from /etc/passwd using pwd module."""
+        users = []
+        try:
+            for user in pwd.getpwall():
+                # BSD systems typically use UID < 1000 for system users
+                is_system_user = user.pw_uid < 1000
+
+                # Get user's group memberships
+                group_names = []
+                try:
+                    # Get all groups and check membership
+                    for group in grp.getgrall():
+                        if user.pw_name in group.gr_mem:
+                            group_names.append(group.gr_name)
+                    # Also include user's primary group
+                    try:
+                        primary_group = grp.getgrgid(user.pw_gid)
+                        if primary_group.gr_name not in group_names:
+                            group_names.append(primary_group.gr_name)
+                    except KeyError:
+                        pass
+                except Exception as e:
+                    self.logger.debug(
+                        "Failed to get group memberships for user %s: %s",
+                        user.pw_name,
+                        e,
+                    )
+
+                user_info = {
+                    "username": user.pw_name,
+                    "uid": user.pw_uid,
+                    "gid": user.pw_gid,
+                    "home_directory": user.pw_dir,
+                    "shell": user.pw_shell,
+                    "gecos": user.pw_gecos,  # Real name/comment field
+                    "is_system_user": is_system_user,
+                    "groups": group_names,
+                }
+
+                users.append(user_info)
+
+        except Exception as e:
+            self.logger.error("Failed to collect BSD users: %s", e)
+
+        return users
+
+    def _get_bsd_groups(self) -> List[Dict[str, Any]]:
+        """Get BSD groups from /etc/group using grp module."""
+        groups = []
+        try:
+            for group in grp.getgrall():
+                # BSD systems typically use GID < 1000 for system groups
+                is_system_group = group.gr_gid < 1000
+
+                group_info = {
+                    "group_name": group.gr_name,
+                    "gid": group.gr_gid,
+                    "members": list(group.gr_mem),  # Convert tuple to list
+                    "is_system_group": is_system_group,
+                }
+
+                groups.append(group_info)
+
+        except Exception as e:
+            self.logger.error("Failed to collect BSD groups: %s", e)
 
         return groups
 
