@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # SysManage Agent Startup Script
 # Starts the SysManage agent daemon
@@ -6,7 +6,8 @@
 echo "Starting SysManage Agent..."
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Use $0 instead of BASH_SOURCE for better shell compatibility
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Create logs directory if it doesn't exist
@@ -116,16 +117,23 @@ if [ -f "requirements.txt" ]; then
     # Check if virtual environment exists and activate it
     if [ -d ".venv" ]; then
         echo "Activating virtual environment..."
-        source .venv/bin/activate
+        . .venv/bin/activate
     elif [ -d "venv" ]; then
         echo "Activating virtual environment..."
-        source venv/bin/activate
+        . venv/bin/activate
     fi
     
     # Install dependencies if required modules are not available
     if ! python3 -c "import websockets, yaml, aiohttp" >/dev/null 2>&1; then
         echo "Installing required Python packages..."
-        pip3 install -r requirements.txt
+        
+        # Use OpenBSD-specific requirements to avoid cryptography build issues
+        if [ "$(uname)" = "OpenBSD" ] && [ -f "requirements-openbsd.txt" ]; then
+            echo "Detected OpenBSD - using simplified requirements to avoid build issues..."
+            pip3 install -r requirements-openbsd.txt
+        else
+            pip3 install -r requirements.txt
+        fi
     fi
 fi
 
