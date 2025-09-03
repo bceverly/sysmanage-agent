@@ -181,7 +181,7 @@ class HardwareCollector:
                         cpu_info["cores"] = 0
                         cpu_info["threads"] = 0
 
-                # Extract frequency from processor name if available
+                # Extract frequency from processor speed field if available
                 processor_speed = hardware.get("current_processor_speed", "")
                 if processor_speed:
                     # Convert GHz to MHz
@@ -192,6 +192,53 @@ class HardwareCollector:
                         cpu_info["frequency_mhz"] = int(
                             processor_speed.replace(" MHz", "")
                         )
+                else:
+                    # For Apple Silicon Macs, try to extract frequency from chip name
+                    chip_type = hardware.get("chip_type", "")
+                    if "Apple" in chip_type:
+                        # Try to get base frequency from sysctl (may not be available)
+                        freq_result = subprocess.run(
+                            ["sysctl", "-n", "hw.cpufrequency"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
+                        )
+                        if freq_result.returncode == 0 and freq_result.stdout.strip():
+                            try:
+                                # hw.cpufrequency is in Hz, convert to MHz
+                                freq_hz = int(freq_result.stdout.strip())
+                                cpu_info["frequency_mhz"] = freq_hz // 1000000
+                            except ValueError:
+                                # If we can't get frequency, leave it empty
+                                pass
+                        else:
+                            # Try alternative sysctl parameters
+                            for sysctl_key in ["hw.cpufrequency_max", "hw.tbfrequency"]:
+                                freq_result = subprocess.run(
+                                    ["sysctl", "-n", sysctl_key],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=10,
+                                    check=False,
+                                )
+                                if (
+                                    freq_result.returncode == 0
+                                    and freq_result.stdout.strip()
+                                ):
+                                    try:
+                                        freq_hz = int(freq_result.stdout.strip())
+                                        # For tb frequency, it's typically much higher, use a heuristic
+                                        if sysctl_key == "hw.tbfrequency":
+                                            # Typical Apple Silicon base frequency is around 3.2GHz
+                                            cpu_info["frequency_mhz"] = 3200
+                                        else:
+                                            cpu_info["frequency_mhz"] = (
+                                                freq_hz // 1000000
+                                            )
+                                        break
+                                    except ValueError:
+                                        continue
 
         except Exception as e:
             cpu_info["error"] = _("Failed to get macOS CPU info: %s") % str(e)
@@ -697,8 +744,13 @@ class HardwareCollector:
                             cpu_info["cores"] = cores_per_socket * sockets
                         elif key == "Socket(s)":
                             cpu_info["sockets"] = int(value)
-                        elif key == "CPU MHz":
-                            cpu_info["frequency_mhz"] = int(float(value))
+                        elif key == "CPU MHz" or key == "CPU max MHz":
+                            # Use max frequency if current frequency not already set
+                            if "frequency_mhz" not in cpu_info or key == "CPU max MHz":
+                                try:
+                                    cpu_info["frequency_mhz"] = int(float(value))
+                                except ValueError:
+                                    pass
 
             # Fallback to /proc/cpuinfo if lscpu not available
             if not cpu_info:
@@ -716,13 +768,49 @@ class HardwareCollector:
                             cpu_info["vendor"] = value
                         elif key == "model name" and "model" not in cpu_info:
                             cpu_info["model"] = value
-                        elif key == "cpu MHz" and "frequency_mhz" not in cpu_info:
-                            cpu_info["frequency_mhz"] = int(float(value))
+                        elif key == "cpu MHz":
+                            try:
+                                freq = int(float(value))
+                                # Only set if we don't already have a frequency or if this is non-zero
+                                if "frequency_mhz" not in cpu_info or freq > 0:
+                                    cpu_info["frequency_mhz"] = freq
+                            except ValueError:
+                                pass
                         elif key == "processor":
                             processor_count = max(processor_count, int(value) + 1)
 
                 if processor_count > 0:
                     cpu_info["threads"] = processor_count
+
+            # If still no frequency, try additional methods
+            if "frequency_mhz" not in cpu_info or cpu_info.get("frequency_mhz", 0) == 0:
+                # Try to read from cpufreq scaling
+                try:
+                    with open(
+                        "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
+                        "r",
+                        encoding="utf-8",
+                    ) as f:
+                        # This value is in KHz, convert to MHz
+                        freq_khz = int(f.read().strip())
+                        cpu_info["frequency_mhz"] = freq_khz // 1000
+                except (FileNotFoundError, ValueError, IOError):
+                    # Try to extract from model name as last resort
+                    if "model" in cpu_info:
+                        import re
+
+                        model = cpu_info["model"]
+                        # Look for patterns like "@ 2.60GHz" or "2600MHz" in CPU model
+                        ghz_match = re.search(
+                            r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE
+                        )
+                        if ghz_match:
+                            freq_ghz = float(ghz_match.group(1))
+                            cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
+                        else:
+                            mhz_match = re.search(r"(\d+)\s*MHz", model, re.IGNORECASE)
+                            if mhz_match:
+                                cpu_info["frequency_mhz"] = int(mhz_match.group(1))
 
         except Exception as e:
             cpu_info["error"] = _("Failed to get Linux CPU info: %s") % str(e)
