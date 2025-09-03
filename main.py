@@ -10,7 +10,6 @@ import logging
 import os
 import platform
 import secrets
-import socket
 import ssl
 import uuid
 from datetime import datetime, timezone
@@ -26,6 +25,7 @@ from i18n import _, set_language
 from discovery import discovery_client
 from security.certificate_store import CertificateStore
 from update_detection import UpdateDetector
+from agent_utils import UpdateChecker, AuthenticationHelper, MessageProcessor
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods
@@ -68,6 +68,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Initialize certificate store
         self.cert_store = CertificateStore()
+
+        # Initialize utility classes
+        self.update_checker_util = UpdateChecker(self, self.logger)
+        self.auth_helper = AuthenticationHelper(self, self.logger)
+        self.message_processor = MessageProcessor(self, self.logger)
 
         # Get server URL from config
         self.server_url = self.config.get_server_url()
@@ -224,51 +229,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server."""
-        command_id = message.get("message_id")
-        command_data = message.get("data", {})
-        command_type = command_data.get("command_type")
-        parameters = command_data.get("parameters", {})
-
-        self.logger.info(
-            "Received command: %s with parameters: %s", command_type, parameters
-        )
-
-        try:
-            if command_type == "execute_shell":
-                result = await self.execute_shell_command(parameters)
-            elif command_type == "get_system_info":
-                result = await self.get_detailed_system_info()
-            elif command_type == "install_package":
-                result = await self.install_package(parameters)
-            elif command_type == "update_system":
-                result = await self.update_system()
-            elif command_type == "restart_service":
-                result = await self.restart_service(parameters)
-            elif command_type == "reboot_system":
-                result = await self.reboot_system()
-            elif command_type == "update_os_version":
-                result = await self.update_os_version()
-            elif command_type == "update_hardware":
-                result = await self.update_hardware()
-            elif command_type == "update_user_access":
-                result = await self.update_user_access()
-            elif command_type == "check_updates":
-                result = await self.check_updates()
-            elif command_type == "apply_updates":
-                result = await self.apply_updates(parameters)
-            else:
-                result = {
-                    "success": False,
-                    "error": f"Unknown command type: {command_type}",
-                }
-        except Exception as e:
-            result = {"success": False, "error": str(e)}
-
-        # Send result back to server
-        response = self.create_message(
-            "command_result", {"command_id": command_id, **result}
-        )
-        await self.send_message(response)
+        await self.message_processor.handle_command(message)
 
     async def execute_shell_command(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a shell command."""
@@ -437,6 +398,21 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             )
             await self.send_message(software_message)
 
+            self.logger.info(_("Sending initial update check..."))
+
+            # Send initial update check
+            try:
+                update_result = await self.check_updates()
+                if update_result.get("total_updates", 0) > 0:
+                    self.logger.info(
+                        "Found %d available updates during initial check",
+                        update_result["total_updates"],
+                    )
+                else:
+                    self.logger.info("No updates found during initial check")
+            except Exception as e:
+                self.logger.error("Failed to perform initial update check: %s", e)
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -589,40 +565,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
+    async def update_checker(self):
+        """Handle periodic update checking."""
+        await self.update_checker_util.run_update_checker_loop()
+
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
-        server_config = self.config.get_server_config()
-        hostname = server_config.get("hostname", "localhost")
-        port = server_config.get("port", 8000)
-        use_https = server_config.get("use_https", False)
-
-        # Build auth URL
-        protocol = "https" if use_https else "http"
-        auth_url = f"{protocol}://{hostname}:{port}/agent/auth"
-
-        # Set up SSL context if needed
-        ssl_context = None
-        if use_https:
-            ssl_context = ssl.create_default_context()
-            if not self.config.should_verify_ssl():
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-
-        # Get hostname to send in header
-        system_hostname = socket.gethostname()
-
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
-        async with aiohttp.ClientSession(connector=connector) as session:
-            headers = {"x-agent-hostname": system_hostname}
-
-            async with session.post(auth_url, headers=headers) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("connection_token", "")
-
-                raise ConnectionError(
-                    f"Failed to get auth token: HTTP {response.status}"
-                )
+        return await self.auth_helper.get_auth_token()
 
     async def fetch_certificates(self, host_id: int) -> bool:
         """Fetch certificates from server after approval."""
@@ -923,14 +872,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     # Send OS version data immediately after connection
                     await self.send_initial_data_updates()
 
-                    # Run sender and receiver concurrently with proper error handling
+                    # Run sender, receiver, and update checker concurrently with proper error handling
                     try:
                         sender_task = asyncio.create_task(self.message_sender())
                         receiver_task = asyncio.create_task(self.message_receiver())
+                        update_checker_task = asyncio.create_task(self.update_checker())
 
                         # Wait for either task to complete (which indicates an error or disconnection)
                         done, pending = await asyncio.wait(
-                            [sender_task, receiver_task],
+                            [sender_task, receiver_task, update_checker_task],
                             return_when=asyncio.FIRST_COMPLETED,
                         )
 

@@ -740,12 +740,12 @@ class SoftwareInventoryCollector:
     def _collect_chocolatey_packages(self):
         """Collect packages from Chocolatey."""
         # Implementation would use 'choco list --local-only'
-        pass
+        logger.debug(_("Chocolatey package collection not yet implemented"))
 
     def _collect_scoop_packages(self):
         """Collect packages from Scoop."""
         # Implementation would use 'scoop list'
-        pass
+        logger.debug(_("Scoop package collection not yet implemented"))
 
     def _collect_pkg_packages(self):
         """Collect packages from FreeBSD/OpenBSD pkg."""
@@ -874,4 +874,4 @@ class SoftwareInventoryCollector:
     def _collect_ports_packages(self):
         """Collect packages from FreeBSD ports."""
         # Implementation would parse /var/db/pkg
-        pass
+        logger.debug(_("FreeBSD ports collection not yet implemented"))
