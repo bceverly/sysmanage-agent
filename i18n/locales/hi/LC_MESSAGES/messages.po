@@ -1,156 +1,566 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 15:34-0400\n"
 "Language: hi\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Performing periodic update check"
+msgstr ""
+
+#, python-format
+msgid "Found %d available updates during periodic check"
+msgstr ""
+
+#, python-format
+msgid "Error during periodic update check: %s"
+msgstr ""
+
+#, python-format
+msgid "Update checker error: %s"
+msgstr ""
+
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr ""
+
+#, python-format
+msgid "Received command: %s with parameters: %s"
+msgstr ""
+
+#, python-format
+msgid "Unknown command type: %s"
+msgstr ""
+
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#, python-format
+msgid ""
+"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
+"agent.yaml or ./sysmanage-agent.yaml"
+msgstr ""
+
+# Configuration
+#, fuzzy, python-format
+msgid "Invalid YAML in configuration file: %s"
+msgstr "कॉन्फ़िगरेशन लोड कर रहे हैं"
+
+#, python-format
+msgid "Failed to load configuration file: %s"
+msgstr ""
+
+#, python-format
+msgid "Discovered %s SysManage server(s)"
+msgstr ""
+
+msgid "No SysManage servers discovered on the network"
+msgstr ""
+
+#, python-format
+msgid "Server discovered at %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Invalid JSON response from %s"
+msgstr "सर्वर से अमान्य प्रतिक्रिया"
+
+#, python-format
+msgid "Error during broadcast discovery: %s"
+msgstr ""
+
+#, python-format
+msgid "Server announcement received from %s"
+msgstr ""
+
+#, python-format
+msgid "Invalid JSON announcement from %s"
+msgstr ""
+
+#, python-format
+msgid "Error listening for announcements: %s"
+msgstr ""
+
+#, python-format
+msgid "Selected server at %s (score: %s)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unsupported platform: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+
+#, fuzzy, python-format
+msgid "Failed to collect hardware info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS CPU info: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS memory info: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS storage info: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get APFS container info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS network info: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+#, python-format
+msgid "Failed to get Linux CPU info: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to get Linux memory info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux storage info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux network info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows CPU info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows memory info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows storage info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows network info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD CPU info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD memory info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD storage info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD network info: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
 msgstr "सिस्टम प्रबंधन एजेंट शुरू कर रहे हैं"
 
-msgid "Connecting to server"
-msgstr "सर्वर से कनेक्ट कर रहे हैं"
-
-msgid "Connected to server successfully"
-msgstr "सर्वर से सफलतापूर्वक कनेक्ट हो गए"
-
-msgid "Connection failed"
-msgstr "कनेक्शन विफल"
-
-msgid "Disconnected from server"
-msgstr "सर्वर से डिस्कनेक्ट हो गए"
-
-msgid "Reconnecting to server"
-msgstr "सर्वर से पुनः कनेक्ट कर रहे हैं"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "कॉन्फ़िगरेशन लोड कर रहे हैं"
-
-msgid "Configuration loaded successfully"
-msgstr "कॉन्फ़िगरेशन सफलतापूर्वक लोड हुई"
-
-msgid "Configuration error"
-msgstr "कॉन्फ़िगरेशन त्रुटि"
-
-msgid "Invalid server URL"
-msgstr "अमान्य सर्वर URL"
-
-# System information
-msgid "Gathering system information"
-msgstr "सिस्टम जानकारी एकत्रित कर रहे हैं"
-
-msgid "System information collected"
-msgstr "सिस्टम जानकारी एकत्रित की गई"
-
-msgid "Failed to collect system information"
-msgstr "सिस्टम जानकारी एकत्रित करना विफल"
-
-# Command execution
-msgid "Executing command"
-msgstr "कमांड निष्पादित कर रहे हैं"
-
-msgid "Command executed successfully"
-msgstr "कमांड सफलतापूर्वक निष्पादित हुई"
-
-msgid "Command execution failed"
-msgstr "कमांड निष्पादन विफल"
-
-msgid "Command not permitted"
-msgstr "कमांड की अनुमति नहीं है"
-
-# File operations
-msgid "File not found"
-msgstr "फ़ाइल नहीं मिली"
-
-msgid "Permission denied"
-msgstr "अनुमति अस्वीकृत"
-
-msgid "File operation completed"
-msgstr "फ़ाइल ऑपरेशन पूर्ण"
-
-# Service management
-msgid "Service started"
-msgstr "सेवा शुरू की गई"
-
-msgid "Service stopped"
-msgstr "सेवा बंद की गई"
-
-msgid "Service installation completed"
-msgstr "सेवा स्थापना पूर्ण"
-
-msgid "Service removal completed"
-msgstr "सेवा हटाना पूर्ण"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "एक अप्रत्याशित त्रुटि हुई"
-
-msgid "Network error"
-msgstr "नेटवर्क त्रुटि"
-
-msgid "Authentication failed"
-msgstr "प्रमाणीकरण विफल"
-
-msgid "Invalid response from server"
-msgstr "सर्वर से अमान्य प्रतिक्रिया"
+msgid "Cannot send message: not connected to server"
+msgstr ""
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
 msgstr "प्रारंभिक OS संस्करण डेटा भेज रहे हैं..."
 
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+
+msgid "Sending initial user access data..."
+msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+
+msgid "Sending initial software inventory data..."
+msgstr "प्रारंभिक सॉफ्टवेयर सूची डेटा भेज रहे हैं..."
+
+#, fuzzy
+msgid "Sending initial update check..."
+msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+
 msgid "Initial data updates sent successfully"
 msgstr "प्रारंभिक डेटा अपडेट सफलतापूर्वक भेजे गए"
 
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
-msgid "Sending initial user access data..."
-msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+
+msgid "Registering with SysManage server..."
+msgstr ""
+
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+msgid "Connected to server successfully"
+msgstr "सर्वर से सफलतापूर्वक कनेक्ट हो गए"
 
 # Software Inventory Messages
 msgid "Collecting software inventory"
 msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र कर रहे हैं"
 
-msgid "Software inventory collection completed: %d packages found"
-msgstr "सॉफ़्टवेयर इन्वेंटरी संग्रह पूर्ण: %d पैकेज मिले"
-
-msgid "Failed to collect software inventory: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
-
+#, python-format
 msgid "Unsupported platform for software inventory: %s"
 msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
 
+#, python-format
+msgid "Software inventory collection completed: %d packages found"
+msgstr "सॉफ़्टवेयर इन्वेंटरी संग्रह पूर्ण: %d पैकेज मिले"
+
+#, python-format
+msgid "Failed to collect software inventory: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+
+#, python-format
 msgid "Detected package managers: %s"
 msgstr "पहचाने गए पैकेज प्रबंधक: %s"
 
 msgid "Collecting apt packages"
 msgstr "apt पैकेज एकत्र कर रहे हैं"
 
+#, python-format
 msgid "Failed to collect apt packages: %s"
 msgstr "apt पैकेज एकत्र करना विफल: %s"
 
 msgid "Collecting snap packages"
 msgstr "snap पैकेज एकत्र कर रहे हैं"
 
+#, python-format
 msgid "Failed to collect snap packages: %s"
 msgstr "snap पैकेज एकत्र करना विफल: %s"
 
 msgid "Collecting flatpak packages"
 msgstr "flatpak पैकेज एकत्र कर रहे हैं"
 
+#, python-format
 msgid "Failed to collect flatpak packages: %s"
 msgstr "flatpak पैकेज एकत्र करना विफल: %s"
 
 msgid "Collecting Homebrew packages"
 msgstr "Homebrew पैकेज एकत्र कर रहे हैं"
 
+#, python-format
 msgid "Failed to collect Homebrew packages: %s"
 msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
 
 msgid "Collecting macOS Applications"
 msgstr "macOS एप्लिकेशन एकत्र कर रहे हैं"
 
+#, python-format
 msgid "Failed to collect macOS applications: %s"
 msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
 
-msgid "Sending initial software inventory data..."
-msgstr "प्रारंभिक सॉफ्टवेयर सूची डेटा भेज रहे हैं..."
+#, fuzzy
+msgid "Collecting DNF packages"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to collect DNF packages: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Collecting Pacman packages"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to collect Pacman packages: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Collecting Mac App Store applications"
+msgstr "macOS एप्लिकेशन एकत्र कर रहे हैं"
+
+msgid "Failed to parse system_profiler JSON output"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect Mac App Store applications: %s"
+msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Collecting winget packages"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to collect winget packages: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+msgid "Chocolatey package collection not yet implemented"
+msgstr ""
+
+msgid "Scoop package collection not yet implemented"
+msgstr ""
+
+#, fuzzy
+msgid "Collecting BSD pkg packages"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+msgid "No BSD package manager output found"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect BSD pkg packages: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Collecting OpenBSD pkg_info packages"
+msgstr "snap पैकेज एकत्र कर रहे हैं"
+
+msgid "Successfully collected OpenBSD packages"
+msgstr ""
+
+#, python-format
+msgid "No OpenBSD pkg_info output found. Return code: %d"
+msgstr ""
+
+#, python-format
+msgid "pkg_info stderr: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect OpenBSD pkg_info packages: %s"
+msgstr "snap पैकेज एकत्र करना विफल: %s"
+
+msgid "FreeBSD ports collection not yet implemented"
+msgstr ""
+
+msgid "Detecting available updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unsupported platform for update detection: %s"
+msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+
+#, python-format
+msgid ""
+"Update detection completed: %d updates found (%d security, %d system, %d "
+"application)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect available updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+#, fuzzy
+msgid "Detecting apt updates"
+msgstr "apt पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to detect apt updates: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Detecting snap updates"
+msgstr "snap पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to detect snap updates: %s"
+msgstr "snap पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Detecting flatpak updates"
+msgstr "flatpak पैकेज एकत्र कर रहे हैं"
+
+#, fuzzy, python-format
+msgid "Failed to detect flatpak updates: %s"
+msgstr "flatpak पैकेज एकत्र करना विफल: %s"
+
+msgid "Detecting DNF updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect DNF updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+msgid "Detecting Pacman updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Pacman updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+msgid "Detecting Zypper updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Zypper updates: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, fuzzy
+msgid "Detecting Homebrew updates"
+msgstr "Homebrew पैकेज एकत्र कर रहे हैं"
+
+msgid "Failed to parse Homebrew JSON output"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Homebrew updates: %s"
+msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
+
+msgid "Detecting Mac App Store updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Mac App Store updates: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+msgid "Detecting MacPorts updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect MacPorts updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+msgid "Detecting winget updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect winget updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+msgid "Detecting Chocolatey updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Chocolatey updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+msgid "Detecting Scoop updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Scoop updates: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+msgid "Detecting pkg updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect pkg updates: %s"
+msgstr "apt पैकेज एकत्र करना विफल: %s"
+
+#, python-format
+msgid "Applying updates for %d packages"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to apply apt updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply DNF updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply pkg updates: %s"
+msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+#~ msgid "Connecting to server"
+#~ msgstr "सर्वर से कनेक्ट कर रहे हैं"
+
+#~ msgid "Connection failed"
+#~ msgstr "कनेक्शन विफल"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "सर्वर से डिस्कनेक्ट हो गए"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "सर्वर से पुनः कनेक्ट कर रहे हैं"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "कॉन्फ़िगरेशन सफलतापूर्वक लोड हुई"
+
+#~ msgid "Configuration error"
+#~ msgstr "कॉन्फ़िगरेशन त्रुटि"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "अमान्य सर्वर URL"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "सिस्टम जानकारी एकत्रित कर रहे हैं"
+
+#~ msgid "System information collected"
+#~ msgstr "सिस्टम जानकारी एकत्रित की गई"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "सिस्टम जानकारी एकत्रित करना विफल"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "कमांड निष्पादित कर रहे हैं"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "कमांड सफलतापूर्वक निष्पादित हुई"
+
+#~ msgid "Command execution failed"
+#~ msgstr "कमांड निष्पादन विफल"
+
+#~ msgid "Command not permitted"
+#~ msgstr "कमांड की अनुमति नहीं है"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "फ़ाइल नहीं मिली"
+
+#~ msgid "Permission denied"
+#~ msgstr "अनुमति अस्वीकृत"
+
+#~ msgid "File operation completed"
+#~ msgstr "फ़ाइल ऑपरेशन पूर्ण"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "सेवा शुरू की गई"
+
+#~ msgid "Service stopped"
+#~ msgstr "सेवा बंद की गई"
+
+#~ msgid "Service installation completed"
+#~ msgstr "सेवा स्थापना पूर्ण"
+
+#~ msgid "Service removal completed"
+#~ msgstr "सेवा हटाना पूर्ण"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "एक अप्रत्याशित त्रुटि हुई"
+
+#~ msgid "Network error"
+#~ msgstr "नेटवर्क त्रुटि"
+
+#~ msgid "Authentication failed"
+#~ msgstr "प्रमाणीकरण विफल"

@@ -1,85 +1,491 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-30 16:13-0400\n"
+"POT-Creation-Date: 2025-09-03 15:34-0400\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: main.py:40
+msgid "Performing periodic update check"
+msgstr "Führe periodische Update-Prüfung durch"
+
+#, python-format
+msgid "Found %d available updates during periodic check"
+msgstr "%d verfügbare Updates bei periodischer Prüfung gefunden"
+
+#, python-format
+msgid "Error during periodic update check: %s"
+msgstr "Fehler bei periodischer Update-Prüfung: %s"
+
+#, python-format
+msgid "Update checker error: %s"
+msgstr ""
+
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "Authentifizierung fehlgeschlagen mit Status %s: %s"
+
+#, python-format
+msgid "Received command: %s with parameters: %s"
+msgstr ""
+
+#, python-format
+msgid "Unknown command type: %s"
+msgstr "Unbekannter Befehlstyp: %s"
+
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#, python-format
+msgid ""
+"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
+"agent.yaml or ./sysmanage-agent.yaml"
+msgstr "Konfigurationsdatei '%s' nicht gefunden. Erwartete Pfade: /etc/sysmanage-agent.yaml oder ./sysmanage-agent.yaml"
+
+# Configuration
+#, fuzzy, python-format
+msgid "Invalid YAML in configuration file: %s"
+msgstr "Konfiguration wird geladen"
+
+#, python-format
+msgid "Failed to load configuration file: %s"
+msgstr "Fehler beim Laden der Konfigurationsdatei: %s"
+
+#, python-format
+msgid "Discovered %s SysManage server(s)"
+msgstr "%s SysManage-Server entdeckt"
+
+msgid "No SysManage servers discovered on the network"
+msgstr "Keine SysManage-Server im Netzwerk entdeckt"
+
+#, python-format
+msgid "Server discovered at %s"
+msgstr "Server bei %s entdeckt"
+
+#, fuzzy, python-format
+msgid "Invalid JSON response from %s"
+msgstr "Ungültige Antwort vom Server"
+
+#, python-format
+msgid "Error during broadcast discovery: %s"
+msgstr ""
+
+#, python-format
+msgid "Server announcement received from %s"
+msgstr ""
+
+#, python-format
+msgid "Invalid JSON announcement from %s"
+msgstr ""
+
+#, python-format
+msgid "Error listening for announcements: %s"
+msgstr ""
+
+#, python-format
+msgid "Selected server at %s (score: %s)"
+msgstr "Server bei %s ausgewählt (Bewertung: %s)"
+
+#, fuzzy, python-format
+msgid "Unsupported platform: %s"
+msgstr "Nicht unterstützte Plattform für Software-Inventar: %s"
+
+#, fuzzy, python-format
+msgid "Failed to collect hardware info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS CPU info: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS memory info: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS storage info: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get APFS container info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS network info: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, python-format
+msgid "Failed to get Linux CPU info: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to get Linux memory info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux storage info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux network info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows CPU info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows memory info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows storage info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows network info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD CPU info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD memory info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD storage info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD network info: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
 msgid "No configuration found, attempting auto-discovery..."
 msgstr ""
 
-#: main.py:43
 msgid "Unable to configure agent: no config file and auto-discovery failed"
 msgstr ""
 
 # Agent startup and connection
-#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "SysManage Agent wird gestartet"
 
-#: main.py:177
 msgid "Cannot send message: not connected to server"
 msgstr ""
 
 # OS Version Update Messages
-#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "Sende initiale OS-Versionsdaten..."
 
 # OS Version Update Messages
-#: main.py:343
 #, fuzzy
 msgid "Sending initial hardware data..."
 msgstr "Sende initiale OS-Versionsdaten..."
 
-#: main.py:362
+msgid "Sending initial user access data..."
+msgstr "Sende anfängliche Benutzerzugriffsdaten..."
+
+msgid "Sending initial software inventory data..."
+msgstr "Sende initiale Software-Inventardaten..."
+
+# OS Version Update Messages
+#, fuzzy
+msgid "Sending initial update check..."
+msgstr "Sende initiale OS-Versionsdaten..."
+
 msgid "Initial data updates sent successfully"
 msgstr "Initiale Datenaktualisierungen erfolgreich gesendet"
 
-#: main.py:364
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
 
-#: main.py:641
 msgid "Registering with SysManage server..."
 msgstr ""
 
-#: main.py:643
 msgid "Failed to register with server. Exiting."
 msgstr ""
 
-#: main.py:646
 msgid "Registration successful, checking certificates..."
 msgstr ""
 
-#: main.py:651
 msgid "Valid certificates found - secure authentication available"
 msgstr ""
 
-#: main.py:653
 msgid "No certificates found - using token-based authentication"
 msgstr ""
 
-#: main.py:655
 msgid ""
 "For enhanced security, approve this host to enable certificate-based auth"
 msgstr ""
 
-#: main.py:658
 msgid "Starting WebSocket connection..."
 msgstr ""
 
-#: main.py:698
 msgid "Connected to server successfully"
 msgstr "Erfolgreich mit dem Server verbunden"
 
-#: client_registration.py:22
-msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "Software-Inventar wird erfasst"
+
+#, python-format
+msgid "Unsupported platform for software inventory: %s"
+msgstr "Nicht unterstützte Plattform für Software-Inventar: %s"
+
+#, python-format
+msgid "Software inventory collection completed: %d packages found"
+msgstr "Software-Inventar-Erfassung abgeschlossen: %d Pakete gefunden"
+
+#, python-format
+msgid "Failed to collect software inventory: %s"
+msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+
+#, python-format
+msgid "Detected package managers: %s"
+msgstr "Erkannte Paketmanager: %s"
+
+msgid "Collecting apt packages"
+msgstr "Sammle apt-Pakete"
+
+#, python-format
+msgid "Failed to collect apt packages: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+msgid "Collecting snap packages"
+msgstr "Sammle snap-Pakete"
+
+#, python-format
+msgid "Failed to collect snap packages: %s"
+msgstr "Fehler beim Sammeln der snap-Pakete: %s"
+
+msgid "Collecting flatpak packages"
+msgstr "Sammle flatpak-Pakete"
+
+#, python-format
+msgid "Failed to collect flatpak packages: %s"
+msgstr "Fehler beim Sammeln der flatpak-Pakete: %s"
+
+msgid "Collecting Homebrew packages"
+msgstr "Sammle Homebrew-Pakete"
+
+#, python-format
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Fehler beim Sammeln der Homebrew-Pakete: %s"
+
+msgid "Collecting macOS Applications"
+msgstr "Sammle macOS-Anwendungen"
+
+#, python-format
+msgid "Failed to collect macOS applications: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, fuzzy
+msgid "Collecting DNF packages"
+msgstr "Sammle apt-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to collect DNF packages: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, fuzzy
+msgid "Collecting Pacman packages"
+msgstr "Sammle apt-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to collect Pacman packages: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, fuzzy
+msgid "Collecting Mac App Store applications"
+msgstr "Sammle macOS-Anwendungen"
+
+msgid "Failed to parse system_profiler JSON output"
 msgstr ""
 
-#: security/certificate_store.py:41
+#, fuzzy, python-format
+msgid "Failed to collect Mac App Store applications: %s"
+msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
+
+#, fuzzy
+msgid "Collecting winget packages"
+msgstr "Sammle apt-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to collect winget packages: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+msgid "Chocolatey package collection not yet implemented"
+msgstr ""
+
+msgid "Scoop package collection not yet implemented"
+msgstr ""
+
+#, fuzzy
+msgid "Collecting BSD pkg packages"
+msgstr "Sammle apt-Pakete"
+
+msgid "No BSD package manager output found"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect BSD pkg packages: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, fuzzy
+msgid "Collecting OpenBSD pkg_info packages"
+msgstr "Sammle snap-Pakete"
+
+msgid "Successfully collected OpenBSD packages"
+msgstr ""
+
+#, python-format
+msgid "No OpenBSD pkg_info output found. Return code: %d"
+msgstr ""
+
+#, python-format
+msgid "pkg_info stderr: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect OpenBSD pkg_info packages: %s"
+msgstr "Fehler beim Sammeln der snap-Pakete: %s"
+
+msgid "FreeBSD ports collection not yet implemented"
+msgstr ""
+
+msgid "Detecting available updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unsupported platform for update detection: %s"
+msgstr "Nicht unterstützte Plattform für Software-Inventar: %s"
+
+#, python-format
+msgid ""
+"Update detection completed: %d updates found (%d security, %d system, %d "
+"application)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect available updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+#, fuzzy
+msgid "Detecting apt updates"
+msgstr "Sammle apt-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to detect apt updates: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, fuzzy
+msgid "Detecting snap updates"
+msgstr "Sammle snap-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to detect snap updates: %s"
+msgstr "Fehler beim Sammeln der snap-Pakete: %s"
+
+#, fuzzy
+msgid "Detecting flatpak updates"
+msgstr "Sammle flatpak-Pakete"
+
+#, fuzzy, python-format
+msgid "Failed to detect flatpak updates: %s"
+msgstr "Fehler beim Sammeln der flatpak-Pakete: %s"
+
+msgid "Detecting DNF updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect DNF updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+msgid "Detecting Pacman updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Pacman updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+msgid "Detecting Zypper updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Zypper updates: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, fuzzy
+msgid "Detecting Homebrew updates"
+msgstr "Sammle Homebrew-Pakete"
+
+msgid "Failed to parse Homebrew JSON output"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Homebrew updates: %s"
+msgstr "Fehler beim Sammeln der Homebrew-Pakete: %s"
+
+msgid "Detecting Mac App Store updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Mac App Store updates: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+msgid "Detecting MacPorts updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect MacPorts updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+msgid "Detecting winget updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect winget updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+msgid "Detecting Chocolatey updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Chocolatey updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+msgid "Detecting Scoop updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Scoop updates: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+msgid "Detecting pkg updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect pkg updates: %s"
+msgstr "Fehler beim Sammeln der apt-Pakete: %s"
+
+#, python-format
+msgid "Applying updates for %d packages"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to apply apt updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply DNF updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply pkg updates: %s"
+msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr ""
@@ -95,10 +501,6 @@ msgstr ""
 
 #~ msgid "Reconnecting to server"
 #~ msgstr "Neuverbindung zum Server"
-
-# Configuration
-#~ msgid "Loading configuration"
-#~ msgstr "Konfiguration wird geladen"
 
 #~ msgid "Configuration loaded successfully"
 #~ msgstr "Konfiguration erfolgreich geladen"
@@ -164,58 +566,3 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "Authentifizierung fehlgeschlagen"
-
-#~ msgid "Invalid response from server"
-#~ msgstr "Ungültige Antwort vom Server"
-
-msgid "Sending initial user access data..."
-msgstr "Sende anfängliche Benutzerzugriffsdaten..."
-
-# Software Inventory Messages
-msgid "Collecting software inventory"
-msgstr "Software-Inventar wird erfasst"
-
-msgid "Software inventory collection completed: %d packages found"
-msgstr "Software-Inventar-Erfassung abgeschlossen: %d Pakete gefunden"
-
-msgid "Failed to collect software inventory: %s"
-msgstr "Fehler beim Erfassen des Software-Inventars: %s"
-
-msgid "Unsupported platform for software inventory: %s"
-msgstr "Nicht unterstützte Plattform für Software-Inventar: %s"
-
-msgid "Detected package managers: %s"
-msgstr "Erkannte Paketmanager: %s"
-
-msgid "Collecting apt packages"
-msgstr "Sammle apt-Pakete"
-
-msgid "Failed to collect apt packages: %s"
-msgstr "Fehler beim Sammeln der apt-Pakete: %s"
-
-msgid "Collecting snap packages"
-msgstr "Sammle snap-Pakete"
-
-msgid "Failed to collect snap packages: %s"
-msgstr "Fehler beim Sammeln der snap-Pakete: %s"
-
-msgid "Collecting flatpak packages"
-msgstr "Sammle flatpak-Pakete"
-
-msgid "Failed to collect flatpak packages: %s"
-msgstr "Fehler beim Sammeln der flatpak-Pakete: %s"
-
-msgid "Collecting Homebrew packages"
-msgstr "Sammle Homebrew-Pakete"
-
-msgid "Failed to collect Homebrew packages: %s"
-msgstr "Fehler beim Sammeln der Homebrew-Pakete: %s"
-
-msgid "Collecting macOS Applications"
-msgstr "Sammle macOS-Anwendungen"
-
-msgid "Failed to collect macOS applications: %s"
-msgstr "Fehler beim Sammeln der macOS-Anwendungen: %s"
-
-msgid "Sending initial software inventory data..."
-msgstr "Sende initiale Software-Inventardaten..."

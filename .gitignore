@@ -169,3 +169,6 @@ fix-commits.sh
 # Local configuration files
 sysmanage-agent.yaml
 sysmanage-agent.yaml
+
+# Claude
+CLAUDE.md

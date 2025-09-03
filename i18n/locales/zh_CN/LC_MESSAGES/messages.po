@@ -1,85 +1,491 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-30 16:13-0400\n"
+"POT-Creation-Date: 2025-09-03 15:34-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: main.py:40
+msgid "Performing periodic update check"
+msgstr ""
+
+#, python-format
+msgid "Found %d available updates during periodic check"
+msgstr ""
+
+#, python-format
+msgid "Error during periodic update check: %s"
+msgstr ""
+
+#, python-format
+msgid "Update checker error: %s"
+msgstr ""
+
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr ""
+
+#, python-format
+msgid "Received command: %s with parameters: %s"
+msgstr ""
+
+#, python-format
+msgid "Unknown command type: %s"
+msgstr ""
+
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr ""
+
+#, python-format
+msgid ""
+"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
+"agent.yaml or ./sysmanage-agent.yaml"
+msgstr ""
+
+# Configuration
+#, fuzzy, python-format
+msgid "Invalid YAML in configuration file: %s"
+msgstr "正在加载配置"
+
+#, python-format
+msgid "Failed to load configuration file: %s"
+msgstr ""
+
+#, python-format
+msgid "Discovered %s SysManage server(s)"
+msgstr ""
+
+msgid "No SysManage servers discovered on the network"
+msgstr ""
+
+#, python-format
+msgid "Server discovered at %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Invalid JSON response from %s"
+msgstr "来自服务器的无效响应"
+
+#, python-format
+msgid "Error during broadcast discovery: %s"
+msgstr ""
+
+#, python-format
+msgid "Server announcement received from %s"
+msgstr ""
+
+#, python-format
+msgid "Invalid JSON announcement from %s"
+msgstr ""
+
+#, python-format
+msgid "Error listening for announcements: %s"
+msgstr ""
+
+#, python-format
+msgid "Selected server at %s (score: %s)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unsupported platform: %s"
+msgstr "软件清单不支持的平台：%s"
+
+#, fuzzy, python-format
+msgid "Failed to collect hardware info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS CPU info: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS memory info: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS storage info: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get APFS container info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS network info: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, python-format
+msgid "Failed to get Linux CPU info: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to get Linux memory info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux storage info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux network info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows CPU info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows memory info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows storage info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows network info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD CPU info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD memory info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD storage info: %s"
+msgstr "收集软件清单失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD network info: %s"
+msgstr "收集软件清单失败：%s"
+
 msgid "No configuration found, attempting auto-discovery..."
 msgstr ""
 
-#: main.py:43
 msgid "Unable to configure agent: no config file and auto-discovery failed"
 msgstr ""
 
 # Agent startup and connection
-#: main.py:72 main.py:633
 msgid "Starting SysManage Agent"
 msgstr "正在启动 SysManage 代理"
 
-#: main.py:177
 msgid "Cannot send message: not connected to server"
 msgstr ""
 
 # OS Version Update Messages
-#: main.py:336
 msgid "Sending initial OS version data..."
 msgstr "正在发送初始操作系统版本数据..."
 
 # OS Version Update Messages
-#: main.py:343
 #, fuzzy
 msgid "Sending initial hardware data..."
 msgstr "正在发送初始操作系统版本数据..."
 
-#: main.py:362
+msgid "Sending initial user access data..."
+msgstr "正在发送初始用户访问数据..."
+
+msgid "Sending initial software inventory data..."
+msgstr "正在发送初始软件清单数据..."
+
+# OS Version Update Messages
+#, fuzzy
+msgid "Sending initial update check..."
+msgstr "正在发送初始操作系统版本数据..."
+
 msgid "Initial data updates sent successfully"
 msgstr "初始数据更新发送成功"
 
-#: main.py:364
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "发送初始数据更新失败：%s"
 
-#: main.py:641
 msgid "Registering with SysManage server..."
 msgstr ""
 
-#: main.py:643
 msgid "Failed to register with server. Exiting."
 msgstr ""
 
-#: main.py:646
 msgid "Registration successful, checking certificates..."
 msgstr ""
 
-#: main.py:651
 msgid "Valid certificates found - secure authentication available"
 msgstr ""
 
-#: main.py:653
 msgid "No certificates found - using token-based authentication"
 msgstr ""
 
-#: main.py:655
 msgid ""
 "For enhanced security, approve this host to enable certificate-based auth"
 msgstr ""
 
-#: main.py:658
 msgid "Starting WebSocket connection..."
 msgstr ""
 
-#: main.py:698
 msgid "Connected to server successfully"
 msgstr "成功连接到服务器"
 
-#: client_registration.py:22
-msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+# Software Inventory Messages
+msgid "Collecting software inventory"
+msgstr "正在收集软件清单"
+
+#, python-format
+msgid "Unsupported platform for software inventory: %s"
+msgstr "软件清单不支持的平台：%s"
+
+#, python-format
+msgid "Software inventory collection completed: %d packages found"
+msgstr "软件清单收集完成：找到 %d 个软件包"
+
+#, python-format
+msgid "Failed to collect software inventory: %s"
+msgstr "收集软件清单失败：%s"
+
+#, python-format
+msgid "Detected package managers: %s"
+msgstr "检测到的包管理器：%s"
+
+msgid "Collecting apt packages"
+msgstr "正在收集 apt 软件包"
+
+#, python-format
+msgid "Failed to collect apt packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+msgid "Collecting snap packages"
+msgstr "正在收集 snap 软件包"
+
+#, python-format
+msgid "Failed to collect snap packages: %s"
+msgstr "收集 snap 软件包失败：%s"
+
+msgid "Collecting flatpak packages"
+msgstr "正在收集 flatpak 软件包"
+
+#, python-format
+msgid "Failed to collect flatpak packages: %s"
+msgstr "收集 flatpak 软件包失败：%s"
+
+msgid "Collecting Homebrew packages"
+msgstr "正在收集 Homebrew 软件包"
+
+#, python-format
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "收集 Homebrew 软件包失败：%s"
+
+msgid "Collecting macOS Applications"
+msgstr "正在收集 macOS 应用程序"
+
+#, python-format
+msgid "Failed to collect macOS applications: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, fuzzy
+msgid "Collecting DNF packages"
+msgstr "正在收集 apt 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to collect DNF packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, fuzzy
+msgid "Collecting Pacman packages"
+msgstr "正在收集 apt 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to collect Pacman packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, fuzzy
+msgid "Collecting Mac App Store applications"
+msgstr "正在收集 macOS 应用程序"
+
+msgid "Failed to parse system_profiler JSON output"
 msgstr ""
 
-#: security/certificate_store.py:41
+#, fuzzy, python-format
+msgid "Failed to collect Mac App Store applications: %s"
+msgstr "收集 macOS 应用程序失败：%s"
+
+#, fuzzy
+msgid "Collecting winget packages"
+msgstr "正在收集 apt 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to collect winget packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+msgid "Chocolatey package collection not yet implemented"
+msgstr ""
+
+msgid "Scoop package collection not yet implemented"
+msgstr ""
+
+#, fuzzy
+msgid "Collecting BSD pkg packages"
+msgstr "正在收集 apt 软件包"
+
+msgid "No BSD package manager output found"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect BSD pkg packages: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, fuzzy
+msgid "Collecting OpenBSD pkg_info packages"
+msgstr "正在收集 snap 软件包"
+
+msgid "Successfully collected OpenBSD packages"
+msgstr ""
+
+#, python-format
+msgid "No OpenBSD pkg_info output found. Return code: %d"
+msgstr ""
+
+#, python-format
+msgid "pkg_info stderr: %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to collect OpenBSD pkg_info packages: %s"
+msgstr "收集 snap 软件包失败：%s"
+
+msgid "FreeBSD ports collection not yet implemented"
+msgstr ""
+
+msgid "Detecting available updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unsupported platform for update detection: %s"
+msgstr "软件清单不支持的平台：%s"
+
+#, python-format
+msgid ""
+"Update detection completed: %d updates found (%d security, %d system, %d "
+"application)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect available updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+#, fuzzy
+msgid "Detecting apt updates"
+msgstr "正在收集 apt 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to detect apt updates: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, fuzzy
+msgid "Detecting snap updates"
+msgstr "正在收集 snap 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to detect snap updates: %s"
+msgstr "收集 snap 软件包失败：%s"
+
+#, fuzzy
+msgid "Detecting flatpak updates"
+msgstr "正在收集 flatpak 软件包"
+
+#, fuzzy, python-format
+msgid "Failed to detect flatpak updates: %s"
+msgstr "收集 flatpak 软件包失败：%s"
+
+msgid "Detecting DNF updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect DNF updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+msgid "Detecting Pacman updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Pacman updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+msgid "Detecting Zypper updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Zypper updates: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, fuzzy
+msgid "Detecting Homebrew updates"
+msgstr "正在收集 Homebrew 软件包"
+
+msgid "Failed to parse Homebrew JSON output"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Homebrew updates: %s"
+msgstr "收集 Homebrew 软件包失败：%s"
+
+msgid "Detecting Mac App Store updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Mac App Store updates: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+msgid "Detecting MacPorts updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect MacPorts updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+msgid "Detecting winget updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect winget updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+msgid "Detecting Chocolatey updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Chocolatey updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+msgid "Detecting Scoop updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect Scoop updates: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+msgid "Detecting pkg updates"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to detect pkg updates: %s"
+msgstr "收集 apt 软件包失败：%s"
+
+#, python-format
+msgid "Applying updates for %d packages"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Failed to apply apt updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to apply DNF updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
+#, fuzzy, python-format
+msgid "Failed to apply pkg updates: %s"
+msgstr "发送初始数据更新失败：%s"
+
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr ""
@@ -95,10 +501,6 @@ msgstr ""
 
 #~ msgid "Reconnecting to server"
 #~ msgstr "正在重新连接服务器"
-
-# Configuration
-#~ msgid "Loading configuration"
-#~ msgstr "正在加载配置"
 
 #~ msgid "Configuration loaded successfully"
 #~ msgstr "配置加载成功"
@@ -164,58 +566,3 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "身份验证失败"
-
-#~ msgid "Invalid response from server"
-#~ msgstr "来自服务器的无效响应"
-
-msgid "Sending initial user access data..."
-msgstr "正在发送初始用户访问数据..."
-
-# Software Inventory Messages
-msgid "Collecting software inventory"
-msgstr "正在收集软件清单"
-
-msgid "Software inventory collection completed: %d packages found"
-msgstr "软件清单收集完成：找到 %d 个软件包"
-
-msgid "Failed to collect software inventory: %s"
-msgstr "收集软件清单失败：%s"
-
-msgid "Unsupported platform for software inventory: %s"
-msgstr "软件清单不支持的平台：%s"
-
-msgid "Detected package managers: %s"
-msgstr "检测到的包管理器：%s"
-
-msgid "Collecting apt packages"
-msgstr "正在收集 apt 软件包"
-
-msgid "Failed to collect apt packages: %s"
-msgstr "收集 apt 软件包失败：%s"
-
-msgid "Collecting snap packages"
-msgstr "正在收集 snap 软件包"
-
-msgid "Failed to collect snap packages: %s"
-msgstr "收集 snap 软件包失败：%s"
-
-msgid "Collecting flatpak packages"
-msgstr "正在收集 flatpak 软件包"
-
-msgid "Failed to collect flatpak packages: %s"
-msgstr "收集 flatpak 软件包失败：%s"
-
-msgid "Collecting Homebrew packages"
-msgstr "正在收集 Homebrew 软件包"
-
-msgid "Failed to collect Homebrew packages: %s"
-msgstr "收集 Homebrew 软件包失败：%s"
-
-msgid "Collecting macOS Applications"
-msgstr "正在收集 macOS 应用程序"
-
-msgid "Failed to collect macOS applications: %s"
-msgstr "收集 macOS 应用程序失败：%s"
-
-msgid "Sending initial software inventory data..."
-msgstr "正在发送初始软件清单数据..."
