@@ -1,156 +1,566 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-03 15:34-0400\n"
 "Language: ar\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Performing periodic update check"
+msgstr "تنفيذ فحص التحديث الدوري"
+
+#, python-format
+msgid "Found %d available updates during periodic check"
+msgstr "تم العثور على %d تحديث متاح أثناء الفحص الدوري"
+
+#, python-format
+msgid "Error during periodic update check: %s"
+msgstr "خطأ أثناء فحص التحديث الدوري: %s"
+
+#, python-format
+msgid "Update checker error: %s"
+msgstr "خطأ في مدقق التحديث: %s"
+
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "فشلت المصادقة بالحالة %s: %s"
+
+#, python-format
+msgid "Received command: %s with parameters: %s"
+msgstr "تم استلام الأمر: %s مع المعاملات: %s"
+
+#, python-format
+msgid "Unknown command type: %s"
+msgstr "نوع أمر غير معروف: %s"
+
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
+msgstr "⚠️  تحذير: aiohttp غير متاح، سيتم تخطي التسجيل"
+
+#, python-format
+msgid ""
+"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
+"agent.yaml or ./sysmanage-agent.yaml"
+msgstr "ملف التكوين '%s' غير موجود. المواقع المتوقعة: /etc/sysmanage-agent.yaml أو ./sysmanage-agent.yaml"
+
+# Configuration
+#, python-format
+msgid "Invalid YAML in configuration file: %s"
+msgstr "YAML غير صحيح في ملف التكوين: %s"
+
+#, python-format
+msgid "Failed to load configuration file: %s"
+msgstr "فشل في تحميل ملف التكوين: %s"
+
+#, python-format
+msgid "Discovered %s SysManage server(s)"
+msgstr "تم اكتشاف %s خادم SysManage"
+
+msgid "No SysManage servers discovered on the network"
+msgstr "لم يتم اكتشاف خوادم SysManage على الشبكة"
+
+#, python-format
+msgid "Server discovered at %s"
+msgstr "تم اكتشاف خادم في %s"
+
+#, fuzzy, python-format
+msgid "Invalid JSON response from %s"
+msgstr "استجابة غير صحيحة من الخادم"
+
+#, python-format
+msgid "Error during broadcast discovery: %s"
+msgstr "خطأ أثناء اكتشاف البث: %s"
+
+#, python-format
+msgid "Server announcement received from %s"
+msgstr "تم استلام إعلان الخادم من %s"
+
+#, python-format
+msgid "Invalid JSON announcement from %s"
+msgstr "إعلان JSON غير صحيح من %s"
+
+#, python-format
+msgid "Error listening for announcements: %s"
+msgstr "خطأ في الاستماع للإعلانات: %s"
+
+#, python-format
+msgid "Selected server at %s (score: %s)"
+msgstr "تم اختيار الخادم في %s (النقاط: %s)"
+
+#, fuzzy, python-format
+msgid "Unsupported platform: %s"
+msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to collect hardware info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS CPU info: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS memory info: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS storage info: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get APFS container info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get macOS network info: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+#, python-format
+msgid "Failed to get Linux CPU info: %s"
+msgstr "فشل في الحصول على معلومات معالج Linux: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux memory info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux storage info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Linux network info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows CPU info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows memory info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows storage info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get Windows network info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD CPU info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD memory info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD storage info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, fuzzy, python-format
+msgid "Failed to get BSD network info: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+msgid "No configuration found, attempting auto-discovery..."
+msgstr "لم يتم العثور على تكوين، محاولة الاكتشاف التلقائي..."
+
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr "غير قادر على تكوين الوكيل: لا يوجد ملف تكوين وفشل الاكتشاف التلقائي"
 
 # Agent startup and connection
 msgid "Starting SysManage Agent"
 msgstr "بدء تشغيل وكيل إدارة النظام"
 
-msgid "Connecting to server"
-msgstr "الاتصال بالخادم"
-
-msgid "Connected to server successfully"
-msgstr "تم الاتصال بالخادم بنجاح"
-
-msgid "Connection failed"
-msgstr "فشل الاتصال"
-
-msgid "Disconnected from server"
-msgstr "انقطع الاتصال مع الخادم"
-
-msgid "Reconnecting to server"
-msgstr "إعادة الاتصال بالخادم"
-
-# Configuration
-msgid "Loading configuration"
-msgstr "تحميل التكوين"
-
-msgid "Configuration loaded successfully"
-msgstr "تم تحميل التكوين بنجاح"
-
-msgid "Configuration error"
-msgstr "خطأ في التكوين"
-
-msgid "Invalid server URL"
-msgstr "رابط الخادم غير صحيح"
-
-# System information
-msgid "Gathering system information"
-msgstr "جمع معلومات النظام"
-
-msgid "System information collected"
-msgstr "تم جمع معلومات النظام"
-
-msgid "Failed to collect system information"
-msgstr "فشل في جمع معلومات النظام"
-
-# Command execution
-msgid "Executing command"
-msgstr "تنفيذ الأمر"
-
-msgid "Command executed successfully"
-msgstr "تم تنفيذ الأمر بنجاح"
-
-msgid "Command execution failed"
-msgstr "فشل تنفيذ الأمر"
-
-msgid "Command not permitted"
-msgstr "الأمر غير مسموح"
-
-# File operations
-msgid "File not found"
-msgstr "الملف غير موجود"
-
-msgid "Permission denied"
-msgstr "الإذن مرفوض"
-
-msgid "File operation completed"
-msgstr "تمت عملية الملف"
-
-# Service management
-msgid "Service started"
-msgstr "تم بدء الخدمة"
-
-msgid "Service stopped"
-msgstr "تم إيقاف الخدمة"
-
-msgid "Service installation completed"
-msgstr "تم تثبيت الخدمة"
-
-msgid "Service removal completed"
-msgstr "تم إزالة الخدمة"
-
-# Error messages
-msgid "An unexpected error occurred"
-msgstr "حدث خطأ غير متوقع"
-
-msgid "Network error"
-msgstr "خطأ في الشبكة"
-
-msgid "Authentication failed"
-msgstr "فشل المصادقة"
-
-msgid "Invalid response from server"
-msgstr "استجابة غير صحيحة من الخادم"
+msgid "Cannot send message: not connected to server"
+msgstr "لا يمكن إرسال الرسالة: غير متصل بالخادم"
 
 # OS Version Update Messages
 msgid "Sending initial OS version data..."
 msgstr "إرسال بيانات إصدار نظام التشغيل الأولية..."
 
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "إرسال بيانات وصول المستخدم الأولية..."
+
+msgid "Sending initial user access data..."
+msgstr "إرسال بيانات وصول المستخدم الأولية..."
+
+msgid "Sending initial software inventory data..."
+msgstr "إرسال بيانات جرد البرامج الأولية..."
+
+#, fuzzy
+msgid "Sending initial update check..."
+msgstr "إرسال بيانات وصول المستخدم الأولية..."
+
 msgid "Initial data updates sent successfully"
 msgstr "تم إرسال تحديثات البيانات الأولية بنجاح"
 
+#, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
-msgid "Sending initial user access data..."
-msgstr "إرسال بيانات وصول المستخدم الأولية..."
+
+msgid "Registering with SysManage server..."
+msgstr "التسجيل في خادم SysManage..."
+
+msgid "Failed to register with server. Exiting."
+msgstr "فشل التسجيل في الخادم. خروج."
+
+msgid "Registration successful, checking certificates..."
+msgstr "تم التسجيل بنجاح، فحص الشهادات..."
+
+msgid "Valid certificates found - secure authentication available"
+msgstr "تم العثور على شهادات صالحة - المصادقة الآمنة متاحة"
+
+msgid "No certificates found - using token-based authentication"
+msgstr "لم يتم العثور على شهادات - استخدام مصادقة قائمة على الرموز"
+
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr "للحصول على أمان محسّن، اعتمد هذا المضيف لتمكين المصادقة القائمة على الشهادة"
+
+msgid "Starting WebSocket connection..."
+msgstr "بدء اتصال WebSocket..."
+
+msgid "Connected to server successfully"
+msgstr "تم الاتصال بالخادم بنجاح"
 
 # Software Inventory Messages
 msgid "Collecting software inventory"
 msgstr "جمع جرد البرمجيات"
 
-msgid "Software inventory collection completed: %d packages found"
-msgstr "اكتمل جمع جرد البرمجيات: تم العثور على %d حزمة"
-
-msgid "Failed to collect software inventory: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
-
+#, python-format
 msgid "Unsupported platform for software inventory: %s"
 msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
 
+#, python-format
+msgid "Software inventory collection completed: %d packages found"
+msgstr "اكتمل جمع جرد البرمجيات: تم العثور على %d حزمة"
+
+#, python-format
+msgid "Failed to collect software inventory: %s"
+msgstr "فشل في جمع جرد البرمجيات: %s"
+
+#, python-format
 msgid "Detected package managers: %s"
 msgstr "مديري الحزم المكتشفة: %s"
 
 msgid "Collecting apt packages"
 msgstr "جمع حزم apt"
 
+#, python-format
 msgid "Failed to collect apt packages: %s"
 msgstr "فشل في جمع حزم apt: %s"
 
 msgid "Collecting snap packages"
 msgstr "جمع حزم snap"
 
+#, python-format
 msgid "Failed to collect snap packages: %s"
 msgstr "فشل في جمع حزم snap: %s"
 
 msgid "Collecting flatpak packages"
 msgstr "جمع حزم flatpak"
 
+#, python-format
 msgid "Failed to collect flatpak packages: %s"
 msgstr "فشل في جمع حزم flatpak: %s"
 
 msgid "Collecting Homebrew packages"
 msgstr "جمع حزم Homebrew"
 
+#, python-format
 msgid "Failed to collect Homebrew packages: %s"
 msgstr "فشل في جمع حزم Homebrew: %s"
 
 msgid "Collecting macOS Applications"
 msgstr "جمع تطبيقات macOS"
 
+#, python-format
 msgid "Failed to collect macOS applications: %s"
 msgstr "فشل في جمع تطبيقات macOS: %s"
 
-msgid "Sending initial software inventory data..."
-msgstr "إرسال بيانات جرد البرامج الأولية..."
+#, fuzzy
+msgid "Collecting DNF packages"
+msgstr "جمع حزم apt"
+
+#, fuzzy, python-format
+msgid "Failed to collect DNF packages: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, fuzzy
+msgid "Collecting Pacman packages"
+msgstr "جمع حزم apt"
+
+#, fuzzy, python-format
+msgid "Failed to collect Pacman packages: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, fuzzy
+msgid "Collecting Mac App Store applications"
+msgstr "جمع تطبيقات macOS"
+
+msgid "Failed to parse system_profiler JSON output"
+msgstr "فشل في تحليل مخرجات JSON لـ system_profiler"
+
+#, fuzzy, python-format
+msgid "Failed to collect Mac App Store applications: %s"
+msgstr "فشل في جمع تطبيقات macOS: %s"
+
+#, fuzzy
+msgid "Collecting winget packages"
+msgstr "جمع حزم apt"
+
+#, fuzzy, python-format
+msgid "Failed to collect winget packages: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+msgid "Chocolatey package collection not yet implemented"
+msgstr "جمع حزم Chocolatey لم يتم تنفيذه بعد"
+
+msgid "Scoop package collection not yet implemented"
+msgstr "جمع حزم Scoop لم يتم تنفيذه بعد"
+
+#, fuzzy
+msgid "Collecting BSD pkg packages"
+msgstr "جمع حزم apt"
+
+msgid "No BSD package manager output found"
+msgstr "لم يتم العثور على مخرجات مدير حزم BSD"
+
+#, fuzzy, python-format
+msgid "Failed to collect BSD pkg packages: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, fuzzy
+msgid "Collecting OpenBSD pkg_info packages"
+msgstr "جمع حزم snap"
+
+msgid "Successfully collected OpenBSD packages"
+msgstr "تم جمع حزم OpenBSD بنجاح"
+
+#, python-format
+msgid "No OpenBSD pkg_info output found. Return code: %d"
+msgstr "لم يتم العثور على مخرجات pkg_info لـ OpenBSD. رمز العودة: %d"
+
+#, python-format
+msgid "pkg_info stderr: %s"
+msgstr "pkg_info stderr: %s"
+
+#, fuzzy, python-format
+msgid "Failed to collect OpenBSD pkg_info packages: %s"
+msgstr "فشل في جمع حزم snap: %s"
+
+msgid "FreeBSD ports collection not yet implemented"
+msgstr "جمع موانئ FreeBSD لم يتم تنفيذه بعد"
+
+msgid "Detecting available updates"
+msgstr "اكتشاف التحديثات المتاحة"
+
+#, fuzzy, python-format
+msgid "Unsupported platform for update detection: %s"
+msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+
+#, python-format
+msgid ""
+"Update detection completed: %d updates found (%d security, %d system, %d "
+"application)"
+msgstr "تم اكتشاف التحديثات: تم العثور على %d تحديث (%d أمني، %d نظام، %d تطبيق)"
+
+#, fuzzy, python-format
+msgid "Failed to detect available updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+#, fuzzy
+msgid "Detecting apt updates"
+msgstr "جمع حزم apt"
+
+#, fuzzy, python-format
+msgid "Failed to detect apt updates: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, fuzzy
+msgid "Detecting snap updates"
+msgstr "جمع حزم snap"
+
+#, fuzzy, python-format
+msgid "Failed to detect snap updates: %s"
+msgstr "فشل في جمع حزم snap: %s"
+
+#, fuzzy
+msgid "Detecting flatpak updates"
+msgstr "جمع حزم flatpak"
+
+#, fuzzy, python-format
+msgid "Failed to detect flatpak updates: %s"
+msgstr "فشل في جمع حزم flatpak: %s"
+
+msgid "Detecting DNF updates"
+msgstr "اكتشاف تحديثات DNF"
+
+#, fuzzy, python-format
+msgid "Failed to detect DNF updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+msgid "Detecting Pacman updates"
+msgstr "اكتشاف تحديثات Pacman"
+
+#, fuzzy, python-format
+msgid "Failed to detect Pacman updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+msgid "Detecting Zypper updates"
+msgstr "اكتشاف تحديثات Zypper"
+
+#, fuzzy, python-format
+msgid "Failed to detect Zypper updates: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, fuzzy
+msgid "Detecting Homebrew updates"
+msgstr "جمع حزم Homebrew"
+
+msgid "Failed to parse Homebrew JSON output"
+msgstr "فشل في تحليل مخرجات JSON لـ Homebrew"
+
+#, fuzzy, python-format
+msgid "Failed to detect Homebrew updates: %s"
+msgstr "فشل في جمع حزم Homebrew: %s"
+
+msgid "Detecting Mac App Store updates"
+msgstr "اكتشاف تحديثات Mac App Store"
+
+#, fuzzy, python-format
+msgid "Failed to detect Mac App Store updates: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+msgid "Detecting MacPorts updates"
+msgstr "اكتشاف تحديثات MacPorts"
+
+#, fuzzy, python-format
+msgid "Failed to detect MacPorts updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+msgid "Detecting winget updates"
+msgstr "اكتشاف تحديثات winget"
+
+#, fuzzy, python-format
+msgid "Failed to detect winget updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+msgid "Detecting Chocolatey updates"
+msgstr "اكتشاف تحديثات Chocolatey"
+
+#, fuzzy, python-format
+msgid "Failed to detect Chocolatey updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+msgid "Detecting Scoop updates"
+msgstr "اكتشاف تحديثات Scoop"
+
+#, fuzzy, python-format
+msgid "Failed to detect Scoop updates: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+msgid "Detecting pkg updates"
+msgstr "اكتشاف تحديثات pkg"
+
+#, fuzzy, python-format
+msgid "Failed to detect pkg updates: %s"
+msgstr "فشل في جمع حزم apt: %s"
+
+#, python-format
+msgid "Applying updates for %d packages"
+msgstr "تطبيق تحديثات لـ %d حزمة"
+
+#, fuzzy, python-format
+msgid "Failed to apply apt updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply DNF updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+#, fuzzy, python-format
+msgid "Failed to apply pkg updates: %s"
+msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+
+#, python-brace-format
+msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr "⚠️  لا يمكن الوصول إلى {config_dir}، العودة إلى {fallback_dir}"
+
+#~ msgid "Connecting to server"
+#~ msgstr "الاتصال بالخادم"
+
+#~ msgid "Connection failed"
+#~ msgstr "فشل الاتصال"
+
+#~ msgid "Disconnected from server"
+#~ msgstr "انقطع الاتصال مع الخادم"
+
+#~ msgid "Reconnecting to server"
+#~ msgstr "إعادة الاتصال بالخادم"
+
+#~ msgid "Configuration loaded successfully"
+#~ msgstr "تم تحميل التكوين بنجاح"
+
+#~ msgid "Configuration error"
+#~ msgstr "خطأ في التكوين"
+
+#~ msgid "Invalid server URL"
+#~ msgstr "رابط الخادم غير صحيح"
+
+# System information
+#~ msgid "Gathering system information"
+#~ msgstr "جمع معلومات النظام"
+
+#~ msgid "System information collected"
+#~ msgstr "تم جمع معلومات النظام"
+
+#~ msgid "Failed to collect system information"
+#~ msgstr "فشل في جمع معلومات النظام"
+
+# Command execution
+#~ msgid "Executing command"
+#~ msgstr "تنفيذ الأمر"
+
+#~ msgid "Command executed successfully"
+#~ msgstr "تم تنفيذ الأمر بنجاح"
+
+#~ msgid "Command execution failed"
+#~ msgstr "فشل تنفيذ الأمر"
+
+#~ msgid "Command not permitted"
+#~ msgstr "الأمر غير مسموح"
+
+# File operations
+#~ msgid "File not found"
+#~ msgstr "الملف غير موجود"
+
+#~ msgid "Permission denied"
+#~ msgstr "الإذن مرفوض"
+
+#~ msgid "File operation completed"
+#~ msgstr "تمت عملية الملف"
+
+# Service management
+#~ msgid "Service started"
+#~ msgstr "تم بدء الخدمة"
+
+#~ msgid "Service stopped"
+#~ msgstr "تم إيقاف الخدمة"
+
+#~ msgid "Service installation completed"
+#~ msgstr "تم تثبيت الخدمة"
+
+#~ msgid "Service removal completed"
+#~ msgstr "تم إزالة الخدمة"
+
+# Error messages
+#~ msgid "An unexpected error occurred"
+#~ msgstr "حدث خطأ غير متوقع"
+
+#~ msgid "Network error"
+#~ msgstr "خطأ في الشبكة"
+
+#~ msgid "Authentication failed"
+#~ msgstr "فشل المصادقة"

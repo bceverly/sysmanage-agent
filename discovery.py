@@ -11,6 +11,8 @@ import platform
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from i18n import _
+
 try:
     import netifaces
 except ImportError:
@@ -63,9 +65,9 @@ class ServerDiscoveryClient:
         unique_servers = self._deduplicate_servers(discovered_servers)
 
         if unique_servers:
-            logger.info("Discovered %s SysManage server(s)", len(unique_servers))
+            logger.info(_("Discovered %s SysManage server(s)"), len(unique_servers))
         else:
-            logger.warning("No SysManage servers discovered on the network")
+            logger.warning(_("No SysManage servers discovered on the network"))
 
         return unique_servers
 
@@ -124,13 +126,13 @@ class ServerDiscoveryClient:
                         response["discovered_via"] = "broadcast"
                         response["server_ip"] = addr[0]
                         servers.append(response)
-                        logger.info("Server discovered at %s", addr[0])
+                        logger.info(_("Server discovered at %s"), addr[0])
 
                 except socket.timeout:
                     continue
                 except json.JSONDecodeError:
                     logger.warning(
-                        "Invalid JSON response from %s",
+                        _("Invalid JSON response from %s"),
                         addr[0] if "addr" in locals() else "unknown",
                     )
                 except Exception as e:
@@ -140,7 +142,7 @@ class ServerDiscoveryClient:
             sock.close()
 
         except Exception as e:
-            logger.error("Error during broadcast discovery: %s", e)
+            logger.error(_("Error during broadcast discovery: %s"), e)
 
         return servers
 
@@ -185,13 +187,13 @@ class ServerDiscoveryClient:
                             "server_ip": addr[0],
                         }
                         servers.append(server_info)
-                        logger.info("Server announcement received from %s", addr[0])
+                        logger.info(_("Server announcement received from %s"), addr[0])
 
                 except socket.timeout:
                     continue
                 except json.JSONDecodeError:
                     logger.warning(
-                        "Invalid JSON announcement from %s",
+                        _("Invalid JSON announcement from %s"),
                         addr[0] if "addr" in locals() else "unknown",
                     )
                 except Exception as e:
@@ -201,7 +203,7 @@ class ServerDiscoveryClient:
             sock.close()
 
         except Exception as e:
-            logger.error("Error listening for announcements: %s", e)
+            logger.error(_("Error listening for announcements: %s"), e)
 
         return servers
 
@@ -255,7 +257,7 @@ class ServerDiscoveryClient:
         best_server = scored_servers[0][1]
 
         logger.info(
-            "Selected server at %s (score: %s)",
+            _("Selected server at %s (score: %s)"),
             best_server.get("server_ip"),
             scored_servers[0][0],
         )

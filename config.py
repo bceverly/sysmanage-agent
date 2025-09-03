@@ -8,6 +8,8 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from i18n import _
+
 
 class ConfigManager:
     """Manages configuration for the SysManage Agent."""
@@ -49,17 +51,19 @@ class ConfigManager:
         """Load configuration from YAML file."""
         if not os.path.exists(self.config_file):
             raise FileNotFoundError(
-                f"Configuration file '{self.config_file}' not found. "
-                f"Expected locations: /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
+                _(
+                    "Configuration file '%s' not found. Expected locations: /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
+                )
+                % self.config_file
             )
 
         try:
             with open(self.config_file, "r", encoding="utf-8") as file:
                 self.config_data = yaml.safe_load(file) or {}
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML in configuration file: {e}") from e
+            raise ValueError(_("Invalid YAML in configuration file: %s") % e) from e
         except Exception as e:
-            raise RuntimeError(f"Failed to load configuration file: {e}") from e
+            raise RuntimeError(_("Failed to load configuration file: %s") % e) from e
 
     def get(self, key_path: str, default: Any = None) -> Any:
         """

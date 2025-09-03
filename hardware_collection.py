@@ -8,6 +8,8 @@ import logging
 from typing import Any, Dict, List
 from datetime import datetime, timezone
 
+from i18n import _
+
 
 class HardwareCollector:
     """Collects hardware information across different platforms."""
@@ -69,7 +71,7 @@ class HardwareCollector:
                 # Unsupported platform
                 return {
                     "hardware_details": json.dumps(
-                        {"error": f"Unsupported platform: {system}"}
+                        {"error": _("Unsupported platform: %s") % system}
                     ),
                     "storage_details": json.dumps([]),
                     "network_details": json.dumps([]),
@@ -114,10 +116,10 @@ class HardwareCollector:
             }
 
         except Exception as e:
-            self.logger.error("Failed to collect hardware info: %s", e)
+            self.logger.error(_("Failed to collect hardware info: %s"), e)
             hardware_data = {
                 "hardware_details": json.dumps(
-                    {"error": f"Failed to collect hardware info: {str(e)}"}
+                    {"error": _("Failed to collect hardware info: %s") % str(e)}
                 ),
                 "storage_details": json.dumps([]),
                 "network_details": json.dumps([]),
@@ -192,7 +194,7 @@ class HardwareCollector:
                         )
 
         except Exception as e:
-            cpu_info["error"] = f"Failed to get macOS CPU info: {str(e)}"
+            cpu_info["error"] = _("Failed to get macOS CPU info: %s") % str(e)
 
         return cpu_info
 
@@ -224,7 +226,7 @@ class HardwareCollector:
                         memory_info["total_mb"] = int(memory_str.replace(" MB", ""))
 
         except Exception as e:
-            memory_info["error"] = f"Failed to get macOS memory info: {str(e)}"
+            memory_info["error"] = _("Failed to get macOS memory info: %s") % str(e)
 
         return memory_info
 
@@ -395,7 +397,7 @@ class HardwareCollector:
 
         except Exception as e:
             storage_devices.append(
-                {"error": f"Failed to get macOS storage info: {str(e)}"}
+                {"error": _("Failed to get macOS storage info: %s") % str(e)}
             )
 
         # Don't collect APFS containers - they're of no interest to users
@@ -505,7 +507,9 @@ class HardwareCollector:
                                         break
 
         except Exception as e:
-            containers.append({"error": f"Failed to get APFS container info: {str(e)}"})
+            containers.append(
+                {"error": _("Failed to get APFS container info: %s") % str(e)}
+            )
 
         # Clean up any remaining temporary fields
         for container in containers:
@@ -658,7 +662,7 @@ class HardwareCollector:
 
         except Exception as e:
             network_interfaces.append(
-                {"error": f"Failed to get macOS network info: {str(e)}"}
+                {"error": _("Failed to get macOS network info: %s") % str(e)}
             )
 
         return network_interfaces
@@ -721,7 +725,7 @@ class HardwareCollector:
                     cpu_info["threads"] = processor_count
 
         except Exception as e:
-            cpu_info["error"] = f"Failed to get Linux CPU info: {str(e)}"
+            cpu_info["error"] = _("Failed to get Linux CPU info: %s") % str(e)
 
         return cpu_info
 
@@ -738,7 +742,7 @@ class HardwareCollector:
                         break
 
         except Exception as e:
-            memory_info["error"] = f"Failed to get Linux memory info: {str(e)}"
+            memory_info["error"] = _("Failed to get Linux memory info: %s") % str(e)
 
         return memory_info
 
@@ -787,7 +791,7 @@ class HardwareCollector:
 
         except Exception as e:
             storage_devices.append(
-                {"error": f"Failed to get Linux storage info: {str(e)}"}
+                {"error": _("Failed to get Linux storage info: %s") % str(e)}
             )
 
         return storage_devices
@@ -899,7 +903,7 @@ class HardwareCollector:
 
         except Exception as e:
             network_interfaces.append(
-                {"error": f"Failed to get Linux network info: {str(e)}"}
+                {"error": _("Failed to get Linux network info: %s") % str(e)}
             )
 
         return network_interfaces
@@ -940,7 +944,7 @@ class HardwareCollector:
                         cpu_info["threads"] = int(data[5]) if data[5].strip() else 0
 
         except Exception as e:
-            cpu_info["error"] = f"Failed to get Windows CPU info: {str(e)}"
+            cpu_info["error"] = _("Failed to get Windows CPU info: %s") % str(e)
 
         return cpu_info
 
@@ -967,7 +971,7 @@ class HardwareCollector:
                         memory_info["total_mb"] = memory_bytes // (1024 * 1024)
 
         except Exception as e:
-            memory_info["error"] = f"Failed to get Windows memory info: {str(e)}"
+            memory_info["error"] = _("Failed to get Windows memory info: %s") % str(e)
 
         return memory_info
 
@@ -1008,7 +1012,7 @@ class HardwareCollector:
 
         except Exception as e:
             storage_devices.append(
-                {"error": f"Failed to get Windows storage info: {str(e)}"}
+                {"error": _("Failed to get Windows storage info: %s") % str(e)}
             )
 
         return storage_devices
@@ -1119,7 +1123,7 @@ class HardwareCollector:
 
         except Exception as e:
             network_interfaces.append(
-                {"error": f"Failed to get Windows network info: {str(e)}"}
+                {"error": _("Failed to get Windows network info: %s") % str(e)}
             )
 
         return network_interfaces
@@ -1210,7 +1214,7 @@ class HardwareCollector:
                         cpu_info["frequency_mhz"] = int(mhz_match.group(1))
 
         except Exception as e:
-            cpu_info["error"] = f"Failed to get BSD CPU info: {str(e)}"
+            cpu_info["error"] = _("Failed to get BSD CPU info: %s") % str(e)
 
         return cpu_info
 
@@ -1234,7 +1238,7 @@ class HardwareCollector:
                 memory_info["total_mb"] = memory_bytes // (1024 * 1024)
 
         except Exception as e:
-            memory_info["error"] = f"Failed to get BSD memory info: {str(e)}"
+            memory_info["error"] = _("Failed to get BSD memory info: %s") % str(e)
 
         return memory_info
 
@@ -1295,7 +1299,7 @@ class HardwareCollector:
 
         except Exception as e:
             storage_devices.append(
-                {"error": f"Failed to get BSD storage info: {str(e)}"}
+                {"error": _("Failed to get BSD storage info: %s") % str(e)}
             )
 
         return storage_devices
@@ -1434,7 +1438,7 @@ class HardwareCollector:
 
         except Exception as e:
             network_interfaces.append(
-                {"error": f"Failed to get BSD network info: {str(e)}"}
+                {"error": _("Failed to get BSD network info: %s") % str(e)}
             )
 
         return network_interfaces

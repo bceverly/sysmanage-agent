@@ -10,6 +10,8 @@ from typing import Dict, Any, Optional
 
 import aiohttp
 
+from i18n import _
+
 
 class UpdateChecker:
     """Handles periodic update checking logic."""
@@ -26,17 +28,17 @@ class UpdateChecker:
         if not (self.agent.running and self.agent.connected):
             return False
 
-        self.logger.info("Performing periodic update check")
+        self.logger.info(_("Performing periodic update check"))
         try:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
-                    "Found %d available updates during periodic check",
+                    _("Found %d available updates during periodic check"),
                     update_result["total_updates"],
                 )
             return True
         except Exception as e:
-            self.logger.error("Error during periodic update check: %s", e)
+            self.logger.error(_("Error during periodic update check: %s"), e)
             return False
 
     async def run_update_checker_loop(self):
@@ -64,7 +66,7 @@ class UpdateChecker:
                 self.logger.debug("Update checker cancelled")
                 raise
             except Exception as e:
-                self.logger.error("Update checker error: %s", e)
+                self.logger.error(_("Update checker error: %s"), e)
                 return
 
 
@@ -112,7 +114,8 @@ class AuthenticationHelper:
                     return data.get("connection_token", "")
                 else:
                     raise Exception(
-                        f"Auth failed with status {response.status}: {await response.text()}"
+                        _("Auth failed with status %s: %s")
+                        % (response.status, await response.text())
                     )
 
 
@@ -131,7 +134,7 @@ class MessageProcessor:
         parameters = command_data.get("parameters", {})
 
         self.logger.info(
-            "Received command: %s with parameters: %s", command_type, parameters
+            _("Received command: %s with parameters: %s"), command_type, parameters
         )
 
         try:
@@ -174,5 +177,5 @@ class MessageProcessor:
         else:
             return {
                 "success": False,
-                "error": f"Unknown command type: {command_type}",
+                "error": _("Unknown command type: %s") % command_type,
             }
