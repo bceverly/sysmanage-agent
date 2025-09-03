@@ -1,0 +1,178 @@
+"""
+Utility functions for the SysManage agent to reduce main.py complexity.
+"""
+
+import asyncio
+import logging
+import socket
+import ssl
+from typing import Dict, Any, Optional
+
+import aiohttp
+
+
+class UpdateChecker:
+    """Handles periodic update checking logic."""
+
+    def __init__(self, agent, logger: logging.Logger):
+        self.agent = agent
+        self.logger = logger
+
+    async def perform_periodic_check(self) -> bool:
+        """
+        Perform a single periodic update check.
+        Returns True if successful, False otherwise.
+        """
+        if not (self.agent.running and self.agent.connected):
+            return False
+
+        self.logger.info("Performing periodic update check")
+        try:
+            update_result = await self.agent.check_updates()
+            if update_result.get("total_updates", 0) > 0:
+                self.logger.info(
+                    "Found %d available updates during periodic check",
+                    update_result["total_updates"],
+                )
+            return True
+        except Exception as e:
+            self.logger.error("Error during periodic update check: %s", e)
+            return False
+
+    async def run_update_checker_loop(self):
+        """Main update checker loop."""
+        self.logger.debug("Update checker started")
+
+        update_check_interval = self.agent.config.get_update_check_interval()
+        last_check_time = 0
+
+        while self.agent.running:
+            try:
+                current_time = asyncio.get_event_loop().time()
+
+                # Check if it's time for an update check
+                if current_time - last_check_time >= update_check_interval:
+                    await self.perform_periodic_check()
+                    last_check_time = current_time
+
+                # Sleep for a shorter interval to check timing more frequently
+                await asyncio.sleep(
+                    60
+                )  # Check every minute if it's time for update check
+
+            except asyncio.CancelledError:
+                self.logger.debug("Update checker cancelled")
+                raise
+            except Exception as e:
+                self.logger.error("Update checker error: %s", e)
+                return
+
+
+class AuthenticationHelper:
+    """Handles authentication token management."""
+
+    def __init__(self, agent, logger: logging.Logger):
+        self.agent = agent
+        self.logger = logger
+
+    def build_auth_url(self) -> str:
+        """Build authentication URL from server config."""
+        server_config = self.agent.config.get_server_config()
+        hostname = server_config.get("hostname", "localhost")
+        port = server_config.get("port", 8000)
+        use_https = server_config.get("use_https", False)
+
+        protocol = "https" if use_https else "http"
+        return f"{protocol}://{hostname}:{port}/agent/auth"
+
+    async def get_auth_token(self) -> str:
+        """Get authentication token for WebSocket connection."""
+        auth_url = self.build_auth_url()
+        server_config = self.agent.config.get_server_config()
+        use_https = server_config.get("use_https", False)
+
+        # Set up SSL context if needed
+        ssl_context = None
+        if use_https:
+            ssl_context = ssl.create_default_context()
+            if not self.agent.config.should_verify_ssl():
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+
+        # Get hostname to send in header
+        system_hostname = socket.gethostname()
+
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            headers = {"x-agent-hostname": system_hostname}
+
+            async with session.post(auth_url, headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data.get("connection_token", "")
+                else:
+                    raise Exception(
+                        f"Auth failed with status {response.status}: {await response.text()}"
+                    )
+
+
+class MessageProcessor:
+    """Handles WebSocket message processing."""
+
+    def __init__(self, agent, logger: logging.Logger):
+        self.agent = agent
+        self.logger = logger
+
+    async def handle_command(self, message: Dict[str, Any]):
+        """Handle command from server and send response."""
+        command_id = message.get("message_id")
+        command_data = message.get("data", {})
+        command_type = command_data.get("command_type")
+        parameters = command_data.get("parameters", {})
+
+        self.logger.info(
+            "Received command: %s with parameters: %s", command_type, parameters
+        )
+
+        try:
+            result = await self._dispatch_command(command_type, parameters)
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+
+        # Send result back to server
+        response = self.agent.create_message(
+            "command_result", {"command_id": command_id, **result}
+        )
+        await self.agent.send_message(response)
+
+    async def _dispatch_command(
+        self, command_type: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Dispatch command to appropriate handler."""
+        if command_type == "execute_shell":
+            return await self.agent.execute_shell_command(parameters)
+        elif command_type == "get_system_info":
+            return await self.agent.get_detailed_system_info()
+        elif command_type == "install_package":
+            return await self.agent.install_package(parameters)
+        elif command_type == "update_system":
+            return await self.agent.update_system()
+        elif command_type == "restart_service":
+            return await self.agent.restart_service(parameters)
+        elif command_type == "reboot_system":
+            return await self.agent.reboot_system()
+        elif command_type == "update_os_version":
+            return await self.agent.update_os_version()
+        elif command_type == "update_hardware":
+            return await self.agent.update_hardware()
+        elif command_type == "update_user_access":
+            return await self.agent.update_user_access()
+        elif command_type == "check_updates":
+            return await self.agent.check_updates()
+        elif command_type == "apply_updates":
+            return await self.agent.apply_updates(parameters)
+        else:
+            return {
+                "success": False,
+                "error": f"Unknown command type: {command_type}",
+            }

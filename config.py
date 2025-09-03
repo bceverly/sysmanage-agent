@@ -173,3 +173,7 @@ class ConfigManager:
     def should_verify_ssl(self) -> bool:
         """Check if SSL certificates should be verified."""
         return self.get("server.verify_ssl", True)
+
+    def get_update_check_interval(self) -> int:
+        """Get update check interval in seconds."""
+        return self.get("client.update_check_interval", 3600)  # Default 1 hour
