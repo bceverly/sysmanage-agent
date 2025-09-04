@@ -570,23 +570,65 @@ class UpdateDetector:
             )
 
             if result.returncode == 0 and result.stdout.strip():
-                for line in result.stdout.strip().split("\n"):
-                    if "*" in line:  # Update lines start with *
-                        # Parse format: * Label: Name-Version
-                        match = re.match(r"\*\s+(.+?):\s+(.+)-(\d+\.\d+.*)", line)
-                        if match:
-                            label = match.group(1)
-                            name = match.group(2)
-                            version = match.group(3)
+                lines = result.stdout.strip().split("\n")
+                i = 0
+                while i < len(lines):
+                    line = lines[i]
+                    if "*" in line and "Label:" in line:  # Update lines start with * Label:
+                        # Parse format: * Label: Name-VersionCode
+                        label_match = re.match(r"\*\s+Label:\s+(.+)", line)
+                        if label_match:
+                            label = label_match.group(1).strip()
+                            
+                            # Look for the next line with Title and Version info
+                            details_line = ""
+                            if i + 1 < len(lines) and lines[i + 1].strip().startswith("Title:"):
+                                details_line = lines[i + 1].strip()
+                                i += 1  # Skip the details line in next iteration
+                            
+                            # Parse details: Title: Name, Version: X.Y.Z, Size: XXXKIB, ...
+                            title = label  # Fallback to label
+                            version = "unknown"
+                            size_kb = None
+                            is_recommended = False
+                            requires_restart = False
+                            
+                            if details_line:
+                                # Extract Title
+                                title_match = re.search(r"Title:\s*([^,]+)", details_line)
+                                if title_match:
+                                    title = title_match.group(1).strip()
+                                
+                                # Extract Version
+                                version_match = re.search(r"Version:\s*([^,]+)", details_line)
+                                if version_match:
+                                    version = version_match.group(1).strip()
+                                
+                                # Extract Size
+                                size_match = re.search(r"Size:\s*(\d+)KiB", details_line)
+                                if size_match:
+                                    size_kb = int(size_match.group(1))
+                                
+                                # Check if recommended
+                                is_recommended = "Recommended: YES" in details_line
+                                
+                                # Check if requires restart
+                                requires_restart = "Action: restart" in details_line
 
                             update = {
-                                "package_name": name,
+                                "package_name": title,
                                 "available_version": version,
                                 "package_manager": "mac_app_store",
+                                "label": label,
+                                "size_kb": size_kb,
                                 "is_security_update": "Security" in label,
-                                "is_system_update": "macOS" in name or "Safari" in name,
+                                "is_system_update": "macOS" in title or "Safari" in title,
+                                "is_recommended": is_recommended,
+                                "requires_restart": requires_restart,
                             }
                             self.available_updates.append(update)
+                    
+                    i += 1
 
         except Exception as e:
             logger.error(_("Failed to detect Mac App Store updates: %s"), str(e))

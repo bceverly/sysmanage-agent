@@ -706,7 +706,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             )
 
             # Create update message
-            update_message = self.create_message("update_check_result", update_info)
+            update_message = self.create_message("package_updates_update", update_info)
 
             # Send update information to server
             await self.send_message(update_message)
