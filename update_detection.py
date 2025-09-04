@@ -890,7 +890,7 @@ class UpdateDetector:
         if not package_names:
             return {
                 "success": False,
-                "error": "No packages specified for update",
+                "error": _("No packages specified for update"),
                 "updated_packages": [],
                 "failed_packages": [],
                 "update_timestamp": datetime.now().isoformat() + "Z",
