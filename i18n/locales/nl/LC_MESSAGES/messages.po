@@ -1,40 +1,106 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 15:34-0400\n"
+"POT-Creation-Date: 2025-09-04 11:38-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "Performing periodic update check"
-msgstr ""
+#: hardware_collection.py:74
+#, fuzzy, python-format
+msgid "Unsupported platform: %s"
+msgstr "Niet-ondersteund platform voor software-inventaris: %s"
 
+#: hardware_collection.py:119 hardware_collection.py:122
+#, fuzzy, python-format
+msgid "Failed to collect hardware info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:244
+#, fuzzy, python-format
+msgid "Failed to get macOS CPU info: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: hardware_collection.py:276
+#, fuzzy, python-format
+msgid "Failed to get macOS memory info: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: hardware_collection.py:447
+#, fuzzy, python-format
+msgid "Failed to get macOS storage info: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: hardware_collection.py:558
+#, fuzzy, python-format
+msgid "Failed to get APFS container info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:712
+#, fuzzy, python-format
+msgid "Failed to get macOS network info: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: hardware_collection.py:816
 #, python-format
-msgid "Found %d available updates during periodic check"
+msgid "Failed to get Linux CPU info: %s"
 msgstr ""
 
-#, python-format
-msgid "Error during periodic update check: %s"
-msgstr ""
+#: hardware_collection.py:833
+#, fuzzy, python-format
+msgid "Failed to get Linux memory info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
-#, python-format
-msgid "Update checker error: %s"
-msgstr ""
+#: hardware_collection.py:882
+#, fuzzy, python-format
+msgid "Failed to get Linux storage info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr ""
+#: hardware_collection.py:994
+#, fuzzy, python-format
+msgid "Failed to get Linux network info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
-#, python-format
-msgid "Received command: %s with parameters: %s"
-msgstr ""
+#: hardware_collection.py:1035
+#, fuzzy, python-format
+msgid "Failed to get Windows CPU info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
-#, python-format
-msgid "Unknown command type: %s"
-msgstr ""
+#: hardware_collection.py:1062
+#, fuzzy, python-format
+msgid "Failed to get Windows memory info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
-msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
-msgstr ""
+#: hardware_collection.py:1103
+#, fuzzy, python-format
+msgid "Failed to get Windows storage info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
 
+#: hardware_collection.py:1214
+#, fuzzy, python-format
+msgid "Failed to get Windows network info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:1305
+#, fuzzy, python-format
+msgid "Failed to get BSD CPU info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:1329
+#, fuzzy, python-format
+msgid "Failed to get BSD memory info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:1390
+#, fuzzy, python-format
+msgid "Failed to get BSD storage info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: hardware_collection.py:1529
+#, fuzzy, python-format
+msgid "Failed to get BSD network info: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: config.py:55
 #, python-format
 msgid ""
 "Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
@@ -42,452 +108,560 @@ msgid ""
 msgstr ""
 
 # Configuration
+#: config.py:64
 #, fuzzy, python-format
 msgid "Invalid YAML in configuration file: %s"
 msgstr "Configuratie laden"
 
+#: config.py:66
 #, python-format
 msgid "Failed to load configuration file: %s"
 msgstr ""
 
+#: agent_utils.py:31
+msgid "Performing periodic update check"
+msgstr ""
+
+#: agent_utils.py:36
 #, python-format
-msgid "Discovered %s SysManage server(s)"
+msgid "Found %d available updates during periodic check"
 msgstr ""
 
-msgid "No SysManage servers discovered on the network"
-msgstr ""
-
+#: agent_utils.py:41
 #, python-format
-msgid "Server discovered at %s"
+msgid "Error during periodic update check: %s"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Invalid JSON response from %s"
-msgstr "Ongeldige reactie van server"
-
+#: agent_utils.py:69
 #, python-format
-msgid "Error during broadcast discovery: %s"
+msgid "Update checker error: %s"
 msgstr ""
 
+#: agent_utils.py:119
 #, python-format
-msgid "Server announcement received from %s"
+msgid "Auth failed with status %s: %s"
 msgstr ""
 
+#: agent_utils.py:139
 #, python-format
-msgid "Invalid JSON announcement from %s"
+msgid "Received command: %s with parameters: %s"
 msgstr ""
 
+#: agent_utils.py:182
 #, python-format
-msgid "Error listening for announcements: %s"
+msgid "Unknown command type: %s"
 msgstr ""
 
-#, python-format
-msgid "Selected server at %s (score: %s)"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Unsupported platform: %s"
-msgstr "Niet-ondersteund platform voor software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to collect hardware info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get macOS CPU info: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get macOS memory info: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get macOS storage info: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get APFS container info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get macOS network info: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, python-format
-msgid "Failed to get Linux CPU info: %s"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Failed to get Linux memory info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Linux storage info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Linux network info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Windows CPU info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Windows memory info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Windows storage info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get Windows network info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get BSD CPU info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get BSD memory info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get BSD storage info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, fuzzy, python-format
-msgid "Failed to get BSD network info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-msgid "No configuration found, attempting auto-discovery..."
-msgstr ""
-
-msgid "Unable to configure agent: no config file and auto-discovery failed"
-msgstr ""
-
-# Agent startup and connection
-msgid "Starting SysManage Agent"
-msgstr "SysManage Agent wordt gestart"
-
-msgid "Cannot send message: not connected to server"
-msgstr ""
-
-# OS Version Update Messages
-msgid "Sending initial OS version data..."
-msgstr "Initiële OS-versiegegevens verzenden..."
-
-# OS Version Update Messages
-#, fuzzy
-msgid "Sending initial hardware data..."
-msgstr "Initiële OS-versiegegevens verzenden..."
-
-msgid "Sending initial user access data..."
-msgstr "Versturen initiële gebruikerstoegang gegevens..."
-
-msgid "Sending initial software inventory data..."
-msgstr "Initiële software-inventarisgegevens verzenden..."
-
-# OS Version Update Messages
-#, fuzzy
-msgid "Sending initial update check..."
-msgstr "Initiële OS-versiegegevens verzenden..."
-
-msgid "Initial data updates sent successfully"
-msgstr "Initiële gegevens succesvol verzonden"
-
-#, python-format
-msgid "Failed to send initial data updates: %s"
-msgstr "Verzenden van initiële gegevens mislukt: %s"
-
-msgid "Registering with SysManage server..."
-msgstr ""
-
-msgid "Failed to register with server. Exiting."
-msgstr ""
-
-msgid "Registration successful, checking certificates..."
-msgstr ""
-
-msgid "Valid certificates found - secure authentication available"
-msgstr ""
-
-msgid "No certificates found - using token-based authentication"
-msgstr ""
-
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
-msgid "Starting WebSocket connection..."
-msgstr ""
-
-msgid "Connected to server successfully"
-msgstr "Succesvol verbonden met server"
-
-# Software Inventory Messages
-msgid "Collecting software inventory"
-msgstr "Software-inventaris verzamelen"
-
-#, python-format
-msgid "Unsupported platform for software inventory: %s"
-msgstr "Niet-ondersteund platform voor software-inventaris: %s"
-
-#, python-format
-msgid "Software inventory collection completed: %d packages found"
-msgstr "Software-inventaris verzameling voltooid: %d pakketten gevonden"
-
-#, python-format
-msgid "Failed to collect software inventory: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#, python-format
-msgid "Detected package managers: %s"
-msgstr "Gedetecteerde pakketbeheerders: %s"
-
-msgid "Collecting apt packages"
-msgstr "Apt-pakketten verzamelen"
-
-#, python-format
-msgid "Failed to collect apt packages: %s"
-msgstr "Fout bij verzamelen apt-pakketten: %s"
-
-msgid "Collecting snap packages"
-msgstr "Snap-pakketten verzamelen"
-
-#, python-format
-msgid "Failed to collect snap packages: %s"
-msgstr "Fout bij verzamelen snap-pakketten: %s"
-
-msgid "Collecting flatpak packages"
-msgstr "Flatpak-pakketten verzamelen"
-
-#, python-format
-msgid "Failed to collect flatpak packages: %s"
-msgstr "Fout bij verzamelen flatpak-pakketten: %s"
-
-msgid "Collecting Homebrew packages"
-msgstr "Homebrew-pakketten verzamelen"
-
-#, python-format
-msgid "Failed to collect Homebrew packages: %s"
-msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
-
-msgid "Collecting macOS Applications"
-msgstr "macOS-applicaties verzamelen"
-
-#, python-format
-msgid "Failed to collect macOS applications: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, fuzzy
-msgid "Collecting DNF packages"
-msgstr "Apt-pakketten verzamelen"
-
-#, fuzzy, python-format
-msgid "Failed to collect DNF packages: %s"
-msgstr "Fout bij verzamelen apt-pakketten: %s"
-
-#, fuzzy
-msgid "Collecting Pacman packages"
-msgstr "Apt-pakketten verzamelen"
-
-#, fuzzy, python-format
-msgid "Failed to collect Pacman packages: %s"
-msgstr "Fout bij verzamelen apt-pakketten: %s"
-
-#, fuzzy
-msgid "Collecting Mac App Store applications"
-msgstr "macOS-applicaties verzamelen"
-
-msgid "Failed to parse system_profiler JSON output"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Failed to collect Mac App Store applications: %s"
-msgstr "Fout bij verzamelen macOS-applicaties: %s"
-
-#, fuzzy
-msgid "Collecting winget packages"
-msgstr "Apt-pakketten verzamelen"
-
-#, fuzzy, python-format
-msgid "Failed to collect winget packages: %s"
-msgstr "Fout bij verzamelen apt-pakketten: %s"
-
-msgid "Chocolatey package collection not yet implemented"
-msgstr ""
-
-msgid "Scoop package collection not yet implemented"
-msgstr ""
-
-#, fuzzy
-msgid "Collecting BSD pkg packages"
-msgstr "Apt-pakketten verzamelen"
-
-msgid "No BSD package manager output found"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Failed to collect BSD pkg packages: %s"
-msgstr "Fout bij verzamelen apt-pakketten: %s"
-
-#, fuzzy
-msgid "Collecting OpenBSD pkg_info packages"
-msgstr "Snap-pakketten verzamelen"
-
-msgid "Successfully collected OpenBSD packages"
-msgstr ""
-
-#, python-format
-msgid "No OpenBSD pkg_info output found. Return code: %d"
-msgstr ""
-
-#, python-format
-msgid "pkg_info stderr: %s"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Failed to collect OpenBSD pkg_info packages: %s"
-msgstr "Fout bij verzamelen snap-pakketten: %s"
-
-msgid "FreeBSD ports collection not yet implemented"
-msgstr ""
-
+#: update_detection.py:48
 msgid "Detecting available updates"
 msgstr ""
 
+#: update_detection.py:63
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Niet-ondersteund platform voor software-inventaris: %s"
 
+#: update_detection.py:81
 #, python-format
 msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
 msgstr ""
 
+#: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:149 software_inventory_collection.py:138
+#, python-format
+msgid "Detected package managers: %s"
+msgstr "Gedetecteerde pakketbeheerders: %s"
+
+#: update_detection.py:219
 #, fuzzy
 msgid "Detecting apt updates"
 msgstr "Apt-pakketten verzamelen"
 
+#: update_detection.py:269
 #, fuzzy, python-format
 msgid "Failed to detect apt updates: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
+#: update_detection.py:310
 #, fuzzy
 msgid "Detecting snap updates"
 msgstr "Snap-pakketten verzamelen"
 
+#: update_detection.py:337
 #, fuzzy, python-format
 msgid "Failed to detect snap updates: %s"
 msgstr "Fout bij verzamelen snap-pakketten: %s"
 
+#: update_detection.py:342
 #, fuzzy
 msgid "Detecting flatpak updates"
 msgstr "Flatpak-pakketten verzamelen"
 
+#: update_detection.py:367
 #, fuzzy, python-format
 msgid "Failed to detect flatpak updates: %s"
 msgstr "Fout bij verzamelen flatpak-pakketten: %s"
 
+#: update_detection.py:372
 msgid "Detecting DNF updates"
 msgstr ""
 
+#: update_detection.py:410
 #, fuzzy, python-format
 msgid "Failed to detect DNF updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:434
 msgid "Detecting Pacman updates"
 msgstr ""
 
+#: update_detection.py:464
 #, fuzzy, python-format
 msgid "Failed to detect Pacman updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:469
 msgid "Detecting Zypper updates"
 msgstr ""
 
+#: update_detection.py:503
 #, fuzzy, python-format
 msgid "Failed to detect Zypper updates: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
+#: update_detection.py:510
 #, fuzzy
 msgid "Detecting Homebrew updates"
 msgstr "Homebrew-pakketten verzamelen"
 
+#: update_detection.py:554
 msgid "Failed to parse Homebrew JSON output"
 msgstr ""
 
+#: update_detection.py:557
 #, fuzzy, python-format
 msgid "Failed to detect Homebrew updates: %s"
 msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
 
+#: update_detection.py:562
 msgid "Detecting Mac App Store updates"
 msgstr ""
 
+#: update_detection.py:645
 #, fuzzy, python-format
 msgid "Failed to detect Mac App Store updates: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
+#: update_detection.py:650
 msgid "Detecting MacPorts updates"
 msgstr ""
 
+#: update_detection.py:675
 #, fuzzy, python-format
 msgid "Failed to detect MacPorts updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:682
 msgid "Detecting winget updates"
 msgstr ""
 
+#: update_detection.py:716
 #, fuzzy, python-format
 msgid "Failed to detect winget updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:726
 msgid "Detecting Chocolatey updates"
 msgstr ""
 
+#: update_detection.py:751
 #, fuzzy, python-format
 msgid "Failed to detect Chocolatey updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:756
 msgid "Detecting Scoop updates"
 msgstr ""
 
+#: update_detection.py:781
 #, fuzzy, python-format
 msgid "Failed to detect Scoop updates: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
+#: update_detection.py:788
 msgid "Detecting pkg updates"
 msgstr ""
 
+#: update_detection.py:822
 #, fuzzy, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
+#: update_detection.py:888
 #, python-format
 msgid "Applying updates for %d packages"
 msgstr ""
 
+#: update_detection.py:893 main.py:730
+msgid "No packages specified for update"
+msgstr ""
+
+#: update_detection.py:977
 #, fuzzy, python-format
 msgid "Failed to apply apt updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:1100
 #, fuzzy, python-format
 msgid "Failed to apply DNF updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: update_detection.py:1231
 #, fuzzy, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+#: discovery.py:68
+#, python-format
+msgid "Discovered %s SysManage server(s)"
+msgstr ""
+
+#: discovery.py:70
+msgid "No SysManage servers discovered on the network"
+msgstr ""
+
+#: discovery.py:129
+#, python-format
+msgid "Server discovered at %s"
+msgstr ""
+
+#: discovery.py:135
+#, fuzzy, python-format
+msgid "Invalid JSON response from %s"
+msgstr "Ongeldige reactie van server"
+
+#: discovery.py:145
+#, python-format
+msgid "Error during broadcast discovery: %s"
+msgstr ""
+
+#: discovery.py:190
+#, python-format
+msgid "Server announcement received from %s"
+msgstr ""
+
+#: discovery.py:196
+#, python-format
+msgid "Invalid JSON announcement from %s"
+msgstr ""
+
+#: discovery.py:206
+#, python-format
+msgid "Error listening for announcements: %s"
+msgstr ""
+
+#: discovery.py:260
+#, python-format
+msgid "Selected server at %s (score: %s)"
+msgstr ""
+
+#: security/certificate_store.py:44
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
+msgstr ""
+
+# Software Inventory Messages
+#: software_inventory_collection.py:53
+msgid "Collecting software inventory"
+msgstr "Software-inventaris verzamelen"
+
+#: software_inventory_collection.py:68
+#, python-format
+msgid "Unsupported platform for software inventory: %s"
+msgstr "Niet-ondersteund platform voor software-inventaris: %s"
+
+#: software_inventory_collection.py:72
+#, python-format
+msgid "Software inventory collection completed: %d packages found"
+msgstr "Software-inventaris verzameling voltooid: %d pakketten gevonden"
+
+#: software_inventory_collection.py:84
+#, python-format
+msgid "Failed to collect software inventory: %s"
+msgstr "Fout bij verzamelen software-inventaris: %s"
+
+#: software_inventory_collection.py:233
+msgid "Collecting apt packages"
+msgstr "Apt-pakketten verzamelen"
+
+#: software_inventory_collection.py:272
+#, python-format
+msgid "Failed to collect apt packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: software_inventory_collection.py:277
+msgid "Collecting snap packages"
+msgstr "Snap-pakketten verzamelen"
+
+#: software_inventory_collection.py:307
+#, python-format
+msgid "Failed to collect snap packages: %s"
+msgstr "Fout bij verzamelen snap-pakketten: %s"
+
+#: software_inventory_collection.py:312
+msgid "Collecting flatpak packages"
+msgstr "Flatpak-pakketten verzamelen"
+
+#: software_inventory_collection.py:352
+#, python-format
+msgid "Failed to collect flatpak packages: %s"
+msgstr "Fout bij verzamelen flatpak-pakketten: %s"
+
+#: software_inventory_collection.py:405
+msgid "Collecting Homebrew packages"
+msgstr "Homebrew-pakketten verzamelen"
+
+#: software_inventory_collection.py:455
+#, python-format
+msgid "Failed to collect Homebrew packages: %s"
+msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
+
+#: software_inventory_collection.py:460
+msgid "Collecting macOS Applications"
+msgstr "macOS-applicaties verzamelen"
+
+#: software_inventory_collection.py:520
+#, python-format
+msgid "Failed to collect macOS applications: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: software_inventory_collection.py:533
+#, fuzzy
+msgid "Collecting DNF packages"
+msgstr "Apt-pakketten verzamelen"
+
+#: software_inventory_collection.py:572
+#, fuzzy, python-format
+msgid "Failed to collect DNF packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: software_inventory_collection.py:577
+#, fuzzy
+msgid "Collecting Pacman packages"
+msgstr "Apt-pakketten verzamelen"
+
+#: software_inventory_collection.py:605
+#, fuzzy, python-format
+msgid "Failed to collect Pacman packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: software_inventory_collection.py:625
+#, fuzzy
+msgid "Collecting Mac App Store applications"
+msgstr "macOS-applicaties verzamelen"
+
+#: software_inventory_collection.py:677
+msgid "Failed to parse system_profiler JSON output"
+msgstr ""
+
+#: software_inventory_collection.py:680
+#, fuzzy, python-format
+msgid "Failed to collect Mac App Store applications: %s"
+msgstr "Fout bij verzamelen macOS-applicaties: %s"
+
+#: software_inventory_collection.py:700
+#, fuzzy
+msgid "Collecting winget packages"
+msgstr "Apt-pakketten verzamelen"
+
+#: software_inventory_collection.py:738
+#, fuzzy, python-format
+msgid "Failed to collect winget packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: software_inventory_collection.py:743
+msgid "Chocolatey package collection not yet implemented"
+msgstr ""
+
+#: software_inventory_collection.py:748
+msgid "Scoop package collection not yet implemented"
+msgstr ""
+
+#: software_inventory_collection.py:753
+#, fuzzy
+msgid "Collecting BSD pkg packages"
+msgstr "Apt-pakketten verzamelen"
+
+#: software_inventory_collection.py:781
+msgid "No BSD package manager output found"
+msgstr ""
+
+#: software_inventory_collection.py:784
+#, fuzzy, python-format
+msgid "Failed to collect BSD pkg packages: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: software_inventory_collection.py:789
+#, fuzzy
+msgid "Collecting OpenBSD pkg_info packages"
+msgstr "Snap-pakketten verzamelen"
+
+#: software_inventory_collection.py:803
+msgid "Successfully collected OpenBSD packages"
+msgstr ""
+
+#: software_inventory_collection.py:806
+#, python-format
+msgid "No OpenBSD pkg_info output found. Return code: %d"
+msgstr ""
+
+#: software_inventory_collection.py:810
+#, python-format
+msgid "pkg_info stderr: %s"
+msgstr ""
+
+#: software_inventory_collection.py:813
+#, fuzzy, python-format
+msgid "Failed to collect OpenBSD pkg_info packages: %s"
+msgstr "Fout bij verzamelen snap-pakketten: %s"
+
+#: software_inventory_collection.py:877
+msgid "FreeBSD ports collection not yet implemented"
+msgstr ""
+
+#: main.py:41
+msgid "No configuration found, attempting auto-discovery..."
+msgstr ""
+
+#: main.py:45
+msgid "Unable to configure agent: no config file and auto-discovery failed"
+msgstr ""
+
+# Agent startup and connection
+#: main.py:80 main.py:848
+msgid "Starting SysManage Agent"
+msgstr "SysManage Agent wordt gestart"
+
+#: main.py:211
+msgid "Cannot send message: not connected to server"
+msgstr ""
+
+# OS Version Update Messages
+#: main.py:332
+msgid "Sending initial OS version data..."
+msgstr "Initiële OS-versiegegevens verzenden..."
+
+# OS Version Update Messages
+#: main.py:342
+#, fuzzy
+msgid "Sending initial hardware data..."
+msgstr "Initiële OS-versiegegevens verzenden..."
+
+#: main.py:361
+msgid "Sending initial user access data..."
+msgstr "Versturen initiële gebruikerstoegang gegevens..."
+
+#: main.py:382
+msgid "Sending initial software inventory data..."
+msgstr "Initiële software-inventarisgegevens verzenden..."
+
+# OS Version Update Messages
+#: main.py:401
+#, fuzzy
+msgid "Sending initial update check..."
+msgstr "Initiële OS-versiegegevens verzenden..."
+
+#: main.py:416
+msgid "Initial data updates sent successfully"
+msgstr "Initiële gegevens succesvol verzonden"
+
+#: main.py:418
+#, python-format
+msgid "Failed to send initial data updates: %s"
+msgstr "Verzenden van initiële gegevens mislukt: %s"
+
+#: main.py:737
+msgid "Updates started in background"
+msgstr "Updates gestart op de achtergrond"
+
+#: main.py:741
+#, fuzzy, python-format
+msgid "Failed to start update process: %s"
+msgstr "Fout bij verzamelen apt-pakketten: %s"
+
+#: main.py:766
+msgid "No valid packages found for update"
+msgstr "Geen geldige pakketten gevonden voor update"
+
+#: main.py:786
+#, python-format
+msgid "Update application completed: %d updated, %d failed"
+msgstr "Update-applicatie voltooid: %d bijgewerkt, %d mislukt"
+
+#: main.py:800
+msgid "Successfully sent update results to server"
+msgstr "Update-resultaten succesvol naar server verzonden"
+
+#: main.py:803
+msgid "Failed to send update results, will retry..."
+msgstr "Verzenden update-resultaten mislukt, opnieuw proberen..."
+
+#: main.py:805
+#, python-format
+msgid "Waiting for reconnection to send update results (attempt %d/%d)"
+msgstr "Wachten op herverbinding om update-resultaten te verzenden (poging %d/%d)"
+
+#: main.py:810
+#, fuzzy, python-format
+msgid "Failed to send update results after %d attempts"
+msgstr "Verzenden van initiële gegevens mislukt: %s"
+
+#: main.py:813
+#, fuzzy, python-format
+msgid "Failed to apply updates in background: %s"
+msgstr "Verzenden van initiële gegevens mislukt: %s"
+
+#: main.py:856
+msgid "Registering with SysManage server..."
+msgstr ""
+
+#: main.py:858
+msgid "Failed to register with server. Exiting."
+msgstr ""
+
+#: main.py:861
+msgid "Registration successful, checking certificates..."
+msgstr ""
+
+#: main.py:867
+msgid "Valid certificates found - secure authentication available"
+msgstr ""
+
+#: main.py:871
+msgid "No certificates found - using token-based authentication"
+msgstr ""
+
+#: main.py:875
+msgid ""
+"For enhanced security, approve this host to enable certificate-based auth"
+msgstr ""
+
+#: main.py:879
+msgid "Starting WebSocket connection..."
+msgstr ""
+
+#: main.py:935
+msgid "Connected to server successfully"
+msgstr "Succesvol verbonden met server"
+
+#: client_registration.py:24
+msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
 
 #~ msgid "Connecting to server"

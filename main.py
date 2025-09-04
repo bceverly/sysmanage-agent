@@ -8,7 +8,6 @@ import asyncio
 import json
 import logging
 import os
-import platform
 import secrets
 import ssl
 import uuid
@@ -24,8 +23,9 @@ from registration import ClientRegistration
 from i18n import _, set_language
 from discovery import discovery_client
 from security.certificate_store import CertificateStore
-from update_detection import UpdateDetector
 from agent_utils import UpdateChecker, AuthenticationHelper, MessageProcessor
+from update_operations import UpdateOperations
+from system_operations import SystemOperations
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods
@@ -73,6 +73,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self.update_checker_util = UpdateChecker(self, self.logger)
         self.auth_helper = AuthenticationHelper(self, self.logger)
         self.message_processor = MessageProcessor(self, self.logger)
+
+        # Initialize operation modules
+        self.update_ops = UpdateOperations(self)
+        self.system_ops = SystemOperations(self)
 
         # Get server URL from config
         self.server_url = self.config.get_server_url()
@@ -233,98 +237,27 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def execute_shell_command(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a shell command."""
-        command = parameters.get("command")
-        working_dir = parameters.get("working_directory")
-
-        if not command:
-            return {"success": False, "error": "No command specified"}
-
-        try:
-            process = await asyncio.create_subprocess_shell(
-                command,
-                cwd=working_dir,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-
-            stdout, stderr = await process.communicate()
-
-            return {
-                "success": process.returncode == 0,
-                "result": {
-                    "stdout": stdout.decode(),
-                    "stderr": stderr.decode(),
-                    "exit_code": process.returncode,
-                },
-                "exit_code": process.returncode,
-            }
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return await self.system_ops.execute_shell_command(parameters)
 
     async def get_detailed_system_info(self) -> Dict[str, Any]:
         """Get detailed system information."""
-        try:
-            # Get basic system info
-            info = {
-                "hostname": self.hostname,
-                "platform": self.platform,
-                "ipv4": self.ipv4,
-                "ipv6": self.ipv6,
-                "architecture": platform.architecture()[0],
-                "processor": platform.processor(),
-                "system": platform.system(),
-                "release": platform.release(),
-                "version": platform.version(),
-            }
-
-            return {"success": True, "result": info}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return await self.system_ops.get_detailed_system_info()
 
     async def install_package(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Install a package (platform-specific implementation needed)."""
-        package_name = parameters.get("package_name")
-
-        if not package_name:
-            return {"success": False, "error": "No package name specified"}
-
-        # This is a placeholder - real implementation would be platform-specific
-        return {
-            "success": False,
-            "error": f"Package installation not yet implemented for {self.platform}",
-        }
+        """Install a package using the appropriate package manager."""
+        return await self.system_ops.install_package(parameters)
 
     async def update_system(self) -> Dict[str, Any]:
-        """Update the system (platform-specific implementation needed)."""
-        return {
-            "success": False,
-            "error": f"System updates not yet implemented for {self.platform}",
-        }
+        """Update the system using the default package manager."""
+        return await self.system_ops.update_system()
 
     async def restart_service(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Restart a service (platform-specific implementation needed)."""
-        service_name = parameters.get("service_name")
-
-        if not service_name:
-            return {"success": False, "error": "No service name specified"}
-
-        return {
-            "success": False,
-            "error": f"Service management not yet implemented for {self.platform}",
-        }
+        """Restart a system service."""
+        return await self.system_ops.restart_service(parameters)
 
     async def reboot_system(self) -> Dict[str, Any]:
         """Reboot the system."""
-        try:
-            # Schedule reboot in 10 seconds to allow response to be sent
-            if self.platform == "Windows":
-                await asyncio.create_subprocess_shell("shutdown /r /t 10")
-            else:
-                await asyncio.create_subprocess_shell("sudo shutdown -r +1")
-
-            return {"success": True, "result": "Reboot scheduled"}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return await self.system_ops.reboot_system()
 
     async def send_initial_data_updates(self):
         """Send initial data updates after WebSocket connection."""
@@ -689,92 +622,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def check_updates(self) -> Dict[str, Any]:
         """Check for available updates for installed packages."""
-        try:
-            # Initialize update detector
-            update_detector = UpdateDetector()
-
-            # Get available updates
-            update_info = update_detector.get_available_updates()
-
-            # Add hostname to update data for server processing
-            system_info = self.registration.get_system_info()
-            update_info["hostname"] = system_info["hostname"]
-
-            self.logger.info(
-                "Update check completed: %d updates found",
-                update_info.get("total_updates", 0),
-            )
-
-            # Create update message
-            update_message = self.create_message("package_updates_update", update_info)
-
-            # Send update information to server
-            await self.send_message(update_message)
-
-            return {"success": True, "result": "Update check completed"}
-        except Exception as e:
-            self.logger.error("Failed to check updates: %s", e)
-            return {"success": False, "error": str(e)}
+        return await self.update_ops.check_updates()
 
     async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply updates for specified packages."""
-        try:
-            package_names = parameters.get("package_names", [])
-            package_managers = parameters.get("package_managers")
-
-            if not package_names:
-                return {"success": False, "error": "No packages specified for update"}
-
-            # Initialize update detector
-            update_detector = UpdateDetector()
-
-            # First, get current updates to verify packages exist
-            update_info = update_detector.get_available_updates()
-            available_packages = [
-                u["package_name"] for u in update_info["available_updates"]
-            ]
-
-            # Filter to only valid package names
-            valid_packages = [pkg for pkg in package_names if pkg in available_packages]
-            invalid_packages = [
-                pkg for pkg in package_names if pkg not in available_packages
-            ]
-
-            if invalid_packages:
-                self.logger.warning("Invalid packages requested: %s", invalid_packages)
-
-            if not valid_packages:
-                return {"success": False, "error": "No valid packages found for update"}
-
-            # Apply updates
-            update_results = update_detector.apply_updates(
-                valid_packages, package_managers
-            )
-
-            # Add hostname to result data
-            system_info = self.registration.get_system_info()
-            update_results["hostname"] = system_info["hostname"]
-
-            self.logger.info(
-                "Update application completed: %d updated, %d failed",
-                len(update_results.get("updated_packages", [])),
-                len(update_results.get("failed_packages", [])),
-            )
-
-            # Create update result message
-            update_message = self.create_message("update_apply_result", update_results)
-
-            # Send update results to server
-            await self.send_message(update_message)
-
-            return {
-                "success": True,
-                "result": "Updates applied",
-                "details": update_results,
-            }
-        except Exception as e:
-            self.logger.error("Failed to apply updates: %s", e)
-            return {"success": False, "error": str(e)}
+        return await self.update_ops.apply_updates(parameters)
 
     async def run(self):
         """Main agent execution loop."""
@@ -878,13 +730,21 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         receiver_task = asyncio.create_task(self.message_receiver())
                         update_checker_task = asyncio.create_task(self.update_checker())
 
-                        # Wait for either task to complete (which indicates an error or disconnection)
+                        # Wait for either sender or receiver to complete (connection tasks only)
+                        # Update checker runs independently and doesn't trigger disconnection
                         done, pending = await asyncio.wait(
-                            [sender_task, receiver_task, update_checker_task],
+                            [sender_task, receiver_task],
                             return_when=asyncio.FIRST_COMPLETED,
                         )
 
-                        # Cancel any remaining tasks
+                        # Cancel the update checker task when connection fails
+                        update_checker_task.cancel()
+                        try:
+                            await update_checker_task
+                        except asyncio.CancelledError:
+                            pass
+
+                        # Cancel any remaining connection tasks
                         for task in pending:
                             task.cancel()
                             try:
@@ -892,7 +752,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                             except asyncio.CancelledError:
                                 pass
 
-                        # Check if any task had an exception
+                        # Check if any connection task had an exception
                         for task in done:
                             if task.exception():
                                 raise task.exception()

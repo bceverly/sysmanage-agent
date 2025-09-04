@@ -46,7 +46,7 @@ class UpdateChecker:
         self.logger.debug("Update checker started")
 
         update_check_interval = self.agent.config.get_update_check_interval()
-        last_check_time = 0
+        last_check_time = asyncio.get_event_loop().time()
 
         while self.agent.running:
             try:
@@ -67,7 +67,9 @@ class UpdateChecker:
                 raise
             except Exception as e:
                 self.logger.error(_("Update checker error: %s"), e)
-                return
+                # Wait before next attempt instead of terminating
+                await asyncio.sleep(30)
+                continue
 
 
 class AuthenticationHelper:
