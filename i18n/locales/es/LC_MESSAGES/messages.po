@@ -99,14 +99,6 @@ msgstr "Error al recopilar inventario de software: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Error al recopilar inventario de software: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Plataforma no soportada para inventario de software: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -649,12 +633,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -666,6 +644,77 @@ msgstr "Conectado al servidor exitosamente"
 #: client_registration.py:24
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "Controlador de mensajes en cola inicializado"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "Error al enviar mensaje directamente: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "Error procesando mensaje en cola %s: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "Error en procesador de cola: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "Conexión establecida, iniciando procesamiento de cola"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "Conexión perdida, deteniendo procesamiento de cola"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "Error cerrando controlador de mensajes: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "Gestor de cola de mensajes inicializado"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "Mensaje encolado: id=%s, tipo=%s, dirección=%s, prioridad=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "Mensaje marcado como procesando: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "Mensaje marcado como completado: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "Mensaje %s falló (intento %d/%d), programado para reintento en %d segundos"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "Mensaje %s falló permanentemente después de %d intentos: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "Se limpiaron %d mensajes antiguos"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "Error al deserializar mensaje %s: %s"
 
 #~ msgid "Connecting to server"
 #~ msgstr "Conectando al servidor"

@@ -61,7 +61,12 @@ i18n:
         }
         with patch("main.ClientRegistration", return_value=mock_registration), patch(
             "main.set_language"
-        ):
+        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+            # Mock the message handler
+            mock_handler = Mock()
+            mock_handler.queue_outbound_message = AsyncMock(return_value="test-msg-id")
+            mock_handler_class.return_value = mock_handler
+
             agent = SysManageAgent(agent_config)
             agent.websocket = AsyncMock()
             agent.connected = True  # Set connected flag for tests
@@ -106,26 +111,28 @@ i18n:
 
         result = await mock_agent.send_message(test_message)
 
-        # Should return True on success
+        # Should return True on success (message queued)
         assert result is True
-        mock_agent.websocket.send.assert_called_once()
-        mock_agent.logger.debug.assert_called_with("Sent message: %s", "heartbeat")
+        # Verify message was queued instead of sent directly
+        mock_agent.message_handler.queue_outbound_message.assert_called_once_with(
+            test_message
+        )
+        mock_agent.logger.debug.assert_called_with(
+            "Queued message: %s (ID: %s)", "heartbeat", "test-msg-id"
+        )
 
     @pytest.mark.asyncio
     async def test_send_message_failure(self, mock_agent):
         """Test message sending failure."""
         error = Exception("Connection error")
-        mock_agent.websocket.send.side_effect = error
+        mock_agent.message_handler.queue_outbound_message.side_effect = error
         test_message = {"message_type": "heartbeat", "data": {}}
 
         result = await mock_agent.send_message(test_message)
 
         # Should return False on failure
         assert result is False
-        mock_agent.logger.error.assert_called_with("Failed to send message: %s", error)
-        # Connection should be marked as disconnected
-        assert mock_agent.connected is False
-        assert mock_agent.websocket is None
+        mock_agent.logger.error.assert_called_with("Failed to queue message: %s", error)
 
     @pytest.mark.asyncio
     async def test_send_message_no_websocket(self, mock_agent):
@@ -135,13 +142,12 @@ i18n:
 
         result = await mock_agent.send_message(test_message)
 
-        # Should return False and log warning
-        assert result is False
-        mock_agent.logger.warning.assert_called_with(
-            "Cannot send message: not connected to server"
+        # Should still return True as message is queued for later sending
+        assert result is True
+        # Verify message was queued even without connection
+        mock_agent.message_handler.queue_outbound_message.assert_called_once_with(
+            test_message
         )
-        mock_agent.logger.debug.assert_not_called()
-        mock_agent.logger.error.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_message_sender_heartbeat_loop(self, mock_agent):
@@ -156,21 +162,24 @@ i18n:
             with pytest.raises(asyncio.CancelledError):
                 await mock_agent.message_sender()
 
-        # Verify initial system info was sent
-        assert mock_agent.websocket.send.call_count >= 1
+        # Verify messages were queued (including initial system info)
+        assert mock_agent.message_handler.queue_outbound_message.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_message_sender_error_handling(self, mock_agent):
         """Test message sender error handling."""
         mock_agent.running = True
-        mock_agent.websocket.send.side_effect = Exception("Send error")
+        mock_agent.message_handler.queue_outbound_message.side_effect = Exception(
+            "Queue error"
+        )
         mock_agent.config.get_ping_interval = Mock(return_value=0.1)
 
-        with patch("asyncio.sleep", side_effect=[None, asyncio.CancelledError()]):
+        # Mock sleep to immediately trigger CancelledError on second call
+        with patch("asyncio.sleep", side_effect=asyncio.CancelledError()):
             with pytest.raises(asyncio.CancelledError):
                 await mock_agent.message_sender()
 
-        # Verify error was logged
+        # Verify error was logged for the initial send_message call
         mock_agent.logger.error.assert_called()
 
 
@@ -285,29 +294,47 @@ i18n:
 class TestMessageHandling:
     """Test agent message handling functionality."""
 
-    def test_message_id_uniqueness(self):
+    @pytest.fixture
+    def mock_agent(self, tmp_path):
+        """Create a mock SysManage agent for testing."""
+        # Create a temporary config file
+        config_file = tmp_path / "test_sysmanage_agent.yaml"
+        config_content = """
+server:
+  hostname: "test-server.example.com"
+  port: 8000
+  use_https: false
+  api_path: "/api"
+
+i18n:
+  language: "en"
+"""
+        config_file.write_text(config_content)
+
+        with patch("main.ClientRegistration"), patch("main.set_language"), patch(
+            "main.QueuedMessageHandler"
+        ):
+            agent = SysManageAgent(str(config_file))
+            agent.logger = Mock()
+            return agent
+
+    def test_message_id_uniqueness(self, mock_agent):
         """Test that message IDs are unique."""
+        # Create messages and verify unique IDs
+        messages = []
+        for _ in range(10):
+            msg = mock_agent.create_message("test", {})
+            messages.append(msg["message_id"])
 
-        with patch("main.ClientRegistration"), patch("main.set_language"):
+        # All message IDs should be unique
+        assert len(set(messages)) == len(messages)
 
-            # Create messages and verify unique IDs
-            messages = []
-            for _ in range(10):
-                msg = SysManageAgent.create_message(None, "test", {})
-                messages.append(msg["message_id"])
-
-            # All message IDs should be unique
-            assert len(set(messages)) == len(messages)
-
-    def test_message_timestamp_format(self):
+    def test_message_timestamp_format(self, mock_agent):
         """Test that message timestamps are properly formatted."""
+        msg = mock_agent.create_message("test", {})
+        timestamp = msg["timestamp"]
 
-        with patch("main.ClientRegistration"), patch("main.set_language"):
-
-            msg = SysManageAgent.create_message(None, "test", {})
-            timestamp = msg["timestamp"]
-
-            # Should be able to parse the timestamp
-            parsed_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            assert isinstance(parsed_time, datetime)
-            assert parsed_time.tzinfo is not None
+        # Should be able to parse the timestamp
+        parsed_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        assert isinstance(parsed_time, datetime)
+        assert parsed_time.tzinfo is not None

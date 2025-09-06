@@ -509,6 +509,21 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting Homebrew updates"))
 
+            # First update Homebrew to get the latest package information
+            logger.debug(_("Updating Homebrew package information"))
+            update_result = subprocess.run(
+                ["brew", "update"],
+                capture_output=True,
+                text=True,
+                timeout=60,  # Give more time for update
+                check=False,
+            )
+
+            if update_result.returncode != 0:
+                logger.warning(_("Homebrew update failed: %s"), update_result.stderr)
+            else:
+                logger.debug(_("Homebrew update completed successfully"))
+
             # Get outdated formulas
             result = subprocess.run(
                 ["brew", "outdated", "--json=v2"],
@@ -904,16 +919,46 @@ class UpdateDetector:
             "requires_reboot": False,
         }
 
+        # Get fresh available updates for the apply operation
+        logger.info(_("Refreshing update detection for apply operation"))
+        fresh_update_data = self.get_available_updates()
+        fresh_updates = fresh_update_data.get("available_updates", [])
+
         # Group packages by package manager
         packages_by_manager = {}
-        for update in self.available_updates:
+        logger.info(
+            _("Filtering %d available updates for requested packages: %s"),
+            len(fresh_updates),
+            package_names,
+        )
+        logger.info(_("Requested package managers: %s"), package_managers)
+
+        for update in fresh_updates:
             if update["package_name"] in package_names:
                 manager = update["package_manager"]
+                logger.info(
+                    _("Found package '%s' with manager '%s'"),
+                    update["package_name"],
+                    manager,
+                )
                 if package_managers and manager not in package_managers:
+                    logger.warning(
+                        _(
+                            "Skipping package '%s' - manager '%s' not in requested managers %s"
+                        ),
+                        update["package_name"],
+                        manager,
+                        package_managers,
+                    )
                     continue
                 if manager not in packages_by_manager:
                     packages_by_manager[manager] = []
                 packages_by_manager[manager].append(update)
+
+        logger.info(
+            _("Packages grouped by manager: %s"),
+            {k: [p["package_name"] for p in v] for k, v in packages_by_manager.items()},
+        )
 
         # Apply updates for each package manager
         for manager, packages in packages_by_manager.items():
@@ -1118,9 +1163,18 @@ class UpdateDetector:
                 else:
                     cmd = ["brew", "upgrade", package["package_name"]]
 
+                logger.info(_("Running homebrew command: %s"), " ".join(cmd))
                 result = subprocess.run(
                     cmd, capture_output=True, text=True, timeout=120, check=False
                 )
+
+                logger.info(
+                    _("Homebrew command completed. Return code: %d"), result.returncode
+                )
+                if result.stdout:
+                    logger.info(_("Homebrew stdout: %s"), result.stdout.strip())
+                if result.stderr:
+                    logger.info(_("Homebrew stderr: %s"), result.stderr.strip())
 
                 if result.returncode == 0:
                     results["updated_packages"].append(
@@ -1131,6 +1185,9 @@ class UpdateDetector:
                             "package_manager": "homebrew",
                         }
                     )
+                    logger.info(
+                        _("Successfully updated package %s"), package["package_name"]
+                    )
                 else:
                     results["failed_packages"].append(
                         {
@@ -1138,6 +1195,11 @@ class UpdateDetector:
                             "package_manager": "homebrew",
                             "error": result.stderr,
                         }
+                    )
+                    logger.error(
+                        _("Failed to update package %s: %s"),
+                        package["package_name"],
+                        result.stderr,
                     )
 
             except Exception as e:

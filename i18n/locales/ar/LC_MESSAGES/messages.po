@@ -99,14 +99,6 @@ msgstr "فشل في جمع جرد البرمجيات: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "فشل في جمع جرد البرمجيات: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-"ملف التكوين '%s' غير موجود. المواقع المتوقعة: /etc/sysmanage-agent.yaml أو ./"
 "sysmanage-agent.yaml"
 
 # Configuration
@@ -162,14 +154,6 @@ msgstr "اكتشاف التحديثات المتاحة"
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-"تم اكتشاف التحديثات: تم العثور على %d تحديث (%d أمني، %d نظام، %d تطبيق)"
 
 #: update_detection.py:101
 #, fuzzy, python-format
@@ -649,12 +633,6 @@ msgstr "تم العثور على شهادات صالحة - المصادقة ال
 msgid "No certificates found - using token-based authentication"
 msgstr "لم يتم العثور على شهادات - استخدام مصادقة قائمة على الرموز"
 
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-"للحصول على أمان محسّن، اعتمد هذا المضيف لتمكين المصادقة القائمة على الشهادة"
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr "بدء اتصال WebSocket..."
@@ -743,3 +721,74 @@ msgstr "⚠️  تحذير: aiohttp غير متاح، سيتم تخطي التس
 
 #~ msgid "Authentication failed"
 #~ msgstr "فشل المصادقة"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "تم تهيئة معالج الرسائل المجدولة"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "فشل في إرسال الرسالة مباشرة: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "خطأ في معالجة الرسالة المجدولة %s: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "خطأ في معالج الطابور: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "تم تأسيس الاتصال، بدء معالجة الطابور"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "فُقد الاتصال، إيقاف معالجة الطابور"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "خطأ في إغلاق معالج الرسائل: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "تم تهيئة مدير طابور الرسائل"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "رسالة مجدولة: المعرف=%s، النوع=%s، الاتجاه=%s، الأولوية=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "تم وضع علامة على الرسالة كقيد المعالجة: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "تم وضع علامة على الرسالة كمكتملة: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "فشلت الرسالة %s (المحاولة %d/%d)، مجدولة لإعادة المحاولة خلال %d ثانية"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "فشلت الرسالة %s نهائياً بعد %d محاولات: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "تم تنظيف %d رسالة قديمة"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "فشل في إلغاء تسلسل الرسالة %s: %s"

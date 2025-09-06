@@ -99,14 +99,6 @@ msgstr "ソフトウェアインベントリの収集に失敗しました：%s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "ソフトウェアインベントリの収集に失敗しました：%s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "ソフトウェアインベントリでサポートされていないプラットフォーム：%s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -648,12 +632,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -742,3 +720,74 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "認証に失敗しました"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "キューメッセージハンドラを初期化しました"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "メッセージの直接送信に失敗しました：%s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "キューメッセージ%sの処理中にエラーが発生しました：%s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "キュープロセッサでエラーが発生しました：%s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "接続が確立されました。キュー処理を開始します"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "接続が失われました。キュー処理を停止します"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "メッセージハンドラのクローズ中にエラーが発生しました：%s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "メッセージキューマネージャを初期化しました"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "メッセージをキューに追加：id=%s、タイプ=%s、方向=%s、優先度=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "メッセージを処理中としてマークしました：%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "メッセージを完了としてマークしました：%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "メッセージ%sが失敗しました（試行%d/%d）、%d秒後に再試行を予定しています"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "メッセージ%sが%d回の試行後に完全に失敗しました：%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "%d個の古いメッセージをクリーンアップしました"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "メッセージ%sのデシリアライゼーションに失敗しました：%s"

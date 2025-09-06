@@ -2,6 +2,10 @@ websockets>=13.0
 PyYAML>=6.0.2
 aiohttp>=3.12.0
 
+# Database dependencies
+SQLAlchemy>=2.0.0
+alembic>=1.12.0
+
 # Development dependencies for linting and testing
 black>=23.0.0
 pylint>=3.0.0

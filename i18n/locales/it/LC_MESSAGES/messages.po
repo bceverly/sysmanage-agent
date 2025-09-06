@@ -99,14 +99,6 @@ msgstr "Errore nella raccolta dell'inventario software: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Errore nella raccolta dell'inventario software: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Piattaforma non supportata per l'inventario software: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -646,12 +630,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -740,3 +718,74 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "Autenticazione fallita"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "Gestore messaggi in coda inizializzato"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "Invio diretto del messaggio fallito: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "Errore nell'elaborazione del messaggio in coda %s: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "Errore nel processore della coda: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "Connessione stabilita, avvio elaborazione coda"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "Connessione persa, arresto elaborazione coda"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "Errore nella chiusura del gestore messaggi: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "Gestore coda messaggi inizializzato"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "Messaggio accodato: id=%s, tipo=%s, direzione=%s, priorità=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "Messaggio contrassegnato come in elaborazione: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "Messaggio contrassegnato come completato: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "Messaggio %s fallito (tentativo %d/%d), riprogrammato per nuovo tentativo tra %d secondi"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "Messaggio %s fallito definitivamente dopo %d tentativi: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "Puliti %d vecchi messaggi"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "Deserializzazione del messaggio %s fallita: %s"

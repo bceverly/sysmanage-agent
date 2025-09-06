@@ -99,14 +99,6 @@ msgstr "Échec de la collecte de l'inventaire logiciel : %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Échec de la collecte de l'inventaire logiciel : %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Plateforme non prise en charge pour l'inventaire logiciel : %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -646,12 +630,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -663,6 +641,77 @@ msgstr "Connecté au serveur avec succès"
 #: client_registration.py:24
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "Gestionnaire de messages en file d'attente initialisé"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "Échec de l'envoi direct du message : %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "Erreur lors du traitement du message en file d'attente %s : %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "Erreur dans le processeur de file d'attente : %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "Connexion établie, démarrage du traitement de la file d'attente"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "Connexion perdue, arrêt du traitement de la file d'attente"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "Gestionnaire de file d'attente de messages initialisé"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "Message mis en file d'attente : id=%s, type=%s, direction=%s, priorité=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "Message marqué comme en traitement : %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "Message marqué comme terminé : %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "Message %s échoué (tentative %d/%d), programmé pour nouvel essai dans %d secondes"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "Message %s définitivement échoué après %d tentatives : %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "%d anciens messages nettoyés"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "Échec de la désérialisation du message %s : %s"
 
 #~ msgid "Connecting to server"
 #~ msgstr "Connexion au serveur"
