@@ -99,14 +99,6 @@ msgstr "Falha ao coletar inventário de software: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Falha ao coletar inventário de software: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Plataforma não suportada para inventário de software: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -646,12 +630,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -740,3 +718,74 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "Autenticação falhou"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "Gerenciador de mensagens em fila inicializado"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "Falha ao enviar mensagem diretamente: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "Erro ao processar mensagem em fila %s: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "Erro no processador de fila: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "Conexão estabelecida, iniciando processamento da fila"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "Conexão perdida, parando processamento da fila"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "Erro ao fechar gerenciador de mensagens: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "Gerenciador de fila de mensagens inicializado"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "Mensagem enfileirada: id=%s, tipo=%s, direção=%s, prioridade=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "Mensagem marcada como processando: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "Mensagem marcada como concluída: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "Mensagem %s falhou (tentativa %d/%d), agendada para nova tentativa em %d segundos"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "Mensagem %s falhou permanentemente após %d tentativas: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "Limpeza de %d mensagens antigas"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "Falha ao desserializar mensagem %s: %s"

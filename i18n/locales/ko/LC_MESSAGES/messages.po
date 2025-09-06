@@ -99,14 +99,6 @@ msgstr "소프트웨어 인벤토리 수집 실패: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "소프트웨어 인벤토리 수집 실패: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -646,12 +630,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -740,3 +718,74 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "인증에 실패했습니다"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "큐 메시지 핸들러가 초기화되었습니다"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "메시지 직접 전송 실패: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "큐 메시지 %s 처리 중 오류 발생: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "큐 프로세서에서 오류 발생: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "연결이 설정되었습니다. 큐 처리를 시작합니다"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "연결이 끊어졌습니다. 큐 처리를 중지합니다"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "메시지 핸들러 종료 중 오류 발생: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "메시지 큐 매니저가 초기화되었습니다"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "메시지 큐에 추가: id=%s, 타입=%s, 방향=%s, 우선순위=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "메시지를 처리 중으로 표시: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "메시지를 완료로 표시: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "메시지 %s 실패 (시도 %d/%d), %d초 후 재시도 예정"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "메시지 %s가 %d회 시도 후 영구 실패: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "%d개의 오래된 메시지를 정리했습니다"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "메시지 %s 역직렬화 실패: %s"

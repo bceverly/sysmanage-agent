@@ -91,26 +91,49 @@ class UpdateOperations:
 
             # Validate packages exist and get their package managers
             valid_packages = []
-            for package_name in package_names:
-                if package_managers and package_name in package_managers:
-                    package_manager = package_managers[package_name]
-                    valid_packages.append(
-                        {"name": package_name, "package_manager": package_manager}
-                    )
-                else:
-                    # Try to detect the package manager automatically
-                    detected_manager = update_detector.detect_package_manager(
-                        package_name
-                    )
-                    if detected_manager:
+
+            # Handle package_managers as either a list or dict
+            if isinstance(package_managers, list):
+                # If it's a list, assume the same order as package_names
+                for i, package_name in enumerate(package_names):
+                    if i < len(package_managers):
+                        package_manager = package_managers[i]
                         valid_packages.append(
-                            {"name": package_name, "package_manager": detected_manager}
+                            {"name": package_name, "package_manager": package_manager}
                         )
                     else:
                         self.logger.warning(
-                            _("Could not determine package manager for %s"),
-                            package_name,
+                            _("No package manager specified for %s"), package_name
                         )
+            else:
+                # Handle as dict or fallback to detection
+                for package_name in package_names:
+                    if package_managers and package_name in package_managers:
+                        package_manager = package_managers[package_name]
+                        valid_packages.append(
+                            {"name": package_name, "package_manager": package_manager}
+                        )
+                    else:
+                        # Use the first available package manager as fallback
+                        available_managers = update_detector._detect_package_managers()
+                        if available_managers:
+                            detected_manager = available_managers[0]
+                            self.logger.info(
+                                _("Using detected package manager '%s' for %s"),
+                                detected_manager,
+                                package_name,
+                            )
+                            valid_packages.append(
+                                {
+                                    "name": package_name,
+                                    "package_manager": detected_manager,
+                                }
+                            )
+                        else:
+                            self.logger.warning(
+                                _("Could not determine package manager for %s"),
+                                package_name,
+                            )
 
             if not valid_packages:
                 self.logger.error(_("No valid packages found for update"))
@@ -120,11 +143,17 @@ class UpdateOperations:
             loop = asyncio.get_event_loop()
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
+                # Extract package names for apply_updates
+                package_names_list = [pkg["name"] for pkg in valid_packages]
+                package_managers_list = [
+                    pkg["package_manager"] for pkg in valid_packages
+                ]
+
                 update_results = await loop.run_in_executor(
                     executor,
                     update_detector.apply_updates,
-                    valid_packages,
-                    package_managers,
+                    package_names_list,
+                    package_managers_list,
                 )
 
             # Add hostname to result data

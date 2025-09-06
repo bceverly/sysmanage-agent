@@ -4,7 +4,6 @@ Test OS version capture functionality.
 
 # pylint: disable=duplicate-code
 
-import json
 import platform
 from unittest.mock import Mock, patch, AsyncMock
 
@@ -195,7 +194,12 @@ i18n:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ):
+        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+
+            # Mock the message handler
+            mock_handler = Mock()
+            mock_handler.queue_outbound_message = AsyncMock(return_value="test-msg-id")
+            mock_handler_class.return_value = mock_handler
 
             mock_registration = Mock()
             mock_registration.get_os_version_info.return_value = {
@@ -223,13 +227,15 @@ i18n:
             assert result["success"] is True
             assert "OS version information sent" in result["result"]
 
-            # Verify message was sent
-            agent.websocket.send.assert_called_once()
-            sent_data = json.loads(agent.websocket.send.call_args[0][0])
-            assert sent_data["message_type"] == "os_version_update"
-            assert sent_data["data"]["platform"] == "Linux"
-            assert sent_data["data"]["machine_architecture"] == "x86_64"
-            assert sent_data["data"]["hostname"] == "test-host.example.com"
+            # Verify message was queued
+            agent.message_handler.queue_outbound_message.assert_called_once()
+            queued_message = agent.message_handler.queue_outbound_message.call_args[0][
+                0
+            ]
+            assert queued_message["message_type"] == "os_version_update"
+            assert queued_message["data"]["platform"] == "Linux"
+            assert queued_message["data"]["machine_architecture"] == "x86_64"
+            assert queued_message["data"]["hostname"] == "test-host.example.com"
 
     @pytest.mark.asyncio
     async def test_handle_update_os_version_command(self, tmp_path):
@@ -246,7 +252,12 @@ i18n:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ):
+        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+
+            # Mock the message handler
+            mock_handler = Mock()
+            mock_handler.queue_outbound_message = AsyncMock(return_value="test-msg-id")
+            mock_handler_class.return_value = mock_handler
 
             mock_registration = Mock()
             mock_registration.get_os_version_info.return_value = {
@@ -277,8 +288,8 @@ i18n:
 
             await agent.handle_command(command_message)
 
-            # Should send two messages: OS update and command result
-            assert agent.websocket.send.call_count == 2
+            # Should queue two messages: OS update and command result
+            assert agent.message_handler.queue_outbound_message.call_count == 2
 
     def test_architecture_detection(self, mock_registration):
         """Test correct detection of various CPU architectures."""

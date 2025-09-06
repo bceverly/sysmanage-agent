@@ -99,14 +99,6 @@ msgstr "Fout bij verzamelen software-inventaris: %s"
 #, fuzzy, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Fout bij verzamelen software-inventaris: %s"
-
-#: config.py:55
-#, python-format
-msgid ""
-"Configuration file '%s' not found. Expected locations: /etc/sysmanage-"
-"agent.yaml or ./sysmanage-agent.yaml"
-msgstr ""
-
 # Configuration
 #: config.py:64
 #, fuzzy, python-format
@@ -160,14 +152,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Niet-ondersteund platform voor software-inventaris: %s"
-
-#: update_detection.py:81
-#, python-format
-msgid ""
-"Update detection completed: %d updates found (%d security, %d system, %d "
-"application)"
-msgstr ""
-
 #: update_detection.py:101
 #, fuzzy, python-format
 msgid "Failed to detect available updates: %s"
@@ -646,12 +630,6 @@ msgstr ""
 #: main.py:871
 msgid "No certificates found - using token-based authentication"
 msgstr ""
-
-#: main.py:875
-msgid ""
-"For enhanced security, approve this host to enable certificate-based auth"
-msgstr ""
-
 #: main.py:879
 msgid "Starting WebSocket connection..."
 msgstr ""
@@ -740,3 +718,74 @@ msgstr ""
 
 #~ msgid "Authentication failed"
 #~ msgstr "Authenticatie mislukt"
+
+# Queue-related messages
+#: queue_handler.py
+msgid "Queued message handler initialized"
+msgstr "Wachtrij berichtenbeheerder geïnitialiseerd"
+#: queue_handler.py
+#, python-format
+msgid "Failed to send message directly: %s"
+msgstr "Directe berichtenverzending mislukt: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error processing queued message %s: %s"
+msgstr "Fout bij verwerking wachtrij bericht %s: %s"
+
+#: queue_handler.py
+#, python-format
+msgid "Error in queue processor: %s"
+msgstr "Fout in wachtrijprocessor: %s"
+
+#: queue_handler.py
+msgid "Connection established, starting queue processing"
+msgstr "Verbinding tot stand gebracht, wachtrijverwerking starten"
+
+#: queue_handler.py
+msgid "Connection lost, stopping queue processing"
+msgstr "Verbinding verloren, wachtrijverwerking stoppen"
+
+#: queue_handler.py
+#, python-format
+msgid "Error closing message handler: %s"
+msgstr "Fout bij sluiten berichtenbeheerder: %s"
+
+#: queue_manager.py
+msgid "Message queue manager initialized"
+msgstr "Berichtenwachtrij beheerder geïnitialiseerd"
+
+#: queue_manager.py
+#, python-format
+msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
+msgstr "Bericht in wachtrij: id=%s, type=%s, richting=%s, prioriteit=%s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as processing: %s"
+msgstr "Bericht gemarkeerd als verwerking: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Marked message as completed: %s"
+msgstr "Bericht gemarkeerd als voltooid: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+msgstr "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over %d seconden"
+
+#: queue_manager.py
+#, python-format
+msgid "Message %s permanently failed after %d attempts: %s"
+msgstr "Bericht %s definitief mislukt na %d pogingen: %s"
+
+#: queue_manager.py
+#, python-format
+msgid "Cleaned up %d old messages"
+msgstr "%d oude berichten opgeruimd"
+
+#: queue_manager.py
+#, python-format
+msgid "Failed to deserialize message %s: %s"
+msgstr "Deserialiseren van bericht %s mislukt: %s"

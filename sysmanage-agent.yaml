@@ -40,7 +40,7 @@ i18n:
 # Logging configuration
 logging:
   # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  level: "INFO"
+  level: "DEBUG"
   
   # Log to file (optional)
   # file: "/var/log/sysmanage-agent.log"
@@ -56,5 +56,14 @@ websocket:
   # Reconnection interval in seconds
   reconnect_interval: 5
   
-  # Ping interval to keep connection alive (reduced for faster server restart detection)
-  ping_interval: 10
+  # Ping interval to keep connection alive (increased to handle large message transmission)
+  ping_interval: 60
+
+# Database configuration
+database:
+  # Path to the agent's SQLite database file
+  # If not specified, defaults to "agent.db" in the agent's working directory
+  path: "agent.db"
+  
+  # Whether to automatically run database migrations on startup
+  auto_migrate: true

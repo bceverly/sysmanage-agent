@@ -26,6 +26,10 @@ from security.certificate_store import CertificateStore
 from agent_utils import UpdateChecker, AuthenticationHelper, MessageProcessor
 from update_operations import UpdateOperations
 from system_operations import SystemOperations
+from message_handler import QueuedMessageHandler
+from database.init import initialize_database
+from database.base import get_database_manager
+from database.models import HostApproval
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods
@@ -56,12 +60,20 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Setup proper logging with config
         self.setup_logging()
 
+        # Initialize database
+        if not initialize_database(self.config):
+            raise RuntimeError(_("Failed to initialize agent database"))
+
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
         self.websocket = None
         self.connected = False
         self.running = False
         self.connection_failures = 0
+
+        # Registration state tracking
+        self.registration_status = None
+        self.needs_registration = False
 
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
@@ -77,6 +89,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Initialize operation modules
         self.update_ops = UpdateOperations(self)
         self.system_ops = SystemOperations(self)
+
+        # Initialize message handler with persistent queues
+        self.message_handler = QueuedMessageHandler(self)
 
         # Get server URL from config
         self.server_url = self.config.get_server_url()
@@ -156,12 +171,64 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self, message_type: str, data: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Create a standardized message."""
-        return {
+        self.logger.debug("AGENT_DEBUG: Creating message of type: %s", message_type)
+        message_data = data or {}
+
+        # Include host_id if available and not already present
+        if "host_id" not in message_data:
+            self.logger.debug(
+                "AGENT_DEBUG: No host_id in message_data, attempting to retrieve from database"
+            )
+            # Skip async context check for now - just proceed with sync approach
+            # This code block exists for potential future enhancement
+            # where we might handle async context differently
+
+            # For now, we'll get the host_id synchronously
+            stored_host_id = self.get_stored_host_id_sync()
+            self.logger.debug(
+                "AGENT_DEBUG: Retrieved stored_host_id: %s", stored_host_id
+            )
+            if stored_host_id:
+                message_data["host_id"] = stored_host_id
+                self.logger.debug(
+                    "AGENT_DEBUG: Added host_id %s to message data", stored_host_id
+                )
+            else:
+                self.logger.debug(
+                    "AGENT_DEBUG: No stored host_id found - message will be sent without host_id"
+                )
+        else:
+            self.logger.debug(
+                "AGENT_DEBUG: host_id already present in message_data: %s",
+                message_data.get("host_id"),
+            )
+
+        message_id = str(uuid.uuid4())
+        message = {
             "message_type": message_type,
-            "message_id": str(uuid.uuid4()),
+            "message_id": message_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "data": data or {},
+            "data": message_data,
         }
+
+        # Log the final message structure (truncated for large messages)
+        data_size = len(str(message_data))
+        if data_size > 1000:
+            self.logger.debug(
+                "AGENT_DEBUG: Created message %s of type %s with %s bytes of data",
+                message_id,
+                message_type,
+                data_size,
+            )
+        else:
+            self.logger.debug(
+                "AGENT_DEBUG: Created message %s of type %s with data: %s",
+                message_id,
+                message_type,
+                message_data,
+            )
+
+        return message
 
     def create_system_info_message(self):
         """Create system info message."""
@@ -210,25 +277,16 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         )
 
     async def send_message(self, message: Dict[str, Any]):
-        """Send a message to the server."""
-        if not self.connected or not self.websocket:
-            self.logger.warning(_("Cannot send message: not connected to server"))
-            return False
-
+        """Send a message to the server using persistent queue."""
         try:
-            await self.websocket.send(json.dumps(message))
-            self.logger.debug("Sent message: %s", message["message_type"])
+            # Queue message for reliable delivery
+            message_id = await self.message_handler.queue_outbound_message(message)
+            self.logger.debug(
+                "Queued message: %s (ID: %s)", message.get("message_type"), message_id
+            )
             return True
-        except websockets.ConnectionClosed:
-            self.logger.warning("Connection closed while sending message")
-            self.connected = False
-            self.websocket = None
-            return False
         except Exception as e:
-            self.logger.error("Failed to send message: %s", e)
-            # Assume connection is broken on any send failure
-            self.connected = False
-            self.websocket = None
+            self.logger.error("Failed to queue message: %s", e)
             return False
 
     async def handle_command(self, message: Dict[str, Any]):
@@ -265,17 +323,33 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.info(_("Sending initial OS version data..."))
 
             # Send OS version data
+            self.logger.debug("AGENT_DEBUG: About to collect OS version info")
             os_info = self.registration.get_os_version_info()
+            self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
             # Add hostname to OS data for server processing
             system_info = self.registration.get_system_info()
             os_info["hostname"] = system_info["hostname"]
+            self.logger.debug("AGENT_DEBUG: OS info with hostname: %s", os_info)
             os_message = self.create_message("os_version_update", os_info)
+            self.logger.debug(
+                "AGENT_DEBUG: About to send OS version message: %s",
+                os_message["message_id"],
+            )
             await self.send_message(os_message)
+            self.logger.debug("AGENT_DEBUG: OS version message sent successfully")
+
+            # Allow queue processing tasks to run
+            await asyncio.sleep(0)
 
             self.logger.info(_("Sending initial hardware data..."))
 
             # Send hardware data
+            self.logger.debug("AGENT_DEBUG: About to collect hardware info")
             hardware_info = self.registration.get_hardware_info()
+            self.logger.debug(
+                "AGENT_DEBUG: Hardware info collected with keys: %s",
+                list(hardware_info.keys()),
+            )
             # Add hostname to hardware data for server processing
             system_info = self.registration.get_system_info()
             hardware_info["hostname"] = system_info["hostname"]
@@ -288,13 +362,40 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "Network interfaces count: %s",
                 len(hardware_info.get("network_interfaces", [])),
             )
+            # Log detailed CPU information
+            self.logger.debug(
+                "AGENT_DEBUG: CPU vendor: %s", hardware_info.get("cpu_vendor", "N/A")
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: CPU model: %s", hardware_info.get("cpu_model", "N/A")
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: CPU cores: %s", hardware_info.get("cpu_cores", "N/A")
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: Memory total: %s MB",
+                hardware_info.get("memory_total_mb", "N/A"),
+            )
             hardware_message = self.create_message("hardware_update", hardware_info)
+            self.logger.debug(
+                "AGENT_DEBUG: About to send hardware message: %s",
+                hardware_message["message_id"],
+            )
             await self.send_message(hardware_message)
+            self.logger.debug("AGENT_DEBUG: Hardware message sent successfully")
+
+            # Allow time for the large hardware message to be sent before sending more data
+            await asyncio.sleep(2)
 
             self.logger.info(_("Sending initial user access data..."))
 
             # Send user access data
+            self.logger.debug("AGENT_DEBUG: About to collect user access info")
             user_access_info = self.registration.get_user_access_info()
+            self.logger.debug(
+                "AGENT_DEBUG: User access info collected with keys: %s",
+                list(user_access_info.keys()),
+            )
             # Add hostname to user access data for server processing
             system_info = self.registration.get_system_info()
             user_access_info["hostname"] = system_info["hostname"]
@@ -307,15 +408,45 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "Groups count: %s",
                 user_access_info.get("total_groups", 0),
             )
+            # Log detailed user/group counts
+            self.logger.debug(
+                "AGENT_DEBUG: Regular users: %s",
+                user_access_info.get("regular_users", "N/A"),
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: System users: %s",
+                user_access_info.get("system_users", "N/A"),
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: Regular groups: %s",
+                user_access_info.get("regular_groups", "N/A"),
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: System groups: %s",
+                user_access_info.get("system_groups", "N/A"),
+            )
             user_access_message = self.create_message(
                 "user_access_update", user_access_info
             )
+            self.logger.debug(
+                "AGENT_DEBUG: About to send user access message: %s",
+                user_access_message["message_id"],
+            )
             await self.send_message(user_access_message)
+            self.logger.debug("AGENT_DEBUG: User access message sent successfully")
+
+            # Allow time for the large user access message to be sent before sending more data
+            await asyncio.sleep(2)
 
             self.logger.info(_("Sending initial software inventory data..."))
 
             # Send software inventory data
+            self.logger.debug("AGENT_DEBUG: About to collect software inventory info")
             software_info = self.registration.get_software_inventory_info()
+            self.logger.debug(
+                "AGENT_DEBUG: Software info collected with keys: %s",
+                list(software_info.keys()),
+            )
             # Add hostname to software inventory data for server processing
             system_info = self.registration.get_system_info()
             software_info["hostname"] = system_info["hostname"]
@@ -326,10 +457,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "Software packages count: %s",
                 software_info.get("total_packages", 0),
             )
+            # Log sample software packages
+            software_packages = software_info.get("software_packages", [])
+            if software_packages:
+                self.logger.debug(
+                    "AGENT_DEBUG: First 3 software packages: %s", software_packages[:3]
+                )
+            else:
+                self.logger.debug("AGENT_DEBUG: No software packages found!")
             software_message = self.create_message(
                 "software_inventory_update", software_info
             )
+            self.logger.debug(
+                "AGENT_DEBUG: About to send software inventory message: %s",
+                software_message["message_id"],
+            )
             await self.send_message(software_message)
+            self.logger.debug(
+                "AGENT_DEBUG: Software inventory message sent successfully"
+            )
 
             self.logger.info(_("Sending initial update check..."))
 
@@ -412,6 +558,49 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.error("Failed to update user access: %s", e)
             return {"success": False, "error": str(e)}
 
+    async def _handle_server_error(self, data: Dict[str, Any]) -> None:
+        """Handle error messages from server."""
+        error_data = data.get("data", {})
+        error_code = error_data.get("error_code", "unknown")
+        error_message = error_data.get("error_message", "No error message provided")
+        self.logger.error("Server error [%s]: %s", error_code, error_message)
+
+        # Handle specific error codes from server
+        if error_code == "host_not_registered":
+            await self._handle_host_not_registered()
+        elif error_code == "host_not_approved":
+            self.logger.warning(
+                "Host registration is pending approval. Will continue periodic attempts."
+            )
+        elif error_code == "missing_hostname":
+            self.logger.error(
+                "Server reports missing hostname in message. This is a bug."
+            )
+        elif error_code == "queue_error":
+            self.logger.error("Server failed to queue message: %s", error_message)
+
+    async def _handle_host_not_registered(self) -> None:
+        """Handle host_not_registered error by clearing state and triggering re-registration."""
+        self.logger.warning(
+            "Server reports host is not registered. Clearing stored host_id and triggering re-registration..."
+        )
+
+        # Clear stored host_id from database
+        try:
+            await self.clear_stored_host_id()
+            self.logger.info("Stored host_id cleared from database")
+        except Exception as e:
+            self.logger.error("Error clearing stored host_id: %s", e)
+
+        # Clear any existing registration state and force re-registration
+        self.registration_status = None
+        self.registration.registered = False
+        # Schedule re-registration on next connection attempt
+        self.needs_registration = True
+        # Disconnect immediately to trigger reconnection with re-registration
+        self.logger.info("Disconnecting to trigger re-registration...")
+        self.running = False
+
     async def message_receiver(self):
         """Handle incoming messages from server."""
         self.logger.debug("Message receiver started")
@@ -437,21 +626,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                             "Server acknowledged message: %s", data.get("message_id")
                         )
                     elif message_type == "error":
-                        # Handle error messages from server
-                        error_data = data.get("data", {})
-                        error_code = error_data.get("error_code", "unknown")
-                        error_message = error_data.get(
-                            "error_message", "No error message provided"
-                        )
-                        self.logger.error(
-                            "Server error [%s]: %s", error_code, error_message
-                        )
-
-                        # If it's a host not approved error, log more specific message
-                        if error_code == "host_not_approved":
-                            self.logger.warning(
-                                "Host registration is pending approval. WebSocket connection will be closed."
-                            )
+                        await self._handle_server_error(data)
+                        if self.needs_registration:
+                            return
+                    elif message_type == "host_approved":
+                        await self.handle_host_approval(data)
+                    elif message_type == "registration_success":
+                        await self.handle_registration_success(data)
                     else:
                         self.logger.warning("Unknown message type: %s", message_type)
 
@@ -501,6 +682,138 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def update_checker(self):
         """Handle periodic update checking."""
         await self.update_checker_util.run_update_checker_loop()
+
+    async def data_collector(self):
+        """Handle periodic data collection and sending."""
+        self.logger.debug("Data collector started")
+
+        # Send periodic data updates every 5 minutes
+        data_collection_interval = 300  # 5 minutes
+
+        while self.running:
+            try:
+                await asyncio.sleep(data_collection_interval)
+                if self.running and self.connected:
+                    self.logger.debug("AGENT_DEBUG: Starting periodic data collection")
+
+                    # Send software inventory update
+                    try:
+                        self.logger.debug(
+                            "AGENT_DEBUG: Collecting software inventory data"
+                        )
+                        software_info = self.registration.get_software_inventory_info()
+                        software_info["hostname"] = self.registration.get_system_info()[
+                            "hostname"
+                        ]
+
+                        # Add host_id if available
+                        host_approval = self.get_host_approval_from_db()
+                        if host_approval:
+                            software_info["host_id"] = host_approval.host_id
+
+                        software_message = self.create_message(
+                            "software_inventory_update", software_info
+                        )
+
+                        self.logger.debug(
+                            "AGENT_DEBUG: Sending periodic software inventory message: %s",
+                            software_message["message_id"],
+                        )
+                        success = await self.send_message(software_message)
+                        if success:
+                            self.logger.debug(
+                                "AGENT_DEBUG: Periodic software inventory sent successfully"
+                            )
+                        else:
+                            self.logger.warning(
+                                "Failed to send periodic software inventory data"
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            "Error collecting/sending software inventory: %s", e
+                        )
+
+                    # Send user access update
+                    try:
+                        self.logger.debug("AGENT_DEBUG: Collecting user access data")
+                        user_info = self.registration.get_user_access_info()
+                        user_info["hostname"] = self.registration.get_system_info()[
+                            "hostname"
+                        ]
+
+                        # Add host_id if available
+                        host_approval = self.get_host_approval_from_db()
+                        if host_approval:
+                            user_info["host_id"] = host_approval.host_id
+
+                        user_message = self.create_message(
+                            "user_access_update", user_info
+                        )
+
+                        self.logger.debug(
+                            "AGENT_DEBUG: Sending periodic user access message: %s",
+                            user_message["message_id"],
+                        )
+                        success = await self.send_message(user_message)
+                        if success:
+                            self.logger.debug(
+                                "AGENT_DEBUG: Periodic user access data sent successfully"
+                            )
+                        else:
+                            self.logger.warning(
+                                "Failed to send periodic user access data"
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            "Error collecting/sending user access data: %s", e
+                        )
+
+                    # Send hardware update (if hardware info has changed)
+                    try:
+                        self.logger.debug("AGENT_DEBUG: Collecting hardware data")
+                        hardware_info = self.registration.get_hardware_info()
+                        hardware_info["hostname"] = self.registration.get_system_info()[
+                            "hostname"
+                        ]
+
+                        # Add host_id if available
+                        host_approval = self.get_host_approval_from_db()
+                        if host_approval:
+                            hardware_info["host_id"] = host_approval.host_id
+
+                        hardware_message = self.create_message(
+                            "hardware_update", hardware_info
+                        )
+
+                        self.logger.debug(
+                            "AGENT_DEBUG: Sending periodic hardware message: %s",
+                            hardware_message["message_id"],
+                        )
+                        success = await self.send_message(hardware_message)
+                        if success:
+                            self.logger.debug(
+                                "AGENT_DEBUG: Periodic hardware data sent successfully"
+                            )
+                        else:
+                            self.logger.warning("Failed to send periodic hardware data")
+
+                    except Exception as e:
+                        self.logger.error(
+                            "Error collecting/sending hardware data: %s", e
+                        )
+
+                    self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
+
+            except asyncio.CancelledError:
+                # Graceful shutdown - re-raise to propagate cancellation
+                self.logger.debug("Data collector cancelled")
+                raise
+            except Exception as e:
+                self.logger.error("Data collector error: %s", e)
+                # Don't break the loop on non-critical errors, but return to trigger reconnection
+                return
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
@@ -628,6 +941,193 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Apply updates for specified packages."""
         return await self.update_ops.apply_updates(parameters)
 
+    async def handle_host_approval(self, message: Dict[str, Any]) -> None:
+        """Handle host approval notification from server."""
+        try:
+            data = message.get("data", {})
+            host_id = data.get("host_id")
+            approval_status = data.get("approval_status", "approved")
+            certificate = data.get("certificate")
+
+            self.logger.info(
+                _("Received host approval notification: host_id=%s, status=%s"),
+                host_id,
+                approval_status,
+            )
+
+            # Store the approval information in the database
+            await self.store_host_approval(host_id, approval_status, certificate)
+
+            self.logger.info(
+                _("Host approval information stored successfully. Host ID: %s"), host_id
+            )
+
+        except Exception as e:
+            self.logger.error(_("Error processing host approval notification: %s"), e)
+
+    async def store_host_approval(
+        self, host_id: int, approval_status: str, certificate: str = None
+    ) -> None:
+        """Store host approval information in local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                # Check if we already have an approval record
+                existing_approval = session.query(HostApproval).first()
+
+                if existing_approval:
+                    # Update existing record
+                    existing_approval.host_id = host_id
+                    existing_approval.approval_status = approval_status
+                    existing_approval.certificate = certificate
+                    existing_approval.updated_at = datetime.now(timezone.utc)
+
+                    if approval_status == "approved":
+                        existing_approval.approved_at = datetime.now(timezone.utc)
+                else:
+                    # Create new approval record
+                    new_approval = HostApproval(
+                        host_id=host_id,
+                        approval_status=approval_status,
+                        certificate=certificate,
+                        approved_at=(
+                            datetime.now(timezone.utc)
+                            if approval_status == "approved"
+                            else None
+                        ),
+                        created_at=datetime.now(timezone.utc),
+                        updated_at=datetime.now(timezone.utc),
+                    )
+                    session.add(new_approval)
+
+                session.commit()
+                self.logger.debug(
+                    _("Host approval record stored in database: host_id=%s"), host_id
+                )
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error storing host approval in database: %s"), e)
+            raise
+
+    async def handle_registration_success(self, message: Dict[str, Any]) -> None:
+        """Handle registration success notification from server."""
+        try:
+            self.logger.info(
+                _("Received registration success notification from server")
+            )
+
+            # The registration success message doesn't need special handling
+            # It's just a confirmation that the system info was processed
+            # The actual approval will come via a separate host_approved message
+
+        except Exception as e:
+            self.logger.error(
+                _("Error processing registration success notification: %s"), e
+            )
+
+    async def get_stored_host_id(self) -> int:
+        """Get the stored host_id from local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(
+                        HostApproval.approval_status == "approved",
+                        HostApproval.host_id.isnot(None),
+                    )
+                    .first()
+                )
+
+                if approval and approval.has_host_id:
+                    return approval.host_id
+
+                return None
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error retrieving stored host_id: %s"), e)
+            return None
+
+    def get_host_approval_from_db(self):
+        """Get the host approval record from local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(
+                        HostApproval.approval_status == "approved",
+                        HostApproval.host_id.isnot(None),
+                    )
+                    .first()
+                )
+
+                return approval
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error retrieving host approval: %s"), e)
+            return None
+
+    def get_stored_host_id_sync(self) -> int:
+        """Get the stored host_id from local database synchronously."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(
+                        HostApproval.approval_status == "approved",
+                        HostApproval.host_id.isnot(None),
+                    )
+                    .first()
+                )
+
+                if approval and approval.has_host_id:
+                    return approval.host_id
+
+                return None
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error retrieving stored host_id synchronously: %s"), e)
+            return None
+
+    async def clear_stored_host_id(self) -> None:
+        """Clear the stored host_id from local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                # Find and remove all host approval records
+                approvals = session.query(HostApproval).all()
+                for approval in approvals:
+                    session.delete(approval)
+
+                session.commit()
+                self.logger.debug(_("Host approval records cleared from database"))
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error clearing host approval records: %s"), e)
+            raise
+
     async def run(self):
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
@@ -677,6 +1177,20 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     await asyncio.sleep(5)
                     continue
 
+                # Check if we need to re-register due to host_not_registered error
+                if self.needs_registration:
+                    self.logger.info(
+                        "Re-registration required, attempting to register..."
+                    )
+                    if not await self.registration.register_with_retry():
+                        self.logger.error(
+                            "Failed to re-register with server. Will retry on next connection attempt."
+                        )
+                        await asyncio.sleep(10)  # Short wait before trying again
+                        continue
+                    self.needs_registration = False
+                    self.logger.info("Re-registration successful")
+
                 # Get authentication token
                 auth_token = await self.get_auth_token()
                 self.logger.info("Got authentication token for WebSocket connection")
@@ -721,26 +1235,35 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     )
                     self.logger.info(_("Connected to server successfully"))
 
+                    # Notify message handler that connection is established
+                    await self.message_handler.on_connection_established()
+
                     # Send OS version data immediately after connection
                     await self.send_initial_data_updates()
 
-                    # Run sender, receiver, and update checker concurrently with proper error handling
+                    # Run sender, receiver, update checker, and data collector concurrently with proper error handling
                     try:
                         sender_task = asyncio.create_task(self.message_sender())
                         receiver_task = asyncio.create_task(self.message_receiver())
                         update_checker_task = asyncio.create_task(self.update_checker())
+                        data_collector_task = asyncio.create_task(self.data_collector())
 
                         # Wait for either sender or receiver to complete (connection tasks only)
-                        # Update checker runs independently and doesn't trigger disconnection
+                        # Update checker and data collector run independently and don't trigger disconnection
                         done, pending = await asyncio.wait(
                             [sender_task, receiver_task],
                             return_when=asyncio.FIRST_COMPLETED,
                         )
 
-                        # Cancel the update checker task when connection fails
+                        # Cancel the update checker and data collector tasks when connection fails
                         update_checker_task.cancel()
+                        data_collector_task.cancel()
                         try:
                             await update_checker_task
+                        except asyncio.CancelledError:
+                            pass
+                        try:
+                            await data_collector_task
                         except asyncio.CancelledError:
                             pass
 
@@ -773,6 +1296,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.websocket = None
             self.running = False
             self.connection_failures += 1
+
+            # Notify message handler that connection is lost
+            try:
+                await self.message_handler.on_connection_lost()
+            except Exception as e:
+                self.logger.error(
+                    "Error notifying message handler of connection loss: %s", e
+                )
 
             self.logger.info(
                 "Connection attempt %d failed, current failure count: %d",

@@ -26,6 +26,7 @@ disable=
     too-many-branches,
     too-many-statements,
     too-many-instance-attributes,
+    too-many-lines,
     line-too-long,
     import-error,
     no-member,
