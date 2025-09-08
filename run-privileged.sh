@@ -276,8 +276,8 @@ main() {
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
-            # OpenBSD doas doesn't have -E flag, so we pass environment explicitly
-            nohup doas env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
+            # OpenBSD doas - don't use nohup, use doas with background operator
+            doas env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
             ;;
         *)
             # sudo with -E flag preserves environment
