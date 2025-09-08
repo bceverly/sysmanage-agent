@@ -276,24 +276,14 @@ main() {
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
-            # OpenBSD doas - create a wrapper script to handle backgrounding properly
-            cat > /tmp/sysmanage_agent_start.sh << EOF
-#!/bin/sh
-cd "$AGENT_DIR"
-export PATH="$current_path"
-export PYTHONPATH="$AGENT_DIR" 
-exec "$python_path" main.py "$@" > logs/agent.log 2>&1 &
-echo \$! > logs/agent.pid
-EOF
-            chmod +x /tmp/sysmanage_agent_start.sh
-            doas /tmp/sysmanage_agent_start.sh
+            # OpenBSD doas - use sh -c to execute the command string directly
+            doas sh -c "cd '$AGENT_DIR' && PATH='$current_path' PYTHONPATH='$AGENT_DIR' '$python_path' main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
             sleep 1
             if [ -f logs/agent.pid ]; then
                 AGENT_PID=$(cat logs/agent.pid)
             else
                 AGENT_PID=""
             fi
-            rm -f /tmp/sysmanage_agent_start.sh
             ;;
         *)
             # sudo with -E flag preserves environment
