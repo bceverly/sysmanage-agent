@@ -328,9 +328,9 @@ main() {
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
-            # OpenBSD doas - use sh -c to execute the command string directly
+            # OpenBSD doas - activate virtual environment and run
             echo "🔑 Requesting elevated privileges with doas..."
-            $priv_cmd sh -c "cd '$AGENT_DIR' && PATH='$current_path' PYTHONPATH='$AGENT_DIR' '$python_path' main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
+            $priv_cmd sh -c "cd '$AGENT_DIR' && . .venv/bin/activate && python main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
             sleep 1
             if [ -f logs/agent.pid ]; then
                 AGENT_PID=$(cat logs/agent.pid)
