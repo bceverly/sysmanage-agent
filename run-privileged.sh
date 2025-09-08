@@ -276,19 +276,36 @@ main() {
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
-            # OpenBSD doas - don't use nohup, use doas with background operator
-            doas env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
+            # OpenBSD doas - create a wrapper script to handle backgrounding properly
+            cat > /tmp/sysmanage_agent_start.sh << EOF
+#!/bin/sh
+cd "$AGENT_DIR"
+export PATH="$current_path"
+export PYTHONPATH="$AGENT_DIR" 
+exec "$python_path" main.py "$@" > logs/agent.log 2>&1 &
+echo \$! > logs/agent.pid
+EOF
+            chmod +x /tmp/sysmanage_agent_start.sh
+            doas /tmp/sysmanage_agent_start.sh
+            sleep 1
+            if [ -f logs/agent.pid ]; then
+                AGENT_PID=$(cat logs/agent.pid)
+            else
+                AGENT_PID=""
+            fi
+            rm -f /tmp/sysmanage_agent_start.sh
             ;;
         *)
             # sudo with -E flag preserves environment
             nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
+            AGENT_PID=$!
             ;;
     esac
     
-    AGENT_PID=$!
-    
-    # Save PID
-    echo $AGENT_PID > logs/agent.pid
+    # Save PID (only for non-doas cases, doas case already saves it)
+    if [ "$priv_cmd" != "doas" ]; then
+        echo $AGENT_PID > logs/agent.pid
+    fi
     
     # Give it a moment to start
     sleep 2
