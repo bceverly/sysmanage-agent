@@ -94,6 +94,83 @@ get_priv_cmd() {
     esac
 }
 
+# Function to check for running agent processes
+check_existing_processes() {
+    local found_processes=false
+    
+    # Check for agent processes by pattern (cross-platform approach)
+    local agent_pids=""
+    if command -v pgrep >/dev/null 2>&1; then
+        # Use pgrep if available (Linux, modern macOS, some BSD)
+        agent_pids=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+    else
+        # Fallback: use ps and grep for older systems
+        agent_pids=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+    fi
+    
+    if [ -n "$agent_pids" ]; then
+        echo "⚠️  Found existing agent processes:"
+        echo "$agent_pids" | while read pid; do
+            if [ -n "$pid" ]; then
+                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
+                if [ -z "$cmd" ]; then
+                    # Fallback for systems where ps -p doesn't work the same way
+                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
+                fi
+                echo "   PID $pid: $cmd"
+            fi
+        done
+        found_processes=true
+    fi
+    
+    # Check PID file
+    if [ -f "logs/agent.pid" ]; then
+        local pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
+        if [ -n "$pid_file_pid" ] && kill -0 "$pid_file_pid" 2>/dev/null; then
+            echo "⚠️  Found agent process from PID file (PID: $pid_file_pid)"
+            found_processes=true
+        fi
+    fi
+    
+    if [ "$found_processes" = true ]; then
+        echo "Attempting to stop existing processes..."
+        return 0  # Found processes
+    else
+        echo "No existing SysManage Agent processes found"
+        return 1  # No processes found
+    fi
+}
+
+# Function to get configuration value from config file with priority
+get_config_value() {
+    local key=$1
+    local config_file=""
+    
+    # Use same priority as ConfigManager: /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml
+    if [ -f "/etc/sysmanage-agent.yaml" ]; then
+        config_file="/etc/sysmanage-agent.yaml"
+    elif [ -f "./sysmanage-agent.yaml" ]; then
+        config_file="./sysmanage-agent.yaml"
+    else
+        return 1
+    fi
+    
+    "$AGENT_DIR/.venv/bin/python" -c "
+import yaml
+import sys
+try:
+    with open('$config_file', 'r') as f:
+        config = yaml.safe_load(f)
+    keys = '$key'.split('.')
+    value = config
+    for k in keys:
+        value = value[k]
+    print(value)
+except:
+    sys.exit(1)
+" 2>/dev/null
+}
+
 # Main execution
 main() {
     local platform
@@ -108,6 +185,33 @@ main() {
     echo "🖥️  Platform: $platform ($(uname))"
     echo "📁 Working directory: $AGENT_DIR"
     
+    # Create logs directory if it doesn't exist
+    mkdir -p logs
+    
+    # Stop any existing agent
+    if check_existing_processes; then
+        sh ./stop.sh
+        sleep 2
+        
+        # Verify they were stopped
+        if check_existing_processes >/dev/null 2>&1; then
+            echo "❌ ERROR: Failed to stop existing agent processes. Please manually stop them before continuing."
+            echo ""
+            echo "To manually check for agent processes:"
+            echo "  ps -ef | grep 'python3.*main.py'"
+            echo ""
+            echo "To manually kill all agent processes:"
+            if command -v pkill >/dev/null 2>&1; then
+                echo "  pkill -f 'python3.*main.py'"
+            else
+                echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+            fi
+            exit 1
+        else
+            echo "✅ Successfully stopped existing processes"
+        fi
+    fi
+    
     check_venv
     check_sudo "$platform"
     
@@ -118,23 +222,104 @@ main() {
     # Preserve current PATH and add venv binaries
     current_path="$venv_path:$PATH"
     
+    # Get system information for startup message
+    HOSTNAME=$($python_path -c "import socket; print(socket.getfqdn())" 2>/dev/null || echo "unknown")
+    PLATFORM=$($python_path -c "import platform; print(platform.system())" 2>/dev/null || echo "unknown")
+    
+    # Determine which config file to use and get server configuration
+    CONFIG_FILE=""
+    if [ -f "/etc/sysmanage-agent.yaml" ]; then
+        CONFIG_FILE="/etc/sysmanage-agent.yaml"
+    elif [ -f "./sysmanage-agent.yaml" ]; then
+        CONFIG_FILE="./sysmanage-agent.yaml"
+    fi
+
+    if [ -n "$CONFIG_FILE" ]; then
+        echo "Using configuration file: $CONFIG_FILE"
+        SERVER_HOST=$(get_config_value "server.hostname")
+        if [ $? -ne 0 ] || [ -z "$SERVER_HOST" ]; then
+            SERVER_HOST="unknown"
+        fi
+        
+        SERVER_PORT=$(get_config_value "server.port")
+        if [ $? -ne 0 ] || [ -z "$SERVER_PORT" ]; then
+            SERVER_PORT="unknown"
+        fi
+        
+        USE_HTTPS_BOOL=$(get_config_value "server.use_https")
+        if [ $? -ne 0 ] || [ -z "$USE_HTTPS_BOOL" ]; then
+            USE_HTTPS="unknown"
+        elif [ "$USE_HTTPS_BOOL" = "True" ] || [ "$USE_HTTPS_BOOL" = "true" ]; then
+            USE_HTTPS="https"
+        else
+            USE_HTTPS="http"
+        fi
+    else
+        echo "⚠️  WARNING: Configuration file not found! Expected /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
+        SERVER_HOST="unknown"
+        SERVER_PORT="unknown"
+        USE_HTTPS="unknown"
+    fi
+    
     echo "🐍 Python: $python_path"
     echo "🔧 Privilege escalation: $priv_cmd"
+    echo ""
+    echo "Agent Details:"
+    echo "  🖥️  Hostname: $HOSTNAME"
+    echo "  🔧 Platform: $PLATFORM"
+    echo "  📁 Directory: $AGENT_DIR"
+    echo "  🌐 Server: $USE_HTTPS://$SERVER_HOST:$SERVER_PORT"
     echo ""
     echo "▶️  Starting SysManage Agent with elevated privileges..."
     echo ""
     
-    # Execute with proper environment
+    # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
             # OpenBSD doas doesn't have -E flag, so we pass environment explicitly
-            doas env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@"
+            nohup doas env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
             ;;
         *)
             # sudo with -E flag preserves environment
-            $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@"
+            nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
             ;;
     esac
+    
+    AGENT_PID=$!
+    
+    # Save PID
+    echo $AGENT_PID > logs/agent.pid
+    
+    # Give it a moment to start
+    sleep 2
+    
+    # Check if the process is still running
+    if kill -0 "$AGENT_PID" 2>/dev/null; then
+        echo ""
+        echo "✅ SysManage Agent is successfully running with elevated privileges!"
+        echo ""
+        echo "Agent Information:"
+        echo "  🆔 Process ID: $AGENT_PID"
+        echo "  🖥️  Hostname: $HOSTNAME" 
+        echo "  🔗 Server: $USE_HTTPS://$SERVER_HOST:$SERVER_PORT"
+        echo "  🔐 Running with: $priv_cmd"
+        echo ""
+        echo "Logs:"
+        echo "  📄 Agent Log: tail -f logs/agent.log"
+        echo ""
+        echo "To stop the agent: ./stop.sh"
+        echo ""
+    else
+        echo ""
+        echo "❌ ERROR: SysManage Agent failed to start!"
+        echo ""
+        echo "Check the log file for details:"
+        echo "  tail logs/agent.log"
+        echo ""
+        # Clean up PID file
+        rm -f logs/agent.pid
+        exit 1
+    fi
 }
 
 # Help function
