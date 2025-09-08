@@ -171,6 +171,53 @@ except:
 " 2>/dev/null
 }
 
+# Check if script is being run with elevated privileges
+check_not_root() {
+    # Check if running as root (UID 0)
+    if [ "$(id -u)" -eq 0 ]; then
+        echo "❌ ERROR: This script should NOT be run with elevated privileges!"
+        echo ""
+        echo "🚫 Do not run this script with:"
+        echo "   - sudo ./run-privileged.sh"
+        echo "   - doas ./run-privileged.sh"
+        echo "   - As root user"
+        echo ""
+        echo "✅ Instead, run it as your regular user:"
+        echo "   ./run-privileged.sh"
+        echo ""
+        echo "The script will handle privilege escalation internally and"
+        echo "prompt you for your password when needed."
+        echo ""
+        exit 1
+    fi
+    
+    # Check if SUDO_USER environment variable is set (indicates running under sudo)
+    if [ -n "$SUDO_USER" ]; then
+        echo "❌ ERROR: This script should NOT be run with sudo!"
+        echo ""
+        echo "🚫 You ran: sudo ./run-privileged.sh"
+        echo "✅ Instead run: ./run-privileged.sh"
+        echo ""
+        echo "The script will handle privilege escalation internally and"
+        echo "prompt you for your password when needed."
+        echo ""
+        exit 1
+    fi
+    
+    # Check if running under doas (check for DOAS_USER on OpenBSD)
+    if [ -n "$DOAS_USER" ]; then
+        echo "❌ ERROR: This script should NOT be run with doas!"
+        echo ""
+        echo "🚫 You ran: doas ./run-privileged.sh"
+        echo "✅ Instead run: ./run-privileged.sh"
+        echo ""
+        echo "The script will handle privilege escalation internally and"
+        echo "prompt you for your password when needed."
+        echo ""
+        exit 1
+    fi
+}
+
 # Main execution
 main() {
     local platform
@@ -178,6 +225,9 @@ main() {
     local venv_path
     local python_path
     local current_path
+    
+    # Check that we're not running with elevated privileges
+    check_not_root
     
     platform=$(detect_platform)
     
@@ -270,14 +320,17 @@ main() {
     echo "  📁 Directory: $AGENT_DIR"
     echo "  🌐 Server: $USE_HTTPS://$SERVER_HOST:$SERVER_PORT"
     echo ""
-    echo "▶️  Starting SysManage Agent with elevated privileges..."
+    echo "🔐 Starting SysManage Agent with elevated privileges..."
+    echo "    This requires administrative access for package management operations."
+    echo "    You will be prompted for your password if needed."
     echo ""
     
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
             # OpenBSD doas - use sh -c to execute the command string directly
-            doas sh -c "cd '$AGENT_DIR' && PATH='$current_path' PYTHONPATH='$AGENT_DIR' '$python_path' main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
+            echo "🔑 Requesting elevated privileges with doas..."
+            $priv_cmd sh -c "cd '$AGENT_DIR' && PATH='$current_path' PYTHONPATH='$AGENT_DIR' '$python_path' main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
             sleep 1
             if [ -f logs/agent.pid ]; then
                 AGENT_PID=$(cat logs/agent.pid)
@@ -286,7 +339,8 @@ main() {
             fi
             ;;
         *)
-            # sudo with -E flag preserves environment
+            # sudo with -E flag preserves environment  
+            echo "🔑 Requesting elevated privileges with sudo..."
             nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
             AGENT_PID=$!
             ;;
@@ -339,7 +393,9 @@ USAGE:
 
 DESCRIPTION:
     Runs the SysManage Agent with elevated privileges required for package 
-    management operations. Works cross-platform on macOS, Linux, and OpenBSD.
+    management operations. Run as a regular user - the script will prompt
+    for your password when elevated privileges are needed.
+    Works cross-platform on macOS, Linux, and OpenBSD.
 
 PLATFORMS:
     macOS    - Uses sudo with Homebrew package management
@@ -347,7 +403,7 @@ PLATFORMS:
     OpenBSD  - Uses doas (preferred) or sudo with pkg_add
 
 EXAMPLES:
-    ./run-privileged.sh                    # Start agent normally
+    ./run-privileged.sh                    # Start agent (will prompt for password)
     ./run-privileged.sh --help             # Show agent help
     ./run-privileged.sh --config custom.yaml  # Use custom config
 
@@ -355,6 +411,10 @@ REQUIREMENTS:
     - Virtual environment (.venv) must be set up
     - sudo access (or doas on OpenBSD) for package management
     - Network connectivity to SysManage server
+
+NOTE:
+    Run this script as your regular user account. Do NOT run with doas/sudo
+    directly - the script will handle privilege escalation internally.
 
 EOF
 }
