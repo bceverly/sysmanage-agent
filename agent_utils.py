@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 import aiohttp
 
 from i18n import _
+from database.models import Priority
 
 
 class UpdateChecker:
@@ -176,8 +177,58 @@ class MessageProcessor:
             return await self.agent.check_updates()
         elif command_type == "apply_updates":
             return await self.agent.apply_updates(parameters)
+        elif command_type == "execute_script":
+            result = await self.agent.execute_script(parameters)
+            # Send script execution result as a separate message for better tracking
+            await self._send_script_execution_result(parameters, result)
+            return result
         else:
             return {
                 "success": False,
                 "error": _("Unknown command type: %s") % command_type,
             }
+
+    async def _send_script_execution_result(
+        self, parameters: Dict[str, Any], result: Dict[str, Any]
+    ):
+        """
+        Send script execution result as a dedicated high-priority message.
+
+        This ensures script results are properly tracked and queued separately
+        from regular command results, improving reliability.
+        """
+        try:
+            import socket
+
+            # Extract execution details
+            execution_id = parameters.get("execution_id")
+            script_name = parameters.get("script_name", "Unknown")
+
+            # Build script execution result message
+            result_message = {
+                "message_type": "script_execution_result",
+                "hostname": socket.gethostname(),
+                "execution_id": execution_id,
+                "script_name": script_name,
+                "success": result.get("success", False),
+                "exit_code": result.get("exit_code"),
+                "stdout": result.get("stdout", ""),
+                "stderr": result.get("stderr", ""),
+                "execution_time": result.get("execution_time"),
+                "shell_used": result.get("shell_used"),
+                "error": result.get("error"),
+                "timeout": result.get("timeout", False),
+                "timestamp": parameters.get("timestamp"),  # Include original timestamp
+            }
+
+            # Queue the script execution result message with high priority
+            await self.agent.message_handler.queue_outbound_message(
+                result_message, priority=Priority.HIGH
+            )
+
+            self.logger.info(
+                _("Queued script execution result for execution_id: %s"), execution_id
+            )
+
+        except Exception as e:
+            self.logger.error(_("Failed to queue script execution result: %s"), e)

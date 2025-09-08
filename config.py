@@ -181,3 +181,49 @@ class ConfigManager:
     def get_update_check_interval(self) -> int:
         """Get update check interval in seconds."""
         return self.get("client.update_check_interval", 3600)  # Default 1 hour
+
+    def get_script_execution_config(self) -> Dict[str, Any]:
+        """Get script execution configuration section."""
+        return self.get("script_execution", {})
+
+    def is_script_execution_enabled(self) -> bool:
+        """Check if script execution is enabled."""
+        return self.get("script_execution.enabled", False)
+
+    def get_script_execution_timeout(self) -> int:
+        """Get script execution timeout in seconds."""
+        return self.get("script_execution.timeout", 300)
+
+    def get_max_concurrent_scripts(self) -> int:
+        """Get maximum number of concurrent script executions."""
+        return self.get("script_execution.max_concurrent", 3)
+
+    def get_allowed_shells(self) -> list:
+        """Get list of allowed shells for script execution."""
+        return self.get("script_execution.allowed_shells", ["bash", "sh"])
+
+    def get_max_script_timeout(self) -> int:
+        """Get maximum allowed script timeout in seconds."""
+        return self.get("script_execution.max_timeout", 3600)
+
+    def is_user_switching_allowed(self) -> bool:
+        """Check if script execution as different users is allowed."""
+        return self.get(
+            "script_execution.user_restrictions.allow_user_switching", False
+        )
+
+    def get_allowed_users(self) -> list:
+        """Get list of users that scripts are allowed to run as."""
+        return self.get("script_execution.user_restrictions.allowed_users", [])
+
+    def get_restricted_paths(self) -> list:
+        """Get list of restricted file paths for script execution."""
+        return self.get("script_execution.security.restricted_paths", [])
+
+    def is_audit_logging_enabled(self) -> bool:
+        """Check if audit logging for script execution is enabled."""
+        return self.get("script_execution.security.audit_logging", True)
+
+    def is_script_approval_required(self) -> bool:
+        """Check if script execution requires manual approval."""
+        return self.get("script_execution.security.require_approval", False)

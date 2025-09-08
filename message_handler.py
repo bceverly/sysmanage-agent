@@ -63,6 +63,8 @@ class QueuedMessageHandler:
             priority = Priority.HIGH
         elif message_type == "command_result":
             priority = Priority.HIGH
+        elif message_type == "script_execution_result":
+            priority = Priority.HIGH  # Script results are time-sensitive
         elif message_type == "system_info":
             priority = Priority.NORMAL
         elif message_type == "error":

@@ -26,10 +26,12 @@ from security.certificate_store import CertificateStore
 from agent_utils import UpdateChecker, AuthenticationHelper, MessageProcessor
 from update_operations import UpdateOperations
 from system_operations import SystemOperations
+from script_operations import ScriptOperations
 from message_handler import QueuedMessageHandler
 from database.init import initialize_database
 from database.base import get_database_manager
 from database.models import HostApproval
+from logging_formatter import UTCTimestampFormatter
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods
@@ -40,6 +42,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self.config_file = config_file
         # Setup basic logging first
         logging.basicConfig(level=logging.INFO)
+
+        # Apply UTC timestamp formatter to initial logging
+        utc_formatter = UTCTimestampFormatter("%(levelname)s: %(name)s: %(message)s")
+        for handler in logging.getLogger().handlers:
+            handler.setFormatter(utc_formatter)
+
         self.logger = logging.getLogger(__name__)
         if not self.try_load_config(config_file):
             self.logger.info(_("No configuration found, attempting auto-discovery..."))
@@ -89,6 +97,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Initialize operation modules
         self.update_ops = UpdateOperations(self)
         self.system_ops = SystemOperations(self)
+        self.script_ops = ScriptOperations(self)
 
         # Initialize message handler with persistent queues
         self.message_handler = QueuedMessageHandler(self)
@@ -111,6 +120,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
+
+        # Apply UTC timestamp formatter to all handlers
+        utc_formatter = UTCTimestampFormatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        for handler in logging.getLogger().handlers:
+            handler.setFormatter(utc_formatter)
+
         logger = logging.getLogger(__name__)
 
         logger.info("Starting auto-discovery process...")
@@ -166,6 +183,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             console_handler.setLevel(getattr(logging, log_level.upper()))
             console_handler.setFormatter(logging.Formatter(log_format))
             logging.getLogger().addHandler(console_handler)
+
+        # Apply UTC timestamp formatter to all handlers
+        utc_formatter = UTCTimestampFormatter(log_format)
+        for handler in logging.getLogger().handlers:
+            handler.setFormatter(utc_formatter)
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
@@ -316,6 +338,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def reboot_system(self) -> Dict[str, Any]:
         """Reboot the system."""
         return await self.system_ops.reboot_system()
+
+    async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a script with proper security controls."""
+        return await self.script_ops.execute_script(parameters)
 
     async def send_initial_data_updates(self):
         """Send initial data updates after WebSocket connection."""
@@ -642,11 +668,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     self.logger.error("Error processing message: %s", e)
 
         except websockets.ConnectionClosed:
-            self.logger.info("Connection to server closed")
+            self.logger.info(
+                "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
+            )
             self.connected = False
             self.websocket = None
         except Exception as e:
-            self.logger.error("Message receiver error: %s", e)
+            self.logger.error("WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", e)
             self.connected = False
             self.websocket = None
 
@@ -1285,11 +1313,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         raise
 
             except websockets.ConnectionClosed:
-                self.logger.warning("WebSocket connection closed by server")
+                self.logger.warning(
+                    "WEBSOCKET_COMMUNICATION_ERROR: WebSocket connection closed by server"
+                )
             except websockets.InvalidStatusCode as e:
-                self.logger.error("WebSocket connection rejected: %s", e)
+                self.logger.error(
+                    "WEBSOCKET_PROTOCOL_ERROR: WebSocket connection rejected: %s", e
+                )
             except Exception as e:
-                self.logger.error("Connection error: %s", e)
+                self.logger.error("WEBSOCKET_UNKNOWN_ERROR: Connection error: %s", e)
 
             # Clean up connection state
             self.connected = False
