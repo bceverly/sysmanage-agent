@@ -94,7 +94,7 @@ class UpdateDetector:
                 "security_updates": len(security_updates),
                 "system_updates": len(system_updates),
                 "application_updates": len(application_updates),
-                "requires_reboot": self._check_reboot_required(),
+                "requires_reboot": self.check_reboot_required(),
             }
 
         except Exception as e:
@@ -854,7 +854,7 @@ class UpdateDetector:
         ]
         return any(package_name.startswith(prefix) for prefix in system_prefixes)
 
-    def _check_reboot_required(self) -> bool:
+    def check_reboot_required(self) -> bool:
         """Check if a system reboot is required for updates."""
         if self.platform == "linux":
             # Check for reboot-required file (Ubuntu/Debian)
@@ -979,7 +979,7 @@ class UpdateDetector:
             # Add more package manager implementations as needed
 
         # Check if reboot is required after updates
-        results["requires_reboot"] = self._check_reboot_required()
+        results["requires_reboot"] = self.check_reboot_required()
         results["success"] = True
 
         return results

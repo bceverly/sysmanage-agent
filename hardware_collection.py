@@ -3,9 +3,13 @@ Hardware collection module for SysManage Agent.
 Handles platform-specific hardware information gathering.
 """
 
+import json
+import os
 import platform
 import logging
-from typing import Any, Dict, List
+import re
+import subprocess
+from typing import Any, Dict, List, Optional, cast
 from datetime import datetime, timezone
 
 from i18n import _
@@ -19,7 +23,6 @@ class HardwareCollector:
 
     def get_hardware_info(self) -> Dict[str, Any]:
         """Get comprehensive hardware information formatted for database storage."""
-        import json
 
         system = platform.system()
 
@@ -134,8 +137,6 @@ class HardwareCollector:
     # macOS hardware collection methods
     def _get_macos_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on macOS using system_profiler."""
-        import subprocess
-        import json
 
         cpu_info = {}
         try:
@@ -247,8 +248,6 @@ class HardwareCollector:
 
     def _get_macos_memory_info(self) -> Dict[str, Any]:
         """Get memory information on macOS using system_profiler."""
-        import subprocess
-        import json
 
         memory_info = {}
         try:
@@ -279,8 +278,6 @@ class HardwareCollector:
 
     def _get_macos_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on macOS using system_profiler and df."""
-        import subprocess
-        import json
 
         storage_devices = []
         try:
@@ -454,8 +451,6 @@ class HardwareCollector:
 
     def _get_macos_apfs_containers(self) -> List[Dict[str, Any]]:
         """Get physical APFS containers using diskutil list."""
-        import subprocess
-        import re
 
         containers = []
         try:
@@ -585,9 +580,6 @@ class HardwareCollector:
 
     def _get_macos_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on macOS using system_profiler and ifconfig."""
-        import subprocess
-        import json
-        import re
 
         network_interfaces = []
         try:
@@ -720,7 +712,6 @@ class HardwareCollector:
         cpu_info = {}
         try:
             # First try lscpu for structured info
-            import subprocess
 
             result = subprocess.run(
                 ["lscpu"], capture_output=True, text=True, timeout=30, check=False
@@ -744,7 +735,7 @@ class HardwareCollector:
                             cpu_info["cores"] = cores_per_socket * sockets
                         elif key == "Socket(s)":
                             cpu_info["sockets"] = int(value)
-                        elif key == "CPU MHz" or key == "CPU max MHz":
+                        elif key in ("CPU MHz", "CPU max MHz"):
                             # Use max frequency if current frequency not already set
                             if "frequency_mhz" not in cpu_info or key == "CPU max MHz":
                                 try:
@@ -797,7 +788,6 @@ class HardwareCollector:
                 except (FileNotFoundError, ValueError, IOError):
                     # Try to extract from model name as last resort
                     if "model" in cpu_info:
-                        import re
 
                         model = cpu_info["model"]
                         # Look for patterns like "@ 2.60GHz" or "2600MHz" in CPU model
@@ -836,8 +826,6 @@ class HardwareCollector:
 
     def _get_linux_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on Linux using lsblk and df."""
-        import subprocess
-        import json
 
         storage_devices = []
         try:
@@ -956,7 +944,6 @@ class HardwareCollector:
 
     def _get_linux_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Linux using /sys/class/net."""
-        import os
 
         network_interfaces = []
         try:
@@ -999,7 +986,6 @@ class HardwareCollector:
     # Windows hardware collection methods
     def _get_windows_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on Windows using wmic."""
-        import subprocess
 
         cpu_info = {}
         try:
@@ -1038,7 +1024,6 @@ class HardwareCollector:
 
     def _get_windows_memory_info(self) -> Dict[str, Any]:
         """Get memory information on Windows using wmic."""
-        import subprocess
 
         memory_info = {}
         try:
@@ -1065,7 +1050,6 @@ class HardwareCollector:
 
     def _get_windows_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on Windows using wmic."""
-        import subprocess
 
         storage_devices = []
         try:
@@ -1174,7 +1158,6 @@ class HardwareCollector:
 
     def _get_windows_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Windows using wmic."""
-        import subprocess
 
         network_interfaces = []
         try:
@@ -1219,7 +1202,6 @@ class HardwareCollector:
     # BSD hardware collection methods
     def _get_bsd_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on OpenBSD/FreeBSD using sysctl."""
-        import subprocess
 
         cpu_info = {}
         try:
@@ -1288,7 +1270,6 @@ class HardwareCollector:
 
             # If no frequency found from sysctl, try to extract from CPU model
             if "frequency_mhz" not in cpu_info and "model" in cpu_info:
-                import re
 
                 model = cpu_info["model"]
                 # Look for patterns like "@ 1.90GHz" or "1900MHz" in CPU model
@@ -1308,7 +1289,6 @@ class HardwareCollector:
 
     def _get_bsd_memory_info(self) -> Dict[str, Any]:
         """Get memory information on OpenBSD/FreeBSD using sysctl."""
-        import subprocess
 
         memory_info = {}
         try:
@@ -1332,7 +1312,6 @@ class HardwareCollector:
 
     def _get_bsd_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on OpenBSD/FreeBSD using df and mount."""
-        import subprocess
 
         storage_devices = []
         try:
@@ -1457,7 +1436,6 @@ class HardwareCollector:
 
     def _get_bsd_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""
-        import subprocess
 
         network_interfaces = []
         try:
@@ -1469,7 +1447,7 @@ class HardwareCollector:
                 check=False,
             )
             if result.returncode == 0:
-                current_interface: Dict[str, Any] = None
+                current_interface: Optional[Dict[str, Any]] = None
                 for line in result.stdout.split("\n"):
                     line = line.strip()
                     if not line:
@@ -1511,14 +1489,20 @@ class HardwareCollector:
                         if "ether " in line:
                             # MAC address line
                             parts = line.split()
-                            if len(parts) >= 2 and current_interface:
-                                current_interface["mac_address"] = parts[1]
-                        elif "media:" in line and current_interface:
+                            if len(parts) >= 2 and current_interface is not None:
+                                current_interface["mac_address"] = parts[
+                                    1
+                                ]  # pylint: disable=unsupported-assignment-operation
+                        elif "media:" in line and current_interface is not None:
                             # Media type information
                             if "Ethernet" in line:
-                                current_interface["type"] = "ethernet"
+                                current_interface["type"] = (
+                                    "ethernet"  # pylint: disable=unsupported-assignment-operation
+                                )
                             elif "IEEE802.11" in line or "wireless" in line.lower():
-                                current_interface["type"] = "wireless"
+                                current_interface["type"] = (
+                                    "wireless"  # pylint: disable=unsupported-assignment-operation
+                                )
 
                 # Add the last interface
                 if current_interface:

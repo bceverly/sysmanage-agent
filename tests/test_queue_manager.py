@@ -10,6 +10,7 @@ from datetime import datetime, timezone, timedelta
 
 import pytest
 
+from database.base import DatabaseManager
 from database.models import MessageQueue, QueueStatus, QueueDirection, Priority
 from database.queue_manager import MessageQueueManager
 
@@ -30,7 +31,12 @@ class TestMessageQueueManager:
     @pytest.fixture
     def queue_manager(self, temp_db_path):
         """Create a MessageQueueManager with a temporary database."""
-        manager = MessageQueueManager(temp_db_path)
+        # Create a direct DatabaseManager instance with the temp path to bypass the global singleton
+        db_manager = DatabaseManager(temp_db_path)
+
+        # Create the manager and directly assign the database manager
+        manager = MessageQueueManager()
+        manager.db_manager = db_manager
 
         # Create tables in the temporary database
         manager.db_manager.create_tables()

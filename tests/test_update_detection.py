@@ -200,7 +200,7 @@ class TestUpdateDetector:
 
         with patch("platform.system", return_value="Linux"):
             detector = UpdateDetector()
-            assert detector._check_reboot_required() is True
+            assert detector.check_reboot_required() is True
 
     def test_check_reboot_required_no_file(self):
         """Test reboot required check when no reboot file exists."""
@@ -212,7 +212,7 @@ class TestUpdateDetector:
             detector.available_updates = [
                 {"package_name": "linux-kernel", "package_manager": "apt"}
             ]
-            assert detector._check_reboot_required() is True
+            assert detector.check_reboot_required() is True
 
     def test_check_reboot_required_no_updates(self):
         """Test reboot required check with no updates."""
@@ -220,7 +220,7 @@ class TestUpdateDetector:
             "os.path.exists", return_value=False
         ):
             detector = UpdateDetector()
-            assert detector._check_reboot_required() is False
+            assert detector.check_reboot_required() is False
 
     def test_apply_updates_no_packages(self):
         """Test applying updates with no packages specified."""

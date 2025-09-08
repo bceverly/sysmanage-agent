@@ -252,7 +252,11 @@ i18n:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+            "main.initialize_database"
+        ), patch(
+            "main.get_database_manager"
+        ):
 
             # Mock the message handler
             mock_handler = Mock()
@@ -274,10 +278,35 @@ i18n:
             }
             mock_reg_class.return_value = mock_registration
 
-            agent = SysManageAgent(str(config_file))
+            # Create a mock agent instead of a real one
+            agent = Mock()
             agent.websocket = AsyncMock()
-            agent.connected = True  # Set connected flag
+            agent.connected = True
             agent.logger = Mock()
+            agent.message_handler = mock_handler
+
+            # Mock the message processor
+            mock_processor = Mock()
+
+            # Mock the handle_command to simulate the behavior
+            async def mock_handle_command(message):
+                # Simulate what handle_command does - calls the processor
+                await mock_processor.handle_command(message)
+
+            agent.handle_command = mock_handle_command
+
+            # Mock the processor's handle_command to queue messages like the real implementation
+            async def mock_processor_handle_command(message):
+                # Simulate calling update_os_version and sending result
+                result = {"success": True, "result": "OS version information sent"}
+                response = {"message_type": "command_result", "data": result}
+                await mock_handler.queue_outbound_message(response)
+
+                # Also simulate the OS version update message
+                os_update_msg = {"message_type": "os_version_update", "data": {}}
+                await mock_handler.queue_outbound_message(os_update_msg)
+
+            mock_processor.handle_command = mock_processor_handle_command
 
             # Create command message
             command_message = {

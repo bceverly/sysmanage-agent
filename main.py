@@ -28,6 +28,7 @@ from update_operations import UpdateOperations
 from system_operations import SystemOperations
 from script_operations import ScriptOperations
 from message_handler import QueuedMessageHandler
+from update_detection import UpdateDetector
 from database.init import initialize_database
 from database.base import get_database_manager
 from database.models import HostApproval
@@ -968,6 +969,54 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply updates for specified packages."""
         return await self.update_ops.apply_updates(parameters)
+
+    async def check_reboot_status(self) -> Dict[str, Any]:
+        """Check if the system requires a reboot."""
+        try:
+            detector = UpdateDetector()
+            requires_reboot = detector.check_reboot_required()
+
+            result = {
+                "success": True,
+                "reboot_required": requires_reboot,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+            # Send reboot status update to server
+            await self.send_reboot_status_update(requires_reboot)
+
+            return result
+
+        except Exception as e:
+            self.logger.error(_("Failed to check reboot status: %s"), e)
+            return {
+                "success": False,
+                "error": str(e),
+                "reboot_required": False,
+            }
+
+    async def send_reboot_status_update(self, requires_reboot: bool) -> None:
+        """Send reboot status update to server."""
+        try:
+            self.logger.info(_("Sending reboot status update: %s"), requires_reboot)
+
+            # Get hostname for server processing
+            system_info = self.registration.get_system_info()
+            hostname = system_info.get("hostname", "unknown")
+
+            reboot_data = {
+                "hostname": hostname,
+                "reboot_required": requires_reboot,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+            reboot_message = self.create_message("reboot_status_update", reboot_data)
+            await self.send_message(reboot_message)
+
+            self.logger.debug("Reboot status message sent successfully")
+
+        except Exception as e:
+            self.logger.error(_("Failed to send reboot status update: %s"), e)
 
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""

@@ -6,7 +6,7 @@ import asyncio
 import logging
 import socket
 import ssl
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 import aiohttp
 
@@ -115,11 +115,11 @@ class AuthenticationHelper:
                 if response.status == 200:
                     data = await response.json()
                     return data.get("connection_token", "")
-                else:
-                    raise Exception(
-                        _("Auth failed with status %s: %s")
-                        % (response.status, await response.text())
-                    )
+
+                raise ConnectionError(
+                    _("Auth failed with status %s: %s")
+                    % (response.status, await response.text())
+                )
 
 
 class MessageProcessor:
@@ -157,36 +157,38 @@ class MessageProcessor:
         """Dispatch command to appropriate handler."""
         if command_type == "execute_shell":
             return await self.agent.execute_shell_command(parameters)
-        elif command_type == "get_system_info":
+        if command_type == "get_system_info":
             return await self.agent.get_detailed_system_info()
-        elif command_type == "install_package":
+        if command_type == "install_package":
             return await self.agent.install_package(parameters)
-        elif command_type == "update_system":
+        if command_type == "update_system":
             return await self.agent.update_system()
-        elif command_type == "restart_service":
+        if command_type == "restart_service":
             return await self.agent.restart_service(parameters)
-        elif command_type == "reboot_system":
+        if command_type == "reboot_system":
             return await self.agent.reboot_system()
-        elif command_type == "update_os_version":
+        if command_type == "update_os_version":
             return await self.agent.update_os_version()
-        elif command_type == "update_hardware":
+        if command_type == "update_hardware":
             return await self.agent.update_hardware()
-        elif command_type == "update_user_access":
+        if command_type == "update_user_access":
             return await self.agent.update_user_access()
-        elif command_type == "check_updates":
+        if command_type == "check_updates":
             return await self.agent.check_updates()
-        elif command_type == "apply_updates":
+        if command_type == "apply_updates":
             return await self.agent.apply_updates(parameters)
-        elif command_type == "execute_script":
+        if command_type == "execute_script":
             result = await self.agent.execute_script(parameters)
             # Send script execution result as a separate message for better tracking
             await self._send_script_execution_result(parameters, result)
             return result
-        else:
-            return {
-                "success": False,
-                "error": _("Unknown command type: %s") % command_type,
-            }
+        if command_type == "check_reboot_status":
+            return await self.agent.check_reboot_status()
+
+        return {
+            "success": False,
+            "error": _("Unknown command type: %s") % command_type,
+        }
 
     async def _send_script_execution_result(
         self, parameters: Dict[str, Any], result: Dict[str, Any]
@@ -198,8 +200,6 @@ class MessageProcessor:
         from regular command results, improving reliability.
         """
         try:
-            import socket
-
             # Extract execution details
             execution_id = parameters.get("execution_id")
             script_name = parameters.get("script_name", "Unknown")

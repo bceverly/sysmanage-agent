@@ -519,6 +519,217 @@ Options:
   --help                     Show help message
 ```
 
+## Privileged Execution
+
+### Overview
+
+The SysManage Agent requires elevated privileges for certain system management operations, particularly **package management** (installing, updating, and removing software packages). This section provides cross-platform solutions for running the agent with appropriate permissions.
+
+### Why Privileged Access is Required
+
+Package management operations require administrative privileges:
+- **Linux**: `apt`, `yum`, `dnf`, `zypper`, `pacman` require `sudo`
+- **macOS**: `brew` operations may require administrator access
+- **OpenBSD**: `pkg_add`, `pkg_delete` require `doas` or `root`
+- **Windows**: Package installers require administrator privileges
+
+### Cross-Platform Privileged Runner
+
+The included `run-privileged.sh` script provides a secure, cross-platform solution for running the agent with elevated privileges.
+
+#### Features
+- ✅ **Cross-platform**: Works on macOS (zsh), Linux (bash), and OpenBSD (ksh)
+- 🔐 **Security-focused**: Uses appropriate privilege escalation for each platform
+- 🛡️ **Environment preservation**: Maintains Python virtual environment paths
+- 🔍 **Auto-detection**: Automatically detects platform and available tools
+- ⚡ **Developer-friendly**: Easy to use during development and testing
+
+#### Usage
+
+```bash
+# Basic usage - start agent with privileges
+./run-privileged.sh
+
+# Pass arguments to the agent
+./run-privileged.sh --config custom.yaml
+./run-privileged.sh --debug
+
+# Show help for the runner script
+./run-privileged.sh --help runner
+```
+
+#### Platform-Specific Behavior
+
+| Platform | Privilege Tool | Command Used |
+|----------|---------------|--------------|
+| **macOS** | `sudo` | `sudo -E PATH="..." python main.py` |
+| **Linux** | `sudo` | `sudo -E PATH="..." python main.py` |  
+| **OpenBSD** | `doas` (preferred) | `doas env PATH="..." python main.py` |
+| **OpenBSD** | `sudo` (fallback) | `sudo -E PATH="..." python main.py` |
+
+#### Installation
+
+The script is included in the repository. Simply make it executable:
+
+```bash
+chmod +x run-privileged.sh
+```
+
+### Alternative Approaches
+
+#### Option 1: Manual sudo execution (Development)
+
+```bash
+# Linux/macOS - Run with preserved environment and PATH
+sudo -E PATH=".venv/bin:$PATH" .venv/bin/python main.py
+
+# Alternative approach
+sudo -E .venv/bin/python main.py --disable-migrations  # If database migrations cause issues
+```
+
+#### Option 2: Passwordless sudo configuration (Advanced)
+
+For development environments, configure passwordless sudo for package management:
+
+**Create `/etc/sudoers.d/sysmanage-agent`:**
+```bash
+# Allow user to run package management without password
+%sysmanage ALL=(ALL) NOPASSWD: /usr/bin/apt, /usr/bin/apt-get, /usr/bin/dnf, /usr/bin/yum, /usr/bin/zypper, /usr/bin/pacman
+%sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/brew  # macOS
+%sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg_add, /usr/sbin/pkg_delete  # OpenBSD
+```
+
+**Then run normally:**
+```bash
+python main.py
+```
+
+#### Option 3: Production systemd service (Linux)
+
+For production deployments, run as a systemd service with root privileges:
+
+**Create `/etc/systemd/system/sysmanage-agent.service`:**
+```ini
+[Unit]
+Description=SysManage Agent - System Management and Monitoring
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/sysmanage-agent
+ExecStart=/opt/sysmanage-agent/.venv/bin/python main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/opt/sysmanage-agent
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Security Considerations
+
+#### Development vs Production
+
+| Environment | Recommended Approach | Security Level |
+|-------------|---------------------|----------------|
+| **Development** | `run-privileged.sh` script | Medium - Temporary elevation |
+| **Testing** | Manual sudo execution | Medium - Session-based |
+| **Production** | SystemD service as root | High - Isolated service |
+
+#### Best Practices
+
+1. **Minimal Privileges**: Only run with elevated privileges when necessary
+2. **Audit Logging**: Monitor all privileged operations through system logs
+3. **Environment Isolation**: Use virtual environments to isolate dependencies
+4. **Regular Updates**: Keep the agent updated for security patches
+5. **Access Control**: Restrict who can execute privileged operations
+
+#### Privilege Escalation Tools
+
+- **Linux/macOS**: Uses `sudo` with environment preservation (`-E` flag)
+- **OpenBSD**: Prefers `doas` (OpenBSD's recommended tool) with fallback to `sudo`
+- **Windows**: Requires "Run as Administrator" (future implementation)
+
+### Troubleshooting Privileged Execution
+
+#### Common Issues
+
+**1. "alembic not found" error:**
+```bash
+# The script preserves PATH to include virtual environment
+# If this still occurs, check that .venv/bin exists:
+ls -la .venv/bin/alembic
+```
+
+**2. Password prompts:**
+```bash
+# Check if passwordless sudo is configured:
+sudo -n true && echo "Passwordless sudo works" || echo "Password required"
+```
+
+**3. Permission denied:**
+```bash
+# Ensure script is executable:
+chmod +x run-privileged.sh
+
+# Check sudo access:
+sudo -l
+```
+
+**4. Platform detection issues:**
+```bash
+# Manually check platform detection:
+uname  # Should show: Linux, Darwin, or OpenBSD
+```
+
+#### Debugging
+
+Enable verbose output by adding debug flags:
+
+```bash
+# Run with debug output
+./run-privileged.sh --debug
+
+# Check script execution with shell tracing
+sh -x ./run-privileged.sh
+```
+
+### Examples
+
+#### Package Update Scenario
+
+When the SysManage Server sends a package update command:
+
+1. **Without privileges** (fails):
+   ```bash
+   python main.py
+   # Package update fails: "apt requires sudo"
+   ```
+
+2. **With privileges** (succeeds):
+   ```bash
+   ./run-privileged.sh
+   # Package update succeeds: "alsa-ucm-conf updated successfully"
+   ```
+
+#### Cross-Platform Testing
+
+```bash
+# macOS with Homebrew
+./run-privileged.sh  # Uses: sudo -E ...
+
+# Ubuntu with APT  
+./run-privileged.sh  # Uses: sudo -E ...
+
+# OpenBSD with pkg_add
+./run-privileged.sh  # Uses: doas env ... (or sudo -E ...)
+```
+
 ## Monitoring and Troubleshooting
 
 ### Health Checks
