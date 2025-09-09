@@ -80,8 +80,11 @@ The agent uses the language specified in the configuration file for log messages
 # Update package manager
 sudo apt update
 
-# Install Python 3.9+
-sudo apt install python3.9 python3.9-venv python3.9-dev python3-pip
+# Install Python 3.9+ (use available version)
+sudo apt install python3 python3-venv python3-dev python3-pip
+
+# If python3.9 is available in your distribution, you can also try:
+# sudo apt install python3.9 python3.9-venv python3.9-dev python3-pip
 
 # Install build tools for cryptography packages
 sudo apt install build-essential libffi-dev libssl-dev pkg-config
@@ -93,8 +96,11 @@ source ~/.cargo/env
 
 #### Linux (CentOS/RHEL/Fedora)
 ```bash
-# Install Python 3.9+
-sudo dnf install python3.9 python3.9-devel python3-pip
+# Install Python 3.9+ (use available version)
+sudo dnf install python3 python3-devel python3-pip
+
+# If python3.9 is available in your distribution, you can also try:
+# sudo dnf install python3.9 python3.9-devel python3-pip
 
 # Install build tools
 sudo dnf groupinstall "Development Tools"
@@ -110,8 +116,11 @@ source ~/.cargo/env
 # Install Homebrew (if not already installed)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install Python 3.9+
-brew install python@3.9
+# Install Python 3.9+ (will install latest Python 3)
+brew install python3
+
+# Or install a specific version if needed:
+# brew install python@3.9
 
 # Install Rust (required for cryptography)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -141,8 +150,11 @@ npm install --global windows-build-tools
 # Update package manager
 sudo pkg update
 
-# Install Python 3.9+
-sudo pkg install python39 py39-pip
+# Install Python 3.9+ (use available version)
+sudo pkg install python3 py3-pip
+
+# Or install a specific version if available:
+# sudo pkg install python39 py39-pip
 
 # Install build tools and Rust
 sudo pkg install rust gcc cmake make pkg-config
@@ -157,8 +169,11 @@ source ~/.bashrc
 # Update package manager
 doas pkg_add -u
 
-# Install Python 3.9+
-doas pkg_add python-3.9 py3-pip
+# Install Python 3.9+ (use available version)
+doas pkg_add python-3 py3-pip
+
+# Or install a specific version if available:
+# doas pkg_add python-3.9 py3-pip
 
 # Install build tools and Rust (REQUIRED for cryptography packages)
 doas pkg_add rust gcc cmake gmake pkgconf
