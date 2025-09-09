@@ -89,8 +89,8 @@ sudo apt install python3.11 python3.11-venv python3.11-dev python3-pip
 # sudo apt update
 # sudo apt install python3.12 python3.12-venv python3.12-dev python3-pip
 
-# Install build tools for cryptography packages
-sudo apt install build-essential libffi-dev libssl-dev pkg-config
+# Install build tools for cryptography packages and SQLite
+sudo apt install build-essential libffi-dev libssl-dev pkg-config sqlite3
 
 # Install Rust (required for cryptography)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -145,9 +145,9 @@ sudo dnf install python3 python3-devel python3-pip
 # If python3.9 is available in your distribution, you can also try:
 # sudo dnf install python3.9 python3.9-devel python3-pip
 
-# Install build tools
+# Install build tools and SQLite
 sudo dnf groupinstall "Development Tools"
-sudo dnf install libffi-devel openssl-devel pkg-config
+sudo dnf install libffi-devel openssl-devel pkg-config sqlite
 
 # Install Rust (required for cryptography)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -165,6 +165,9 @@ brew install python3
 # Or install a specific version if needed:
 # brew install python@3.9
 
+# Install SQLite3 (for local database)
+brew install sqlite3
+
 # Install Rust (required for cryptography)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source ~/.cargo/env
@@ -177,6 +180,7 @@ xcode-select --install
 ```powershell
 # Install Python 3.9+ from https://python.org/downloads/
 # Make sure to check "Add Python to PATH" during installation
+# SQLite3 is included with Python installations on Windows
 
 # Install Rust from https://rustup.rs/
 # Download and run rustup-init.exe
@@ -199,6 +203,9 @@ sudo pkg install python3 py3-pip
 # Or install a specific version if available:
 # sudo pkg install python39 py39-pip
 
+# Install SQLite3 (for local database)
+sudo pkg install sqlite3
+
 # Install build tools and Rust
 sudo pkg install rust gcc cmake make pkg-config
 
@@ -217,6 +224,9 @@ doas pkg_add python-3 py3-pip
 
 # Or install a specific version if available:
 # doas pkg_add python-3.9 py3-pip
+
+# Install SQLite3 (for local database)
+doas pkg_add sqlite3
 
 # Install build tools and Rust (REQUIRED for cryptography packages)
 doas pkg_add rust gcc cmake gmake pkgconf
