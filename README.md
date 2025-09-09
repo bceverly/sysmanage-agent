@@ -68,7 +68,7 @@ The agent uses the language specified in the configuration file for log messages
 ## Prerequisites
 
 ### System Requirements
-- **Python**: 3.9 or higher
+- **Python**: 3.11 or 3.12 (Note: Python 3.13 is NOT yet supported due to package compatibility)
 - **OS**: Linux, Windows, macOS, FreeBSD, or OpenBSD
 - **Network**: Outbound HTTPS access to SysManage Server
 - **Privileges**: Administrative rights for system management tasks
@@ -80,14 +80,57 @@ The agent uses the language specified in the configuration file for log messages
 # Update package manager
 sudo apt update
 
-# Install Python 3.9+ (use available version)
-sudo apt install python3 python3-venv python3-dev python3-pip
+# Install Python (3.11 or 3.12 ONLY - not 3.13)
+# For Ubuntu 22.04 through 24.10:
+sudo apt install python3.11 python3.11-venv python3.11-dev python3-pip
 
-# If python3.9 is available in your distribution, you can also try:
-# sudo apt install python3.9 python3.9-venv python3.9-dev python3-pip
+# For Ubuntu with Python 3.12 (if available):
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt update
+# sudo apt install python3.12 python3.12-venv python3.12-dev python3-pip
 
 # Install build tools for cryptography packages
 sudo apt install build-essential libffi-dev libssl-dev pkg-config
+
+# Install Rust (required for cryptography)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+```
+
+#### Linux (Ubuntu 25.04 or newer) - Building Python 3.12 from Source
+
+Ubuntu 25.04+ only ships with Python 3.13, which is not yet compatible with many packages. You must build Python 3.12 from source:
+
+```bash
+# Install build dependencies
+sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev \
+    libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
+    libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev \
+    python3-openssl git pkg-config
+
+# Download and build Python 3.12
+cd /tmp
+wget https://www.python.org/ftp/python/3.12.7/Python-3.12.7.tgz
+tar -xf Python-3.12.7.tgz
+cd Python-3.12.7
+
+# Configure and build (this may take 10-15 minutes)
+./configure --enable-optimizations --with-ensurepip=install
+make -j$(nproc)
+sudo make altinstall
+
+# Verify installation
+python3.12 --version
+
+# Return to your project directory
+cd ~/dev/sysmanage-agent
+
+# Create virtual environment with Python 3.12
+python3.12 -m venv .venv
+source .venv/bin/activate
+
+# Upgrade pip to latest version
+pip install --upgrade pip
 
 # Install Rust (required for cryptography)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -299,6 +342,9 @@ python3 -m venv .venv
 source .venv/bin/activate  # Linux/macOS (On OpenBSD: . .venv/bin/activate)
 # OR
 .venv\Scripts\activate     # Windows
+
+# Upgrade pip to latest version
+pip install --upgrade pip
 
 # Install dependencies
 pip install -r requirements.txt
