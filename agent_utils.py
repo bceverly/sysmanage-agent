@@ -184,6 +184,8 @@ class MessageProcessor:
             return result
         if command_type == "check_reboot_status":
             return await self.agent.check_reboot_status()
+        if command_type == "collect_diagnostics":
+            return await self.agent.collect_diagnostics(parameters)
 
         return {
             "success": False,

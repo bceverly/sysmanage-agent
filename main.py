@@ -833,6 +833,41 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                             "Error collecting/sending hardware data: %s", e
                         )
 
+                    # Send OS version update
+                    try:
+                        self.logger.debug(
+                            "AGENT_DEBUG: About to collect OS version info"
+                        )
+                        os_info = self.registration.get_os_version_info()
+                        self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
+
+                        os_message = {
+                            "message_type": "os_version_update",
+                            "message_id": str(uuid.uuid4()),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "data": os_info,
+                        }
+
+                        self.logger.debug(
+                            "AGENT_DEBUG: Sending periodic OS version message: %s",
+                            os_message["message_id"],
+                        )
+                        success = await self.send_message(os_message)
+
+                        if success:
+                            self.logger.debug(
+                                "AGENT_DEBUG: Periodic OS version data sent successfully"
+                            )
+                        else:
+                            self.logger.warning(
+                                "Failed to send periodic OS version data"
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            "Error collecting/sending OS version data: %s", e
+                        )
+
                     self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
 
             except asyncio.CancelledError:
@@ -1017,6 +1052,397 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(_("Failed to send reboot status update: %s"), e)
+
+    async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Collect system diagnostics and send to server."""
+        try:
+            collection_id = parameters.get("collection_id")
+            collection_types = parameters.get("collection_types", [])
+
+            self.logger.info(
+                _("Starting diagnostics collection for ID: %s"), collection_id
+            )
+            self.logger.info(_("Collection types requested: %s"), collection_types)
+
+            # Dictionary to store collected data
+            diagnostic_data = {
+                "collection_id": collection_id,
+                "success": True,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+            # Collect requested diagnostic data
+            for collection_type in collection_types:
+                try:
+                    self.logger.debug(_("Collecting %s"), collection_type)
+
+                    if collection_type == "system_logs":
+                        diagnostic_data["system_logs"] = (
+                            await self._collect_system_logs()
+                        )
+                    elif collection_type == "configuration_files":
+                        diagnostic_data["configuration_files"] = (
+                            await self._collect_configuration_files()
+                        )
+                    elif collection_type == "network_info":
+                        diagnostic_data["network_info"] = (
+                            await self._collect_network_info()
+                        )
+                    elif collection_type == "process_info":
+                        diagnostic_data["process_info"] = (
+                            await self._collect_process_info()
+                        )
+                    elif collection_type == "disk_usage":
+                        diagnostic_data["disk_usage"] = await self._collect_disk_usage()
+                    elif collection_type == "environment_variables":
+                        diagnostic_data["environment_variables"] = (
+                            await self._collect_environment_variables()
+                        )
+                    elif collection_type == "agent_logs":
+                        diagnostic_data["agent_logs"] = await self._collect_agent_logs()
+                    elif collection_type == "error_logs":
+                        diagnostic_data["error_logs"] = await self._collect_error_logs()
+                    else:
+                        self.logger.warning(
+                            _("Unknown collection type: %s"), collection_type
+                        )
+
+                except Exception as e:
+                    self.logger.error(_("Failed to collect %s: %s"), collection_type, e)
+                    # Continue collecting other types even if one fails
+
+            # Calculate collection statistics
+            collection_size = 0
+            files_collected = 0
+            for key, value in diagnostic_data.items():
+                if isinstance(value, (dict, list)) and key != "collection_id":
+                    collection_size += len(str(value))
+                    if isinstance(value, dict) and "files" in value:
+                        files_collected += len(value.get("files", []))
+                    elif isinstance(value, list):
+                        files_collected += len(value)
+
+            diagnostic_data["collection_size_bytes"] = collection_size
+            diagnostic_data["files_collected"] = files_collected
+
+            # Send diagnostic data to server
+            diagnostic_message = self.create_message(
+                "diagnostic_collection_result", diagnostic_data
+            )
+            await self.send_message(diagnostic_message)
+
+            self.logger.info(
+                _("Diagnostics collection completed for ID: %s"), collection_id
+            )
+
+            return {
+                "success": True,
+                "collection_id": collection_id,
+                "message": "Diagnostics collected and sent to server",
+            }
+
+        except Exception as e:
+            self.logger.error(_("Failed to collect diagnostics: %s"), e)
+
+            # Send error result to server if we have collection_id
+            if parameters.get("collection_id"):
+                error_data = {
+                    "collection_id": parameters["collection_id"],
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                try:
+                    error_message = self.create_message(
+                        "diagnostic_collection_result", error_data
+                    )
+                    await self.send_message(error_message)
+                except Exception as send_error:
+                    self.logger.error(_("Failed to send error message: %s"), send_error)
+
+            return {"success": False, "error": str(e)}
+
+    async def _collect_system_logs(self) -> Dict[str, Any]:
+        """Collect system log information."""
+        try:
+            system_logs = {}
+
+            # Try to get recent system log entries
+            result = await self.system_ops.execute_shell_command(
+                {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
+            )
+            if result.get("success"):
+                system_logs["journalctl_recent"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            # Get kernel messages
+            result = await self.system_ops.execute_shell_command(
+                {"command": "dmesg | tail -n 50"}
+            )
+            if result.get("success"):
+                system_logs["dmesg_recent"] = result.get("result", {}).get("stdout", "")
+
+            # Get auth log if available
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
+                }
+            )
+            if result.get("success"):
+                system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
+
+            return system_logs
+
+        except Exception as e:
+            self.logger.error(_("Error collecting system logs: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_configuration_files(self) -> Dict[str, Any]:
+        """Collect relevant configuration files."""
+        try:
+            config_files = {}
+
+            # Get network configuration
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "cat /etc/network/interfaces 2>/dev/null || cat /etc/sysconfig/network-scripts/ifcfg-* 2>/dev/null || echo 'Network config not found'"
+                }
+            )
+            if result.get("success"):
+                config_files["network_config"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            # Get SSH configuration
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "cat /etc/ssh/sshd_config 2>/dev/null || echo 'SSH config not accessible'"
+                }
+            )
+            if result.get("success"):
+                config_files["ssh_config"] = result.get("result", {}).get("stdout", "")
+
+            # Get agent configuration (our own config)
+            try:
+                with open("config.yaml", "r", encoding="utf-8") as f:
+                    config_files["agent_config"] = f.read()
+            except Exception:
+                config_files["agent_config"] = "Agent config not readable"
+
+            return config_files
+
+        except Exception as e:
+            self.logger.error(_("Error collecting configuration files: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_network_info(self) -> Dict[str, Any]:
+        """Collect network information."""
+        try:
+            network_info = {}
+
+            # Get network interfaces
+            result = await self.system_ops.execute_shell_command(
+                {"command": "ip addr show"}
+            )
+            if result.get("success"):
+                network_info["interfaces"] = result.get("result", {}).get("stdout", "")
+
+            # Get routing table
+            result = await self.system_ops.execute_shell_command(
+                {"command": "ip route show"}
+            )
+            if result.get("success"):
+                network_info["routes"] = result.get("result", {}).get("stdout", "")
+
+            # Get network connections
+            result = await self.system_ops.execute_shell_command(
+                {"command": "ss -tulpn"}
+            )
+            if result.get("success"):
+                network_info["connections"] = result.get("result", {}).get("stdout", "")
+
+            # Get DNS configuration
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'"
+                }
+            )
+            if result.get("success"):
+                network_info["dns_config"] = result.get("result", {}).get("stdout", "")
+
+            return network_info
+
+        except Exception as e:
+            self.logger.error(_("Error collecting network info: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_process_info(self) -> Dict[str, Any]:
+        """Collect process information."""
+        try:
+            process_info = {}
+
+            # Get process list
+            result = await self.system_ops.execute_shell_command(
+                {"command": "ps aux --sort=-%cpu | head -n 20"}
+            )
+            if result.get("success"):
+                process_info["top_processes_cpu"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            # Get memory usage
+            result = await self.system_ops.execute_shell_command(
+                {"command": "ps aux --sort=-%mem | head -n 20"}
+            )
+            if result.get("success"):
+                process_info["top_processes_memory"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            # Get system load
+            result = await self.system_ops.execute_shell_command({"command": "uptime"})
+            if result.get("success"):
+                process_info["system_load"] = result.get("result", {}).get("stdout", "")
+
+            # Get memory info
+            result = await self.system_ops.execute_shell_command({"command": "free -h"})
+            if result.get("success"):
+                process_info["memory_info"] = result.get("result", {}).get("stdout", "")
+
+            return process_info
+
+        except Exception as e:
+            self.logger.error(_("Error collecting process info: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_disk_usage(self) -> Dict[str, Any]:
+        """Collect disk usage information."""
+        try:
+            disk_info = {}
+
+            # Get filesystem usage
+            result = await self.system_ops.execute_shell_command({"command": "df -h"})
+            if result.get("success"):
+                disk_info["filesystem_usage"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            # Get disk I/O stats
+            result = await self.system_ops.execute_shell_command(
+                {"command": "iostat -x 1 1 2>/dev/null || echo 'iostat not available'"}
+            )
+            if result.get("success"):
+                disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
+
+            # Get largest files/directories
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'"
+                }
+            )
+            if result.get("success"):
+                disk_info["largest_directories"] = result.get("result", {}).get(
+                    "stdout", ""
+                )
+
+            return disk_info
+
+        except Exception as e:
+            self.logger.error(_("Error collecting disk usage: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_environment_variables(self) -> Dict[str, Any]:
+        """Collect environment variables (filtered for security)."""
+        try:
+            env_vars = {}
+
+            # Get safe environment variables (exclude sensitive ones)
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "env | grep -E '^(PATH|HOME|USER|SHELL|LANG|LC_|TZ|TERM)=' | sort"
+                }
+            )
+            if result.get("success"):
+                env_vars["safe_env_vars"] = result.get("result", {}).get("stdout", "")
+
+            # Get Python path if available
+            result = await self.system_ops.execute_shell_command(
+                {
+                    "command": "python3 -c 'import sys; print(\"\\n\".join(sys.path))' 2>/dev/null || echo 'Python path not available'"
+                }
+            )
+            if result.get("success"):
+                env_vars["python_path"] = result.get("result", {}).get("stdout", "")
+
+            return env_vars
+
+        except Exception as e:
+            self.logger.error(_("Error collecting environment variables: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_agent_logs(self) -> Dict[str, Any]:
+        """Collect agent log information."""
+        try:
+            agent_logs = {}
+
+            # Get recent agent logs
+            try:
+                with open("logs/agent.log", "r", encoding="utf-8") as f:
+                    # Get last 100 lines
+                    lines = f.readlines()
+                    agent_logs["recent_logs"] = "".join(lines[-100:])
+            except Exception:
+                agent_logs["recent_logs"] = "Agent logs not accessible"
+
+            # Get agent status
+            agent_logs["agent_status"] = {
+                "running": self.running,
+                "connected": self.connected,
+                "reconnect_attempts": getattr(self, "reconnect_attempts", 0),
+                "last_ping": getattr(self, "last_ping", None),
+                "uptime": datetime.now(timezone.utc).isoformat(),
+            }
+
+            return agent_logs
+
+        except Exception as e:
+            self.logger.error(_("Error collecting agent logs: %s"), e)
+            return {"error": str(e)}
+
+    async def _collect_error_logs(self) -> Dict[str, Any]:
+        """Collect error logs from various sources."""
+        try:
+            error_logs = {}
+
+            # Get system error logs
+            result = await self.system_ops.execute_shell_command(
+                {"command": "journalctl -p err --since '1 hour ago' --no-pager -n 50"}
+            )
+            if result.get("success"):
+                error_logs["system_errors"] = result.get("result", {}).get("stdout", "")
+
+            # Get kernel errors
+            result = await self.system_ops.execute_shell_command(
+                {"command": "dmesg | grep -i error | tail -n 20"}
+            )
+            if result.get("success"):
+                error_logs["kernel_errors"] = result.get("result", {}).get("stdout", "")
+
+            # Get agent error logs
+            try:
+                with open("logs/agent.log", "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                    error_lines = [line for line in lines if "ERROR" in line.upper()]
+                    error_logs["agent_errors"] = "".join(error_lines[-50:])
+            except Exception:
+                error_logs["agent_errors"] = "Agent error logs not accessible"
+
+            return error_logs
+
+        except Exception as e:
+            self.logger.error(_("Error collecting error logs: %s"), e)
+            return {"error": str(e)}
 
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""

@@ -330,6 +330,12 @@ main() {
         "doas")
             # OpenBSD doas - activate virtual environment and run
             echo "🔑 Requesting elevated privileges with doas..."
+            # First, validate doas access interactively (this will prompt for password if needed)
+            if ! $priv_cmd true; then
+                echo "❌ ERROR: Failed to obtain doas privileges"
+                exit 1
+            fi
+            # Now run the agent in background (doas credentials are cached briefly)
             $priv_cmd sh -c "cd '$AGENT_DIR' && . .venv/bin/activate && python main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
             sleep 1
             if [ -f logs/agent.pid ]; then
@@ -341,6 +347,12 @@ main() {
         *)
             # sudo with -E flag preserves environment  
             echo "🔑 Requesting elevated privileges with sudo..."
+            # First, validate sudo access interactively (this will prompt for password if needed)
+            if ! $priv_cmd true; then
+                echo "❌ ERROR: Failed to obtain sudo privileges"
+                exit 1
+            fi
+            # Now run the agent in background with nohup (sudo credentials are cached)
             nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
             AGENT_PID=$!
             ;;
