@@ -235,8 +235,22 @@ main() {
     echo "🖥️  Platform: $platform ($(uname))"
     echo "📁 Working directory: $AGENT_DIR"
     
-    # Create logs directory if it doesn't exist
-    mkdir -p logs
+    # Create logs directory if it doesn't exist with proper permissions
+    if [ ! -d logs ]; then
+        mkdir -p logs
+        chmod 755 logs
+    elif [ ! -w logs ]; then
+        # If logs exists but isn't writable, we have a problem
+        echo "⚠️  ERROR: logs directory exists but is not writable!"
+        echo "   Owner: $(ls -ld logs | awk '{print $3}')"
+        echo "   Permissions: $(ls -ld logs | awk '{print $1}')"
+        echo ""
+        echo "   To fix, run:"
+        echo "     rm -rf logs"
+        echo "     mkdir logs"
+        echo ""
+        exit 1
+    fi
     
     # Stop any existing agent
     if check_existing_processes; then
@@ -328,20 +342,47 @@ main() {
     # Start the agent in background with proper environment and logging
     case "$priv_cmd" in
         "doas")
-            # OpenBSD doas - activate virtual environment and run
+            # OpenBSD doas - use exec to replace shell and daemonize properly
             echo "🔑 Requesting elevated privileges with doas..."
-            # First, validate doas access interactively (this will prompt for password if needed)
-            if ! $priv_cmd true; then
-                echo "❌ ERROR: Failed to obtain doas privileges"
+            # Create a wrapper script that doas will execute
+            cat > /tmp/sysmanage_agent_$$.sh << EOF
+#!/bin/sh
+# Change to agent directory
+cd "$AGENT_DIR"
+
+# Start the agent and capture output to log file
+env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > "$AGENT_DIR/logs/agent.log" 2>&1 &
+echo \$! > "$AGENT_DIR/logs/agent.pid"
+EOF
+            chmod +x /tmp/sysmanage_agent_$$.sh
+            
+            # Run the wrapper script with doas (will prompt for password in foreground)
+            $priv_cmd /tmp/sysmanage_agent_$$.sh
+            DOAS_RESULT=$?
+            
+            # Clean up
+            rm -f /tmp/sysmanage_agent_$$.sh
+            
+            # Check if doas succeeded
+            if [ $DOAS_RESULT -ne 0 ]; then
+                echo "❌ ERROR: doas command failed with exit code $DOAS_RESULT"
                 exit 1
             fi
-            # Now run the agent in background (doas credentials are cached briefly)
-            $priv_cmd sh -c "cd '$AGENT_DIR' && . .venv/bin/activate && python main.py $* > logs/agent.log 2>&1 & echo \$! > logs/agent.pid"
+            
+            # Wait a moment for the PID file to be written
             sleep 1
+            
+            # Get the PID
             if [ -f logs/agent.pid ]; then
                 AGENT_PID=$(cat logs/agent.pid)
             else
-                AGENT_PID=""
+                # Try to find the process directly
+                AGENT_PID=$(ps aux | grep "[p]ython.*main.py" | awk '{print $2}' | head -1)
+                if [ -n "$AGENT_PID" ]; then
+                    echo $AGENT_PID > logs/agent.pid
+                else
+                    AGENT_PID=""
+                fi
             fi
             ;;
         *)
@@ -358,16 +399,35 @@ main() {
             ;;
     esac
     
-    # Save PID (only for non-doas cases, doas case already saves it)
-    if [ "$priv_cmd" != "doas" ]; then
+    # Save PID (only for non-doas cases, doas handles it internally)
+    if [ "$priv_cmd" != "doas" ] && [ -n "$AGENT_PID" ]; then
         echo $AGENT_PID > logs/agent.pid
     fi
     
     # Give it a moment to start
-    sleep 2
+    sleep 3
     
     # Check if the process is still running
-    if kill -0 "$AGENT_PID" 2>/dev/null; then
+    # First check if AGENT_PID is set
+    if [ -z "$AGENT_PID" ]; then
+        echo "⚠️  WARNING: Could not get agent process ID from PID file"
+        # Try to find the process anyway
+        AGENT_PID=$(ps aux | grep "[p]ython.*main.py" | awk '{print $2}' | head -1)
+        if [ -z "$AGENT_PID" ]; then
+            echo "❌ ERROR: Failed to get agent process ID"
+            echo ""
+            echo "Check the log file for details:"
+            echo "  tail logs/agent.log"
+            echo ""
+            rm -f logs/agent.pid
+            exit 1
+        fi
+    fi
+    
+    # Check if the process is still running
+    # Note: On OpenBSD with doas, we might not have permission to signal the root-owned process
+    # So we check if the process exists in the process list instead
+    if ps -p "$AGENT_PID" >/dev/null 2>&1 || ps aux | grep -q "^root.*$AGENT_PID"; then
         echo ""
         echo "✅ SysManage Agent is successfully running with elevated privileges!"
         echo ""
