@@ -128,3 +128,20 @@ class SystemOperations:
         except Exception as e:
             self.logger.error(_("Failed to reboot system: %s"), e)
             return {"success": False, "error": str(e)}
+
+    async def shutdown_system(self) -> Dict[str, Any]:
+        """Shutdown the system."""
+        try:
+            # Schedule shutdown in 1 minute to allow response to be sent
+            command = "sudo shutdown -h +1"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("System shutdown scheduled in 1 minute"),
+                }
+            return result
+        except Exception as e:
+            self.logger.error(_("Failed to shutdown system: %s"), e)
+            return {"success": False, "error": str(e)}

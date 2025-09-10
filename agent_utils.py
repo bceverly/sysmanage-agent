@@ -169,6 +169,8 @@ class MessageProcessor:
             return await self.agent.restart_service(parameters)
         if command_type == "reboot_system":
             return await self.agent.reboot_system()
+        if command_type == "shutdown_system":
+            return await self.agent.shutdown_system()
         if command_type == "update_os_version":
             return await self.agent.update_os_version()
         if command_type == "update_hardware":

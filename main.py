@@ -346,6 +346,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Reboot the system."""
         return await self.system_ops.reboot_system()
 
+    async def shutdown_system(self) -> Dict[str, Any]:
+        """Shutdown the system."""
+        return await self.system_ops.shutdown_system()
+
     async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a script with proper security controls."""
         return await self.script_ops.execute_script(parameters)
