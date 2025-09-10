@@ -23,7 +23,12 @@ from registration import ClientRegistration
 from i18n import _, set_language
 from discovery import discovery_client
 from security.certificate_store import CertificateStore
-from agent_utils import UpdateChecker, AuthenticationHelper, MessageProcessor
+from agent_utils import (
+    UpdateChecker,
+    AuthenticationHelper,
+    MessageProcessor,
+    is_running_privileged,
+)
 from update_operations import UpdateOperations
 from system_operations import SystemOperations
 from script_operations import ScriptOperations
@@ -296,6 +301,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "hostname": system_info["hostname"],
                 "ipv4": system_info["ipv4"],
                 "ipv6": system_info["ipv6"],
+                "is_privileged": is_running_privileged(),
             },
         )
 

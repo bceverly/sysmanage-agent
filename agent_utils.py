@@ -4,8 +4,10 @@ Utility functions for the SysManage agent to reduce main.py complexity.
 
 import asyncio
 import logging
+import os
 import socket
 import ssl
+import sys
 from typing import Dict, Any
 
 import aiohttp
@@ -234,3 +236,24 @@ class MessageProcessor:
 
         except Exception as e:
             self.logger.error(_("Failed to queue script execution result: %s"), e)
+
+
+def is_running_privileged() -> bool:
+    """
+    Detect if the agent is running with elevated/privileged access.
+
+    Returns:
+        bool: True if running with elevated privileges, False otherwise
+    """
+    try:
+        if sys.platform == "win32":
+            # Windows - check if running as administrator
+            import ctypes
+
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        else:
+            # Unix-like systems - check if running as root (UID 0)
+            return os.geteuid() == 0
+    except Exception:
+        # If we can't determine privilege level, assume non-privileged for security
+        return False
