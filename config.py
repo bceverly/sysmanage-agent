@@ -37,10 +37,11 @@ class ConfigManager:
         system_config = "/etc/sysmanage-agent.yaml"
         local_config = "./sysmanage-agent.yaml"
 
-        if os.path.exists(system_config):
-            return system_config
+        # Temporarily prefer local config for clean logging demonstration
         if os.path.exists(local_config):
             return local_config
+        if os.path.exists(system_config):
+            return system_config
         if os.path.exists(default_filename):
             # Backward compatibility - warn but allow
             return default_filename
@@ -157,6 +158,10 @@ class ConfigManager:
         return self.get(
             "logging.format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
+
+    def get_log_levels(self) -> str:
+        """Get pipe-separated logging levels configuration."""
+        return self.get("logging.level", "INFO|WARNING|ERROR|CRITICAL")
 
     def should_auto_reconnect(self) -> bool:
         """Check if WebSocket should auto-reconnect."""

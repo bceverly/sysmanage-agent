@@ -39,16 +39,17 @@ i18n:
 
 # Logging configuration
 logging:
-  # Log levels to include: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  # Can combine multiple levels with pipe: "INFO|WARNING|ERROR|CRITICAL"
-  # Examples: "DEBUG" (debug only), "INFO|ERROR" (info and errors only), 
-  #          "WARNING|ERROR|CRITICAL" (warnings and above)
-  level: "INFO|WARNING|ERROR|CRITICAL"
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "DEBUG"
   
-  # Log to file (default is logs/* in service directory)
+  # Log verbosity: Controls amount of information logged
+  # Options: "low" (minimal), "medium" (normal), "high" (verbose)
+  verbosity: "medium"
+
+  # Log to file (optional)
   # file: "/var/log/sysmanage-agent.log"
   
-  # Log format - customize the log message appearance
+  # Log format
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # WebSocket connection settings (for real-time communication)
@@ -77,7 +78,7 @@ database:
 script_execution:
   # Enable or disable script execution functionality
   # Setting this to false (default) completely disables script execution
-  enabled: false
+  enabled: true
   
   # Maximum script execution timeout in seconds (default: 300 = 5 minutes)
   # Scripts that run longer than this will be terminated

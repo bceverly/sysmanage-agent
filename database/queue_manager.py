@@ -16,8 +16,9 @@ from sqlalchemy import and_, or_, desc, asc
 from .base import get_database_manager
 from .models import MessageQueue, QueueMetrics, QueueStatus, QueueDirection, Priority
 from i18n import _
+from verbosity_logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class MessageQueueManager:

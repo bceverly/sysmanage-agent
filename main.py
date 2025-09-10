@@ -23,6 +23,7 @@ from registration import ClientRegistration
 from i18n import _, set_language
 from discovery import discovery_client
 from security.certificate_store import CertificateStore
+from verbosity_logger import get_logger
 from agent_utils import (
     UpdateChecker,
     AuthenticationHelper,
@@ -46,15 +47,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     def __init__(self, config_file: str = "sysmanage-agent.yaml"):
         # Try to discover server if no config file exists
         self.config_file = config_file
-        # Setup basic logging first
-        logging.basicConfig(level=logging.INFO)
+        # Setup minimal logging first - our VerbosityLogger will handle most output
+        logging.basicConfig(
+            level=logging.WARNING
+        )  # Only warnings/errors during startup
 
-        # Apply UTC timestamp formatter to initial logging
-        utc_formatter = UTCTimestampFormatter("%(levelname)s: %(name)s: %(message)s")
-        for handler in logging.getLogger().handlers:
-            handler.setFormatter(utc_formatter)
-
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__, None)  # Will pass config_manager later
         if not self.try_load_config(config_file):
             self.logger.info(_("No configuration found, attempting auto-discovery..."))
             if not self.auto_discover_and_configure():
@@ -73,6 +71,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Setup proper logging with config
         self.setup_logging()
+
+        # Update logger to use config manager for verbosity
+        self.logger = get_logger(__name__, self.config)
 
         # Initialize database
         if not initialize_database(self.config):
@@ -171,29 +172,24 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             return False
 
     def setup_logging(self):
-        """Setup logging based on configuration."""
+        """Setup logging based on configuration with verbosity support."""
         log_level = self.config.get_log_level()
-        log_format = self.config.get_log_format()
         log_file = self.config.get_log_file()
 
-        # Configure logging
-        logging.basicConfig(
-            level=getattr(logging, log_level.upper()),
-            format=log_format,
-            filename=log_file,
-        )
+        # Clear any existing handlers to prevent double logging
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
 
-        # Also log to console if file logging is enabled
+        # Only set up basic file logging if specified - our VerbosityLogger handles console output
         if log_file:
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(getattr(logging, log_level.upper()))
-            console_handler.setFormatter(logging.Formatter(log_format))
-            logging.getLogger().addHandler(console_handler)
-
-        # Apply UTC timestamp formatter to all handlers
-        utc_formatter = UTCTimestampFormatter(log_format)
-        for handler in logging.getLogger().handlers:
-            handler.setFormatter(utc_formatter)
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(getattr(logging, log_level.upper()))
+            file_handler.setFormatter(
+                UTCTimestampFormatter("%(levelname)s: %(name)s: %(message)s")
+            )
+            root_logger.addHandler(file_handler)
+            root_logger.setLevel(getattr(logging, log_level.upper()))
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
