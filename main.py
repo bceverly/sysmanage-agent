@@ -1071,10 +1071,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.info(_("Collection types requested: %s"), collection_types)
 
             # Dictionary to store collected data
+            system_info = self.registration.get_system_info()
             diagnostic_data = {
                 "collection_id": collection_id,
                 "success": True,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
+                "hostname": system_info["hostname"],
             }
 
             # Collect requested diagnostic data
@@ -1152,11 +1154,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             # Send error result to server if we have collection_id
             if parameters.get("collection_id"):
+                system_info = self.registration.get_system_info()
                 error_data = {
                     "collection_id": parameters["collection_id"],
                     "success": False,
                     "error": str(e),
                     "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "hostname": system_info["hostname"],
                 }
                 try:
                     error_message = self.create_message(

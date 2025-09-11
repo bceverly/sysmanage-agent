@@ -85,18 +85,27 @@ if "%HOSTNAME%"=="" set HOSTNAME=unknown
 for /f "delims=" %%i in ('%PYTHON_CMD% -c "import platform; print(platform.system())" 2^>NUL') do set PLATFORM=%%i
 if "%PLATFORM%"=="" set PLATFORM=unknown
 
-REM Get server configuration from client.yaml if it exists
-if exist sysmanage-agent.yaml (
-    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open('sysmanage-agent.yaml')); print(config['server']['hostname'])" 2^>NUL') do set SERVER_HOST=%%i
+REM Get server configuration - check system config first, then local config
+set CONFIG_FILE=
+if exist "C:\ProgramData\SysManage\sysmanage-agent.yaml" (
+    set CONFIG_FILE=C:\ProgramData\SysManage\sysmanage-agent.yaml
+    echo Using system configuration: %CONFIG_FILE%
+) else if exist sysmanage-agent.yaml (
+    set CONFIG_FILE=sysmanage-agent.yaml
+    echo Using local configuration: %CONFIG_FILE%
+)
+
+if not "%CONFIG_FILE%"=="" (
+    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open(r'%CONFIG_FILE%')); print(config['server']['hostname'])" 2^>NUL') do set SERVER_HOST=%%i
     if "%%i"=="" set SERVER_HOST=unknown
     
-    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open('sysmanage-agent.yaml')); print(config['server']['port'])" 2^>NUL') do set SERVER_PORT=%%i
+    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open(r'%CONFIG_FILE%')); print(config['server']['port'])" 2^>NUL') do set SERVER_PORT=%%i
     if "%%i"=="" set SERVER_PORT=unknown
     
-    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open('sysmanage-agent.yaml')); print('https' if config['server']['use_https'] else 'http')" 2^>NUL') do set USE_HTTPS=%%i
+    for /f "delims=" %%i in ('%PYTHON_CMD% -c "import yaml; config=yaml.safe_load(open(r'%CONFIG_FILE%')); print('https' if config['server']['use_https'] else 'http')" 2^>NUL') do set USE_HTTPS=%%i
     if "%%i"=="" set USE_HTTPS=unknown
 ) else (
-    echo Warning: sysmanage-agent.yaml configuration file not found!
+    echo Warning: No sysmanage-agent.yaml configuration file found!
     set SERVER_HOST=unknown
     set SERVER_PORT=unknown
     set USE_HTTPS=unknown
