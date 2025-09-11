@@ -1175,32 +1175,58 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""
         try:
+            import platform
             system_logs = {}
+            current_platform = platform.system()
 
-            # Try to get recent system log entries
-            result = await self.system_ops.execute_shell_command(
-                {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
-            )
-            if result.get("success"):
-                system_logs["journalctl_recent"] = result.get("result", {}).get(
-                    "stdout", ""
+            if current_platform == "Windows":
+                # Get Windows Event Log entries
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-WinEvent -LogName System -MaxEvents 100 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json\""}
                 )
+                if result.get("success"):
+                    system_logs["windows_system_log"] = result.get("result", {}).get("stdout", "")
 
-            # Get kernel messages
-            result = await self.system_ops.execute_shell_command(
-                {"command": "dmesg | tail -n 50"}
-            )
-            if result.get("success"):
-                system_logs["dmesg_recent"] = result.get("result", {}).get("stdout", "")
+                # Get Application Event Log entries
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-WinEvent -LogName Application -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json\""}
+                )
+                if result.get("success"):
+                    system_logs["windows_application_log"] = result.get("result", {}).get("stdout", "")
 
-            # Get auth log if available
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
-                }
-            )
-            if result.get("success"):
-                system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
+                # Get Security Event Log entries (may require admin privileges)
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"try { Get-WinEvent -LogName Security -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json } catch { 'Security logs not accessible - admin privileges required' }\""}
+                )
+                if result.get("success"):
+                    system_logs["windows_security_log"] = result.get("result", {}).get("stdout", "")
+
+            else:
+                # Linux/Unix systems
+                # Try to get recent system log entries
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
+                )
+                if result.get("success"):
+                    system_logs["journalctl_recent"] = result.get("result", {}).get(
+                        "stdout", ""
+                    )
+
+                # Get kernel messages
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "dmesg | tail -n 50"}
+                )
+                if result.get("success"):
+                    system_logs["dmesg_recent"] = result.get("result", {}).get("stdout", "")
+
+                # Get auth log if available
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
+                    }
+                )
+                if result.get("success"):
+                    system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
 
             return system_logs
 
@@ -1211,29 +1237,55 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _collect_configuration_files(self) -> Dict[str, Any]:
         """Collect relevant configuration files."""
         try:
+            import platform
             config_files = {}
+            current_platform = platform.system()
 
-            # Get network configuration
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "cat /etc/network/interfaces 2>/dev/null || cat /etc/sysconfig/network-scripts/ifcfg-* 2>/dev/null || echo 'Network config not found'"
-                }
-            )
-            if result.get("success"):
-                config_files["network_config"] = result.get("result", {}).get(
-                    "stdout", ""
+            if current_platform == "Windows":
+                # Get Windows network configuration
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "ipconfig /all"}
                 )
+                if result.get("success"):
+                    config_files["network_config"] = result.get("result", {}).get("stdout", "")
 
-            # Get SSH configuration
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "cat /etc/ssh/sshd_config 2>/dev/null || echo 'SSH config not accessible'"
-                }
-            )
-            if result.get("success"):
-                config_files["ssh_config"] = result.get("result", {}).get("stdout", "")
+                # Get Windows services configuration (key system services)
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object Name, Status, StartType | ConvertTo-Json\""}
+                )
+                if result.get("success"):
+                    config_files["services_config"] = result.get("result", {}).get("stdout", "")
 
-            # Get agent configuration (our own config)
+                # Get Windows firewall configuration
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "netsh advfirewall show allprofiles"}
+                )
+                if result.get("success"):
+                    config_files["firewall_config"] = result.get("result", {}).get("stdout", "")
+
+            else:
+                # Linux/Unix systems
+                # Get network configuration
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "cat /etc/network/interfaces 2>/dev/null || cat /etc/sysconfig/network-scripts/ifcfg-* 2>/dev/null || echo 'Network config not found'"
+                    }
+                )
+                if result.get("success"):
+                    config_files["network_config"] = result.get("result", {}).get(
+                        "stdout", ""
+                    )
+
+                # Get SSH configuration
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "cat /etc/ssh/sshd_config 2>/dev/null || echo 'SSH config not accessible'"
+                    }
+                )
+                if result.get("success"):
+                    config_files["ssh_config"] = result.get("result", {}).get("stdout", "")
+
+            # Get agent configuration (our own config) - works on both platforms
             try:
                 with open("config.yaml", "r", encoding="utf-8") as f:
                     config_files["agent_config"] = f.read()
@@ -1249,37 +1301,70 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _collect_network_info(self) -> Dict[str, Any]:
         """Collect network information."""
         try:
+            import platform
             network_info = {}
+            current_platform = platform.system()
 
-            # Get network interfaces
-            result = await self.system_ops.execute_shell_command(
-                {"command": "ip addr show"}
-            )
-            if result.get("success"):
-                network_info["interfaces"] = result.get("result", {}).get("stdout", "")
+            if current_platform == "Windows":
+                # Get network interfaces
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "ipconfig /all"}
+                )
+                if result.get("success"):
+                    network_info["interfaces"] = result.get("result", {}).get("stdout", "")
 
-            # Get routing table
-            result = await self.system_ops.execute_shell_command(
-                {"command": "ip route show"}
-            )
-            if result.get("success"):
-                network_info["routes"] = result.get("result", {}).get("stdout", "")
+                # Get routing table
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "route print"}
+                )
+                if result.get("success"):
+                    network_info["routes"] = result.get("result", {}).get("stdout", "")
 
-            # Get network connections
-            result = await self.system_ops.execute_shell_command(
-                {"command": "ss -tulpn"}
-            )
-            if result.get("success"):
-                network_info["connections"] = result.get("result", {}).get("stdout", "")
+                # Get network connections
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "netstat -an"}
+                )
+                if result.get("success"):
+                    network_info["connections"] = result.get("result", {}).get("stdout", "")
 
-            # Get DNS configuration
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'"
-                }
-            )
-            if result.get("success"):
-                network_info["dns_config"] = result.get("result", {}).get("stdout", "")
+                # Get DNS configuration
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "nslookup"}
+                )
+                if result.get("success"):
+                    network_info["dns_config"] = result.get("result", {}).get("stdout", "")
+
+            else:
+                # Linux/Unix systems
+                # Get network interfaces
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "ip addr show"}
+                )
+                if result.get("success"):
+                    network_info["interfaces"] = result.get("result", {}).get("stdout", "")
+
+                # Get routing table
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "ip route show"}
+                )
+                if result.get("success"):
+                    network_info["routes"] = result.get("result", {}).get("stdout", "")
+
+                # Get network connections
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "ss -tulpn"}
+                )
+                if result.get("success"):
+                    network_info["connections"] = result.get("result", {}).get("stdout", "")
+
+                # Get DNS configuration
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'"
+                    }
+                )
+                if result.get("success"):
+                    network_info["dns_config"] = result.get("result", {}).get("stdout", "")
 
             return network_info
 
@@ -1329,32 +1414,58 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _collect_disk_usage(self) -> Dict[str, Any]:
         """Collect disk usage information."""
         try:
+            import platform
             disk_info = {}
+            current_platform = platform.system()
 
-            # Get filesystem usage
-            result = await self.system_ops.execute_shell_command({"command": "df -h"})
-            if result.get("success"):
-                disk_info["filesystem_usage"] = result.get("result", {}).get(
-                    "stdout", ""
+            if current_platform == "Windows":
+                # Get filesystem usage
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, Size, FreeSpace, @{Name='UsedSpace';Expression={$_.Size - $_.FreeSpace}} | ConvertTo-Json\""}
                 )
+                if result.get("success"):
+                    disk_info["filesystem_usage"] = result.get("result", {}).get("stdout", "")
 
-            # Get disk I/O stats
-            result = await self.system_ops.execute_shell_command(
-                {"command": "iostat -x 1 1 2>/dev/null || echo 'iostat not available'"}
-            )
-            if result.get("success"):
-                disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
-
-            # Get largest files/directories
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'"
-                }
-            )
-            if result.get("success"):
-                disk_info["largest_directories"] = result.get("result", {}).get(
-                    "stdout", ""
+                # Get disk performance counters
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-Counter -Counter '\\LogicalDisk(*)\\% Disk Time' -MaxSamples 1 | ConvertTo-Json\""}
                 )
+                if result.get("success"):
+                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
+
+                # Get largest directories using PowerShell
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-ChildItem -Path C:\\ -Directory | Get-ChildItem -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | Select-Object @{Name='Path';Expression={$_.PSPath}}, @{Name='Size';Expression={$_.Sum}} | Sort-Object Size -Descending | Select-Object -First 10 | ConvertTo-Json\""}
+                )
+                if result.get("success"):
+                    disk_info["largest_directories"] = result.get("result", {}).get("stdout", "")
+
+            else:
+                # Linux/Unix systems
+                # Get filesystem usage
+                result = await self.system_ops.execute_shell_command({"command": "df -h"})
+                if result.get("success"):
+                    disk_info["filesystem_usage"] = result.get("result", {}).get(
+                        "stdout", ""
+                    )
+
+                # Get disk I/O stats
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "iostat -x 1 1 2>/dev/null || echo 'iostat not available'"}
+                )
+                if result.get("success"):
+                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
+
+                # Get largest files/directories
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'"
+                    }
+                )
+                if result.get("success"):
+                    disk_info["largest_directories"] = result.get("result", {}).get(
+                        "stdout", ""
+                    )
 
             return disk_info
 
@@ -1365,25 +1476,44 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _collect_environment_variables(self) -> Dict[str, Any]:
         """Collect environment variables (filtered for security)."""
         try:
+            import platform
             env_vars = {}
+            current_platform = platform.system()
 
-            # Get safe environment variables (exclude sensitive ones)
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "env | grep -E '^(PATH|HOME|USER|SHELL|LANG|LC_|TZ|TERM)=' | sort"
-                }
-            )
-            if result.get("success"):
-                env_vars["safe_env_vars"] = result.get("result", {}).get("stdout", "")
+            if current_platform == "Windows":
+                # Get safe environment variables (exclude sensitive ones)
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "powershell -Command \"Get-ChildItem Env: | Where-Object {$_.Name -match '^(PATH|HOME|USERNAME|COMPUTERNAME|PROCESSOR_|OS|TEMP|TMP)$'} | Sort-Object Name | ConvertTo-Json\""}
+                )
+                if result.get("success"):
+                    env_vars["safe_env_vars"] = result.get("result", {}).get("stdout", "")
 
-            # Get Python path if available
-            result = await self.system_ops.execute_shell_command(
-                {
-                    "command": "python3 -c 'import sys; print(\"\\n\".join(sys.path))' 2>/dev/null || echo 'Python path not available'"
-                }
-            )
-            if result.get("success"):
-                env_vars["python_path"] = result.get("result", {}).get("stdout", "")
+                # Get Python path if available
+                result = await self.system_ops.execute_shell_command(
+                    {"command": "python -c \"import sys; print('\\n'.join(sys.path))\" 2>NUL || echo Python path not available"}
+                )
+                if result.get("success"):
+                    env_vars["python_path"] = result.get("result", {}).get("stdout", "")
+
+            else:
+                # Linux/Unix systems
+                # Get safe environment variables (exclude sensitive ones)
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "env | grep -E '^(PATH|HOME|USER|SHELL|LANG|LC_|TZ|TERM)=' | sort"
+                    }
+                )
+                if result.get("success"):
+                    env_vars["safe_env_vars"] = result.get("result", {}).get("stdout", "")
+
+                # Get Python path if available
+                result = await self.system_ops.execute_shell_command(
+                    {
+                        "command": "python3 -c 'import sys; print(\"\\n\".join(sys.path))' 2>/dev/null || echo 'Python path not available'"
+                    }
+                )
+                if result.get("success"):
+                    env_vars["python_path"] = result.get("result", {}).get("stdout", "")
 
             return env_vars
 
