@@ -57,7 +57,7 @@ class FlexibleLogger:
                     enabled_levels.add(getattr(logging, level_name))
 
             return enabled_levels
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             # Default fallback to standard operational logging
             return {logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL}
 
@@ -69,7 +69,7 @@ class FlexibleLogger:
                 if self.config_manager
                 else "%(levelname)s: %(message)s"
             )
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             return "%(levelname)s: %(message)s"
 
     def _should_log(self, level: int) -> bool:

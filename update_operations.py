@@ -115,6 +115,7 @@ class UpdateOperations:
                         )
                     else:
                         # Use the first available package manager as fallback
+                        # pylint: disable-next=protected-access
                         available_managers = update_detector._detect_package_managers()
                         if available_managers:
                             detected_manager = available_managers[0]

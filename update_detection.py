@@ -937,9 +937,10 @@ class UpdateDetector:
             if update["package_name"] in package_names:
                 manager = update["package_manager"]
                 logger.info(
-                    _("Found package '%s' with manager '%s'"),
+                    _("Found package '%s' with manager '%s', bundle_id='%s'"),
                     update["package_name"],
                     manager,
+                    update.get("bundle_id", "N/A"),
                 )
                 if package_managers and manager not in package_managers:
                     logger.warning(
@@ -960,8 +961,27 @@ class UpdateDetector:
             {k: [p["package_name"] for p in v] for k, v in packages_by_manager.items()},
         )
 
+        # Check if any packages were found for update
+        if not packages_by_manager:
+            logger.warning(
+                _("No packages found for update among requested: %s"), package_names
+            )
+            for pkg_name in package_names:
+                results["failed_packages"].append(
+                    {
+                        "package_name": pkg_name,
+                        "package_manager": "unknown",
+                        "error": _(
+                            "Package not found in available updates (may already be up to date)"
+                        ),
+                    }
+                )
+
         # Apply updates for each package manager
         for manager, packages in packages_by_manager.items():
+            logger.info(
+                _("Applying updates for %d packages with %s"), len(packages), manager
+            )
             if manager == "apt":
                 self._apply_apt_updates(packages, results)
             elif manager == "snap":
@@ -1215,12 +1235,19 @@ class UpdateDetector:
         """Apply winget updates."""
         for package in packages:
             try:
+                package_id = package.get("bundle_id", package["package_name"])
+                logger.info(
+                    _("Applying winget update for package '%s' (ID: %s)"),
+                    package["package_name"],
+                    package_id,
+                )
+
                 result = subprocess.run(
                     [
                         "winget",
                         "upgrade",
                         "--id",
-                        package.get("bundle_id", package["package_name"]),
+                        package_id,
                         "--silent",
                     ],
                     capture_output=True,
@@ -1229,7 +1256,17 @@ class UpdateDetector:
                     check=False,
                 )
 
+                logger.debug(
+                    _("Winget command result: returncode=%d, stdout='%s', stderr='%s'"),
+                    result.returncode,
+                    result.stdout.strip(),
+                    result.stderr.strip(),
+                )
+
                 if result.returncode == 0:
+                    logger.info(
+                        _("Successfully updated package '%s'"), package["package_name"]
+                    )
                     results["updated_packages"].append(
                         {
                             "package_name": package["package_name"],
@@ -1239,15 +1276,30 @@ class UpdateDetector:
                         }
                     )
                 else:
+                    error_msg = (
+                        result.stderr.strip()
+                        or result.stdout.strip()
+                        or f"Command failed with exit code {result.returncode}"
+                    )
+                    logger.warning(
+                        _("Failed to update package '%s': %s"),
+                        package["package_name"],
+                        error_msg,
+                    )
                     results["failed_packages"].append(
                         {
                             "package_name": package["package_name"],
                             "package_manager": "winget",
-                            "error": result.stderr,
+                            "error": error_msg,
                         }
                     )
 
             except Exception as e:
+                logger.error(
+                    _("Exception updating package '%s': %s"),
+                    package["package_name"],
+                    str(e),
+                )
                 results["failed_packages"].append(
                     {
                         "package_name": package["package_name"],

@@ -95,14 +95,18 @@ i18n:
         assert message["message_type"] == "test_type"
         assert "message_id" in message
         assert "timestamp" in message
-        assert message["data"] == test_data
+        # Message data should include the original data plus host_id
+        assert message["data"]["test_key"] == "test_value"
+        assert message["data"]["host_id"] == 3  # From mock database
 
     def test_create_message_with_empty_data(self, mock_agent):
         """Test message creation with empty data."""
         message = mock_agent.create_message("test_type")
 
         assert message["message_type"] == "test_type"
-        assert message["data"] == {}
+        # Message should now include host_id automatically
+        assert "host_id" in message["data"]
+        assert message["data"]["host_id"] == 3  # From mock database
 
     @pytest.mark.asyncio
     async def test_send_message_success(self, mock_agent):

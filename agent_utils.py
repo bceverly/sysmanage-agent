@@ -250,12 +250,11 @@ def is_running_privileged() -> bool:
     try:
         if sys.platform == "win32":
             # Windows - check if running as administrator
-            import ctypes
+            import ctypes  # pylint: disable=import-outside-toplevel
 
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
-        else:
-            # Unix-like systems - check if running as root (UID 0)
-            return os.geteuid() == 0
+        # Unix-like systems - check if running as root (UID 0)
+        return os.geteuid() == 0
     except Exception:
         # If we can't determine privilege level, assume non-privileged for security
         return False

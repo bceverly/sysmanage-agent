@@ -7,8 +7,7 @@ import asyncio
 import logging
 import os
 import platform
-import shlex
-import subprocess
+import shutil
 import tempfile
 import time
 from typing import Dict, Any, Optional
@@ -81,8 +80,6 @@ class ScriptOperations:
         for shell in shells_to_try:
             if system == "windows":
                 # On Windows, try to find the executable in PATH
-                import shutil
-
                 for shell_cmd in shell_paths.get(shell, [shell]):
                     if shutil.which(shell_cmd):
                         self.logger.info(_("Selected shell: %s"), shell_cmd)

@@ -12,17 +12,14 @@ Supports multiple package managers per platform and provides detailed metadata
 including versions, installation paths, vendors, and package manager source.
 """
 
-import asyncio
 import json
 import logging
 import os
 import platform
 import re
 import subprocess
-import sys
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 
 from i18n import _
 
@@ -242,6 +239,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -281,6 +279,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -321,6 +320,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -410,6 +410,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -433,6 +434,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -490,6 +492,7 @@ class SoftwareInventoryCollector:
                                         capture_output=True,
                                         text=True,
                                         timeout=5,
+                                        check=False,
                                     )
 
                                     if result.returncode == 0:
@@ -525,7 +528,7 @@ class SoftwareInventoryCollector:
     def _collect_yum_packages(self):
         """Collect packages from YUM (Red Hat/CentOS)."""
         # Implementation would use 'yum list installed' or 'rpm -qa'
-        pass
+        logger.debug(_("YUM package collection not implemented"))
 
     def _collect_dnf_packages(self):
         """Collect packages from DNF (Fedora)."""
@@ -537,6 +540,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -581,6 +585,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -607,17 +612,17 @@ class SoftwareInventoryCollector:
     def _collect_zypper_packages(self):
         """Collect packages from Zypper (openSUSE)."""
         # Implementation would use 'zypper search --installed-only'
-        pass
+        logger.debug(_("Zypper package collection not implemented"))
 
     def _collect_portage_packages(self):
         """Collect packages from Portage (Gentoo)."""
         # Implementation would use 'equery list "*"'
-        pass
+        logger.debug(_("Portage package collection not implemented"))
 
     def _collect_apk_packages(self):
         """Collect packages from APK (Alpine Linux)."""
         # Implementation would use 'apk info'
-        pass
+        logger.debug(_("APK package collection not implemented"))
 
     def _collect_macos_app_store(self):
         """Collect Mac App Store applications."""
@@ -629,6 +634,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=120,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -682,17 +688,17 @@ class SoftwareInventoryCollector:
     def _collect_macports_packages(self):
         """Collect packages from MacPorts."""
         # Implementation would use 'port installed'
-        pass
+        logger.debug(_("MacPorts package collection not implemented"))
 
     def _collect_windows_registry_programs(self):
         """Collect programs from Windows Registry."""
         # Implementation would query registry keys for installed programs
-        pass
+        logger.debug(_("Windows Registry program collection not implemented"))
 
     def _collect_microsoft_store_apps(self):
         """Collect Microsoft Store applications."""
         # Implementation would use PowerShell Get-AppxPackage
-        pass
+        logger.debug(_("Microsoft Store app collection not implemented"))
 
     def _collect_winget_packages(self):
         """Collect packages from Windows Package Manager."""
@@ -704,6 +710,7 @@ class SoftwareInventoryCollector:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
             if result.returncode == 0:

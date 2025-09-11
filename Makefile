@@ -102,8 +102,8 @@ ifeq ($(OS),Windows_NT)
 	@if exist .pytest_cache $(RM) .pytest_cache 2>nul || echo
 	@if exist htmlcov $(RM) htmlcov 2>nul || echo
 	@if exist .coverage del .coverage 2>nul || echo
-	@for /r %%i in (*.pyc) do @del "%%i" 2>nul || echo >nul
-	@for /r %%i in (__pycache__) do @if exist "%%i" $(RM) "%%i" 2>nul || echo >nul
+	@for /r %%i in (*.pyc) do @del "%%i" 2>NUL || echo.
+	@for /r %%i in (__pycache__) do @if exist "%%i" $(RM) "%%i" 2>NUL || echo.
 else
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true

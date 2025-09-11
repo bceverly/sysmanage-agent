@@ -9,7 +9,7 @@ import platform
 import logging
 import re
 import subprocess
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 
 from i18n import _
@@ -1499,19 +1499,16 @@ class HardwareCollector:
                             # MAC address line
                             parts = line.split()
                             if len(parts) >= 2 and current_interface is not None:
-                                current_interface["mac_address"] = parts[
-                                    1
-                                ]  # pylint: disable=unsupported-assignment-operation
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["mac_address"] = parts[1]
                         elif "media:" in line and current_interface is not None:
                             # Media type information
                             if "Ethernet" in line:
-                                current_interface["type"] = (
-                                    "ethernet"  # pylint: disable=unsupported-assignment-operation
-                                )
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["type"] = "ethernet"
                             elif "IEEE802.11" in line or "wireless" in line.lower():
-                                current_interface["type"] = (
-                                    "wireless"  # pylint: disable=unsupported-assignment-operation
-                                )
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["type"] = "wireless"
 
                 # Add the last interface
                 if current_interface:

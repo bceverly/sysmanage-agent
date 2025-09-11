@@ -387,6 +387,7 @@ class UserAccessCollector:
 
                 # Get user's group memberships
                 group_names = []
+                group_result = None
                 try:
                     # Get all local groups, then check if user is a member of each
                     username = user.get("Name", "")
@@ -402,7 +403,11 @@ class UserAccessCollector:
                             check=False,
                         )
 
-                    if group_result.returncode == 0 and group_result.stdout.strip():
+                    if (
+                        group_result
+                        and group_result.returncode == 0
+                        and group_result.stdout.strip()
+                    ):
                         group_names = [
                             line.strip()
                             for line in group_result.stdout.strip().split("\n")
