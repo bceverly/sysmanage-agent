@@ -706,70 +706,115 @@ class UpdateDetector:
 
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")
-                in_packages = False
+                header_line = None
+                data_start_idx = 0
 
-                for line in lines:
-                    if "---" in line:
-                        in_packages = True
-                        continue
+                # Find header line to determine column positions
+                for i, line in enumerate(lines):
+                    if "Name" in line and "Id" in line and "Version" in line:
+                        header_line = line
+                        data_start_idx = i + 2  # Skip header and separator line
+                        break
 
-                    if in_packages and line.strip() and not line.startswith("No"):
-                        parts = line.split()
-                        if len(parts) >= 4:
-                            # Winget output format can vary, but typically:
-                            # Name    ID              Current        Available
-                            # or sometimes shows "< Unknown >" for current version
-                            package_name = parts[0]
-                            bundle_id = parts[1]
+                if header_line and data_start_idx < len(lines):
+                    # Parse column positions from header
+                    name_start = header_line.find("Name")
+                    id_start = header_line.find("Id")
+                    version_start = header_line.find("Version")
+                    available_start = header_line.find("Available")
+                    source_start = header_line.find("Source")
 
-                            # Find current and available versions by looking for version patterns
-                            # Skip "< Unknown >" and similar non-version strings
-                            current_version = None
-                            available_version = None
-
-                            # Look for version-like strings (contain dots and numbers)
-                            version_candidates = []
-                            for i, part in enumerate(parts[2:], start=2):
-                                # Skip angle bracket enclosed values like "< Unknown >"
-                                if part.startswith("<") and part.endswith(">"):
-                                    continue
-                                # Look for version patterns (contains digits and dots)
-                                if re.search(r"\d+\.\d+", part) or re.search(
-                                    r"\d+$", part
-                                ):
-                                    version_candidates.append((i, part))
-
-                            # If we found version candidates, use them
-                            if len(version_candidates) >= 1:
-                                # Last version candidate is typically the available version
-                                available_version = version_candidates[-1][1]
-                                # If we have 2+ candidates, first is current, otherwise current is unknown
-                                if len(version_candidates) >= 2:
-                                    current_version = version_candidates[0][1]
+                    # Process data lines
+                    for line in lines[data_start_idx:]:
+                        if (
+                            line.strip()
+                            and not line.startswith("No")
+                            and not "upgrades available" in line
+                        ):
+                            try:
+                                # Extract fields based on column positions
+                                if id_start > name_start:
+                                    package_name = line[name_start:id_start].strip()
+                                    if version_start > id_start:
+                                        bundle_id = line[id_start:version_start].strip()
+                                        if available_start > version_start:
+                                            current_version = line[
+                                                version_start:available_start
+                                            ].strip()
+                                            if source_start > available_start:
+                                                available_version = line[
+                                                    available_start:source_start
+                                                ].strip()
+                                            else:
+                                                available_version = (
+                                                    line[available_start:]
+                                                    .strip()
+                                                    .split()[0]
+                                                    if line[available_start:].strip()
+                                                    else "unknown"
+                                                )
+                                        else:
+                                            current_version = (
+                                                line[version_start:].strip().split()[0]
+                                                if line[version_start:].strip()
+                                                else "unknown"
+                                            )
+                                            available_version = "unknown"
+                                    else:
+                                        bundle_id = (
+                                            line[id_start:].strip().split()[0]
+                                            if line[id_start:].strip()
+                                            else package_name
+                                        )
+                                        current_version = "unknown"
+                                        available_version = "unknown"
                                 else:
-                                    # No current version detected, likely "< Unknown >"
-                                    current_version = "unknown"
-                            else:
-                                # Fallback to old parsing if no clear versions found
-                                current_version = (
-                                    parts[2] if len(parts) > 2 else "unknown"
-                                )
-                                available_version = (
-                                    parts[3] if len(parts) > 3 else "unknown"
-                                )
+                                    # Fallback to simple parsing
+                                    parts = line.split()
+                                    if len(parts) >= 2:
+                                        package_name = parts[0]
+                                        bundle_id = parts[1]
+                                        current_version = (
+                                            parts[2] if len(parts) > 2 else "unknown"
+                                        )
+                                        available_version = (
+                                            parts[3] if len(parts) > 3 else "unknown"
+                                        )
+                                    else:
+                                        continue
 
-                            # Only add update if we have a valid available version
-                            if available_version and available_version != "unknown":
-                                update = {
-                                    "package_name": package_name,
-                                    "bundle_id": bundle_id,
-                                    "current_version": current_version,
-                                    "available_version": available_version,
-                                    "package_manager": "winget",
-                                    "is_security_update": False,
-                                    "is_system_update": False,
-                                }
-                                self.available_updates.append(update)
+                                # Clean up extracted values
+                                package_name = package_name.strip()
+                                bundle_id = bundle_id.strip()
+                                current_version = current_version.strip()
+                                available_version = available_version.strip()
+
+                                # Skip if any critical field is empty
+                                if not package_name or not bundle_id:
+                                    continue
+
+                                # Only add update if we have a valid available version
+                                if (
+                                    available_version
+                                    and available_version != "unknown"
+                                    and available_version != current_version
+                                ):
+                                    update = {
+                                        "package_name": package_name,
+                                        "bundle_id": bundle_id,
+                                        "current_version": current_version,
+                                        "available_version": available_version,
+                                        "package_manager": "winget",
+                                        "is_security_update": False,
+                                        "is_system_update": False,
+                                    }
+                                    self.available_updates.append(update)
+
+                            except Exception as e:
+                                logger.debug(
+                                    _("Failed to parse winget line '%s': %s"), line, e
+                                )
+                                continue
 
         except Exception as e:
             logger.error(_("Failed to detect winget updates: %s"), str(e))
@@ -978,11 +1023,27 @@ class UpdateDetector:
         logger.info(_("Requested package managers: %s"), package_managers)
 
         for update in fresh_updates:
-            if update["package_name"] in package_names:
+            # Try exact match first, then partial match for better compatibility
+            package_match = None
+            for requested_name in package_names:
+                if (
+                    update["package_name"] == requested_name
+                    or requested_name in update["package_name"]
+                    or (
+                        update.get("bundle_id", "")
+                        and requested_name in update.get("bundle_id", "")
+                    )
+                ):
+                    package_match = requested_name
+                    break
+            if package_match:
                 manager = update["package_manager"]
                 logger.info(
-                    _("Found package '%s' with manager '%s', bundle_id='%s'"),
+                    _(
+                        "Found package '%s' (requested as '%s') with manager '%s', bundle_id='%s'"
+                    ),
                     update["package_name"],
+                    package_match,
                     manager,
                     update.get("bundle_id", "N/A"),
                 )
