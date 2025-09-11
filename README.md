@@ -250,15 +250,27 @@ source ~/.profile
 
 ### Dependencies
 All dependencies are automatically installed via `requirements.txt`:
-- `websockets` - WebSocket client communication
-- `requests` - HTTP client for registration
-- `psutil` - System information gathering
-- `pydantic` - Data validation and configuration
-- `asyncio` - Asynchronous I/O operations
-- **Security dependencies** (require Rust compiler):
-  - `cryptography` - Certificate validation and mTLS authentication
-  - `safety` - Security vulnerability scanning
-  - `bandit` - Security linting
+
+**Core Runtime Dependencies:**
+- `websockets>=13.0` - WebSocket client communication
+- `PyYAML>=6.0.2` - Configuration file parsing
+- `aiohttp>=3.12.0` - Asynchronous HTTP client for registration
+- `cryptography>=41.0.0` - Certificate validation and TLS support (requires Rust compiler)
+- `SQLAlchemy>=2.0.0` - Database ORM for local data storage
+- `alembic>=1.12.0` - Database migration management
+
+**Development Dependencies:**
+- `pytest>=7.0.0` - Testing framework
+- `pytest-asyncio>=0.21.0` - Async test support
+- `pytest-cov>=4.0.0` - Test coverage reporting
+- `black>=23.0.0` - Code formatting
+- `pylint>=3.0.0` - Code linting
+- `isort>=5.12.0` - Import sorting
+- `bandit>=1.7.0` - Security linting
+- `safety>=2.3.0,<4.0.0` - Security vulnerability scanning
+- `typer>=0.9.0,<0.18.0` - CLI interface support
+
+**Note:** The standard library `asyncio` is used for asynchronous operations but doesn't need to be installed separately as it's part of Python 3.7+.
 
 ### Required Directories and Permissions
 
