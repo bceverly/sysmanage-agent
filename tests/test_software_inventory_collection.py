@@ -321,7 +321,7 @@ class TestSoftwareInventoryCollector(
     @patch("subprocess.run")
     def test_collect_winget_packages_success(self, mock_run):
         """Test _collect_winget_packages with successful execution."""
-        mock_output = "Name               Id                           Version\n-------------------------------------------------\nFirefox            Mozilla.Firefox             75.0.0\nVSCode             Microsoft.VisualStudioCode  1.52.1"
+        mock_output = "Name               Id                           Version\n---------------------------------------------------------\nFirefox            Mozilla.Firefox                75.0.0\nVSCode             Microsoft.VisualStudioCode    1.52.1"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
         self.collector._collect_winget_packages()  # pylint: disable=protected-access

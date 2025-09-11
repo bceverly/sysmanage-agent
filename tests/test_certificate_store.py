@@ -3,6 +3,8 @@ Tests for agent certificate store functionality.
 """
 
 import os
+import platform
+import stat
 import tempfile
 import shutil
 import hashlib
@@ -83,21 +85,36 @@ class TestCertificateStore:  # pylint: disable=too-many-public-methods
 
         self.cert_store.store_certificates(cert_data)
 
-        # Client private key should be 0600 (owner read/write only)
-        key_perms = oct(self.cert_store.client_key_path.stat().st_mode)[-3:]
-        assert key_perms == "600"
+        if platform.system() == "Windows":
+            # On Windows, just verify files exist and are readable
+            # Windows doesn't use Unix-style permissions, but we can verify files were created
+            assert self.cert_store.client_key_path.exists()
+            assert self.cert_store.client_cert_path.exists()
+            assert self.cert_store.ca_cert_path.exists()
+            assert self.cert_store.server_fingerprint_path.exists()
 
-        # Other files should be 0644 (world readable)
-        cert_perms = oct(self.cert_store.client_cert_path.stat().st_mode)[-3:]
-        assert cert_perms == "644"
+            # Verify we can read the files
+            assert self.cert_store.client_key_path.read_text() == "PRIVATE_KEY"
+            assert self.cert_store.client_cert_path.read_text() == "CLIENT_CERT"
+            assert self.cert_store.ca_cert_path.read_text() == "CA_CERT"
+            assert self.cert_store.server_fingerprint_path.read_text() == "FINGERPRINT"
+        else:
+            # Unix-like systems - check actual permissions
+            # Client private key should be 0600 (owner read/write only)
+            key_perms = oct(self.cert_store.client_key_path.stat().st_mode)[-3:]
+            assert key_perms == "600"
 
-        ca_perms = oct(self.cert_store.ca_cert_path.stat().st_mode)[-3:]
-        assert ca_perms == "644"
+            # Other files should be 0644 (world readable)
+            cert_perms = oct(self.cert_store.client_cert_path.stat().st_mode)[-3:]
+            assert cert_perms == "644"
 
-        fingerprint_perms = oct(self.cert_store.server_fingerprint_path.stat().st_mode)[
-            -3:
-        ]
-        assert fingerprint_perms == "644"
+            ca_perms = oct(self.cert_store.ca_cert_path.stat().st_mode)[-3:]
+            assert ca_perms == "644"
+
+            fingerprint_perms = oct(
+                self.cert_store.server_fingerprint_path.stat().st_mode
+            )[-3:]
+            assert fingerprint_perms == "644"
 
     def test_load_certificates_success(self):
         """Test successful certificate loading."""
@@ -360,8 +377,27 @@ class TestCertificateStoreError:
     def test_certificate_store_directory_creation_failure(self):
         """Test handling of directory creation failure."""
         # Try to create certificate store in invalid location
-        with pytest.raises(Exception):
-            CertificateStore("/dev/null/invalid")
+        if platform.system() == "Windows":
+            # On Windows, use an invalid path like NUL device or invalid characters
+            invalid_paths = [
+                "NUL\\invalid",  # NUL is a reserved device name
+                "CON\\test",  # CON is a reserved device name
+                "C:\\*invalid*",  # Invalid characters in path
+                "\\\\?\\C:\\<>:|invalid",  # Invalid characters
+            ]
+            # Try each invalid path - at least one should fail
+            failed = False
+            for invalid_path in invalid_paths:
+                try:
+                    CertificateStore(invalid_path)
+                except (OSError, ValueError, Exception):
+                    failed = True
+                    break
+            assert failed, "Expected at least one invalid Windows path to fail"
+        else:
+            # Unix-like systems - use /dev/null which is a file, not a directory
+            with pytest.raises(Exception):
+                CertificateStore("/dev/null/invalid")
 
     def test_certificate_store_permission_errors(self):
         """Test handling of permission errors during file operations."""
@@ -369,33 +405,59 @@ class TestCertificateStoreError:
         try:
             cert_store = CertificateStore(temp_dir)
 
-            # Create read-only directory to simulate permission error
-            read_only_dir = Path(temp_dir) / "readonly"
-            read_only_dir.mkdir()
-            os.chmod(read_only_dir, 0o555)  # Read and execute only  # nosec B103
+            if platform.system() == "Windows":
+                # On Windows, create files and then make them read-only
+                cert_data = {
+                    "certificate": "CERT",
+                    "private_key": "KEY",
+                    "ca_certificate": "CA",
+                    "server_fingerprint": "FINGERPRINT",
+                }
 
-            cert_data = {
-                "certificate": "CERT",
-                "private_key": "KEY",
-                "ca_certificate": "CA",
-                "server_fingerprint": "FINGERPRINT",
-            }
-
-            # Override paths to point to read-only directory
-            cert_store.client_cert_path = read_only_dir / "client.crt"
-            cert_store.client_key_path = read_only_dir / "client.key"
-            cert_store.ca_cert_path = read_only_dir / "ca.crt"
-            cert_store.server_fingerprint_path = read_only_dir / "server.fingerprint"
-
-            # Should raise PermissionError
-            with pytest.raises(PermissionError):
+                # First store certificates normally
                 cert_store.store_certificates(cert_data)
 
-        finally:
-            # Clean up - restore permissions first
-            read_only_dir = Path(temp_dir) / "readonly"
-            if read_only_dir.exists():
+                # Now make one of the files read-only
+                cert_store.client_key_path.chmod(
+                    stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+                )
+
+                # Try to store certificates again - should fail on the read-only file
+                with pytest.raises(PermissionError):
+                    cert_store.store_certificates(cert_data)
+
+                # Clean up - restore write permissions
+                cert_store.client_key_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+            else:
+                # Unix-like systems - use chmod to create read-only directory
+                read_only_dir = Path(temp_dir) / "readonly"
+                read_only_dir.mkdir()
+                os.chmod(read_only_dir, 0o555)  # Read and execute only  # nosec B103
+
+                cert_data = {
+                    "certificate": "CERT",
+                    "private_key": "KEY",
+                    "ca_certificate": "CA",
+                    "server_fingerprint": "FINGERPRINT",
+                }
+
+                # Override paths to point to read-only directory
+                cert_store.client_cert_path = read_only_dir / "client.crt"
+                cert_store.client_key_path = read_only_dir / "client.key"
+                cert_store.ca_cert_path = read_only_dir / "ca.crt"
+                cert_store.server_fingerprint_path = (
+                    read_only_dir / "server.fingerprint"
+                )
+
+                # Should raise PermissionError
+                with pytest.raises(PermissionError):
+                    cert_store.store_certificates(cert_data)
+
+                # Clean up - restore permissions
                 os.chmod(read_only_dir, 0o755)  # nosec B103
+
+        finally:
+            # Clean up
             shutil.rmtree(temp_dir)
 
 

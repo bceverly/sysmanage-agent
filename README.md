@@ -178,17 +178,25 @@ xcode-select --install
 
 #### Windows
 ```powershell
-# Install Python 3.9+ from https://python.org/downloads/
+# 1. Install Chocolatey package manager (required for build tools)
+# Run PowerShell as Administrator and execute:
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# 2. Install GNU Make using Chocolatey (required for build processes)
+# Run from Administrative Command Prompt or PowerShell:
+choco install make
+
+# 3. Install Python 3.9+ from https://python.org/downloads/
 # Make sure to check "Add Python to PATH" during installation
 # SQLite3 is included with Python installations on Windows
 
-# Install Rust from https://rustup.rs/
+# 4. Install Rust from https://rustup.rs/
 # Download and run rustup-init.exe
 
-# Install Git for Windows (includes build tools)
+# 5. Install Git for Windows (includes build tools)
 # Download from https://git-scm.com/download/win
 
-# Install Windows Build Tools (if needed for native packages)
+# 6. Install Windows Build Tools (if needed for native packages)
 # Note: windows-build-tools package is deprecated and may not work
 # Instead, install Visual Studio Build Tools from Microsoft:
 # https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
@@ -978,8 +986,30 @@ sysmanage-agent/
 
 ### Running Tests
 
+The project includes a Makefile that works on all platforms including Windows:
+
 ```bash
-# Run all tests
+# Run all tests with coverage (cross-platform)
+make test
+
+# Clean test artifacts
+make clean
+
+# Setup development environment
+make setup
+
+# Run linting
+make lint
+```
+
+#### Platform-Specific Test Commands
+
+**Linux/macOS/BSD:**
+```bash
+# Using make (recommended)
+make test
+
+# Direct pytest execution
 python -m pytest tests/ -v
 
 # Run with coverage
@@ -988,6 +1018,26 @@ python -m pytest tests/ --cov=. --cov-report=html
 # Run specific test
 python -m pytest tests/test_basic.py -v
 ```
+
+**Windows:**
+```powershell
+# Using make (requires Make for Windows or use from Git Bash)
+make test
+
+# Direct pytest execution
+python -m pytest tests\ -v
+
+# Run with coverage
+python -m pytest tests\ --cov=. --cov-report=html
+
+# Run specific test
+python -m pytest tests\test_basic.py -v
+```
+
+**Note for Windows Users:** 
+- The Makefile automatically detects Windows and adjusts paths accordingly
+- Some tests related to Unix file permissions are automatically skipped on Windows
+- All core functionality tests run successfully on Windows
 
 ### Code Quality
 

@@ -193,8 +193,8 @@ MemAvailable:   12582912 kB
         """Test Windows CPU information collection."""
         mock_system.return_value = "Windows"
 
-        # Mock wmic output
-        wmic_output = "Node,MaxClockSpeed,Manufacturer,Name,NumberOfCores,NumberOfLogicalProcessors\nDESKTOP-TEST,3200,Intel,Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz,8,8"
+        # Mock wmic output - order matches actual wmic csv output
+        wmic_output = "Node,Manufacturer,MaxClockSpeed,Name,NumberOfCores,NumberOfLogicalProcessors\nDESKTOP-TEST,Intel,3200,Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz,8,8"
 
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = wmic_output

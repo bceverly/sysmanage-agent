@@ -6,10 +6,17 @@ Handles cross-platform collection of local user accounts and groups.
 import json
 import logging
 import platform
-import pwd
-import grp
 import subprocess
 from typing import Any, Dict, List
+
+# Unix-only imports - conditionally imported based on platform
+try:
+    import pwd
+    import grp
+except ImportError:
+    # Windows doesn't have pwd/grp modules
+    pwd = None
+    grp = None
 
 
 class UserAccessCollector:
@@ -54,6 +61,9 @@ class UserAccessCollector:
     def _get_linux_users(self) -> List[Dict[str, Any]]:
         """Get Linux user accounts from /etc/passwd."""
         users = []
+        if pwd is None:
+            self.logger.warning("pwd module not available on this platform")
+            return users
         try:
             for user in pwd.getpwall():
                 # Determine if it's a system user (typically UID < 1000 for Linux)
@@ -61,22 +71,23 @@ class UserAccessCollector:
 
                 # Get user's group memberships
                 group_names = []
-                try:
-                    # Get all groups and check membership
-                    for group in grp.getgrall():
-                        if user.pw_name in group.gr_mem:
-                            group_names.append(group.gr_name)
-                    # Also include user's primary group
+                if grp is not None:
                     try:
-                        primary_group = grp.getgrgid(user.pw_gid)
-                        if primary_group.gr_name not in group_names:
-                            group_names.append(primary_group.gr_name)
-                    except KeyError:
-                        pass  # Primary group not found
-                except Exception as exc:
-                    self.logger.debug(
-                        "Failed to get groups for user %s: %s", user.pw_name, exc
-                    )
+                        # Get all groups and check membership
+                        for group in grp.getgrall():
+                            if user.pw_name in group.gr_mem:
+                                group_names.append(group.gr_name)
+                        # Also include user's primary group
+                        try:
+                            primary_group = grp.getgrgid(user.pw_gid)
+                            if primary_group.gr_name not in group_names:
+                                group_names.append(primary_group.gr_name)
+                        except KeyError:
+                            pass  # Primary group not found
+                    except Exception as exc:
+                        self.logger.debug(
+                            "Failed to get groups for user %s: %s", user.pw_name, exc
+                        )
 
                 users.append(
                     {
@@ -96,6 +107,9 @@ class UserAccessCollector:
     def _get_linux_groups(self) -> List[Dict[str, Any]]:
         """Get Linux groups from /etc/group."""
         groups = []
+        if grp is None:
+            self.logger.warning("grp module not available on this platform")
+            return groups
         try:
             for group in grp.getgrall():
                 # Determine if it's a system group (typically GID < 1000 for Linux)
@@ -216,42 +230,48 @@ class UserAccessCollector:
         except Exception as e:
             self.logger.error("Failed to collect macOS users: %s", e)
             # Fallback to pwd module if dscl fails
-            try:
-                for user in pwd.getpwall():
-                    is_system_user = user.pw_uid < 500  # macOS system user threshold
+            if pwd is not None:
+                try:
+                    for user in pwd.getpwall():
+                        is_system_user = (
+                            user.pw_uid < 500
+                        )  # macOS system user threshold
 
-                    # Get user's group memberships using grp fallback
-                    group_names = []
-                    try:
-                        for group in grp.getgrall():
-                            if user.pw_name in group.gr_mem:
-                                group_names.append(group.gr_name)
-                        # Also include user's primary group
-                        try:
-                            primary_group = grp.getgrgid(user.pw_gid)
-                            if primary_group.gr_name not in group_names:
-                                group_names.append(primary_group.gr_name)
-                        except KeyError:
-                            pass
-                    except Exception as fallback_exc:
-                        self.logger.debug(
-                            "Failed to get groups for user %s: %s",
-                            user.pw_name,
-                            fallback_exc,
+                        # Get user's group memberships using grp fallback
+                        group_names = []
+                        if grp is not None:
+                            try:
+                                for group in grp.getgrall():
+                                    if user.pw_name in group.gr_mem:
+                                        group_names.append(group.gr_name)
+                                # Also include user's primary group
+                                try:
+                                    primary_group = grp.getgrgid(user.pw_gid)
+                                    if primary_group.gr_name not in group_names:
+                                        group_names.append(primary_group.gr_name)
+                                except KeyError:
+                                    pass
+                            except Exception as fallback_exc:
+                                self.logger.debug(
+                                    "Failed to get groups for user %s: %s",
+                                    user.pw_name,
+                                    fallback_exc,
+                                )
+
+                        users.append(
+                            {
+                                "username": user.pw_name,
+                                "uid": user.pw_uid,
+                                "home_directory": user.pw_dir,
+                                "shell": user.pw_shell,
+                                "is_system_user": is_system_user,
+                                "groups": group_names,
+                            }
                         )
-
-                    users.append(
-                        {
-                            "username": user.pw_name,
-                            "uid": user.pw_uid,
-                            "home_directory": user.pw_dir,
-                            "shell": user.pw_shell,
-                            "is_system_user": is_system_user,
-                            "groups": group_names,
-                        }
+                except Exception as pwd_error:
+                    self.logger.error(
+                        "Fallback pwd collection also failed: %s", pwd_error
                     )
-            except Exception as pwd_error:
-                self.logger.error("Fallback pwd collection also failed: %s", pwd_error)
 
         return users
 
@@ -311,18 +331,23 @@ class UserAccessCollector:
         except Exception as e:
             self.logger.error("Failed to collect macOS groups: %s", e)
             # Fallback to grp module if dscl fails
-            try:
-                for group in grp.getgrall():
-                    is_system_group = group.gr_gid < 500  # macOS system group threshold
-                    groups.append(
-                        {
-                            "group_name": group.gr_name,
-                            "gid": group.gr_gid,
-                            "is_system_group": is_system_group,
-                        }
+            if grp is not None:
+                try:
+                    for group in grp.getgrall():
+                        is_system_group = (
+                            group.gr_gid < 500
+                        )  # macOS system group threshold
+                        groups.append(
+                            {
+                                "group_name": group.gr_name,
+                                "gid": group.gr_gid,
+                                "is_system_group": is_system_group,
+                            }
+                        )
+                except Exception as grp_error:
+                    self.logger.error(
+                        "Fallback grp collection also failed: %s", grp_error
                     )
-            except Exception as grp_error:
-                self.logger.error("Fallback grp collection also failed: %s", grp_error)
 
         return groups
 
@@ -363,17 +388,19 @@ class UserAccessCollector:
                 # Get user's group memberships
                 group_names = []
                 try:
-                    # Get groups for this user
-                    group_result = subprocess.run(
-                        [
-                            "powershell",
-                            "-Command",
-                            f"Get-LocalGroupMember | Where-Object {{$_.Name -like '*\\{user.get('Name', '')}' -or $_.Name -eq '{user.get('Name', '')}'}} | ForEach-Object {{(Get-LocalGroup -SID $_.SID).Name}}",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        check=False,
-                    )
+                    # Get all local groups, then check if user is a member of each
+                    username = user.get("Name", "")
+                    if username:
+                        group_result = subprocess.run(
+                            [
+                                "powershell",
+                                "-Command",
+                                f"Get-LocalGroup | ForEach-Object {{ try {{ $members = Get-LocalGroupMember -Group $_.Name -ErrorAction SilentlyContinue; if ($members | Where-Object {{$_.Name -like '*\\{username}' -or $_.Name -eq '{username}'}}) {{ $_.Name }} }} catch {{ }} }}",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
 
                     if group_result.returncode == 0 and group_result.stdout.strip():
                         group_names = [
@@ -459,6 +486,9 @@ class UserAccessCollector:
     def _get_bsd_users(self) -> List[Dict[str, Any]]:
         """Get BSD user accounts from /etc/passwd using pwd module."""
         users = []
+        if pwd is None:
+            self.logger.warning("pwd module not available on this platform")
+            return users
         try:
             for user in pwd.getpwall():
                 # BSD systems typically use UID < 1000 for system users
@@ -466,24 +496,25 @@ class UserAccessCollector:
 
                 # Get user's group memberships
                 group_names = []
-                try:
-                    # Get all groups and check membership
-                    for group in grp.getgrall():
-                        if user.pw_name in group.gr_mem:
-                            group_names.append(group.gr_name)
-                    # Also include user's primary group
+                if grp is not None:
                     try:
-                        primary_group = grp.getgrgid(user.pw_gid)
-                        if primary_group.gr_name not in group_names:
-                            group_names.append(primary_group.gr_name)
-                    except KeyError:
-                        pass
-                except Exception as e:
-                    self.logger.debug(
-                        "Failed to get group memberships for user %s: %s",
-                        user.pw_name,
-                        e,
-                    )
+                        # Get all groups and check membership
+                        for group in grp.getgrall():
+                            if user.pw_name in group.gr_mem:
+                                group_names.append(group.gr_name)
+                        # Also include user's primary group
+                        try:
+                            primary_group = grp.getgrgid(user.pw_gid)
+                            if primary_group.gr_name not in group_names:
+                                group_names.append(primary_group.gr_name)
+                        except KeyError:
+                            pass
+                    except Exception as e:
+                        self.logger.debug(
+                            "Failed to get group memberships for user %s: %s",
+                            user.pw_name,
+                            e,
+                        )
 
                 user_info = {
                     "username": user.pw_name,
@@ -506,6 +537,9 @@ class UserAccessCollector:
     def _get_bsd_groups(self) -> List[Dict[str, Any]]:
         """Get BSD groups from /etc/group using grp module."""
         groups = []
+        if grp is None:
+            self.logger.warning("grp module not available on this platform")
+            return groups
         try:
             for group in grp.getgrall():
                 # BSD systems typically use GID < 1000 for system groups

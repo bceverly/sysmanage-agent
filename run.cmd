@@ -103,10 +103,10 @@ if exist sysmanage-agent.yaml (
 )
 
 echo Agent Details:
-echo   🖥️  Hostname: %HOSTNAME%
-echo   🔧 Platform: %PLATFORM%
-echo   📁 Directory: %SCRIPT_DIR%
-echo   🌐 Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
+echo   [*] Hostname: %HOSTNAME%
+echo   [+] Platform: %PLATFORM%
+echo   [-] Directory: %SCRIPT_DIR%
+echo   [~] Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
 
 REM Start the agent in background
 echo Starting SysManage Agent daemon...
@@ -124,22 +124,22 @@ timeout /t 3 >NUL
 
 if exist logs\agent.log (
     echo.
-    echo ✅ SysManage Agent startup initiated!
+    echo [OK] SysManage Agent startup initiated!
     echo.
     echo Agent Information:
-    echo   🖥️  Hostname: %HOSTNAME%
-    echo   🔗 Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
+    echo   [*] Hostname: %HOSTNAME%
+    echo   [~] Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
     echo.
     echo Logs:
-    echo   📄 Agent Log: type logs\agent.log
-    echo   📄 Live Log: Get-Content logs\agent.log -Wait ^(PowerShell^)
+    echo   [i] Agent Log: type logs\agent.log
+    echo   [i] Live Log: Get-Content logs\agent.log -Wait ^(PowerShell^)
     echo.
     echo To stop the agent: stop.cmd
     echo.
     echo Note: Check logs\agent.log to verify successful startup
 ) else (
     echo.
-    echo ❌ ERROR: SysManage Agent may have failed to start!
+    echo [ERROR] SysManage Agent may have failed to start!
     echo.
     echo Check for error messages above or try running:
     echo   %PYTHON_CMD% main.py

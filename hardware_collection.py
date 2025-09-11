@@ -1004,15 +1004,18 @@ class HardwareCollector:
                 check=False,
             )
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
+                lines = [
+                    line for line in result.stdout.strip().split("\n") if line.strip()
+                ]
                 if len(lines) > 1:
-                    # Skip header and get first CPU
+                    # Skip header and get first CPU data line
                     data = lines[1].split(",")
-                    if len(data) >= 5:
+                    if len(data) >= 6:
+                        # CSV format: Node,Manufacturer,MaxClockSpeed,Name,NumberOfCores,NumberOfLogicalProcessors
+                        cpu_info["vendor"] = data[1].strip()
                         cpu_info["frequency_mhz"] = (
-                            int(data[1]) if data[1].strip() else 0
+                            int(data[2]) if data[2].strip() else 0
                         )
-                        cpu_info["vendor"] = data[2].strip()
                         cpu_info["model"] = data[3].strip()
                         cpu_info["cores"] = int(data[4]) if data[4].strip() else 0
                         cpu_info["threads"] = int(data[5]) if data[5].strip() else 0
@@ -1035,7 +1038,9 @@ class HardwareCollector:
                 check=False,
             )
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
+                lines = [
+                    line for line in result.stdout.strip().split("\n") if line.strip()
+                ]
                 if len(lines) > 1:
                     data = lines[1].split(",")
                     if len(data) >= 2 and data[1].strip():
@@ -1067,7 +1072,9 @@ class HardwareCollector:
                 check=False,
             )
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
+                lines = [
+                    line for line in result.stdout.strip().split("\n") if line.strip()
+                ]
                 for line in lines[1:]:  # Skip header
                     data = line.split(",")
                     if len(data) >= 4 and data[1].strip():
@@ -1176,7 +1183,9 @@ class HardwareCollector:
                 check=False,
             )
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
+                lines = [
+                    line for line in result.stdout.strip().split("\n") if line.strip()
+                ]
                 for line in lines[1:]:  # Skip header
                     data = line.split(",")
                     if len(data) >= 4 and data[2].strip():

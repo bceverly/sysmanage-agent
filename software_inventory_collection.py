@@ -708,31 +708,63 @@ class SoftwareInventoryCollector:
 
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")
-                # Skip header lines
-                for line in lines[2:]:  # Usually has 2 header lines
-                    if line.strip() and not line.startswith("-"):
-                        # Parse winget output format
-                        parts = line.split()
-                        if len(parts) >= 3:
-                            package_name = parts[0]
-                            package_id = parts[1]
-                            version = parts[2] if len(parts) > 2 else None
+                # Find the header line to understand column positions
+                header_line = None
+                data_start_idx = 0
+                for i, line in enumerate(lines):
+                    if "Name" in line and "Id" in line and "Version" in line:
+                        header_line = line
+                        # Skip the header and separator line
+                        data_start_idx = i + 2
+                        break
 
-                            package = {
-                                "package_name": package_name,
-                                "version": version,
-                                "bundle_id": package_id,
-                                "package_manager": "winget",
-                                "source": (
-                                    "microsoft_store"
-                                    if "msstore" in package_id.lower()
-                                    else "winget_repository"
-                                ),
-                                "is_system_package": False,
-                                "is_user_installed": True,
-                            }
+                if header_line:
+                    # Extract column positions from header
+                    name_pos = header_line.find("Name")
+                    id_pos = header_line.find("Id")
+                    version_pos = header_line.find("Version")
 
-                            self.collected_packages.append(package)
+                    for line in lines[data_start_idx:]:
+                        if line.strip() and not line.startswith("-"):
+                            # Parse using column positions for more reliable parsing
+                            if len(line) > version_pos:
+                                package_name = (
+                                    line[name_pos:id_pos].strip()
+                                    if id_pos > name_pos
+                                    else line[name_pos:].strip()
+                                )
+                                package_id = (
+                                    line[id_pos:version_pos].strip()
+                                    if version_pos > id_pos
+                                    else line[id_pos:].strip()
+                                )
+                                version_part = (
+                                    line[version_pos:].split()
+                                    if len(line) > version_pos
+                                    else []
+                                )
+                                version = (
+                                    version_part[0]
+                                    if version_part and version_part[0] != ""
+                                    else "Unknown"
+                                )
+
+                                if package_name and package_id:
+                                    package = {
+                                        "package_name": package_name,
+                                        "version": version,
+                                        "bundle_id": package_id,
+                                        "package_manager": "winget",
+                                        "source": (
+                                            "microsoft_store"
+                                            if "msstore" in package_id.lower()
+                                            else "winget_repository"
+                                        ),
+                                        "is_system_package": False,
+                                        "is_user_installed": True,
+                                    }
+
+                                    self.collected_packages.append(package)
 
         except Exception as e:
             logger.error(_("Failed to collect winget packages: %s"), str(e))

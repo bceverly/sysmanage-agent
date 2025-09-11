@@ -74,10 +74,10 @@ timeout /t 1 >NUL
 
 if %PYTHON_COUNT% EQU 0 (
     echo.
-    echo ✅ SysManage Agent stopped successfully!
+    echo [OK] SysManage Agent stopped successfully!
 ) else (
     echo.
-    echo ⚠️  Warning: %PYTHON_COUNT% Python process^(es^) may still be running
+    echo [WARNING] %PYTHON_COUNT% Python process^(es^) may still be running
     echo.
     echo To manually check for processes:
     echo   tasklist ^| find "python"

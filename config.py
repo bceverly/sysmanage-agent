@@ -42,11 +42,11 @@ class ConfigManager:
 
         local_config = "./sysmanage-agent.yaml"
 
-        # Temporarily prefer local config for clean logging demonstration
-        if os.path.exists(local_config):
-            return local_config
+        # Security-first priority: system config takes precedence over local config
         if os.path.exists(system_config):
             return system_config
+        if os.path.exists(local_config):
+            return local_config
         if os.path.exists(default_filename):
             # Backward compatibility - warn but allow
             return default_filename
