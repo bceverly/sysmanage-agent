@@ -716,16 +716,60 @@ class UpdateDetector:
                     if in_packages and line.strip() and not line.startswith("No"):
                         parts = line.split()
                         if len(parts) >= 4:
-                            update = {
-                                "package_name": parts[0],
-                                "bundle_id": parts[1],
-                                "current_version": parts[2],
-                                "available_version": parts[3],
-                                "package_manager": "winget",
-                                "is_security_update": False,
-                                "is_system_update": False,
-                            }
-                            self.available_updates.append(update)
+                            # Winget output format can vary, but typically:
+                            # Name    ID              Current        Available
+                            # or sometimes shows "< Unknown >" for current version
+                            package_name = parts[0]
+                            bundle_id = parts[1]
+
+                            # Find current and available versions by looking for version patterns
+                            # Skip "< Unknown >" and similar non-version strings
+                            current_version = None
+                            available_version = None
+
+                            # Look for version-like strings (contain dots and numbers)
+                            version_candidates = []
+                            for i, part in enumerate(parts[2:], start=2):
+                                # Skip angle bracket enclosed values like "< Unknown >"
+                                if part.startswith("<") and part.endswith(">"):
+                                    continue
+                                # Look for version patterns (contains digits and dots)
+                                if re.search(r"\d+\.\d+", part) or re.search(
+                                    r"\d+$", part
+                                ):
+                                    version_candidates.append((i, part))
+
+                            # If we found version candidates, use them
+                            if len(version_candidates) >= 1:
+                                # Last version candidate is typically the available version
+                                available_version = version_candidates[-1][1]
+                                # If we have 2+ candidates, first is current, otherwise current is unknown
+                                if len(version_candidates) >= 2:
+                                    current_version = version_candidates[0][1]
+                                else:
+                                    # No current version detected, likely "< Unknown >"
+                                    current_version = "unknown"
+                            else:
+                                # Fallback to old parsing if no clear versions found
+                                current_version = (
+                                    parts[2] if len(parts) > 2 else "unknown"
+                                )
+                                available_version = (
+                                    parts[3] if len(parts) > 3 else "unknown"
+                                )
+
+                            # Only add update if we have a valid available version
+                            if available_version and available_version != "unknown":
+                                update = {
+                                    "package_name": package_name,
+                                    "bundle_id": bundle_id,
+                                    "current_version": current_version,
+                                    "available_version": available_version,
+                                    "package_manager": "winget",
+                                    "is_security_update": False,
+                                    "is_system_update": False,
+                                }
+                                self.available_updates.append(update)
 
         except Exception as e:
             logger.error(_("Failed to detect winget updates: %s"), str(e))

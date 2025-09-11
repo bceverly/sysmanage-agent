@@ -14,10 +14,12 @@ import os
 # Add current directory to path to import modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import pytest
 from message_handler import QueuedMessageHandler
 from database.models import Priority
 
 
+@pytest.mark.asyncio
 async def test_script_result_message():
     """Test sending a script execution result message."""
 

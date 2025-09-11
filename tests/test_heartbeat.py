@@ -71,6 +71,9 @@ i18n:
             agent.websocket = AsyncMock()
             agent.connected = True  # Set connected flag for tests
             agent.logger = Mock()
+
+            # Mock the database access for host_id after agent creation
+            agent.get_stored_host_id_sync = Mock(return_value=3)
             return agent
 
     def test_create_heartbeat_message(self, mock_agent):
