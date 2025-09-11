@@ -1,6 +1,6 @@
 @echo off
 REM SysManage Agent Stop Script for Windows
-REM Stops the SysManage agent daemon (both foreground and background, privileged or not)
+REM Stops the SysManage agent daemon
 
 setlocal EnableDelayedExpansion
 
@@ -10,7 +10,6 @@ REM Get the directory where this script is located
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
-REM Initialize counter
 set "STOPPED_COUNT=0"
 
 REM First, try to stop using PID file if it exists
@@ -34,108 +33,39 @@ if exist logs\agent.pid (
     del logs\agent.pid >NUL 2>&1
 )
 
-REM Check for agent processes by looking at their working directory
-echo Checking for SysManage Agent processes...
-
-REM Method 1: Look for Python processes running in our directory
-REM This works even when we can't see command line due to privilege differences
-for /f "tokens=2" %%p in ('tasklist /FI "IMAGENAME eq python.exe" /FO CSV ^| findstr /V "PID"') do (
+REM Method 1: Kill Python processes running main.py
+echo Searching for Python processes running main.py...
+for /f "skip=1 tokens=2" %%p in ('wmic process where "name='python.exe'" get processid 2^>nul') do (
     set "pid=%%p"
-    set "pid=!pid:"=!"
-    if not "!pid!"=="" if not "!pid!"=="PID" (
-        REM Try to determine if this is our agent by checking if it can access our files
-        REM Use handle.exe if available, or use a heuristic approach
-        
-        REM First, let's just check if it's a Python process running from our virtual environment
-        REM by looking at the executable path when possible
-        for /f "tokens=*" %%c in ('wmic process where "processid='!pid!'" get executablepath /format:list 2^>nul ^| findstr "ExecutablePath"') do (
-            set "exepath=%%c"
-            echo !exepath! | findstr /i "%SCRIPT_DIR%" >nul 2>&1
+    if not "!pid!"=="" if not "!pid!"=="ProcessId" (
+        REM Check if this PID is running main.py
+        wmic process where "processid=!pid!" get commandline 2>nul | findstr /i "main.py" >nul 2>&1
+        if not errorlevel 1 (
+            echo Found main.py process ^(PID: !pid!^), stopping...
+            taskkill /PID !pid! /F >NUL 2>&1
             if not errorlevel 1 (
-                echo Found SysManage Agent process in venv ^(PID: !pid!^), stopping...
-                taskkill /PID !pid! /F >NUL 2>&1
-                if not errorlevel 1 (
-                    echo Stopped SysManage Agent process ^(PID: !pid!^)
-                    set /a STOPPED_COUNT+=1
-                )
+                echo Successfully stopped process ^(PID: !pid!^)
+                set /a STOPPED_COUNT+=1
+            ) else (
+                echo Warning: Failed to stop process !pid!
             )
         )
     )
 )
 
-REM Method 2: Try to find processes with command line containing main.py (when accessible)
-for /f "tokens=2 delims==" %%i in ('wmic process where "name='python.exe'" get processid^,commandline /format:list 2^>nul ^| findstr "ProcessId"') do (
-    set "pid=%%i"
-    if not "!pid!"=="" (
-        for /f "tokens=*" %%c in ('wmic process where "processid='!pid!'" get commandline /format:list 2^>nul ^| findstr "CommandLine"') do (
-            set "cmdline=%%c"
-            if not "!cmdline!"=="" (
-                echo !cmdline! | findstr /i "main.py" >nul 2>&1
-                if not errorlevel 1 (
-                    echo Found SysManage Agent by command line ^(PID: !pid!^), stopping...
-                    taskkill /PID !pid! /F >NUL 2>&1
-                    if not errorlevel 1 (
-                        echo Stopped SysManage Agent process ^(PID: !pid!^)
-                        set /a STOPPED_COUNT+=1
-                    )
-                )
-            )
-        )
-    )
-)
-
-REM Method 3: Also check for pythonw.exe (windowless Python)
-for /f "tokens=2" %%p in ('tasklist /FI "IMAGENAME eq pythonw.exe" /FO CSV ^| findstr /V "PID"') do (
-    set "pid=%%p"
-    set "pid=!pid:"=!"
-    if not "!pid!"=="" if not "!pid!"=="PID" (
-        for /f "tokens=*" %%c in ('wmic process where "processid='!pid!'" get executablepath /format:list 2^>nul ^| findstr "ExecutablePath"') do (
-            set "exepath=%%c"
-            echo !exepath! | findstr /i "%SCRIPT_DIR%" >nul 2>&1
-            if not errorlevel 1 (
-                echo Found background SysManage Agent ^(PID: !pid!^), stopping...
-                taskkill /PID !pid! /F >NUL 2>&1
-                if not errorlevel 1 (
-                    echo Stopped background Agent process ^(PID: !pid!^)
-                    set /a STOPPED_COUNT+=1
-                )
-            )
-        )
-    )
-)
-
-REM Method 4: Fallback - if agent is definitely running (server shows it's online)
-REM but we can't detect it, kill ALL Python processes from our venv directory
-REM This is more aggressive but necessary for privileged processes
+REM Method 2: If no main.py processes found, kill all python.exe processes
 if !STOPPED_COUNT! EQU 0 (
-    echo No processes found by standard methods. Trying aggressive detection...
-    
-    REM Look for any python.exe processes and check their executable path
-    for /f "tokens=2" %%p in ('tasklist /FI "IMAGENAME eq python.exe" /FO CSV ^| findstr /V "PID"') do (
+    echo No main.py processes found. Checking all python.exe processes...
+    for /f "tokens=2" %%p in ('tasklist ^| findstr "python.exe" 2^>nul') do (
         set "pid=%%p"
-        set "pid=!pid:"=!"
-        if not "!pid!"=="" if not "!pid!"=="PID" (
-            REM Check if the process is using files in our directory
-            REM by attempting to kill it and see if it affects our logs
-            echo Checking process !pid! - attempting to stop...
+        if not "!pid!"=="" (
+            echo Stopping Python process ^(PID: !pid!^)...
             taskkill /PID !pid! /F >NUL 2>&1
             if not errorlevel 1 (
-                echo Stopped Python process ^(PID: !pid!^) - may have been SysManage Agent
+                echo Successfully stopped process ^(PID: !pid!^)
                 set /a STOPPED_COUNT+=1
-            )
-        )
-    )
-    
-    REM Also check pythonw.exe
-    for /f "tokens=2" %%p in ('tasklist /FI "IMAGENAME eq pythonw.exe" /FO CSV ^| findstr /V "PID"') do (
-        set "pid=%%p"
-        set "pid=!pid:"=!"
-        if not "!pid!"=="" if not "!pid!"=="PID" (
-            echo Stopping pythonw.exe process !pid!...
-            taskkill /PID !pid! /F >NUL 2>&1
-            if not errorlevel 1 (
-                echo Stopped pythonw.exe process ^(PID: !pid!^) - may have been SysManage Agent
-                set /a STOPPED_COUNT+=1
+            ) else (
+                echo Warning: Failed to stop process !pid!
             )
         )
     )
@@ -152,7 +82,7 @@ timeout /t 2 /nobreak >NUL
 
 echo.
 if !STOPPED_COUNT! GTR 0 (
-    echo [OK] Stopped !STOPPED_COUNT! process^(es^) ^(may have included SysManage Agent^)
+    echo [OK] Successfully stopped !STOPPED_COUNT! process^(es^)
     echo.
     echo Wait a few moments and check your server dashboard to confirm the agent is offline.
 ) else (
@@ -170,5 +100,6 @@ echo To verify the agent is stopped, check:
 echo - Server dashboard should show agent as offline
 echo - Task Manager should show no python.exe processes from this directory
 echo - Log files in logs\ directory should stop being updated
+echo - Run: tasklist ^| findstr python
 
 echo.
