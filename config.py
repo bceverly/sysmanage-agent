@@ -26,7 +26,7 @@ class ConfigManager:
 
         Priority order (security-first):
         1. If absolute path provided (e.g., for tests), use it directly
-        2. /etc/sysmanage-agent.yaml (system config)
+        2. Platform-specific system config location
         3. ./sysmanage-agent.yaml (local config)
         4. Fallback to provided filename for backward compatibility
         """
@@ -34,7 +34,12 @@ class ConfigManager:
         if os.path.isabs(default_filename):
             return default_filename
 
-        system_config = "/etc/sysmanage-agent.yaml"
+        # Platform-specific system config paths
+        if os.name == "nt":  # Windows
+            system_config = r"C:\ProgramData\SysManage\sysmanage-agent.yaml"
+        else:  # Unix-like (Linux, macOS, BSD)
+            system_config = "/etc/sysmanage-agent.yaml"
+
         local_config = "./sysmanage-agent.yaml"
 
         # Temporarily prefer local config for clean logging demonstration
@@ -51,11 +56,16 @@ class ConfigManager:
     def load_config(self) -> None:
         """Load configuration from YAML file."""
         if not os.path.exists(self.config_file):
-            raise FileNotFoundError(
-                _(
-                    "Configuration file '%s' not found. Expected locations: /etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
+            if os.name == "nt":  # Windows
+                expected_locations = r"C:\ProgramData\SysManage\sysmanage-agent.yaml or ./sysmanage-agent.yaml"
+            else:  # Unix-like
+                expected_locations = (
+                    "/etc/sysmanage-agent.yaml or ./sysmanage-agent.yaml"
                 )
-                % self.config_file
+
+            raise FileNotFoundError(
+                _("Configuration file '%s' not found. Expected locations: %s")
+                % (self.config_file, expected_locations)
             )
 
         try:

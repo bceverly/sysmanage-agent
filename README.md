@@ -188,8 +188,10 @@ xcode-select --install
 # Install Git for Windows (includes build tools)
 # Download from https://git-scm.com/download/win
 
-# Optional: Install Windows Build Tools for native packages
-npm install --global windows-build-tools
+# Install Windows Build Tools (if needed for native packages)
+# Note: windows-build-tools package is deprecated and may not work
+# Instead, install Visual Studio Build Tools from Microsoft:
+# https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
 ```
 
 #### FreeBSD
@@ -255,7 +257,9 @@ All dependencies are automatically installed via `requirements.txt`:
 The SysManage agent requires certain directories to exist with proper permissions for normal operation:
 
 #### Certificate Storage Directory
-**Default location**: `/etc/sysmanage-agent/` (automatically created if it doesn't exist)
+**Default locations**: 
+- **Linux/macOS/BSD**: `/etc/sysmanage-agent/` (automatically created if it doesn't exist)
+- **Windows**: `C:\ProgramData\SysManage\` (automatically created if it doesn't exist)
 
 ```bash
 # Create certificate directory with proper permissions (Linux/macOS)
@@ -266,8 +270,8 @@ sudo chmod 0700 /etc/sysmanage-agent
 
 ```powershell
 # Create certificate directory (Windows)
-mkdir C:\sysmanage-agent
-icacls "C:\sysmanage-agent" /grant "sysmanage-agent:(OI)(CI)F" /T
+mkdir "C:\ProgramData\SysManage"
+icacls "C:\ProgramData\SysManage" /grant "sysmanage-agent:(OI)(CI)F" /T
 ```
 
 **Required permissions**:
@@ -278,7 +282,7 @@ icacls "C:\sysmanage-agent" /grant "sysmanage-agent:(OI)(CI)F" /T
 
 #### Configuration File Locations
 
-**Linux/macOS**: `/etc/sysmanage-agent.yaml`
+**Linux/macOS/BSD**: `/etc/sysmanage-agent.yaml`
 ```bash
 # Create configuration file with proper permissions
 sudo touch /etc/sysmanage-agent.yaml
@@ -286,11 +290,11 @@ sudo chown sysmanage-agent:sysmanage-agent /etc/sysmanage-agent.yaml
 sudo chmod 0600 /etc/sysmanage-agent.yaml
 ```
 
-**Windows**: `C:\sysmanage-agent.yaml`
+**Windows**: `C:\ProgramData\SysManage\sysmanage-agent.yaml`
 ```powershell
 # Create configuration file with restricted permissions
-New-Item -Path "C:\sysmanage-agent.yaml" -ItemType File
-icacls "C:\sysmanage-agent.yaml" /grant "sysmanage-agent:F" /inheritance:r
+New-Item -Path "C:\ProgramData\SysManage\sysmanage-agent.yaml" -ItemType File -Force
+icacls "C:\ProgramData\SysManage\sysmanage-agent.yaml" /grant "sysmanage-agent:F" /inheritance:r
 ```
 
 #### Log Directory
@@ -346,7 +350,8 @@ git clone https://github.com/bceverly/sysmanage-agent.git
 cd sysmanage-agent
 
 # Create virtual environment
-python3 -m venv .venv
+python3 -m venv .venv  # Linux/macOS
+# python -m venv .venv   # Windows
 
 # Activate virtual environment
 source .venv/bin/activate  # Linux/macOS (On OpenBSD: . .venv/bin/activate)
@@ -434,7 +439,7 @@ Auto-Discovery Process:
 
 ### 1. Manual Server Configuration (Alternative)
 
-Create `/etc/sysmanage-agent.yaml` (Linux/macOS) or `C:\sysmanage-agent.yaml` (Windows):
+Create `/etc/sysmanage-agent.yaml` (Linux/macOS/BSD) or `C:\ProgramData\SysManage\sysmanage-agent.yaml` (Windows):
 
 ```yaml
 # SysManage Server connection details
@@ -465,8 +470,8 @@ monitoring:
 # Logging
 logging:
   level: "INFO"                      # DEBUG, INFO, WARNING, ERROR, CRITICAL
-  file: "/var/log/sysmanage-agent.log"  # Linux/macOS
-  # file: "C:\logs\sysmanage-agent.log"  # Windows
+  file: "/var/log/sysmanage-agent.log"  # Linux/macOS/BSD
+  # file: "C:\ProgramData\SysManage\logs\sysmanage-agent.log"  # Windows
 
 # Internationalization
 i18n:
@@ -907,11 +912,22 @@ SysManage Agent implements mutual TLS authentication to protect against DNS pois
 
 #### Certificate Storage
 
-Client certificates are stored securely in `/etc/sysmanage-agent/` with restricted permissions:
+Client certificates are stored securely with restricted permissions:
+
+**Linux/macOS/BSD**: `/etc/sysmanage-agent/`
 ```
 /etc/sysmanage-agent/
 ├── client.crt          # Agent client certificate
 ├── client.key          # Agent private key (0600 permissions)
+├── ca.crt              # CA certificate for server validation
+└── server.fingerprint  # Server certificate fingerprint for pinning
+```
+
+**Windows**: `C:\ProgramData\SysManage\`
+```
+C:\ProgramData\SysManage\
+├── client.crt          # Agent client certificate
+├── client.key          # Agent private key (restricted permissions)
 ├── ca.crt              # CA certificate for server validation
 └── server.fingerprint  # Server certificate fingerprint for pinning
 ```
