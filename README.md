@@ -631,17 +631,29 @@ Package management operations require administrative privileges:
 
 ### Cross-Platform Privileged Runner
 
-The included `run-privileged.sh` script provides a secure, cross-platform solution for running the agent with elevated privileges.
+The repository includes privileged runner scripts for all platforms to run the agent with elevated privileges.
+
+#### Available Scripts
+
+- **Unix-like systems**: `run-privileged.sh` - Works on macOS, Linux, and OpenBSD
+- **Windows (Foreground)**: 
+  - `run-privileged.cmd` - Batch script for Command Prompt (keeps window open)
+  - `run-privileged.ps1` - PowerShell script with enhanced features (keeps window open)
+- **Windows (Background)**:
+  - `run-privileged-background.cmd` - Runs agent in background, no window remains
+  - `run-privileged-background.ps1` - PowerShell background runner with notifications
 
 #### Features
-- ✅ **Cross-platform**: Works on macOS (zsh), Linux (bash), and OpenBSD (ksh)
+- ✅ **Cross-platform**: Separate scripts for Windows and Unix-like systems
 - 🔐 **Security-focused**: Uses appropriate privilege escalation for each platform
 - 🛡️ **Environment preservation**: Maintains Python virtual environment paths
 - 🔍 **Auto-detection**: Automatically detects platform and available tools
 - ⚡ **Developer-friendly**: Easy to use during development and testing
+- 🪟 **UAC Support**: Windows scripts handle User Account Control prompts
 
 #### Usage
 
+**Unix-like Systems (Linux/macOS/BSD):**
 ```bash
 # Basic usage - start agent with privileges
 ./run-privileged.sh
@@ -654,10 +666,41 @@ The included `run-privileged.sh` script provides a secure, cross-platform soluti
 ./run-privileged.sh --help runner
 ```
 
+**Windows (Foreground - keeps console window open):**
+```cmd
+# Run from Command Prompt
+run-privileged.cmd
+
+# Or from PowerShell
+.\run-privileged.ps1
+```
+
+**Windows (Background - no console window):**
+```cmd
+# Run from Command Prompt (agent runs in background)
+run-privileged-background.cmd
+
+# Or from PowerShell with notifications
+.\run-privileged-background.ps1
+
+# Run silently without notifications
+.\run-privileged-background.ps1 -Silent
+```
+
+**Windows PowerShell Setup (one-time):**
+```powershell
+# Allow script execution (required for .ps1 files)
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Or bypass for current session only
+powershell -ExecutionPolicy Bypass -File run-privileged-background.ps1
+```
+
 #### Platform-Specific Behavior
 
 | Platform | Privilege Tool | Command Used |
 |----------|---------------|--------------|
+| **Windows** | UAC Elevation | Restarts with Administrator privileges |
 | **macOS** | `sudo` | `sudo -E PATH="..." python main.py` |
 | **Linux** | `sudo` | `sudo -E PATH="..." python main.py` |  
 | **OpenBSD** | `doas` (preferred) | `doas env PATH="..." python main.py` |
@@ -665,11 +708,15 @@ The included `run-privileged.sh` script provides a secure, cross-platform soluti
 
 #### Installation
 
-The script is included in the repository. Simply make it executable:
-
+**Unix-like systems:**
 ```bash
 chmod +x run-privileged.sh
 ```
+
+**Windows:**
+No special installation needed. The scripts are ready to use.
+- `.cmd` files can be run directly from Command Prompt or double-clicked
+- `.ps1` files require PowerShell execution policy to be set (see usage above)
 
 ### Alternative Approaches
 
