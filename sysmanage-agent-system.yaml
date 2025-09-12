@@ -95,8 +95,8 @@ script_execution:
     - "bash"        # Default shell on most Linux systems
     - "sh"          # POSIX shell
     - "zsh"         # macOS default shell and popular Linux shell
-    # - "powershell"  # Windows PowerShell (uncomment for Windows)
-    # - "cmd"         # Windows Command Prompt (uncomment for Windows)
+    - "powershell"  # Windows PowerShell
+    - "cmd"         # Windows Command Prompt
     # - "ksh"         # Korn shell (uncomment for BSD systems)
   
   # User execution restrictions (only applies when agent runs as root)

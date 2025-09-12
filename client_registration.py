@@ -79,8 +79,14 @@ class ClientRegistration:
         basic_info = self.get_basic_registration_info()
         os_info = self.get_os_version_info()
 
+        # Add script execution status
+        system_info = {**basic_info, **os_info}
+        system_info["script_execution_enabled"] = (
+            self.config.is_script_execution_enabled()
+        )
+
         # Merge for backward compatibility
-        return {**basic_info, **os_info}
+        return system_info
 
     async def register_with_server(self) -> bool:
         """

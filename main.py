@@ -299,6 +299,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "ipv4": system_info["ipv4"],
                 "ipv6": system_info["ipv6"],
                 "is_privileged": is_running_privileged(),
+                "script_execution_enabled": self.config.is_script_execution_enabled(),
             },
         )
 
