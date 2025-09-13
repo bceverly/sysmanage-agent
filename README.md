@@ -1112,6 +1112,30 @@ python -m bandit -r .
 python -m black .
 ```
 
+## Server API Communication
+
+### API Endpoint Usage
+
+The SysManage Agent communicates with the SysManage Server through both HTTP REST API calls and WebSocket connections. Understanding the server's API routing conventions is important for agent development and debugging.
+
+#### Unauthenticated Endpoints (no `/api` prefix)
+The agent uses these endpoints during initial setup and registration:
+- `/host/register` - Agent registration (used during first connection)
+- `/certificates/server-fingerprint` - Server certificate fingerprint retrieval
+- `/certificates/ca-certificate` - CA certificate download
+- `/agent/auth` - Agent authentication for WebSocket connections
+
+#### Authenticated Endpoints (`/api` prefix)  
+After approval, the agent may use these endpoints for additional functionality:
+- `/api/certificates/client/{host_id}` - Client certificate retrieval after approval
+- `/api/host/*` - Host management endpoints (if needed)
+- `/api/health` - Health check endpoint
+
+#### WebSocket Communication
+- `/api/agent/connect` - Primary WebSocket endpoint for real-time communication
+
+This routing convention ensures that initial setup and registration can occur without authentication, while all administrative functions require proper JWT authentication. The agent's registration process specifically uses the unauthenticated endpoints until it receives approval from a system administrator.
+
 ## Protocol Documentation
 
 ### WebSocket Message Format

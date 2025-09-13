@@ -100,8 +100,14 @@ class ClientRegistration:
             self.registered = True  # Pretend we're registered for now
             return True
 
-        server_url = self.config.get_server_rest_url()
-        registration_url = f"{server_url}/host/register"
+        # Registration is unauthenticated like login, so use base server URL without /api prefix
+        server_config = self.config.get_server_config()
+        hostname = server_config.get("hostname", "localhost")
+        port = server_config.get("port", 8000)
+        use_https = server_config.get("use_https", False)
+        protocol = "https" if use_https else "http"
+        base_url = f"{protocol}://{hostname}:{port}"
+        registration_url = f"{base_url}/host/register"
 
         # Use minimal registration data
         basic_info = self.get_basic_registration_info()

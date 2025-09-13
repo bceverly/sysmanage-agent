@@ -267,8 +267,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     async def _check_server_health(self) -> bool:
         """Check if server is available by testing the root endpoint."""
         try:
-            # Build health check URL (use HTTP endpoint, not WebSocket)
-            http_url = self.config.get_server_rest_url()
+            # Build health check URL - use base server URL without /api prefix
+            # since health check should be unauthenticated
+            server_config = self.config.get_server_config()
+            hostname = server_config.get("hostname", "localhost")
+            port = server_config.get("port", 8000)
+            use_https = server_config.get("use_https", False)
+            protocol = "https" if use_https else "http"
+            http_url = f"{protocol}://{hostname}:{port}"
 
             # Create SSL context if needed
             ssl_context = None
@@ -992,9 +998,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             port = server_config.get("port", 8000)
             use_https = server_config.get("use_https", False)
 
-            # Build certificate URL
+            # Build certificate URL - authenticated endpoint requires /api prefix
             protocol = "https" if use_https else "http"
-            cert_url = f"{protocol}://{hostname}:{port}/certificates/client/{host_id}"
+            cert_url = (
+                f"{protocol}://{hostname}:{port}/api/certificates/client/{host_id}"
+            )
 
             # Set up SSL context if needed
             ssl_context = None
