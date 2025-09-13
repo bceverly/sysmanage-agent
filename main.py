@@ -90,6 +90,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Registration state tracking
         self.registration_status = None
         self.needs_registration = False
+        self.last_registration_time = None
+        self.registration_confirmed = (
+            False  # Track if we have received registration_success
+        )
 
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
@@ -599,6 +603,69 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         error_data = data.get("data", {})
         error_code = error_data.get("error_code", "unknown")
         error_message = error_data.get("error_message", "No error message provided")
+
+        # Check if this is a stale error message
+        message_timestamp = data.get("timestamp")
+        self.logger.debug(
+            "Error message timestamp validation - timestamp: %s, last_registration_time: %s",
+            message_timestamp,
+            self.last_registration_time,
+        )
+
+        if message_timestamp and self.last_registration_time:
+            try:
+                # Parse the message timestamp
+                if isinstance(message_timestamp, str):
+                    # Handle ISO format timestamps
+                    if message_timestamp.endswith("+00:00"):
+                        message_timestamp = message_timestamp[:-6] + "Z"
+                    msg_time = datetime.fromisoformat(
+                        message_timestamp.replace("Z", "+00:00")
+                    )
+                else:
+                    msg_time = message_timestamp
+
+                # Ensure both timestamps are timezone-aware
+                if msg_time.tzinfo is None:
+                    msg_time = msg_time.replace(tzinfo=timezone.utc)
+                if self.last_registration_time.tzinfo is None:
+                    self.last_registration_time = self.last_registration_time.replace(
+                        tzinfo=timezone.utc
+                    )
+
+                self.logger.debug(
+                    "Timestamp comparison - msg_time: %s, last_registration: %s",
+                    msg_time,
+                    self.last_registration_time,
+                )
+
+                # If the error message is older than our last registration, ignore it
+                if msg_time < self.last_registration_time:
+                    self.logger.info(
+                        "Ignoring stale error message [%s] from %s (registration at %s)",
+                        error_code,
+                        msg_time,
+                        self.last_registration_time,
+                    )
+                    return
+
+                self.logger.debug(
+                    "Error message is NOT stale - msg_time: %s >= last_registration: %s",
+                    msg_time,
+                    self.last_registration_time,
+                )
+            except (ValueError, TypeError) as e:
+                self.logger.warning(
+                    "Could not parse message timestamp for stale check: %s", e
+                )
+        else:
+            if not message_timestamp:
+                self.logger.debug("No timestamp in error message, processing normally")
+            if not self.last_registration_time:
+                self.logger.debug(
+                    "No last_registration_time set, processing error normally"
+                )
+
         self.logger.error("Server error [%s]: %s", error_code, error_message)
 
         # Handle specific error codes from server
@@ -630,6 +697,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Clear any existing registration state and force re-registration
         self.registration_status = None
+        self.registration_confirmed = False
         self.registration.registered = False
         # Schedule re-registration on next connection attempt
         self.needs_registration = True
@@ -1872,6 +1940,22 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         except Exception as e:
             self.logger.error(_("Error processing host approval notification: %s"), e)
 
+    async def clear_host_approval(self) -> None:
+        """Clear all host approval records from local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                # Delete all existing host approval records
+                session.query(HostApproval).delete()
+                session.commit()
+                self.logger.debug("Host approval records cleared from database")
+            finally:
+                session.close()
+        except Exception as e:
+            self.logger.error(_("Error clearing host approval records: %s"), e)
+            raise
+
     async def store_host_approval(
         self, host_id: int, approval_status: str, certificate: str = None
     ) -> None:
@@ -1927,20 +2011,35 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 _("Received registration success notification from server")
             )
 
+            # Record the registration timestamp
+            self.last_registration_time = datetime.now(timezone.utc)
+
             # Extract host_id from registration success if available
             host_id = message.get("host_id")
             approved = message.get("approved", False)
 
             if host_id and approved:
                 self.logger.info("Registration approved with host_id: %s", host_id)
-                # Store the host approval automatically
+
+                # Clear any existing host approval and store the new one
+                await self.clear_stored_host_id()
                 await self.store_host_approval(host_id, "approved")
                 self.logger.info("Host approval stored for host_id: %s", host_id)
+
+                # Mark registration as confirmed and send initial data
+                self.registration_confirmed = True
+                self.logger.info(
+                    "Registration confirmed, sending initial inventory data..."
+                )
+                await self.send_initial_data_updates()
+
             elif host_id:
                 self.logger.info(
                     "Registration received host_id %s but approval pending", host_id
                 )
+                await self.clear_stored_host_id()
                 await self.store_host_approval(host_id, "pending")
+                self.registration_confirmed = True
             else:
                 self.logger.info(
                     "Registration success but no host_id provided - approval may come separately"
@@ -2158,10 +2257,19 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     self.logger.info(_("Connected to server successfully"))
 
                     # Notify message handler that connection is established
-                    await self.message_handler.on_connection_established()
+                    try:
+                        await self.message_handler.on_connection_established()
+                    except Exception as e:
+                        self.logger.error(
+                            "Failed to start queue processing: %s", e, exc_info=True
+                        )
 
-                    # Send OS version data immediately after connection
-                    await self.send_initial_data_updates()
+                    # Wait for registration_success before sending inventory data
+                    self.logger.info(
+                        _(
+                            "Connected to server, waiting for registration confirmation..."
+                        )
+                    )
 
                     # Run sender, receiver, update checker, and data collector concurrently with proper error handling
                     try:

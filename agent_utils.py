@@ -13,7 +13,9 @@ from typing import Dict, Any
 import aiohttp
 
 from i18n import _
-from database.models import Priority
+from database.models import Priority, ScriptExecution
+from database.base import get_database_manager
+from datetime import datetime, timezone
 
 
 class UpdateChecker:
@@ -147,11 +149,12 @@ class MessageProcessor:
         except Exception as e:
             result = {"success": False, "error": str(e)}
 
-        # Send result back to server
-        response = self.agent.create_message(
-            "command_result", {"command_id": command_id, **result}
-        )
-        await self.agent.send_message(response)
+        # Send result back to server (skip for script execution as it sends dedicated result)
+        if command_type != "execute_script":
+            response = self.agent.create_message(
+                "command_result", {"command_id": command_id, **result}
+            )
+            await self.agent.send_message(response)
 
     async def _dispatch_command(
         self, command_type: str, parameters: Dict[str, Any]
@@ -182,7 +185,27 @@ class MessageProcessor:
         if command_type == "apply_updates":
             return await self.agent.apply_updates(parameters)
         if command_type == "execute_script":
+            # Check if this execution UUID has already been processed
+            execution_uuid = parameters.get("execution_uuid")
+            if execution_uuid and await self._check_execution_uuid_processed(
+                execution_uuid
+            ):
+                self.logger.warning(
+                    _("Script execution UUID %s already processed, skipping duplicate"),
+                    execution_uuid,
+                )
+                return {
+                    "success": True,
+                    "message": "Already processed",
+                    "duplicate": True,
+                }
+
+            # Store the execution UUID before processing
+            if execution_uuid:
+                await self._store_execution_uuid(parameters)
+
             result = await self.agent.execute_script(parameters)
+
             # Send script execution result as a separate message for better tracking
             await self._send_script_execution_result(parameters, result)
             return result
@@ -208,13 +231,20 @@ class MessageProcessor:
         try:
             # Extract execution details
             execution_id = parameters.get("execution_id")
+            execution_uuid = parameters.get("execution_uuid")
             script_name = parameters.get("script_name", "Unknown")
 
-            # Build script execution result message
+            # Get host_id from database and FQDN from registration system
+            host_approval = self.agent.get_host_approval_from_db()
+            system_info = self.agent.registration.get_system_info()
+            fqdn = system_info.get("fqdn", socket.gethostname())
+
+            # Build script execution result message with host_id and FQDN
             result_message = {
                 "message_type": "script_execution_result",
-                "hostname": socket.gethostname(),
+                "hostname": fqdn,  # Use FQDN instead of short hostname
                 "execution_id": execution_id,
+                "execution_uuid": execution_uuid,  # Include the UUID for tracking
                 "script_name": script_name,
                 "success": result.get("success", False),
                 "exit_code": result.get("exit_code"),
@@ -227,6 +257,10 @@ class MessageProcessor:
                 "timestamp": parameters.get("timestamp"),  # Include original timestamp
             }
 
+            # Add host_id if available (preferred over hostname validation)
+            if host_approval and host_approval.host_id:
+                result_message["host_id"] = host_approval.host_id
+
             # Queue the script execution result message with high priority
             await self.agent.message_handler.queue_outbound_message(
                 result_message, priority=Priority.HIGH
@@ -238,6 +272,75 @@ class MessageProcessor:
 
         except Exception as e:
             self.logger.error(_("Failed to queue script execution result: %s"), e)
+
+    async def _check_execution_uuid_processed(self, execution_uuid: str) -> bool:
+        """Check if an execution UUID has already been processed."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                execution = (
+                    session.query(ScriptExecution)
+                    .filter(ScriptExecution.execution_uuid == execution_uuid)
+                    .first()
+                )
+                return execution is not None
+            finally:
+                session.close()
+        except Exception as e:
+            self.logger.error(_("Error checking execution UUID: %s"), e)
+            return False  # Allow processing if we can't check
+
+    async def _store_execution_uuid(self, parameters: Dict[str, Any]):
+        """Store execution UUID and metadata in database."""
+        try:
+            execution_id = parameters.get("execution_id")
+            execution_uuid = parameters.get("execution_uuid")
+            script_name = parameters.get("script_name", "Unknown")
+            shell_type = parameters.get("shell_type")
+
+            if not execution_uuid:
+                self.logger.warning(_("No execution UUID provided, cannot track"))
+                return
+
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                # Check if already exists
+                existing = (
+                    session.query(ScriptExecution)
+                    .filter(ScriptExecution.execution_uuid == execution_uuid)
+                    .first()
+                )
+
+                if existing:
+                    self.logger.warning(
+                        _("Execution UUID %s already exists in database"),
+                        execution_uuid,
+                    )
+                    return
+
+                # Store new execution record
+                execution_record = ScriptExecution(
+                    execution_id=execution_id,
+                    execution_uuid=execution_uuid,
+                    script_name=script_name,
+                    shell_type=shell_type,
+                    status="pending",
+                    received_at=datetime.now(timezone.utc),
+                )
+
+                session.add(execution_record)
+                session.commit()
+
+                self.logger.info(
+                    _("Stored execution UUID %s for tracking"), execution_uuid
+                )
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error storing execution UUID: %s"), e)
 
 
 def is_running_privileged() -> bool:

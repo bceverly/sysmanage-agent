@@ -4,7 +4,7 @@
 # Server connection settings
 server:
   # Hostname or IP address of the SysManage server
-  hostname: "localhost"
+  hostname: "192.168.4.196"
   
   # Port number for the SysManage server
   port: 8080
@@ -15,9 +15,6 @@ server:
   # SSL verification not needed for HTTP
   verify_ssl: false
   
-  # API endpoint path (empty for direct access to endpoints)
-  api_path: ""
-
 # Client identification settings
 client:
   # Optional: Override the system hostname detection

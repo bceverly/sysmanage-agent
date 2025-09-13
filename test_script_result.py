@@ -7,16 +7,17 @@ to verify the improved connection stability fixes.
 
 import asyncio
 import json
+import os
 import socket
 import sys
-import os
+
+import pytest
 
 # Add current directory to path to import modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import pytest
-from message_handler import QueuedMessageHandler
 from database.models import Priority
+from message_handler import QueuedMessageHandler
 
 
 @pytest.mark.asyncio
@@ -66,7 +67,7 @@ async def test_script_result_message():
         print(
             f"✅ Successfully queued script execution result message with ID: {message_id}"
         )
-        print(f"✅ Message will be sent when agent reconnects to server")
+        print("✅ Message will be sent when agent reconnects to server")
 
         # Get queue stats
         stats = handler.get_queue_statistics()

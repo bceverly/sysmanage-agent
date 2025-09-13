@@ -3,7 +3,7 @@
 
 # Server connection settings
 server:
-  # Hostname or IP address of the SysManage server
+  # Hostname or IP address of the SysManage server  
   hostname: "localhost"
   
   # Port number for the SysManage server
@@ -15,9 +15,6 @@ server:
   # SSL verification not needed for HTTP
   verify_ssl: false
   
-  # API endpoint path
-  api_path: "/api"
-
 # Client identification settings
 client:
   # Optional: Override the system hostname detection
@@ -70,6 +67,16 @@ database:
   
   # Whether to automatically run database migrations on startup
   auto_migrate: true
+
+# Message queue configuration
+message_queue:
+  # Message expiration timeout in minutes (default: 60)
+  # Messages older than this will be marked as expired and no longer processed
+  expiration_timeout_minutes: 60
+  
+  # Cleanup interval in minutes (default: 30) 
+  # How often to check for and clean up expired messages
+  cleanup_interval_minutes: 30
 
 # Script execution configuration
 # SECURITY NOTICE: Script execution is disabled by default for security reasons

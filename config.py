@@ -124,11 +124,10 @@ class ConfigManager:
         hostname = server_config.get("hostname", "localhost")
         port = server_config.get("port", 8000)
         use_https = server_config.get("use_https", False)
-        api_path = server_config.get("api_path", "/api")
 
-        # Build WebSocket URL
+        # Build WebSocket URL - hardcoded to /api/agent/connect
         protocol = "wss" if use_https else "ws"
-        return f"{protocol}://{hostname}:{port}{api_path}/agent/connect"
+        return f"{protocol}://{hostname}:{port}/api/agent/connect"
 
     def get_server_rest_url(self) -> str:
         """Build the complete server REST API URL."""
@@ -137,10 +136,10 @@ class ConfigManager:
         hostname = server_config.get("hostname", "localhost")
         port = server_config.get("port", 8000)
         use_https = server_config.get("use_https", False)
-        api_path = server_config.get("api_path", "/api")
 
-        # Build REST URL
+        # Build REST URL - includes /api prefix for API endpoints
         protocol = "https" if use_https else "http"
+        api_path = server_config.get("api_path", "/api")
         return f"{protocol}://{hostname}:{port}{api_path}"
 
     def get_hostname_override(self) -> Optional[str]:

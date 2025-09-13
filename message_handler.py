@@ -247,9 +247,16 @@ class QueuedMessageHandler:
                 self.processing_task = asyncio.create_task(
                     self.process_outbound_queue()
                 )
-                self.logger.info("Queue processing task created successfully")
+                self.logger.info(
+                    "Queue processing task created successfully: %s",
+                    self.processing_task,
+                )
             except Exception as e:
-                self.logger.error("Failed to create queue processing task: %s", e)
+                self.logger.error(
+                    "Failed to create queue processing task: %s", e, exc_info=True
+                )
+        else:
+            self.logger.info("Queue processor already running, not starting another")
 
     async def on_connection_lost(self):
         """

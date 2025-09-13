@@ -119,7 +119,7 @@ echo   [~] Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
 
 REM Start the agent in background
 echo Starting SysManage Agent daemon...
-start /B %PYTHON_CMD% main.py > logs\agent.log 2>&1
+start /B "" cmd /c "%PYTHON_CMD% main.py > logs\agent.log 2>&1"
 
 REM Get the PID of the started process (Windows doesn't make this easy)
 REM We'll use a small delay and then find the newest python process

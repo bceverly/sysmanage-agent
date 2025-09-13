@@ -256,3 +256,63 @@ class HostApproval(Base):
     def has_host_id(self) -> bool:
         """Check if host has been assigned a server host_id."""
         return self.host_id is not None
+
+
+class ScriptExecution(Base):
+    """
+    Table for tracking script executions to prevent duplicate results.
+
+    This table stores execution UUIDs received from the server to ensure
+    each script execution result is only sent back once.
+    """
+
+    __tablename__ = "script_executions"
+
+    # Primary key
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Execution identification
+    execution_id = Column(String(36), nullable=False, index=True)  # Server execution ID
+    execution_uuid = Column(
+        String(36), nullable=False, unique=True, index=True
+    )  # Unique tracking UUID
+
+    # Execution metadata
+    script_name = Column(String(255), nullable=True)
+    shell_type = Column(String(50), nullable=True)
+
+    # Execution status and results
+    status = Column(
+        String(20), nullable=False, default="pending", index=True
+    )  # pending, completed, failed
+    exit_code = Column(Integer, nullable=True)
+    stdout_output = Column(Text, nullable=True)
+    stderr_output = Column(Text, nullable=True)
+    error_message = Column(Text, nullable=True)
+    execution_time = Column(Integer, nullable=True)  # Execution time in seconds
+
+    # Timestamps
+    received_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    started_at = Column(UTCDateTime, nullable=True)
+    completed_at = Column(UTCDateTime, nullable=True)
+    result_sent_at = Column(
+        UTCDateTime, nullable=True
+    )  # When result was sent to server
+
+    def __repr__(self):
+        return (
+            f"<ScriptExecution(id={self.id}, execution_uuid='{self.execution_uuid}', "
+            f"status='{self.status}')>"
+        )
+
+    @property
+    def is_completed(self) -> bool:
+        """Check if script execution is completed."""
+        return self.status in ["completed", "failed"]
+
+    @property
+    def result_already_sent(self) -> bool:
+        """Check if result has already been sent to server."""
+        return self.result_sent_at is not None

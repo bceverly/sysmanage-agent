@@ -291,7 +291,6 @@ class ServerDiscoveryClient:
                 "hostname": server_ip,
                 "port": server_data.get("api_port", 8000),
                 "use_https": server_data.get("use_ssl", False),
-                "api_path": "/api",
             },
             "client": {
                 "hostname_override": None,
