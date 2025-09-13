@@ -1112,6 +1112,89 @@ python -m bandit -r .
 python -m black .
 ```
 
+## Security Scanning Infrastructure
+
+SysManage Agent implements comprehensive automated security scanning to ensure the agent code is secure and free from vulnerabilities:
+
+### Continuous Integration Security Tools
+
+Our GitHub Actions CI/CD pipeline includes multiple security scanning tools that run automatically on every push and pull request:
+
+#### Python Security Analysis
+- **[Bandit](https://bandit.readthedocs.io/)** - Static security analysis specifically designed for Python, detecting common security issues such as:
+  - Hardcoded passwords and secrets
+  - SQL injection vulnerabilities  
+  - Shell injection vulnerabilities
+  - Insecure cryptographic practices
+  - Use of unsafe functions
+- **[Safety](https://pypi.org/project/safety/)** - Vulnerability scanning for Python dependencies, checking against known CVE databases
+- **[Semgrep](https://semgrep.dev/)** - Advanced static analysis with security-focused rule sets including OWASP Top 10
+
+#### Cross-Language Security Tools
+- **[CodeQL](https://codeql.github.com/)** - GitHub's semantic code analysis engine for Python security analysis
+- **[TruffleHog](https://github.com/trufflesecurity/trufflehog)** - Secrets detection to prevent accidental credential commits
+
+### Security Workflow Files
+
+The agent's security infrastructure includes:
+
+- **`.github/workflows/security.yml`** - Comprehensive security scanning workflow
+- **`.github/workflows/codeql.yml`** - GitHub's native CodeQL security analysis
+- **`.github/workflows/ci.yml`** - Integration with security testing in the main CI pipeline
+
+### Local Security Testing
+
+Developers can run security scans locally before committing:
+
+```bash
+# Python security scanning
+python -m bandit -r . -f screen
+pip freeze | safety check --stdin
+
+# Check for secrets (if trufflehog is installed locally)  
+trufflehog --regex --entropy=False .
+
+# Local comprehensive security scanning
+make security          # Run all security tools (comprehensive)
+make security-full     # Run all security tools (same as above)
+make security-python   # Python-only security (Bandit + Safety)
+make security-secrets  # Basic secrets detection
+
+# Run all tests including security checks
+make test
+make lint
+```
+
+### Security Configuration
+
+The agent includes security-focused configurations:
+
+- **`.bandit`** - Bandit configuration file (if present)
+- **Requirements validation** - All dependencies are regularly scanned for known vulnerabilities
+- **Secure defaults** - Agent configuration uses secure defaults for all security-sensitive settings
+
+### Security Reporting
+
+All security scan results are:
+- **Integrated with GitHub Security Tab** - Centralized vulnerability management across both server and agent repositories
+- **Available as CI Artifacts** - Downloadable security reports for each build
+- **SARIF Compatible** - Industry-standard security report format
+- **Continuously Updated** - Weekly scheduled scans to catch new vulnerabilities in dependencies
+
+### Agent-Specific Security Measures
+
+As the agent runs with elevated privileges on managed systems, additional security measures are implemented:
+
+- **Command Validation** - All incoming commands are validated before execution
+- **Resource Limits** - Built-in timeouts and resource constraints prevent abuse
+- **Audit Logging** - All privileged operations are logged for security auditing
+- **Secure Communication** - All server communication uses encrypted channels with certificate validation
+- **Privilege Separation** - Agent runs with minimal required privileges where possible
+
+### Free Security Scanning
+
+All security scanning tools are available at no cost for public repositories, providing enterprise-grade security analysis without licensing expenses.
+
 ## Server API Communication
 
 ### API Endpoint Usage

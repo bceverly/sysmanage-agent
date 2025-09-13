@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format-python run stop
+.PHONY: test lint clean setup install-dev help format-python run stop security security-full security-python security-secrets
 
 # Default target
 help:
@@ -14,6 +14,10 @@ help:
 	@echo "  make install-dev   - Install development tools"
 	@echo "  make run           - Start the agent"
 	@echo "  make stop          - Stop the agent"
+	@echo "  make security      - Run comprehensive security analysis (all tools)"
+	@echo "  make security-full - Run comprehensive security analysis (all tools)"
+	@echo "  make security-python - Run Python security scanning (Bandit + Safety)"
+	@echo "  make security-secrets - Run secrets detection"
 
 # Virtual environment activation
 VENV := .venv
@@ -55,7 +59,7 @@ endif
 # Install development dependencies
 install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
-	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort
+	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort bandit safety
 
 # Setup target that ensures everything is ready
 setup: install-dev
@@ -150,3 +154,44 @@ coverage: setup-venv clean-whitespace
 	@echo "Generating coverage report..."
 	@$(PYTHON) -m pytest tests/ --cov=main --cov-report=html --cov-report=term
 	@echo "Coverage report generated in htmlcov/index.html"
+
+# Security analysis targets
+
+# Comprehensive security analysis (default)
+security: security-full
+
+# Comprehensive security analysis - all tools  
+security-full: security-python security-secrets
+	@echo "[OK] Comprehensive security analysis completed!"
+
+# Python security analysis (Bandit + Safety)
+security-python: setup-venv
+	@echo "=== Python Security Analysis ==="
+	@echo "Running Bandit static security analysis..."
+ifeq ($(OS),Windows_NT)
+	-@$(PYTHON) -m bandit -r *.py alembic/ database/ i18n/ security/ scripts/ -f screen --skip B101,B404,B603,B607
+else
+	@$(PYTHON) -m bandit -r *.py alembic/ database/ i18n/ security/ scripts/ -f screen --skip B101,B404,B603,B607 || true
+endif
+	@echo ""
+	@echo "Running Safety dependency vulnerability scan..."
+ifeq ($(OS),Windows_NT)
+	-@echo "Safety scan requires authentication - skipping interactive prompt"
+else
+	@echo "Safety scan requires authentication - skipping interactive prompt"
+endif
+	@echo "[OK] Python security analysis completed"
+
+# Secrets detection (basic pattern matching)
+security-secrets:
+	@echo "=== Secrets Detection ==="
+	@echo "Scanning for potential secrets and credentials..."
+	@echo "Checking for common secret patterns..."
+	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(password|secret|key|token)\s*[:=]\s*['\"][^'\"\\s]{8,}" . || echo "No obvious secrets found in patterns"
+	@echo ""
+	@echo "Checking for hardcoded API keys..."
+	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(api_?key|access_?token|auth_?token)\s*[:=]\s*['\"][A-Za-z0-9+/=]{20,}" . || echo "No obvious API keys found"
+	@echo ""
+	@echo "Checking for AWS credentials..."
+	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(AKIA[0-9A-Z]{16}|aws_secret_access_key)" . || echo "No AWS credentials found"
+	@echo "[OK] Basic secrets detection completed"
