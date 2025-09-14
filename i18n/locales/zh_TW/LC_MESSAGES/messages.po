@@ -568,6 +568,70 @@ msgstr "初始資料更新傳送成功"
 msgid "Failed to send initial data updates: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "未知裝置"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUM更新偵測尚未實現"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Store更新偵測尚未實現"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "正在偵測fwupd韌體更新"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupd守護程式未執行或無權限"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupd重新整理失敗（可能需要權限）：%s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "無法重新整理fwupd中繼資料（可能需要權限）"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "解析fwupd JSON輸出失敗：%s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "處理fwupd更新時發生錯誤：%s"
+
+msgid "No firmware updates available"
+msgstr "沒有可用的韌體更新"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates失敗：%s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "偵測fwupd更新失敗：%s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "韌體套件未找到裝置ID：%s"
+
+msgid "No device ID available for firmware update"
+msgstr "韌體更新沒有可用的裝置ID"
+
+msgid "Applying firmware update for device: %s"
+msgstr "正在為裝置套用韌體更新：%s"
+
+msgid "Running firmware update command: %s"
+msgstr "正在執行韌體更新指令：%s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "成功更新韌體：%s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "更新%s韌體失敗：%s"
+
+msgid "Firmware update failed"
+msgstr "韌體更新失敗"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "韌體更新在10分鐘後逾時"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "為%s套用韌體更新時發生例外：%s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "背景開始更新"

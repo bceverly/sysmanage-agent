@@ -103,6 +103,70 @@ msgstr "Initial data updates sent successfully"
 
 msgid "Failed to send initial data updates: %s"
 msgstr "Failed to send initial data updates: %s"
+
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "Unknown Device"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUM update detection not yet implemented"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Store update detection not yet implemented"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "Detecting fwupd firmware updates"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupd daemon not running or no permissions"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupd refresh failed (may need privileges): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "Could not refresh fwupd metadata (may need privileges)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "Failed to parse fwupd JSON output: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "Error processing fwupd updates: %s"
+
+msgid "No firmware updates available"
+msgstr "No firmware updates available"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates failed: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "Failed to detect fwupd updates: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "No device ID found for firmware package: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "No device ID available for firmware update"
+
+msgid "Applying firmware update for device: %s"
+msgstr "Applying firmware update for device: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "Running firmware update command: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "Successfully updated firmware for: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "Failed to update firmware for %s: %s"
+
+msgid "Firmware update failed"
+msgstr "Firmware update failed"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "Firmware update timed out after 10 minutes"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "Exception applying firmware update for %s: %s"
 msgid "Sending initial user access data..."
 msgstr "Sending initial user access data..."
 

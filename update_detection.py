@@ -128,6 +128,7 @@ class UpdateDetector:
             "zypper": ["zypper"],
             "portage": ["emerge"],
             "apk": ["apk"],
+            "fwupd": ["fwupdmgr"],  # Firmware update manager
             # macOS package managers
             "homebrew": ["brew"],
             "macports": ["port"],
@@ -177,6 +178,8 @@ class UpdateDetector:
             self._detect_pacman_updates()
         if "zypper" in managers:
             self._detect_zypper_updates()
+        if "fwupd" in managers:
+            self._detect_fwupd_updates()
 
     def _detect_macos_updates(self):
         """Detect updates from macOS sources."""
@@ -426,7 +429,7 @@ class UpdateDetector:
     def _detect_yum_updates(self):
         """Detect updates from YUM (Red Hat/CentOS)."""
         # Similar to DNF but using yum commands
-        logger.debug("YUM update detection not yet implemented")
+        logger.debug(_("YUM update detection not yet implemented"))
 
     def _detect_pacman_updates(self):
         """Detect updates from Pacman (Arch Linux)."""
@@ -501,6 +504,171 @@ class UpdateDetector:
 
         except Exception as e:
             logger.error(_("Failed to detect Zypper updates: %s"), str(e))
+
+    def _detect_fwupd_updates(self):
+        """Detect firmware updates from fwupd."""
+        try:
+            logger.debug(_("Detecting fwupd firmware updates"))
+
+            # First, check if the daemon is running and we have permissions
+            if not self._check_fwupd_daemon():
+                logger.warning(_("fwupd daemon not running or no permissions"))
+                return
+
+            # Refresh metadata if allowed (requires privileges)
+            try:
+                refresh_result = subprocess.run(
+                    ["fwupdmgr", "refresh", "--force"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    check=False,
+                )
+                if refresh_result.returncode != 0:
+                    logger.debug(
+                        _("fwupd refresh failed (may need privileges): %s"),
+                        refresh_result.stderr,
+                    )
+            except Exception:
+                logger.debug(
+                    _("Could not refresh fwupd metadata (may need privileges)")
+                )
+
+            # Get updates that are available
+            result = subprocess.run(
+                ["fwupdmgr", "get-updates", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0 and result.stdout.strip():
+                try:
+                    import json as json_module
+
+                    updates_data = json_module.loads(result.stdout)
+
+                    if isinstance(updates_data, dict) and "Devices" in updates_data:
+                        devices = updates_data["Devices"]
+                    elif isinstance(updates_data, list):
+                        devices = updates_data
+                    else:
+                        devices = []
+
+                    for device in devices:
+                        device_id = device.get("DeviceId", "unknown")
+                        device_name = device.get(
+                            "Name", device.get("DeviceName", _("Unknown Device"))
+                        )
+
+                        # Check for releases (available updates)
+                        releases = device.get("Releases", [])
+                        if not releases:
+                            continue
+
+                        # Get current version
+                        current_version = device.get("Version", "unknown")
+
+                        # Process each available release
+                        for release in releases:
+                            if not release:
+                                continue
+
+                            available_version = release.get("Version", "unknown")
+
+                            # Skip if same version (shouldn't happen, but safety check)
+                            if available_version == current_version:
+                                continue
+
+                            # Determine if this is a security update
+                            is_security = self._is_fwupd_security_update(release)
+
+                            # Get additional metadata
+                            size = release.get("Size", 0)
+                            vendor = device.get("Vendor", "Unknown")
+
+                            # Create update record with unique package name that includes version
+                            # This ensures React keys are unique when multiple firmware versions are available
+                            unique_package_name = (
+                                f"{vendor} {device_name} (→ {available_version})"
+                            )
+
+                            update = {
+                                "package_name": unique_package_name,
+                                "device_id": device_id,
+                                "current_version": current_version,
+                                "available_version": available_version,
+                                "package_manager": "fwupd",
+                                "is_security_update": is_security,
+                                "is_system_update": True,  # Firmware updates are always system-level
+                                "update_size": size,
+                                "vendor": vendor,
+                                "device_name": device_name,
+                                "release_description": release.get("Description", ""),
+                                "release_summary": release.get("Summary", ""),
+                                "urgency": release.get("Urgency", "unknown"),
+                                "requires_reboot": True,  # Most firmware updates require reboot
+                            }
+
+                            self.available_updates.append(update)
+
+                except json_module.JSONDecodeError as e:
+                    logger.error(_("Failed to parse fwupd JSON output: %s"), str(e))
+                except Exception as e:
+                    logger.error(_("Error processing fwupd updates: %s"), str(e))
+
+            elif result.returncode == 2:
+                # Exit code 2 typically means no updates available
+                logger.debug(_("No firmware updates available"))
+            else:
+                logger.debug(_("fwupd get-updates failed: %s"), result.stderr.strip())
+
+        except Exception as e:
+            logger.error(_("Failed to detect fwupd updates: %s"), str(e))
+
+    def _check_fwupd_daemon(self) -> bool:
+        """Check if fwupd daemon is running and accessible."""
+        try:
+            result = subprocess.run(
+                ["fwupdmgr", "get-devices", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            return result.returncode == 0
+        except Exception:
+            return False
+
+    def _is_fwupd_security_update(self, release: dict) -> bool:
+        """Determine if a firmware release is security-related."""
+        # Check various indicators that this might be a security update
+        description = (
+            release.get("Description", "") + " " + release.get("Summary", "")
+        ).lower()
+
+        urgency = release.get("Urgency", "").lower()
+
+        # Security keywords
+        security_keywords = [
+            "security",
+            "cve",
+            "vulnerability",
+            "exploit",
+            "patch",
+            "fix",
+            "critical",
+            "urgent",
+            "mitigation",
+        ]
+
+        # Check if urgency indicates security
+        if urgency in ["critical", "high"]:
+            return True
+
+        # Check description for security keywords
+        return any(keyword in description for keyword in security_keywords)
 
     # macOS Update Detection Implementations
 
@@ -822,7 +990,7 @@ class UpdateDetector:
     def _detect_microsoft_store_updates(self):
         """Detect Microsoft Store updates."""
         # This would require PowerShell commands to check Windows Store updates
-        logger.debug("Microsoft Store update detection not yet implemented")
+        logger.debug(_("Microsoft Store update detection not yet implemented"))
 
     def _detect_chocolatey_updates(self):
         """Detect updates from Chocolatey."""
@@ -941,6 +1109,11 @@ class UpdateDetector:
             "firmware",
             "driver",
         ]
+
+        # All firmware packages are system packages
+        if "firmware" in package_name.lower():
+            return True
+
         return any(package_name.startswith(prefix) for prefix in system_prefixes)
 
     def check_reboot_required(self) -> bool:
@@ -958,6 +1131,13 @@ class UpdateDetector:
                 or "linux-image" in u.get("package_name", "").lower()
             ]
             if kernel_updates:
+                return True
+
+            # Check for firmware updates in the pending updates
+            firmware_updates = [
+                u for u in self.available_updates if u.get("package_manager") == "fwupd"
+            ]
+            if firmware_updates:
                 return True
 
         elif self.platform == "darwin":
@@ -1101,6 +1281,8 @@ class UpdateDetector:
                 self._apply_winget_updates(packages, results)
             elif manager == "pkg":
                 self._apply_pkg_updates(packages, results)
+            elif manager == "fwupd":
+                self._apply_fwupd_updates(packages, results)
             # Add more package manager implementations as needed
 
         # Check if reboot is required after updates
@@ -1454,5 +1636,144 @@ class UpdateDetector:
                         "package_name": package["package_name"],
                         "package_manager": "pkg",
                         "error": str(e),
+                    }
+                )
+
+    def _apply_fwupd_updates(self, packages: List[Dict], results: Dict):
+        """Apply firmware updates using fwupd."""
+        for package in packages:
+            device_id = package.get("device_id", "")
+            package_name = package["package_name"]
+
+            if not device_id:
+                logger.error(
+                    _("No device ID found for firmware package: %s"), package_name
+                )
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "fwupd",
+                        "error": _("No device ID available for firmware update"),
+                    }
+                )
+                continue
+
+            try:
+                logger.info(_("Applying firmware update for device: %s"), device_id)
+
+                # Check if system has privilege mode enabled
+                # Firmware updates typically require root/admin privileges
+                privilege_check = subprocess.run(
+                    ["fwupdmgr", "get-devices", "--json"],
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+
+                if privilege_check.returncode != 0:
+                    error_msg = _(
+                        "fwupd not accessible - may require privileged mode or elevated permissions"
+                    )
+                    logger.warning(error_msg)
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "fwupd",
+                            "error": error_msg,
+                        }
+                    )
+                    continue
+
+                # Apply the firmware update
+                # We use --assume-yes to avoid interactive prompts
+                update_cmd = ["fwupdmgr", "update", device_id, "--assume-yes"]
+
+                logger.info(
+                    _("Running firmware update command: %s"), " ".join(update_cmd)
+                )
+
+                result = subprocess.run(
+                    update_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=600,  # Firmware updates can take a long time
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully updated firmware for: %s"), package_name
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": package["available_version"],
+                            "package_manager": "fwupd",
+                            "device_id": device_id,
+                            "requires_reboot": True,  # Firmware updates typically require reboot
+                        }
+                    )
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("Firmware update failed")
+                    )
+                    logger.error(
+                        _("Failed to update firmware for %s: %s"),
+                        package_name,
+                        error_msg,
+                    )
+
+                    # Check for common error conditions
+                    if (
+                        "not authorized" in error_msg.lower()
+                        or "permission" in error_msg.lower()
+                    ):
+                        error_msg = _(
+                            "Firmware update requires elevated privileges - agent may need to run in privileged mode"
+                        )
+                    elif "no updates" in error_msg.lower():
+                        error_msg = _(
+                            "No firmware updates available (may have been applied by another process)"
+                        )
+                    elif "device busy" in error_msg.lower():
+                        error_msg = _(
+                            "Device is busy - firmware update may be in progress or device is in use"
+                        )
+
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "fwupd",
+                            "error": error_msg,
+                            "device_id": device_id,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                error_msg = _("Firmware update timed out after 10 minutes")
+                logger.error(error_msg)
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "fwupd",
+                        "error": error_msg,
+                        "device_id": device_id,
+                    }
+                )
+            except Exception as e:
+                logger.error(
+                    _("Exception applying firmware update for %s: %s"),
+                    package_name,
+                    str(e),
+                )
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "fwupd",
+                        "error": str(e),
+                        "device_id": device_id,
                     }
                 )

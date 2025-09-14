@@ -570,6 +570,70 @@ msgstr "Initiële gegevens succesvol verzonden"
 msgid "Failed to send initial data updates: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "Onbekend Apparaat"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUM update detectie nog niet geïmplementeerd"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Store update detectie nog niet geïmplementeerd"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "Detecteren van fwupd firmware updates"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupd daemon draait niet of geen permissies"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupd vernieuwen mislukt (mogelijk privileges nodig): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "Kon fwupd metadata niet vernieuwen (mogelijk privileges nodig)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "Parseren van fwupd JSON output mislukt: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "Fout bij verwerken van fwupd updates: %s"
+
+msgid "No firmware updates available"
+msgstr "Geen firmware updates beschikbaar"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates mislukt: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "Detecteren van fwupd updates mislukt: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "Geen apparaat ID gevonden voor firmware pakket: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "Geen apparaat ID beschikbaar voor firmware update"
+
+msgid "Applying firmware update for device: %s"
+msgstr "Toepassen van firmware update voor apparaat: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "Uitvoeren van firmware update commando: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "Firmware succesvol bijgewerkt voor: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "Firmware bijwerken mislukt voor %s: %s"
+
+msgid "Firmware update failed"
+msgstr "Firmware update mislukt"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "Firmware update time-out na 10 minuten"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "Uitzondering bij toepassen firmware update voor %s: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "Updates gestart op de achtergrond"

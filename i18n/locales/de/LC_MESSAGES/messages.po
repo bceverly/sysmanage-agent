@@ -572,6 +572,70 @@ msgstr "Initiale Datenaktualisierungen erfolgreich gesendet"
 msgid "Failed to send initial data updates: %s"
 msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "Unbekanntes Gerät"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUM-Update-Erkennung noch nicht implementiert"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Store Update-Erkennung noch nicht implementiert"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "Erkenne fwupd Firmware-Updates"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupd-Daemon läuft nicht oder keine Berechtigung"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupd-Aktualisierung fehlgeschlagen (möglicherweise Berechtigungen erforderlich): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "Konnte fwupd-Metadaten nicht aktualisieren (möglicherweise Berechtigungen erforderlich)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "Fehler beim Parsen der fwupd JSON-Ausgabe: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "Fehler beim Verarbeiten der fwupd-Updates: %s"
+
+msgid "No firmware updates available"
+msgstr "Keine Firmware-Updates verfügbar"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates fehlgeschlagen: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "Fehler beim Erkennen von fwupd-Updates: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "Keine Geräte-ID für Firmware-Paket gefunden: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "Keine Geräte-ID für Firmware-Update verfügbar"
+
+msgid "Applying firmware update for device: %s"
+msgstr "Wende Firmware-Update für Gerät an: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "Führe Firmware-Update-Befehl aus: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "Firmware erfolgreich aktualisiert für: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "Fehler beim Aktualisieren der Firmware für %s: %s"
+
+msgid "Firmware update failed"
+msgstr "Firmware-Update fehlgeschlagen"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "Firmware-Update nach 10 Minuten abgebrochen"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "Ausnahme beim Anwenden des Firmware-Updates für %s: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "Updates im Hintergrund gestartet"

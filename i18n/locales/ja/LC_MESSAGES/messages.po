@@ -572,6 +572,70 @@ msgstr "初期データ更新が正常に送信されました"
 msgid "Failed to send initial data updates: %s"
 msgstr "初期データ更新の送信に失敗しました: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "不明なデバイス"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUMアップデート検出はまだ実装されていません"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Storeアップデート検出はまだ実装されていません"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "fwupdファームウェアアップデートを検出中"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupdデーモンが実行されていないか、権限がありません"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupdの更新に失敗しました（特権が必要な場合があります）: %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "fwupdメタデータを更新できませんでした（特権が必要な場合があります）"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "fwupd JSON出力の解析に失敗しました: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "fwupdアップデートの処理中にエラーが発生しました: %s"
+
+msgid "No firmware updates available"
+msgstr "利用可能なファームウェアアップデートはありません"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updatesが失敗しました: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "fwupdアップデートの検出に失敗しました: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "ファームウェアパッケージのデバイスIDが見つかりません: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "ファームウェアアップデート用のデバイスIDが利用できません"
+
+msgid "Applying firmware update for device: %s"
+msgstr "デバイスのファームウェアアップデートを適用中: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "ファームウェアアップデートコマンドを実行中: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "ファームウェアの更新に成功しました: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "%sのファームウェアアップデートに失敗しました: %s"
+
+msgid "Firmware update failed"
+msgstr "ファームウェアアップデートに失敗しました"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "ファームウェアアップデートが10分後にタイムアウトしました"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "%sのファームウェアアップデート適用中に例外が発生しました: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "バックグラウンドでアップデートを開始しました"

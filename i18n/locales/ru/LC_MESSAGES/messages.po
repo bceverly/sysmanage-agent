@@ -570,6 +570,70 @@ msgstr "Начальные обновления данных успешно от
 msgid "Failed to send initial data updates: %s"
 msgstr "Ошибка отправки начальных обновлений данных: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "Неизвестное Устройство"
+
+msgid "YUM update detection not yet implemented"
+msgstr "Обнаружение обновлений YUM еще не реализовано"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Обнаружение обновлений Microsoft Store еще не реализовано"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "Обнаружение обновлений прошивки fwupd"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "Демон fwupd не запущен или нет разрешений"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "Обновление fwupd не удалось (могут потребоваться привилегии): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "Не удалось разобрать JSON вывод fwupd: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "Ошибка обработки обновлений fwupd: %s"
+
+msgid "No firmware updates available"
+msgstr "Обновления прошивки недоступны"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates не удалось: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "Не удалось обнаружить обновления fwupd: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "Не найден ID устройства для пакета прошивки: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "Нет доступного ID устройства для обновления прошивки"
+
+msgid "Applying firmware update for device: %s"
+msgstr "Применение обновления прошивки для устройства: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "Выполнение команды обновления прошивки: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "Успешно обновлена прошивка для: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "Не удалось обновить прошивку для %s: %s"
+
+msgid "Firmware update failed"
+msgstr "Обновление прошивки не удалось"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "Обновление прошивки прервано по таймауту через 10 минут"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "Исключение при применении обновления прошивки для %s: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "Обновления запущены в фоновом режиме"

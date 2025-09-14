@@ -571,6 +571,70 @@ msgstr "تم إرسال تحديثات البيانات الأولية بنجا�
 msgid "Failed to send initial data updates: %s"
 msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "جهاز غير معروف"
+
+msgid "YUM update detection not yet implemented"
+msgstr "كشف تحديثات YUM غير مطبق بعد"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "كشف تحديثات Microsoft Store غير مطبق بعد"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "كشف تحديثات البرامج الثابتة fwupd"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "خدمة fwupd غير تعمل أو لا توجد أذونات"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "فشل تحديث fwupd (قد تحتاج صلاحيات): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "لا يمكن تحديث بيانات fwupd الوصفية (قد تحتاج صلاحيات)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "خطأ في معالجة تحديثات fwupd: %s"
+
+msgid "No firmware updates available"
+msgstr "لا توجد تحديثات للبرامج الثابتة متاحة"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "فشل fwupd get-updates: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "فشل في اكتشاف تحديثات fwupd: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "لم يتم العثور على معرف الجهاز لحزمة البرامج الثابتة: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "لا يوجد معرف جهاز متاح لتحديث البرامج الثابتة"
+
+msgid "Applying firmware update for device: %s"
+msgstr "تطبيق تحديث البرامج الثابتة للجهاز: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "تشغيل أمر تحديث البرامج الثابتة: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "تم تحديث البرامج الثابتة بنجاح لـ: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "فشل في تحديث البرامج الثابتة لـ %s: %s"
+
+msgid "Firmware update failed"
+msgstr "فشل تحديث البرامج الثابتة"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "استثناء في تطبيق تحديث البرامج الثابتة لـ %s: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "تم بدء التحديثات في الخلفية"

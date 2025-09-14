@@ -568,6 +568,70 @@ msgstr "प्रारंभिक डेटा अपडेट सफलता
 msgid "Failed to send initial data updates: %s"
 msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
 
+# Firmware update messages
+msgid "Unknown Device"
+msgstr "अज्ञात डिवाइस"
+
+msgid "YUM update detection not yet implemented"
+msgstr "YUM अपडेट जांच अभी तक लागू नहीं की गई"
+
+msgid "Microsoft Store update detection not yet implemented"
+msgstr "Microsoft Store अपडेट जांच अभी तक लागू नहीं की गई"
+
+msgid "Detecting fwupd firmware updates"
+msgstr "fwupd फर्मवेयर अपडेट का पता लगा रहे हैं"
+
+msgid "fwupd daemon not running or no permissions"
+msgstr "fwupd डेमन चल नहीं रहा या अनुमतियां नहीं हैं"
+
+msgid "fwupd refresh failed (may need privileges): %s"
+msgstr "fwupd रीफ्रेश विफल (विशेषाधिकार की आवश्यकता हो सकती है): %s"
+
+msgid "Could not refresh fwupd metadata (may need privileges)"
+msgstr "fwupd मेटाडेटा को रीफ्रेश नहीं कर सके (विशेषाधिकार की आवश्यकता हो सकती है)"
+
+msgid "Failed to parse fwupd JSON output: %s"
+msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
+
+msgid "Error processing fwupd updates: %s"
+msgstr "fwupd अपडेट प्रोसेसिंग में त्रुटि: %s"
+
+msgid "No firmware updates available"
+msgstr "कोई फर्मवेयर अपडेट उपलब्ध नहीं"
+
+msgid "fwupd get-updates failed: %s"
+msgstr "fwupd get-updates विफल: %s"
+
+msgid "Failed to detect fwupd updates: %s"
+msgstr "fwupd अपडेट का पता लगाना विफल: %s"
+
+msgid "No device ID found for firmware package: %s"
+msgstr "फर्मवेयर पैकेज के लिए कोई डिवाइस ID नहीं मिला: %s"
+
+msgid "No device ID available for firmware update"
+msgstr "फर्मवेयर अपडेट के लिए कोई डिवाइस ID उपलब्ध नहीं"
+
+msgid "Applying firmware update for device: %s"
+msgstr "डिवाइस के लिए फर्मवेयर अपडेट लागू कर रहे हैं: %s"
+
+msgid "Running firmware update command: %s"
+msgstr "फर्मवेयर अपडेट कमांड चला रहे हैं: %s"
+
+msgid "Successfully updated firmware for: %s"
+msgstr "सफलतापूर्वक फर्मवेयर अपडेट किया गया: %s"
+
+msgid "Failed to update firmware for %s: %s"
+msgstr "%s के लिए फर्मवेयर अपडेट विफल: %s"
+
+msgid "Firmware update failed"
+msgstr "फर्मवेयर अपडेट विफल"
+
+msgid "Firmware update timed out after 10 minutes"
+msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+
+msgid "Exception applying firmware update for %s: %s"
+msgstr "%s के लिए फर्मवेयर अपडेट लागू करने में अपवाद: %s"
+
 #: main.py:737
 msgid "Updates started in background"
 msgstr "अपडेट बैकग्राउंड में शुरू हुए"
