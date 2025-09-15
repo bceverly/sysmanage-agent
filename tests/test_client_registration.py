@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from client_registration import ClientRegistration
+from src.sysmanage_agent.registration.client_registration import ClientRegistration
 
 
 class TestClientRegistration:
@@ -32,7 +32,7 @@ class TestClientRegistration:
         assert hasattr(registration, "hardware_collector")
         assert hasattr(registration, "os_info_collector")
 
-    @patch("client_registration.NetworkUtils")
+    @patch("src.sysmanage_agent.registration.client_registration.NetworkUtils")
     def test_get_basic_registration_info(self, mock_network_utils, registration):
         """Test basic registration info collection."""
         # Mock network utilities
@@ -52,7 +52,7 @@ class TestClientRegistration:
         assert result["ipv6"] == "2001:db8::1"
         assert result["active"] is True
 
-    @patch("client_registration.OSInfoCollector")
+    @patch("src.sysmanage_agent.registration.client_registration.OSInfoCollector")
     def test_get_os_version_info(self, mock_os_collector, registration):
         """Test OS version information collection."""
         # Mock OS info collector
@@ -87,7 +87,7 @@ class TestClientRegistration:
         assert result["processor"] == "arm"
         assert "os_details" in result
 
-    @patch("client_registration.HardwareCollector")
+    @patch("src.sysmanage_agent.registration.client_registration.HardwareCollector")
     def test_get_hardware_info(self, mock_hardware_collector, registration):
         """Test hardware information collection."""
         # Mock hardware collector

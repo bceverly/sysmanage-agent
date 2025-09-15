@@ -8,8 +8,8 @@ import unittest.mock
 import yaml as yaml_module
 
 import main
-import registration
-from config import ConfigManager
+from src.sysmanage_agent.registration import registration
+from src.sysmanage_agent.core.config import ConfigManager
 from main import SysManageAgent
 
 
@@ -97,8 +97,10 @@ def test_agent_basic_creation():
         temp_file_name = f.name
 
     try:
-        # Mock logging to avoid setup issues
-        with unittest.mock.patch("main.logging"):
+        # Mock logging and database initialization to avoid setup issues
+        with unittest.mock.patch("main.logging"), unittest.mock.patch(
+            "main.initialize_database", return_value=True
+        ):
             agent = SysManageAgent(temp_file_name)
             assert agent.config is not None  # nosec B101
             assert agent.agent_id is not None  # nosec B101

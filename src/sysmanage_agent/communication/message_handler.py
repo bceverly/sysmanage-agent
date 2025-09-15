@@ -8,9 +8,9 @@ import json
 import logging
 from typing import Dict, Any
 
-from database.queue_manager import MessageQueueManager
-from database.models import QueueDirection, Priority
-from i18n import _
+from src.database.queue_manager import MessageQueueManager
+from src.database.models import QueueDirection, Priority
+from src.i18n import _
 
 
 class QueuedMessageHandler:

@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 
-from config import ConfigManager
-from registration import ClientRegistration
+from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.registration.client_registration import ClientRegistration
 from main import SysManageAgent
 
 
@@ -56,7 +56,7 @@ i18n:
         ), patch(
             "platform.python_version", return_value="3.11.5"
         ), patch(
-            "os_info_collection.OSInfoCollector._get_linux_distribution_info",
+            "src.sysmanage_agent.collection.os_info_collection.OSInfoCollector._get_linux_distribution_info",
             return_value=("Linux", "5.15.0-88-generic"),
         ):
 
@@ -194,7 +194,9 @@ i18n:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+            "main.initialize_database", return_value=True
+        ):
 
             # Mock the message handler
             mock_handler = Mock()
@@ -253,7 +255,7 @@ i18n:
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
         ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
-            "main.initialize_database"
+            "main.initialize_database", return_value=True
         ), patch(
             "main.get_database_manager"
         ):

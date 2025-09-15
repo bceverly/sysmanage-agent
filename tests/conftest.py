@@ -6,7 +6,7 @@ import asyncio
 import sys
 import tempfile
 import os
-from unittest.mock import Mock, AsyncMock, MagicMock
+from unittest.mock import Mock, AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -46,8 +46,9 @@ websocket:
         temp_config_path = f.name
 
     try:
-        agent_instance = SysManageAgent(temp_config_path)
-        yield agent_instance
+        with patch("main.initialize_database", return_value=True):
+            agent_instance = SysManageAgent(temp_config_path)
+            yield agent_instance
     finally:
         # Clean up temporary file
         if os.path.exists(temp_config_path):

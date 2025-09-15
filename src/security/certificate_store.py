@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 from cryptography import x509
-from i18n import _
+from src.i18n import _
 
 # Import used for certificate parsing if needed in the future
 # from cryptography.hazmat.primitives import serialization

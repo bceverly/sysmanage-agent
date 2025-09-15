@@ -12,7 +12,7 @@ import tempfile
 import time
 from typing import Dict, Any, Optional
 
-from i18n import _
+from src.i18n import _
 
 
 class ScriptOperations:

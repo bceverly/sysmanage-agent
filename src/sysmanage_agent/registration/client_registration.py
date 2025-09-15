@@ -8,12 +8,14 @@ import logging
 import asyncio
 from typing import Any, Dict, Optional
 
-from i18n import _
-from hardware_collection import HardwareCollector
-from os_info_collection import OSInfoCollector
-from network_utils import NetworkUtils
-from user_access_collection import UserAccessCollector
-from software_inventory_collection import SoftwareInventoryCollector
+from src.i18n import _
+from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
+from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
+from src.sysmanage_agent.communication.network_utils import NetworkUtils
+from src.sysmanage_agent.collection.user_access_collection import UserAccessCollector
+from src.sysmanage_agent.collection.software_inventory_collection import (
+    SoftwareInventoryCollector,
+)
 
 try:
     import aiohttp

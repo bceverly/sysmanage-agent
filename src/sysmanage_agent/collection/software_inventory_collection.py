@@ -17,11 +17,11 @@ import logging
 import os
 import platform
 import re
-import subprocess
+import subprocess  # nosec B404
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from i18n import _
+from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,10 @@ class SoftwareInventoryCollector:
             # Special case for pkg_info which doesn't support --version
             if command == "pkg_info":
                 result = subprocess.run(
-                    [command], capture_output=True, timeout=5, check=False
+                    [command],
+                    capture_output=True,
+                    timeout=5,
+                    check=False,  # nosec B603, B607
                 )
                 # pkg_info returns usage info when run without arguments
                 return result.returncode in [
@@ -150,7 +153,10 @@ class SoftwareInventoryCollector:
                 ]  # Accept both success and usage error
             else:
                 subprocess.run(
-                    [command, "--version"], capture_output=True, timeout=5, check=False
+                    [command, "--version"],
+                    capture_output=True,
+                    timeout=5,
+                    check=False,  # nosec B603, B607
                 )
                 return True
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
@@ -235,7 +241,7 @@ class SoftwareInventoryCollector:
                     "dpkg-query",
                     "-W",
                     "--showformat=${Package}\t${Version}\t${Architecture}\t${Description}\t${Installed-Size}\n",
-                ],
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -275,7 +281,7 @@ class SoftwareInventoryCollector:
             logger.debug(_("Collecting snap packages"))
 
             result = subprocess.run(
-                ["snap", "list", "--unicode=never"],
+                ["snap", "list", "--unicode=never"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -316,7 +322,7 @@ class SoftwareInventoryCollector:
                     "list",
                     "--app",
                     "--columns=name,application,version,size,origin",
-                ],
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -406,7 +412,7 @@ class SoftwareInventoryCollector:
 
             # Get list of installed packages
             result = subprocess.run(
-                ["brew", "list", "--formula", "--versions"],
+                ["brew", "list", "--formula", "--versions"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -430,7 +436,7 @@ class SoftwareInventoryCollector:
 
             # Also collect casks
             result = subprocess.run(
-                ["brew", "list", "--cask", "--versions"],
+                ["brew", "list", "--cask", "--versions"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -488,7 +494,11 @@ class SoftwareInventoryCollector:
                                 try:
                                     # Use system_profiler or plutil to read plist
                                     result = subprocess.run(
-                                        ["plutil", "-p", info_plist_path],
+                                        [
+                                            "plutil",
+                                            "-p",
+                                            info_plist_path,
+                                        ],  # nosec B603, B607
                                         capture_output=True,
                                         text=True,
                                         timeout=5,
@@ -536,7 +546,7 @@ class SoftwareInventoryCollector:
             logger.debug(_("Collecting DNF packages"))
 
             result = subprocess.run(
-                ["dnf", "list", "installed"],
+                ["dnf", "list", "installed"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -581,7 +591,7 @@ class SoftwareInventoryCollector:
             logger.debug(_("Collecting Pacman packages"))
 
             result = subprocess.run(
-                ["pacman", "-Q"],
+                ["pacman", "-Q"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -630,7 +640,11 @@ class SoftwareInventoryCollector:
             logger.debug(_("Collecting Mac App Store applications"))
 
             result = subprocess.run(
-                ["system_profiler", "SPApplicationsDataType", "-json"],
+                [
+                    "system_profiler",
+                    "SPApplicationsDataType",
+                    "-json",
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=120,
@@ -706,7 +720,7 @@ class SoftwareInventoryCollector:
             logger.debug(_("Collecting winget packages"))
 
             result = subprocess.run(
-                ["winget", "list"],
+                ["winget", "list"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -793,7 +807,7 @@ class SoftwareInventoryCollector:
 
             # Try FreeBSD style first: pkg info -a
             result = subprocess.run(
-                ["pkg", "info", "-a"],
+                ["pkg", "info", "-a"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -806,7 +820,7 @@ class SoftwareInventoryCollector:
             else:
                 # Try OpenBSD style: pkg_info -a
                 result = subprocess.run(
-                    ["pkg_info", "-a"],
+                    ["pkg_info", "-a"],  # nosec B603, B607
                     capture_output=True,
                     text=True,
                     timeout=60,
@@ -829,7 +843,7 @@ class SoftwareInventoryCollector:
 
             # Use pkg_info -a to list all installed packages
             result = subprocess.run(
-                ["pkg_info", "-a"],
+                ["pkg_info", "-a"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,

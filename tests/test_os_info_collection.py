@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from os_info_collection import OSInfoCollector
+from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
 
 
 class TestOSInfoCollector:

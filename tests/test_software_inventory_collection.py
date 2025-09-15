@@ -12,7 +12,9 @@ import subprocess
 import unittest
 from unittest.mock import Mock, patch
 
-from software_inventory_collection import SoftwareInventoryCollector
+from src.sysmanage_agent.collection.software_inventory_collection import (
+    SoftwareInventoryCollector,
+)
 
 
 class TestSoftwareInventoryCollector(

@@ -17,11 +17,11 @@ import logging
 import os
 import platform
 import re
-import subprocess
+import subprocess  # nosec B404
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from i18n import _
+from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class UpdateDetector:
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system PATH."""
         try:
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 [command, "--version"], capture_output=True, timeout=5, check=False
             )
             return True
@@ -222,7 +222,7 @@ class UpdateDetector:
             logger.debug(_("Detecting apt updates"))
 
             # First, update the package list (simulate only)
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 ["apt-get", "update", "-qq"],
                 capture_output=True,
                 timeout=60,
@@ -230,7 +230,7 @@ class UpdateDetector:
             )
 
             # Get list of upgradable packages
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["apt", "list", "--upgradable"],
                 capture_output=True,
                 text=True,
@@ -274,7 +274,7 @@ class UpdateDetector:
     def _is_apt_security_update(self, package_name: str) -> bool:
         """Check if an apt package update is security-related."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["apt-cache", "policy", package_name],
                 capture_output=True,
                 text=True,
@@ -291,7 +291,7 @@ class UpdateDetector:
     def _get_apt_update_size(self, package_name: str) -> Optional[int]:
         """Get the download size for an apt package update."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["apt-cache", "show", package_name],
                 capture_output=True,
                 text=True,
@@ -312,7 +312,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting snap updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["snap", "refresh", "--list"],
                 capture_output=True,
                 text=True,
@@ -344,7 +344,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting flatpak updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["flatpak", "remote-ls", "--updates"],
                 capture_output=True,
                 text=True,
@@ -374,7 +374,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting DNF updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dnf", "check-update", "--quiet"],
                 capture_output=True,
                 text=True,
@@ -415,7 +415,7 @@ class UpdateDetector:
     def _is_dnf_security_update(self, package_name: str) -> bool:
         """Check if a DNF package update is security-related."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dnf", "updateinfo", "list", "--security", package_name],
                 capture_output=True,
                 text=True,
@@ -437,11 +437,11 @@ class UpdateDetector:
             logger.debug(_("Detecting Pacman updates"))
 
             # First sync the database
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 ["pacman", "-Sy"], capture_output=True, timeout=60, check=False
             )
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["pacman", "-Qu"],
                 capture_output=True,
                 text=True,
@@ -471,7 +471,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting Zypper updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["zypper", "list-updates"],
                 capture_output=True,
                 text=True,
@@ -517,7 +517,7 @@ class UpdateDetector:
 
             # Refresh metadata if allowed (requires privileges)
             try:
-                refresh_result = subprocess.run(
+                refresh_result = subprocess.run(  # nosec B603, B607
                     ["fwupdmgr", "refresh", "--force"],
                     capture_output=True,
                     text=True,
@@ -535,7 +535,7 @@ class UpdateDetector:
                 )
 
             # Get updates that are available
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["fwupdmgr", "get-updates", "--json"],
                 capture_output=True,
                 text=True,
@@ -630,7 +630,7 @@ class UpdateDetector:
     def _check_fwupd_daemon(self) -> bool:
         """Check if fwupd daemon is running and accessible."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["fwupdmgr", "get-devices", "--json"],
                 capture_output=True,
                 text=True,
@@ -679,7 +679,7 @@ class UpdateDetector:
 
             # First update Homebrew to get the latest package information
             logger.debug(_("Updating Homebrew package information"))
-            update_result = subprocess.run(
+            update_result = subprocess.run(  # nosec B603, B607
                 ["brew", "update"],
                 capture_output=True,
                 text=True,
@@ -693,7 +693,7 @@ class UpdateDetector:
                 logger.debug(_("Homebrew update completed successfully"))
 
             # Get outdated formulas
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["brew", "outdated", "--json=v2"],
                 capture_output=True,
                 text=True,
@@ -744,7 +744,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting Mac App Store updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["softwareupdate", "--list"],
                 capture_output=True,
                 text=True,
@@ -832,7 +832,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting MacPorts updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["port", "outdated"],
                 capture_output=True,
                 text=True,
@@ -864,7 +864,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting winget updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["winget", "upgrade", "--include-unknown"],
                 capture_output=True,
                 text=True,
@@ -997,7 +997,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting Chocolatey updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["choco", "outdated", "-r"],
                 capture_output=True,
                 text=True,
@@ -1027,7 +1027,7 @@ class UpdateDetector:
         try:
             logger.debug(_("Detecting Scoop updates"))
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["scoop", "status"],
                 capture_output=True,
                 text=True,
@@ -1060,11 +1060,11 @@ class UpdateDetector:
             logger.debug(_("Detecting pkg updates"))
 
             # Update the package repository
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 ["pkg", "update", "-q"], capture_output=True, timeout=60, check=False
             )
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["pkg", "version", "-vl", "<"],
                 capture_output=True,
                 text=True,
@@ -1297,7 +1297,7 @@ class UpdateDetector:
 
         try:
             # Run apt-get upgrade for specific packages
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["apt-get", "install", "--only-upgrade", "-y"] + package_names,
                 capture_output=True,
                 text=True,
@@ -1340,7 +1340,7 @@ class UpdateDetector:
         """Apply snap updates."""
         for package in packages:
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     ["snap", "refresh", package["package_name"]],
                     capture_output=True,
                     text=True,
@@ -1380,7 +1380,7 @@ class UpdateDetector:
         for package in packages:
             try:
                 bundle_id = package.get("bundle_id", package["package_name"])
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     ["flatpak", "update", "-y", bundle_id],
                     capture_output=True,
                     text=True,
@@ -1420,7 +1420,7 @@ class UpdateDetector:
         package_names = [p["package_name"] for p in packages]
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dnf", "upgrade", "-y"] + package_names,
                 capture_output=True,
                 text=True,
@@ -1471,7 +1471,7 @@ class UpdateDetector:
                     cmd = ["brew", "upgrade", package["package_name"]]
 
                 logger.info(_("Running homebrew command: %s"), " ".join(cmd))
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     cmd, capture_output=True, text=True, timeout=120, check=False
                 )
 
@@ -1529,7 +1529,7 @@ class UpdateDetector:
                     package_id,
                 )
 
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     [
                         "winget",
                         "upgrade",
@@ -1600,7 +1600,7 @@ class UpdateDetector:
         package_names = [p["package_name"] for p in packages]
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["pkg", "upgrade", "-y"] + package_names,
                 capture_output=True,
                 text=True,
@@ -1663,7 +1663,7 @@ class UpdateDetector:
 
                 # Check if system has privilege mode enabled
                 # Firmware updates typically require root/admin privileges
-                privilege_check = subprocess.run(
+                privilege_check = subprocess.run(  # nosec B603, B607
                     ["fwupdmgr", "get-devices", "--json"],
                     capture_output=True,
                     timeout=10,
@@ -1692,7 +1692,7 @@ class UpdateDetector:
                     _("Running firmware update command: %s"), " ".join(update_cmd)
                 )
 
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     update_cmd,
                     capture_output=True,
                     text=True,

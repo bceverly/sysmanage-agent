@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch, mock_open
 
 import pytest
 
-from hardware_collection import HardwareCollector
+from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 
 
 class TestHardwareCollector:

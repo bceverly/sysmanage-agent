@@ -11,10 +11,10 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import our database base and models
-from database.base import Base, get_database_manager
+from src.database.base import Base, get_database_manager
 
 # Import models to ensure they're registered with Base.metadata
-from database import models
+from src.database import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

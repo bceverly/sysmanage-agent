@@ -5,11 +5,11 @@ Handles platform-specific OS version and architecture information gathering.
 
 import platform
 import logging
-import subprocess
+import subprocess  # nosec B404
 import json
 from typing import Any, Dict
 
-from i18n import _
+from src.i18n import _
 
 
 class OSInfoCollector:
@@ -100,7 +100,7 @@ class OSInfoCollector:
             # Check if Ubuntu Pro (pro command) is available
             # Use --all to get all services including N/A ones
             result = subprocess.run(
-                ["pro", "status", "--all", "--format", "json"],
+                ["pro", "status", "--all", "--format", "json"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=10,

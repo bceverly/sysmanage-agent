@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
-from config import ConfigManager
-from i18n import set_language, get_language, _, TRANSLATIONS, get_translation
+from src.sysmanage_agent.core.config import ConfigManager
+from src.i18n import set_language, get_language, _, TRANSLATIONS, get_translation
 from main import SysManageAgent
 
 
@@ -129,7 +129,7 @@ i18n:
         """Test config integration with main agent initialization."""
         with patch("main.ClientRegistration"), patch(
             "main.set_language"
-        ) as mock_set_language:
+        ) as mock_set_language, patch("main.initialize_database", return_value=True):
             SysManageAgent(config_with_i18n)
 
             # Verify that set_language was called with the configured language

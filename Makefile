@@ -108,7 +108,7 @@ format-python: setup-venv clean-whitespace
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
-	@$(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=config --cov=registration --cov-report=term-missing --cov-report=html
+	@$(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
 	@echo "[OK] Tests completed"
 
 # Clean artifacts
@@ -233,9 +233,9 @@ security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
 ifeq ($(OS),Windows_NT)
-	-@$(PYTHON) -m bandit -r *.py alembic/ database/ i18n/ security/ scripts/ -f screen --skip B101,B404,B603,B607
+	-@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607
 else
-	@$(PYTHON) -m bandit -r *.py alembic/ database/ i18n/ security/ scripts/ -f screen --skip B101,B404,B603,B607 || true
+	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
 endif
 	@echo ""
 	@echo "Running Safety dependency vulnerability scan..."

@@ -5,7 +5,7 @@ Unit tests for update detection module.
 # pylint: disable=protected-access,too-many-public-methods
 
 from unittest.mock import Mock, patch
-from update_detection import UpdateDetector
+from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
 class TestUpdateDetector:
@@ -61,7 +61,9 @@ class TestUpdateDetector:
         assert detector._detect_package_managers() == managers
 
     @patch("platform.system")
-    @patch("update_detection.UpdateDetector._detect_linux_updates")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_linux_updates"
+    )
     def test_get_available_updates_linux(self, mock_detect_linux, mock_system):
         """Test update detection on Linux."""
         mock_system.return_value = "Linux"
@@ -77,7 +79,9 @@ class TestUpdateDetector:
         assert result["platform"] == "linux"
 
     @patch("platform.system")
-    @patch("update_detection.UpdateDetector._detect_macos_updates")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_macos_updates"
+    )
     def test_get_available_updates_macos(self, mock_detect_macos, mock_system):
         """Test update detection on macOS."""
         mock_system.return_value = "Darwin"
@@ -89,7 +93,9 @@ class TestUpdateDetector:
         assert result["platform"] == "darwin"
 
     @patch("platform.system")
-    @patch("update_detection.UpdateDetector._detect_windows_updates")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_windows_updates"
+    )
     def test_get_available_updates_windows(self, mock_detect_windows, mock_system):
         """Test update detection on Windows."""
         mock_system.return_value = "Windows"
@@ -101,7 +107,9 @@ class TestUpdateDetector:
         assert result["platform"] == "windows"
 
     @patch("platform.system")
-    @patch("update_detection.UpdateDetector._detect_bsd_updates")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_bsd_updates"
+    )
     def test_get_available_updates_openbsd(self, mock_detect_bsd, mock_system):
         """Test update detection on OpenBSD."""
         mock_system.return_value = "OpenBSD"

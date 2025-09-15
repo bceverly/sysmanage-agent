@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 import yaml
 
-from i18n import _
+from src.i18n import _
 
 
 class ConfigManager:

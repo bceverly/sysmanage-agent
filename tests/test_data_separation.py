@@ -8,8 +8,8 @@ from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 
-from config import ConfigManager
-from registration import ClientRegistration
+from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.registration.client_registration import ClientRegistration
 from main import SysManageAgent
 
 
@@ -44,9 +44,13 @@ i18n:
     def test_get_basic_registration_info_minimal(self, mock_registration):
         """Test that get_basic_registration_info() returns only minimal data."""
         with patch.object(
-            mock_registration, "get_hostname", return_value="test-host.example.com"
+            mock_registration.network_utils,
+            "get_hostname",
+            return_value="test-host.example.com",
         ), patch.object(
-            mock_registration, "get_ip_addresses", return_value=("192.168.1.100", "::1")
+            mock_registration.network_utils,
+            "get_ip_addresses",
+            return_value=("192.168.1.100", "::1"),
         ):
 
             basic_info = mock_registration.get_basic_registration_info()
@@ -63,22 +67,21 @@ i18n:
 
     def test_get_os_version_info_comprehensive(self, mock_registration):
         """Test that get_os_version_info() returns comprehensive OS data."""
-        with patch("platform.system", return_value="Linux"), patch(
-            "platform.release", return_value="5.15.0-88-generic"
-        ), patch(
-            "platform.version",
-            return_value="#98-Ubuntu SMP Mon Oct 2 15:29:04 UTC 2023",
-        ), patch(
-            "platform.architecture", return_value=("64bit", "ELF")
-        ), patch(
-            "platform.processor", return_value="x86_64"
-        ), patch(
-            "platform.machine", return_value="x86_64"
-        ), patch(
-            "platform.python_version", return_value="3.11.5"
-        ), patch(
-            "os_info_collection.OSInfoCollector._get_linux_distribution_info",
-            return_value=("Linux", "5.15.0-88-generic"),
+        mock_os_info = {
+            "platform": "Linux",
+            "platform_release": "5.15.0-88-generic",
+            "platform_version": "#98-Ubuntu SMP Mon Oct 2 15:29:04 UTC 2023",
+            "architecture": "64bit",
+            "processor": "x86_64",
+            "machine_architecture": "x86_64",
+            "python_version": "3.11.5",
+            "os_info": {"distribution": "Ubuntu", "version": "5.15.0-88-generic"},
+        }
+
+        with patch.object(
+            mock_registration.os_info_collector,
+            "get_os_version_info",
+            return_value=mock_os_info,
         ):
 
             os_info = mock_registration.get_os_version_info()
@@ -104,14 +107,27 @@ i18n:
 
     def test_data_separation_no_overlap(self, mock_registration):
         """Test that basic registration and OS version data don't overlap."""
+        mock_os_info = {
+            "platform": "Darwin",
+            "platform_release": "23.1.0",
+            "platform_version": "Darwin Kernel Version 23.1.0",
+            "architecture": "64bit",
+            "processor": "arm",
+            "machine_architecture": "arm64",
+            "python_version": "3.11.5",
+            "os_info": {"mac_version": "14.1.1"},
+        }
+
         with patch.object(
-            mock_registration, "get_hostname", return_value="test-host"
+            mock_registration.network_utils, "get_hostname", return_value="test-host"
         ), patch.object(
-            mock_registration, "get_ip_addresses", return_value=("10.0.0.1", None)
-        ), patch(
-            "platform.system", return_value="Darwin"
-        ), patch(
-            "platform.machine", return_value="arm64"
+            mock_registration.network_utils,
+            "get_ip_addresses",
+            return_value=("10.0.0.1", None),
+        ), patch.object(
+            mock_registration.os_info_collector,
+            "get_os_version_info",
+            return_value=mock_os_info,
         ):
 
             basic_info = mock_registration.get_basic_registration_info()
@@ -127,16 +143,29 @@ i18n:
 
     def test_get_system_info_combines_both(self, mock_registration):
         """Test that get_system_info() combines both basic and OS version data."""
+        mock_os_info = {
+            "platform": "Windows",
+            "platform_release": "10",
+            "platform_version": "10.0.19045",
+            "architecture": "64bit",
+            "processor": "Intel Core i7",
+            "machine_architecture": "AMD64",
+            "python_version": "3.11.5",
+            "os_info": {"windows_version": "10", "windows_service_pack": "10.0.19045"},
+        }
+
         with patch.object(
-            mock_registration, "get_hostname", return_value="combined-host"
+            mock_registration.network_utils,
+            "get_hostname",
+            return_value="combined-host",
         ), patch.object(
-            mock_registration,
+            mock_registration.network_utils,
             "get_ip_addresses",
             return_value=("172.16.0.1", "2001:db8::1"),
-        ), patch(
-            "platform.system", return_value="Windows"
-        ), patch(
-            "platform.machine", return_value="AMD64"
+        ), patch.object(
+            mock_registration.os_info_collector,
+            "get_os_version_info",
+            return_value=mock_os_info,
         ):
 
             system_info = mock_registration.get_system_info()
@@ -168,7 +197,7 @@ i18n:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ):
+        ), patch("main.initialize_database", return_value=True):
 
             # Mock OS version and hardware data
             mock_registration = Mock()
@@ -257,9 +286,11 @@ i18n:
         with patch(
             "aiohttp.ClientSession", return_value=mock_session_context
         ), patch.object(
-            mock_registration, "get_hostname", return_value="minimal-host"
+            mock_registration.network_utils, "get_hostname", return_value="minimal-host"
         ), patch.object(
-            mock_registration, "get_ip_addresses", return_value=("1.2.3.4", None)
+            mock_registration.network_utils,
+            "get_ip_addresses",
+            return_value=("1.2.3.4", None),
         ), patch(
             "ssl.create_default_context"
         ), patch(
@@ -298,7 +329,9 @@ i18n:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration"), patch("main.set_language"):
+        with patch("main.ClientRegistration"), patch("main.set_language"), patch(
+            "main.initialize_database", return_value=True
+        ):
 
             agent = SysManageAgent(str(config_file))
 
@@ -328,15 +361,30 @@ i18n:
             ("AMD64", "Windows", "Windows"),
         ]
 
-        for arch, platform, expected_platform in architectures:
+        for arch, _, expected_platform in architectures:
+            mock_os_info = {
+                "platform": expected_platform,
+                "platform_release": "1.0.0",
+                "platform_version": f"{expected_platform} Test Version",
+                "architecture": "64bit",
+                "processor": f"{arch} processor",
+                "machine_architecture": arch,
+                "python_version": "3.11.5",
+                "os_info": {"arch_notes": f"Testing {arch}"},
+            }
+
             with patch.object(
-                mock_registration, "get_hostname", return_value=f"{arch}-host"
+                mock_registration.network_utils,
+                "get_hostname",
+                return_value=f"{arch}-host",
             ), patch.object(
-                mock_registration, "get_ip_addresses", return_value=("10.0.0.1", None)
-            ), patch(
-                "platform.machine", return_value=arch
-            ), patch(
-                "platform.system", return_value=platform
+                mock_registration.network_utils,
+                "get_ip_addresses",
+                return_value=("10.0.0.1", None),
+            ), patch.object(
+                mock_registration.os_info_collector,
+                "get_os_version_info",
+                return_value=mock_os_info,
             ):
 
                 basic_info = mock_registration.get_basic_registration_info()

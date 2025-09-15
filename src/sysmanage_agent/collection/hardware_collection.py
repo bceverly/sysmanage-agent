@@ -8,11 +8,11 @@ import os
 import platform
 import logging
 import re
-import subprocess
+import subprocess  # nosec B404
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 
-from i18n import _
+from src.i18n import _
 
 
 class HardwareCollector:
@@ -142,7 +142,7 @@ class HardwareCollector:
         try:
             # Get CPU info from system_profiler
             result = subprocess.run(
-                ["system_profiler", "-json", "SPHardwareDataType"],
+                ["system_profiler", "-json", "SPHardwareDataType"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -199,7 +199,7 @@ class HardwareCollector:
                     if "Apple" in chip_type:
                         # Try to get base frequency from sysctl (may not be available)
                         freq_result = subprocess.run(
-                            ["sysctl", "-n", "hw.cpufrequency"],
+                            ["sysctl", "-n", "hw.cpufrequency"],  # nosec B603, B607
                             capture_output=True,
                             text=True,
                             timeout=10,
@@ -217,7 +217,7 @@ class HardwareCollector:
                             # Try alternative sysctl parameters
                             for sysctl_key in ["hw.cpufrequency_max", "hw.tbfrequency"]:
                                 freq_result = subprocess.run(
-                                    ["sysctl", "-n", sysctl_key],
+                                    ["sysctl", "-n", sysctl_key],  # nosec B603, B607
                                     capture_output=True,
                                     text=True,
                                     timeout=10,
@@ -252,7 +252,7 @@ class HardwareCollector:
         memory_info = {}
         try:
             result = subprocess.run(
-                ["system_profiler", "-json", "SPHardwareDataType"],
+                ["system_profiler", "-json", "SPHardwareDataType"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -283,7 +283,7 @@ class HardwareCollector:
         try:
             # Get basic storage info from system_profiler
             result = subprocess.run(
-                ["system_profiler", "-json", "SPStorageDataType"],
+                ["system_profiler", "-json", "SPStorageDataType"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -292,7 +292,7 @@ class HardwareCollector:
 
             # Get disk usage info from df
             df_result = subprocess.run(
-                ["df", "-k"],  # Get output in 1K blocks
+                ["df", "-k"],  # Get output in 1K blocks  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -455,7 +455,7 @@ class HardwareCollector:
         containers = []
         try:
             result = subprocess.run(
-                ["diskutil", "list"],
+                ["diskutil", "list"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -585,7 +585,7 @@ class HardwareCollector:
         try:
             # Get basic network info from system_profiler
             result = subprocess.run(
-                ["system_profiler", "-json", "SPNetworkDataType"],
+                ["system_profiler", "-json", "SPNetworkDataType"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -594,7 +594,7 @@ class HardwareCollector:
 
             # Get detailed interface info from ifconfig
             ifconfig_result = subprocess.run(
-                ["ifconfig"],
+                ["ifconfig"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -714,7 +714,11 @@ class HardwareCollector:
             # First try lscpu for structured info
 
             result = subprocess.run(
-                ["lscpu"], capture_output=True, text=True, timeout=30, check=False
+                ["lscpu"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,  # nosec B603, B607
             )
             if result.returncode == 0:
                 for line in result.stdout.split("\n"):
@@ -831,7 +835,12 @@ class HardwareCollector:
         try:
             # Use lsblk to get block devices
             result = subprocess.run(
-                ["lsblk", "-J", "-o", "NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE"],
+                [
+                    "lsblk",
+                    "-J",
+                    "-o",
+                    "NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE",
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -997,7 +1006,7 @@ class HardwareCollector:
                     "get",
                     "Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed",
                     "/format:csv",
-                ],
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1031,7 +1040,13 @@ class HardwareCollector:
         memory_info = {}
         try:
             result = subprocess.run(
-                ["wmic", "computersystem", "get", "TotalPhysicalMemory", "/format:csv"],
+                [
+                    "wmic",
+                    "computersystem",
+                    "get",
+                    "TotalPhysicalMemory",
+                    "/format:csv",
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1065,7 +1080,7 @@ class HardwareCollector:
                     "get",
                     "Size,FreeSpace,FileSystem,DeviceID",
                     "/format:csv",
-                ],
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1176,7 +1191,7 @@ class HardwareCollector:
                     "get",
                     "Name,AdapterType,MACAddress,NetEnabled",
                     "/format:csv",
-                ],
+                ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1216,7 +1231,7 @@ class HardwareCollector:
         try:
             # Get CPU model name
             result = subprocess.run(
-                ["sysctl", "-n", "hw.model"],
+                ["sysctl", "-n", "hw.model"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1235,7 +1250,7 @@ class HardwareCollector:
 
             # Get number of CPUs
             result = subprocess.run(
-                ["sysctl", "-n", "hw.ncpu"],
+                ["sysctl", "-n", "hw.ncpu"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1246,7 +1261,7 @@ class HardwareCollector:
 
             # Try to get physical CPU cores (may not be available on all BSD systems)
             result = subprocess.run(
-                ["sysctl", "-n", "hw.ncpuonline"],
+                ["sysctl", "-n", "hw.ncpuonline"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1261,7 +1276,7 @@ class HardwareCollector:
             # Try to get CPU frequency (may not be available)
             for freq_key in ["hw.cpuspeed", "hw.clockrate", "machdep.tsc_freq"]:
                 result = subprocess.run(
-                    ["sysctl", "-n", freq_key],
+                    ["sysctl", "-n", freq_key],  # nosec B603, B607
                     capture_output=True,
                     text=True,
                     timeout=30,
@@ -1303,7 +1318,7 @@ class HardwareCollector:
         try:
             # Get physical memory
             result = subprocess.run(
-                ["sysctl", "-n", "hw.physmem"],
+                ["sysctl", "-n", "hw.physmem"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -1326,7 +1341,11 @@ class HardwareCollector:
         try:
             # Get mounted filesystems
             result = subprocess.run(
-                ["df", "-h"], capture_output=True, text=True, timeout=30, check=False
+                ["df", "-h"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,  # nosec B603, B607
             )
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")[1:]  # Skip header
@@ -1355,7 +1374,11 @@ class HardwareCollector:
 
             # Try to get filesystem types from mount command
             result = subprocess.run(
-                ["mount"], capture_output=True, text=True, timeout=30, check=False
+                ["mount"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,  # nosec B603, B607
             )
             if result.returncode == 0:
                 mount_lines = result.stdout.strip().split("\n")
@@ -1450,7 +1473,7 @@ class HardwareCollector:
         network_interfaces = []
         try:
             result = subprocess.run(
-                ["ifconfig", "-a"],
+                ["ifconfig", "-a"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,

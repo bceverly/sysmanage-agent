@@ -10,9 +10,9 @@ from datetime import datetime, timezone, timedelta
 
 import pytest
 
-from database.base import DatabaseManager
-from database.models import MessageQueue, QueueStatus, QueueDirection, Priority
-from database.queue_manager import MessageQueueManager
+from src.database.base import DatabaseManager
+from src.database.models import MessageQueue, QueueStatus, QueueDirection, Priority
+from src.database.queue_manager import MessageQueueManager
 
 
 class TestMessageQueueManager:

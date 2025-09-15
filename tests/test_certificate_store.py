@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
-from security.certificate_store import CertificateStore
+from src.security.certificate_store import CertificateStore
 
 
 class TestCertificateStore:  # pylint: disable=too-many-public-methods

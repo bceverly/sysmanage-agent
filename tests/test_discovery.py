@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from discovery import ServerDiscoveryClient
+from src.sysmanage_agent.registration.discovery import ServerDiscoveryClient
 
 
 class TestServerDiscoveryClient:

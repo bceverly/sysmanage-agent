@@ -19,27 +19,27 @@ import aiohttp
 import websockets
 import yaml
 
-from config import ConfigManager
-from registration import ClientRegistration
-from i18n import _, set_language
-from discovery import discovery_client
-from security.certificate_store import CertificateStore
-from verbosity_logger import get_logger
-from agent_utils import (
+from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.registration.registration import ClientRegistration
+from src.i18n import _, set_language
+from src.sysmanage_agent.registration.discovery import discovery_client
+from src.security.certificate_store import CertificateStore
+from src.sysmanage_agent.utils.verbosity_logger import get_logger
+from src.sysmanage_agent.core.agent_utils import (
     UpdateChecker,
     AuthenticationHelper,
     MessageProcessor,
     is_running_privileged,
 )
-from update_operations import UpdateOperations
-from system_operations import SystemOperations
-from script_operations import ScriptOperations
-from message_handler import QueuedMessageHandler
-from update_detection import UpdateDetector
-from database.init import initialize_database
-from database.base import get_database_manager
-from database.models import HostApproval
-from logging_formatter import UTCTimestampFormatter
+from src.sysmanage_agent.operations.update_operations import UpdateOperations
+from src.sysmanage_agent.operations.system_operations import SystemOperations
+from src.sysmanage_agent.operations.script_operations import ScriptOperations
+from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
+from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.database.init import initialize_database
+from src.database.base import get_database_manager
+from src.database.models import HostApproval
+from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
 
 
 class SysManageAgent:  # pylint: disable=too-many-public-methods

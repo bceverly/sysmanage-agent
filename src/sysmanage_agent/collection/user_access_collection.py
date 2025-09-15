@@ -6,7 +6,7 @@ Handles cross-platform collection of local user accounts and groups.
 import json
 import logging
 import platform
-import subprocess
+import subprocess  # nosec B404
 from typing import Any, Dict, List
 
 # Unix-only imports - conditionally imported based on platform
@@ -132,7 +132,7 @@ class UserAccessCollector:
         users = []
         try:
             # Get all users using dscl
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dscl", ".", "list", "/Users"],
                 capture_output=True,
                 text=True,
@@ -145,7 +145,7 @@ class UserAccessCollector:
 
                 try:
                     # Get user details
-                    uid_result = subprocess.run(
+                    uid_result = subprocess.run(  # nosec B603, B607
                         ["dscl", ".", "read", f"/Users/{username}", "UniqueID"],
                         capture_output=True,
                         text=True,
@@ -157,7 +157,7 @@ class UserAccessCollector:
                         else None
                     )
 
-                    home_result = subprocess.run(
+                    home_result = subprocess.run(  # nosec B603, B607
                         ["dscl", ".", "read", f"/Users/{username}", "NFSHomeDirectory"],
                         capture_output=True,
                         text=True,
@@ -169,7 +169,7 @@ class UserAccessCollector:
                         else None
                     )
 
-                    shell_result = subprocess.run(
+                    shell_result = subprocess.run(  # nosec B603, B607
                         ["dscl", ".", "read", f"/Users/{username}", "UserShell"],
                         capture_output=True,
                         text=True,
@@ -188,7 +188,7 @@ class UserAccessCollector:
                     group_names = []
                     try:
                         # Use 'groups' command which is much faster
-                        groups_result = subprocess.run(
+                        groups_result = subprocess.run(  # nosec B603, B607
                             ["groups", username],
                             capture_output=True,
                             text=True,
@@ -280,7 +280,7 @@ class UserAccessCollector:
         groups = []
         try:
             # Get all groups using dscl
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dscl", ".", "list", "/Groups"],
                 capture_output=True,
                 text=True,
@@ -293,7 +293,7 @@ class UserAccessCollector:
 
                 try:
                     # Get group GID
-                    gid_result = subprocess.run(
+                    gid_result = subprocess.run(  # nosec B603, B607
                         [
                             "dscl",
                             ".",
@@ -356,7 +356,7 @@ class UserAccessCollector:
         users = []
         try:
             # Use PowerShell to get local users
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 [
                     "powershell",
                     "-Command",
@@ -392,7 +392,7 @@ class UserAccessCollector:
                     # Get all local groups, then check if user is a member of each
                     username = user.get("Name", "")
                     if username:
-                        group_result = subprocess.run(
+                        group_result = subprocess.run(  # nosec B603, B607
                             [
                                 "powershell",
                                 "-Command",
@@ -441,7 +441,7 @@ class UserAccessCollector:
         groups = []
         try:
             # Use PowerShell to get local groups
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 [
                     "powershell",
                     "-Command",

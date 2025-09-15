@@ -12,9 +12,9 @@ from typing import Dict, Any
 
 import aiohttp
 
-from i18n import _
-from database.models import Priority, ScriptExecution
-from database.base import get_database_manager
+from src.i18n import _
+from src.database.models import Priority, ScriptExecution
+from src.database.base import get_database_manager
 from datetime import datetime, timezone
 
 

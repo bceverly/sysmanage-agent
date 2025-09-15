@@ -11,7 +11,7 @@ import platform
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from i18n import _
+from src.i18n import _
 
 try:
     import netifaces

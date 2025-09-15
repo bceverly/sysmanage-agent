@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from network_utils import NetworkUtils
+from src.sysmanage_agent.communication.network_utils import NetworkUtils
 
 
 class TestNetworkUtils:

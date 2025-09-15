@@ -5,7 +5,9 @@ Handles initial registration and periodic re-registration with the server.
 This module provides backward compatibility while delegating to the modular implementation.
 """
 
-from client_registration import ClientRegistration as ModularClientRegistration
+from src.sysmanage_agent.registration.client_registration import (
+    ClientRegistration as ModularClientRegistration,
+)
 
 
 # For backward compatibility, we re-export the main class

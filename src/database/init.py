@@ -3,12 +3,12 @@ Database initialization and migration management for SysManage Agent.
 """
 
 import os
-import subprocess
+import subprocess  # nosec B404
 import logging
 from typing import Optional
 
 from .base import get_database_manager
-from i18n import _
+from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -71,13 +71,15 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
     """
     try:
         # Change to the agent directory to ensure alembic.ini is found
-        agent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        agent_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
 
         # Run alembic command
         cmd = ["alembic", operation, revision]
         logger.info(_("Running alembic command: %s"), " ".join(cmd))
 
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607
             cmd, cwd=agent_dir, capture_output=True, text=True, timeout=60
         )
 

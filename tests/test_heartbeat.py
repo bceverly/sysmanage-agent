@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 
-from config import ConfigManager
+from src.sysmanage_agent.core.config import ConfigManager
 from main import SysManageAgent
 
 
@@ -61,7 +61,9 @@ i18n:
         }
         with patch("main.ClientRegistration", return_value=mock_registration), patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class:
+        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+            "main.initialize_database", return_value=True
+        ):
             # Mock the message handler
             mock_handler = Mock()
             mock_handler.queue_outbound_message = AsyncMock(return_value="test-msg-id")
@@ -279,7 +281,7 @@ i18n:
 
         with patch("main.ClientRegistration", return_value=mock_registration), patch(
             "main.set_language"
-        ):
+        ), patch("main.initialize_database", return_value=True):
             agent = SysManageAgent(str(config_file))
             return agent
 
@@ -320,7 +322,7 @@ i18n:
 
         with patch("main.ClientRegistration"), patch("main.set_language"), patch(
             "main.QueuedMessageHandler"
-        ):
+        ), patch("main.initialize_database", return_value=True):
             agent = SysManageAgent(str(config_file))
             agent.logger = Mock()
             return agent
