@@ -98,8 +98,11 @@ class TestSysManageAgentInitialization:
             agent = SysManageAgent(temp_config)
 
             # Verify defaults are applied through the URLs (where defaults are actually used)
-            assert (
-                "basic-server.com:8000" in agent.config.get_server_url()
+            server_url = agent.config.get_server_rest_url()
+            assert server_url.startswith(
+                "http://basic-server.com:8000"
+            ) or server_url.startswith(
+                "https://basic-server.com:8000"
             )  # Default port applied
             assert agent.config.get_log_level() == "INFO"  # Default log level
             assert (
