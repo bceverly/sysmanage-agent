@@ -9,9 +9,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "YOUR_USERNAME"
+      - "bceverly"
     assignees:
-      - "YOUR_USERNAME"
+      - "bceverly"
     commit-message:
       prefix: "deps"
       include: "scope"
@@ -37,9 +37,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "YOUR_USERNAME"
+      - "bceverly"
     assignees:
-      - "YOUR_USERNAME"
+      - "bceverly"
     commit-message:
       prefix: "ci"
       include: "scope"
