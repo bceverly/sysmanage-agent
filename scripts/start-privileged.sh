@@ -7,8 +7,10 @@
 
 set -e
 
-# Get the absolute path to the script directory
-AGENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Change to the project root directory (parent of scripts directory)
+AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$AGENT_DIR"
 
 # Platform detection
@@ -254,17 +256,20 @@ main() {
     
     # Stop any existing agent
     if check_existing_processes; then
-        sh ./stop.sh
+        sh ./scripts/stop.sh
         sleep 2
         
         # Verify they were stopped
         if check_existing_processes >/dev/null 2>&1; then
-            echo "❌ ERROR: Failed to stop existing agent processes. Please manually stop them before continuing."
+            echo "❌ ERROR: Failed to stop existing agent processes. Please stop them before continuing."
             echo ""
-            echo "To manually check for agent processes:"
+            echo "Try using the stop command first:"
+            echo "  make stop"
+            echo ""
+            echo "If that fails, manually check for agent processes:"
             echo "  ps -ef | grep 'python3.*main.py'"
             echo ""
-            echo "To manually kill all agent processes:"
+            echo "Or manually kill all agent processes:"
             if command -v pkill >/dev/null 2>&1; then
                 echo "  pkill -f 'python3.*main.py'"
             else
@@ -440,7 +445,7 @@ EOF
         echo "Logs:"
         echo "  📄 Agent Log: tail -f logs/agent.log"
         echo ""
-        echo "To stop the agent: ./stop.sh"
+        echo "To stop the agent: make stop"
         echo ""
     else
         echo ""

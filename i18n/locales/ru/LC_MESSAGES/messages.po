@@ -853,3 +853,43 @@ msgstr "Очищено %d старых сообщений"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Ошибка десериализации сообщения %s: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Требуется токен Ubuntu Pro"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Подключение подписки Ubuntu Pro..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro успешно подключен"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Подписка Ubuntu Pro успешно подключена"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Ошибка подключения Ubuntu Pro: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Ошибка при подключении Ubuntu Pro: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Отключение подписки Ubuntu Pro..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro успешно отключен"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Подписка Ubuntu Pro успешно отключена"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Ошибка отключения Ubuntu Pro: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Ошибка при отключении Ubuntu Pro: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Обновленная информация об ОС отправлена на сервер после изменения Ubuntu Pro"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Ошибка отправки обновления ОС после изменения Ubuntu Pro: %s"

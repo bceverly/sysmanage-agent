@@ -853,3 +853,43 @@ msgstr "Échec de la désérialisation du message %s : %s"
 
 #~ msgid "Authentication failed"
 #~ msgstr "Échec de l'authentification"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Le jeton Ubuntu Pro est requis"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Attachement de l'abonnement Ubuntu Pro..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro attaché avec succès"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Abonnement Ubuntu Pro attaché avec succès"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Échec de l'attachement d'Ubuntu Pro : %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Erreur lors de l'attachement d'Ubuntu Pro : %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Détachement de l'abonnement Ubuntu Pro..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro détaché avec succès"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Abonnement Ubuntu Pro détaché avec succès"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Échec du détachement d'Ubuntu Pro : %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Erreur lors du détachement d'Ubuntu Pro : %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Informations du système d'exploitation mises à jour envoyées au serveur après changement Ubuntu Pro"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"

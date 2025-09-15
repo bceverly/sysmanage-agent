@@ -5,7 +5,11 @@ Handles platform-specific OS version and architecture information gathering.
 
 import platform
 import logging
+import subprocess
+import json
 from typing import Any, Dict
+
+from i18n import _
 
 
 class OSInfoCollector:
@@ -79,6 +83,124 @@ class OSInfoCollector:
         # Fallback to kernel version
         return ("Linux", platform.release())
 
+    def _get_ubuntu_pro_info(self) -> Dict[str, Any]:
+        """Get Ubuntu Pro subscription and service status information."""
+        ubuntu_pro_info = {
+            "available": False,
+            "attached": False,
+            "services": [],
+            "account_name": "",
+            "contract_name": "",
+            "expires": None,
+            "version": "",
+            "tech_support_level": "n/a",
+        }
+
+        try:
+            # Check if Ubuntu Pro (pro command) is available
+            # Use --all to get all services including N/A ones
+            result = subprocess.run(
+                ["pro", "status", "--all", "--format", "json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode == 0 and result.stdout:
+                try:
+                    pro_data = json.loads(result.stdout)
+
+                    ubuntu_pro_info["available"] = True
+                    ubuntu_pro_info["attached"] = pro_data.get("attached", False)
+                    ubuntu_pro_info["version"] = pro_data.get("version", "")
+                    ubuntu_pro_info["expires"] = pro_data.get("expires")
+
+                    # Account information
+                    account = pro_data.get("account", {})
+                    if account:
+                        ubuntu_pro_info["account_name"] = account.get("name", "")
+
+                    # Contract information
+                    contract = pro_data.get("contract", {})
+                    if contract:
+                        ubuntu_pro_info["contract_name"] = contract.get("name", "")
+                        ubuntu_pro_info["tech_support_level"] = contract.get(
+                            "tech_support_level", "n/a"
+                        )
+
+                    # Services information
+                    services = pro_data.get("services", [])
+                    service_list = []
+
+                    self.logger.debug(
+                        f"Processing {len(services)} services from pro status"
+                    )
+
+                    for i, service in enumerate(services):
+                        service_name = service.get("name", "")
+
+                        # Map the pro status values to our standardized status
+                        raw_status = service.get("status", "disabled")
+                        available = service.get("available", "no") == "yes"
+                        entitled = service.get("entitled", "no") == "yes"
+
+                        self.logger.debug(
+                            f"Service {i+1}/{len(services)}: {service_name} - raw_status={raw_status}, available={available}, entitled={entitled}"
+                        )
+
+                        # Determine the normalized status
+                        if not available:
+                            status = "n/a"
+                        elif raw_status in ["enabled", "active"]:
+                            status = "enabled"
+                        else:
+                            status = "disabled"
+
+                        service_info = {
+                            "name": service_name,
+                            "description": service.get("description", ""),
+                            "available": available,
+                            "status": status,
+                            "entitled": entitled,
+                            "raw_status": raw_status,  # Keep original for debugging
+                        }
+                        service_list.append(service_info)
+
+                        self.logger.debug(
+                            f"Added service: {service_name} with status={status}"
+                        )
+
+                    ubuntu_pro_info["services"] = service_list
+                    self.logger.debug(
+                        f"Final service list contains {len(service_list)} services"
+                    )
+
+                    self.logger.debug(
+                        _("Ubuntu Pro status collected: attached=%s, services=%d"),
+                        ubuntu_pro_info["attached"],
+                        len(service_list),
+                    )
+
+                except json.JSONDecodeError as e:
+                    self.logger.warning(
+                        _("Failed to parse Ubuntu Pro JSON output: %s"), str(e)
+                    )
+                except Exception as e:
+                    self.logger.warning(
+                        _("Error processing Ubuntu Pro data: %s"), str(e)
+                    )
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(_("Ubuntu Pro status check timed out"))
+        except FileNotFoundError:
+            # pro command not available - this is normal on non-Ubuntu systems
+            self.logger.debug(_("Ubuntu Pro not available on this system"))
+        except Exception as e:
+            self.logger.warning(_("Failed to get Ubuntu Pro status: %s"), str(e))
+
+        return ubuntu_pro_info
+
     def get_os_version_info(self) -> Dict[str, Any]:
         """Get comprehensive OS version information as separate data."""
         # Get CPU architecture (x86_64, arm64, aarch64, riscv64, etc.)
@@ -120,6 +242,12 @@ class OSInfoCollector:
                     os_info["distribution_codename"] = os_release.get(
                         "VERSION_CODENAME", ""
                     )
+
+                    # Add Ubuntu Pro information for Ubuntu systems
+                    distribution = os_info.get("distribution", "")
+                    if "ubuntu" in distribution.lower():
+                        os_info["ubuntu_pro"] = self._get_ubuntu_pro_info()
+
             except (AttributeError, OSError):
                 pass
 

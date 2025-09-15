@@ -853,3 +853,43 @@ msgstr "已清理 %d 条旧消息"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "反序列化消息 %s 失败：%s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "需要 Ubuntu Pro 令牌"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "正在附加 Ubuntu Pro 订阅..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro 附加成功"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Ubuntu Pro 订阅附加成功"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "附加 Ubuntu Pro 失败：%s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "附加 Ubuntu Pro 时出错：%s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "正在分离 Ubuntu Pro 订阅..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro 分离成功"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Ubuntu Pro 订阅分离成功"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "分离 Ubuntu Pro 失败：%s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "分离 Ubuntu Pro 时出错：%s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Ubuntu Pro 更改后已将更新的操作系统信息发送到服务器"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Ubuntu Pro 更改后发送操作系统更新失败：%s"

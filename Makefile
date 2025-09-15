@@ -1,23 +1,36 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format-python run stop security security-full security-python security-secrets
+.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets
 
 # Default target
 help:
 	@echo "SysManage Agent - Available targets:"
+	@echo "  make start             - Start SysManage Agent (unprivileged for security)"
+	@echo "  make start-privileged  - Start SysManage Agent with elevated privileges"
+	@echo "  make start-unprivileged - Start SysManage Agent without elevated privileges"
+	@echo "  make stop              - Stop SysManage Agent (auto-detects shell/platform)"
+	@echo ""
+	@echo "Development targets:"
 	@echo "  make test          - Run all unit tests"
 	@echo "  make lint          - Run Python linting"
 	@echo "  make format-python - Format Python code"
 	@echo "  make setup         - Install development dependencies"
 	@echo "  make clean         - Clean test artifacts and cache"
 	@echo "  make install-dev   - Install development tools"
-	@echo "  make run           - Start the agent"
-	@echo "  make stop          - Stop the agent"
 	@echo "  make security      - Run comprehensive security analysis (all tools)"
 	@echo "  make security-full - Run comprehensive security analysis (all tools)"
 	@echo "  make security-python - Run Python security scanning (Bandit + Safety)"
 	@echo "  make security-secrets - Run secrets detection"
+	@echo ""
+	@echo "Privilege Levels:"
+	@echo "  unprivileged - Runs as regular user (default for security)"
+	@echo "                 ✓ System monitoring, reporting"
+	@echo "                 ✗ Package management, system changes"
+	@echo ""
+	@echo "  privileged   - Runs with elevated permissions"
+	@echo "                 ✓ Full functionality including package management"
+	@echo "                 ⚠ Requires sudo/doas access"
 
 # Virtual environment activation
 VENV := .venv
@@ -116,21 +129,72 @@ else
 endif
 	@echo "[OK] Clean completed"
 
-# Agent management targets
-run:
-	@echo "Starting SysManage Agent..."
+# Agent management targets with privilege level selection
+
+# Default start target (unprivileged for security)
+start: start-unprivileged
+
+# Unprivileged start
+start-unprivileged:
+	@echo "Starting SysManage Agent (unprivileged mode)..."
 ifeq ($(OS),Windows_NT)
-	@cmd /c run.cmd
+	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start.ps1) else (scripts\start.cmd)
 else
-	@./run.sh
+	@if [ -n "$$ZSH_VERSION" ]; then \
+		echo "Detected zsh shell, using start.sh"; \
+		./scripts/start.sh; \
+	elif [ -n "$$BASH_VERSION" ]; then \
+		echo "Detected bash shell, using start.sh"; \
+		./scripts/start.sh; \
+	elif [ -n "$$KSH_VERSION" ]; then \
+		echo "Detected ksh shell, using start.sh"; \
+		./scripts/start.sh; \
+	else \
+		echo "Detected POSIX shell, using start.sh"; \
+		./scripts/start.sh; \
+	fi
 endif
 
+# Privileged start
+start-privileged:
+	@echo "Starting SysManage Agent (privileged mode)..."
+ifeq ($(OS),Windows_NT)
+	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start-privileged.ps1) else (scripts\start-privileged.cmd)
+else
+	@if [ -n "$$ZSH_VERSION" ]; then \
+		echo "Detected zsh shell, using start-privileged.sh"; \
+		./scripts/start-privileged.sh; \
+	elif [ -n "$$BASH_VERSION" ]; then \
+		echo "Detected bash shell, using start-privileged.sh"; \
+		./scripts/start-privileged.sh; \
+	elif [ -n "$$KSH_VERSION" ]; then \
+		echo "Detected ksh shell, using start-privileged.sh"; \
+		./scripts/start-privileged.sh; \
+	else \
+		echo "Detected POSIX shell, using start-privileged.sh"; \
+		./scripts/start-privileged.sh; \
+	fi
+endif
+
+# Stop agent
 stop:
 	@echo "Stopping SysManage Agent..."
 ifeq ($(OS),Windows_NT)
-	@cmd /c stop.cmd
+	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/stop.ps1) else (scripts\stop.cmd)
 else
-	@./stop.sh
+	@if [ -n "$$ZSH_VERSION" ]; then \
+		echo "Detected zsh shell, using stop.sh"; \
+		./scripts/stop.sh; \
+	elif [ -n "$$BASH_VERSION" ]; then \
+		echo "Detected bash shell, using stop.sh"; \
+		./scripts/stop.sh; \
+	elif [ -n "$$KSH_VERSION" ]; then \
+		echo "Detected ksh shell, using stop.sh"; \
+		./scripts/stop.sh; \
+	else \
+		echo "Detected POSIX shell, using stop.sh"; \
+		./scripts/stop.sh; \
+	fi
 endif
 
 # Development helpers

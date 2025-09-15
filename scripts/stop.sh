@@ -7,7 +7,9 @@ echo "Stopping SysManage Agent..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+# Change to the project root directory (parent of scripts directory)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
 
 # Function to get configuration value from config file with priority
 get_config_value() {
@@ -179,7 +181,7 @@ else
     echo "To manually check for agent processes:"
     echo "  ps -ef | grep 'python3.*main.py'"
     echo ""
-    echo "To manually kill all agent processes:"
+    echo "To manually kill all agent processes (as last resort):"
     if command -v pkill >/dev/null 2>&1; then
         echo "  pkill -f 'python3.*main.py'"
     else

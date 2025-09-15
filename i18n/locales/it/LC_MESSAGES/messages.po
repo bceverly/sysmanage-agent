@@ -853,3 +853,43 @@ msgstr "Puliti %d vecchi messaggi"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Deserializzazione del messaggio %s fallita: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Il token Ubuntu Pro è richiesto"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Collegamento dell'abbonamento Ubuntu Pro..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro collegato con successo"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Abbonamento Ubuntu Pro collegato con successo"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Errore nel collegare Ubuntu Pro: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Errore nel collegamento di Ubuntu Pro: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Scollegamento dell'abbonamento Ubuntu Pro..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro scollegato con successo"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Abbonamento Ubuntu Pro scollegato con successo"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Errore nello scollegare Ubuntu Pro: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Errore nello scollegamento di Ubuntu Pro: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Informazioni del sistema operativo aggiornate inviate al server dopo il cambio di Ubuntu Pro"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Errore nell'invio dell'aggiornamento del SO dopo il cambio di Ubuntu Pro: %s"

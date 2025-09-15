@@ -160,6 +160,23 @@ class MessageProcessor:
         self, command_type: str, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Dispatch command to appropriate handler."""
+        # Handle generic_command wrapper - unwrap nested commands
+        if command_type == "generic_command":
+            nested_command_type = parameters.get("command_type")
+            nested_parameters = parameters.get("parameters", {})
+            self.logger.debug(
+                f"Unwrapping generic_command: {nested_command_type} with params: {nested_parameters}"
+            )
+            if nested_command_type:
+                return await self._dispatch_command(
+                    nested_command_type, nested_parameters
+                )
+            else:
+                return {
+                    "success": False,
+                    "error": _("Generic command missing nested command_type"),
+                }
+
         if command_type == "execute_shell":
             return await self.agent.execute_shell_command(parameters)
         if command_type == "get_system_info":
@@ -184,6 +201,14 @@ class MessageProcessor:
             return await self.agent.check_updates()
         if command_type == "apply_updates":
             return await self.agent.apply_updates(parameters)
+        if command_type == "ubuntu_pro_attach":
+            return await self.agent.ubuntu_pro_attach(parameters)
+        if command_type == "ubuntu_pro_detach":
+            return await self.agent.ubuntu_pro_detach(parameters)
+        if command_type == "ubuntu_pro_enable_service":
+            return await self.agent.ubuntu_pro_enable_service(parameters)
+        if command_type == "ubuntu_pro_disable_service":
+            return await self.agent.ubuntu_pro_disable_service(parameters)
         if command_type == "execute_script":
             # Check if this execution UUID has already been processed
             execution_uuid = parameters.get("execution_uuid")

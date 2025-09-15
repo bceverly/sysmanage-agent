@@ -853,3 +853,43 @@ msgstr "Limpeza de %d mensagens antigas"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Falha ao desserializar mensagem %s: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Token do Ubuntu Pro é necessário"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Anexando assinatura do Ubuntu Pro..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro anexado com sucesso"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Assinatura do Ubuntu Pro anexada com sucesso"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Falha ao anexar Ubuntu Pro: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Erro ao anexar Ubuntu Pro: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Desanexando assinatura do Ubuntu Pro..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro desanexado com sucesso"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Assinatura do Ubuntu Pro desanexada com sucesso"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Falha ao desanexar Ubuntu Pro: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Erro ao desanexar Ubuntu Pro: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Informações do SO atualizadas enviadas para o servidor após mudança do Ubuntu Pro"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Falha ao enviar atualização do SO após mudança do Ubuntu Pro: %s"

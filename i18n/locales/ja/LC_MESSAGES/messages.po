@@ -855,3 +855,43 @@ msgstr "%d個の古いメッセージをクリーンアップしました"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "メッセージ%sのデシリアライゼーションに失敗しました：%s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Ubuntu Proトークンが必要です"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Proサブスクリプションをアタッチ中..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Proのアタッチに成功しました"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Ubuntu Proサブスクリプションのアタッチに成功しました"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Ubuntu Proのアタッチに失敗しました：%s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Ubuntu Proアタッチエラー：%s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Proサブスクリプションをデタッチ中..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Proのデタッチに成功しました"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Ubuntu Proサブスクリプションのデタッチに成功しました"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Ubuntu Proのデタッチに失敗しました：%s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Ubuntu Proデタッチエラー：%s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Ubuntu Pro変更後、更新されたOS情報をサーバーに送信しました"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Ubuntu Pro変更後のOSアップデート送信に失敗しました：%s"

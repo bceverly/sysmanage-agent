@@ -8,7 +8,9 @@ echo "Starting SysManage Agent..."
 # Get the directory where this script is located
 # Use $0 instead of BASH_SOURCE for better shell compatibility
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+# Change to the project root directory (parent of scripts directory)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
 
 # Create logs directory if it doesn't exist
 mkdir -p logs
@@ -76,17 +78,20 @@ check_existing_processes() {
 
 # Stop any existing agent
 if check_existing_processes; then
-    sh ./stop.sh
+    sh ./scripts/stop.sh
     sleep 2
     
     # Verify they were stopped
     if check_existing_processes >/dev/null 2>&1; then
-        echo "❌ ERROR: Failed to stop existing agent processes. Please manually stop them before continuing."
+        echo "❌ ERROR: Failed to stop existing agent processes. Please stop them before continuing."
         echo ""
-        echo "To manually check for agent processes:"
+        echo "Try using the stop command first:"
+        echo "  make stop"
+        echo ""
+        echo "If that fails, manually check for agent processes:"
         echo "  ps -ef | grep 'python3.*main.py'"
         echo ""
-        echo "To manually kill all agent processes:"
+        echo "Or manually kill all agent processes:"
         if command -v pkill >/dev/null 2>&1; then
             echo "  pkill -f 'python3.*main.py'"
         else
@@ -246,7 +251,7 @@ if kill -0 "$AGENT_PID" 2>/dev/null; then
     echo "Logs:"
     echo "  📄 Agent Log: tail -f logs/agent.log"
     echo ""
-    echo "To stop the agent: ./stop.sh"
+    echo "To stop the agent: make stop"
     echo ""
 else
     echo ""

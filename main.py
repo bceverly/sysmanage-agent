@@ -359,6 +359,26 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Shutdown the system."""
         return await self.system_ops.shutdown_system()
 
+    async def ubuntu_pro_attach(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Attach Ubuntu Pro subscription using provided token."""
+        return await self.system_ops.ubuntu_pro_attach(parameters)
+
+    async def ubuntu_pro_detach(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Detach Ubuntu Pro subscription."""
+        return await self.system_ops.ubuntu_pro_detach(parameters)
+
+    async def ubuntu_pro_enable_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Enable Ubuntu Pro service."""
+        return await self.system_ops.ubuntu_pro_enable_service(parameters)
+
+    async def ubuntu_pro_disable_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Disable Ubuntu Pro service."""
+        return await self.system_ops.ubuntu_pro_disable_service(parameters)
+
     async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a script with proper security controls."""
         return await self.script_ops.execute_script(parameters)

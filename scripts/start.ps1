@@ -4,8 +4,10 @@
 
 # Requires -Version 5.0
 
-# Get the absolute path to the script directory
-$AgentDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Get the directory where this script is located
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Change to the project root directory (parent of scripts directory)
+$AgentDir = Split-Path -Parent $ScriptDir
 Set-Location $AgentDir
 
 Write-Host "===============================================" -ForegroundColor Cyan
@@ -85,13 +87,13 @@ if ($existingProcesses) {
     Write-Host "Found existing Python processes. Attempting to stop agent..." -ForegroundColor Yellow
     
     # Try to use the stop script
-    $StopScript = Join-Path $AgentDir "stop.cmd"
+    $StopScript = Join-Path $AgentDir "scripts\stop.cmd"
     if (Test-Path $StopScript) {
         & $StopScript
         Start-Sleep -Seconds 2
     } else {
         Write-Host "[WARNING] Cannot stop existing processes without privileges" -ForegroundColor Yellow
-        Write-Host "You may need to manually stop the agent or use Task Manager" -ForegroundColor Yellow
+        Write-Host "You may need to run 'make stop' or manually stop the agent via Task Manager" -ForegroundColor Yellow
     }
 }
 
@@ -198,7 +200,7 @@ cd /d "$AgentDir"
         Write-Host "   [i] Error Log: $ErrorLogFile" -ForegroundColor Yellow
         Write-Host "   [i] Live Log: Get-Content '$AgentLogFile' -Wait" -ForegroundColor Yellow
         Write-Host ""
-        Write-Host "To stop the agent: .\stop.ps1 or .\stop.cmd" -ForegroundColor Green
+        Write-Host "To stop the agent: make stop" -ForegroundColor Green
         Write-Host ""
         
         # Clean up temporary batch file

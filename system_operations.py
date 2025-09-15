@@ -145,3 +145,198 @@ class SystemOperations:
         except Exception as e:
             self.logger.error(_("Failed to shutdown system: %s"), e)
             return {"success": False, "error": str(e)}
+
+    async def ubuntu_pro_attach(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Attach Ubuntu Pro subscription using provided token."""
+        token = parameters.get("token")
+
+        if not token:
+            return {"success": False, "error": _("Ubuntu Pro token is required")}
+
+        try:
+            self.logger.info(_("Attaching Ubuntu Pro subscription..."))
+
+            # Run pro attach command with the provided token
+            command = f"sudo pro attach {token}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(_("Ubuntu Pro attached successfully"))
+
+                # After successful attach, send updated OS info to server
+                await self._send_os_update_after_pro_change()
+
+                return {
+                    "success": True,
+                    "result": _("Ubuntu Pro subscription attached successfully"),
+                    "output": result["result"]["stdout"],
+                }
+            else:
+                self.logger.error(
+                    _("Failed to attach Ubuntu Pro: %s"), result["result"]["stderr"]
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to attach Ubuntu Pro: %s")
+                    % result["result"]["stderr"],
+                    "output": result["result"]["stderr"],
+                }
+        except Exception as e:
+            self.logger.error(_("Error attaching Ubuntu Pro: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def ubuntu_pro_detach(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Detach Ubuntu Pro subscription."""
+        try:
+            self.logger.info(_("Detaching Ubuntu Pro subscription..."))
+
+            # Run pro detach command
+            command = "sudo pro detach --assume-yes"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(_("Ubuntu Pro detached successfully"))
+
+                # After successful detach, send updated OS info to server
+                await self._send_os_update_after_pro_change()
+
+                return {
+                    "success": True,
+                    "result": _("Ubuntu Pro subscription detached successfully"),
+                    "output": result["result"]["stdout"],
+                }
+            else:
+                self.logger.error(
+                    _("Failed to detach Ubuntu Pro: %s"), result["result"]["stderr"]
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to detach Ubuntu Pro: %s")
+                    % result["result"]["stderr"],
+                    "output": result["result"]["stderr"],
+                }
+        except Exception as e:
+            self.logger.error(_("Error detaching Ubuntu Pro: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def ubuntu_pro_enable_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Enable Ubuntu Pro service."""
+        service_name = parameters.get("service")
+
+        if not service_name:
+            return {"success": False, "error": _("Service name is required")}
+
+        try:
+            self.logger.info(_("Enabling Ubuntu Pro service: %s"), service_name)
+
+            # Run pro enable command
+            command = f"sudo pro enable {service_name} --assume-yes"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(
+                    _("Ubuntu Pro service %s enabled successfully"), service_name
+                )
+
+                # After successful enable, send updated OS info to server
+                await self._send_os_update_after_pro_change()
+
+                return {
+                    "success": True,
+                    "result": _("Ubuntu Pro service %s enabled successfully")
+                    % service_name,
+                    "output": result["result"]["stdout"],
+                }
+            else:
+                self.logger.error(
+                    _("Failed to enable Ubuntu Pro service %s: %s"),
+                    service_name,
+                    result["result"]["stderr"],
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to enable Ubuntu Pro service %s: %s")
+                    % (service_name, result["result"]["stderr"]),
+                    "output": result["result"]["stderr"],
+                }
+        except Exception as e:
+            self.logger.error(
+                _("Error enabling Ubuntu Pro service %s: %s"), service_name, e
+            )
+            return {"success": False, "error": str(e)}
+
+    async def ubuntu_pro_disable_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Disable Ubuntu Pro service."""
+        service_name = parameters.get("service")
+
+        if not service_name:
+            return {"success": False, "error": _("Service name is required")}
+
+        try:
+            self.logger.info(_("Disabling Ubuntu Pro service: %s"), service_name)
+
+            # Run pro disable command
+            command = f"sudo pro disable {service_name} --assume-yes"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(
+                    _("Ubuntu Pro service %s disabled successfully"), service_name
+                )
+
+                # After successful disable, send updated OS info to server
+                await self._send_os_update_after_pro_change()
+
+                return {
+                    "success": True,
+                    "result": _("Ubuntu Pro service %s disabled successfully")
+                    % service_name,
+                    "output": result["result"]["stdout"],
+                }
+            else:
+                self.logger.error(
+                    _("Failed to disable Ubuntu Pro service %s: %s"),
+                    service_name,
+                    result["result"]["stderr"],
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to disable Ubuntu Pro service %s: %s")
+                    % (service_name, result["result"]["stderr"]),
+                    "output": result["result"]["stderr"],
+                }
+        except Exception as e:
+            self.logger.error(
+                _("Error disabling Ubuntu Pro service %s: %s"), service_name, e
+            )
+            return {"success": False, "error": str(e)}
+
+    async def _send_os_update_after_pro_change(self):
+        """Send updated OS information to server after Ubuntu Pro status change."""
+        try:
+            # Wait a moment for the pro command to fully complete
+            await asyncio.sleep(2)
+
+            # Get updated OS info with new Ubuntu Pro status
+            os_info = self.agent.registration.get_os_version_info()
+
+            # Add hostname for server processing
+            system_info = self.agent.registration.get_system_info()
+            os_info["hostname"] = system_info["hostname"]
+
+            # Create and send OS update message
+            os_message = self.agent.create_message("os_version_update", os_info)
+            await self.agent.send_message(os_message)
+
+            self.logger.info(
+                _("Updated OS information sent to server after Ubuntu Pro change")
+            )
+
+        except Exception as e:
+            self.logger.error(
+                _("Failed to send OS update after Ubuntu Pro change: %s"), e
+            )

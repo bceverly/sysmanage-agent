@@ -851,3 +851,43 @@ msgstr "%d पुराने संदेश साफ किए गए"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "संदेश %s को डिसीरियलाइज़ करने में विफल: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Ubuntu Pro टोकन आवश्यक है"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro सब्स्क्रिप्शन अटैच कर रहे हैं..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro सफलतापूर्वक अटैच हो गया"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Ubuntu Pro सब्स्क्रिप्शन सफलतापूर्वक अटैच हो गई"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Ubuntu Pro अटैच करने में विफल: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Ubuntu Pro अटैच करने में त्रुटि: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro सब्स्क्रिप्शन डिटैच कर रहे हैं..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro सफलतापूर्वक डिटैच हो गया"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Ubuntu Pro सब्स्क्रिप्शन सफलतापूर्वक डिटैच हो गई"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Ubuntu Pro परिवर्तन के बाद सर्वर को अपडेटेड OS जानकारी भेजी गई"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Ubuntu Pro परिवर्तन के बाद OS अपडेट भेजने में विफल: %s"

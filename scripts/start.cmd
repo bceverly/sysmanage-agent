@@ -6,7 +6,9 @@ echo Starting SysManage Agent...
 
 REM Get the directory where this script is located
 set "SCRIPT_DIR=%~dp0"
-cd /d "%SCRIPT_DIR%"
+REM Change to the project root directory (parent of scripts directory)
+for %%i in ("%SCRIPT_DIR%\..") do set "AGENT_DIR=%%~fi"
+cd /d "%AGENT_DIR%"
 
 REM Create logs directory if it doesn't exist
 if not exist logs mkdir logs
@@ -27,14 +29,14 @@ if exist logs\agent.pid (
     if not errorlevel 1 (
         echo Warning: Found existing agent process ^(PID: %AGENT_PID%^)
         echo Stopping existing process...
-        call stop.cmd
+        call scripts\stop.cmd
         timeout /t 2 >NUL
     )
 )
 
 REM Stop any existing agent processes
 echo Stopping any existing SysManage Agent processes...
-call stop.cmd >NUL 2>&1
+call scripts\stop.cmd >NUL 2>&1
 
 REM Check for Python 3 (try python3 first, then python)
 python3 --version >NUL 2>&1
@@ -114,7 +116,7 @@ if not "%CONFIG_FILE%"=="" (
 echo Agent Details:
 echo   [*] Hostname: %HOSTNAME%
 echo   [+] Platform: %PLATFORM%
-echo   [-] Directory: %SCRIPT_DIR%
+echo   [-] Directory: %AGENT_DIR%
 echo   [~] Server: %USE_HTTPS%://%SERVER_HOST%:%SERVER_PORT%
 
 REM Start the agent in background
@@ -143,7 +145,7 @@ if exist logs\agent.log (
     echo   [i] Agent Log: type logs\agent.log
     echo   [i] Live Log: Get-Content logs\agent.log -Wait ^(PowerShell^)
     echo.
-    echo To stop the agent: stop.cmd
+    echo To stop the agent: make stop
     echo.
     echo Note: Check logs\agent.log to verify successful startup
 ) else (

@@ -853,3 +853,43 @@ msgstr "%d oude berichten opgeruimd"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Deserialiseren van bericht %s mislukt: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Ubuntu Pro token is vereist"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro abonnement koppelen..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro succesvol gekoppeld"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Ubuntu Pro abonnement succesvol gekoppeld"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Fout bij koppelen Ubuntu Pro: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Fout bij het koppelen van Ubuntu Pro: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro abonnement ontkoppelen..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro succesvol ontkoppeld"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Ubuntu Pro abonnement succesvol ontkoppeld"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Fout bij ontkoppelen Ubuntu Pro: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Fout bij het ontkoppelen van Ubuntu Pro: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Bijgewerkte OS-informatie naar server verzonden na Ubuntu Pro wijziging"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Fout bij verzenden OS-update na Ubuntu Pro wijziging: %s"

@@ -853,3 +853,43 @@ msgstr "%d개의 오래된 메시지를 정리했습니다"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "메시지 %s 역직렬화 실패: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "Ubuntu Pro 토큰이 필요합니다"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro 구독을 연결하는 중..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "Ubuntu Pro가 성공적으로 연결되었습니다"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "Ubuntu Pro 구독이 성공적으로 연결되었습니다"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "Ubuntu Pro 연결 실패: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "Ubuntu Pro 연결 오류: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "Ubuntu Pro 구독을 분리하는 중..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "Ubuntu Pro가 성공적으로 분리되었습니다"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "Ubuntu Pro 구독이 성공적으로 분리되었습니다"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "Ubuntu Pro 분리 실패: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "Ubuntu Pro 분리 오류: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "Ubuntu Pro 변경 후 업데이트된 OS 정보가 서버로 전송되었습니다"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"

@@ -856,3 +856,43 @@ msgstr "تم تنظيف %d رسالة قديمة"
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "فشل في إلغاء تسلسل الرسالة %s: %s"
+
+# Ubuntu Pro functionality
+msgid "Ubuntu Pro token is required"
+msgstr "رمز Ubuntu Pro مطلوب"
+
+msgid "Attaching Ubuntu Pro subscription..."
+msgstr "ربط اشتراك Ubuntu Pro..."
+
+msgid "Ubuntu Pro attached successfully"
+msgstr "تم ربط Ubuntu Pro بنجاح"
+
+msgid "Ubuntu Pro subscription attached successfully"
+msgstr "تم ربط اشتراك Ubuntu Pro بنجاح"
+
+msgid "Failed to attach Ubuntu Pro: %s"
+msgstr "فشل في ربط Ubuntu Pro: %s"
+
+msgid "Error attaching Ubuntu Pro: %s"
+msgstr "خطأ في ربط Ubuntu Pro: %s"
+
+msgid "Detaching Ubuntu Pro subscription..."
+msgstr "إلغاء ربط اشتراك Ubuntu Pro..."
+
+msgid "Ubuntu Pro detached successfully"
+msgstr "تم إلغاء ربط Ubuntu Pro بنجاح"
+
+msgid "Ubuntu Pro subscription detached successfully"
+msgstr "تم إلغاء ربط اشتراك Ubuntu Pro بنجاح"
+
+msgid "Failed to detach Ubuntu Pro: %s"
+msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
+
+msgid "Error detaching Ubuntu Pro: %s"
+msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
+
+msgid "Updated OS information sent to server after Ubuntu Pro change"
+msgstr "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
+
+msgid "Failed to send OS update after Ubuntu Pro change: %s"
+msgstr "فشل في إرسال تحديث نظام التشغيل بعد تغيير Ubuntu Pro: %s"
