@@ -4,8 +4,9 @@
 
 # Requires -Version 5.0
 
-# Get the absolute path to the script directory
-$AgentDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Get the absolute path to the agent directory (parent of scripts directory)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$AgentDir = Split-Path -Parent $ScriptDir
 Set-Location $AgentDir
 
 Write-Host "===============================================" -ForegroundColor Cyan
