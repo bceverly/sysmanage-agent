@@ -1,0 +1,19 @@
+name: "SysManage Agent CodeQL Configuration"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - "**/*.test.py"
+  - "**/test_*.py"
+  - "tests/**"
+  - ".venv/**"
+  - "**/__pycache__/**"
+  - "dist/**"
+  - "build/**"
+
+paths:
+  - "main.py"
+  - "src/**"
