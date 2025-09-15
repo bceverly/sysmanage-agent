@@ -407,8 +407,9 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
         assert result[0]["gid"] is None
         assert result[0]["is_system_group"] is True
 
+    @patch("src.sysmanage_agent.collection.user_access_collection.grp")
     @patch("src.sysmanage_agent.collection.user_access_collection.pwd")
-    def test_get_bsd_users_success(self, mock_pwd):
+    def test_get_bsd_users_success(self, mock_pwd, mock_grp):
         """Test successful _get_bsd_users execution."""
         mock_user = SimpleNamespace(
             pw_name="bsduser",
@@ -419,6 +420,14 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
             pw_gecos="BSD User",
         )
         mock_pwd.getpwall.return_value = [mock_user]
+
+        # Mock group that doesn't include our test user
+        mock_group = SimpleNamespace(
+            gr_name="wheel", gr_gid=0, gr_mem=["root", "admin"]
+        )
+        mock_grp.getgrall.return_value = [mock_group]
+        # Mock getgrgid to raise KeyError for user's primary group (gid 1001)
+        mock_grp.getgrgid.side_effect = KeyError("Group not found")
 
         result = self.collector._get_bsd_users()
 
