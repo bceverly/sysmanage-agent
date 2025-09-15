@@ -84,6 +84,60 @@ message_queue:
 script_execution:
   # Enable or disable script execution functionality
   # Setting this to false (default) completely disables script execution
+  enabled: true
+  
+  # Maximum script execution timeout in seconds (default: 300 = 5 minutes)
+  # Scripts that run longer than this will be terminated
+  timeout: 300
+  
+  # Maximum number of concurrent script executions allowed
+  # This prevents resource exhaustion from multiple simultaneous scripts
+  max_concurrent: 3
+  
+  # Allowed shells for script execution
+  # Only these shells will be permitted for script execution
+  # Remove or comment out shells you don't want to allow
+  allowed_shells:
+    - "bash"        # Default shell on most Linux systems
+    - "sh"          # POSIX shell
+    - "zsh"         # macOS default shell and popular Linux shell
+  
+  # User execution restrictions (only applies when agent runs as root)
+  user_restrictions:
+    # Allow script execution as different users (requires agent to run as root)
+    allow_user_switching: false
+    
+    # List of users that scripts are allowed to run as
+    # Empty list means any user is allowed (if allow_user_switching is true)
+    # This is a security feature to limit which users scripts can impersonate
+    allowed_users: []
+  
+  # Security restrictions
+  security:
+    # Prevent scripts from accessing sensitive files/directories
+    # This is advisory - actual enforcement depends on user permissions
+    restricted_paths:
+      - "/etc/passwd"
+      - "/etc/shadow" 
+      - "/etc/ssh/"
+      - "/home/*/.ssh/"
+      - "/root/.ssh/"
+      - "*.key"
+      - "*.pem"
+    
+    # Log all script executions for audit purposes
+    audit_logging: true
+    
+    # Require explicit approval for each script execution
+    # If true, scripts will be queued for manual approval
+    require_approval: false
+
+# Script execution configuration
+# SECURITY NOTICE: Script execution is disabled by default for security reasons
+# Only enable this feature if you trust the server administrators and understand the risks
+script_execution:
+  # Enable or disable script execution functionality
+  # Setting this to false (default) completely disables script execution
   enabled: false
   
   # Maximum script execution timeout in seconds (default: 300 = 5 minutes)

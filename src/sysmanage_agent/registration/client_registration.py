@@ -58,7 +58,14 @@ class ClientRegistration:
         """Get minimal system information for initial registration."""
         hostname = self.network_utils.get_hostname()
         ipv4, ipv6 = self.network_utils.get_ip_addresses()
-        return self._create_basic_registration_dict(hostname, ipv4, ipv6)
+        basic_info = self._create_basic_registration_dict(hostname, ipv4, ipv6)
+
+        # Add script execution capability
+        basic_info["script_execution_enabled"] = (
+            self.config.is_script_execution_enabled()
+        )
+
+        return basic_info
 
     def get_os_version_info(self) -> Dict[str, Any]:
         """Get comprehensive OS version information as separate data."""

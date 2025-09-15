@@ -56,7 +56,14 @@ i18n:
             basic_info = mock_registration.get_basic_registration_info()
 
             # Should contain only minimal registration fields
-            expected_fields = {"hostname", "fqdn", "ipv4", "ipv6", "active"}
+            expected_fields = {
+                "hostname",
+                "fqdn",
+                "ipv4",
+                "ipv6",
+                "active",
+                "script_execution_enabled",
+            }
             assert set(basic_info.keys()) == expected_fields
 
             assert basic_info["hostname"] == "test-host.example.com"
@@ -305,7 +312,14 @@ i18n:
             call_args = mock_session.post.call_args
             sent_data = call_args[1]["json"]  # Get the JSON data from kwargs
 
-            expected_fields = {"hostname", "fqdn", "ipv4", "ipv6", "active"}
+            expected_fields = {
+                "hostname",
+                "fqdn",
+                "ipv4",
+                "ipv6",
+                "active",
+                "script_execution_enabled",
+            }
             assert set(sent_data.keys()) == expected_fields
 
             # Should NOT contain OS version fields
