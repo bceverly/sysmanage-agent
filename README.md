@@ -10,7 +10,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![Linting](https://img.shields.io/badge/pylint-10.00/10-brightgreen.svg)](https://github.com/PyCQA/pylint)
-[![Test Coverage](https://img.shields.io/badge/test%20coverage-89%25-brightgreen.svg)]()
+[![Test Coverage](https://img.shields.io/badge/test%20coverage-43%25-orange.svg)]()
 
 A lightweight, secure, cross-platform system monitoring agent that connects to SysManage Server via WebSocket for real-time remote management.
 
