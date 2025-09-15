@@ -1,6 +1,4 @@
 [bandit]
 # Configuration file for bandit security scanner
-exclude_dirs = ['.venv', '__pycache__', '.git', 'tests']
-skips = ['B101', 'B404', 'B603', 'B607']
-confidence = ['HIGH', 'MEDIUM']
-severity = ['HIGH', 'MEDIUM']
+exclude_dirs = .venv,__pycache__,.git,tests,.pytest_cache
+skips = B101,B404
