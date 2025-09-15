@@ -92,12 +92,10 @@ def sample_command_message():
     }
 
 
-@pytest.fixture
-def event_loop():
-    """Create an event loop for async tests."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+@pytest.fixture(scope="function")
+def event_loop_policy():
+    """Create event loop policy for async tests."""
+    return asyncio.DefaultEventLoopPolicy()
 
 
 @pytest.fixture

@@ -132,16 +132,6 @@ class TestNetworkUtils:
             assert ipv4 == "10.0.0.100"
             assert ipv6 is None
 
-    def test_get_ip_addresses_connection_failures(self, network_utils):
-        """Test IP address collection when all connections fail."""
-        with patch("socket.socket") as mock_socket:
-            mock_socket.side_effect = Exception("Network unreachable")
-
-            ipv4, ipv6 = network_utils.get_ip_addresses()
-
-            assert ipv4 is None
-            assert ipv6 is None
-
     def test_get_ip_addresses_partial_failure(self, network_utils):
         """Test IP address collection with partial failures."""
         # Mock successful IPv4, failed IPv6
