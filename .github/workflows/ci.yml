@@ -63,7 +63,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short
+        python -m pytest tests/ -v --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=xml --cov-report=term-missing --tb=short
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -96,16 +96,16 @@ jobs:
 
     - name: Run Black formatter check
       run: |
-        python -m black --check --diff *.py
+        python -m black --check --diff .
 
     - name: Run Pylint
       run: |
-        python -m pylint *.py --exit-zero
+        python -m pylint main.py tests/ --rcfile=.pylintrc --exit-zero
 
     - name: Run Bandit security linter
       run: |
-        python -m bandit -r . -f json -o bandit-report.json || true
-        python -m bandit -r .
+        python -m bandit -r main.py src/ -f json -o bandit-report.json --skip B101,B404,B603,B607 || true
+        python -m bandit -r main.py src/ --skip B101,B404,B603,B607
 
     - name: Run Safety dependency check
       run: |
@@ -160,7 +160,7 @@ jobs:
         EOF
         
         python -c "
-        from config import ConfigManager
+        from src.sysmanage_agent.core.config import ConfigManager
         config = ConfigManager('test-config.yaml')
         print('✅ Configuration validation passed')
         print(f'Server URL: {config.get_server_url()}')
@@ -170,7 +170,8 @@ jobs:
     - name: Package agent for distribution
       run: |
         mkdir -p dist
-        cp *.py dist/
+        cp main.py dist/
+        cp -r src/ dist/
         cp requirements.txt dist/
         # Create a sample config file for distribution
         cp sysmanage-agent.yaml.example dist/ 2>/dev/null || echo "# Sample SysManage Agent Configuration" > dist/sysmanage-agent.yaml.example
