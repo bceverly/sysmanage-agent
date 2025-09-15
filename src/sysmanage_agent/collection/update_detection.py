@@ -1836,16 +1836,16 @@ class UpdateDetector:
                         $categories = @()
                         if ($update.Categories) {
                             foreach($cat in $update.Categories) {
-                                $categories += $cat.Name
+                                $categories += @{ Name = $cat.Name }
                             }
                         }
 
                         $updateInfo = @{
                             Title = $update.Title
                             Description = $update.Description
-                            Categories = $categories -join ","
+                            Categories = $categories
                             IsDownloaded = $update.IsDownloaded
-                            Size = $update.MaxDownloadSize
+                            SizeInBytes = $update.MaxDownloadSize
                             SeverityText = if($update.MsrcSeverity) { $update.MsrcSeverity } else { "Unknown" }
                             UpdateID = $update.Identity.UpdateID
                             RevisionNumber = $update.Identity.RevisionNumber
@@ -1884,22 +1884,36 @@ class UpdateDetector:
 
                     for update in updates_data:
                         # Determine if this is a security update
-                        categories = update.get("Categories", "").lower()
+                        categories = update.get("Categories", [])
                         severity = update.get("SeverityText", "").lower()
                         title = update.get("Title", "").lower()
 
+                        # Handle both string and list formats for categories
+                        if isinstance(categories, list):
+                            category_text = " ".join(
+                                [
+                                    (
+                                        cat.get("Name", "")
+                                        if isinstance(cat, dict)
+                                        else str(cat)
+                                    )
+                                    for cat in categories
+                                ]
+                            ).lower()
+                        else:
+                            category_text = str(categories).lower()
+
                         is_security = (
-                            "security" in categories
+                            "security" in category_text
                             or "critical" in severity
                             or "important" in severity
                             or "security" in title
-                            or "cumulative"
-                            in title  # Cumulative updates often include security fixes
-                            or "kb" in title  # KB updates are often security-related
+                            or "cumulative" in title
+                            or "kb" in title
                         )
 
                         # Default to security if we can't determine (as requested)
-                        update_type = "security" if is_security else "security"
+                        update_type = "security" if is_security else "regular"
 
                         self.available_updates.append(
                             {
@@ -1909,7 +1923,9 @@ class UpdateDetector:
                                 "package_manager": "Windows Update",
                                 "update_type": update_type,
                                 "description": update.get("Description", ""),
-                                "size": update.get("Size", 0),
+                                "size": self._format_size_mb(
+                                    update.get("SizeInBytes", 0)
+                                ),
                                 "categories": update.get("Categories", ""),
                                 "severity": update.get("SeverityText", "Unknown"),
                                 "is_downloaded": update.get("IsDownloaded", False),
@@ -2313,3 +2329,10 @@ class UpdateDetector:
 
         except Exception as e:
             logger.debug(_("Failed to detect SUSE system updates: %s"), str(e))
+
+    def _format_size_mb(self, size_bytes):
+        """Format size in bytes to MB string."""
+        if size_bytes == 0:
+            return "0.0 MB"
+        size_mb = size_bytes / 1024 / 1024
+        return f"{size_mb:.1f} MB"
