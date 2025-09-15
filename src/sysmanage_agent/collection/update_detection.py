@@ -3,13 +3,22 @@
 Update Detection Module for SysManage Agent
 
 This module provides comprehensive update detection across multiple platforms:
+
+OS-Level System Updates:
+- Linux: System/kernel updates via distribution-specific mechanisms
+- macOS: System updates via Software Update (softwareupdate)
+- Windows: Windows Updates via PowerShell/WU API (all updates from Windows Update)
+- OpenBSD: System patches via syspatch
+
+Package Manager Updates:
 - Linux: apt, snap, flatpak, yum/dnf, pacman, zypper
 - macOS: Mac App Store, Homebrew, MacPorts
 - Windows: Microsoft Store, winget, Chocolatey
 - BSD: pkg, ports
 
-Detects available updates for installed packages and provides detailed metadata
-including current version, available version, security status, and update size.
+Detects available updates for both system components and installed packages,
+providing detailed metadata including current version, available version,
+security status, and update size.
 """
 
 import json
@@ -162,6 +171,10 @@ class UpdateDetector:
 
     def _detect_linux_updates(self):
         """Detect updates from Linux package managers."""
+        # First detect OS-level system updates
+        self._detect_linux_system_updates()
+
+        # Then detect package manager updates
         managers = self._detect_package_managers()
 
         if "apt" in managers:
@@ -183,6 +196,9 @@ class UpdateDetector:
 
     def _detect_macos_updates(self):
         """Detect updates from macOS sources."""
+        # First detect OS-level system updates
+        self._detect_macos_system_updates()
+
         # Mac App Store updates
         self._detect_macos_app_store_updates()
 
@@ -195,6 +211,9 @@ class UpdateDetector:
 
     def _detect_windows_updates(self):
         """Detect updates from Windows sources."""
+        # First detect OS-level system updates
+        self._detect_windows_system_updates()
+
         # Microsoft Store updates
         self._detect_microsoft_store_updates()
 
@@ -209,6 +228,11 @@ class UpdateDetector:
 
     def _detect_bsd_updates(self):
         """Detect updates from BSD systems."""
+        # First detect OS-level system updates (OpenBSD syspatch)
+        if platform.system().lower() == "openbsd":
+            self._detect_openbsd_system_updates()
+
+        # Then detect package manager updates
         managers = self._detect_package_managers()
 
         if "pkg" in managers:
@@ -1777,3 +1801,515 @@ class UpdateDetector:
                         "device_id": device_id,
                     }
                 )
+
+        return results
+
+    # OS-Level System Update Detection Methods
+
+    def _detect_windows_system_updates(self):
+        """Detect Windows system updates from Windows Update using PowerShell."""
+        try:
+            logger.debug(_("Detecting Windows system updates"))
+
+            # PowerShell command to get Windows Updates
+            # This is more reliable than wuauclt which is deprecated
+            powershell_cmd = [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                """
+                try {
+                    # Import the module for Windows Update
+                    if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
+                        Import-Module PSWindowsUpdate -ErrorAction SilentlyContinue
+                        $updates = Get-WUList -MicrosoftUpdate
+                    } else {
+                        # Fallback to WUApiLib COM object
+                        $session = New-Object -ComObject Microsoft.Update.Session
+                        $searcher = $session.CreateUpdateSearcher()
+                        $searchResult = $searcher.Search("IsInstalled=0")
+                        $updates = $searchResult.Updates
+                    }
+
+                    $updateList = @()
+                    foreach($update in $updates) {
+                        $categories = @()
+                        if ($update.Categories) {
+                            foreach($cat in $update.Categories) {
+                                $categories += $cat.Name
+                            }
+                        }
+
+                        $updateInfo = @{
+                            Title = $update.Title
+                            Description = $update.Description
+                            Categories = $categories -join ","
+                            IsDownloaded = $update.IsDownloaded
+                            Size = $update.MaxDownloadSize
+                            SeverityText = if($update.MsrcSeverity) { $update.MsrcSeverity } else { "Unknown" }
+                            UpdateID = $update.Identity.UpdateID
+                            RevisionNumber = $update.Identity.RevisionNumber
+                        }
+                        $updateList += $updateInfo
+                    }
+
+                    $updateList | ConvertTo-Json -Depth 3
+                } catch {
+                    Write-Output "ERROR: $($_.Exception.Message)"
+                }
+                """,
+            ]
+
+            result = subprocess.run(  # nosec B603, B607
+                powershell_cmd,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
+                ),
+            )
+
+            if result.returncode == 0 and result.stdout.strip():
+                output = result.stdout.strip()
+
+                if output.startswith("ERROR:"):
+                    logger.warning(_("Windows Update detection failed: %s"), output[6:])
+                    return
+
+                try:
+                    updates_data = json.loads(output) if output != "null" else []
+                    if not isinstance(updates_data, list):
+                        updates_data = [updates_data] if updates_data else []
+
+                    for update in updates_data:
+                        # Determine if this is a security update
+                        categories = update.get("Categories", "").lower()
+                        severity = update.get("SeverityText", "").lower()
+                        title = update.get("Title", "").lower()
+
+                        is_security = (
+                            "security" in categories
+                            or "critical" in severity
+                            or "important" in severity
+                            or "security" in title
+                            or "cumulative"
+                            in title  # Cumulative updates often include security fixes
+                            or "kb" in title  # KB updates are often security-related
+                        )
+
+                        # Default to security if we can't determine (as requested)
+                        update_type = "security" if is_security else "security"
+
+                        self.available_updates.append(
+                            {
+                                "package_name": update.get("Title", "Unknown Update"),
+                                "current_version": "installed",
+                                "available_version": f"Rev.{update.get('RevisionNumber', 'unknown')}",
+                                "package_manager": "Windows Update",
+                                "update_type": update_type,
+                                "description": update.get("Description", ""),
+                                "size": update.get("Size", 0),
+                                "categories": update.get("Categories", ""),
+                                "severity": update.get("SeverityText", "Unknown"),
+                                "is_downloaded": update.get("IsDownloaded", False),
+                                "update_id": update.get("UpdateID", ""),
+                            }
+                        )
+
+                    logger.debug(
+                        _("Found %d Windows system updates"), len(updates_data)
+                    )
+
+                except json.JSONDecodeError as e:
+                    logger.warning(
+                        _("Failed to parse Windows Update output: %s"), str(e)
+                    )
+
+        except subprocess.TimeoutExpired:
+            logger.warning(_("Windows Update detection timed out"))
+        except Exception as e:
+            logger.error(_("Failed to detect Windows system updates: %s"), str(e))
+
+    def _detect_macos_system_updates(self):
+        """Detect macOS system updates from Software Update."""
+        try:
+            logger.debug(_("Detecting macOS system updates"))
+
+            # Use softwareupdate command to list available updates
+            result = subprocess.run(  # nosec B603, B607
+                ["softwareupdate", "--list", "--no-scan"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                output = result.stdout
+
+                # Parse the output to extract update information
+                lines = output.split("\n")
+                current_update = None
+
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    # Look for update entries (usually start with *)
+                    if line.startswith("*"):
+                        # Extract update name and details
+                        parts = line[1:].strip().split("-", 1)
+                        if len(parts) >= 2:
+                            update_name = parts[0].strip()
+                            description = parts[1].strip()
+
+                            # Determine if this is a security update
+                            name_lower = update_name.lower()
+                            desc_lower = description.lower()
+
+                            is_security = (
+                                "security" in name_lower
+                                or "security" in desc_lower
+                                or "safari"
+                                in name_lower  # Safari updates often security-related
+                                or "xprotect"
+                                in name_lower  # XProtect is security software
+                                or "malware" in desc_lower
+                                or "vulnerability" in desc_lower
+                            )
+
+                            # Default to security as requested
+                            update_type = "security" if is_security else "security"
+
+                            self.available_updates.append(
+                                {
+                                    "package_name": update_name,
+                                    "current_version": "installed",
+                                    "available_version": "latest",
+                                    "package_manager": "macOS Update",
+                                    "update_type": update_type,
+                                    "description": description,
+                                    "size": 0,  # Size not available from softwareupdate --list
+                                }
+                            )
+
+                logger.debug(
+                    _("Found %d macOS system updates"),
+                    len(
+                        [
+                            u
+                            for u in self.available_updates
+                            if u.get("package_manager") == "macOS Update"
+                        ]
+                    ),
+                )
+
+            else:
+                logger.warning(
+                    _("softwareupdate command failed with exit code %d"),
+                    result.returncode,
+                )
+                if result.stderr:
+                    logger.warning(_("softwareupdate stderr: %s"), result.stderr)
+
+        except subprocess.TimeoutExpired:
+            logger.warning(_("macOS system update detection timed out"))
+        except Exception as e:
+            logger.error(_("Failed to detect macOS system updates: %s"), str(e))
+
+    def _detect_openbsd_system_updates(self):
+        """Detect OpenBSD system updates using syspatch."""
+        try:
+            logger.debug(_("Detecting OpenBSD system updates"))
+
+            # Check available syspatches
+            result = subprocess.run(  # nosec B603, B607
+                ["syspatch", "-c"],  # -c for check only
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                patches = result.stdout.strip().split("\n")
+
+                for patch in patches:
+                    patch = patch.strip()
+                    if not patch:
+                        continue
+
+                    # syspatch -c lists available patches, one per line
+                    # All syspatch updates are security/system updates by nature
+                    self.available_updates.append(
+                        {
+                            "package_name": f"syspatch-{patch}",
+                            "current_version": "not installed",
+                            "available_version": patch,
+                            "package_manager": "syspatch",
+                            "update_type": "security",  # All syspatches are security updates
+                            "description": f"OpenBSD system security patch {patch}",
+                            "size": 0,  # Size not available from syspatch -c
+                        }
+                    )
+
+                logger.debug(
+                    _("Found %d OpenBSD system patches"),
+                    len(
+                        [
+                            u
+                            for u in self.available_updates
+                            if u.get("package_manager") == "syspatch"
+                        ]
+                    ),
+                )
+
+            elif result.returncode == 1:
+                # syspatch returns 1 when no patches are available
+                logger.debug(_("No OpenBSD system patches available"))
+            else:
+                logger.warning(
+                    _("syspatch command failed with exit code %d"), result.returncode
+                )
+                if result.stderr:
+                    logger.warning(_("syspatch stderr: %s"), result.stderr)
+
+        except subprocess.TimeoutExpired:
+            logger.warning(_("OpenBSD system update detection timed out"))
+        except FileNotFoundError:
+            logger.debug(_("syspatch not available on this system"))
+        except Exception as e:
+            logger.error(_("Failed to detect OpenBSD system updates: %s"), str(e))
+
+    def _detect_linux_system_updates(self):
+        """Detect Linux distribution system updates (separate from package updates)."""
+        try:
+            logger.debug(_("Detecting Linux system/kernel updates"))
+
+            # Check if we're on a Debian/Ubuntu system
+            if os.path.exists("/etc/debian_version"):
+                self._detect_debian_system_updates()
+            elif os.path.exists("/etc/redhat-release") or os.path.exists(
+                "/etc/fedora-release"
+            ):
+                self._detect_redhat_system_updates()
+            elif os.path.exists("/etc/arch-release"):
+                self._detect_arch_system_updates()
+            elif os.path.exists("/etc/SUSE-brand") or os.path.exists(
+                "/etc/SuSE-release"
+            ):
+                self._detect_suse_system_updates()
+
+        except Exception as e:
+            logger.error(_("Failed to detect Linux system updates: %s"), str(e))
+
+    def _detect_debian_system_updates(self):
+        """Detect Debian/Ubuntu system-level updates."""
+        try:
+            # Look for kernel and system updates specifically
+            result = subprocess.run(  # nosec B603, B607
+                ["apt", "list", "--upgradable"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.split("\n")[1:]  # Skip header
+
+                for line in lines:
+                    if not line.strip():
+                        continue
+
+                    parts = line.split("/")
+                    if len(parts) >= 2:
+                        package_name = parts[0]
+
+                        # Filter for system-level packages
+                        if any(
+                            keyword in package_name
+                            for keyword in [
+                                "linux-image",
+                                "linux-headers",
+                                "linux-generic",
+                                "ubuntu-release-upgrader",
+                                "update-manager",
+                                "systemd",
+                                "udev",
+                                "dbus",
+                                "init",
+                            ]
+                        ):
+                            # This is a system update
+                            version_info = parts[1].split(" ")
+                            available_version = (
+                                version_info[0] if version_info else "unknown"
+                            )
+
+                            # Check if it's security-related
+                            is_security = self._is_apt_security_update(package_name)
+                            update_type = "security" if is_security else "system"
+
+                            self.available_updates.append(
+                                {
+                                    "package_name": package_name,
+                                    "current_version": "installed",
+                                    "available_version": available_version,
+                                    "package_manager": "Linux System Update",
+                                    "update_type": update_type,
+                                    "description": f"Linux system package update: {package_name}",
+                                    "size": 0,
+                                }
+                            )
+
+        except Exception as e:
+            logger.debug(_("Failed to detect Debian system updates: %s"), str(e))
+
+    def _detect_redhat_system_updates(self):
+        """Detect RedHat/Fedora system-level updates."""
+        try:
+            # Use dnf if available, otherwise yum
+            cmd = "dnf" if self._command_exists("dnf") else "yum"
+
+            result = subprocess.run(  # nosec B603, B607
+                [cmd, "check-update", "--security"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            # yum/dnf returns 100 when updates are available
+            if result.returncode == 100 or result.returncode == 0:
+                lines = result.stdout.split("\n")
+
+                for line in lines:
+                    if not line.strip() or line.startswith("Last metadata"):
+                        continue
+
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        package_name = parts[0]
+                        available_version = parts[1]
+
+                        # Filter for system packages
+                        if any(
+                            keyword in package_name
+                            for keyword in [
+                                "kernel",
+                                "systemd",
+                                "glibc",
+                                "rpm",
+                                "yum",
+                                "dnf",
+                            ]
+                        ):
+                            self.available_updates.append(
+                                {
+                                    "package_name": package_name,
+                                    "current_version": "installed",
+                                    "available_version": available_version,
+                                    "package_manager": "Linux System Update",
+                                    "update_type": "security",  # From --security flag
+                                    "description": f"Linux system package update: {package_name}",
+                                    "size": 0,
+                                }
+                            )
+
+        except Exception as e:
+            logger.debug(_("Failed to detect RedHat system updates: %s"), str(e))
+
+    def _detect_arch_system_updates(self):
+        """Detect Arch Linux system-level updates."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["pacman", "-Sup", "--print-format", "%n %v"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.split("\n")
+
+                for line in lines:
+                    if not line.strip():
+                        continue
+
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        package_name = parts[0]
+                        available_version = parts[1]
+
+                        # Filter for system packages
+                        if any(
+                            keyword in package_name
+                            for keyword in [
+                                "linux",
+                                "kernel",
+                                "systemd",
+                                "glibc",
+                                "pacman",
+                            ]
+                        ):
+                            self.available_updates.append(
+                                {
+                                    "package_name": package_name,
+                                    "current_version": "installed",
+                                    "available_version": available_version,
+                                    "package_manager": "Linux System Update",
+                                    "update_type": "system",
+                                    "description": f"Linux system package update: {package_name}",
+                                    "size": 0,
+                                }
+                            )
+
+        except Exception as e:
+            logger.debug(_("Failed to detect Arch system updates: %s"), str(e))
+
+    def _detect_suse_system_updates(self):
+        """Detect SUSE system-level updates."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["zypper", "list-updates", "--type", "package"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.split("\n")
+
+                for line in lines:
+                    if not line.strip() or line.startswith("S |"):
+                        continue
+
+                    parts = line.split("|")
+                    if len(parts) >= 4:
+                        package_name = parts[2].strip()
+                        available_version = parts[4].strip()
+
+                        # Filter for system packages
+                        if any(
+                            keyword in package_name
+                            for keyword in [
+                                "kernel",
+                                "systemd",
+                                "glibc",
+                                "zypper",
+                                "rpm",
+                            ]
+                        ):
+                            self.available_updates.append(
+                                {
+                                    "package_name": package_name,
+                                    "current_version": "installed",
+                                    "available_version": available_version,
+                                    "package_manager": "Linux System Update",
+                                    "update_type": "system",
+                                    "description": f"Linux system package update: {package_name}",
+                                    "size": 0,
+                                }
+                            )
+
+        except Exception as e:
+            logger.debug(_("Failed to detect SUSE system updates: %s"), str(e))
