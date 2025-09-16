@@ -31,6 +31,15 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - 🏃‍♂️ **Lightweight**: Minimal resource footprint and dependencies
 - 🔍 **Auto-Discovery**: Automatically discover and configure with SysManage servers on the network
 - ⚙️ **Remote Configuration**: Receive and apply configuration updates from the server
+- 🛠️ **Hardware Inventory**: Collect and report detailed hardware information (CPU, RAM, storage, network)
+- 📋 **Software Inventory**: Track and report installed packages and software
+- 👥 **User & Group Management**: System user and group enumeration and reporting
+- 🔄 **Update Detection**: Monitor available system and security updates
+- 🚀 **System Control**: Remote reboot and shutdown capabilities (with privileged mode)
+- 📜 **Script Execution**: Execute shell scripts remotely with configurable security controls
+- ⚡ **Queue Management**: Persistent message queuing for reliable communication
+- 🏷️ **Privileged Mode**: Support for both regular user and elevated privilege operation
+- 📊 **System Diagnostics**: Built-in diagnostic tools for troubleshooting
 
 ## Architecture
 
