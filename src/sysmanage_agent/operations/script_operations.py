@@ -8,6 +8,7 @@ import logging
 import os
 import platform
 import shutil
+import stat
 import tempfile
 import time
 from typing import Dict, Any, Optional
@@ -131,7 +132,7 @@ class ScriptOperations:
 
         # Set execute permissions on Unix-like systems
         if not platform.system().lower() == "windows":
-            os.chmod(script_path, 0o700)
+            os.chmod(script_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         return script_path
 

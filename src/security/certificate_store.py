@@ -7,6 +7,7 @@ for secure communication with the SysManage server.
 
 import hashlib
 import os
+import stat
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -43,7 +44,7 @@ class CertificateStore:
             self.config_dir.mkdir(parents=True, exist_ok=True)
             # Set directory permissions (Unix only)
             if os.name != "nt":
-                os.chmod(self.config_dir, 0o700)
+                os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         except PermissionError:
             # Fall back to local directory in the same location as the running script
             script_dir = Path(sys.argv[0]).parent.resolve()
@@ -58,7 +59,7 @@ class CertificateStore:
             self.config_dir.mkdir(parents=True, exist_ok=True)
             # Set directory permissions (Unix only)
             if os.name != "nt":
-                os.chmod(self.config_dir, 0o700)
+                os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         # Certificate file paths
         self.client_cert_path = self.config_dir / "client.crt"
@@ -78,25 +79,34 @@ class CertificateStore:
         with open(self.client_cert_path, "w", encoding="utf-8") as f:
             f.write(cert_data["certificate"])
         if os.name != "nt":  # Unix only
-            os.chmod(self.client_cert_path, 0o644)
+            os.chmod(
+                self.client_cert_path,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+            )
 
         # Store client private key with restrictive permissions
         with open(self.client_key_path, "w", encoding="utf-8") as f:
             f.write(cert_data["private_key"])
         if os.name != "nt":  # Unix only
-            os.chmod(self.client_key_path, 0o600)
+            os.chmod(self.client_key_path, stat.S_IRUSR | stat.S_IWUSR)
 
         # Store CA certificate
         with open(self.ca_cert_path, "w", encoding="utf-8") as f:
             f.write(cert_data["ca_certificate"])
         if os.name != "nt":  # Unix only
-            os.chmod(self.ca_cert_path, 0o644)
+            os.chmod(
+                self.ca_cert_path,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+            )
 
         # Store server fingerprint
         with open(self.server_fingerprint_path, "w", encoding="utf-8") as f:
             f.write(cert_data["server_fingerprint"])
         if os.name != "nt":  # Unix only
-            os.chmod(self.server_fingerprint_path, 0o644)
+            os.chmod(
+                self.server_fingerprint_path,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+            )
 
     def load_certificates(self) -> Optional[Tuple[str, str, str]]:
         """
