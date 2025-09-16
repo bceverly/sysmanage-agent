@@ -1,0 +1,165 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  semgrep:
+    name: Semgrep Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Run Semgrep scan
+      run: |
+        pip install semgrep
+        semgrep scan --sarif --output=semgrep.sarif --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: semgrep.sarif
+      if: always()
+
+  dependency-check:
+    name: Dependency Vulnerability Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    # Backend dependency check with Safety
+    - name: Install Safety
+      run: pip install safety
+
+    - name: Install backend dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Safety scan (Python)
+      run: |
+        safety scan --output json --output-file safety-report.json || true
+        safety scan --output screen || true
+
+    - name: Upload Safety results
+      uses: actions/upload-artifact@v4
+      if: hashFiles('safety-report.json') != ''
+      with:
+        name: safety-report
+        path: safety-report.json
+
+  bandit-scan:
+    name: Bandit Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Bandit
+      run: pip install bandit
+
+    - name: Run Bandit security scan
+      run: |
+        bandit -r *.py src/ -f screen --skip B101,B404,B603,B607
+        bandit -r *.py src/ -f json --skip B101,B404,B603,B607 -o bandit-report.json || true
+
+    - name: Upload Bandit results
+      uses: actions/upload-artifact@v4
+      if: hashFiles('bandit-report.json') != ''
+      with:
+        name: bandit-security-report
+        path: bandit-report.json
+
+  snyk:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/python@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+    - name: Check if Snyk SARIF file exists
+      id: check_sarif
+      run: |
+        if [ -f "snyk.sarif" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Warning: snyk.sarif file was not generated"
+        fi
+
+    - name: Upload Snyk results to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v3
+      if: steps.check_sarif.outputs.exists == 'true'
+      with:
+        sarif_file: snyk.sarif
+
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        extra_args: --debug --only-verified
