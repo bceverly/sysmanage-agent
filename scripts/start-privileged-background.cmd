@@ -5,8 +5,9 @@ REM No console window will remain open after starting
 
 setlocal EnableDelayedExpansion
 
-REM Get the absolute path to the script directory
-set "AGENT_DIR=%~dp0"
+REM Get the absolute path to the project root directory (parent of scripts)
+set "SCRIPT_DIR=%~dp0"
+set "AGENT_DIR=%SCRIPT_DIR%.."
 cd /d "%AGENT_DIR%"
 
 REM Check if we're already running as administrator

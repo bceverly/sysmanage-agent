@@ -160,7 +160,7 @@ endif
 start-privileged:
 	@echo "Starting SysManage Agent (privileged mode)..."
 ifeq ($(OS),Windows_NT)
-	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start-privileged.ps1) else (scripts\start-privileged.cmd)
+	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start-privileged-background.ps1) else (scripts\start-privileged-background.cmd)
 else
 	@if [ -n "$$ZSH_VERSION" ]; then \
 		echo "Detected zsh shell, using start-privileged.sh"; \

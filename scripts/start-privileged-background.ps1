@@ -8,8 +8,9 @@ param(
     [switch]$Silent = $false  # If true, suppress all notifications
 )
 
-# Get the absolute path to the script directory
-$AgentDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Get the absolute path to the project root directory (parent of scripts)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$AgentDir = Split-Path -Parent $ScriptDir
 Set-Location $AgentDir
 
 # Function to check if running as administrator
