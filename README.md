@@ -8,8 +8,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-AGPLv3-blue.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![Linting](https://img.shields.io/badge/pylint-10.00/10-brightgreen.svg)](https://github.com/PyCQA/pylint)
+[![Security: bandit](https://img.shields.io/badge/bandit-passing-brightgreen.svg)](https://github.com/PyCQA/bandit) [![Security: semgrep](https://img.shields.io/badge/semgrep-scan-brightgreen.svg)](https://semgrep.dev/) [![Security: safety](https://img.shields.io/badge/safety-passing-brightgreen.svg)](https://pypi.org/project/safety/) [![Security: snyk](https://img.shields.io/badge/snyk-monitored-brightgreen.svg)](https://snyk.io/) [![Security: trufflehog](https://img.shields.io/badge/trufflehog-clean-brightgreen.svg)](https://github.com/trufflesecurity/trufflehog)
 [![Test Coverage](https://img.shields.io/badge/test%20coverage-56%25-orange.svg)]()
 
 A lightweight, secure, cross-platform system monitoring agent that connects to SysManage Server via WebSocket for real-time remote management. 
@@ -1132,16 +1132,52 @@ Our GitHub Actions CI/CD pipeline includes multiple security scanning tools that
 #### Python Security Analysis
 - **[Bandit](https://bandit.readthedocs.io/)** - Static security analysis specifically designed for Python, detecting common security issues such as:
   - Hardcoded passwords and secrets
-  - SQL injection vulnerabilities  
+  - SQL injection vulnerabilities
   - Shell injection vulnerabilities
   - Insecure cryptographic practices
   - Use of unsafe functions
+  - Subprocess security validation
+  - Configuration security patterns
 - **[Safety](https://pypi.org/project/safety/)** - Vulnerability scanning for Python dependencies, checking against known CVE databases
+  - Scans requirements.txt for vulnerable packages
+  - Provides detailed vulnerability reports
+  - Generates upgrade recommendations
 - **[Semgrep](https://semgrep.dev/)** - Advanced static analysis with security-focused rule sets including OWASP Top 10
+  - Multi-language security analysis
+  - Community and custom security rules
+  - SARIF report generation for GitHub Security tab
 
 #### Cross-Language Security Tools
 - **[CodeQL](https://codeql.github.com/)** - GitHub's semantic code analysis engine for Python security analysis
+  - Deep semantic analysis of code flow
+  - Advanced vulnerability detection
+  - Integration with GitHub Security tab
 - **[TruffleHog](https://github.com/trufflesecurity/trufflehog)** - Secrets detection to prevent accidental credential commits
+  - Scans entire git history for leaked credentials
+  - Detects API keys, passwords, tokens, certificates
+  - Verifies secrets against live services
+
+#### Agent-Specific Security Scanning
+
+The agent's security scanning focuses on Python-specific vulnerabilities and agent-related security concerns:
+
+##### Network Communication Security
+- SSL/TLS configuration validation
+- WebSocket connection security analysis
+- Certificate handling verification
+- Protocol downgrade attack prevention
+
+##### Command Execution Security
+- Input sanitization verification
+- Command injection prevention
+- Subprocess security validation
+- Privilege escalation detection
+
+##### Configuration Security
+- Configuration file permission checks
+- Sensitive data exposure detection
+- Default credential identification
+- Insecure configuration pattern detection
 
 ### Security Workflow Files
 

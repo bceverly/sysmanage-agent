@@ -52,6 +52,103 @@ For general bugs and feature requests, please use [GitHub Issues](https://github
 - Resource usage limits
 - Process isolation where possible
 
+## Security Scanning Infrastructure
+
+SysManage Agent implements automated security scanning through CI/CD pipeline integration to proactively identify and prevent security vulnerabilities in the agent codebase:
+
+### Continuous Security Monitoring
+
+All security scans run automatically on:
+- **Every push** to main and develop branches
+- **Every pull request**
+- **Weekly scheduled scans** (Sundays at 2 AM UTC)
+
+### Python Security Tools
+
+#### Static Code Analysis
+- **[Bandit](https://bandit.readthedocs.io/)** - Detects common security issues in Python code
+  - Scans for SQL injection, hardcoded passwords, insecure random generators
+  - Identifies unsafe use of eval(), exec(), and shell commands
+  - Checks for insecure network communication patterns
+  - Validates subprocess and command execution security
+
+- **[Semgrep](https://semgrep.dev/)** - Multi-language static analysis with OWASP Top 10 rules
+  - Checks for security anti-patterns and vulnerabilities
+  - Uses community rules + OWASP Top 10 rule sets
+  - Generates SARIF reports for GitHub Security tab
+  - Analyzes configuration handling and input validation
+
+#### Dependency Vulnerability Scanning
+- **[Safety](https://pypi.org/project/safety/)** - Scans Python dependencies for known vulnerabilities
+  - Checks against Python security advisories database
+  - Identifies vulnerable package versions in requirements.txt
+  - Generates detailed vulnerability reports
+  - Provides upgrade recommendations for secure versions
+
+#### Secrets Detection
+- **[TruffleHog](https://github.com/trufflesecurity/trufflehog)** - Comprehensive secrets scanning
+  - Scans entire git history for leaked credentials
+  - Detects API keys, passwords, tokens, certificates
+  - Verifies secrets against live services
+  - Prevents accidental credential commits
+
+### Agent-Specific Security Scanning
+
+The agent's security scanning focuses on Python-specific vulnerabilities and agent-related security concerns:
+
+#### Network Communication Security
+- SSL/TLS configuration validation
+- WebSocket connection security analysis
+- Certificate handling verification
+- Protocol downgrade attack prevention
+
+#### Command Execution Security
+- Input sanitization verification
+- Command injection prevention
+- Subprocess security validation
+- Privilege escalation detection
+
+#### Configuration Security
+- Configuration file permission checks
+- Sensitive data exposure detection
+- Default credential identification
+- Insecure configuration pattern detection
+
+### Local Security Testing
+
+Developers can run security scans locally before committing:
+
+```bash
+# Individual security tools
+python -m bandit -r src/ -f screen                    # Python static analysis
+pip freeze | safety check --stdin                     # Python dependency check
+trufflehog git file://. --only-verified               # Secrets detection
+
+# If using requirements files
+safety check -r requirements.txt                      # Dependency vulnerability scan
+bandit -r src/ -f json -o bandit-report.json         # Generate JSON report
+```
+
+### Security Workflow Integration
+
+Security scanning is integrated with the agent's CI/CD pipeline:
+
+- **GitHub Security Tab**: Centralized vulnerability management dashboard
+- **SARIF Reports**: Standardized security report format for tool interoperability
+- **Security Artifacts**: Downloadable detailed reports for each scan
+- **Pull Request Integration**: Security checks block merging if critical issues found
+- **Weekly Monitoring**: Scheduled scans catch newly disclosed vulnerabilities
+
+### Security Badge Status
+
+Our README displays real-time security status badges:
+
+- ![Security: bandit](https://img.shields.io/badge/security-bandit-passing-brightgreen.svg) **Bandit**: Python static analysis status
+- ![Security: semgrep](https://img.shields.io/badge/security-semgrep-passing-brightgreen.svg) **Semgrep**: Multi-language security analysis
+- ![Security: safety](https://img.shields.io/badge/security-safety-passing-brightgreen.svg) **Safety**: Python dependency vulnerability status
+- ![Security: snyk](https://img.shields.io/badge/security-snyk-monitored-brightgreen.svg) **Snyk**: npm dependency monitoring status
+- ![Security: secrets](https://img.shields.io/badge/security-secrets%20scan-clean-brightgreen.svg) **Secrets**: Repository secrets scan status
+
 ## Security Best Practices
 
 ### Installation
