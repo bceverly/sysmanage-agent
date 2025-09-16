@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets
+.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades
 
 # Default target
 help:
@@ -22,6 +22,7 @@ help:
 	@echo "  make security-full - Run comprehensive security analysis (all tools)"
 	@echo "  make security-python - Run Python security scanning (Bandit + Safety)"
 	@echo "  make security-secrets - Run secrets detection"
+	@echo "  make security-upgrades - Check for security package upgrades"
 	@echo ""
 	@echo "Privilege Levels:"
 	@echo "  unprivileged - Runs as regular user (default for security)"
@@ -224,6 +225,18 @@ coverage: setup-venv clean-whitespace
 # Comprehensive security analysis (default)
 security: security-full
 
+# Show upgrade recommendations by checking outdated packages
+security-upgrades: setup-venv
+	@echo "=== Security Upgrade Recommendations ==="
+	@echo "Current versions of security-critical packages:"
+	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic|safety)"
+	@echo ""
+	@echo "Checking for outdated packages..."
+	@$(PYTHON) -m pip list --outdated --format=columns 2>/dev/null | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic|safety)" || echo "All security packages are up to date"
+	@echo ""
+	@echo "For detailed vulnerability info, check:"
+	@echo "  https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
+
 # Comprehensive security analysis - all tools  
 security-full: security-python security-secrets
 	@echo "[OK] Comprehensive security analysis completed!"
@@ -240,10 +253,19 @@ endif
 	@echo ""
 	@echo "Running Safety dependency vulnerability scan..."
 ifeq ($(OS),Windows_NT)
-	-@echo "Safety scan requires authentication - skipping interactive prompt"
+	-@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
+	-@echo ""
+	-@echo "=== Current dependency versions (for upgrade reference) ==="
+	-@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
 else
-	@echo "Safety scan requires authentication - skipping interactive prompt"
+	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
+	@echo ""
+	@echo "=== Current dependency versions (for upgrade reference) ==="
+	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
 endif
+	@echo ""
+	@echo "Note: Check Safety web UI at https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
+	@echo "      for specific version upgrade recommendations when vulnerabilities are found."
 	@echo "[OK] Python security analysis completed"
 
 # Secrets detection (basic pattern matching)

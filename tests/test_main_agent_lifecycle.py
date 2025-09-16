@@ -11,6 +11,7 @@ import tempfile
 import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
+from urllib.parse import urlparse
 
 import pytest
 import yaml
@@ -99,11 +100,11 @@ class TestSysManageAgentInitialization:
 
             # Verify defaults are applied through the URLs (where defaults are actually used)
             server_url = agent.config.get_server_rest_url()
-            assert server_url.startswith(
-                "http://basic-server.com:8000"
-            ) or server_url.startswith(
-                "https://basic-server.com:8000"
-            )  # Default port applied
+            parsed_url = urlparse(server_url)
+            # Validate hostname and port separately for security
+            assert parsed_url.hostname == "basic-server.com"
+            assert parsed_url.port == 8000
+            assert parsed_url.scheme in ("http", "https")
             assert agent.config.get_log_level() == "INFO"  # Default log level
             assert (
                 agent.config.get_registration_retry_interval() == 30
