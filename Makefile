@@ -109,7 +109,7 @@ format-python: setup-venv clean-whitespace
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
-	@$(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
+	@PYTHONWARNINGS=ignore::RuntimeWarning $(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
 	@echo "[OK] Tests completed"
 
 # Clean artifacts

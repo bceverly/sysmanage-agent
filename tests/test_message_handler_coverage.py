@@ -3,28 +3,17 @@ Comprehensive unit tests for src.sysmanage_agent.communication.message_handler m
 Tests the QueuedMessageHandler class for message queuing and processing.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import pytest
 from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 from src.database.models import QueueDirection, Priority
+from tests.message_handler_test_base import MessageHandlerTestBase
 
 
-class TestQueuedMessageHandler:  # pylint: disable=too-many-public-methods,attribute-defined-outside-init
+class TestQueuedMessageHandler(
+    MessageHandlerTestBase
+):  # pylint: disable=too-many-public-methods
     """Test cases for QueuedMessageHandler class."""
-
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_agent = Mock()
-        self.mock_agent.connected = True
-        self.mock_agent.websocket = Mock()
-
-        with patch(
-            "src.sysmanage_agent.communication.message_handler.MessageQueueManager"
-        ):
-            self.handler = QueuedMessageHandler(self.mock_agent, "/tmp/test.db")
-
-        self.handler.queue_manager = Mock()
-        self.handler.queue_processor_running = False
 
     def test_init_with_database_path(self):
         """Test QueuedMessageHandler initialization with database path."""
