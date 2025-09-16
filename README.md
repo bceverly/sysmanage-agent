@@ -12,7 +12,7 @@
 [![Linting](https://img.shields.io/badge/pylint-10.00/10-brightgreen.svg)](https://github.com/PyCQA/pylint)
 [![Test Coverage](https://img.shields.io/badge/test%20coverage-65%25-yellow.svg)]()
 
-A lightweight, secure, cross-platform system monitoring agent that connects to SysManage Server via WebSocket for real-time remote management.
+A lightweight, secure, cross-platform system monitoring agent that connects to SysManage Server via WebSocket for real-time remote management. 
 
 ## Overview
 
