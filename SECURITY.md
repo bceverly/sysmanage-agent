@@ -143,11 +143,11 @@ Security scanning is integrated with the agent's CI/CD pipeline:
 
 Our README displays real-time security status badges:
 
-- ![Security: bandit](https://img.shields.io/badge/security-bandit-passing-brightgreen.svg) **Bandit**: Python static analysis status
-- ![Security: semgrep](https://img.shields.io/badge/security-semgrep-passing-brightgreen.svg) **Semgrep**: Multi-language security analysis
-- ![Security: safety](https://img.shields.io/badge/security-safety-passing-brightgreen.svg) **Safety**: Python dependency vulnerability status
-- ![Security: snyk](https://img.shields.io/badge/security-snyk-monitored-brightgreen.svg) **Snyk**: npm dependency monitoring status
-- ![Security: secrets](https://img.shields.io/badge/security-secrets%20scan-clean-brightgreen.svg) **Secrets**: Repository secrets scan status
+- ![Security: bandit](https://img.shields.io/badge/bandit-passing-brightgreen.svg) **Bandit**: Python static analysis status
+- ![Security: semgrep](https://img.shields.io/badge/semgrep-scan-brightgreen.svg) **Semgrep**: Multi-language security analysis
+- ![Security: safety](https://img.shields.io/badge/safety-passing-brightgreen.svg) **Safety**: Python dependency vulnerability status
+- ![Security: snyk](https://img.shields.io/badge/snyk-monitored-brightgreen.svg) **Snyk**: Dependency monitoring status
+- ![Security: trufflehog](https://img.shields.io/badge/trufflehog-clean-brightgreen.svg) **TruffleHog**: Repository secrets scan status
 
 ## Security Best Practices
 
