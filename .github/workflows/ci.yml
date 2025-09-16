@@ -162,4 +162,4 @@ jobs:
 
     - name: Verify imports and basic functionality
       run: |
-        python -c "import src.sysmanage_agent.main; print('Imports successful')"
+        python -c "import main; print('Imports successful')"
