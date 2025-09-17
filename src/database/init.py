@@ -75,8 +75,12 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
 
-        # Run alembic command
-        cmd = ["alembic", operation, revision]
+        # Run alembic command using the virtual environment's alembic
+        venv_alembic = os.path.join(agent_dir, ".venv", "bin", "alembic")
+        if os.path.exists(venv_alembic):
+            cmd = [venv_alembic, operation, revision]
+        else:
+            cmd = ["alembic", operation, revision]
         logger.info(_("Running alembic command: %s"), " ".join(cmd))
 
         result = subprocess.run(  # nosec B603, B607

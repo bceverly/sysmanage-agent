@@ -21,26 +21,41 @@ class NetworkUtils:
         if self.config:
             override = self.config.get_hostname_override()
             if override:
+                self.logger.debug("Using hostname override: %s", override)
                 return override
 
-        # Try multiple methods to get a proper hostname, especially for OpenBSD
+        # Try multiple methods to get a proper hostname, especially for FreeBSD/OpenBSD
         hostname = None
+        self.logger.debug("Starting hostname detection...")
 
         # First try socket.getfqdn()
         fqdn = socket.getfqdn()
-        if fqdn and fqdn != "localhost" and fqdn != "localhost.localdomain":
-            hostname = fqdn
+        self.logger.debug("socket.getfqdn() returned: %r", fqdn)
+        if (
+            fqdn
+            and fqdn.strip()
+            and fqdn != "localhost"
+            and fqdn != "localhost.localdomain"
+        ):
+            hostname = fqdn.strip()
+            self.logger.debug("Using FQDN as hostname: %s", hostname)
 
         # If that didn't work, try socket.gethostname()
         if not hostname:
             try:
                 hostname = socket.gethostname()
-                if hostname and hostname != "localhost":
+                if hostname and hostname.strip() and hostname != "localhost":
+                    hostname = hostname.strip()
                     # Try to get FQDN from hostname
                     try:
                         fqdn = socket.getfqdn(hostname)
-                        if fqdn and fqdn != "localhost" and fqdn != hostname:
-                            hostname = fqdn
+                        if (
+                            fqdn
+                            and fqdn.strip()
+                            and fqdn != "localhost"
+                            and fqdn != hostname
+                        ):
+                            hostname = fqdn.strip()
                     except (socket.error, OSError):
                         pass
             except (socket.error, OSError):
@@ -53,13 +68,13 @@ class NetworkUtils:
                 if os.path.exists("/etc/hostname"):
                     with open("/etc/hostname", "r", encoding="utf-8") as f:
                         file_hostname = f.read().strip()
-                        if file_hostname:
+                        if file_hostname and file_hostname != "localhost":
                             hostname = file_hostname
                 # Try reading /etc/myname (OpenBSD specific)
                 elif os.path.exists("/etc/myname"):
                     with open("/etc/myname", "r", encoding="utf-8") as f:
                         file_hostname = f.read().strip()
-                        if file_hostname:
+                        if file_hostname and file_hostname != "localhost":
                             hostname = file_hostname
             except (OSError, IOError):
                 pass
@@ -82,8 +97,18 @@ class NetworkUtils:
         # Final fallback
         if not hostname:
             hostname = "unknown-host"
+            self.logger.warning(
+                "Could not determine hostname, using fallback: %s", hostname
+            )
+        else:
+            self.logger.debug("Final hostname determined: %s", hostname)
 
-        return hostname
+        # Ensure hostname is never empty or None
+        if not hostname or not hostname.strip():
+            hostname = "unknown-host"
+            self.logger.warning("Hostname was empty, using fallback: %s", hostname)
+
+        return hostname.strip()
 
     def get_ip_addresses(self) -> Tuple[Optional[str], Optional[str]]:
         """Get both IPv4 and IPv6 addresses of the machine."""

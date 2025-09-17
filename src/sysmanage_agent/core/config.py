@@ -3,6 +3,7 @@ Configuration management for SysManage Agent.
 Reads YAML configuration files and provides configuration data.
 """
 
+import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -15,6 +16,9 @@ class ConfigManager:
     """Manages configuration for the SysManage Agent."""
 
     def __init__(self, config_file: str = "sysmanage-agent.yaml"):
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
+
         # Determine config file path with security priority
         self.config_file = self._determine_config_path(config_file)
         self.config_data: Dict[str, Any] = {}
@@ -202,7 +206,9 @@ class ConfigManager:
 
     def is_script_execution_enabled(self) -> bool:
         """Check if script execution is enabled."""
-        return self.get("script_execution.enabled", False)
+        enabled = self.get("script_execution.enabled", False)
+        self.logger.debug("Script execution enabled: %s", enabled)
+        return enabled
 
     def get_script_execution_timeout(self) -> int:
         """Get script execution timeout in seconds."""

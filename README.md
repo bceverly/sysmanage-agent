@@ -74,11 +74,9 @@ source .venv/bin/activate  # Linux/macOS
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Run with auto-discovery (recommended)
-python main.py
-
-# 5. Or run with specific server
-python main.py --server sysmanage.example.com --port 6443
+# 4. Start the agent
+gmake start                    # Standard agent
+# gmake start-privileged       # Privileged agent (for package management)
 ```
 
 ## Configuration
