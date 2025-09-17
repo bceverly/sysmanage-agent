@@ -132,3 +132,25 @@ script_execution:
     # If true, scripts will be queued for manual approval
     require_approval: false
 
+# Data collection settings
+collection:
+  # Enable collection of system information
+  enabled: true
+
+  # Collection intervals (in seconds)
+  intervals:
+    system_info: 300      # 5 minutes
+    software: 3600        # 1 hour
+    hardware: 1800        # 30 minutes
+    network: 300          # 5 minutes
+    users: 1800           # 30 minutes
+
+  # Types of data to collect
+  types:
+    software_packages: true
+    system_updates: true
+    hardware_info: true
+    network_interfaces: true
+    user_accounts: true
+    system_metrics: true
+
