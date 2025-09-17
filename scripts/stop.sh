@@ -80,59 +80,134 @@ kill_by_pidfile() {
             echo "Agent PID file found but process not running"
         fi
         rm -f "$pidfile"
+        return 0  # Successfully handled PID file case
     else
         echo "No PID file found, checking for running processes..."
+        return 1  # No PID file, need to check for processes by pattern
     fi
 }
 
-# Function to kill agent processes by pattern
+# Function to kill agent processes by pattern with privilege handling
 kill_by_pattern() {
-    local pattern="python3.*main.py"
-    
-    # Cross-platform process finding
-    local pids=""
-    if command -v pgrep >/dev/null 2>&1; then
-        # Use pgrep if available (Linux, modern macOS, some BSD)
-        pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$) # Exclude this script's PID
-    else
-        # Fallback: use ps and grep for older systems
-        pids=$(ps -ef 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+    local pattern="python[[:space:]]*main\.py"
+
+    # Cross-platform process finding with user information
+    local process_info=""
+
+    # Use ps -eaf format which works reliably on OpenBSD
+    process_info=$(ps -eaf 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$)
+
+    # If no results with simplified pattern, try with the original pattern we know works
+    if [ -z "$process_info" ]; then
+        process_info=$(ps -eaf 2>/dev/null | grep "python.*main\.py" | grep -v grep | grep -v $$)
     fi
-    
-    if [ -n "$pids" ]; then
-        local pid_count=$(echo "$pids" | wc -l)
-        echo "Found $pid_count SysManage Agent process(es), stopping them..."
-        echo "$pids" | while read pid; do
-            if [ -n "$pid" ]; then
-                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-60)
-                if [ -z "$cmd" ]; then
-                    # Fallback for systems where ps -p doesn't work the same way
-                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-60)
+
+    if [ -n "$process_info" ]; then
+        local process_count=$(echo "$process_info" | wc -l)
+        echo "Found $process_count SysManage Agent process(es), attempting to stop them..."
+
+        # Track current user info
+        local current_user=$(id -un)
+        local current_uid=$(id -u)
+
+        # Write process info to temp file to avoid subshell issues
+        local temp_file="/tmp/sysmanage_processes_$$"
+        echo "$process_info" > "$temp_file"
+
+        # Process each line of process_info
+        while IFS= read -r proc_line; do
+            if [ -n "$proc_line" ]; then
+                local pid=$(echo "$proc_line" | awk '{print $1}')
+                # For ps -eaf format, user info is not easily available, so we'll determine it by trying to kill
+                local cmd=$(echo "$proc_line" | cut -d' ' -f5- | cut -c1-60)
+
+                echo "  Found PID $pid: $cmd"
+
+                # Try to kill the process
+                if kill "$pid" 2>/dev/null; then
+                    echo "    ✅ Successfully sent TERM signal to PID $pid"
+                else
+                    echo "    ⚠️  Could not send TERM signal to PID $pid - trying with elevated privileges..."
+
+                    # Try with elevated privileges (doas/sudo)
+                    local killed=false
+                    if command -v doas >/dev/null 2>&1 && doas -n true 2>/dev/null; then
+                        if doas kill "$pid" 2>/dev/null; then
+                            echo "    ✅ Successfully sent signal via doas"
+                            killed=true
+                        fi
+                    elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+                        if sudo kill "$pid" 2>/dev/null; then
+                            echo "    ✅ Successfully sent signal via sudo"
+                            killed=true
+                        fi
+                    fi
+
+                    if [ "$killed" = false ]; then
+                        echo "    ❌ Could not kill process $pid (may require manual intervention)"
+                    fi
                 fi
-                echo "  Stopping PID $pid: $cmd"
-                kill "$pid" 2>/dev/null
             fi
-        done
-        
-        # Wait a moment
-        sleep 2
-        
-        # Force kill if still running - check again with same cross-platform approach
-        local remaining_pids=""
-        if command -v pgrep >/dev/null 2>&1; then
-            remaining_pids=$(pgrep -f "$pattern" 2>/dev/null | grep -v $$)
-        else
-            remaining_pids=$(ps -ef 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+        done < "$temp_file"
+
+        # Clean up temp file
+        rm -f "$temp_file"
+
+        # Wait a moment for graceful shutdown
+        sleep 3
+
+        # Check for remaining processes and force kill if needed
+        local remaining_info=""
+        remaining_info=$(ps -eaf 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$)
+
+        # If no results with simplified pattern, try with the original pattern we know works
+        if [ -z "$remaining_info" ]; then
+            remaining_info=$(ps -eaf 2>/dev/null | grep "python.*main\.py" | grep -v grep | grep -v $$)
         fi
-        
-        if [ -n "$remaining_pids" ]; then
-            local remaining_count=$(echo "$remaining_pids" | wc -l)
-            echo "⚠️  $remaining_count agent process(es) still running, force stopping..."
-            echo "$remaining_pids" | while read pid; do
-                if [ -n "$pid" ]; then
-                    kill -9 "$pid" 2>/dev/null
+
+        if [ -n "$remaining_info" ]; then
+            local remaining_count=$(echo "$remaining_info" | wc -l)
+            echo "⚠️  $remaining_count agent process(es) still running, attempting force kill..."
+
+            # Write remaining process info to temp file
+            local temp_file2="/tmp/sysmanage_remaining_$$"
+            echo "$remaining_info" > "$temp_file2"
+
+            while IFS= read -r proc_line; do
+                if [ -n "$proc_line" ]; then
+                    local pid=$(echo "$proc_line" | awk '{print $1}')
+
+                    echo "  Force killing PID $pid..."
+
+                    # Try force kill
+                    if kill -9 "$pid" 2>/dev/null; then
+                        echo "    ✅ Force killed PID $pid"
+                    else
+                        echo "    ⚠️  Could not force kill PID $pid - trying with elevated privileges..."
+
+                        # Try with elevated privileges
+                        local killed=false
+                        if command -v doas >/dev/null 2>&1 && doas -n true 2>/dev/null; then
+                            if doas kill -9 "$pid" 2>/dev/null; then
+                                echo "    ✅ Force killed via doas"
+                                killed=true
+                            fi
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+                            if sudo kill -9 "$pid" 2>/dev/null; then
+                                echo "    ✅ Force killed via sudo"
+                                killed=true
+                            fi
+                        fi
+
+                        if [ "$killed" = false ]; then
+                            echo "    ❌ Could not force kill process $pid (may require manual intervention)"
+                        fi
+                    fi
                 fi
-            done
+            done < "$temp_file2"
+
+            # Clean up temp file
+            rm -f "$temp_file2"
         fi
     fi
 }
@@ -165,11 +240,7 @@ sleep 1
 
 # Cross-platform process count check
 remaining_processes=0
-if command -v pgrep >/dev/null 2>&1; then
-    remaining_processes=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$ | wc -l)
-else
-    remaining_processes=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | wc -l)
-fi
+remaining_processes=$(ps -eaf 2>/dev/null | grep "python.*main\.py" | grep -v grep | grep -v $$ | wc -l)
 
 if [ "$remaining_processes" -eq 0 ]; then
     echo ""
@@ -179,13 +250,13 @@ else
     echo "⚠️  Warning: $remaining_processes agent process(es) may still be running"
     echo ""
     echo "To manually check for agent processes:"
-    echo "  ps -ef | grep 'python3.*main.py'"
+    echo "  ps -ef | grep 'python.*main.py'"
     echo ""
     echo "To manually kill all agent processes (as last resort):"
     if command -v pkill >/dev/null 2>&1; then
-        echo "  pkill -f 'python3.*main.py'"
+        echo "  pkill -f 'python.*main.py'"
     else
-        echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+        echo "  kill \$(ps -ef | grep 'python.*main.py' | grep -v grep | awk '{print \$2}')"
     fi
 fi
 

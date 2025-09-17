@@ -104,10 +104,10 @@ check_existing_processes() {
     local agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
         # Use pgrep if available (Linux, modern macOS, some BSD)
-        agent_pids=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+        agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
     else
         # Fallback: use ps and grep for older systems
-        agent_pids=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+        agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
     fi
     
     if [ -n "$agent_pids" ]; then
@@ -261,21 +261,39 @@ main() {
         
         # Verify they were stopped
         if check_existing_processes >/dev/null 2>&1; then
-            echo "❌ ERROR: Failed to stop existing agent processes. Please stop them before continuing."
+            echo "❌ ERROR: Failed to stop existing agent processes."
             echo ""
-            echo "Try using the stop command first:"
-            echo "  make stop"
+            echo "This often happens when switching between user mode (make start) and"
+            echo "privileged mode (make start-privileged). The existing processes may be"
+            echo "running in a different session or as a different user."
             echo ""
-            echo "If that fails, manually check for agent processes:"
-            echo "  ps -ef | grep 'python3.*main.py'"
+            echo "Options to resolve this:"
+            echo "1. Try the stop command first:"
+            echo "   make stop"
             echo ""
-            echo "Or manually kill all agent processes:"
+            echo "2. Manually check for agent processes:"
+            echo "   ps -ef | grep 'python.*main.py'"
+            echo ""
+            echo "3. Force kill all python processes (CAUTION - this affects ALL python processes):"
             if command -v pkill >/dev/null 2>&1; then
-                echo "  pkill -f 'python3.*main.py'"
+                echo "   pkill -f 'python.*main.py'"
             else
-                echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+                echo "   kill \$(ps -ef | grep 'python.*main.py' | grep -v grep | awk '{print \$2}')"
             fi
-            exit 1
+            echo ""
+            echo "4. If processes are stuck/orphaned, reboot the system"
+            echo ""
+            echo "5. To force start anyway (not recommended), run:"
+            echo "   FORCE=1 make start-privileged"
+
+            # Check for FORCE environment variable
+            if [ "$FORCE" = "1" ]; then
+                echo ""
+                echo "⚠️  FORCE mode enabled - starting anyway despite existing processes"
+                echo "   This may result in multiple agents running simultaneously!"
+            else
+                exit 1
+            fi
         else
             echo "✅ Successfully stopped existing processes"
         fi
