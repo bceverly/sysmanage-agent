@@ -18,5 +18,5 @@
   
   <!-- Text -->
   <text x="75" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1976d2">SysManage</text>
-  <text x="75" y="40" font-family="Arial, sans-serif" font-size="10" fill="#666">System Management Platform</text>
+  <text x="75" y="40" font-family="Arial, sans-serif" font-size="10" fill="#ffffff">System Management Platform</text>
 </svg>
