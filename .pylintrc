@@ -32,7 +32,8 @@ disable=
     no-member,
     unused-argument,
     broad-except,
-    invalid-name
+    invalid-name,
+    duplicate-code
 
 [REPORTS]
 # Set the output format
