@@ -99,17 +99,30 @@ get_priv_cmd() {
 # Function to check for running agent processes
 check_existing_processes() {
     local found_processes=false
-    
+
+    # More specific pattern to avoid matching other Python processes
+    # Look for processes that contain both "python" and the specific path to this agent
+    local agent_dir_pattern="sysmanage-agent"
+    local main_py_pattern="main.py"
+
     # Check for agent processes by pattern (cross-platform approach)
     local agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
-        # Use pgrep if available (Linux, modern macOS, some BSD)
-        agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+        # Use pgrep with more specific pattern
+        agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$) # Exclude this script's PID
+        # Fallback to broader pattern if no results
+        if [ -z "$agent_pids" ]; then
+            agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
+        fi
     else
-        # Fallback: use ps and grep for older systems
-        agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+        # Fallback: use ps and grep with more specific pattern
+        agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+        # Fallback to broader pattern if no results
+        if [ -z "$agent_pids" ]; then
+            agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+        fi
     fi
-    
+
     if [ -n "$agent_pids" ]; then
         echo "⚠️  Found existing agent processes:"
         echo "$agent_pids" | while read pid; do
@@ -124,7 +137,7 @@ check_existing_processes() {
         done
         found_processes=true
     fi
-    
+
     # Check PID file
     if [ -f "logs/agent.pid" ]; then
         local pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
@@ -133,7 +146,7 @@ check_existing_processes() {
             found_processes=true
         fi
     fi
-    
+
     if [ "$found_processes" = true ]; then
         echo "Attempting to stop existing processes..."
         return 0  # Found processes
@@ -256,43 +269,105 @@ main() {
     
     # Stop any existing agent
     if check_existing_processes; then
+        echo "Attempting to stop existing processes using regular stop script..."
         sh ./scripts/stop.sh
         sleep 2
-        
+
         # Verify they were stopped
         if check_existing_processes >/dev/null 2>&1; then
-            echo "❌ ERROR: Failed to stop existing agent processes."
-            echo ""
-            echo "This often happens when switching between user mode (make start) and"
-            echo "privileged mode (make start-privileged). The existing processes may be"
-            echo "running in a different session or as a different user."
-            echo ""
-            echo "Options to resolve this:"
-            echo "1. Try the stop command first:"
-            echo "   make stop"
-            echo ""
-            echo "2. Manually check for agent processes:"
-            echo "   ps -ef | grep 'python.*main.py'"
-            echo ""
-            echo "3. Force kill all python processes (CAUTION - this affects ALL python processes):"
-            if command -v pkill >/dev/null 2>&1; then
-                echo "   pkill -f 'python.*main.py'"
-            else
-                echo "   kill \$(ps -ef | grep 'python.*main.py' | grep -v grep | awk '{print \$2}')"
-            fi
-            echo ""
-            echo "4. If processes are stuck/orphaned, reboot the system"
-            echo ""
-            echo "5. To force start anyway (not recommended), run:"
-            echo "   FORCE=1 make start-privileged"
+            echo "⚠️  Regular stop failed. Trying with elevated privileges to stop processes..."
 
-            # Check for FORCE environment variable
-            if [ "$FORCE" = "1" ]; then
-                echo ""
-                echo "⚠️  FORCE mode enabled - starting anyway despite existing processes"
-                echo "   This may result in multiple agents running simultaneously!"
+            # Try to stop with elevated privileges
+            priv_cmd_temp=$(get_priv_cmd "$platform")
+
+            # Get process PIDs that match our pattern (using same logic as check_existing_processes)
+            local agent_dir_pattern="sysmanage-agent"
+            local main_py_pattern="main.py"
+            agent_pids=""
+            if command -v pgrep >/dev/null 2>&1; then
+                agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$)
+                # Fallback to broader pattern if no results
+                if [ -z "$agent_pids" ]; then
+                    agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
+                fi
             else
-                exit 1
+                agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+                # Fallback to broader pattern if no results
+                if [ -z "$agent_pids" ]; then
+                    agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+                fi
+            fi
+
+            if [ -n "$agent_pids" ]; then
+                echo "Found agent processes: $agent_pids"
+                echo "Attempting to stop them with $priv_cmd_temp..."
+
+                for pid in $agent_pids; do
+                    echo "  Stopping PID $pid..."
+                    if [ "$priv_cmd_temp" = "doas" ]; then
+                        if doas kill "$pid" 2>/dev/null; then
+                            echo "    ✅ Stopped PID $pid with doas"
+                        else
+                            echo "    ⚠️  Failed to stop PID $pid with doas, trying SIGKILL..."
+                            doas kill -9 "$pid" 2>/dev/null && echo "    ✅ Force killed PID $pid"
+                        fi
+                    else
+                        if $priv_cmd_temp kill "$pid" 2>/dev/null; then
+                            echo "    ✅ Stopped PID $pid with sudo"
+                        else
+                            echo "    ⚠️  Failed to stop PID $pid with sudo, trying SIGKILL..."
+                            $priv_cmd_temp kill -9 "$pid" 2>/dev/null && echo "    ✅ Force killed PID $pid"
+                        fi
+                    fi
+                done
+
+                sleep 3
+
+                # Final check
+                if check_existing_processes >/dev/null 2>&1; then
+                    echo "❌ ERROR: Still failed to stop existing agent processes."
+                    echo ""
+                    echo "This often happens when switching between user mode (make start) and"
+                    echo "privileged mode (make start-privileged). The existing processes may be"
+                    echo "running in a different session or as a different user."
+                    echo ""
+                    echo "Options to resolve this:"
+                    echo "1. Manually check for agent processes:"
+                    echo "   ps -ef | grep 'python.*main.py'"
+                    echo ""
+                    echo "2. Try killing specific PIDs with elevated privileges:"
+                    if [ "$priv_cmd_temp" = "doas" ]; then
+                        echo "   doas kill <PID>"
+                        echo "   doas kill -9 <PID>  # for stubborn processes"
+                        echo ""
+                        echo "   To kill all sysmanage-agent processes safely:"
+                        echo "   doas pkill -f 'sysmanage-agent.*main.py'"
+                    else
+                        echo "   sudo kill <PID>"
+                        echo "   sudo kill -9 <PID>  # for stubborn processes"
+                        echo ""
+                        echo "   To kill all sysmanage-agent processes safely:"
+                        echo "   sudo pkill -f 'sysmanage-agent.*main.py'"
+                    fi
+                    echo ""
+                    echo "3. If processes are stuck/orphaned, reboot the system"
+                    echo ""
+                    echo "4. To force start anyway (not recommended), run:"
+                    echo "   FORCE=1 make start-privileged"
+
+                    # Check for FORCE environment variable
+                    if [ "$FORCE" = "1" ]; then
+                        echo ""
+                        echo "⚠️  FORCE mode enabled - starting anyway despite existing processes"
+                        echo "   This may result in multiple agents running simultaneously!"
+                    else
+                        exit 1
+                    fi
+                else
+                    echo "✅ Successfully stopped existing processes with elevated privileges"
+                fi
+            else
+                echo "⚠️  No agent processes found in second check - they may have stopped"
             fi
         else
             echo "✅ Successfully stopped existing processes"

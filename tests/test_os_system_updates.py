@@ -187,7 +187,8 @@ No new software available.
 
         for update in self.detector.available_updates:
             assert update["package_manager"] == "syspatch"
-            assert update["update_type"] == "security"
+            assert update["is_security_update"] is True
+            assert update["is_system_update"] is True
 
     @patch("subprocess.run")
     def test_detect_openbsd_system_updates_no_patches(self, mock_run):
@@ -341,24 +342,26 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
             self.detector._detect_linux_system_updates()
             mock_suse.assert_called_once()
 
-    @patch("platform.system")
-    def test_integration_os_system_updates_called_first(self, mock_system):
+    def test_integration_os_system_updates_called_first(self):
         """Test that OS system updates are detected within Linux updates."""
-        mock_system.return_value = "Linux"
 
-        with patch.object(
-            self.detector, "_detect_linux_system_updates"
-        ) as mock_os_updates, patch.object(
-            self.detector, "_detect_package_managers"
-        ) as mock_pkg_mgrs:
+        with patch("platform.system", return_value="Linux"):
+            # Create a new detector with the mocked platform
+            detector = UpdateDetector()
 
-            mock_pkg_mgrs.return_value = []
+            with patch.object(
+                detector, "_detect_linux_system_updates"
+            ) as mock_os_updates, patch.object(
+                detector, "_detect_package_managers"
+            ) as mock_pkg_mgrs:
 
-            result = self.detector.get_available_updates()
+                mock_pkg_mgrs.return_value = []
 
-            # OS system updates should be called within _detect_linux_updates
-            mock_os_updates.assert_called_once()
-            assert "available_updates" in result
+                result = detector.get_available_updates()
+
+                # OS system updates should be called within _detect_linux_updates
+                mock_os_updates.assert_called_once()
+                assert "available_updates" in result
 
     def test_windows_update_size_conversion(self):
         """Test Windows update size conversion."""

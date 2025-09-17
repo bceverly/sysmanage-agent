@@ -2063,9 +2063,12 @@ class UpdateDetector:
                             "current_version": "not installed",
                             "available_version": patch,
                             "package_manager": "syspatch",
-                            "update_type": "security",  # All syspatches are security updates
-                            "description": f"OpenBSD system security patch {patch}",
-                            "size": 0,  # Size not available from syspatch -c
+                            "is_security_update": True,  # All syspatches are security updates
+                            "is_system_update": True,  # All syspatches are also system updates
+                            "requires_reboot": True,  # Most syspatches require reboot
+                            "update_size_bytes": None,  # Size not available from syspatch -c
+                            "source": "OpenBSD base system",
+                            "repository": "syspatch",
                         }
                     )
 
