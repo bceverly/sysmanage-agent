@@ -67,8 +67,9 @@ cd sysmanage-agent
 
 # 2. Create virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate   # Windows
+source .venv/bin/activate
+# Note: On BSD systems (FreeBSD, OpenBSD, NetBSD), use: . .venv/bin/activate
+# Windows users: .venv\Scripts\activate
 
 # 3. Install dependencies
 pip install --upgrade pip
