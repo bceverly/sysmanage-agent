@@ -365,8 +365,10 @@ class TestSysManageAgentMessaging:
 
             agent = SysManageAgent(temp_config)
 
-            # Mock the host_id retrieval
-            with patch.object(agent, "get_stored_host_id_sync", return_value=None):
+            # Mock the host_id and host_token retrieval
+            with patch.object(
+                agent, "get_stored_host_id_sync", return_value=None
+            ), patch.object(agent, "get_stored_host_token_sync", return_value=None):
                 message_data = {"test_key": "test_value"}
                 message = agent.create_message("test_type", message_data)
 
@@ -408,7 +410,7 @@ class TestSysManageAgentMessaging:
 
             with patch("main.is_running_privileged", return_value=True), patch.object(
                 agent, "get_stored_host_id_sync", return_value=None
-            ):
+            ), patch.object(agent, "get_stored_host_token_sync", return_value=None):
                 message = agent.create_heartbeat_message()
 
             assert message["message_type"] == "heartbeat"
@@ -448,7 +450,9 @@ class TestSysManageAgentMessaging:
             agent.registration = Mock()
             agent.registration.get_system_info = Mock(return_value=mock_system_info)
 
-            with patch.object(agent, "get_stored_host_id_sync", return_value=None):
+            with patch.object(
+                agent, "get_stored_host_id_sync", return_value=None
+            ), patch.object(agent, "get_stored_host_token_sync", return_value=None):
                 message = agent.create_system_info_message()
 
             assert message["message_type"] == "system_info"

@@ -226,7 +226,10 @@ class HostApproval(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # Host identification from server
-    host_id = Column(Integer, nullable=True, index=True)  # Server-assigned host ID
+    host_id = Column(
+        Integer, nullable=True, index=True
+    )  # Server-assigned host ID (legacy)
+    host_token = Column(String(64), nullable=True, index=True)  # Secure host token
 
     # Approval information
     approval_status = Column(String(20), nullable=False, default="pending", index=True)

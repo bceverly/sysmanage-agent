@@ -207,7 +207,8 @@ class ConfigManager:
     def is_script_execution_enabled(self) -> bool:
         """Check if script execution is enabled."""
         enabled = self.get("script_execution.enabled", False)
-        self.logger.debug("Script execution enabled: %s", enabled)
+        if hasattr(self, "logger"):
+            self.logger.debug("Script execution enabled: %s", enabled)
         return enabled
 
     def get_script_execution_timeout(self) -> int:

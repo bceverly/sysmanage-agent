@@ -74,8 +74,9 @@ i18n:
             agent.connected = True  # Set connected flag for tests
             agent.logger = Mock()
 
-            # Mock the database access for host_id after agent creation
+            # Mock the database access for host_id and host_token after agent creation
             agent.get_stored_host_id_sync = Mock(return_value=3)
+            agent.get_stored_host_token_sync = Mock(return_value=None)
             return agent
 
     def test_create_heartbeat_message(self, mock_agent):

@@ -212,19 +212,30 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             # This code block exists for potential future enhancement
             # where we might handle async context differently
 
-            # For now, we'll get the host_id synchronously
+            # For now, we'll get the host_id and host_token synchronously
             stored_host_id = self.get_stored_host_id_sync()
+            stored_host_token = self.get_stored_host_token_sync()
             self.logger.debug(
-                "AGENT_DEBUG: Retrieved stored_host_id: %s", stored_host_id
+                "AGENT_DEBUG: Retrieved stored_host_id: %s, host_token: %s",
+                stored_host_id,
+                (
+                    stored_host_token[:16] + "..."
+                    if stored_host_token and isinstance(stored_host_token, str)
+                    else stored_host_token
+                ),
             )
             if stored_host_id:
                 message_data["host_id"] = stored_host_id
                 self.logger.debug(
                     "AGENT_DEBUG: Added host_id %s to message data", stored_host_id
                 )
-            else:
+            if stored_host_token:
+                message_data["host_token"] = stored_host_token
+                self.logger.debug("AGENT_DEBUG: Added host_token to message data")
+
+            if not stored_host_id and not stored_host_token:
                 self.logger.debug(
-                    "AGENT_DEBUG: No stored host_id found - message will be sent without host_id"
+                    "AGENT_DEBUG: No stored host_id or host_token found - message will be sent without authentication"
                 )
         else:
             self.logger.debug(
@@ -1985,7 +1996,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             raise
 
     async def store_host_approval(
-        self, host_id: int, approval_status: str, certificate: str = None
+        self,
+        host_id: int,
+        approval_status: str,
+        certificate: str = None,
+        host_token: str = None,
     ) -> None:
         """Store host approval information in local database."""
         try:
@@ -1998,6 +2013,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 if existing_approval:
                     # Update existing record
                     existing_approval.host_id = host_id
+                    existing_approval.host_token = host_token
                     existing_approval.approval_status = approval_status
                     existing_approval.certificate = certificate
                     existing_approval.updated_at = datetime.now(timezone.utc)
@@ -2008,6 +2024,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     # Create new approval record
                     new_approval = HostApproval(
                         host_id=host_id,
+                        host_token=host_token,
                         approval_status=approval_status,
                         certificate=certificate,
                         approved_at=(
@@ -2042,16 +2059,27 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             # Record the registration timestamp
             self.last_registration_time = datetime.now(timezone.utc)
 
-            # Extract host_id from registration success if available
+            # Extract host_id and host_token from registration success if available
             host_id = message.get("host_id")
+            host_token = message.get("host_token")
             approved = message.get("approved", False)
 
-            if host_id and approved:
-                self.logger.info("Registration approved with host_id: %s", host_id)
+            if (host_id or host_token) and approved:
+                self.logger.info(
+                    "Registration approved with host_id: %s, host_token: %s",
+                    host_id,
+                    (
+                        host_token[:16] + "..."
+                        if host_token and isinstance(host_token, str)
+                        else host_token
+                    ),
+                )
 
                 # Clear any existing host approval and store the new one
                 await self.clear_stored_host_id()
-                await self.store_host_approval(host_id, "approved")
+                await self.store_host_approval(
+                    host_id, "approved", host_token=host_token
+                )
                 self.logger.info("Host approval stored for host_id: %s", host_id)
 
                 # Mark registration as confirmed and send initial data
@@ -2061,12 +2089,20 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 )
                 await self.send_initial_data_updates()
 
-            elif host_id:
+            elif host_id or host_token:
                 self.logger.info(
-                    "Registration received host_id %s but approval pending", host_id
+                    "Registration received host_id %s, host_token %s but approval pending",
+                    host_id,
+                    (
+                        host_token[:16] + "..."
+                        if host_token and isinstance(host_token, str)
+                        else host_token
+                    ),
                 )
                 await self.clear_stored_host_id()
-                await self.store_host_approval(host_id, "pending")
+                await self.store_host_approval(
+                    host_id, "pending", host_token=host_token
+                )
                 self.registration_confirmed = True
             else:
                 self.logger.info(
@@ -2103,6 +2139,60 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(_("Error retrieving stored host_id: %s"), e)
+            return None
+
+    async def get_stored_host_token(self) -> str:
+        """Get the stored host_token from local database."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(
+                        HostApproval.approval_status == "approved",
+                        HostApproval.host_token.isnot(None),
+                    )
+                    .first()
+                )
+
+                if approval and approval.host_token:
+                    return approval.host_token
+
+                return None
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error retrieving stored host_token: %s"), e)
+            return None
+
+    def get_stored_host_token_sync(self) -> str:
+        """Get the stored host_token from local database synchronously."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(
+                        HostApproval.approval_status == "approved",
+                        HostApproval.host_token.isnot(None),
+                    )
+                    .first()
+                )
+
+                if approval and approval.host_token:
+                    return approval.host_token
+
+                return None
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.error(_("Error retrieving stored host_token: %s"), e)
             return None
 
     def get_host_approval_from_db(self):
@@ -2157,7 +2247,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             return None
 
     async def clear_stored_host_id(self) -> None:
-        """Clear the stored host_id from local database."""
+        """Clear the stored host_id from local database and related data."""
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
@@ -2167,8 +2257,30 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 for approval in approvals:
                     session.delete(approval)
 
+                # Clear any pending script executions since they're tied to the old host
+                from src.database.models import ScriptExecution, MessageQueue
+
+                script_executions = session.query(ScriptExecution).all()
+                for execution in script_executions:
+                    session.delete(execution)
+
+                # Clear any queued messages with host_id data
+                queued_messages = session.query(MessageQueue).all()
+                for message in queued_messages:
+                    try:
+                        # Parse message data to check for host_id
+                        message_data = json.loads(message.message_data)
+                        if "host_id" in message_data:
+                            # Remove messages containing the old host_id
+                            session.delete(message)
+                    except (json.JSONDecodeError, KeyError):
+                        # Keep messages that can't be parsed or don't have host_id
+                        pass
+
                 session.commit()
-                self.logger.debug(_("Host approval records cleared from database"))
+                self.logger.info(
+                    _("Host approval records and related data cleared from database")
+                )
 
             finally:
                 session.close()
