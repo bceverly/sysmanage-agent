@@ -36,21 +36,47 @@ help:
 # Virtual environment activation
 VENV = .venv
 
-# Unix/BSD/Linux defaults (works on FreeBSD)
-PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
-RM = rm -rf
-PYTHON_CMD = python3
+# Platform detection and variable setup
+ifeq ($(OS),Windows_NT)
+    # Windows-specific paths and commands
+    PYTHON = "$(VENV)/Scripts/python.exe"
+    PIP = "$(VENV)/Scripts/pip.exe"
+    RM = rmdir /s /q
+    PYTHON_CMD = python
+    VENV_ACTIVATE = $(VENV)/Scripts/activate
+    NULL_REDIRECT = >nul 2>&1
+    SHELL_TEST = if exist
+    SHELL_AND = &&
+    DEL_CMD = del /q
+else
+    # Unix/BSD/Linux defaults (works on FreeBSD)
+    PYTHON = $(VENV)/bin/python
+    PIP = $(VENV)/bin/pip
+    RM = rm -rf
+    PYTHON_CMD = python3
+    VENV_ACTIVATE = $(VENV)/bin/activate
+    NULL_REDIRECT = 2>/dev/null
+    SHELL_TEST = if [ -f
+    SHELL_AND = ] ; then
+    DEL_CMD = rm -f
+endif
 
 # Create or repair virtual environment
-$(VENV)/bin/activate:
+$(VENV_ACTIVATE):
 	@echo "Creating/repairing virtual environment..."
-	@$(RM) $(VENV) 2>/dev/null || true
+ifeq ($(OS),Windows_NT)
+	@if exist $(VENV) $(RM) $(VENV) $(NULL_REDIRECT) || echo.
+	@$(PYTHON_CMD) -m venv $(VENV)
+	@$(PIP) install --upgrade pip
+	@if exist requirements.txt $(PIP) install -r requirements.txt
+else
+	@$(RM) $(VENV) $(NULL_REDIRECT) || true
 	@$(PYTHON_CMD) -m venv $(VENV)
 	@$(PIP) install --upgrade pip
 	@if [ -f requirements.txt ]; then $(PIP) install -r requirements.txt; fi
+endif
 
-setup-venv: $(VENV)/bin/activate
+setup-venv: $(VENV_ACTIVATE)
 
 # Install development dependencies
 install-dev: setup-venv
@@ -69,7 +95,11 @@ clean-whitespace: setup-venv
 lint: format-python
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc || echo.
+else
 	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc || true
+endif
 	@echo "[OK] Python linting completed"
 
 # Format Python code
@@ -81,16 +111,28 @@ format-python: setup-venv clean-whitespace
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
+ifeq ($(OS),Windows_NT)
+	@set PYTHONWARNINGS=ignore::RuntimeWarning && $(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
+else
 	@PYTHONWARNINGS=ignore::RuntimeWarning $(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
+endif
 	@echo "[OK] Tests completed"
 
 # Clean artifacts
 clean:
 	@echo "Cleaning test artifacts and cache..."
-	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-	@find . -name "*.pyc" -delete 2>/dev/null || true
+ifeq ($(OS),Windows_NT)
+	@for /d /r . %%d in (__pycache__) do @if exist "%%d" rmdir /s /q "%%d" $(NULL_REDIRECT) || echo.
+	@for /d /r . %%d in (.pytest_cache) do @if exist "%%d" rmdir /s /q "%%d" $(NULL_REDIRECT) || echo.
+	@for /r . %%f in (*.pyc) do @if exist "%%f" del /q "%%f" $(NULL_REDIRECT) || echo.
+	@if exist htmlcov rmdir /s /q htmlcov $(NULL_REDIRECT) || echo.
+	@if exist .coverage del /q .coverage $(NULL_REDIRECT) || echo.
+else
+	@find . -type d -name "__pycache__" -exec rm -rf {} + $(NULL_REDIRECT) || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + $(NULL_REDIRECT) || true
+	@find . -name "*.pyc" -delete $(NULL_REDIRECT) || true
 	@rm -rf htmlcov/ .coverage
+endif
 	@echo "[OK] Clean completed"
 
 # Agent management targets with privilege level selection
@@ -106,7 +148,11 @@ start-unprivileged:
 # Privileged start
 start-privileged:
 	@echo "Starting SysManage Agent (privileged mode)..."
+ifeq ($(OS),Windows_NT)
+	@powershell.exe -ExecutionPolicy Bypass -File scripts/start-privileged-background.ps1
+else
 	@./scripts/start-privileged.sh
+endif
 
 # Stop agent
 stop:
@@ -144,10 +190,17 @@ security: security-full
 security-upgrades: setup-venv
 	@echo "=== Security Upgrade Recommendations ==="
 	@echo "Current versions of security-critical packages:"
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) -m pip list | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic safety"
+	@echo.
+	@echo "Checking for outdated packages..."
+	@$(PYTHON) -m pip list --outdated --format=columns $(NULL_REDIRECT) | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic safety" || echo "All security packages are up to date"
+else
 	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic|safety)"
 	@echo ""
 	@echo "Checking for outdated packages..."
-	@$(PYTHON) -m pip list --outdated --format=columns 2>/dev/null | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic|safety)" || echo "All security packages are up to date"
+	@$(PYTHON) -m pip list --outdated --format=columns $(NULL_REDIRECT) | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic|safety)" || echo "All security packages are up to date"
+endif
 	@echo ""
 	@echo "For detailed vulnerability info, check:"
 	@echo "  https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
@@ -160,6 +213,15 @@ security-full: security-python security-secrets
 security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || echo.
+	@echo.
+	@echo "Running Safety dependency vulnerability scan..."
+	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
+	@echo.
+	@echo "=== Current dependency versions (for upgrade reference) ==="
+	@$(PYTHON) -m pip list | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic" || echo "Package list completed"
+else
 	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
 	@echo ""
 	@echo "Running Safety dependency vulnerability scan..."
@@ -167,6 +229,7 @@ security-python: setup-venv
 	@echo ""
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
+endif
 	@echo ""
 	@echo "Note: Check Safety web UI at https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
 	@echo "      for specific version upgrade recommendations when vulnerabilities are found."
@@ -177,11 +240,21 @@ security-secrets:
 	@echo "=== Secrets Detection ==="
 	@echo "Scanning for potential secrets and credentials..."
 	@echo "Checking for common secret patterns..."
-	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(password|secret|key|token)\s*[:=]\s*['\"][^'\"\\s]{8,}" . || echo "No obvious secrets found in patterns"
+ifeq ($(OS),Windows_NT)
+	@findstr /r /s /i /v /f:"nul" "(password|secret|key|token)" *.py src\*.py tests\*.py scripts\*.py alembic\*.py $(NULL_REDIRECT) || echo "No obvious secrets found in patterns"
+	@echo.
+	@echo "Checking for hardcoded API keys..."
+	@findstr /r /s /i "api.*key.*=" *.py src\*.py tests\*.py scripts\*.py alembic\*.py $(NULL_REDIRECT) || echo "No obvious API keys found"
+	@echo.
+	@echo "Checking for AWS credentials..."
+	@findstr /r /s /i "AKIA" *.py src\*.py tests\*.py scripts\*.py alembic\*.py $(NULL_REDIRECT) || echo "No AWS credentials found"
+else
+	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(password|secret|key|token)\\s*[:=]\\s*['\"][^'\"\\\\s]{8,}" . || echo "No obvious secrets found in patterns"
 	@echo ""
 	@echo "Checking for hardcoded API keys..."
-	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(api_?key|access_?token|auth_?token)\s*[:=]\s*['\"][A-Za-z0-9+/=]{20,}" . || echo "No obvious API keys found"
+	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(api_?key|access_?token|auth_?token)\\s*[:=]\\s*['\"][A-Za-z0-9+/=]{20,}" . || echo "No obvious API keys found"
 	@echo ""
 	@echo "Checking for AWS credentials..."
 	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(AKIA[0-9A-Z]{16}|aws_secret_access_key)" . || echo "No AWS credentials found"
+endif
 	@echo "[OK] Basic secrets detection completed"
