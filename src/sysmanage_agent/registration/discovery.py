@@ -136,7 +136,9 @@ class ServerDiscoveryClient:
                         addr[0] if "addr" in locals() else "unknown",
                     )
                 except Exception as e:
-                    logger.debug("Error receiving discovery response: %s", e)
+                    logger.debug(
+                        "Error receiving discovery response: %s", type(e).__name__
+                    )
                     continue
 
             sock.close()

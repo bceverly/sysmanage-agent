@@ -38,7 +38,7 @@ from src.sysmanage_agent.communication.message_handler import QueuedMessageHandl
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.database.init import initialize_database
 from src.database.base import get_database_manager
-from src.database.models import HostApproval
+from src.database.models import HostApproval, ScriptExecution, MessageQueue
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
 
 
@@ -218,11 +218,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.debug(
                 "AGENT_DEBUG: Retrieved stored_host_id: %s, host_token: %s",
                 stored_host_id,
-                (
-                    stored_host_token[:16] + "..."
-                    if stored_host_token and isinstance(stored_host_token, str)
-                    else stored_host_token
-                ),
+                "***REDACTED***" if stored_host_token else None,
             )
             if stored_host_id:
                 message_data["host_id"] = stored_host_id
@@ -1111,16 +1107,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         server_fingerprint = data.get("fingerprint")
                         self.logger.info(
                             "Retrieved server fingerprint for validation: %s",
-                            (
-                                server_fingerprint[:16] + "..."
-                                if server_fingerprint
-                                else "None"
-                            ),
+                            "***REDACTED***" if server_fingerprint else "None",
                         )
                         # We'll store it when we get the full cert data
 
         except Exception as e:
-            self.logger.error("Failed to get server fingerprint: %s", e)
+            self.logger.error("Failed to get server fingerprint: %s", type(e).__name__)
             return False
 
         # Check if we can find our host ID from previous registration
@@ -2068,11 +2060,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 self.logger.info(
                     "Registration approved with host_id: %s, host_token: %s",
                     host_id,
-                    (
-                        host_token[:16] + "..."
-                        if host_token and isinstance(host_token, str)
-                        else host_token
-                    ),
+                    "***REDACTED***" if host_token else None,
                 )
 
                 # Clear any existing host approval and store the new one
@@ -2093,11 +2081,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 self.logger.info(
                     "Registration received host_id %s, host_token %s but approval pending",
                     host_id,
-                    (
-                        host_token[:16] + "..."
-                        if host_token and isinstance(host_token, str)
-                        else host_token
-                    ),
+                    "***REDACTED***" if host_token else None,
                 )
                 await self.clear_stored_host_id()
                 await self.store_host_approval(
@@ -2165,7 +2149,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 session.close()
 
         except Exception as e:
-            self.logger.error(_("Error retrieving stored host_token: %s"), e)
+            self.logger.error(
+                _("Error retrieving stored host_token: %s"), type(e).__name__
+            )
             return None
 
     def get_stored_host_token_sync(self) -> str:
@@ -2192,7 +2178,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 session.close()
 
         except Exception as e:
-            self.logger.error(_("Error retrieving stored host_token: %s"), e)
+            self.logger.error(
+                _("Error retrieving stored host_token: %s"), type(e).__name__
+            )
             return None
 
     def get_host_approval_from_db(self):
@@ -2216,7 +2204,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 session.close()
 
         except Exception as e:
-            self.logger.error(_("Error retrieving host approval: %s"), e)
+            self.logger.error(_("Error retrieving host approval: %s"), type(e).__name__)
             return None
 
     def get_stored_host_id_sync(self) -> int:
@@ -2258,8 +2246,6 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     session.delete(approval)
 
                 # Clear any pending script executions since they're tied to the old host
-                from src.database.models import ScriptExecution, MessageQueue
-
                 script_executions = session.query(ScriptExecution).all()
                 for execution in script_executions:
                     session.delete(execution)
