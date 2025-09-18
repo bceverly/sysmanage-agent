@@ -216,9 +216,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             stored_host_id = self.get_stored_host_id_sync()
             stored_host_token = self.get_stored_host_token_sync()
             self.logger.debug(
-                "AGENT_DEBUG: Retrieved stored_host_id: %s, host_token: %s",
+                "AGENT_DEBUG: Retrieved stored_host_id: %s, has_token: %s",
                 stored_host_id,
-                "***REDACTED***" if stored_host_token else None,
+                bool(stored_host_token),
             )
             if stored_host_id:
                 message_data["host_id"] = stored_host_id
@@ -2058,9 +2058,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             if (host_id or host_token) and approved:
                 self.logger.info(
-                    "Registration approved with host_id: %s, host_token: %s",
+                    "Registration approved with host_id: %s, has_token: %s",
                     host_id,
-                    "***REDACTED***" if host_token else None,
+                    bool(host_token),
                 )
 
                 # Clear any existing host approval and store the new one
@@ -2079,9 +2079,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             elif host_id or host_token:
                 self.logger.info(
-                    "Registration received host_id %s, host_token %s but approval pending",
+                    "Registration received host_id %s, has_token %s but approval pending",
                     host_id,
-                    "***REDACTED***" if host_token else None,
+                    bool(host_token),
                 )
                 await self.clear_stored_host_id()
                 await self.store_host_approval(
@@ -2150,7 +2150,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(
-                _("Error retrieving stored host_token: %s"), type(e).__name__
+                _("Error retrieving stored credentials: %s"), type(e).__name__
             )
             return None
 
@@ -2179,7 +2179,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(
-                _("Error retrieving stored host_token: %s"), type(e).__name__
+                _("Error retrieving stored credentials: %s"), type(e).__name__
             )
             return None
 
