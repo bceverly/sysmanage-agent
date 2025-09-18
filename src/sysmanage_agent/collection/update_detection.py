@@ -1840,7 +1840,7 @@ class UpdateDetector:
             try:
                 # First check if do-release-upgrade is available
                 check_cmd = ["which", "do-release-upgrade"]
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607
                     check_cmd, capture_output=True, timeout=10, check=False
                 )
                 if result.returncode != 0:
@@ -2974,7 +2974,7 @@ class UpdateDetector:
         """Detect Ubuntu release upgrades using do-release-upgrade."""
         try:
             # Check if do-release-upgrade is available
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["which", "do-release-upgrade"],
                 capture_output=True,
                 text=True,
@@ -2985,7 +2985,7 @@ class UpdateDetector:
                 return
 
             # Check for available release upgrades
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["do-release-upgrade", "--check-dist-upgrade-only", "--quiet"],
                 capture_output=True,
                 text=True,
@@ -3029,7 +3029,7 @@ class UpdateDetector:
         """Detect Fedora version upgrades using dnf system-upgrade."""
         try:
             # Check if dnf system-upgrade plugin is available
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["dnf", "system-upgrade", "--help"],
                 capture_output=True,
                 text=True,
@@ -3051,7 +3051,7 @@ class UpdateDetector:
             next_version = str(int(current_version) + 1)
 
             # Check if the next version exists (this is a simplified check)
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 [
                     "dnf",
                     "system-upgrade",
@@ -3092,7 +3092,7 @@ class UpdateDetector:
         """Detect openSUSE version upgrades."""
         try:
             # Get current openSUSE version
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["zypper", "--version"],
                 capture_output=True,
                 text=True,
@@ -3103,7 +3103,7 @@ class UpdateDetector:
                 return
 
             # Check for distribution upgrades
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["zypper", "dist-upgrade", "--dry-run", "--no-confirm"],
                 capture_output=True,
                 text=True,
@@ -3140,7 +3140,7 @@ class UpdateDetector:
         """Detect macOS version upgrades using softwareupdate."""
         try:
             # Check for major macOS upgrades
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["softwareupdate", "--list", "--include-config-data"],
                 capture_output=True,
                 text=True,
@@ -3163,7 +3163,7 @@ class UpdateDetector:
                             )  # Everything after the *
 
                             # Get current macOS version
-                            current_result = subprocess.run(
+                            current_result = subprocess.run(  # nosec B603, B607
                                 ["sw_vers", "-productVersion"],
                                 capture_output=True,
                                 text=True,
@@ -3204,7 +3204,7 @@ class UpdateDetector:
             } | Select-Object Title, Size | ConvertTo-Json
             """
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["powershell", "-Command", powershell_cmd],
                 capture_output=True,
                 text=True,
@@ -3223,7 +3223,7 @@ class UpdateDetector:
                         size = update.get("Size", 0)
 
                         # Get current Windows version
-                        version_result = subprocess.run(
+                        version_result = subprocess.run(  # nosec B603, B607
                             [
                                 "powershell",
                                 "-Command",
@@ -3275,7 +3275,7 @@ class UpdateDetector:
         """Detect OpenBSD version upgrades using sysupgrade."""
         try:
             # Check if sysupgrade is available
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["which", "sysupgrade"],
                 capture_output=True,
                 text=True,
@@ -3286,7 +3286,7 @@ class UpdateDetector:
                 return
 
             # Check for available upgrades
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["sysupgrade", "-n"],  # -n for dry run
                 capture_output=True,
                 text=True,
@@ -3296,7 +3296,7 @@ class UpdateDetector:
 
             if result.returncode == 0 and "upgrade" in result.stdout.lower():
                 # Get current version
-                version_result = subprocess.run(
+                version_result = subprocess.run(  # nosec B603, B607
                     ["uname", "-r"],
                     capture_output=True,
                     text=True,
@@ -3330,7 +3330,7 @@ class UpdateDetector:
         """Detect FreeBSD version upgrades using freebsd-update."""
         try:
             # Check for available upgrades
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607
                 ["freebsd-update", "upgrade", "-r", "RELEASE"],
                 capture_output=True,
                 text=True,
@@ -3343,7 +3343,7 @@ class UpdateDetector:
                 or "available" in result.stdout.lower()
             ):
                 # Get current version
-                version_result = subprocess.run(
+                version_result = subprocess.run(  # nosec B603, B607
                     ["uname", "-r"],
                     capture_output=True,
                     text=True,
