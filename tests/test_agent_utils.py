@@ -538,24 +538,18 @@ class TestPrivilegeDetection:
     """Test cases for is_running_privileged function."""
 
     @patch("sys.platform", "linux")
-    @patch("os.geteuid")
-    def test_is_running_privileged_root_linux(self, mock_geteuid):
+    def test_is_running_privileged_root_linux(self):
         """Test privilege detection on Linux as root."""
-        mock_geteuid.return_value = 0
-
-        result = is_running_privileged()
-
-        assert result is True
+        with patch("os.geteuid", return_value=0, create=True):
+            result = is_running_privileged()
+            assert result is True
 
     @patch("sys.platform", "linux")
-    @patch("os.geteuid")
-    def test_is_running_privileged_non_root_linux(self, mock_geteuid):
+    def test_is_running_privileged_non_root_linux(self):
         """Test privilege detection on Linux as non-root."""
-        mock_geteuid.return_value = 1000
-
-        result = is_running_privileged()
-
-        assert result is False
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = is_running_privileged()
+            assert result is False
 
     @patch("sys.platform", "win32")
     def test_is_running_privileged_admin_windows(self):
@@ -590,11 +584,8 @@ class TestPrivilegeDetection:
             assert result is False
 
     @patch("sys.platform", "linux")
-    @patch("os.geteuid")
-    def test_is_running_privileged_exception(self, mock_geteuid):
+    def test_is_running_privileged_exception(self):
         """Test privilege detection with exception."""
-        mock_geteuid.side_effect = Exception("Access error")
-
-        result = is_running_privileged()
-
-        assert result is False  # Should default to non-privileged for security
+        with patch("os.geteuid", side_effect=Exception("Access error"), create=True):
+            result = is_running_privileged()
+            assert result is False  # Should default to non-privileged for security

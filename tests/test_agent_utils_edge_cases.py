@@ -251,18 +251,20 @@ class TestIsRunningPrivilegedEdgeCases:
     def test_is_running_privileged_unix_root(self):
         """Test privilege detection on Unix as root."""
         with patch("sys.platform", "linux"):
-            with patch("os.geteuid", return_value=0):
+            with patch("os.geteuid", return_value=0, create=True):
                 assert is_running_privileged() is True
 
     def test_is_running_privileged_unix_user(self):
         """Test privilege detection on Unix as regular user."""
         with patch("sys.platform", "linux"):
-            with patch("os.geteuid", return_value=1000):
+            with patch("os.geteuid", return_value=1000, create=True):
                 assert is_running_privileged() is False
 
     def test_is_running_privileged_exception_handling(self):
         """Test privilege detection with exception."""
         with patch("sys.platform", "linux"):
-            with patch("os.geteuid", side_effect=AttributeError("No geteuid")):
+            with patch(
+                "os.geteuid", side_effect=AttributeError("No geteuid"), create=True
+            ):
                 # Should default to False for security
                 assert is_running_privileged() is False

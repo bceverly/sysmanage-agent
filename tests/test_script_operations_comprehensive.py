@@ -206,14 +206,15 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         """Test script execution with working directory that's not a directory."""
         parameters = {"script_content": "pwd", "working_directory": "/etc/passwd"}
 
-        with patch("os.path.exists", return_value=True), patch(
-            "os.path.isdir", return_value=False
-        ):
+        with patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"):
+            with patch("os.path.exists", return_value=True), patch(
+                "os.path.isdir", return_value=False
+            ):
 
-            result = await self.script_ops.execute_script(parameters)
+                result = await self.script_ops.execute_script(parameters)
 
-            assert result["success"] is False
-            assert "not a directory" in result["error"]
+                assert result["success"] is False
+                assert "not a directory" in result["error"]
 
     @pytest.mark.asyncio
     @patch("platform.system", return_value="Linux")

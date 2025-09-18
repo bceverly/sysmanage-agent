@@ -38,8 +38,8 @@ VENV := .venv
 
 # Detect operating system for cross-platform compatibility
 ifeq ($(OS),Windows_NT)
-    PYTHON := $(VENV)\Scripts\python.exe
-    PIP := $(VENV)\Scripts\pip.exe
+    PYTHON := $(VENV)/Scripts/python.exe
+    PIP := $(VENV)/Scripts/pip.exe
     RM := rmdir /s /q
     PYTHON_CMD := python
 else
@@ -51,14 +51,14 @@ endif
 
 # Create or repair virtual environment
 ifeq ($(OS),Windows_NT)
-$(VENV)\Scripts\activate.bat:
+$(VENV)/Scripts/activate.bat:
 	@echo "Creating/repairing virtual environment..."
 	@if exist $(VENV) $(RM) $(VENV) 2>nul || echo
 	@$(PYTHON_CMD) -m venv $(VENV)
 	@$(PIP) install --upgrade pip
 	@if exist requirements.txt $(PIP) install -r requirements.txt
 
-setup-venv: $(VENV)\Scripts\activate.bat
+setup-venv: $(VENV)/Scripts/activate.bat
 else
 $(VENV)/bin/activate:
 	@echo "Creating/repairing virtual environment..."
@@ -109,7 +109,11 @@ format-python: setup-venv clean-whitespace
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
+ifeq ($(OS),Windows_NT)
+	@set PYTHONWARNINGS=ignore::RuntimeWarning && "$(PYTHON)" -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
+else
 	@PYTHONWARNINGS=ignore::RuntimeWarning $(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
+endif
 	@echo "[OK] Tests completed"
 
 # Clean artifacts
