@@ -216,9 +216,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             stored_host_id = self.get_stored_host_id_sync()
             stored_host_token = self.get_stored_host_token_sync()
             self.logger.debug(
-                "AGENT_DEBUG: Retrieved stored_host_id: %s, has_token: %s",
-                stored_host_id,
-                bool(stored_host_token),
+                "AGENT_DEBUG: Retrieved stored_host_id",
             )
             if stored_host_id:
                 message_data["host_id"] = stored_host_id
@@ -2058,9 +2056,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             if (host_id or host_token) and approved:
                 self.logger.info(
-                    "Registration approved with host_id: %s, has_token: %s",
-                    host_id,
-                    bool(host_token),
+                    "Registration approved",
                 )
 
                 # Clear any existing host approval and store the new one
@@ -2079,9 +2075,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
             elif host_id or host_token:
                 self.logger.info(
-                    "Registration received host_id %s, has_token %s but approval pending",
-                    host_id,
-                    bool(host_token),
+                    "Registration received but approval pending",
                 )
                 await self.clear_stored_host_id()
                 await self.store_host_approval(
@@ -2148,10 +2142,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             finally:
                 session.close()
 
-        except Exception as e:
-            self.logger.error(
-                _("Error retrieving stored credentials: %s"), type(e).__name__
-            )
+        except Exception:
+            self.logger.error(_("Error retrieving stored credentials"))
             return None
 
     def get_stored_host_token_sync(self) -> str:
@@ -2177,10 +2169,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             finally:
                 session.close()
 
-        except Exception as e:
-            self.logger.error(
-                _("Error retrieving stored credentials: %s"), type(e).__name__
-            )
+        except Exception:
+            self.logger.error(_("Error retrieving stored credentials"))
             return None
 
     def get_host_approval_from_db(self):
