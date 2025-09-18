@@ -81,19 +81,22 @@ class TestMessageQueueManager:
         """Test message dequeuing with priority ordering."""
         # Create messages with different priorities
         low_msg_id = queue_manager.enqueue_message(
-            "low_priority", {"data": "low"}, QueueDirection.OUTBOUND, Priority.LOW
+            "low_priority",
+            {"data": "low"},
+            QueueDirection.OUTBOUND,
+            priority=Priority.LOW,
         )
         urgent_msg_id = queue_manager.enqueue_message(
             "urgent_priority",
             {"data": "urgent"},
             QueueDirection.OUTBOUND,
-            Priority.URGENT,
+            priority=Priority.URGENT,
         )
         normal_msg_id = queue_manager.enqueue_message(
             "normal_priority",
             {"data": "normal"},
             QueueDirection.OUTBOUND,
-            Priority.NORMAL,
+            priority=Priority.NORMAL,
         )
 
         # Dequeue messages - should be ordered by priority

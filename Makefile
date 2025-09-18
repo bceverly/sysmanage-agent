@@ -34,32 +34,15 @@ help:
 	@echo "                 ⚠ Requires sudo/doas access"
 
 # Virtual environment activation
-VENV := .venv
+VENV = .venv
 
-# Detect operating system for cross-platform compatibility
-ifeq ($(OS),Windows_NT)
-    PYTHON := $(VENV)/Scripts/python.exe
-    PIP := $(VENV)/Scripts/pip.exe
-    RM := rmdir /s /q
-    PYTHON_CMD := python
-else
-    PYTHON := $(VENV)/bin/python
-    PIP := $(VENV)/bin/pip
-    RM := rm -rf
-    PYTHON_CMD := python3
-endif
+# Unix/BSD/Linux defaults (works on FreeBSD)
+PYTHON = $(VENV)/bin/python
+PIP = $(VENV)/bin/pip
+RM = rm -rf
+PYTHON_CMD = python3
 
 # Create or repair virtual environment
-ifeq ($(OS),Windows_NT)
-$(VENV)/Scripts/activate.bat:
-	@echo "Creating/repairing virtual environment..."
-	@if exist $(VENV) $(RM) $(VENV) 2>nul || echo
-	@$(PYTHON_CMD) -m venv $(VENV)
-	@$(PIP) install --upgrade pip
-	@if exist requirements.txt $(PIP) install -r requirements.txt
-
-setup-venv: $(VENV)/Scripts/activate.bat
-else
 $(VENV)/bin/activate:
 	@echo "Creating/repairing virtual environment..."
 	@$(RM) $(VENV) 2>/dev/null || true
@@ -68,7 +51,6 @@ $(VENV)/bin/activate:
 	@if [ -f requirements.txt ]; then $(PIP) install -r requirements.txt; fi
 
 setup-venv: $(VENV)/bin/activate
-endif
 
 # Install development dependencies
 install-dev: setup-venv
@@ -84,21 +66,11 @@ clean-whitespace: setup-venv
 	@$(PYTHON) scripts/clean_whitespace.py
 
 # Python linting
-ifeq ($(OS),Windows_NT)
 lint: format-python
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
-	@echo "OS detected: $(OS)"
-	@echo "Using Python: $(PYTHON)"
-	@.venv\Scripts\python.exe -m pylint main.py tests/ --rcfile=.pylintrc || echo "Pylint completed with warnings/errors"
+	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc || true
 	@echo "[OK] Python linting completed"
-else
-lint: format-python
-	@echo "=== Python Linting ==="
-	@echo "Running pylint..."
-	@$(PYTHON) -m pylint main.py tests/ --rcfile=.pylintrc || true
-	@echo "[OK] Python linting completed"
-endif
 
 # Format Python code
 format-python: setup-venv clean-whitespace
@@ -109,29 +81,16 @@ format-python: setup-venv clean-whitespace
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
-ifeq ($(OS),Windows_NT)
-	@set PYTHONWARNINGS=ignore::RuntimeWarning && "$(PYTHON)" -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
-else
 	@PYTHONWARNINGS=ignore::RuntimeWarning $(PYTHON) -m pytest tests/ -v --tb=short --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html
-endif
 	@echo "[OK] Tests completed"
 
 # Clean artifacts
 clean:
 	@echo "Cleaning test artifacts and cache..."
-ifeq ($(OS),Windows_NT)
-	@if exist __pycache__ $(RM) __pycache__ 2>nul || echo
-	@if exist .pytest_cache $(RM) .pytest_cache 2>nul || echo
-	@if exist htmlcov $(RM) htmlcov 2>nul || echo
-	@if exist .coverage del .coverage 2>nul || echo
-	@for /r %%i in (*.pyc) do @del "%%i" 2>NUL || echo.
-	@for /r %%i in (__pycache__) do @if exist "%%i" $(RM) "%%i" 2>NUL || echo.
-else
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -name "*.pyc" -delete 2>/dev/null || true
 	@rm -rf htmlcov/ .coverage
-endif
 	@echo "[OK] Clean completed"
 
 # Agent management targets with privilege level selection
@@ -142,65 +101,17 @@ start: start-unprivileged
 # Unprivileged start
 start-unprivileged:
 	@echo "Starting SysManage Agent (unprivileged mode)..."
-ifeq ($(OS),Windows_NT)
-	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start.ps1) else (scripts\start.cmd)
-else
-	@if [ -n "$$ZSH_VERSION" ]; then \
-		echo "Detected zsh shell, using start.sh"; \
-		./scripts/start.sh; \
-	elif [ -n "$$BASH_VERSION" ]; then \
-		echo "Detected bash shell, using start.sh"; \
-		./scripts/start.sh; \
-	elif [ -n "$$KSH_VERSION" ]; then \
-		echo "Detected ksh shell, using start.sh"; \
-		./scripts/start.sh; \
-	else \
-		echo "Detected POSIX shell, using start.sh"; \
-		./scripts/start.sh; \
-	fi
-endif
+	@./scripts/start.sh
 
 # Privileged start
 start-privileged:
 	@echo "Starting SysManage Agent (privileged mode)..."
-ifeq ($(OS),Windows_NT)
-	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/start-privileged-background.ps1) else (scripts\start-privileged-background.cmd)
-else
-	@if [ -n "$$ZSH_VERSION" ]; then \
-		echo "Detected zsh shell, using start-privileged.sh"; \
-		./scripts/start-privileged.sh; \
-	elif [ -n "$$BASH_VERSION" ]; then \
-		echo "Detected bash shell, using start-privileged.sh"; \
-		./scripts/start-privileged.sh; \
-	elif [ -n "$$KSH_VERSION" ]; then \
-		echo "Detected ksh shell, using start-privileged.sh"; \
-		./scripts/start-privileged.sh; \
-	else \
-		echo "Detected POSIX shell, using start-privileged.sh"; \
-		./scripts/start-privileged.sh; \
-	fi
-endif
+	@./scripts/start-privileged.sh
 
 # Stop agent
 stop:
 	@echo "Stopping SysManage Agent..."
-ifeq ($(OS),Windows_NT)
-	@if defined PSModulePath (powershell -ExecutionPolicy Bypass -File scripts/stop.ps1) else (scripts\stop.cmd)
-else
-	@if [ -n "$$ZSH_VERSION" ]; then \
-		echo "Detected zsh shell, using stop.sh"; \
-		./scripts/stop.sh; \
-	elif [ -n "$$BASH_VERSION" ]; then \
-		echo "Detected bash shell, using stop.sh"; \
-		./scripts/stop.sh; \
-	elif [ -n "$$KSH_VERSION" ]; then \
-		echo "Detected ksh shell, using stop.sh"; \
-		./scripts/stop.sh; \
-	else \
-		echo "Detected POSIX shell, using stop.sh"; \
-		./scripts/stop.sh; \
-	fi
-endif
+	@./scripts/stop.sh
 
 # Development helpers
 check-syntax: setup-venv
@@ -249,24 +160,13 @@ security-full: security-python security-secrets
 security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
-ifeq ($(OS),Windows_NT)
-	-@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607
-else
 	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
-endif
 	@echo ""
 	@echo "Running Safety dependency vulnerability scan..."
-ifeq ($(OS),Windows_NT)
-	-@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
-	-@echo ""
-	-@echo "=== Current dependency versions (for upgrade reference) ==="
-	-@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
-else
 	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
 	@echo ""
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
-endif
 	@echo ""
 	@echo "Note: Check Safety web UI at https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
 	@echo "      for specific version upgrade recommendations when vulnerabilities are found."

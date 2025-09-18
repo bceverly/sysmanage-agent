@@ -64,7 +64,7 @@ class UserAccessCollector:
         if pwd is None:
             self.logger.warning("pwd module not available on this platform")
             return users
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             for user in pwd.getpwall():
                 # Determine if it's a system user (typically UID < 1000 for Linux)
                 is_system_user = user.pw_uid < 1000
@@ -230,8 +230,8 @@ class UserAccessCollector:
         except Exception as e:
             self.logger.error("Failed to collect macOS users: %s", e)
             # Fallback to pwd module if dscl fails
-            if pwd is not None:
-                try:
+            if pwd is not None:  # pylint: disable=too-many-nested-blocks
+                try:  # pylint: disable=too-many-nested-blocks
                     for user in pwd.getpwall():
                         is_system_user = (
                             user.pw_uid < 500
@@ -494,7 +494,7 @@ class UserAccessCollector:
         if pwd is None:
             self.logger.warning("pwd module not available on this platform")
             return users
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             for user in pwd.getpwall():
                 # BSD systems typically use UID < 1000 for system users
                 is_system_user = user.pw_uid < 1000

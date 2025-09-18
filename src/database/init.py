@@ -5,10 +5,9 @@ Database initialization and migration management for SysManage Agent.
 import os
 import subprocess  # nosec B404
 import logging
-from typing import Optional
 
-from .base import get_database_manager
 from src.i18n import _
+from .base import get_database_manager
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +83,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         logger.info(_("Running alembic command: %s"), " ".join(cmd))
 
         result = subprocess.run(  # nosec B603, B607
-            cmd, cwd=agent_dir, capture_output=True, text=True, timeout=60
+            cmd, cwd=agent_dir, capture_output=True, text=True, timeout=60, check=False
         )
 
         if result.returncode == 0:
@@ -92,15 +91,15 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             if result.stdout:
                 logger.debug("Alembic output: %s", result.stdout)
             return True
-        else:
-            logger.error(
-                _("Alembic %s failed with return code %d"), operation, result.returncode
-            )
-            if result.stderr:
-                logger.error("Alembic error: %s", result.stderr)
-            if result.stdout:
-                logger.error("Alembic output: %s", result.stdout)
-            return False
+
+        logger.error(
+            _("Alembic %s failed with return code %d"), operation, result.returncode
+        )
+        if result.stderr:
+            logger.error("Alembic error: %s", result.stderr)
+        if result.stdout:
+            logger.error("Alembic output: %s", result.stdout)
+        return False
 
     except subprocess.TimeoutExpired:
         logger.error(_("Alembic %s timed out after 60 seconds"), operation)
@@ -127,7 +126,7 @@ def initialize_database(config_manager) -> bool:
 
         # Initialize the global database manager with the correct path FIRST
         # This ensures all subsequent get_database_manager() calls use this path
-        db_manager = get_database_manager(db_path)
+        get_database_manager(db_path)  # Initialize global database manager
 
         # Check if database exists
         db_exists = os.path.exists(db_path)

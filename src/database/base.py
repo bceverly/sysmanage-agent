@@ -97,7 +97,7 @@ def get_database_manager(database_path: str = None) -> DatabaseManager:
     Returns:
         DatabaseManager instance
     """
-    global _db_manager
+    global _db_manager  # pylint: disable=global-statement
     if _db_manager is None:
         _db_manager = DatabaseManager(database_path)
     return _db_manager

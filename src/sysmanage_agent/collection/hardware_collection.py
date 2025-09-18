@@ -139,7 +139,7 @@ class HardwareCollector:
         """Get CPU information on macOS using system_profiler."""
 
         cpu_info = {}
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             # Get CPU info from system_profiler
             result = subprocess.run(
                 ["system_profiler", "-json", "SPHardwareDataType"],  # nosec B603, B607
@@ -280,7 +280,7 @@ class HardwareCollector:
         """Get storage information on macOS using system_profiler and df."""
 
         storage_devices = []
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             # Get basic storage info from system_profiler
             result = subprocess.run(
                 ["system_profiler", "-json", "SPStorageDataType"],  # nosec B603, B607
@@ -453,7 +453,7 @@ class HardwareCollector:
         """Get physical APFS containers using diskutil list."""
 
         containers = []
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             result = subprocess.run(
                 ["diskutil", "list"],  # nosec B603, B607
                 capture_output=True,
@@ -582,7 +582,7 @@ class HardwareCollector:
         """Get network information on macOS using system_profiler and ifconfig."""
 
         network_interfaces = []
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             # Get basic network info from system_profiler
             result = subprocess.run(
                 ["system_profiler", "-json", "SPNetworkDataType"],  # nosec B603, B607
@@ -710,7 +710,7 @@ class HardwareCollector:
     def _get_linux_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on Linux using /proc/cpuinfo and lscpu."""
         cpu_info = {}
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             # First try lscpu for structured info
 
             result = subprocess.run(
@@ -902,12 +902,7 @@ class HardwareCollector:
         device_type = device.get("type", "").lower()
         mount_point = device.get("mountpoint", "") or device.get("mount_point", "")
 
-        # Physical device types
-        physical_types = ["disk", "rom"]
-        if device_type in physical_types and not is_child:
-            return True
-
-        # Logical device types
+        # Check for explicitly logical device types
         logical_types = [
             "part",
             "lvm",
@@ -918,38 +913,47 @@ class HardwareCollector:
             "raid5",
             "raid10",
         ]
-        if device_type in logical_types:
+
+        # Check for logical devices by type, name patterns, or mount patterns
+        is_logical = (
+            device_type in logical_types
+            or device_name.startswith(("loop", "ram", "tmpfs"))
+            or any(
+                mount_point.startswith(pattern)
+                for pattern in [
+                    "/dev",
+                    "/proc",
+                    "/sys",
+                    "/run",
+                    "/boot/efi",
+                    "/snap/",
+                    "/var/lib/snapd",
+                ]
+            )
+        )
+
+        if is_logical:
             return False
 
-        # Loop devices and temporary filesystems are logical
-        if device_name.startswith(("loop", "ram", "tmpfs")):
-            return False
-
-        # Virtual and special filesystems are logical
-        logical_mount_patterns = [
-            "/dev",
-            "/proc",
-            "/sys",
-            "/run",
-            "/boot/efi",
-            "/snap/",
-            "/var/lib/snapd",
-        ]
-
-        for pattern in logical_mount_patterns:
-            if mount_point.startswith(pattern):
-                return False
+        # Check for explicitly physical device types
+        physical_types = ["disk", "rom"]
+        is_physical_type = device_type in physical_types and not is_child
 
         # Root filesystem is considered physical for user clarity
-        if mount_point == "/":
-            return True
+        is_root_fs = mount_point == "/"
 
         # USB, SCSI, and SATA devices are typically physical
-        if any(keyword in device_name for keyword in ["usb", "sd", "hd", "nvme"]):
-            return not is_child  # The device itself is physical, partitions are logical
+        is_hardware_device = any(
+            keyword in device_name for keyword in ["usb", "sd", "hd", "nvme"]
+        )
 
-        # Default: top-level devices are physical, children are logical
-        return not is_child
+        # Return True if explicitly physical, root filesystem, or hardware device (but not child)
+        return (
+            is_physical_type
+            or is_root_fs
+            or (is_hardware_device and not is_child)
+            or not is_child  # Default: top-level devices are physical
+        )
 
     def _get_linux_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Linux using /sys/class/net."""
@@ -1471,7 +1475,7 @@ class HardwareCollector:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""
 
         network_interfaces = []
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             result = subprocess.run(
                 ["ifconfig", "-a"],  # nosec B603, B607
                 capture_output=True,

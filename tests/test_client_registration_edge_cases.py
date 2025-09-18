@@ -3,7 +3,7 @@ Test edge cases and error handling for client_registration.py.
 Focused on improving test coverage by targeting uncovered paths.
 """
 
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -123,14 +123,34 @@ class TestClientRegistrationEdgeCases:
             "use_https": False,
         }
 
-        mock_response = AsyncMock()
+        # Create a complete mock for aiohttp
+        mock_response = Mock()
         mock_response.status = 400
-        mock_response.text.return_value = "Bad Request"
 
-        mock_session = AsyncMock()
-        mock_session.post.return_value.__aenter__.return_value = mock_response
+        async def mock_text():
+            return "Bad Request"
 
-        with patch("aiohttp.ClientSession", return_value=mock_session):
+        mock_response.text = mock_text
+
+        # Mock the session context manager properly
+        class MockSessionContext:
+            async def __aenter__(self):
+                return mock_response
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        class MockSession:
+            def post(self, *args, **kwargs):
+                return MockSessionContext()
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        with patch("aiohttp.ClientSession", return_value=MockSession()):
             with patch.object(
                 self.client_registration,
                 "get_basic_registration_info",

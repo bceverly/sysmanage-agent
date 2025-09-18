@@ -8,6 +8,7 @@ import os
 import socket
 import ssl
 import sys
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 import aiohttp
@@ -15,7 +16,6 @@ import aiohttp
 from src.i18n import _
 from src.database.models import Priority, ScriptExecution
 from src.database.base import get_database_manager
-from datetime import datetime, timezone
 
 
 class UpdateChecker:
@@ -156,6 +156,59 @@ class MessageProcessor:
             )
             await self.agent.send_message(response)
 
+    def _get_command_handlers(self) -> Dict[str, Any]:
+        """Get mapping of command types to their handlers."""
+        return {
+            "execute_shell": self.agent.execute_shell_command,
+            "get_system_info": lambda params: self.agent.get_detailed_system_info(),
+            "install_package": self.agent.install_package,
+            "update_system": lambda params: self.agent.update_system(),
+            "restart_service": self.agent.restart_service,
+            "reboot_system": lambda params: self.agent.reboot_system(),
+            "shutdown_system": lambda params: self.agent.shutdown_system(),
+            "update_os_version": lambda params: self.agent.update_os_version(),
+            "update_hardware": lambda params: self.agent.update_hardware(),
+            "update_user_access": lambda params: self.agent.update_user_access(),
+            "check_updates": lambda params: self.agent.check_updates(),
+            "apply_updates": self.agent.apply_updates,
+            "ubuntu_pro_attach": self.agent.ubuntu_pro_attach,
+            "ubuntu_pro_detach": self.agent.ubuntu_pro_detach,
+            "ubuntu_pro_enable_service": self.agent.ubuntu_pro_enable_service,
+            "ubuntu_pro_disable_service": self.agent.ubuntu_pro_disable_service,
+            "execute_script": self._handle_execute_script,
+            "check_reboot_status": lambda params: self.agent.check_reboot_status(),
+            "collect_diagnostics": self.agent.collect_diagnostics,
+        }
+
+    async def _handle_execute_script(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle script execution with UUID tracking."""
+        # Check if this execution UUID has already been processed
+        execution_uuid = parameters.get("execution_uuid")
+        if execution_uuid and await self._check_execution_uuid_processed(
+            execution_uuid
+        ):
+            self.logger.warning(
+                _("Script execution UUID %s already processed, skipping duplicate"),
+                execution_uuid,
+            )
+            return {
+                "success": True,
+                "message": "Already processed",
+                "duplicate": True,
+            }
+
+        # Store the execution UUID before processing
+        if execution_uuid:
+            await self._store_execution_uuid(parameters)
+
+        result = await self.agent.execute_script(parameters)
+
+        # Send script execution result as a separate message for better tracking
+        await self._send_script_execution_result(parameters, result)
+        return result
+
     async def _dispatch_command(
         self, command_type: str, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -171,73 +224,18 @@ class MessageProcessor:
                 return await self._dispatch_command(
                     nested_command_type, nested_parameters
                 )
-            else:
-                return {
-                    "success": False,
-                    "error": _("Generic command missing nested command_type"),
-                }
 
-        if command_type == "execute_shell":
-            return await self.agent.execute_shell_command(parameters)
-        if command_type == "get_system_info":
-            return await self.agent.get_detailed_system_info()
-        if command_type == "install_package":
-            return await self.agent.install_package(parameters)
-        if command_type == "update_system":
-            return await self.agent.update_system()
-        if command_type == "restart_service":
-            return await self.agent.restart_service(parameters)
-        if command_type == "reboot_system":
-            return await self.agent.reboot_system()
-        if command_type == "shutdown_system":
-            return await self.agent.shutdown_system()
-        if command_type == "update_os_version":
-            return await self.agent.update_os_version()
-        if command_type == "update_hardware":
-            return await self.agent.update_hardware()
-        if command_type == "update_user_access":
-            return await self.agent.update_user_access()
-        if command_type == "check_updates":
-            return await self.agent.check_updates()
-        if command_type == "apply_updates":
-            return await self.agent.apply_updates(parameters)
-        if command_type == "ubuntu_pro_attach":
-            return await self.agent.ubuntu_pro_attach(parameters)
-        if command_type == "ubuntu_pro_detach":
-            return await self.agent.ubuntu_pro_detach(parameters)
-        if command_type == "ubuntu_pro_enable_service":
-            return await self.agent.ubuntu_pro_enable_service(parameters)
-        if command_type == "ubuntu_pro_disable_service":
-            return await self.agent.ubuntu_pro_disable_service(parameters)
-        if command_type == "execute_script":
-            # Check if this execution UUID has already been processed
-            execution_uuid = parameters.get("execution_uuid")
-            if execution_uuid and await self._check_execution_uuid_processed(
-                execution_uuid
-            ):
-                self.logger.warning(
-                    _("Script execution UUID %s already processed, skipping duplicate"),
-                    execution_uuid,
-                )
-                return {
-                    "success": True,
-                    "message": "Already processed",
-                    "duplicate": True,
-                }
+            return {
+                "success": False,
+                "error": _("Generic command missing nested command_type"),
+            }
 
-            # Store the execution UUID before processing
-            if execution_uuid:
-                await self._store_execution_uuid(parameters)
+        # Get command handlers
+        handlers = self._get_command_handlers()
+        handler = handlers.get(command_type)
 
-            result = await self.agent.execute_script(parameters)
-
-            # Send script execution result as a separate message for better tracking
-            await self._send_script_execution_result(parameters, result)
-            return result
-        if command_type == "check_reboot_status":
-            return await self.agent.check_reboot_status()
-        if command_type == "collect_diagnostics":
-            return await self.agent.collect_diagnostics(parameters)
+        if handler:
+            return await handler(parameters)
 
         return {
             "success": False,

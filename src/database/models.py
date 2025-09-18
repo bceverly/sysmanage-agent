@@ -4,10 +4,9 @@ Database models for SysManage Agent message queues.
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index
-from sqlalchemy.types import TypeDecorator, String as SQLString
+from sqlalchemy import Column, Integer, String, Text, DateTime, Index
+from sqlalchemy.types import TypeDecorator
 
 from .base import Base
 
@@ -37,7 +36,7 @@ class Priority(str, Enum):
     URGENT = "urgent"
 
 
-class UTCDateTime(TypeDecorator):
+class UTCDateTime(TypeDecorator):  # pylint: disable=too-many-ancestors
     """SQLAlchemy type to ensure datetime is stored as UTC."""
 
     impl = DateTime
@@ -61,6 +60,15 @@ class UTCDateTime(TypeDecorator):
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
         return value
+
+    def process_literal_param(self, value, dialect):
+        """Process literal parameter values."""
+        return str(value) if value is not None else None
+
+    @property
+    def python_type(self):
+        """Return the Python type object for this type."""
+        return datetime
 
 
 class MessageQueue(Base):

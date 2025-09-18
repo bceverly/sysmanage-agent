@@ -64,8 +64,6 @@ class ClientRegistration:
         script_exec_enabled = self.config.is_script_execution_enabled()
         basic_info["script_execution_enabled"] = script_exec_enabled
         # Debug logging
-        import logging
-
         logger = logging.getLogger(__name__)
         logger.info("=== AGENT REGISTRATION DEBUG ===")
         logger.info("Script execution enabled from config: %s", script_exec_enabled)
@@ -103,8 +101,6 @@ class ClientRegistration:
         script_exec_enabled = self.config.is_script_execution_enabled()
         system_info["script_execution_enabled"] = script_exec_enabled
         # Debug logging
-        import logging
-
         logger = logging.getLogger(__name__)
         logger.info("=== AGENT SYSTEM INFO DEBUG ===")
         logger.info("Script execution enabled from config: %s", script_exec_enabled)

@@ -134,7 +134,7 @@ class OSInfoCollector:
                     service_list = []
 
                     self.logger.debug(
-                        f"Processing {len(services)} services from pro status"
+                        "Processing %d services from pro status", len(services)
                     )
 
                     for i, service in enumerate(services):
@@ -146,7 +146,13 @@ class OSInfoCollector:
                         entitled = service.get("entitled", "no") == "yes"
 
                         self.logger.debug(
-                            f"Service {i+1}/{len(services)}: {service_name} - raw_status={raw_status}, available={available}, entitled={entitled}"
+                            "Service %d/%d: %s - raw_status=%s, available=%s, entitled=%s",
+                            i + 1,
+                            len(services),
+                            service_name,
+                            raw_status,
+                            available,
+                            entitled,
                         )
 
                         # Determine the normalized status
@@ -168,12 +174,12 @@ class OSInfoCollector:
                         service_list.append(service_info)
 
                         self.logger.debug(
-                            f"Added service: {service_name} with status={status}"
+                            "Added service: %s with status=%s", service_name, status
                         )
 
                     ubuntu_pro_info["services"] = service_list
                     self.logger.debug(
-                        f"Final service list contains {len(service_list)} services"
+                        "Final service list contains %d services", len(service_list)
                     )
 
                     self.logger.debug(

@@ -12,7 +12,7 @@ import yaml
 from src.i18n import _
 
 
-class ConfigManager:
+class ConfigManager:  # pylint: disable=too-many-public-methods
     """Manages configuration for the SysManage Agent."""
 
     def __init__(self, config_file: str = "sysmanage-agent.yaml"):

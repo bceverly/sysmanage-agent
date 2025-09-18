@@ -531,7 +531,7 @@ class UpdateDetector:
 
     def _detect_fwupd_updates(self):
         """Detect firmware updates from fwupd."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Detecting fwupd firmware updates"))
 
             # First, check if the daemon is running and we have permissions
@@ -569,9 +569,7 @@ class UpdateDetector:
 
             if result.returncode == 0 and result.stdout.strip():
                 try:
-                    import json as json_module
-
-                    updates_data = json_module.loads(result.stdout)
+                    updates_data = json.loads(result.stdout)
 
                     if isinstance(updates_data, dict) and "Devices" in updates_data:
                         devices = updates_data["Devices"]
@@ -637,7 +635,7 @@ class UpdateDetector:
 
                             self.available_updates.append(update)
 
-                except json_module.JSONDecodeError as e:
+                except json.JSONDecodeError as e:
                     logger.error(_("Failed to parse fwupd JSON output: %s"), str(e))
                 except Exception as e:
                     logger.error(_("Error processing fwupd updates: %s"), str(e))
@@ -765,7 +763,7 @@ class UpdateDetector:
 
     def _detect_macos_app_store_updates(self):
         """Detect Mac App Store updates."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Detecting Mac App Store updates"))
 
             result = subprocess.run(  # nosec B603, B607
@@ -885,7 +883,7 @@ class UpdateDetector:
 
     def _detect_winget_updates(self):
         """Detect updates from Windows Package Manager."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Detecting winget updates"))
 
             result = subprocess.run(  # nosec B603, B607
@@ -1865,6 +1863,7 @@ class UpdateDetector:
                 capture_output=True,
                 text=True,
                 timeout=120,
+                check=False,
                 creationflags=(
                     subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
                 ),
@@ -1958,6 +1957,7 @@ class UpdateDetector:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -1965,7 +1965,6 @@ class UpdateDetector:
 
                 # Parse the output to extract update information
                 lines = output.split("\n")
-                current_update = None
 
                 for line in lines:
                     line = line.strip()
@@ -2044,6 +2043,7 @@ class UpdateDetector:
                 ["syspatch", "-c"],  # -c for check only
                 capture_output=True,
                 text=True,
+                check=False,
                 timeout=60,
             )
 
@@ -2129,6 +2129,7 @@ class UpdateDetector:
             result = subprocess.run(  # nosec B603, B607
                 ["apt", "list", "--upgradable"],
                 capture_output=True,
+                check=False,
                 text=True,
                 timeout=30,
             )
@@ -2192,13 +2193,14 @@ class UpdateDetector:
 
             result = subprocess.run(  # nosec B603, B607
                 [cmd, "check-update", "--security"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=60,
             )
 
             # yum/dnf returns 100 when updates are available
-            if result.returncode == 100 or result.returncode == 0:
+            if result.returncode in (100, 0):
                 lines = result.stdout.split("\n")
 
                 for line in lines:
@@ -2245,6 +2247,7 @@ class UpdateDetector:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -2293,6 +2296,7 @@ class UpdateDetector:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
             if result.returncode == 0:

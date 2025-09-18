@@ -171,10 +171,19 @@ class TestDatabaseInitAdditional:
 
             # Setup path mocking
             mock_abspath.return_value = "/path/to/src/database/init.py"
+
+            # Provide enough dirname return values for all expected calls
             mock_dirname.side_effect = [
-                "/path/to/src/database",
-                "/path/to/src",
-                "/path/to",
+                "/path/to/src/database",  # First call from run_alembic_migration
+                "/path/to/src",  # Second call from run_alembic_migration
+                "/path/to",  # Third call from run_alembic_migration
+                "/home/bceverly/dev/sysmanage-agent/src/i18n",  # From i18n module
+                "/home/bceverly/dev/sysmanage-agent/src",  # Additional fallback
+                "/home/bceverly/dev/sysmanage-agent",  # Additional fallback
+                "/home/bceverly/dev",  # Additional fallback
+                "/home/bceverly",  # Additional fallback
+                "/home",  # Additional fallback
+                "/",  # Root fallback
             ]
 
             # Setup subprocess mock for success
@@ -193,6 +202,7 @@ class TestDatabaseInitAdditional:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=False,
             )
 
     @patch("src.database.init.run_alembic_migration")

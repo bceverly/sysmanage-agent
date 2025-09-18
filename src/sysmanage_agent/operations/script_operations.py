@@ -136,6 +136,121 @@ class ScriptOperations:
 
         return script_path
 
+    def _validate_script_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate script execution parameters."""
+        # Check if script execution is enabled
+        if not self.agent.config.is_script_execution_enabled():
+            return {
+                "success": False,
+                "error": _("Script execution is disabled in agent configuration"),
+            }
+
+        # Extract and validate script content
+        script_content = parameters.get("script_content")
+        if not script_content:
+            return {"success": False, "error": _("No script content provided")}
+
+        # Validate working directory
+        working_directory = parameters.get("working_directory")
+        if working_directory:
+            if not os.path.exists(working_directory):
+                return {
+                    "success": False,
+                    "error": _("Working directory does not exist: %s")
+                    % working_directory,
+                }
+            if not os.path.isdir(working_directory):
+                return {
+                    "success": False,
+                    "error": _("Working directory is not a directory: %s")
+                    % working_directory,
+                }
+
+        return {"success": True}
+
+    async def _execute_script_file(
+        self, script_content: str, shell_path: str, timeout: int, working_directory: str
+    ) -> Dict[str, Any]:
+        """Execute script file and return results."""
+        # Create script file
+        script_path = self._create_script_file(script_content, shell_path)
+
+        try:
+            # Prepare execution command
+            if platform.system().lower() == "windows":
+                if "powershell" in shell_path.lower():
+                    cmd = [
+                        shell_path,
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        script_path,
+                    ]
+                else:
+                    cmd = [shell_path, "/c", script_path]
+            else:
+                cmd = [shell_path, script_path]
+
+            self.logger.info(_("Executing script with shell: %s"), shell_path)
+            self.logger.debug(_("Script content preview: %s..."), script_content[:100])
+
+            # Execute script
+            start_time = time.time()
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=working_directory,
+            )
+
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=timeout
+                )
+                execution_time = time.time() - start_time
+
+                # Decode output
+                stdout_text = stdout.decode("utf-8", errors="replace")
+                stderr_text = stderr.decode("utf-8", errors="replace")
+
+                self.logger.info(
+                    _("Script execution completed in %.2f seconds with exit code %d"),
+                    execution_time,
+                    process.returncode,
+                )
+
+                return {
+                    "success": True,
+                    "exit_code": process.returncode,
+                    "stdout": stdout_text,
+                    "stderr": stderr_text,
+                    "execution_time": execution_time,
+                    "shell_used": shell_path,
+                }
+
+            except asyncio.TimeoutError:
+                # Kill the process if it times out
+                try:
+                    process.kill()
+                    await process.wait()
+                except ProcessLookupError:
+                    pass  # Process already terminated
+
+                return {
+                    "success": False,
+                    "error": _("Script execution timed out after %d seconds") % timeout,
+                    "timeout": True,
+                }
+
+        finally:
+            # Clean up script file
+            try:
+                os.unlink(script_path)
+            except OSError as e:
+                self.logger.warning(
+                    _("Failed to delete script file %s: %s"), script_path, e
+                )
+
     async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute a script with proper security controls.
@@ -151,12 +266,10 @@ class ScriptOperations:
             Execution result with output, error, and status information
         """
         try:
-            # Check if script execution is enabled
-            if not self.agent.config.is_script_execution_enabled():
-                return {
-                    "success": False,
-                    "error": _("Script execution is disabled in agent configuration"),
-                }
+            # Validate parameters
+            validation_result = self._validate_script_parameters(parameters)
+            if not validation_result["success"]:
+                return validation_result
 
             # Extract parameters
             script_content = parameters.get("script_content")
@@ -165,9 +278,6 @@ class ScriptOperations:
                 "timeout", self.agent.config.get_script_execution_timeout()
             )
             working_directory = parameters.get("working_directory")
-
-            if not script_content:
-                return {"success": False, "error": _("No script content provided")}
 
             # Validate timeout
             max_timeout = self.agent.config.get_max_script_timeout()
@@ -180,104 +290,10 @@ class ScriptOperations:
             # Detect shell
             shell_path = self._detect_shell(shell_type)
 
-            # Validate working directory
-            if working_directory:
-                if not os.path.exists(working_directory):
-                    return {
-                        "success": False,
-                        "error": _("Working directory does not exist: %s")
-                        % working_directory,
-                    }
-                if not os.path.isdir(working_directory):
-                    return {
-                        "success": False,
-                        "error": _("Working directory is not a directory: %s")
-                        % working_directory,
-                    }
-
-            # Create script file
-            script_path = self._create_script_file(script_content, shell_path)
-
-            try:
-                # Prepare execution command
-                if platform.system().lower() == "windows":
-                    if "powershell" in shell_path.lower():
-                        cmd = [
-                            shell_path,
-                            "-ExecutionPolicy",
-                            "Bypass",
-                            "-File",
-                            script_path,
-                        ]
-                    else:
-                        cmd = [shell_path, "/c", script_path]
-                else:
-                    cmd = [shell_path, script_path]
-
-                self.logger.info(_("Executing script with shell: %s"), shell_path)
-                self.logger.debug(
-                    _("Script content preview: %s..."), script_content[:100]
-                )
-
-                # Execute script
-                start_time = time.time()
-                process = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=working_directory,
-                )
-
-                try:
-                    stdout, stderr = await asyncio.wait_for(
-                        process.communicate(), timeout=timeout
-                    )
-                    execution_time = time.time() - start_time
-
-                    # Decode output
-                    stdout_text = stdout.decode("utf-8", errors="replace")
-                    stderr_text = stderr.decode("utf-8", errors="replace")
-
-                    self.logger.info(
-                        _(
-                            "Script execution completed in %.2f seconds with exit code %d"
-                        ),
-                        execution_time,
-                        process.returncode,
-                    )
-
-                    return {
-                        "success": True,
-                        "exit_code": process.returncode,
-                        "stdout": stdout_text,
-                        "stderr": stderr_text,
-                        "execution_time": execution_time,
-                        "shell_used": shell_path,
-                    }
-
-                except asyncio.TimeoutError:
-                    # Kill the process if it times out
-                    try:
-                        process.kill()
-                        await process.wait()
-                    except ProcessLookupError:
-                        pass  # Process already terminated
-
-                    return {
-                        "success": False,
-                        "error": _("Script execution timed out after %d seconds")
-                        % timeout,
-                        "timeout": True,
-                    }
-
-            finally:
-                # Clean up script file
-                try:
-                    os.unlink(script_path)
-                except OSError as e:
-                    self.logger.warning(
-                        _("Failed to delete script file %s: %s"), script_path, e
-                    )
+            # Execute the script
+            return await self._execute_script_file(
+                script_content, shell_path, timeout, working_directory
+            )
 
         except Exception as e:
             self.logger.error(_("Script execution failed: %s"), e)

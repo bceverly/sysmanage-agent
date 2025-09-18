@@ -151,14 +151,14 @@ class SoftwareInventoryCollector:
                     0,
                     1,
                 ]  # Accept both success and usage error
-            else:
-                subprocess.run(
-                    [command, "--version"],
-                    capture_output=True,
-                    timeout=5,
-                    check=False,  # nosec B603, B607
-                )
-                return True
+
+            subprocess.run(
+                [command, "--version"],
+                capture_output=True,
+                timeout=5,
+                check=False,  # nosec B603, B607
+            )
+            return True
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
 
@@ -232,7 +232,7 @@ class SoftwareInventoryCollector:
 
     def _collect_apt_packages(self):
         """Collect packages from apt/dpkg (Debian/Ubuntu)."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Collecting apt packages"))
 
             # Use dpkg-query for detailed package information
@@ -464,7 +464,7 @@ class SoftwareInventoryCollector:
 
     def _collect_macos_applications(self):
         """Collect applications from macOS Applications folder."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Collecting macOS Applications"))
 
             apps_dirs = ["/Applications", os.path.expanduser("~/Applications")]
@@ -636,7 +636,7 @@ class SoftwareInventoryCollector:
 
     def _collect_macos_app_store(self):
         """Collect Mac App Store applications."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Collecting Mac App Store applications"))
 
             result = subprocess.run(
@@ -716,7 +716,7 @@ class SoftwareInventoryCollector:
 
     def _collect_winget_packages(self):
         """Collect packages from Windows Package Manager."""
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             logger.debug(_("Collecting winget packages"))
 
             result = subprocess.run(

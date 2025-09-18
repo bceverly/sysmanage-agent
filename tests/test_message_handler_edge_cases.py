@@ -290,7 +290,8 @@ class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-meth
     @pytest.mark.asyncio
     async def test_on_connection_lost_task_already_done(self):
         """Test connection lost when processing task is already done."""
-        self.handler.processing_task = AsyncMock()
+        # Fix: Use Mock instead of AsyncMock for task object
+        self.handler.processing_task = Mock()
         self.handler.processing_task.done.return_value = True
 
         await self.handler.on_connection_lost()

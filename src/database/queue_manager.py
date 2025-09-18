@@ -4,19 +4,17 @@ Provides persistent message queuing with retry logic and priority handling.
 """
 
 import json
-import logging
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any, Union
 from contextlib import contextmanager
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, asc
+from sqlalchemy import and_, or_, asc
 
-from .base import get_database_manager
-from .models import MessageQueue, QueueMetrics, QueueStatus, QueueDirection, Priority
 from src.i18n import _
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
+from .base import get_database_manager
+from .models import MessageQueue, QueueStatus, QueueDirection, Priority
 
 logger = get_logger(__name__)
 
@@ -57,6 +55,7 @@ class MessageQueueManager:
         message_type: str,
         message_data: Dict[str, Any],
         direction: Union[str, QueueDirection],
+        *,
         priority: Union[str, Priority] = Priority.NORMAL,
         message_id: str = None,
         scheduled_at: datetime = None,

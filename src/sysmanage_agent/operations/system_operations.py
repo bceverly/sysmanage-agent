@@ -171,16 +171,16 @@ class SystemOperations:
                     "result": _("Ubuntu Pro subscription attached successfully"),
                     "output": result["result"]["stdout"],
                 }
-            else:
-                self.logger.error(
-                    _("Failed to attach Ubuntu Pro: %s"), result["result"]["stderr"]
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to attach Ubuntu Pro: %s")
-                    % result["result"]["stderr"],
-                    "output": result["result"]["stderr"],
-                }
+
+            self.logger.error(
+                _("Failed to attach Ubuntu Pro: %s"), result["result"]["stderr"]
+            )
+            return {
+                "success": False,
+                "error": _("Failed to attach Ubuntu Pro: %s")
+                % result["result"]["stderr"],
+                "output": result["result"]["stderr"],
+            }
         except Exception as e:
             self.logger.error(_("Error attaching Ubuntu Pro: %s"), e)
             return {"success": False, "error": str(e)}
@@ -205,16 +205,16 @@ class SystemOperations:
                     "result": _("Ubuntu Pro subscription detached successfully"),
                     "output": result["result"]["stdout"],
                 }
-            else:
-                self.logger.error(
-                    _("Failed to detach Ubuntu Pro: %s"), result["result"]["stderr"]
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to detach Ubuntu Pro: %s")
-                    % result["result"]["stderr"],
-                    "output": result["result"]["stderr"],
-                }
+
+            self.logger.error(
+                _("Failed to detach Ubuntu Pro: %s"), result["result"]["stderr"]
+            )
+            return {
+                "success": False,
+                "error": _("Failed to detach Ubuntu Pro: %s")
+                % result["result"]["stderr"],
+                "output": result["result"]["stderr"],
+            }
         except Exception as e:
             self.logger.error(_("Error detaching Ubuntu Pro: %s"), e)
             return {"success": False, "error": str(e)}
@@ -249,18 +249,18 @@ class SystemOperations:
                     % service_name,
                     "output": result["result"]["stdout"],
                 }
-            else:
-                self.logger.error(
-                    _("Failed to enable Ubuntu Pro service %s: %s"),
-                    service_name,
-                    result["result"]["stderr"],
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to enable Ubuntu Pro service %s: %s")
-                    % (service_name, result["result"]["stderr"]),
-                    "output": result["result"]["stderr"],
-                }
+
+            self.logger.error(
+                _("Failed to enable Ubuntu Pro service %s: %s"),
+                service_name,
+                result["result"]["stderr"],
+            )
+            return {
+                "success": False,
+                "error": _("Failed to enable Ubuntu Pro service %s: %s")
+                % (service_name, result["result"]["stderr"]),
+                "output": result["result"]["stderr"],
+            }
         except Exception as e:
             self.logger.error(
                 _("Error enabling Ubuntu Pro service %s: %s"), service_name, e
@@ -297,18 +297,18 @@ class SystemOperations:
                     % service_name,
                     "output": result["result"]["stdout"],
                 }
-            else:
-                self.logger.error(
-                    _("Failed to disable Ubuntu Pro service %s: %s"),
-                    service_name,
-                    result["result"]["stderr"],
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to disable Ubuntu Pro service %s: %s")
-                    % (service_name, result["result"]["stderr"]),
-                    "output": result["result"]["stderr"],
-                }
+
+            self.logger.error(
+                _("Failed to disable Ubuntu Pro service %s: %s"),
+                service_name,
+                result["result"]["stderr"],
+            )
+            return {
+                "success": False,
+                "error": _("Failed to disable Ubuntu Pro service %s: %s")
+                % (service_name, result["result"]["stderr"]),
+                "output": result["result"]["stderr"],
+            }
         except Exception as e:
             self.logger.error(
                 _("Error disabling Ubuntu Pro service %s: %s"), service_name, e
