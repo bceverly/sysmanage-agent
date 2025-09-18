@@ -174,6 +174,9 @@ class UpdateDetector:
         # First detect OS-level system updates
         self._detect_linux_system_updates()
 
+        # Detect OS version upgrades
+        self._detect_linux_version_upgrades()
+
         # Then detect package manager updates
         managers = self._detect_package_managers()
 
@@ -199,6 +202,9 @@ class UpdateDetector:
         # First detect OS-level system updates
         self._detect_macos_system_updates()
 
+        # Detect OS version upgrades
+        self._detect_macos_version_upgrades()
+
         # Mac App Store updates
         self._detect_macos_app_store_updates()
 
@@ -213,6 +219,9 @@ class UpdateDetector:
         """Detect updates from Windows sources."""
         # First detect OS-level system updates
         self._detect_windows_system_updates()
+
+        # Detect OS version upgrades
+        self._detect_windows_version_upgrades()
 
         # Microsoft Store updates
         self._detect_microsoft_store_updates()
@@ -231,6 +240,9 @@ class UpdateDetector:
         # First detect OS-level system updates (OpenBSD syspatch)
         if platform.system().lower() == "openbsd":
             self._detect_openbsd_system_updates()
+
+        # Detect OS version upgrades
+        self._detect_bsd_version_upgrades()
 
         # Then detect package manager updates
         managers = self._detect_package_managers()
@@ -1305,6 +1317,21 @@ class UpdateDetector:
                 self._apply_pkg_updates(packages, results)
             elif manager == "fwupd":
                 self._apply_fwupd_updates(packages, results)
+            # OS Version Upgrade Package Managers
+            elif manager == "ubuntu-release":
+                self._apply_ubuntu_release_updates(packages, results)
+            elif manager == "fedora-release":
+                self._apply_fedora_release_updates(packages, results)
+            elif manager == "opensuse-release":
+                self._apply_opensuse_release_updates(packages, results)
+            elif manager == "macos-upgrade":
+                self._apply_macos_upgrade_updates(packages, results)
+            elif manager == "windows-upgrade":
+                self._apply_windows_upgrade_updates(packages, results)
+            elif manager == "openbsd-upgrade":
+                self._apply_openbsd_upgrade_updates(packages, results)
+            elif manager == "freebsd-upgrade":
+                self._apply_freebsd_upgrade_updates(packages, results)
             # Add more package manager implementations as needed
 
         # Check if reboot is required after updates
@@ -1801,6 +1828,564 @@ class UpdateDetector:
                 )
 
         return results
+
+    # ===== OS VERSION UPGRADE APPLICATION METHODS =====
+
+    def _apply_ubuntu_release_updates(self, packages: List[Dict], results: Dict):
+        """Apply Ubuntu release upgrades using do-release-upgrade."""
+        for package in packages:
+            package_name = package.get("package_name")
+            logger.info(_("Applying Ubuntu release upgrade: %s"), package_name)
+
+            try:
+                # First check if do-release-upgrade is available
+                check_cmd = ["which", "do-release-upgrade"]
+                result = subprocess.run(
+                    check_cmd, capture_output=True, timeout=10, check=False
+                )
+                if result.returncode != 0:
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "ubuntu-release",
+                            "error": _("do-release-upgrade not available"),
+                        }
+                    )
+                    continue
+
+                # Run the upgrade non-interactively
+                upgrade_cmd = [
+                    "do-release-upgrade",
+                    "-f",
+                    "DistUpgradeViewNonInteractive",
+                ]
+                logger.info(
+                    _("Running Ubuntu release upgrade command: %s"),
+                    " ".join(upgrade_cmd),
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=3600,  # 1 hour timeout for OS upgrades
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully applied Ubuntu release upgrade: %s"),
+                        package_name,
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": package.get("available_version"),
+                            "package_manager": "ubuntu-release",
+                        }
+                    )
+                    results["requires_reboot"] = True
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("Ubuntu release upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "ubuntu-release",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "ubuntu-release",
+                        "error": _("Ubuntu release upgrade timed out after 1 hour"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "ubuntu-release",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_fedora_release_updates(self, packages: List[Dict], results: Dict):
+        """Apply Fedora release upgrades using dnf system-upgrade."""
+        for package in packages:
+            package_name = package.get("package_name")
+            target_version = package.get("available_version")
+            logger.info(
+                _("Applying Fedora release upgrade: %s to %s"),
+                package_name,
+                target_version,
+            )
+
+            try:
+                # Download the upgrade
+                download_cmd = [
+                    "dnf",
+                    "system-upgrade",
+                    "download",
+                    "--refresh",
+                    f"--releasever={target_version}",
+                    "--allowerasing",
+                    "-y",
+                ]
+                logger.info(
+                    _("Downloading Fedora release upgrade: %s"), " ".join(download_cmd)
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    download_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=1800,  # 30 minutes for download
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    # Apply the upgrade (this will schedule a reboot)
+                    apply_cmd = ["dnf", "system-upgrade", "reboot"]
+                    logger.info(
+                        _("Applying Fedora release upgrade: %s"), " ".join(apply_cmd)
+                    )
+
+                    apply_result = subprocess.run(  # nosec B603, B607
+                        apply_cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                        check=False,
+                    )
+
+                    if apply_result.returncode == 0:
+                        logger.info(
+                            _("Successfully scheduled Fedora release upgrade: %s"),
+                            package_name,
+                        )
+                        results["updated_packages"].append(
+                            {
+                                "package_name": package_name,
+                                "old_version": package.get("current_version"),
+                                "new_version": target_version,
+                                "package_manager": "fedora-release",
+                            }
+                        )
+                        results["requires_reboot"] = True
+                    else:
+                        error_msg = (
+                            apply_result.stderr.strip()
+                            if apply_result.stderr
+                            else _("Fedora upgrade apply failed")
+                        )
+                        results["failed_packages"].append(
+                            {
+                                "package_name": package_name,
+                                "package_manager": "fedora-release",
+                                "error": error_msg,
+                            }
+                        )
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("Fedora upgrade download failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "fedora-release",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "fedora-release",
+                        "error": _("Fedora release upgrade timed out"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "fedora-release",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_opensuse_release_updates(self, packages: List[Dict], results: Dict):
+        """Apply openSUSE release upgrades using zypper dist-upgrade."""
+        for package in packages:
+            package_name = package.get("package_name")
+            logger.info(_("Applying openSUSE release upgrade: %s"), package_name)
+
+            try:
+                upgrade_cmd = [
+                    "zypper",
+                    "dist-upgrade",
+                    "--auto-agree-with-licenses",
+                    "--no-confirm",
+                ]
+                logger.info(
+                    _("Running openSUSE upgrade command: %s"), " ".join(upgrade_cmd)
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=3600,  # 1 hour timeout
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully applied openSUSE release upgrade: %s"),
+                        package_name,
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": package.get("available_version"),
+                            "package_manager": "opensuse-release",
+                        }
+                    )
+                    results["requires_reboot"] = True
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("openSUSE release upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "opensuse-release",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "opensuse-release",
+                        "error": _("openSUSE release upgrade timed out after 1 hour"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "opensuse-release",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_macos_upgrade_updates(self, packages: List[Dict], results: Dict):
+        """Apply macOS version upgrades using softwareupdate."""
+        for package in packages:
+            package_name = package.get("package_name")
+            available_version = package.get("available_version")
+            logger.info(_("Applying macOS upgrade: %s"), available_version)
+
+            try:
+                # Install the macOS upgrade
+                upgrade_cmd = [
+                    "softwareupdate",
+                    "--install",
+                    available_version,
+                    "--restart",
+                ]
+                logger.info(
+                    _("Running macOS upgrade command: %s"), " ".join(upgrade_cmd)
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=7200,  # 2 hours timeout for macOS upgrades
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully applied macOS upgrade: %s"), available_version
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": available_version,
+                            "package_manager": "macos-upgrade",
+                        }
+                    )
+                    results["requires_reboot"] = True
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("macOS upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "macos-upgrade",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "macos-upgrade",
+                        "error": _("macOS upgrade timed out after 2 hours"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "macos-upgrade",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_windows_upgrade_updates(self, packages: List[Dict], results: Dict):
+        """Apply Windows version upgrades using PowerShell."""
+        for package in packages:
+            package_name = package.get("package_name")
+            available_version = package.get("available_version")
+            logger.info(_("Applying Windows upgrade: %s"), available_version)
+
+            try:
+                # PowerShell command to install Windows feature updates
+                powershell_cmd = f"""
+                Install-WindowsUpdate -Title "{available_version}" -AcceptAll -AutoReboot
+                """
+
+                upgrade_cmd = ["powershell", "-Command", powershell_cmd]
+                logger.info(_("Running Windows upgrade command"))
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=7200,  # 2 hours timeout for Windows upgrades
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully applied Windows upgrade: %s"), available_version
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": available_version,
+                            "package_manager": "windows-upgrade",
+                        }
+                    )
+                    results["requires_reboot"] = True
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("Windows upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "windows-upgrade",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "windows-upgrade",
+                        "error": _("Windows upgrade timed out after 2 hours"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "windows-upgrade",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_openbsd_upgrade_updates(self, packages: List[Dict], results: Dict):
+        """Apply OpenBSD version upgrades using sysupgrade."""
+        for package in packages:
+            package_name = package.get("package_name")
+            logger.info(_("Applying OpenBSD upgrade: %s"), package_name)
+
+            try:
+                # Run sysupgrade
+                upgrade_cmd = ["sysupgrade"]
+                logger.info(
+                    _("Running OpenBSD sysupgrade command: %s"), " ".join(upgrade_cmd)
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=1800,  # 30 minutes timeout
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    logger.info(
+                        _("Successfully applied OpenBSD upgrade: %s"), package_name
+                    )
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "old_version": package.get("current_version"),
+                            "new_version": package.get("available_version"),
+                            "package_manager": "openbsd-upgrade",
+                        }
+                    )
+                    results["requires_reboot"] = True
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("OpenBSD upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "openbsd-upgrade",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "openbsd-upgrade",
+                        "error": _("OpenBSD upgrade timed out after 30 minutes"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "openbsd-upgrade",
+                        "error": str(e),
+                    }
+                )
+
+    def _apply_freebsd_upgrade_updates(self, packages: List[Dict], results: Dict):
+        """Apply FreeBSD version upgrades using freebsd-update."""
+        for package in packages:
+            package_name = package.get("package_name")
+            logger.info(_("Applying FreeBSD upgrade: %s"), package_name)
+
+            try:
+                # Run freebsd-update upgrade and install
+                upgrade_cmd = ["freebsd-update", "upgrade", "-r", "RELEASE"]
+                logger.info(
+                    _("Running FreeBSD upgrade command: %s"), " ".join(upgrade_cmd)
+                )
+
+                result = subprocess.run(  # nosec B603, B607
+                    upgrade_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=1800,  # 30 minutes for upgrade
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    # Install the upgrade
+                    install_cmd = ["freebsd-update", "install"]
+                    install_result = subprocess.run(  # nosec B603, B607
+                        install_cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=1800,  # 30 minutes for install
+                        check=False,
+                    )
+
+                    if install_result.returncode == 0:
+                        logger.info(
+                            _("Successfully applied FreeBSD upgrade: %s"), package_name
+                        )
+                        results["updated_packages"].append(
+                            {
+                                "package_name": package_name,
+                                "old_version": package.get("current_version"),
+                                "new_version": package.get("available_version"),
+                                "package_manager": "freebsd-upgrade",
+                            }
+                        )
+                        results["requires_reboot"] = True
+                    else:
+                        error_msg = (
+                            install_result.stderr.strip()
+                            if install_result.stderr
+                            else _("FreeBSD upgrade install failed")
+                        )
+                        results["failed_packages"].append(
+                            {
+                                "package_name": package_name,
+                                "package_manager": "freebsd-upgrade",
+                                "error": error_msg,
+                            }
+                        )
+                else:
+                    error_msg = (
+                        result.stderr.strip()
+                        if result.stderr
+                        else _("FreeBSD upgrade failed")
+                    )
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package_name,
+                            "package_manager": "freebsd-upgrade",
+                            "error": error_msg,
+                        }
+                    )
+
+            except subprocess.TimeoutExpired:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "freebsd-upgrade",
+                        "error": _("FreeBSD upgrade timed out"),
+                    }
+                )
+            except Exception as e:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package_name,
+                        "package_manager": "freebsd-upgrade",
+                        "error": str(e),
+                    }
+                )
 
     # OS-Level System Update Detection Methods
 
@@ -2343,3 +2928,447 @@ class UpdateDetector:
             return "0.0 MB"
         size_mb = size_bytes / 1024 / 1024
         return f"{size_mb:.1f} MB"
+
+    # ===== OS VERSION UPGRADE DETECTION =====
+
+    def _detect_os_version_upgrades(self):
+        """
+        Detect available OS version upgrades across all platforms.
+        All OS upgrades are classified as security updates.
+        """
+        logger.debug(_("Detecting OS version upgrades"))
+
+        if self.platform == "linux":
+            self._detect_linux_version_upgrades()
+        elif self.platform == "darwin":
+            self._detect_macos_version_upgrades()
+        elif self.platform == "windows":
+            self._detect_windows_version_upgrades()
+        elif self.platform in ["freebsd", "openbsd", "netbsd"]:
+            self._detect_bsd_version_upgrades()
+
+    def _detect_linux_version_upgrades(self):
+        """Detect Linux distribution version upgrades."""
+        try:
+            # Check for Ubuntu release upgrades
+            if os.path.exists("/etc/debian_version"):
+                self._detect_ubuntu_release_upgrades()
+
+            # Check for Fedora version upgrades
+            elif os.path.exists("/etc/fedora-release"):
+                self._detect_fedora_version_upgrades()
+
+            # Check for openSUSE version upgrades
+            elif os.path.exists("/etc/SUSE-brand"):
+                self._detect_opensuse_version_upgrades()
+
+            # Check for Arch Linux upgrades (rolling release)
+            elif os.path.exists("/etc/arch-release"):
+                # Arch is rolling release, no major version upgrades
+                pass
+
+        except Exception as e:
+            logger.error(_("Failed to detect Linux version upgrades: %s"), str(e))
+
+    def _detect_ubuntu_release_upgrades(self):
+        """Detect Ubuntu release upgrades using do-release-upgrade."""
+        try:
+            # Check if do-release-upgrade is available
+            result = subprocess.run(
+                ["which", "do-release-upgrade"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode != 0:
+                return
+
+            # Check for available release upgrades
+            result = subprocess.run(
+                ["do-release-upgrade", "--check-dist-upgrade-only", "--quiet"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                # Parse current version
+                with open("/etc/lsb-release", "r", encoding="utf-8") as f:
+                    content = f.read()
+                    current_version = None
+                    for line in content.split("\n"):
+                        if line.startswith("DISTRIB_RELEASE="):
+                            current_version = line.split("=")[1].strip('"')
+                            break
+
+                if current_version:
+                    # Extract available version from output
+                    # do-release-upgrade output format varies, so we'll create a generic upgrade
+                    available_version = "Next LTS"  # Generic for now
+
+                    self.available_updates.append(
+                        {
+                            "package_name": "ubuntu-release",
+                            "current_version": current_version,
+                            "available_version": available_version,
+                            "package_manager": "ubuntu-release",
+                            "is_security_update": True,  # Always security for OS upgrades
+                            "is_system_update": True,
+                            "update_size": 2000000000,  # ~2GB estimate
+                            "repository": "ubuntu-release",
+                            "requires_reboot": True,
+                        }
+                    )
+
+        except Exception as e:
+            logger.error(_("Failed to detect Ubuntu release upgrades: %s"), str(e))
+
+    def _detect_fedora_version_upgrades(self):
+        """Detect Fedora version upgrades using dnf system-upgrade."""
+        try:
+            # Check if dnf system-upgrade plugin is available
+            result = subprocess.run(
+                ["dnf", "system-upgrade", "--help"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode != 0:
+                return
+
+            # Get current Fedora version
+            with open("/etc/fedora-release", "r", encoding="utf-8") as f:
+                content = f.read()
+                match = re.search(r"Fedora (\d+)", content)
+                if not match:
+                    return
+                current_version = match.group(1)
+
+            # Check for newer Fedora releases (simple check for next version)
+            next_version = str(int(current_version) + 1)
+
+            # Check if the next version exists (this is a simplified check)
+            result = subprocess.run(
+                [
+                    "dnf",
+                    "system-upgrade",
+                    "download",
+                    "--refresh",
+                    "--releasever=" + next_version,
+                    "--assumeno",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            # If the command doesn't immediately fail, there might be an upgrade available
+            if (
+                "No such file or directory" not in result.stderr
+                and "Not found" not in result.stderr
+            ):
+                self.available_updates.append(
+                    {
+                        "package_name": "fedora-release",
+                        "current_version": current_version,
+                        "available_version": next_version,
+                        "package_manager": "fedora-release",
+                        "is_security_update": True,  # Always security for OS upgrades
+                        "is_system_update": True,
+                        "update_size": 1500000000,  # ~1.5GB estimate
+                        "repository": "fedora-release",
+                        "requires_reboot": True,
+                    }
+                )
+
+        except Exception as e:
+            logger.error(_("Failed to detect Fedora version upgrades: %s"), str(e))
+
+    def _detect_opensuse_version_upgrades(self):
+        """Detect openSUSE version upgrades."""
+        try:
+            # Get current openSUSE version
+            result = subprocess.run(
+                ["zypper", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode != 0:
+                return
+
+            # Check for distribution upgrades
+            result = subprocess.run(
+                ["zypper", "dist-upgrade", "--dry-run", "--no-confirm"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if (
+                "upgrade" in result.stdout.lower()
+                and "packages" in result.stdout.lower()
+            ):
+                # Parse version info (simplified)
+                current_version = "Current"
+                available_version = "Latest"
+
+                self.available_updates.append(
+                    {
+                        "package_name": "opensuse-release",
+                        "current_version": current_version,
+                        "available_version": available_version,
+                        "package_manager": "opensuse-release",
+                        "is_security_update": True,  # Always security for OS upgrades
+                        "is_system_update": True,
+                        "update_size": 1000000000,  # ~1GB estimate
+                        "repository": "opensuse-release",
+                        "requires_reboot": True,
+                    }
+                )
+
+        except Exception as e:
+            logger.error(_("Failed to detect openSUSE version upgrades: %s"), str(e))
+
+    def _detect_macos_version_upgrades(self):
+        """Detect macOS version upgrades using softwareupdate."""
+        try:
+            # Check for major macOS upgrades
+            result = subprocess.run(
+                ["softwareupdate", "--list", "--include-config-data"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.split("\n")
+                for line in lines:
+                    # Look for macOS installer packages
+                    if "macOS" in line and ("Installer" in line or "Upgrade" in line):
+                        # Parse the line to extract version info
+                        # Format is usually: "* macOS Something-Version"
+                        parts = line.strip().split()
+                        if len(parts) >= 2:
+                            package_name = "macos-upgrade"
+                            available_version = " ".join(
+                                parts[1:]
+                            )  # Everything after the *
+
+                            # Get current macOS version
+                            current_result = subprocess.run(
+                                ["sw_vers", "-productVersion"],
+                                capture_output=True,
+                                text=True,
+                                timeout=10,
+                                check=False,
+                            )
+                            current_version = (
+                                current_result.stdout.strip()
+                                if current_result.returncode == 0
+                                else "Unknown"
+                            )
+
+                            self.available_updates.append(
+                                {
+                                    "package_name": package_name,
+                                    "current_version": current_version,
+                                    "available_version": available_version,
+                                    "package_manager": "macos-upgrade",
+                                    "is_security_update": True,  # Always security for OS upgrades
+                                    "is_system_update": True,
+                                    "update_size": 8000000000,  # ~8GB estimate for macOS
+                                    "repository": "apple-software-update",
+                                    "requires_reboot": True,
+                                }
+                            )
+
+        except Exception as e:
+            logger.error(_("Failed to detect macOS version upgrades: %s"), str(e))
+
+    def _detect_windows_version_upgrades(self):
+        """Detect Windows version upgrades using Windows Update."""
+        try:
+            # PowerShell command to check for feature updates (major version upgrades)
+            powershell_cmd = """
+            Get-WUList -MicrosoftUpdate | Where-Object {
+                $_.Title -match "Feature update|Version upgrade|Windows 11|Windows 10" -and
+                $_.Size -gt 1GB
+            } | Select-Object Title, Size | ConvertTo-Json
+            """
+
+            result = subprocess.run(
+                ["powershell", "-Command", powershell_cmd],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode == 0 and result.stdout.strip():
+                try:
+                    updates = json.loads(result.stdout)
+                    if not isinstance(updates, list):
+                        updates = [updates]
+
+                    for update in updates:
+                        title = update.get("Title", "")
+                        size = update.get("Size", 0)
+
+                        # Get current Windows version
+                        version_result = subprocess.run(
+                            [
+                                "powershell",
+                                "-Command",
+                                "(Get-ComputerInfo).WindowsVersion",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
+                        )
+                        current_version = (
+                            version_result.stdout.strip()
+                            if version_result.returncode == 0
+                            else "Unknown"
+                        )
+
+                        self.available_updates.append(
+                            {
+                                "package_name": "windows-feature-update",
+                                "current_version": current_version,
+                                "available_version": title,
+                                "package_manager": "windows-upgrade",
+                                "is_security_update": True,  # Always security for OS upgrades
+                                "is_system_update": True,
+                                "update_size": size,
+                                "repository": "windows-update",
+                                "requires_reboot": True,
+                            }
+                        )
+
+                except json.JSONDecodeError:
+                    logger.debug(_("Could not parse Windows upgrade JSON output"))
+
+        except Exception as e:
+            logger.error(_("Failed to detect Windows version upgrades: %s"), str(e))
+
+    def _detect_bsd_version_upgrades(self):
+        """Detect BSD version upgrades."""
+        try:
+            if self.platform == "openbsd":
+                self._detect_openbsd_version_upgrades()
+            elif self.platform == "freebsd":
+                self._detect_freebsd_version_upgrades()
+
+        except Exception as e:
+            logger.error(_("Failed to detect BSD version upgrades: %s"), str(e))
+
+    def _detect_openbsd_version_upgrades(self):
+        """Detect OpenBSD version upgrades using sysupgrade."""
+        try:
+            # Check if sysupgrade is available
+            result = subprocess.run(
+                ["which", "sysupgrade"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode != 0:
+                return
+
+            # Check for available upgrades
+            result = subprocess.run(
+                ["sysupgrade", "-n"],  # -n for dry run
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0 and "upgrade" in result.stdout.lower():
+                # Get current version
+                version_result = subprocess.run(
+                    ["uname", "-r"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                current_version = (
+                    version_result.stdout.strip()
+                    if version_result.returncode == 0
+                    else "Unknown"
+                )
+
+                self.available_updates.append(
+                    {
+                        "package_name": "openbsd-release",
+                        "current_version": current_version,
+                        "available_version": "Next Release",
+                        "package_manager": "openbsd-upgrade",
+                        "is_security_update": True,  # Always security for OS upgrades
+                        "is_system_update": True,
+                        "update_size": 500000000,  # ~500MB estimate
+                        "repository": "openbsd-release",
+                        "requires_reboot": True,
+                    }
+                )
+
+        except Exception as e:
+            logger.error(_("Failed to detect OpenBSD version upgrades: %s"), str(e))
+
+    def _detect_freebsd_version_upgrades(self):
+        """Detect FreeBSD version upgrades using freebsd-update."""
+        try:
+            # Check for available upgrades
+            result = subprocess.run(
+                ["freebsd-update", "upgrade", "-r", "RELEASE"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if (
+                "upgrade" in result.stdout.lower()
+                or "available" in result.stdout.lower()
+            ):
+                # Get current version
+                version_result = subprocess.run(
+                    ["uname", "-r"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                current_version = (
+                    version_result.stdout.strip()
+                    if version_result.returncode == 0
+                    else "Unknown"
+                )
+
+                self.available_updates.append(
+                    {
+                        "package_name": "freebsd-release",
+                        "current_version": current_version,
+                        "available_version": "Next Release",
+                        "package_manager": "freebsd-upgrade",
+                        "is_security_update": True,  # Always security for OS upgrades
+                        "is_system_update": True,
+                        "update_size": 800000000,  # ~800MB estimate
+                        "repository": "freebsd-release",
+                        "requires_reboot": True,
+                    }
+                )
+
+        except Exception as e:
+            logger.error(_("Failed to detect FreeBSD version upgrades: %s"), str(e))
