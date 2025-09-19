@@ -10,11 +10,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-sys.path.append("/home/bceverly/dev/sysmanage-agent/src")
-
-from sysmanage_agent.collection.package_collection import (
+from src.sysmanage_agent.collection.package_collection import (
     PackageCollector,
-)  # pylint: disable=wrong-import-position
+)
 
 
 class TestPackageCollector:  # pylint: disable=too-many-public-methods
@@ -37,7 +35,7 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
         """Create a PackageCollector instance with mocked dependencies."""
         db_manager, _ = mock_db_manager
         with patch(
-            "sysmanage_agent.collection.package_collection.get_database_manager",
+            "src.sysmanage_agent.collection.package_collection.get_database_manager",
             return_value=db_manager,
         ):
             collector = PackageCollector()
@@ -427,18 +425,26 @@ package-with-long-name.x86_64   1.0.0-1.el8.very.long.version   extras
             assert count == 0
 
     @patch("platform.system")
-    @patch("shutil.which")
+    @patch("subprocess.run")
     def test_package_manager_detection(
-        self, mock_which, mock_system, package_collector
+        self, mock_run, mock_system, package_collector
     ):
         """Test package manager detection based on system and available commands."""
         mock_system.return_value = "Linux"
 
-        # Test APT detection
-        mock_which.side_effect = lambda cmd: "/usr/bin/apt" if cmd == "apt" else None
+        # Test APT detection - mock subprocess.run for "which" command
+        def mock_subprocess_run(cmd, **kwargs):
+            result = Mock()
+            if cmd == ["which", "apt"]:
+                result.returncode = 0  # apt is available
+            else:
+                result.returncode = 1  # other package managers not available
+            return result
+
+        mock_run.side_effect = mock_subprocess_run
 
         with patch.object(
-            package_collector, "_collect_apt_packages", return_value=[]
+            package_collector, "_collect_apt_packages", return_value=5
         ) as mock_apt:
             with patch.object(package_collector, "_store_packages"):
                 package_collector.collect_all_available_packages()
