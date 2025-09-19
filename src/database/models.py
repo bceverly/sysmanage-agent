@@ -327,3 +327,27 @@ class ScriptExecution(Base):
     def result_already_sent(self) -> bool:
         """Check if result has already been sent to server."""
         return self.result_sent_at is not None
+
+
+class AvailablePackage(Base):
+    """Model for storing available packages from different package managers on this agent."""
+
+    __tablename__ = "available_packages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    package_manager = Column(String(50), nullable=False)
+    package_name = Column(String(255), nullable=False)
+    package_version = Column(String(100), nullable=False)
+    package_description = Column(Text, nullable=True)
+    collection_date = Column(UTCDateTime, nullable=False)
+    created_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self):
+        return (
+            f"<AvailablePackage(id={self.id}, "
+            f"manager='{self.package_manager}', "
+            f"name='{self.package_name}', "
+            f"version='{self.package_version}')>"
+        )

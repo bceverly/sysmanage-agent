@@ -144,6 +144,7 @@ collection:
     hardware: 1800        # 30 minutes
     network: 300          # 5 minutes
     users: 1800           # 30 minutes
+    available_packages: 86400  # 24 hours (daily collection of available packages)
 
   # Types of data to collect
   types:
@@ -153,4 +154,5 @@ collection:
     network_interfaces: true
     user_accounts: true
     system_metrics: true
+    available_packages: true  # Collect available packages from package managers
 

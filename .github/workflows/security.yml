@@ -26,9 +26,16 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Run Semgrep scan
+      env:
+        # This will give you access to Semgrep Pro rules and features
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
       run: |
         pip install semgrep
-        semgrep scan --sarif --output=semgrep.sarif --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"
+        # When SEMGREP_APP_TOKEN is set, you get access to:
+        # - Pro rules (p/default includes more comprehensive ruleset)
+        # - Supply chain scanning
+        # - Better performance with cloud-based scanning
+        semgrep scan --sarif --output=semgrep.sarif --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"
 
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v3

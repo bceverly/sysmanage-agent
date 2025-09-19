@@ -18,6 +18,7 @@ help:
 	@echo "  make setup         - Install development dependencies"
 	@echo "  make clean         - Clean test artifacts and cache"
 	@echo "  make install-dev   - Install development tools"
+	@echo "  make check-test-models - Check model synchronization and database compatibility"
 	@echo "  make security      - Run comprehensive security analysis (all tools)"
 	@echo "  make security-full - Run comprehensive security analysis (all tools)"
 	@echo "  make security-python - Run Python security scanning (Bandit + Safety)"
@@ -81,7 +82,7 @@ setup-venv: $(VENV_ACTIVATE)
 # Install development dependencies
 install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
-	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort bandit safety
+	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort bandit safety semgrep
 
 # Setup target that ensures everything is ready
 setup: install-dev
@@ -181,6 +182,11 @@ coverage: setup-venv clean-whitespace
 	@$(PYTHON) -m pytest tests/ --cov=main --cov-report=html --cov-report=term
 	@echo "Coverage report generated in htmlcov/index.html"
 
+# Model synchronization check
+check-test-models: setup-venv
+	@echo "Checking test model synchronization..."
+	@$(PYTHON) scripts/check_test_models.py
+
 # Security analysis targets
 
 # Comprehensive security analysis (default)
@@ -214,7 +220,7 @@ security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
 ifeq ($(OS),Windows_NT)
-	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || echo.
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607 || echo.
 	@echo.
 	@echo "Running Safety dependency vulnerability scan..."
 	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
@@ -222,8 +228,17 @@ ifeq ($(OS),Windows_NT)
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic" || echo "Package list completed"
 else
-	@$(PYTHON) -m bandit -r *.py alembic/ src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
 	@echo ""
+	@echo "Running Semgrep static analysis..."
+	@echo "Tip: Export SEMGREP_APP_TOKEN for access to Pro rules and features"
+ifeq ($(OS),Windows_NT)
+	@semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || echo "Semgrep scan completed"
+	@echo.
+else
+	@semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true
+	@echo ""
+endif
 	@echo "Running Safety dependency vulnerability scan..."
 	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
 	@echo ""

@@ -121,6 +121,7 @@ Developers can run security scans locally before committing:
 ```bash
 # Individual security tools
 python -m bandit -r src/ -f screen                    # Python static analysis
+semgrep scan --config="p/security-audit" --config="p/python" --config="p/owasp-top-ten"  # Multi-language static analysis
 pip freeze | safety check --stdin                     # Python dependency check
 trufflehog git file://. --only-verified               # Secrets detection
 
