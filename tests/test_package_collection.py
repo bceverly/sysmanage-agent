@@ -426,9 +426,7 @@ package-with-long-name.x86_64   1.0.0-1.el8.very.long.version   extras
 
     @patch("platform.system")
     @patch("subprocess.run")
-    def test_package_manager_detection(
-        self, mock_run, mock_system, package_collector
-    ):
+    def test_package_manager_detection(self, mock_run, mock_system, package_collector):
         """Test package manager detection based on system and available commands."""
         mock_system.return_value = "Linux"
 
