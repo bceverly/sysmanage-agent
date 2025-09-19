@@ -5,7 +5,7 @@ This module handles the collection of available packages from various package ma
 and stores them in the local SQLite database for later transmission to the server.
 """
 
-import subprocess
+import subprocess  # nosec B404
 import logging
 from datetime import datetime, timezone
 from typing import List, Dict
