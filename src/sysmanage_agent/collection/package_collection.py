@@ -817,7 +817,7 @@ class PackageCollector:
             logger.error(_("Failed to get package managers: %s"), e)
             return []
 
-    def get_packages_for_transmission(self) -> Dict[str, List[Dict[str, str]]]:
+    def get_packages_for_transmission(self) -> Dict[str, any]:
         """Get all packages organized by package manager for transmission to server."""
         try:
             with self.db_manager.get_session() as session:
@@ -838,7 +838,12 @@ class PackageCollector:
                         }
                     )
 
-                return packages_by_manager
+                # Include OS information for the server
+                return {
+                    "os_name": platform.system(),
+                    "os_version": platform.release(),
+                    "package_managers": packages_by_manager,
+                }
 
         except Exception as e:
             logger.error(_("Failed to get packages for transmission: %s"), e)

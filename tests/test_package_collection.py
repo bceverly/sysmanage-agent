@@ -347,13 +347,23 @@ python@3.11 3.11.5
 
         result = package_collector.get_packages_for_transmission()
 
-        assert "apt" in result
-        assert "snap" in result
-        assert len(result["apt"]) == 2
-        assert len(result["snap"]) == 1
+        # Check top-level structure includes OS information
+        assert "os_name" in result
+        assert "os_version" in result
+        assert "package_managers" in result
+
+        # Check OS information is present (will vary by platform)
+        assert result["os_name"] is not None
+        assert result["os_version"] is not None
+
+        package_managers = result["package_managers"]
+        assert "apt" in package_managers
+        assert "snap" in package_managers
+        assert len(package_managers["apt"]) == 2
+        assert len(package_managers["snap"]) == 1
 
         # Check structure
-        apt_nginx = result["apt"][0]
+        apt_nginx = package_managers["apt"][0]
         assert apt_nginx["name"] == "nginx"
         assert apt_nginx["version"] == "1.18.0"
         assert apt_nginx["description"] == "Web server"
