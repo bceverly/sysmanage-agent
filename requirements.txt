@@ -19,3 +19,7 @@ pytest>=7.0.0
 pytest-asyncio>=0.21.0
 pytest-cov>=4.0.0
 coverage>=7.0.0
+
+# Note: On OpenBSD 7.7, coverage.py C tracer requires gcc and py3-cffi
+# Install with: doas pkg_add gcc py3-cffi
+# The install-dev target will automatically handle C tracer setup

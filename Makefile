@@ -25,6 +25,8 @@ help:
 	@echo "  make security-secrets - Run secrets detection"
 	@echo "  make security-upgrades - Check for security package upgrades"
 	@echo ""
+	@echo "OpenBSD users: install-dev will check for C tracer dependencies (gcc, py3-cffi)"
+	@echo ""
 	@echo "Privilege Levels:"
 	@echo "  unprivileged - Runs as regular user (default for security)"
 	@echo "                 ✓ System monitoring, reporting"
@@ -83,6 +85,10 @@ setup-venv: $(VENV_ACTIVATE)
 install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
 	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort bandit safety semgrep
+	@echo "Installing requirements.txt..."
+	@$(PIP) install -r requirements.txt
+	@echo "Checking for OpenBSD C tracer requirements..."
+	@$(PYTHON) scripts/check-openbsd-deps.py
 
 # Setup target that ensures everything is ready
 setup: install-dev
