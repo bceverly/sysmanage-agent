@@ -613,8 +613,9 @@ class PackageCollector:
                         {"name": name, "version": version_match, "description": summary}
                     )
 
-            except Exception:
-                # If parsing fails for a line, skip it
+            except Exception:  # nosec B112
+                # If parsing fails for a line, skip it and continue processing
+                # This is safe because we're parsing text output that may have malformed lines
                 continue
 
         return packages
