@@ -28,6 +28,11 @@ client:
   # Update check settings
   update_check_interval: 3600      # seconds between update checks (default: 1 hour)
 
+  # Package collection settings
+  package_collection_interval: 86400  # seconds between package collection runs (default: 24 hours/daily)
+  package_collection_enabled: true    # enable/disable automatic package collection
+  package_collection_at_startup: true # collect packages at agent startup
+
 # Internationalization settings
 i18n:
   # Language/locale for agent messages and logging

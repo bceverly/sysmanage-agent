@@ -16,6 +16,7 @@ import aiohttp
 from src.i18n import _
 from src.database.models import Priority, ScriptExecution
 from src.database.base import get_database_manager
+from src.sysmanage_agent.collection.package_collection import PackageCollector
 
 
 class UpdateChecker:
@@ -74,6 +75,77 @@ class UpdateChecker:
                 self.logger.error(_("Update checker error: %s"), e)
                 # Wait before next attempt instead of terminating
                 await asyncio.sleep(30)
+                continue
+
+
+class PackageCollectionScheduler:
+    """Handles periodic package collection logic."""
+
+    def __init__(self, agent, logger: logging.Logger):
+        self.agent = agent
+        self.logger = logger
+        self.package_collector = PackageCollector()
+
+    async def perform_package_collection(self) -> bool:
+        """
+        Perform a single package collection run.
+        Returns True if successful, False otherwise.
+        """
+        if not self.agent.config.is_package_collection_enabled():
+            self.logger.debug("Package collection is disabled in configuration")
+            return False
+
+        self.logger.info(_("Starting package collection"))
+        try:
+            success = self.package_collector.collect_all_available_packages()
+            if success:
+                self.logger.info(_("Package collection completed successfully"))
+            else:
+                self.logger.warning(_("Package collection completed with some issues"))
+            return success
+        except Exception as e:
+            self.logger.error(_("Error during package collection: %s"), e)
+            return False
+
+    async def run_package_collection_loop(self):
+        """Main package collection loop."""
+        self.logger.debug("Package collection scheduler started")
+
+        if not self.agent.config.is_package_collection_enabled():
+            self.logger.info("Package collection is disabled - scheduler will not run")
+            return
+
+        # Run collection at startup if configured
+        if self.agent.config.is_package_collection_at_startup_enabled():
+            self.logger.info("Running initial package collection at startup")
+            await self.perform_package_collection()
+
+        package_collection_interval = (
+            self.agent.config.get_package_collection_interval()
+        )
+        last_collection_time = asyncio.get_event_loop().time()
+
+        while self.agent.running:
+            try:
+                current_time = asyncio.get_event_loop().time()
+
+                # Check if it's time for package collection
+                if current_time - last_collection_time >= package_collection_interval:
+                    await self.perform_package_collection()
+                    last_collection_time = current_time
+
+                # Sleep for a shorter interval to check timing more frequently
+                await asyncio.sleep(
+                    300
+                )  # Check every 5 minutes if it's time for package collection
+
+            except asyncio.CancelledError:
+                self.logger.debug("Package collection scheduler cancelled")
+                raise
+            except Exception as e:
+                self.logger.error(_("Package collection scheduler error: %s"), e)
+                # Wait before next attempt instead of terminating
+                await asyncio.sleep(60)
                 continue
 
 
@@ -151,8 +223,27 @@ class MessageProcessor:
 
         # Send result back to server (skip for script execution as it sends dedicated result)
         if command_type != "execute_script":
+            # Extract standard command result fields, put everything else in result field
+            success = result.get("success", True)
+            error = result.get("error")
+            exit_code = result.get("exit_code")
+
+            # Create a clean result payload - remove standard fields from result data
+            result_data = {
+                k: v
+                for k, v in result.items()
+                if k not in ["success", "error", "exit_code"]
+            }
+
             response = self.agent.create_message(
-                "command_result", {"command_id": command_id, **result}
+                "command_result",
+                {
+                    "command_id": command_id,
+                    "success": success,
+                    "result": result_data if result_data else None,
+                    "error": error,
+                    "exit_code": exit_code,
+                },
             )
             await self.agent.send_message(response)
 
@@ -178,6 +269,7 @@ class MessageProcessor:
             "execute_script": self._handle_execute_script,
             "check_reboot_status": lambda params: self.agent.check_reboot_status(),
             "collect_diagnostics": self.agent.collect_diagnostics,
+            "collect_available_packages": lambda params: self.agent.collect_available_packages(),
         }
 
     async def _handle_execute_script(

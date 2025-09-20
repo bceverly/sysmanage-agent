@@ -10,6 +10,7 @@ import logging
 import os
 import platform
 import secrets
+import socket
 import ssl
 import uuid
 from datetime import datetime, timezone
@@ -27,6 +28,7 @@ from src.security.certificate_store import CertificateStore
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
 from src.sysmanage_agent.core.agent_utils import (
     UpdateChecker,
+    PackageCollectionScheduler,
     AuthenticationHelper,
     MessageProcessor,
     is_running_privileged,
@@ -103,6 +105,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Initialize utility classes
         self.update_checker_util = UpdateChecker(self, self.logger)
+        self.package_collection_scheduler = PackageCollectionScheduler(
+            self, self.logger
+        )
         self.auth_helper = AuthenticationHelper(self, self.logger)
         self.message_processor = MessageProcessor(self, self.logger)
 
@@ -1011,6 +1016,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
+    async def package_collector(self):
+        """Handle periodic package collection."""
+        await self.package_collection_scheduler.run_package_collection_loop()
+
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
         return await self.auth_helper.get_auth_token()
@@ -1341,6 +1350,42 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 except Exception as send_error:
                     self.logger.error(_("Failed to send error message: %s"), send_error)
 
+            return {"success": False, "error": str(e)}
+
+    async def collect_available_packages(self) -> Dict[str, Any]:
+        """Collect and return available packages from all package managers."""
+        try:
+            # Trigger package collection
+            success = (
+                await self.package_collection_scheduler.perform_package_collection()
+            )
+            if not success:
+                return {"success": False, "error": "Package collection failed"}
+
+            # Get packages for transmission
+            packages = (
+                self.package_collection_scheduler.package_collector.get_packages_for_transmission()
+            )
+
+            # Get current OS information from registration system
+            system_info = self.registration.get_system_info()
+            os_info = system_info.get("os_info", {})
+
+            # Determine OS name and version
+            os_name = os_info.get("distribution", "Unknown")
+            os_version = os_info.get("distribution_version", "Unknown")
+
+            return {
+                "success": True,
+                "packages": packages,
+                "package_managers": packages,  # Server expects this key name
+                "os_name": os_name,
+                "os_version": os_version,
+                "hostname": system_info.get("hostname", socket.gethostname()),
+                "total_packages": sum(len(pkg_list) for pkg_list in packages.values()),
+            }
+        except Exception as e:
+            self.logger.error(_("Error collecting available packages: %s"), e)
             return {"success": False, "error": str(e)}
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
@@ -2387,29 +2432,37 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         )
                     )
 
-                    # Run sender, receiver, update checker, and data collector concurrently with proper error handling
+                    # Run sender, receiver, update checker, data collector, and package collector concurrently with proper error handling
                     try:
                         sender_task = asyncio.create_task(self.message_sender())
                         receiver_task = asyncio.create_task(self.message_receiver())
                         update_checker_task = asyncio.create_task(self.update_checker())
                         data_collector_task = asyncio.create_task(self.data_collector())
+                        package_collector_task = asyncio.create_task(
+                            self.package_collector()
+                        )
 
                         # Wait for either sender or receiver to complete (connection tasks only)
-                        # Update checker and data collector run independently and don't trigger disconnection
+                        # Update checker, data collector, and package collector run independently and don't trigger disconnection
                         done, pending = await asyncio.wait(
                             [sender_task, receiver_task],
                             return_when=asyncio.FIRST_COMPLETED,
                         )
 
-                        # Cancel the update checker and data collector tasks when connection fails
+                        # Cancel the background tasks when connection fails
                         update_checker_task.cancel()
                         data_collector_task.cancel()
+                        package_collector_task.cancel()
                         try:
                             await update_checker_task
                         except asyncio.CancelledError:
                             pass
                         try:
                             await data_collector_task
+                        except asyncio.CancelledError:
+                            pass
+                        try:
+                            await package_collector_task
                         except asyncio.CancelledError:
                             pass
 

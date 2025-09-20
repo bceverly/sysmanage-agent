@@ -5,7 +5,6 @@ Tests the PackageCollector class and related methods.
 
 # pylint: disable=wrong-import-position,protected-access
 
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -66,10 +65,18 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
                 # apt update succeeds
                 result.returncode = 0
                 result.stdout = ""
-            elif cmd == ["apt", "list", "--available"]:
-                # apt list returns package data
+            elif cmd == ["apt-cache", "dumpavail"]:
+                # apt-cache dumpavail returns package data in dumpavail format
                 result.returncode = 0
-                result.stdout = """\nnginx/jammy-updates,jammy-security 1.18.0-6ubuntu14.4 all\n  small, powerful, scalable web/proxy server\n\npython3/jammy-updates 3.10.6-1~22.04 amd64\n  interactive high-level object-oriented language\n"""
+                result.stdout = """Package: nginx
+Version: 1.18.0-6ubuntu14.4
+Description: small, powerful, scalable web/proxy server
+
+Package: python3
+Version: 3.10.6-1~22.04
+Description: interactive high-level object-oriented language
+
+"""
             elif cmd[0] == "which":
                 # Other package managers not available
                 result.returncode = 1
@@ -114,11 +121,16 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
             if cmd == ["apt", "update"]:
                 result.returncode = 0
                 result.stdout = ""
-            elif cmd == ["apt", "list", "--available"]:
+            elif cmd == ["apt-cache", "dumpavail"]:
                 result.returncode = 0
-                result.stdout = """
-nginx/jammy-updates,jammy-security 1.18.0-6ubuntu14.4 all
-python3/jammy-updates 3.10.6-1~22.04 amd64
+                result.stdout = """Package: nginx
+Version: 1.18.0-6ubuntu14.4
+Description: small, powerful, scalable web/proxy server
+
+Package: python3
+Version: 3.10.6-1~22.04
+Description: interactive high-level object-oriented language
+
 """
             else:
                 result.returncode = 1

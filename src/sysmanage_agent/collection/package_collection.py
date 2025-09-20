@@ -161,20 +161,20 @@ class PackageCollector:
                 ["apt", "update"], capture_output=True, timeout=300, check=False
             )
 
-            # Get available packages
+            # Get all available packages with descriptions using apt-cache dumpavail
             result = subprocess.run(  # nosec B603, B607
-                ["apt", "list", "--available"],
+                ["apt-cache", "dumpavail"],
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=600,  # Increased timeout for larger output
                 check=False,
             )
 
             if result.returncode != 0:
-                logger.error(_("Failed to get APT package list"))
+                logger.error(_("Failed to get APT package information"))
                 return 0
 
-            packages = self._parse_apt_output(result.stdout)
+            packages = self._parse_apt_dumpavail_output(result.stdout)
             return self._store_packages("apt", packages)
 
         except Exception as e:
@@ -274,8 +274,9 @@ class PackageCollector:
     def _collect_snap_packages(self) -> int:
         """Collect packages from Snap."""
         try:
+            # Use % to get all available snaps with descriptions
             result = subprocess.run(  # nosec B603, B607
-                ["snap", "find"],
+                ["snap", "find", "%"],
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -407,20 +408,95 @@ class PackageCollector:
         """Parse APT package list output."""
         packages = []
         for line in output.splitlines():
-            if line.startswith("WARNING") or not line.strip():
+            if (
+                line.startswith("WARNING")
+                or line.startswith("Listing")
+                or not line.strip()
+            ):
                 continue
 
-            # APT format: "package/suite version architecture [status]"
+            # APT format: "package/repository version architecture"
             parts = line.split()
-            if len(parts) >= 2:
-                name_suite = parts[0].split("/")[0]
+            if len(parts) >= 3:
+                name_repo = parts[0].split("/")[
+                    0
+                ]  # Extract package name without repository
                 version = parts[1]
-                # Get description if available
+                _architecture = parts[2]  # Architecture info, not currently used
+
+                # For now, description is empty - could be enhanced later with apt-cache show
                 description = ""
 
                 packages.append(
-                    {"name": name_suite, "version": version, "description": description}
+                    {"name": name_repo, "version": version, "description": description}
                 )
+
+        return packages
+
+    def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse apt-cache dumpavail output to extract package info with descriptions."""
+        # pylint: disable=too-many-nested-blocks
+        packages = []
+        current_package = {}
+
+        # Split output into lines and process each package block
+        lines = output.splitlines()
+        i = 0
+
+        while i < len(lines):
+            line = lines[i].strip()
+
+            # Skip empty lines at the start
+            if not line:
+                i += 1
+                continue
+
+            # Start of a new package block
+            current_package = {}
+
+            # Process all fields in this package block
+            while i < len(lines) and lines[i].strip():
+                line = lines[i].strip()
+
+                if ":" in line:
+                    field, value = line.split(":", 1)
+                    field = field.strip().lower()
+                    value = value.strip()
+
+                    if field == "package":
+                        current_package["name"] = value
+                    elif field == "version":
+                        current_package["version"] = value
+                    elif field == "description":
+                        # Description might span multiple lines
+                        description_lines = [value]
+                        i += 1
+
+                        # Collect continuation lines (start with space)
+                        while i < len(lines) and lines[i].startswith(" "):
+                            desc_line = lines[i][1:]  # Remove leading space
+                            if desc_line.strip():  # Skip empty description lines
+                                description_lines.append(desc_line.strip())
+                            i += 1
+
+                        # Join description lines and clean up
+                        current_package["description"] = " ".join(
+                            description_lines
+                        ).strip()
+                        continue  # i already incremented in the while loop
+
+                i += 1
+
+            # Add package if we have minimum required fields
+            if current_package.get("name") and current_package.get("version"):
+                # Ensure description exists (empty string if missing)
+                if "description" not in current_package:
+                    current_package["description"] = ""
+
+                packages.append(current_package)
+
+            # Skip empty line after package block
+            i += 1
 
         return packages
 
@@ -498,22 +574,48 @@ class PackageCollector:
         return packages
 
     def _parse_snap_output(self, output: str) -> List[Dict[str, str]]:
-        """Parse Snap package list output."""
+        """Parse Snap package list output from 'snap find %'."""
         packages = []
-        for line in output.splitlines():
+        lines = output.splitlines()
+
+        # Skip header line and empty lines
+        for line in lines:
             if line.startswith("Name") or not line.strip():
                 continue
 
-            # Snap format: "name version publisher notes summary"
-            parts = line.split()
-            if len(parts) >= 2:
-                name = parts[0]
-                version = parts[1]
-                summary = " ".join(parts[4:]) if len(parts) > 4 else ""
+            # Parse fixed-width columns based on 'snap find %' format
+            # Name (25 chars), Version (28 chars), Publisher (21 chars), Notes (8 chars), Summary (rest)
+            try:
+                if len(line) < 30:  # Skip lines that are too short
+                    continue
 
-                packages.append(
-                    {"name": name, "version": version, "description": summary}
-                )
+                # Extract name (first column, trim whitespace)
+                name = line[:25].strip()
+                if not name:
+                    continue
+
+                # Extract version (second column, starts around position 25)
+                version_start = 25
+                version_line = line[version_start:]
+                version_match = version_line.split()[0] if version_line.split() else ""
+
+                # Find summary - it's the last column after publisher and notes
+                # Split the line and take everything after position 3 (name, version, publisher, notes)
+                parts = line.split()
+                if len(parts) >= 5:
+                    # Summary is everything from the 5th element onwards
+                    summary = " ".join(parts[4:])
+                else:
+                    summary = ""
+
+                if name and version_match:
+                    packages.append(
+                        {"name": name, "version": version_match, "description": summary}
+                    )
+
+            except Exception:
+                # If parsing fails for a line, skip it
+                continue
 
         return packages
 

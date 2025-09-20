@@ -200,6 +200,18 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         """Get update check interval in seconds."""
         return self.get("client.update_check_interval", 3600)  # Default 1 hour
 
+    def get_package_collection_interval(self) -> int:
+        """Get package collection interval in seconds."""
+        return self.get("client.package_collection_interval", 86400)  # Default 24 hours
+
+    def is_package_collection_enabled(self) -> bool:
+        """Check if automatic package collection is enabled."""
+        return self.get("client.package_collection_enabled", True)
+
+    def is_package_collection_at_startup_enabled(self) -> bool:
+        """Check if package collection should run at startup."""
+        return self.get("client.package_collection_at_startup", True)
+
     def get_script_execution_config(self) -> Dict[str, Any]:
         """Get script execution configuration section."""
         return self.get("script_execution", {})
