@@ -3372,3 +3372,286 @@ class UpdateDetector:
 
         except Exception as e:
             logger.error(_("Failed to detect FreeBSD version upgrades: %s"), str(e))
+
+    def install_package(  # pylint: disable=too-many-return-statements
+        self, package_name: str, package_manager: str = "auto"
+    ) -> Dict[str, Any]:
+        """
+        Install a package using the specified or auto-detected package manager.
+
+        Args:
+            package_name: Name of the package to install
+            package_manager: Package manager to use ("auto" for auto-detection)
+
+        Returns:
+            Dict containing success status, version, and output/error information
+        """
+        try:
+            # Auto-detect package manager if needed
+            if package_manager == "auto":
+                package_manager = self._detect_best_package_manager()
+
+            # Install based on package manager
+            if package_manager == "apt":
+                return self._install_with_apt(package_name)
+            if package_manager == "yum":
+                return self._install_with_yum(package_name)
+            if package_manager == "dnf":
+                return self._install_with_dnf(package_name)
+            if package_manager == "pacman":
+                return self._install_with_pacman(package_name)
+            if package_manager == "zypper":
+                return self._install_with_zypper(package_name)
+            if package_manager == "pkg":
+                return self._install_with_pkg(package_name)
+            if package_manager == "brew":
+                return self._install_with_brew(package_name)
+            if package_manager == "winget":
+                return self._install_with_winget(package_name)
+            if package_manager == "choco":
+                return self._install_with_choco(package_name)
+
+            return {
+                "success": False,
+                "error": f"Unsupported package manager: {package_manager}",
+            }
+
+        except Exception as e:
+            logger.error(_("Failed to install package %s: %s"), package_name, str(e))
+            return {"success": False, "error": str(e)}
+
+    def _detect_best_package_manager(self) -> str:
+        """Detect the best package manager for the current system."""
+        # Platform-specific package manager preferences
+        platform_managers = {
+            "linux": ["apt", "dnf", "yum", "pacman", "zypper"],
+            "darwin": ["brew"],
+            "windows": ["winget", "choco"],
+        }
+
+        # Handle BSD platforms
+        if self.platform in ["freebsd", "openbsd", "netbsd"]:
+            return "pkg"
+
+        # Get manager list for platform
+        managers = platform_managers.get(self.platform, ["apt"])
+
+        # Check for available managers in order of preference
+        for manager in managers:
+            if self._command_exists(manager):
+                return manager
+
+        # Return first manager as fallback
+        return managers[0]
+
+    def _command_exists(self, command: str) -> bool:
+        """Check if a command exists in the system PATH."""
+        try:
+            subprocess.run(  # nosec B603
+                ["which", command], capture_output=True, check=True, timeout=5
+            )
+            return True
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+        ):
+            return False
+
+    def _install_with_apt(self, package_name: str) -> Dict[str, Any]:
+        """Install package using apt package manager."""
+        try:
+            # Update package list first
+            subprocess.run(  # nosec B603, B607
+                ["sudo", "apt", "update"], capture_output=True, check=True, timeout=120
+            )
+
+            # Install the package
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "apt", "install", "-y", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            # Get installed version
+            version_result = subprocess.run(  # nosec B603, B607
+                ["dpkg", "-s", package_name],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            version = "unknown"
+            if version_result.returncode == 0:
+                for line in version_result.stdout.split("\n"):
+                    if line.startswith("Version:"):
+                        version = line.split(":", 1)[1].strip()
+                        break
+
+            return {"success": True, "version": version, "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "error": f"Installation of {package_name} timed out",
+            }
+
+    def _install_with_yum(self, package_name: str) -> Dict[str, Any]:
+        """Install package using yum package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "yum", "install", "-y", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_dnf(self, package_name: str) -> Dict[str, Any]:
+        """Install package using dnf package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "dnf", "install", "-y", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_pacman(self, package_name: str) -> Dict[str, Any]:
+        """Install package using pacman package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "pacman", "-S", "--noconfirm", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_zypper(self, package_name: str) -> Dict[str, Any]:
+        """Install package using zypper package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "zypper", "install", "-y", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_pkg(self, package_name: str) -> Dict[str, Any]:
+        """Install package using pkg package manager (BSD systems)."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "pkg", "install", "-y", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_brew(self, package_name: str) -> Dict[str, Any]:
+        """Install package using Homebrew package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["brew", "install", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_winget(self, package_name: str) -> Dict[str, Any]:
+        """Install package using winget package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["winget", "install", "--id", package_name, "--silent"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_choco(self, package_name: str) -> Dict[str, Any]:
+        """Install package using Chocolatey package manager."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["choco", "install", package_name, "-y"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }

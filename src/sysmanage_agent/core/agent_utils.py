@@ -253,6 +253,8 @@ class MessageProcessor:
             "execute_shell": self.agent.execute_shell_command,
             "get_system_info": lambda params: self.agent.get_detailed_system_info(),
             "install_package": self.agent.install_package,
+            "install_packages": self.agent.install_packages,  # New UUID-based handler
+            "uninstall_packages": self.agent.uninstall_packages,  # New UUID-based uninstall handler
             "update_system": lambda params: self.agent.update_system(),
             "restart_service": self.agent.restart_service,
             "reboot_system": lambda params: self.agent.reboot_system(),

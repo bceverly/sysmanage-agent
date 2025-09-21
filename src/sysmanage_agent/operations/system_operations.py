@@ -4,11 +4,17 @@ Handles system-level commands and operations.
 """
 
 import asyncio
-import platform
+import json
 import logging
+import os
+import platform
+import socket
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.database.models import InstallationRequestTracking
+from src.database.base import get_database_manager
 from src.i18n import _
 
 
@@ -54,8 +60,9 @@ class SystemOperations:
         """Get detailed system information."""
         try:
             # Get basic system info
+            system_info = self.agent.registration.get_system_info()
             info = {
-                "hostname": self.agent.hostname,
+                "hostname": system_info.get("hostname") or socket.gethostname(),
                 "platform": self.agent.platform,
                 "ipv4": self.agent.ipv4,
                 "ipv6": self.agent.ipv6,
@@ -74,17 +81,682 @@ class SystemOperations:
         """Install a package using the appropriate package manager."""
         package_name = parameters.get("package_name")
         package_manager = parameters.get("package_manager")
+        installation_id = parameters.get("installation_id")
+        requested_by = parameters.get("requested_by")
 
         if not package_name:
             return {"success": False, "error": _("No package name specified")}
 
+        self.logger.info(
+            _("Installing package %s (installation_id: %s, requested_by: %s)"),
+            package_name,
+            installation_id,
+            requested_by,
+        )
+
         try:
+            # Send installation started status update
+            if installation_id:
+                await self._send_installation_status_update(
+                    installation_id, "installing", package_name, requested_by
+                )
+
             update_detector = UpdateDetector()
             result = update_detector.install_package(package_name, package_manager)
-            return {"success": True, "result": result}
+
+            # Determine success based on result
+            success = True
+            error_message = None
+            installed_version = None
+
+            if isinstance(result, dict):
+                success = result.get("success", True)
+                error_message = result.get("error")
+                installed_version = result.get("version")
+            elif isinstance(result, str):
+                # Some installations return string output
+                if "error" in result.lower() or "failed" in result.lower():
+                    success = False
+                    error_message = result
+
+            # Send installation completion status update
+            if installation_id:
+                await self._send_installation_status_update(
+                    installation_id,
+                    "completed" if success else "failed",
+                    package_name,
+                    requested_by,
+                    error_message=error_message,
+                    installed_version=installed_version,
+                    installation_log=str(result) if result else None,
+                )
+
+            return {
+                "success": success,
+                "result": result,
+                "installation_id": installation_id,
+                "package_name": package_name,
+                "installed_version": installed_version,
+                "error": error_message,
+            }
+
         except Exception as e:
+            error_message = str(e)
             self.logger.error(_("Failed to install package %s: %s"), package_name, e)
-            return {"success": False, "error": str(e)}
+
+            # Send installation failed status update
+            if installation_id:
+                await self._send_installation_status_update(
+                    installation_id,
+                    "failed",
+                    package_name,
+                    requested_by,
+                    error_message=error_message,
+                )
+
+            return {
+                "success": False,
+                "error": error_message,
+                "installation_id": installation_id,
+                "package_name": package_name,
+            }
+
+    async def install_packages(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:  # pylint: disable=too-many-nested-blocks
+        """
+        Install multiple packages using UUID-based grouping.
+
+        This is the new method that handles the UUID request from the server.
+        It stores the request in the database and installs all packages as a group.
+        """
+        request_id = parameters.get("request_id")
+        packages = parameters.get("packages", [])
+        requested_by = parameters.get("requested_by")
+
+        if not request_id:
+            return {"success": False, "error": _("No request_id specified")}
+
+        if not packages:
+            return {
+                "success": False,
+                "error": _("No packages specified for installation"),
+            }
+
+        self.logger.info(
+            _("Installing %d packages for request %s (requested_by: %s)"),
+            len(packages),
+            request_id,
+            requested_by,
+        )
+
+        # Store the request in agent database for tracking
+        try:
+            db_manager = get_database_manager()
+            with db_manager.get_session() as session:
+                # Create tracking record
+                tracking_record = InstallationRequestTracking(
+                    request_id=request_id,
+                    requested_by=requested_by,
+                    status="in_progress",
+                    packages_json=json.dumps(packages),
+                    received_at=datetime.now(timezone.utc),
+                    started_at=datetime.now(timezone.utc),
+                )
+                session.add(tracking_record)
+                session.commit()
+
+        except Exception as e:
+            self.logger.error(_("Failed to store installation request: %s"), e)
+            return {
+                "success": False,
+                "error": _("Failed to store installation request: %s") % str(e),
+            }
+
+        # Install all packages in a single batch command
+        success_packages = []
+        failed_packages = []
+        installation_log = []
+
+        # Extract valid package names
+        valid_packages = []
+        for package in packages:
+            package_name = package.get("package_name")
+            if not package_name:
+                self.logger.warning(_("Skipping package with no name"))
+                failed_packages.append({"package": package, "error": "No package name"})
+                continue
+            valid_packages.append(package)
+
+        if not valid_packages:
+            installation_log.append("No valid packages to install")
+            return {
+                "success": True,
+                "message": "No packages to install",
+                "log": installation_log,
+                "failed_packages": failed_packages,
+                "success_packages": success_packages,
+            }
+
+        # Group packages by package manager
+        package_groups = {}
+        for package in valid_packages:
+            package_manager = package.get("package_manager", "auto")
+            if package_manager == "auto":
+                # Auto-detect package manager (assume apt for now)
+                package_manager = "apt"
+
+            if package_manager not in package_groups:
+                package_groups[package_manager] = []
+            package_groups[package_manager].append(package)
+
+        # Install packages for each package manager
+        for pkg_manager, pkg_list in package_groups.items():
+            if pkg_manager == "apt":
+                result = await self._install_packages_with_apt(
+                    [pkg["package_name"] for pkg in pkg_list]
+                )
+
+                if result.get("success", False):
+                    # All packages succeeded
+                    for package in pkg_list:
+                        package_name = package["package_name"]
+                        success_packages.append(
+                            {
+                                "package_name": package_name,
+                                "installed_version": result.get("versions", {}).get(
+                                    package_name, "unknown"
+                                ),
+                                "result": result,
+                            }
+                        )
+                        installation_log.append(
+                            f"✓ {package_name} installed successfully"
+                        )
+                else:
+                    # All packages failed
+                    error_msg = result.get("error", "Unknown error")
+                    for package in pkg_list:
+                        package_name = package["package_name"]
+                        failed_packages.append(
+                            {
+                                "package_name": package_name,
+                                "error": error_msg,
+                                "result": result,
+                            }
+                        )
+                        installation_log.append(f"✗ {package_name} failed: {error_msg}")
+            else:
+                # Fall back to individual installation for non-apt package managers
+                for package in pkg_list:
+                    package_name = package.get("package_name")
+                    try:
+                        installation_log.append(f"Installing {package_name}...")
+                        self.logger.info(_("Installing package: %s"), package_name)
+
+                        update_detector = UpdateDetector()
+                        result = update_detector.install_package(
+                            package_name, pkg_manager
+                        )
+
+                        if result.get("success", False):
+                            success_packages.append(
+                                {
+                                    "package_name": package_name,
+                                    "installed_version": result.get(
+                                        "installed_version"
+                                    ),
+                                    "result": result,
+                                }
+                            )
+                            installation_log.append(
+                                f"✓ {package_name} installed successfully"
+                            )
+                        else:
+                            error_msg = result.get("error", "Unknown error")
+                            failed_packages.append(
+                                {
+                                    "package_name": package_name,
+                                    "error": error_msg,
+                                    "result": result,
+                                }
+                            )
+                            installation_log.append(
+                                f"✗ {package_name} failed: {error_msg}"
+                            )
+
+                    except Exception as e:
+                        error_msg = str(e)
+                        self.logger.error(
+                            _("Failed to install package %s: %s"), package_name, e
+                        )
+                        failed_packages.append(
+                            {"package_name": package_name, "error": error_msg}
+                        )
+                        installation_log.append(f"✗ {package_name} failed: {error_msg}")
+
+        # Determine overall success
+        overall_success = len(failed_packages) == 0
+        installation_log_text = "\n".join(installation_log)
+
+        # Update tracking record with completion
+        try:
+            db_manager = get_database_manager()
+            with db_manager.get_session() as session:
+                tracking_record = (
+                    session.query(InstallationRequestTracking)
+                    .filter_by(request_id=request_id)
+                    .first()
+                )
+                if tracking_record:
+                    tracking_record.status = (
+                        "completed" if overall_success else "failed"
+                    )
+                    tracking_record.completed_at = datetime.now(timezone.utc)
+                    tracking_record.result_log = installation_log_text
+                    tracking_record.success = "true" if overall_success else "false"
+                    session.commit()
+
+        except Exception as e:
+            self.logger.error(_("Failed to update installation tracking record: %s"), e)
+
+        # Send completion notification to server via HTTP POST
+        try:
+            await self._send_installation_completion(
+                request_id, overall_success, installation_log_text
+            )
+        except Exception as e:
+            self.logger.error(
+                _("Failed to send installation completion to server: %s"), e
+            )
+
+        return {
+            "success": overall_success,
+            "request_id": request_id,
+            "successful_packages": success_packages,
+            "failed_packages": failed_packages,
+            "installation_log": installation_log_text,
+            "summary": f"Installed {len(success_packages)}/{len(packages)} packages successfully",
+        }
+
+    async def uninstall_packages(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Uninstall multiple packages using UUID-based grouping.
+
+        This method handles the UUID request from the server to uninstall packages.
+        It stores the request in the database and uninstalls all packages as a group.
+        """
+        request_id = parameters.get("request_id")
+        packages = parameters.get("packages", [])
+        requested_by = parameters.get("requested_by")
+
+        if not request_id:
+            return {"success": False, "error": "No request_id specified"}
+
+        if not packages:
+            return {
+                "success": False,
+                "error": "No packages specified for uninstallation",
+            }
+
+        self.logger.info(
+            "Uninstalling %d packages for request %s (requested_by: %s)",
+            len(packages),
+            request_id,
+            requested_by,
+        )
+
+        # Store the request in agent database for tracking
+        try:
+            db_manager = get_database_manager()
+            with db_manager.get_session() as session:
+                # Create tracking record
+                tracking_record = InstallationRequestTracking(
+                    request_id=request_id,
+                    requested_by=requested_by,
+                    status="in_progress",
+                    packages_json=json.dumps(packages),
+                    received_at=datetime.now(timezone.utc),
+                    started_at=datetime.now(timezone.utc),
+                )
+                session.add(tracking_record)
+                session.commit()
+
+        except Exception as e:
+            self.logger.error("Failed to store uninstall request: %s", e)
+            return {
+                "success": False,
+                "error": f"Failed to store uninstall request: {str(e)}",
+            }
+
+        # Uninstall all packages in a single batch command
+        success_packages = []
+        failed_packages = []
+        uninstall_log = []
+
+        # Extract valid package names
+        valid_packages = []
+        for package in packages:
+            package_name = package.get("package_name")
+            if not package_name:
+                self.logger.warning("Skipping package with no name")
+                failed_packages.append({"package": package, "error": "No package name"})
+                continue
+            valid_packages.append(package)
+
+        if not valid_packages:
+            uninstall_log.append("No valid packages to uninstall")
+        else:
+            # Group packages by package manager
+            package_groups = {}
+            for package in valid_packages:
+                package_manager = package.get("package_manager", "auto")
+                if package_manager == "auto":
+                    # Auto-detect package manager (assume apt for now)
+                    package_manager = "apt"
+
+                if package_manager not in package_groups:
+                    package_groups[package_manager] = []
+                package_groups[package_manager].append(package)
+
+            # Uninstall packages for each package manager
+            for pkg_manager, pkg_list in package_groups.items():
+                if pkg_manager == "apt":
+                    result = await self._uninstall_packages_with_apt(
+                        [pkg["package_name"] for pkg in pkg_list]
+                    )
+
+                    if result.get("success", False):
+                        # All packages succeeded
+                        for package in pkg_list:
+                            package_name = package["package_name"]
+                            success_packages.append(
+                                {"package_name": package_name, "result": result}
+                            )
+                            uninstall_log.append(
+                                f"✓ {package_name} uninstalled successfully"
+                            )
+                    else:
+                        # All packages failed
+                        error_msg = result.get("error", "Unknown error")
+                        for package in pkg_list:
+                            package_name = package["package_name"]
+                            failed_packages.append(
+                                {
+                                    "package_name": package_name,
+                                    "error": error_msg,
+                                    "result": result,
+                                }
+                            )
+                            uninstall_log.append(
+                                f"✗ {package_name} failed: {error_msg}"
+                            )
+                else:
+                    # Fall back to individual uninstall for non-apt package managers
+                    for package in pkg_list:
+                        package_name = package.get("package_name")
+                        uninstall_log.append(f"Uninstalling {package_name}...")
+                        self.logger.info("Uninstalling package: %s", package_name)
+
+                        # For now, just simulate success for non-apt managers
+                        # TODO: Implement other package managers  # pylint: disable=fixme
+                        failed_packages.append(
+                            {
+                                "package_name": package_name,
+                                "error": f"Uninstall not implemented for {pkg_manager} package manager",
+                            }
+                        )
+                        uninstall_log.append(
+                            f"✗ {package_name} failed: Uninstall not implemented for {pkg_manager}"
+                        )
+
+        # Determine overall success
+        overall_success = len(failed_packages) == 0
+        uninstall_log_text = "\n".join(uninstall_log)
+
+        # Update tracking record with completion
+        try:
+            db_manager = get_database_manager()
+            with db_manager.get_session() as session:
+                tracking_record = (
+                    session.query(InstallationRequestTracking)
+                    .filter_by(request_id=request_id)
+                    .first()
+                )
+                if tracking_record:
+                    tracking_record.status = (
+                        "completed" if overall_success else "failed"
+                    )
+                    tracking_record.completed_at = datetime.now(timezone.utc)
+                    tracking_record.result_log = uninstall_log_text
+                    tracking_record.success = "true" if overall_success else "false"
+                    session.commit()
+
+        except Exception as e:
+            self.logger.error("Failed to update uninstall tracking record: %s", e)
+
+        # Send completion notification to server via HTTP POST
+        try:
+            await self._send_installation_completion(
+                request_id, overall_success, uninstall_log_text
+            )
+        except Exception as e:
+            self.logger.error("Failed to send uninstall completion to server: %s", e)
+
+        return {
+            "success": overall_success,
+            "request_id": request_id,
+            "successful_packages": success_packages,
+            "failed_packages": failed_packages,
+            "uninstall_log": uninstall_log_text,
+            "summary": f"Uninstalled {len(success_packages)}/{len(packages)} packages successfully",
+        }
+
+    async def _install_packages_with_apt(
+        self, package_names: list
+    ) -> Dict[str, Any]:  # pylint: disable=too-many-nested-blocks
+        """Install multiple packages with a single apt-get command."""
+        try:
+            if not package_names:
+                return {"success": False, "error": "No packages to install"}
+
+            self.logger.info(
+                "Installing packages with apt-get: %s", ", ".join(package_names)
+            )
+
+            # Set non-interactive environment to prevent configuration dialogs
+            env = os.environ.copy()
+            env.update(
+                {
+                    "DEBIAN_FRONTEND": "noninteractive",
+                    "DEBCONF_NONINTERACTIVE_SEEN": "true",
+                }
+            )
+
+            # Update package list first
+            update_process = await asyncio.create_subprocess_exec(
+                "sudo",
+                "-E",
+                "apt-get",
+                "update",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env,
+            )
+            await update_process.communicate()
+
+            # Install all packages in a single command
+            install_cmd = ["sudo", "-E", "apt-get", "install", "-y"] + package_names
+            install_process = await asyncio.create_subprocess_exec(
+                *install_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env,
+            )
+
+            stdout, stderr = await install_process.communicate()
+            stdout_text = stdout.decode() if stdout else ""
+            stderr_text = stderr.decode() if stderr else ""
+
+            if install_process.returncode == 0:
+                # Get versions for installed packages
+                versions = await self._get_package_versions(package_names)
+                return {"success": True, "versions": versions, "output": stdout_text}
+
+            return {
+                "success": False,
+                "error": f"apt-get install failed: {stderr_text or stdout_text}",
+                "output": stderr_text or stdout_text,
+            }
+
+        except Exception as e:
+            self.logger.error("Failed to install packages with apt-get: %s", e)
+            return {
+                "success": False,
+                "error": f"Exception during apt-get install: {str(e)}",
+            }
+
+    async def _uninstall_packages_with_apt(self, package_names: list) -> Dict[str, Any]:
+        """Uninstall multiple packages with a single apt-get command."""
+        try:
+            if not package_names:
+                return {"success": False, "error": "No packages to uninstall"}
+
+            self.logger.info(
+                "Uninstalling packages with apt-get: %s", ", ".join(package_names)
+            )
+
+            # Set non-interactive environment to prevent configuration dialogs
+            env = os.environ.copy()
+            env.update(
+                {
+                    "DEBIAN_FRONTEND": "noninteractive",
+                    "DEBCONF_NONINTERACTIVE_SEEN": "true",
+                }
+            )
+
+            # Uninstall all packages in a single command (autoremove to clean up dependencies)
+            uninstall_cmd = [
+                "sudo",
+                "-E",
+                "apt-get",
+                "remove",
+                "--autoremove",
+                "-y",
+            ] + package_names
+            uninstall_process = await asyncio.create_subprocess_exec(
+                *uninstall_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env,
+            )
+
+            stdout, stderr = await uninstall_process.communicate()
+            stdout_text = stdout.decode() if stdout else ""
+            stderr_text = stderr.decode() if stderr else ""
+
+            if uninstall_process.returncode == 0:
+                return {"success": True, "output": stdout_text}
+
+            return {
+                "success": False,
+                "error": f"apt-get remove failed: {stderr_text or stdout_text}",
+                "output": stderr_text or stdout_text,
+            }
+
+        except Exception as e:
+            self.logger.error("Failed to uninstall packages with apt-get: %s", e)
+            return {
+                "success": False,
+                "error": f"Exception during apt-get remove: {str(e)}",
+            }
+
+    async def _send_installation_completion(
+        self, request_id: str, success: bool, result_log: str
+    ):
+        """Send completion notification to the server."""
+        try:
+            # Prepare payload
+            payload = {
+                "request_id": request_id,
+                "success": success,
+                "result_log": result_log,
+            }
+
+            # Use centralized API method
+            response = await self.agent.call_server_api(
+                "agent/installation-complete", "POST", payload
+            )
+
+            if response:
+                self.logger.info(
+                    _("Installation completion sent successfully for request %s"),
+                    request_id,
+                )
+            else:
+                self.logger.error(
+                    _("Failed to send installation completion for request %s"),
+                    request_id,
+                )
+
+        except Exception as e:
+            self.logger.error(_("Error sending installation completion: %s"), e)
+            raise
+
+    async def _send_installation_status_update(  # pylint: disable=too-many-positional-arguments
+        self,
+        installation_id: str,
+        status: str,
+        package_name: str,
+        requested_by: str,
+        error_message: str = None,
+        installed_version: str = None,
+        installation_log: str = None,
+    ):
+        """Send package installation status update to server."""
+        try:
+            # Get host information for the status update
+            host_approval = self.agent.get_host_approval_from_db()
+            system_info = self.agent.registration.get_system_info()
+
+            # Get hostname with fallback
+            hostname = system_info.get("hostname") or socket.gethostname()
+
+            update_message = {
+                "message_type": "package_installation_status",
+                "installation_id": installation_id,
+                "status": status,
+                "package_name": package_name,
+                "requested_by": requested_by,
+                "timestamp": asyncio.get_event_loop().time(),
+                "hostname": hostname,
+            }
+
+            # Add optional fields
+            if error_message:
+                update_message["error_message"] = error_message
+            if installed_version:
+                update_message["installed_version"] = installed_version
+            if installation_log:
+                update_message["installation_log"] = installation_log
+
+            # Add host identification
+            if host_approval and host_approval.host_id:
+                update_message["host_id"] = host_approval.host_id
+
+            # Send the status update message
+            await self.agent.send_message(update_message)
+
+            self.logger.info(
+                _("Sent package installation status update: %s for %s"),
+                status,
+                package_name,
+            )
+
+        except Exception as e:
+            self.logger.error(
+                _("Failed to send package installation status update: %s"), e
+            )
 
     async def update_system(self) -> Dict[str, Any]:
         """Update the system using the default package manager."""
@@ -326,7 +998,7 @@ class SystemOperations:
 
             # Add hostname for server processing
             system_info = self.agent.registration.get_system_info()
-            os_info["hostname"] = system_info["hostname"]
+            os_info["hostname"] = system_info.get("hostname") or socket.gethostname()
 
             # Create and send OS update message
             os_message = self.agent.create_message("os_version_update", os_info)
@@ -340,3 +1012,32 @@ class SystemOperations:
             self.logger.error(
                 _("Failed to send OS update after Ubuntu Pro change: %s"), e
             )
+
+    async def _get_package_versions(self, package_names: list) -> dict:
+        """Get installed versions for a list of package names."""
+        versions = {}
+        for package_name in package_names:
+            try:
+                version_process = await asyncio.create_subprocess_exec(
+                    "dpkg",
+                    "-s",
+                    package_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                version_stdout, _ = await version_process.communicate()
+
+                if version_process.returncode != 0:
+                    versions[package_name] = "unknown"
+                    continue
+
+                version_text = version_stdout.decode()
+                for line in version_text.split("\n"):
+                    if line.startswith("Version:"):
+                        versions[package_name] = line.split(":", 1)[1].strip()
+                        break
+                else:
+                    versions[package_name] = "unknown"
+            except Exception:
+                versions[package_name] = "unknown"
+        return versions

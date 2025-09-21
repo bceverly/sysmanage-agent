@@ -351,3 +351,44 @@ class AvailablePackage(Base):
             f"name='{self.package_name}', "
             f"version='{self.package_version}')>"
         )
+
+
+class InstallationRequestTracking(Base):
+    """
+    Table for tracking package installation requests on the agent side.
+    Stores the UUID and related information for pending installations.
+    """
+
+    __tablename__ = "installation_request_tracking"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # The UUID from the server that groups packages
+    request_id = Column(String(36), nullable=False, unique=True, index=True)
+
+    # Installation metadata
+    requested_by = Column(String(100), nullable=False)
+    status = Column(
+        String(20), nullable=False, default="pending"
+    )  # pending, in_progress, completed, failed
+
+    # Package information (JSON string containing list of packages)
+    packages_json = Column(Text, nullable=False)
+
+    # Timestamps
+    received_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    started_at = Column(UTCDateTime, nullable=True)
+    completed_at = Column(UTCDateTime, nullable=True)
+
+    # Results
+    result_log = Column(Text, nullable=True)
+    success = Column(String(10), nullable=True)  # "true", "false", or null
+
+    def __repr__(self):
+        return (
+            f"<InstallationRequestTracking(id={self.id}, "
+            f"request_id='{self.request_id}', "
+            f"status='{self.status}')>"
+        )

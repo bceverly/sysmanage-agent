@@ -353,6 +353,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Install a package using the appropriate package manager."""
         return await self.system_ops.install_package(parameters)
 
+    async def install_packages(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Install multiple packages using the appropriate package manager."""
+        return await self.system_ops.install_packages(parameters)
+
+    async def uninstall_packages(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Uninstall multiple packages using the appropriate package manager."""
+        return await self.system_ops.uninstall_packages(parameters)
+
     async def update_system(self) -> Dict[str, Any]:
         """Update the system using the default package manager."""
         return await self.system_ops.update_system()
@@ -2216,6 +2224,80 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception:
             self.logger.error(_("Error retrieving stored credentials"))
+            return None
+
+    async def call_server_api(
+        self, endpoint: str, method: str = "POST", data: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Centralized method for making API calls to the server.
+
+        Args:
+            endpoint: API endpoint (without /api prefix, e.g., "agent/installation-complete")
+            method: HTTP method (GET, POST, PUT, DELETE)
+            data: Request payload (for POST/PUT requests)
+
+        Returns:
+            Response data as dictionary, or None if request failed
+        """
+        try:
+            # Get server configuration
+            config = self.config
+            server_host = config.get("server", {}).get("host", "localhost")
+            server_port = config.get("server", {}).get("port", 8080)
+            use_ssl = config.get("server", {}).get("ssl", {}).get("enabled", False)
+
+            # Construct full URL with /api prefix
+            protocol = "https" if use_ssl else "http"
+            url = f"{protocol}://{server_host}:{server_port}/api/{endpoint}"
+
+            # Get authentication token
+            host_token = self.get_stored_host_token_sync()
+            if not host_token:
+                self.logger.error(_("No host token available for API authentication"))
+                return None
+
+            # Prepare headers
+            headers = {
+                "Authorization": f"Bearer {host_token}",
+                "Content-Type": "application/json",
+            }
+
+            # Create SSL context if needed
+            ssl_context = None
+            if use_ssl:
+                ssl_context = ssl.create_default_context()
+                if not config.get("server", {}).get("ssl", {}).get("verify", True):
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+
+            # Make the HTTP request
+            async with aiohttp.ClientSession() as session:
+                async with session.request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    json=data if data else None,
+                    ssl=ssl_context,
+                ) as response:
+                    if response.status == 200:
+                        try:
+                            return await response.json()
+                        except Exception:
+                            return {"success": True}
+                    else:
+                        error_text = await response.text()
+                        self.logger.error(
+                            _(
+                                "API call failed: {} {} - Status: {}, Response: {}"
+                            ).format(method, url, response.status, error_text)
+                        )
+                        return None
+
+        except Exception as e:
+            self.logger.error(
+                _("Error making API call to {}: {}").format(endpoint, str(e))
+            )
             return None
 
     def get_host_approval_from_db(self):

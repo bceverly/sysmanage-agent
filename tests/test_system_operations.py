@@ -23,6 +23,12 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         self.mock_agent.platform = "Linux"
         self.mock_agent.ipv4 = "192.168.1.100"
         self.mock_agent.ipv6 = "::1"
+
+        # Mock the registration.get_system_info() method
+        self.mock_agent.registration.get_system_info.return_value = {
+            "hostname": "test-host"
+        }
+
         self.system_ops = SystemOperations(self.mock_agent)
 
     def test_init(self):
