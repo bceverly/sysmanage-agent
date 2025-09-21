@@ -3445,10 +3445,6 @@ class UpdateDetector:
         # Return first manager as fallback
         return managers[0]
 
-    def _command_exists(self, command: str) -> bool:
-        """Check if a command exists in the system PATH."""
-        return shutil.which(command) is not None
-
     def _install_with_apt(self, package_name: str) -> Dict[str, Any]:
         """Install package using apt package manager."""
         try:
