@@ -26,6 +26,7 @@ import logging
 import os
 import platform
 import re
+import shutil
 import subprocess  # nosec B404
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -3446,17 +3447,7 @@ class UpdateDetector:
 
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system PATH."""
-        try:
-            subprocess.run(  # nosec B603
-                ["which", command], capture_output=True, check=True, timeout=5
-            )
-            return True
-        except (
-            subprocess.CalledProcessError,
-            subprocess.TimeoutExpired,
-            FileNotFoundError,
-        ):
-            return False
+        return shutil.which(command) is not None
 
     def _install_with_apt(self, package_name: str) -> Dict[str, Any]:
         """Install package using apt package manager."""
