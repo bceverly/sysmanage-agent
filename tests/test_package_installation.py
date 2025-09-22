@@ -234,7 +234,7 @@ class TestPackageInstallation:
         assert call_args["status"] == "installing"
         assert call_args["package_name"] == "test-package"
         assert call_args["requested_by"] == "test-user"
-        assert call_args["host_id"] == 1
+        assert call_args["host_id"] == "1"
         assert call_args["hostname"] == "test-agent.example.com"
 
     @pytest.mark.asyncio

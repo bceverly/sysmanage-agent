@@ -10,7 +10,6 @@ import logging
 import os
 import platform
 import secrets
-import socket
 import ssl
 import uuid
 from datetime import datetime, timezone
@@ -883,7 +882,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         # Add host_id if available
                         host_approval = self.get_host_approval_from_db()
                         if host_approval:
-                            software_info["host_id"] = host_approval.host_id
+                            software_info["host_id"] = str(host_approval.host_id)
 
                         software_message = self.create_message(
                             "software_inventory_update", software_info
@@ -919,7 +918,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         # Add host_id if available
                         host_approval = self.get_host_approval_from_db()
                         if host_approval:
-                            user_info["host_id"] = host_approval.host_id
+                            user_info["host_id"] = str(host_approval.host_id)
 
                         user_message = self.create_message(
                             "user_access_update", user_info
@@ -955,7 +954,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         # Add host_id if available
                         host_approval = self.get_host_approval_from_db()
                         if host_approval:
-                            hardware_info["host_id"] = host_approval.host_id
+                            hardware_info["host_id"] = str(host_approval.host_id)
 
                         hardware_message = self.create_message(
                             "hardware_update", hardware_info
@@ -1032,7 +1031,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Get authentication token for WebSocket connection."""
         return await self.auth_helper.get_auth_token()
 
-    async def fetch_certificates(self, host_id: int) -> bool:
+    async def fetch_certificates(self, host_id: str) -> bool:
         """Fetch certificates from server after approval."""
         try:
             server_config = self.config.get_server_config()
@@ -1361,7 +1360,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             return {"success": False, "error": str(e)}
 
     async def collect_available_packages(self) -> Dict[str, Any]:
-        """Collect and return available packages from all package managers."""
+        """Collect and send available packages from all package managers using pagination."""
         try:
             # Trigger package collection
             success = (
@@ -1383,18 +1382,96 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             os_name = os_info.get("distribution", "Unknown")
             os_version = os_info.get("distribution_version", "Unknown")
 
-            return {
-                "success": True,
-                "packages": packages,
-                "package_managers": packages,  # Server expects this key name
-                "os_name": os_name,
-                "os_version": os_version,
-                "hostname": system_info.get("hostname", socket.gethostname()),
-                "total_packages": sum(len(pkg_list) for pkg_list in packages.values()),
-            }
+            # Calculate total packages
+            total_packages = sum(
+                len(pkg_list) for pkg_list in packages["package_managers"].values()
+            )
+
+            # Send packages using pagination to avoid large message issues
+            success = await self._send_available_packages_paginated(
+                packages["package_managers"], os_name, os_version, total_packages
+            )
+
+            if success:
+                return {
+                    "success": True,
+                    "message": f"Successfully sent {total_packages} packages using pagination",
+                    "total_packages": total_packages,
+                }
+            return {"success": False, "error": "Failed to send paginated packages"}
+
         except Exception as e:
             self.logger.error(_("Error collecting available packages: %s"), e)
             return {"success": False, "error": str(e)}
+
+    async def _send_available_packages_paginated(
+        self,
+        package_managers: Dict[str, list],
+        os_name: str,
+        os_version: str,
+        total_packages: int,
+    ) -> bool:
+        """Send available packages using pagination to avoid large message issues."""
+        batch_id = str(uuid.uuid4())
+        batch_size = 1000  # Send packages in batches of 1000
+
+        try:
+            # Send batch start message
+            batch_start_message = self.create_message(
+                "available_packages_batch_start",
+                {
+                    "batch_id": batch_id,
+                    "os_name": os_name,
+                    "os_version": os_version,
+                    "package_managers": list(package_managers.keys()),
+                    "total_packages": total_packages,
+                },
+            )
+            await self.send_message(batch_start_message)
+            self.logger.info(
+                f"Started packages batch {batch_id} with {total_packages} total packages"
+            )
+
+            # Send packages in batches for each package manager
+            for manager_name, packages_list in package_managers.items():
+                if not packages_list:
+                    continue
+
+                # Split packages into batches
+                for i in range(0, len(packages_list), batch_size):
+                    batch_packages = packages_list[i : i + batch_size]
+
+                    batch_message = self.create_message(
+                        "available_packages_batch",
+                        {
+                            "batch_id": batch_id,
+                            "package_managers": {manager_name: batch_packages},
+                        },
+                    )
+                    await self.send_message(batch_message)
+                    self.logger.info(
+                        f"Sent batch with {len(batch_packages)} packages from {manager_name} "
+                        f"(batch {batch_id}, packages {i+1}-{i+len(batch_packages)})"
+                    )
+
+            # Send batch end message
+            batch_end_message = self.create_message(
+                "available_packages_batch_end",
+                {
+                    "batch_id": batch_id,
+                    "total_packages": total_packages,
+                },
+            )
+            await self.send_message(batch_end_message)
+            self.logger.info(f"Completed packages batch {batch_id}")
+
+            return True
+
+        except Exception as e:
+            self.logger.error(
+                f"Error sending paginated packages for batch {batch_id}: {e}"
+            )
+            return False
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""
@@ -2040,7 +2117,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def store_host_approval(
         self,
-        host_id: int,
+        host_id: str,
         approval_status: str,
         certificate: str = None,
         host_token: str = None,
@@ -2145,7 +2222,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 _("Error processing registration success notification: %s"), e
             )
 
-    async def get_stored_host_id(self) -> int:
+    async def get_stored_host_id(self) -> str:
         """Get the stored host_id from local database."""
         try:
             db_manager = get_database_manager()
@@ -2161,7 +2238,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 )
 
                 if approval and approval.has_host_id:
-                    return approval.host_id
+                    return str(approval.host_id)
 
                 return None
 
@@ -2324,7 +2401,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error retrieving host approval: %s"), type(e).__name__)
             return None
 
-    def get_stored_host_id_sync(self) -> int:
+    def get_stored_host_id_sync(self) -> str:
         """Get the stored host_id from local database synchronously."""
         try:
             db_manager = get_database_manager()
@@ -2340,7 +2417,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 )
 
                 if approval and approval.has_host_id:
-                    return approval.host_id
+                    return str(approval.host_id)
 
                 return None
 

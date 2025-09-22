@@ -92,7 +92,7 @@ class TestClientRegistrationEdgeCases:
     def test_get_host_id_with_registration_data(self):
         """Test get_host_id with valid registration data."""
         self.client_registration.registration_data = {"id": 12345}
-        assert self.client_registration.get_host_id() == 12345
+        assert self.client_registration.get_host_id() == "12345"
 
     def test_get_registration_data_none(self):
         """Test get_registration_data when no data exists."""

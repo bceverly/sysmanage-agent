@@ -229,8 +229,9 @@ class ClientRegistration:
         """Get the registration response data."""
         return self.registration_data
 
-    def get_host_id(self) -> Optional[int]:
+    def get_host_id(self) -> Optional[str]:
         """Get the host ID from registration data."""
         if self.registration_data:
-            return self.registration_data.get("id")
+            host_id = self.registration_data.get("id")
+            return str(host_id) if host_id is not None else None
         return None

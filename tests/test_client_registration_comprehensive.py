@@ -353,7 +353,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
     def test_get_host_id_available(self):
         """Test getting host ID when registration data is available."""
         self.client_reg.registration_data = {"id": 999, "other": "data"}
-        assert self.client_reg.get_host_id() == 999
+        assert self.client_reg.get_host_id() == "999"
 
     def test_get_host_id_missing_id_key(self):
         """Test getting host ID when registration data lacks 'id' key."""

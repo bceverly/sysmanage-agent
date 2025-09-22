@@ -376,7 +376,7 @@ class MessageProcessor:
 
             # Add host_id if available (preferred over hostname validation)
             if host_approval and host_approval.host_id:
-                result_message["host_id"] = host_approval.host_id
+                result_message["host_id"] = str(host_approval.host_id)
 
             # Queue the script execution result message with high priority
             await self.agent.message_handler.queue_outbound_message(

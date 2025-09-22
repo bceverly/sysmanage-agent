@@ -26,7 +26,6 @@ import logging
 import os
 import platform
 import re
-import shutil
 import subprocess  # nosec B404
 from datetime import datetime
 from typing import Dict, List, Optional, Any

@@ -2,13 +2,54 @@
 Database models for SysManage Agent message queues.
 """
 
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index
 from sqlalchemy.types import TypeDecorator
+from sqlalchemy.dialects.postgresql import UUID
 
 from .base import Base
+
+
+class GUID(TypeDecorator):  # pylint: disable=too-many-ancestors
+    """
+    Platform-independent GUID type.
+    Uses PostgreSQL's UUID type when available, otherwise stores as string.
+    """
+
+    impl = String
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(UUID(as_uuid=True))
+        return dialect.type_descriptor(String(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        if dialect.name == "postgresql":
+            return str(value) if not isinstance(value, uuid.UUID) else value
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        if not isinstance(value, uuid.UUID):
+            return uuid.UUID(value)
+        return value
+
+    def process_literal_param(self, value, dialect):
+        """Process literal parameter for inline SQL compilation."""
+        if value is None:
+            return None
+        return str(value)
+
+    @property
+    def python_type(self):
+        return uuid.UUID
 
 
 class QueueStatus(str, Enum):
@@ -82,7 +123,7 @@ class MessageQueue(Base):
     __tablename__ = "message_queue"
 
     # Primary key
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Message identification
     message_id = Column(String(36), unique=True, nullable=False, index=True)  # UUID
@@ -178,7 +219,7 @@ class QueueMetrics(Base):
 
     __tablename__ = "queue_metrics"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Metric identification
     metric_name = Column(String(50), nullable=False, index=True)
@@ -231,12 +272,10 @@ class HostApproval(Base):
     __tablename__ = "host_approval"
 
     # Primary key
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Host identification from server
-    host_id = Column(
-        Integer, nullable=True, index=True
-    )  # Server-assigned host ID (legacy)
+    host_id = Column(GUID(), nullable=True, index=True)  # Server-assigned host ID
     host_token = Column(String(64), nullable=True, index=True)  # Secure host token
 
     # Approval information
@@ -280,7 +319,7 @@ class ScriptExecution(Base):
     __tablename__ = "script_executions"
 
     # Primary key
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Execution identification
     execution_id = Column(String(36), nullable=False, index=True)  # Server execution ID
@@ -334,7 +373,7 @@ class AvailablePackage(Base):
 
     __tablename__ = "available_packages"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     package_manager = Column(String(50), nullable=False)
     package_name = Column(String(255), nullable=False)
     package_version = Column(String(100), nullable=False)
@@ -361,7 +400,7 @@ class InstallationRequestTracking(Base):
 
     __tablename__ = "installation_request_tracking"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # The UUID from the server that groups packages
     request_id = Column(String(36), nullable=False, unique=True, index=True)

@@ -742,7 +742,7 @@ class SystemOperations:
 
             # Add host identification
             if host_approval and host_approval.host_id:
-                update_message["host_id"] = host_approval.host_id
+                update_message["host_id"] = str(host_approval.host_id)
 
             # Send the status update message
             await self.agent.send_message(update_message)
