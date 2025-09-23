@@ -241,12 +241,18 @@ else
 	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
 	@echo ""
 	@echo "Running Semgrep static analysis..."
-	@echo "Tip: Export SEMGREP_APP_TOKEN for access to Pro rules and features"
+	@echo "Tip: Export SEMGREP_APP_TOKEN for access to Pro rules and supply chain analysis"
 ifeq ($(OS),Windows_NT)
-	@semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || echo "Semgrep scan completed"
+	@if defined SEMGREP_APP_TOKEN (semgrep ci) else (semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten") || echo "Semgrep scan completed"
 	@echo.
 else
-	@semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true
+	@if [ -n "$$SEMGREP_APP_TOKEN" ]; then \
+		echo "Using Semgrep CI with supply chain analysis..."; \
+		semgrep ci || true; \
+	else \
+		echo "Using basic Semgrep scan (set SEMGREP_APP_TOKEN for supply chain analysis)..."; \
+		semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true; \
+	fi
 	@echo ""
 endif
 	@echo "Running Safety dependency vulnerability scan..."
