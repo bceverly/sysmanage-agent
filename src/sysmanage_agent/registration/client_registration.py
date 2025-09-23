@@ -338,5 +338,8 @@ class ClientRegistration:
                 )
                 return approval.host_token if approval else None
         except Exception as e:
-            self.logger.error("Error getting stored host_token: %s", e)
+            self.logger.error(
+                "Error retrieving stored approval data: %s", type(e).__name__
+            )
+            self.logger.debug("Error details: %s", str(e))
             return None

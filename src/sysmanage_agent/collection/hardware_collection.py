@@ -1586,8 +1586,7 @@ class HardwareCollector:
                 # Use full path to diskinfo for security
                 diskinfo_path = "/usr/sbin/diskinfo"
                 if os.path.exists(diskinfo_path):
-                    # nosec B603: subprocess call with known safe command path
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603
                         [diskinfo_path, base_device],
                         capture_output=True,
                         text=True,

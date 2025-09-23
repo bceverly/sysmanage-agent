@@ -33,9 +33,16 @@ jobs:
         pip install semgrep
         # When SEMGREP_APP_TOKEN is set, you get access to:
         # - Pro rules (p/default includes more comprehensive ruleset)
-        # - Supply chain scanning
+        # - Supply chain scanning for dependency vulnerabilities
+        # - Cross-file dataflow analysis
         # - Better performance with cloud-based scanning
-        semgrep scan --sarif --output=semgrep.sarif --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"
+        if [ -n "$SEMGREP_APP_TOKEN" ]; then
+          echo "Using Semgrep CI with supply chain analysis..."
+          semgrep ci --sarif --output=semgrep.sarif --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" --config="p/supply-chain"
+        else
+          echo "Using basic Semgrep scan (set SEMGREP_APP_TOKEN for supply chain analysis)..."
+          semgrep scan --sarif --output=semgrep.sarif --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"
+        fi
 
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v3

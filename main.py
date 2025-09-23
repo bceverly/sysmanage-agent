@@ -1012,6 +1012,26 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                             "Error collecting/sending OS version data: %s", e
                         )
 
+                    # Send reboot status update
+                    try:
+                        self.logger.debug("AGENT_DEBUG: Checking reboot status")
+                        detector = UpdateDetector()
+                        requires_reboot = detector.check_reboot_required()
+
+                        self.logger.debug(
+                            "AGENT_DEBUG: Reboot required: %s", requires_reboot
+                        )
+
+                        await self.send_reboot_status_update(requires_reboot)
+                        self.logger.debug(
+                            "AGENT_DEBUG: Periodic reboot status sent successfully"
+                        )
+
+                    except Exception as e:
+                        self.logger.error(
+                            "Error collecting/sending reboot status: %s", e
+                        )
+
                     self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
 
             except asyncio.CancelledError:

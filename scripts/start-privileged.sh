@@ -275,11 +275,9 @@ main() {
 
         # Verify they were stopped
         if check_existing_processes >/dev/null 2>&1; then
-            echo "⚠️  Regular stop failed. Trying with elevated privileges to stop processes..."
+            echo "⚠️  Regular stop script failed. Trying to kill processes as regular user first..."
 
-            # Try to stop with elevated privileges
-            priv_cmd_temp=$(get_priv_cmd "$platform")
-
+            # First, try to kill processes as regular user (silently)
             # Get process PIDs that match our pattern (using same logic as check_existing_processes)
             local agent_dir_pattern="sysmanage-agent"
             local main_py_pattern="main.py"
@@ -298,7 +296,51 @@ main() {
                 fi
             fi
 
+            regular_user_success=false
             if [ -n "$agent_pids" ]; then
+                echo "Found agent processes owned by current user, attempting to kill them..."
+                for pid in $agent_pids; do
+                    # Try to kill as regular user (silently)
+                    if kill "$pid" 2>/dev/null; then
+                        echo "  ✅ Stopped PID $pid as regular user"
+                        regular_user_success=true
+                    else
+                        # If regular kill fails, try SIGKILL as regular user
+                        if kill -9 "$pid" 2>/dev/null; then
+                            echo "  ✅ Force killed PID $pid as regular user"
+                            regular_user_success=true
+                        fi
+                    fi
+                done
+
+                # Give processes time to exit
+                sleep 2
+            fi
+
+            # Check if regular user killing worked
+            if check_existing_processes >/dev/null 2>&1; then
+                echo "⚠️  Regular user kill failed. Trying with elevated privileges..."
+
+                # Try to stop with elevated privileges
+                priv_cmd_temp=$(get_priv_cmd "$platform")
+
+                # Re-check for remaining processes that might be owned by root or other users
+                agent_pids=""
+                if command -v pgrep >/dev/null 2>&1; then
+                    agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$)
+                    # Fallback to broader pattern if no results
+                    if [ -z "$agent_pids" ]; then
+                        agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
+                    fi
+                else
+                    agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
+                    # Fallback to broader pattern if no results
+                    if [ -z "$agent_pids" ]; then
+                        agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+                    fi
+                fi
+
+                if [ -n "$agent_pids" ]; then
                 echo "Found agent processes: $agent_pids"
                 echo "Attempting to stop them with $priv_cmd_temp..."
 
@@ -368,6 +410,9 @@ main() {
                 fi
             else
                 echo "⚠️  No agent processes found in second check - they may have stopped"
+            fi
+            else
+                echo "✅ Successfully stopped existing processes as regular user"
             fi
         else
             echo "✅ Successfully stopped existing processes"
