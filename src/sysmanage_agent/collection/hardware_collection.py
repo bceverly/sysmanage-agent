@@ -1271,6 +1271,99 @@ class HardwareCollector:
         # Default to physical for unknown cases
         return True
 
+    def _should_skip_ipconfig_line(self, line: str) -> bool:
+        """Check if a line from ipconfig output should be skipped."""
+        if not line:
+            return True
+
+        skip_prefixes = [
+            "Windows IP Configuration",
+            "Host Name",
+            "Primary Dns Suffix",
+            "Node Type",
+            "IP Routing Enabled",
+            "WINS Proxy Enabled",
+            "DNS Suffix Search List",
+        ]
+
+        return any(line.startswith(prefix) for prefix in skip_prefixes)
+
+    def _parse_adapter_property(
+        self, current_adapter: Dict[str, Any], line: str
+    ) -> None:
+        """Parse a single adapter property line from ipconfig output."""
+        key, value = line.split(":", 1)
+        # Clean up the key - remove dots and extra spaces
+        key = key.strip().replace(".", "").replace(" ", " ").strip()
+        value = value.strip()
+
+        if "Media State" in key:
+            self._handle_media_state(current_adapter, value)
+        elif "Description" in key:
+            self._handle_description(current_adapter, value)
+        elif "Physical Address" in key:
+            current_adapter["mac_address"] = value
+        elif "DHCP Enabled" in key:
+            current_adapter["dhcp_enabled"] = value.lower() == "yes"
+        elif "IPv4 Address" in key or key == "IP Address":
+            self._handle_ip_address(current_adapter, value)
+        elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
+            self._handle_ip_address(current_adapter, value)
+        elif "Subnet Mask" in key:
+            if value and value != "(none)" and value:
+                current_adapter["subnet_masks"].append(value)
+        elif "Default Gateway" in key:
+            if value and value != "(none)" and value:
+                current_adapter["gateways"].append(value)
+        elif "DNS Servers" in key:
+            if value and value != "(none)" and value:
+                current_adapter["dns_servers"].append(value)
+
+    def _handle_media_state(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle media state property."""
+        current_adapter["media_state"] = value
+        current_adapter["is_active"] = value != "Media disconnected"
+        current_adapter["connection_status"] = (
+            "Connected" if value != "Media disconnected" else "Disconnected"
+        )
+
+    def _handle_description(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle description property and determine adapter type."""
+        current_adapter["description"] = value
+        # Extract adapter type from description and adapter name
+        adapter_name = current_adapter.get("name", "")
+        combined_text = f"{adapter_name} {value}".lower()
+
+        if "bluetooth" in combined_text:
+            current_adapter["type"] = "Bluetooth"
+        elif "wi-fi" in combined_text or "wireless" in combined_text:
+            current_adapter["type"] = "Wireless"
+        elif (
+            "ethernet" in combined_text
+            or "gigabit" in combined_text
+            or "network connection" in combined_text
+        ):
+            current_adapter["type"] = "Ethernet"
+        elif "loopback" in combined_text:
+            current_adapter["type"] = "Loopback"
+        elif "tunnel" in combined_text or "vpn" in combined_text:
+            current_adapter["type"] = "Tunnel"
+        else:
+            current_adapter["type"] = "Unknown"
+
+    def _handle_ip_address(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle IP address (IPv4 or IPv6) property."""
+        if value and value != "(none)" and value:
+            # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
+            ip = value.split("(")[0].strip()
+            if "%" in ip:  # Remove IPv6 zone ID
+                ip = ip.split("%")[0]
+            if ip:
+                current_adapter["ip_addresses"].append(ip)
+                if not current_adapter["is_active"]:
+                    current_adapter["is_active"] = True
+                    current_adapter["connection_status"] = "Connected"
+
     def _get_windows_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Windows using ipconfig /all."""
 
@@ -1287,32 +1380,33 @@ class HardwareCollector:
             )
 
             if result.returncode != 0:
-                self.logger.error("ipconfig /all failed with return code: %d", result.returncode)
+                self.logger.error(
+                    "ipconfig /all failed with return code: %d", result.returncode
+                )
                 return network_interfaces
 
             # Parse the ipconfig output
             output = result.stdout
             current_adapter = None
 
-            for line in output.split('\n'):
+            for line in output.split("\n"):
                 original_line = line
                 line = line.strip()
 
                 # Skip empty lines and general system info
-                if not line or line.startswith('Windows IP Configuration') or \
-                   line.startswith('Host Name') or line.startswith('Primary Dns Suffix') or \
-                   line.startswith('Node Type') or line.startswith('IP Routing Enabled') or \
-                   line.startswith('WINS Proxy Enabled') or line.startswith('DNS Suffix Search List'):
+                if self._should_skip_ipconfig_line(line):
                     continue
 
                 # Detect new adapter sections (these are not indented)
-                if not original_line.startswith('   ') and ('adapter ' in line and ':' in line):
+                if not original_line.startswith("   ") and (
+                    "adapter " in line and ":" in line
+                ):
                     # Save previous adapter if it exists
                     if current_adapter:
                         network_interfaces.append(current_adapter)
 
                     # Start new adapter
-                    adapter_name = line.split(':')[0].strip()
+                    adapter_name = line.split(":")[0].strip()
                     current_adapter = {
                         "name": adapter_name,
                         "description": adapter_name,
@@ -1326,90 +1420,22 @@ class HardwareCollector:
                         "enabled": True,
                         "is_active": False,
                         "media_state": "Unknown",
-                        "connection_status": "Unknown"
+                        "connection_status": "Unknown",
                     }
                     continue
 
                 # Parse adapter properties (these are indented with spaces)
-                if current_adapter and original_line.startswith('   ') and ':' in line:
-                    key, value = line.split(':', 1)
-                    # Clean up the key - remove dots and extra spaces
-                    key = key.strip().replace('.', '').replace(' ', ' ').strip()
-                    value = value.strip()
-
-                    if "Media State" in key:
-                        current_adapter["media_state"] = value
-                        current_adapter["is_active"] = value != "Media disconnected"
-                        current_adapter["connection_status"] = "Connected" if value != "Media disconnected" else "Disconnected"
-
-                    elif "Description" in key:
-                        current_adapter["description"] = value
-                        # Extract adapter type from description and adapter name
-                        adapter_name = current_adapter.get("name", "")
-                        combined_text = f"{adapter_name} {value}".lower()
-
-                        if "bluetooth" in combined_text:
-                            current_adapter["type"] = "Bluetooth"
-                        elif "wi-fi" in combined_text or "wireless" in combined_text:
-                            current_adapter["type"] = "Wireless"
-                        elif "ethernet" in combined_text or "gigabit" in combined_text or "network connection" in combined_text:
-                            current_adapter["type"] = "Ethernet"
-                        elif "loopback" in combined_text:
-                            current_adapter["type"] = "Loopback"
-                        elif "tunnel" in combined_text or "vpn" in combined_text:
-                            current_adapter["type"] = "Tunnel"
-                        else:
-                            current_adapter["type"] = "Unknown"
-
-                    elif "Physical Address" in key:
-                        current_adapter["mac_address"] = value
-
-                    elif "DHCP Enabled" in key:
-                        current_adapter["dhcp_enabled"] = value.lower() == "yes"
-
-                    elif "IPv4 Address" in key or key == "IP Address":
-                        # Handle multiple IP addresses
-                        if value and value != "(none)" and value:
-                            # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
-                            ip = value.split('(')[0].strip()
-                            if '%' in ip:  # Remove IPv6 zone ID
-                                ip = ip.split('%')[0]
-                            if ip:
-                                current_adapter["ip_addresses"].append(ip)
-                                if not current_adapter["is_active"]:
-                                    current_adapter["is_active"] = True
-                                    current_adapter["connection_status"] = "Connected"
-
-                    elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
-                        if value and value != "(none)" and value:
-                            # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
-                            ip = value.split('(')[0].strip()
-                            if '%' in ip:  # Remove IPv6 zone ID
-                                ip = ip.split('%')[0]
-                            if ip:
-                                current_adapter["ip_addresses"].append(ip)
-                                if not current_adapter["is_active"]:
-                                    current_adapter["is_active"] = True
-                                    current_adapter["connection_status"] = "Connected"
-
-                    elif "Subnet Mask" in key:
-                        if value and value != "(none)" and value:
-                            current_adapter["subnet_masks"].append(value)
-
-                    elif "Default Gateway" in key:
-                        if value and value != "(none)" and value:
-                            current_adapter["gateways"].append(value)
-
-                    elif "DNS Servers" in key:
-                        if value and value != "(none)" and value:
-                            current_adapter["dns_servers"].append(value)
+                if current_adapter and original_line.startswith("   ") and ":" in line:
+                    self._parse_adapter_property(current_adapter, line)
 
             # Don't forget the last adapter
             if current_adapter:
                 network_interfaces.append(current_adapter)
 
         except Exception as e:
-            self.logger.error("Failed to get Windows network info via ipconfig: %s", str(e))
+            self.logger.error(
+                "Failed to get Windows network info via ipconfig: %s", str(e)
+            )
             network_interfaces.append(
                 {"error": _("Failed to get Windows network configuration: %s") % str(e)}
             )
