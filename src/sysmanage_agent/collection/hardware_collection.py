@@ -1120,16 +1120,18 @@ class HardwareCollector:
         return memory_info
 
     def _get_windows_storage_info(self) -> List[Dict[str, Any]]:
-        """Get storage information on Windows using wmic."""
+        """Get storage information on Windows using wmic for both physical and logical drives."""
 
         storage_devices = []
+
+        # First, get physical disk drives
         try:
             result = subprocess.run(
                 [
                     "wmic",
-                    "logicaldisk",
+                    "diskdrive",
                     "get",
-                    "Size,FreeSpace,FileSystem,DeviceID",
+                    "Size,Model,DeviceID,InterfaceType",
                     "/format:csv",
                 ],  # nosec B603, B607
                 capture_output=True,
@@ -1145,19 +1147,59 @@ class HardwareCollector:
                     data = line.split(",")
                     if len(data) >= 4 and data[1].strip():
                         device_info = {
-                            "name": data[1].strip(),
-                            "file_system": data[2].strip(),
-                            "free_space": int(data[3]) if data[3].strip() else 0,
-                            "size": int(data[4]) if data[4].strip() else 0,
-                            "is_physical": self._is_physical_volume_windows(
-                                data[1].strip()
+                            "name": data[1].strip(),  # DeviceID like \\.\PHYSICALDRIVE0
+                            "model": data[3].strip() if len(data) > 3 else "Unknown",
+                            "size": int(data[4]) if data[4].strip().isdigit() else 0,
+                            "interface_type": (
+                                data[2].strip() if len(data) > 2 else "Unknown"
                             ),
+                            "is_physical": True,
+                            "device_type": "physical",
+                            "file_system": "N/A",  # Physical drives don't have filesystems
+                            "free_space": 0,  # Physical drives don't have free space concept
+                        }
+                        storage_devices.append(device_info)
+        except Exception as e:
+            self.logger.error("Failed to get Windows physical disk info: %s", str(e))
+
+        # Then, get logical drives (partitions/volumes)
+        try:
+            result = subprocess.run(
+                [
+                    "wmic",
+                    "logicaldisk",
+                    "get",
+                    "Size,FreeSpace,FileSystem,DeviceID,VolumeName",
+                    "/format:csv",
+                ],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode == 0:
+                lines = [
+                    line for line in result.stdout.strip().split("\n") if line.strip()
+                ]
+                for line in lines[1:]:  # Skip header
+                    data = line.split(",")
+                    if len(data) >= 4 and data[1].strip():
+                        device_info = {
+                            "name": data[1].strip(),  # Drive letter like C:
+                            "file_system": data[2].strip(),
+                            "free_space": (
+                                int(data[3]) if data[3].strip().isdigit() else 0
+                            ),
+                            "size": int(data[4]) if data[4].strip().isdigit() else 0,
+                            "volume_name": data[5].strip() if len(data) > 5 else "",
+                            "is_physical": False,  # Logical drives are never physical
+                            "device_type": "logical",
                         }
                         storage_devices.append(device_info)
 
         except Exception as e:
             storage_devices.append(
-                {"error": _("Failed to get Windows storage info: %s") % str(e)}
+                {"error": _("Failed to get Windows logical disk info: %s") % str(e)}
             )
 
         return storage_devices
@@ -1230,46 +1272,146 @@ class HardwareCollector:
         return True
 
     def _get_windows_network_info(self) -> List[Dict[str, Any]]:
-        """Get network information on Windows using wmic."""
+        """Get network information on Windows using ipconfig /all."""
 
         network_interfaces = []
+
         try:
+            # Run ipconfig /all to get comprehensive network information
             result = subprocess.run(
-                [
-                    "wmic",
-                    "path",
-                    "win32_networkadapter",
-                    "get",
-                    "Name,AdapterType,MACAddress,NetEnabled",
-                    "/format:csv",
-                ],  # nosec B603, B607
+                ["ipconfig", "/all"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
                 check=False,
             )
-            if result.returncode == 0:
-                lines = [
-                    line for line in result.stdout.strip().split("\n") if line.strip()
-                ]
-                for line in lines[1:]:  # Skip header
-                    data = line.split(",")
-                    if len(data) >= 4 and data[2].strip():
-                        interface_info = {
-                            "type": data[1].strip(),
-                            "mac_address": data[2].strip(),
-                            "name": data[3].strip(),
-                            "enabled": (
-                                data[4].strip().lower() == "true"
-                                if data[4].strip()
-                                else False
-                            ),
-                        }
-                        network_interfaces.append(interface_info)
+
+            if result.returncode != 0:
+                self.logger.error("ipconfig /all failed with return code: %d", result.returncode)
+                return network_interfaces
+
+            # Parse the ipconfig output
+            output = result.stdout
+            current_adapter = None
+
+            for line in output.split('\n'):
+                original_line = line
+                line = line.strip()
+
+                # Skip empty lines and general system info
+                if not line or line.startswith('Windows IP Configuration') or \
+                   line.startswith('Host Name') or line.startswith('Primary Dns Suffix') or \
+                   line.startswith('Node Type') or line.startswith('IP Routing Enabled') or \
+                   line.startswith('WINS Proxy Enabled') or line.startswith('DNS Suffix Search List'):
+                    continue
+
+                # Detect new adapter sections (these are not indented)
+                if not original_line.startswith('   ') and ('adapter ' in line and ':' in line):
+                    # Save previous adapter if it exists
+                    if current_adapter:
+                        network_interfaces.append(current_adapter)
+
+                    # Start new adapter
+                    adapter_name = line.split(':')[0].strip()
+                    current_adapter = {
+                        "name": adapter_name,
+                        "description": adapter_name,
+                        "type": "Unknown",
+                        "mac_address": None,
+                        "ip_addresses": [],
+                        "subnet_masks": [],
+                        "gateways": [],
+                        "dns_servers": [],
+                        "dhcp_enabled": False,
+                        "enabled": True,
+                        "is_active": False,
+                        "media_state": "Unknown",
+                        "connection_status": "Unknown"
+                    }
+                    continue
+
+                # Parse adapter properties (these are indented with spaces)
+                if current_adapter and original_line.startswith('   ') and ':' in line:
+                    key, value = line.split(':', 1)
+                    # Clean up the key - remove dots and extra spaces
+                    key = key.strip().replace('.', '').replace(' ', ' ').strip()
+                    value = value.strip()
+
+                    if "Media State" in key:
+                        current_adapter["media_state"] = value
+                        current_adapter["is_active"] = value != "Media disconnected"
+                        current_adapter["connection_status"] = "Connected" if value != "Media disconnected" else "Disconnected"
+
+                    elif "Description" in key:
+                        current_adapter["description"] = value
+                        # Extract adapter type from description and adapter name
+                        adapter_name = current_adapter.get("name", "")
+                        combined_text = f"{adapter_name} {value}".lower()
+
+                        if "bluetooth" in combined_text:
+                            current_adapter["type"] = "Bluetooth"
+                        elif "wi-fi" in combined_text or "wireless" in combined_text:
+                            current_adapter["type"] = "Wireless"
+                        elif "ethernet" in combined_text or "gigabit" in combined_text or "network connection" in combined_text:
+                            current_adapter["type"] = "Ethernet"
+                        elif "loopback" in combined_text:
+                            current_adapter["type"] = "Loopback"
+                        elif "tunnel" in combined_text or "vpn" in combined_text:
+                            current_adapter["type"] = "Tunnel"
+                        else:
+                            current_adapter["type"] = "Unknown"
+
+                    elif "Physical Address" in key:
+                        current_adapter["mac_address"] = value
+
+                    elif "DHCP Enabled" in key:
+                        current_adapter["dhcp_enabled"] = value.lower() == "yes"
+
+                    elif "IPv4 Address" in key or key == "IP Address":
+                        # Handle multiple IP addresses
+                        if value and value != "(none)" and value:
+                            # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
+                            ip = value.split('(')[0].strip()
+                            if '%' in ip:  # Remove IPv6 zone ID
+                                ip = ip.split('%')[0]
+                            if ip:
+                                current_adapter["ip_addresses"].append(ip)
+                                if not current_adapter["is_active"]:
+                                    current_adapter["is_active"] = True
+                                    current_adapter["connection_status"] = "Connected"
+
+                    elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
+                        if value and value != "(none)" and value:
+                            # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
+                            ip = value.split('(')[0].strip()
+                            if '%' in ip:  # Remove IPv6 zone ID
+                                ip = ip.split('%')[0]
+                            if ip:
+                                current_adapter["ip_addresses"].append(ip)
+                                if not current_adapter["is_active"]:
+                                    current_adapter["is_active"] = True
+                                    current_adapter["connection_status"] = "Connected"
+
+                    elif "Subnet Mask" in key:
+                        if value and value != "(none)" and value:
+                            current_adapter["subnet_masks"].append(value)
+
+                    elif "Default Gateway" in key:
+                        if value and value != "(none)" and value:
+                            current_adapter["gateways"].append(value)
+
+                    elif "DNS Servers" in key:
+                        if value and value != "(none)" and value:
+                            current_adapter["dns_servers"].append(value)
+
+            # Don't forget the last adapter
+            if current_adapter:
+                network_interfaces.append(current_adapter)
 
         except Exception as e:
+            self.logger.error("Failed to get Windows network info via ipconfig: %s", str(e))
             network_interfaces.append(
-                {"error": _("Failed to get Windows network info: %s") % str(e)}
+                {"error": _("Failed to get Windows network configuration: %s") % str(e)}
             )
 
         return network_interfaces

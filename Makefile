@@ -164,7 +164,11 @@ endif
 # Stop agent
 stop:
 	@echo "Stopping SysManage Agent..."
+ifeq ($(OS),Windows_NT)
+	@powershell -ExecutionPolicy Bypass -File ./scripts/stop.ps1
+else
 	@./scripts/stop.sh
+endif
 
 # Development helpers
 check-syntax: setup-venv
