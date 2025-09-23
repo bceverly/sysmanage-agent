@@ -5,7 +5,6 @@ Tests database initialization functionality.
 
 from unittest.mock import Mock
 
-
 from src.database.init import get_database_path_from_config, initialize_database
 
 

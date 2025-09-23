@@ -8,7 +8,6 @@ Tests flexible logging with granular level control.
 import logging
 from unittest.mock import Mock, patch
 
-
 from src.sysmanage_agent.utils.verbosity_logger import FlexibleLogger, get_logger
 
 

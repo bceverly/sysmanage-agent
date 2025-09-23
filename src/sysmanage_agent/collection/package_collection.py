@@ -5,11 +5,11 @@ This module handles the collection of available packages from various package ma
 and stores them in the local SQLite database for later transmission to the server.
 """
 
-import subprocess  # nosec B404
 import logging
-from datetime import datetime, timezone
-from typing import List, Dict
 import platform
+import subprocess  # nosec B404
+from datetime import datetime, timezone
+from typing import Dict, List
 
 from src.database.base import get_database_manager
 from src.database.models import AvailablePackage

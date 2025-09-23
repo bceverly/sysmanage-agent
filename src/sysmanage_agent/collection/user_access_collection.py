@@ -11,8 +11,8 @@ from typing import Any, Dict, List
 
 # Unix-only imports - conditionally imported based on platform
 try:
-    import pwd
     import grp
+    import pwd
 except ImportError:
     # Windows doesn't have pwd/grp modules
     pwd = None

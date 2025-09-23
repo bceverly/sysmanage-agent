@@ -6,7 +6,8 @@ Tests script execution operations with security and validation.
 # pylint: disable=protected-access,attribute-defined-outside-init
 
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
 from src.sysmanage_agent.operations.script_operations import ScriptOperations

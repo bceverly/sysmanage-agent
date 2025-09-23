@@ -19,7 +19,7 @@ import platform
 import re
 import subprocess  # nosec B404
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 

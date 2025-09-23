@@ -6,11 +6,11 @@ Create Date: 2025-09-21 16:00:00.000000
 
 """
 
-from typing import Sequence, Union
 import uuid
+from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.

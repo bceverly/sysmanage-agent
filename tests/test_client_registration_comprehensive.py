@@ -6,7 +6,8 @@ Tests client registration with server and system information collection.
 # pylint: disable=protected-access,attribute-defined-outside-init
 
 import ssl
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
 from src.sysmanage_agent.registration.client_registration import ClientRegistration
@@ -27,7 +28,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "use_https": True,
         }
 
-        # Mock all the collection modules
+        # Mock all the collection modules and database session
         with patch(
             "src.sysmanage_agent.registration.client_registration.HardwareCollector"
         ), patch(
@@ -38,7 +39,15 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "src.sysmanage_agent.registration.client_registration.UserAccessCollector"
         ), patch(
             "src.sysmanage_agent.registration.client_registration.SoftwareInventoryCollector"
-        ):
+        ), patch(
+            "src.sysmanage_agent.registration.client_registration.get_db_session"
+        ) as mock_db_session:
+            # Mock the database session to return no existing auth data
+            mock_session = Mock()
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
+            mock_db_session.return_value.__enter__.return_value = mock_session
 
             self.client_reg = ClientRegistration(self.mock_config)
 
@@ -348,7 +357,8 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
     def test_get_host_id_none(self):
         """Test getting host ID when registration data is None."""
-        assert self.client_reg.get_host_id() is None
+        with patch.object(self.client_reg, "_get_stored_host_id", return_value=None):
+            assert self.client_reg.get_host_id() is None
 
     def test_get_host_id_available(self):
         """Test getting host ID when registration data is available."""

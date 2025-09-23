@@ -6,10 +6,10 @@ Provides reliable message delivery with queue-based persistence.
 import asyncio
 import json
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
+from src.database.models import Priority, QueueDirection
 from src.database.queue_manager import MessageQueueManager
-from src.database.models import QueueDirection, Priority
 from src.i18n import _
 
 

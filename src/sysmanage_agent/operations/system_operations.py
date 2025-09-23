@@ -10,12 +10,12 @@ import os
 import platform
 import socket
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 
-from src.sysmanage_agent.collection.update_detection import UpdateDetector
-from src.database.models import InstallationRequestTracking
 from src.database.base import get_database_manager
+from src.database.models import InstallationRequestTracking
 from src.i18n import _
+from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
 class SystemOperations:

@@ -4,13 +4,13 @@ Test data separation functionality - minimal registration vs comprehensive OS da
 
 # pylint: disable=duplicate-code
 
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from main import SysManageAgent
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.registration.client_registration import ClientRegistration
-from main import SysManageAgent
 
 
 class TestDataSeparation:

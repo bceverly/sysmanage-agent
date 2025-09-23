@@ -5,7 +5,7 @@ Tests configuration management with YAML files and security priority.
 
 # pylint: disable=attribute-defined-outside-init
 
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 import pytest
 import yaml

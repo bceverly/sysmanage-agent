@@ -3,7 +3,7 @@ Base test class for message handler tests.
 Provides common setup to avoid code duplication.
 """
 
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 

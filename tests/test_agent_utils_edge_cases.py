@@ -4,14 +4,14 @@ Focused on improving test coverage by targeting uncovered paths.
 """
 
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from src.sysmanage_agent.core.agent_utils import (
-    UpdateChecker,
     AuthenticationHelper,
     MessageProcessor,
+    UpdateChecker,
     is_running_privileged,
 )
 

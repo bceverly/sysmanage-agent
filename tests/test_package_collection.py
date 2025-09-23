@@ -9,9 +9,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.sysmanage_agent.collection.package_collection import (
-    PackageCollector,
-)
+from src.sysmanage_agent.collection.package_collection import PackageCollector
 
 
 class TestPackageCollector:  # pylint: disable=too-many-public-methods

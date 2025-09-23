@@ -9,9 +9,9 @@ from unittest.mock import patch
 
 import pytest
 
-from src.sysmanage_agent.core.config import ConfigManager
-from src.i18n import set_language, get_language, _, TRANSLATIONS, get_translation
 from main import SysManageAgent
+from src.i18n import TRANSLATIONS, _, get_language, get_translation, set_language
+from src.sysmanage_agent.core.config import ConfigManager
 
 
 class TestAgentI18nConfiguration:

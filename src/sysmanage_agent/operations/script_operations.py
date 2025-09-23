@@ -11,7 +11,7 @@ import shutil
 import stat
 import tempfile
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 

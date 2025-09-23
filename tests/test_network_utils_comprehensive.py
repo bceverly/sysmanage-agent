@@ -6,8 +6,7 @@ Tests network utilities for hostname and IP address detection.
 # pylint: disable=attribute-defined-outside-init
 
 import socket
-from unittest.mock import Mock, patch, mock_open
-
+from unittest.mock import Mock, mock_open, patch
 
 from src.sysmanage_agent.communication.network_utils import NetworkUtils
 

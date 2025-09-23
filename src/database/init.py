@@ -2,11 +2,12 @@
 Database initialization and migration management for SysManage Agent.
 """
 
+import logging
 import os
 import subprocess  # nosec B404
-import logging
 
 from src.i18n import _
+
 from .base import get_database_manager
 
 logger = logging.getLogger(__name__)

@@ -6,11 +6,11 @@ Tests the missing coverage areas.
 from unittest.mock import patch
 
 from src.i18n import (
-    set_language,
-    get_translation,
-    ngettext,
     DEFAULT_LANGUAGE,
     TRANSLATIONS,
+    get_translation,
+    ngettext,
+    set_language,
 )
 
 

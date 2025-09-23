@@ -7,9 +7,9 @@ from unittest.mock import Mock, patch
 
 from src.database.init import (
     get_database_path_from_config,
-    should_auto_migrate,
-    run_alembic_migration,
     initialize_database,
+    run_alembic_migration,
+    should_auto_migrate,
 )
 
 

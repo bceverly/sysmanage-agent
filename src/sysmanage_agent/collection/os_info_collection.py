@@ -3,10 +3,10 @@ OS information collection module for SysManage Agent.
 Handles platform-specific OS version and architecture information gathering.
 """
 
-import platform
-import logging
-import subprocess  # nosec B404
 import json
+import logging
+import platform
+import subprocess  # nosec B404
 from typing import Any, Dict
 
 from src.i18n import _

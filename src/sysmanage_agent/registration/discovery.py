@@ -6,8 +6,8 @@ Provides automatic server discovery and configuration retrieval.
 import asyncio
 import json
 import logging
-import socket
 import platform
+import socket
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 

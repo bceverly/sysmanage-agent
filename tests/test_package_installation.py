@@ -5,7 +5,7 @@ Unit tests for agent-side package installation functionality
 import os
 import sys
 from datetime import datetime, timezone
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -13,8 +13,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # pylint: disable=wrong-import-position,protected-access
-from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.operations.system_operations import SystemOperations
 
 
 class TestPackageInstallation:

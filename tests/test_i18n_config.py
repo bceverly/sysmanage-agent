@@ -2,10 +2,11 @@
 Test internationalization configuration functionality.
 """
 
-import tempfile
 import os
+import tempfile
+
+from src.i18n import get_language, set_language
 from src.sysmanage_agent.core.config import ConfigManager
-from src.i18n import set_language, get_language
 
 
 def test_config_manager_language_default():

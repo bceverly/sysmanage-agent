@@ -19,7 +19,19 @@ class TestClientRegistrationEdgeCases:
         """Set up test environment."""
         # pylint: disable=attribute-defined-outside-init
         self.mock_config = Mock()
-        self.client_registration = ClientRegistration(self.mock_config)
+
+        # Mock database session to prevent loading existing auth data
+        with patch(
+            "src.sysmanage_agent.registration.client_registration.get_db_session"
+        ) as mock_db_session:
+            # Mock the database session to return no existing auth data
+            mock_session = Mock()
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
+            mock_db_session.return_value.__enter__.return_value = mock_session
+
+            self.client_registration = ClientRegistration(self.mock_config)
 
     def test_init_without_aiohttp(self):
         """Test initialization when aiohttp is not available."""
@@ -87,7 +99,10 @@ class TestClientRegistrationEdgeCases:
 
     def test_get_host_id_no_registration_data(self):
         """Test get_host_id when no registration data exists."""
-        assert self.client_registration.get_host_id() is None
+        with patch.object(
+            self.client_registration, "_get_stored_host_id", return_value=None
+        ):
+            assert self.client_registration.get_host_id() is None
 
     def test_get_host_id_with_registration_data(self):
         """Test get_host_id with valid registration data."""

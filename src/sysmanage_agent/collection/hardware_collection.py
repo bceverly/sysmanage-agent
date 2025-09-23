@@ -3,14 +3,15 @@ Hardware collection module for SysManage Agent.
 Handles platform-specific hardware information gathering.
 """
 
+import glob
 import json
+import logging
 import os
 import platform
-import logging
 import re
 import subprocess  # nosec B404
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 
@@ -133,6 +134,50 @@ class HardwareCollector:
     def _get_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
         return datetime.now(timezone.utc).isoformat()
+
+    def _parse_size_to_bytes(self, size_str: str) -> int:
+        """Parse human-readable size to bytes."""
+        if not size_str or size_str == "-":
+            return 0
+
+        size_str = size_str.strip().upper()
+        try:
+            # Handle cases like "42G", "4.7G", "312K", "1.0K", "0B"
+            multipliers = {
+                "B": 1,
+                "K": 1024,
+                "M": 1024**2,
+                "G": 1024**3,
+                "T": 1024**4,
+                "P": 1024**5,
+            }
+
+            # Extract numeric part and unit
+            numeric_part = ""
+            unit = ""
+            for char in size_str:
+                if char.isdigit() or char == ".":
+                    numeric_part += char
+                else:
+                    unit = size_str[len(numeric_part) :].strip()
+                    break
+
+            if not numeric_part:
+                return 0
+
+            size_float = float(numeric_part)
+
+            # Find the multiplier
+            multiplier = 1
+            for suffix, mult in multipliers.items():
+                if unit.startswith(suffix):
+                    multiplier = mult
+                    break
+
+            return int(size_float * multiplier)
+
+        except (ValueError, TypeError):
+            return 0
 
     # macOS hardware collection methods
     def _get_macos_cpu_info(self) -> Dict[str, Any]:
@@ -1363,6 +1408,15 @@ class HardwareCollector:
                         if self._should_skip_bsd_filesystem(device_name, mount_point):
                             continue
 
+                        is_physical = self._is_physical_volume_bsd(
+                            device_name, mount_point
+                        )
+
+                        # Convert human-readable sizes to bytes
+                        capacity_bytes = self._parse_size_to_bytes(parts[1])
+                        used_bytes = self._parse_size_to_bytes(parts[2])
+                        available_bytes = self._parse_size_to_bytes(parts[3])
+
                         device_info = {
                             "name": device_name,
                             "size": parts[1],
@@ -1370,9 +1424,13 @@ class HardwareCollector:
                             "available": parts[3],
                             "mount_point": mount_point,
                             "type": "unknown",  # Will be updated from mount command
-                            "is_physical": self._is_physical_volume_bsd(
-                                device_name, mount_point
-                            ),
+                            "is_physical": is_physical,
+                            "device_type": "physical" if is_physical else "logical",
+                            # Add fields expected by server API
+                            "capacity_bytes": capacity_bytes,
+                            "used_bytes": used_bytes,
+                            "available_bytes": available_bytes,
+                            "file_system": "unknown",  # Will be updated from mount command
                         }
                         storage_devices.append(device_info)
 
@@ -1399,6 +1457,10 @@ class HardwareCollector:
                 for device in storage_devices:
                     if device["name"] in device_types:
                         device["type"] = device_types[device["name"]]
+                        device["file_system"] = device_types[device["name"]]
+
+            # Add physical storage devices (not shown in df but exist as block devices)
+            self._add_physical_bsd_devices(storage_devices)
 
         except Exception as e:
             storage_devices.append(
@@ -1471,6 +1533,116 @@ class HardwareCollector:
         # Default to physical for /dev/ devices, logical for everything else
         return device_name.startswith("/dev/")
 
+    def _add_physical_bsd_devices(self, storage_devices: List[Dict[str, Any]]) -> None:
+        """Add physical storage devices that may not appear in df output."""
+
+        # Track devices we already have to avoid duplicates
+        existing_devices = {device["name"] for device in storage_devices}
+
+        # Physical device patterns to search for
+        device_patterns = [
+            "/dev/ada*",  # FreeBSD SATA drives
+            "/dev/da*",  # FreeBSD SCSI/USB drives
+            "/dev/nvd*",  # NVMe drives
+            "/dev/sd*",  # OpenBSD/some FreeBSD SCSI drives
+            "/dev/wd*",  # OpenBSD IDE/SATA drives
+        ]
+
+        for pattern in device_patterns:
+            for device_path in glob.glob(pattern):
+                self._process_physical_device(
+                    device_path, storage_devices, existing_devices
+                )
+
+    def _process_physical_device(
+        self,
+        device_path: str,
+        storage_devices: List[Dict[str, Any]],
+        existing_devices: set,
+    ) -> None:
+        """Process a single physical device and add it to storage_devices if valid."""
+        # Skip partition devices (e.g., ada0p1, ada0s1), focus on whole disks
+        base_device = device_path
+        if any(c in os.path.basename(device_path) for c in ["p", "s"]):
+            # This looks like a partition, get the base device
+            match = re.match(r"(/dev/[a-z]+\d+)", device_path)
+            if match:
+                base_device = match.group(1)
+            else:
+                return  # Skip if we can't determine base device
+
+        # Skip if we already have this device
+        if base_device in existing_devices:
+            return
+
+        try:
+            # Get device size using diskinfo if available
+            size_bytes = 0
+            size_human = "Unknown"
+
+            try:
+                result = subprocess.run(
+                    ["diskinfo", base_device],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    # diskinfo output format: device_name size_bytes sector_size ...
+                    parts = result.stdout.strip().split("\t")
+                    if len(parts) >= 2:
+                        size_bytes = int(parts[1])
+                        # Convert to human readable
+                        size_human = self._bytes_to_human_readable(size_bytes)
+            except (subprocess.TimeoutExpired, ValueError, FileNotFoundError):
+                # diskinfo not available or failed, try stat
+                try:
+                    stat_result = os.stat(base_device)
+                    size_bytes = stat_result.st_size
+                    size_human = self._bytes_to_human_readable(size_bytes)
+                except (OSError, AttributeError):
+                    pass
+
+            # Add the physical device
+            device_info = {
+                "name": base_device,
+                "size": size_human,
+                "used": "N/A",  # Not applicable for raw devices
+                "available": "N/A",  # Not applicable for raw devices
+                "mount_point": "",  # Raw devices are not mounted
+                "type": "block",
+                "is_physical": True,
+                "device_type": "physical",
+                "capacity_bytes": size_bytes,
+                "used_bytes": 0,  # Not applicable for raw devices
+                "available_bytes": size_bytes,  # Whole device is "available"
+                "file_system": "raw",  # Raw block device
+            }
+            storage_devices.append(device_info)
+            existing_devices.add(base_device)
+
+        except Exception:
+            # Skip devices we can't access
+            pass
+
+    def _bytes_to_human_readable(self, size_bytes: int) -> str:
+        """Convert bytes to human readable format."""
+        if size_bytes == 0:
+            return "0B"
+
+        units = ["B", "K", "M", "G", "T", "P"]
+        unit_index = 0
+        size = float(size_bytes)
+
+        while size >= 1024 and unit_index < len(units) - 1:
+            size /= 1024
+            unit_index += 1
+
+        if unit_index == 0:
+            return f"{int(size)}B"
+        return f"{size:.1f}{units[unit_index]}"
+
     def _get_bsd_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""
 
@@ -1486,15 +1658,18 @@ class HardwareCollector:
             if result.returncode == 0:
                 current_interface: Optional[Dict[str, Any]] = None
                 for line in result.stdout.split("\n"):
+                    original_line = line
                     line = line.strip()
                     if not line:
                         continue
 
-                    # New interface (starts at beginning of line)
+                    # New interface (starts at beginning of line, has interface_name:)
                     if (
-                        not line.startswith("\t")
-                        and not line.startswith(" ")
+                        not original_line.startswith("\t")
+                        and not original_line.startswith(" ")
                         and ":" in line
+                        and " flags="
+                        in line  # Must have flags to be an interface header
                     ):
                         if current_interface:
                             network_interfaces.append(current_interface)
@@ -1504,39 +1679,97 @@ class HardwareCollector:
                             current_interface = None
                             continue
 
-                        current_interface = {
-                            "name": interface_name,
-                            "flags": "",
-                            "type": "ethernet",  # Default type
-                            "mac_address": "",
-                            "state": "unknown",
-                        }
-
-                        # Extract flags from the line
+                        # Determine if interface is up from flags
+                        flags_str = ""
+                        is_up = False
                         if "flags=" in line:
                             flags_start = line.find("flags=") + 6
                             flags_end = line.find(">", flags_start)
                             if flags_end > flags_start:
-                                current_interface["flags"] = line[flags_start:flags_end]
+                                flags_str = line[flags_start:flags_end]
+                                is_up = "UP" in flags_str
+
+                        current_interface = {
+                            "name": interface_name,
+                            "flags": flags_str,
+                            "interface_type": "ethernet",  # Default type
+                            "hardware_type": "ethernet",  # Alias for compatibility
+                            "mac_address": "",
+                            "ipv4_address": None,
+                            "ipv6_address": None,
+                            "subnet_mask": None,
+                            "is_active": is_up,
+                            "speed_mbps": None,
+                        }
 
                     # Interface details (indented lines)
                     elif current_interface and (
-                        line.startswith("\t") or line.startswith(" ")
+                        original_line.startswith("\t") or original_line.startswith(" ")
                     ):
                         if "ether " in line:
-                            # MAC address line
+                            # MAC address line: "ether 08:00:27:12:34:56"
                             parts = line.split()
                             if len(parts) >= 2 and current_interface is not None:
                                 # pylint: disable-next=unsupported-assignment-operation
                                 current_interface["mac_address"] = parts[1]
+                        elif "inet " in line and current_interface is not None:
+                            # IPv4 address line: "inet 192.168.4.188 netmask 0xffffff00 broadcast 192.168.4.255"
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["ipv4_address"] = parts[1]
+                            if "netmask" in parts:
+                                netmask_idx = parts.index("netmask")
+                                if netmask_idx + 1 < len(parts):
+                                    netmask_hex = parts[netmask_idx + 1]
+                                    # Convert hex netmask to decimal notation
+                                    if netmask_hex.startswith("0x"):
+                                        try:
+                                            netmask_int = int(netmask_hex, 16)
+                                            # Convert to dotted decimal notation
+                                            subnet_mask = ".".join(
+                                                [
+                                                    str(
+                                                        (netmask_int >> (8 * (3 - i)))
+                                                        & 0xFF
+                                                    )
+                                                    for i in range(4)
+                                                ]
+                                            )
+                                            # pylint: disable-next=unsupported-assignment-operation
+                                            current_interface["subnet_mask"] = (
+                                                subnet_mask
+                                            )
+                                        except ValueError:
+                                            pass
+                        elif "inet6 " in line and current_interface is not None:
+                            # IPv6 address line: "inet6 fe80::a00:27ff:fe12:3456%em0 prefixlen 64"
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                ipv6_addr = parts[1]
+                                # Remove interface suffix if present (e.g., %em0)
+                                if "%" in ipv6_addr:
+                                    ipv6_addr = ipv6_addr.split("%")[0]
+                                # Skip link-local addresses for primary IPv6
+                                if (
+                                    not ipv6_addr.startswith("fe80:")
+                                    and current_interface is not None
+                                    and current_interface.get("ipv6_address") is None
+                                ):
+                                    # pylint: disable-next=unsupported-assignment-operation
+                                    current_interface["ipv6_address"] = ipv6_addr
                         elif "media:" in line and current_interface is not None:
                             # Media type information
                             if "Ethernet" in line:
                                 # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["type"] = "ethernet"
+                                current_interface["interface_type"] = "ethernet"
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["hardware_type"] = "ethernet"
                             elif "IEEE802.11" in line or "wireless" in line.lower():
                                 # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["type"] = "wireless"
+                                current_interface["interface_type"] = "wireless"
+                                # pylint: disable-next=unsupported-assignment-operation
+                                current_interface["hardware_type"] = "wireless"
 
                 # Add the last interface
                 if current_interface:

@@ -9,13 +9,13 @@ import socket
 import ssl
 import sys
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 
 import aiohttp
 
-from src.i18n import _
-from src.database.models import Priority, ScriptExecution
 from src.database.base import get_database_manager
+from src.database.models import Priority, ScriptExecution
+from src.i18n import _
 from src.sysmanage_agent.collection.package_collection import PackageCollector
 
 

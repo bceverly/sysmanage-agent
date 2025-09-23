@@ -5,6 +5,7 @@ Unit tests for OS-level system update detection functionality (Feature #50).
 # pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init
 
 from unittest.mock import Mock, patch
+
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 

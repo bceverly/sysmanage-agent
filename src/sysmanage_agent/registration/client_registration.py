@@ -3,19 +3,21 @@ Client registration module for SysManage Agent.
 Handles initial registration and periodic re-registration with the server.
 """
 
-import ssl
-import logging
 import asyncio
+import logging
+import ssl
 from typing import Any, Dict, Optional
 
+from src.database.base import get_db_session
+from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
-from src.sysmanage_agent.communication.network_utils import NetworkUtils
-from src.sysmanage_agent.collection.user_access_collection import UserAccessCollector
 from src.sysmanage_agent.collection.software_inventory_collection import (
     SoftwareInventoryCollector,
 )
+from src.sysmanage_agent.collection.user_access_collection import UserAccessCollector
+from src.sysmanage_agent.communication.network_utils import NetworkUtils
 
 try:
     import aiohttp
@@ -41,6 +43,9 @@ class ClientRegistration:
         self.network_utils = NetworkUtils(config_manager)
         self.user_access_collector = UserAccessCollector()
         self.software_inventory_collector = SoftwareInventoryCollector()
+
+        # Load existing authentication data from database
+        self._load_stored_auth_data()
 
     def _create_basic_registration_dict(
         self, hostname: str, ipv4: str, ipv6: str
@@ -162,9 +167,16 @@ class ClientRegistration:
                         response_data = await response.json()
                         self.registration_data = response_data
                         self.registered = True
+
+                        # Store authentication data in database
+                        host_id = response_data.get("id")
+                        host_token = response_data.get("host_token")
+                        if host_id:
+                            self._store_auth_data(host_id, host_token)
+
                         self.logger.info(
                             "Successfully registered with server. Host ID: %s",
-                            response_data.get("id"),
+                            host_id,
                         )
                         return True
                     if response.status == 409:
@@ -230,8 +242,101 @@ class ClientRegistration:
         return self.registration_data
 
     def get_host_id(self) -> Optional[str]:
-        """Get the host ID from registration data."""
+        """Get the host ID from registration data or stored data."""
         if self.registration_data:
             host_id = self.registration_data.get("id")
             return str(host_id) if host_id is not None else None
-        return None
+
+        # Try to get from stored authentication data
+        return self._get_stored_host_id()
+
+    def get_host_token(self) -> Optional[str]:
+        """Get the host token from registration data or stored data."""
+        if self.registration_data:
+            host_token = self.registration_data.get("host_token")
+            return str(host_token) if host_token is not None else None
+
+        # Try to get from stored authentication data
+        return self._get_stored_host_token()
+
+    def _load_stored_auth_data(self) -> None:
+        """Load stored authentication data from database on startup."""
+        try:
+            with get_db_session() as session:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(HostApproval.approval_status == "approved")
+                    .first()
+                )
+
+                if approval and approval.host_id:
+                    # Create registration data from stored authentication
+                    self.registration_data = {
+                        "id": str(approval.host_id),
+                        "host_token": approval.host_token,
+                    }
+                    self.registered = True
+                    self.logger.info(
+                        "Loaded stored authentication: Host ID %s", approval.host_id
+                    )
+                else:
+                    self.logger.debug("No stored authentication data found")
+        except Exception as e:
+            self.logger.error("Error loading stored auth data: %s", e)
+
+    def _store_auth_data(self, host_id: str, host_token: Optional[str]) -> None:
+        """Store authentication data in database."""
+        try:
+            with get_db_session() as session:
+                # Check if approval record already exists
+                approval = (
+                    session.query(HostApproval)
+                    .filter(HostApproval.host_id == host_id)
+                    .first()
+                )
+
+                if approval:
+                    # Update existing record
+                    approval.host_token = host_token
+                    approval.approval_status = "approved"
+                else:
+                    # Create new approval record
+                    approval = HostApproval(
+                        host_id=host_id,
+                        host_token=host_token,
+                        approval_status="approved",
+                    )
+                    session.add(approval)
+
+                session.commit()
+                self.logger.info("Stored authentication data for host_id: %s", host_id)
+        except Exception as e:
+            self.logger.error("Error storing auth data: %s", e)
+
+    def _get_stored_host_id(self) -> Optional[str]:
+        """Get host_id from database."""
+        try:
+            with get_db_session() as session:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(HostApproval.approval_status == "approved")
+                    .first()
+                )
+                return str(approval.host_id) if approval and approval.host_id else None
+        except Exception as e:
+            self.logger.error("Error getting stored host_id: %s", e)
+            return None
+
+    def _get_stored_host_token(self) -> Optional[str]:
+        """Get host_token from database."""
+        try:
+            with get_db_session() as session:
+                approval = (
+                    session.query(HostApproval)
+                    .filter(HostApproval.approval_status == "approved")
+                    .first()
+                )
+                return approval.host_token if approval else None
+        except Exception as e:
+            self.logger.error("Error getting stored host_token: %s", e)
+            return None

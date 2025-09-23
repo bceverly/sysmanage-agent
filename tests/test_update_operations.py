@@ -3,7 +3,8 @@ Comprehensive tests for update_operations module.
 Tests the UpdateOperations class and its methods.
 """
 
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
 from src.sysmanage_agent.operations.update_operations import UpdateOperations

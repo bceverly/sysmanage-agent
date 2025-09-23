@@ -4,9 +4,11 @@ Tests the QueuedMessageHandler class for message queuing and processing.
 """
 
 from unittest.mock import patch
+
 import pytest
+
+from src.database.models import Priority, QueueDirection
 from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
-from src.database.models import QueueDirection, Priority
 from tests.message_handler_test_base import MessageHandlerTestBase
 
 

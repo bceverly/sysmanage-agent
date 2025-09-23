@@ -3,7 +3,8 @@ Additional tests for client registration to achieve full coverage.
 Tests the missing coverage areas including error handling and edge cases.
 """
 
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 
 from src.sysmanage_agent.registration.client_registration import ClientRegistration
@@ -20,31 +21,53 @@ class TestClientRegistrationCoverage:
 
     def test_simple_coverage_lines(self):
         """Test simple lines for coverage without complex async mocking."""
-        registration = ClientRegistration(self.mock_config)
+        # Mock database session to prevent loading existing auth data
+        with patch(
+            "src.sysmanage_agent.registration.client_registration.get_db_session"
+        ) as mock_db_session:
+            # Mock the database session to return no existing auth data
+            mock_session = Mock()
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
+            mock_db_session.return_value.__enter__.return_value = mock_session
 
-        # Test that the class can be instantiated (covers various lines)
-        assert registration is not None
-        assert not registration.registered  # Initial state
+            registration = ClientRegistration(self.mock_config)
 
-        # Test basic properties
-        assert hasattr(registration, "registration_data")
-        assert hasattr(registration, "registered")
+            # Test that the class can be instantiated (covers various lines)
+            assert registration is not None
+            assert not registration.registered  # Initial state
+
+            # Test basic properties
+            assert hasattr(registration, "registration_data")
+            assert hasattr(registration, "registered")
 
     @pytest.mark.asyncio
     async def test_register_with_retry_max_retries_exceeded(self):
         """Test register_with_retry when max retries exceeded - line 206."""
-        registration = ClientRegistration(self.mock_config)
+        # Mock database session to prevent loading existing auth data
+        with patch(
+            "src.sysmanage_agent.registration.client_registration.get_db_session"
+        ) as mock_db_session:
+            # Mock the database session to return no existing auth data
+            mock_session = Mock()
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
+            mock_db_session.return_value.__enter__.return_value = mock_session
 
-        # Mock config to return small retry values for fast testing
-        self.mock_config.get_registration_retry_interval.return_value = 0.01  # 10ms
-        self.mock_config.get_max_registration_retries.return_value = 2
+            registration = ClientRegistration(self.mock_config)
 
-        # Mock register_with_server to always fail
-        with patch.object(registration, "register_with_server", return_value=False):
-            with patch("asyncio.sleep"):  # Mock sleep to speed up test
-                result = await registration.register_with_retry()
+            # Mock config to return small retry values for fast testing
+            self.mock_config.get_registration_retry_interval.return_value = 0.01  # 10ms
+            self.mock_config.get_max_registration_retries.return_value = 2
 
-                assert result is False
+            # Mock register_with_server to always fail
+            with patch.object(registration, "register_with_server", return_value=False):
+                with patch("asyncio.sleep"):  # Mock sleep to speed up test
+                    result = await registration.register_with_retry()
+
+                    assert result is False
 
     def test_aiohttp_import_error_handling(self):
         """Test ImportError handling for aiohttp - lines 24-26."""

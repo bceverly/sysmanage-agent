@@ -4,12 +4,12 @@ Test heartbeat functionality on the agent side.
 
 import asyncio
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.sysmanage_agent.core.config import ConfigManager
 from main import SysManageAgent
+from src.sysmanage_agent.core.config import ConfigManager
 
 
 class TestAgentHeartbeat:

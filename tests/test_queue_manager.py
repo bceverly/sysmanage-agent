@@ -6,12 +6,12 @@ Tests message queuing, dequeuing, retry logic, and state management.
 import os
 import tempfile
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from src.database.base import DatabaseManager
-from src.database.models import MessageQueue, QueueStatus, QueueDirection, Priority
+from src.database.models import MessageQueue, Priority, QueueDirection, QueueStatus
 from src.database.queue_manager import MessageQueueManager
 
 

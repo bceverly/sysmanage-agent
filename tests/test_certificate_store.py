@@ -2,18 +2,18 @@
 Tests for agent certificate store functionality.
 """
 
+import hashlib
 import os
 import platform
+import shutil
 import stat
 import tempfile
-import shutil
-import hashlib
-from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 from cryptography import x509
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 

@@ -4,12 +4,12 @@ Focused on improving test coverage by targeting uncovered paths.
 """
 
 import json
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 from src.database.models import Priority, QueueDirection
+from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 
 
 class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods

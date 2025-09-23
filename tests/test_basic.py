@@ -5,12 +5,13 @@ Basic tests for SysManage Agent components.
 import os
 import tempfile as temp_module
 import unittest.mock
+
 import yaml as yaml_module
 
 import main
-from src.sysmanage_agent.registration import registration
-from src.sysmanage_agent.core.config import ConfigManager
 from main import SysManageAgent
+from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.registration import registration
 
 
 def test_config_manager_basic():

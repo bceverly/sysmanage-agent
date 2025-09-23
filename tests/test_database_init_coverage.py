@@ -3,8 +3,8 @@ Tests for database/init.py to improve coverage.
 Targets the 13 missing lines (80% -> 100%).
 """
 
-from unittest.mock import patch, Mock
 import subprocess
+from unittest.mock import Mock, patch
 
 from src.database.init import run_alembic_migration
 

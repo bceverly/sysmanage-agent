@@ -6,10 +6,10 @@ Handles package update checking and application operations.
 import asyncio
 import concurrent.futures
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
-from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.i18n import _
+from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
 class UpdateOperations:

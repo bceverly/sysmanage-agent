@@ -6,11 +6,11 @@ Provides isolated test database and mocking infrastructure.
 import asyncio
 import gc
 import glob
+import os
 import sys
 import tempfile
-import os
 import uuid
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from sqlalchemy import create_engine

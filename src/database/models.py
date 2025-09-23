@@ -6,9 +6,9 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Index
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy import Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.types import TypeDecorator
 
 from .base import Base
 

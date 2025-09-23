@@ -5,8 +5,8 @@ Tests user and group collection across different platforms.
 
 # pylint: disable=protected-access,attribute-defined-outside-init
 
-from unittest.mock import Mock, patch
 from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.user_access_collection import UserAccessCollector
 

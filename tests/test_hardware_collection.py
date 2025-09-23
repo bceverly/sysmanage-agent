@@ -5,7 +5,7 @@ Tests for the hardware collection module.
 # pylint: disable=protected-access
 
 import json
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 

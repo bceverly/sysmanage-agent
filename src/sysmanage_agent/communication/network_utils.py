@@ -3,9 +3,9 @@ Network utilities module for SysManage Agent.
 Handles network-related functionality like IP address detection and hostname resolution.
 """
 
-import socket
 import logging
 import os
+import socket
 from typing import Optional, Tuple
 
 

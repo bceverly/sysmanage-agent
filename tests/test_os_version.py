@@ -5,13 +5,13 @@ Test OS version capture functionality.
 # pylint: disable=duplicate-code
 
 import platform
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from main import SysManageAgent
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.registration.client_registration import ClientRegistration
-from main import SysManageAgent
 
 
 class TestOSVersionCapture:

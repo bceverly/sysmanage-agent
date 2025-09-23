@@ -4,10 +4,11 @@ Tests missing coverage areas to improve overall coverage.
 """
 
 import json
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
-from src.database.models import QueueDirection, Priority
+from src.database.models import Priority, QueueDirection
 from tests.message_handler_test_base import MessageHandlerTestBase
 
 

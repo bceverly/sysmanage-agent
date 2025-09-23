@@ -6,9 +6,9 @@ Tests the missing coverage areas including property methods and edge cases.
 from datetime import datetime, timezone
 
 from src.database.models import (
+    HostApproval,
     MessageQueue,
     QueueMetrics,
-    HostApproval,
     ScriptExecution,
     UTCDateTime,
 )

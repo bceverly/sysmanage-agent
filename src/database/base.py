@@ -2,9 +2,11 @@
 Database base configuration for SysManage Agent.
 """
 
-import os
 import logging
+import os
+from contextlib import contextmanager
 from pathlib import Path
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -103,6 +105,7 @@ def get_database_manager(database_path: str = None) -> DatabaseManager:
     return _db_manager
 
 
+@contextmanager
 def get_db_session():
     """
     Get a database session. Use this in a context manager.

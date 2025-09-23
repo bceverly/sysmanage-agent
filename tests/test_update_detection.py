@@ -5,6 +5,7 @@ Unit tests for update detection module.
 # pylint: disable=protected-access,too-many-public-methods
 
 from unittest.mock import Mock, patch
+
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 

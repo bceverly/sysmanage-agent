@@ -5,8 +5,8 @@ This module provides a custom logging formatter that prefixes all log entries
 with a UTC timezone timestamp in square brackets followed by a space.
 """
 
-import logging
 import datetime
+import logging
 
 
 class UTCTimestampFormatter(logging.Formatter):

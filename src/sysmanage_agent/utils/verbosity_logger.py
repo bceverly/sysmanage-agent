@@ -7,6 +7,7 @@ Supports custom formats and selective level filtering.
 
 import logging
 from typing import Set
+
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
 
 
