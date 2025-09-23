@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 
+logger = logging.getLogger(__name__)
+
 
 class HardwareCollector:
     """Collects hardware information across different platforms."""
@@ -1581,20 +1583,24 @@ class HardwareCollector:
             size_human = "Unknown"
 
             try:
-                result = subprocess.run(
-                    ["diskinfo", base_device],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode == 0:
-                    # diskinfo output format: device_name size_bytes sector_size ...
-                    parts = result.stdout.strip().split("\t")
-                    if len(parts) >= 2:
-                        size_bytes = int(parts[1])
-                        # Convert to human readable
-                        size_human = self._bytes_to_human_readable(size_bytes)
+                # Use full path to diskinfo for security
+                diskinfo_path = "/usr/sbin/diskinfo"
+                if os.path.exists(diskinfo_path):
+                    # nosec B603: subprocess call with known safe command path
+                    result = subprocess.run(
+                        [diskinfo_path, base_device],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0:
+                        # diskinfo output format: device_name size_bytes sector_size ...
+                        parts = result.stdout.strip().split("\t")
+                        if len(parts) >= 2:
+                            size_bytes = int(parts[1])
+                            # Convert to human readable
+                            size_human = self._bytes_to_human_readable(size_bytes)
             except (subprocess.TimeoutExpired, ValueError, FileNotFoundError):
                 # diskinfo not available or failed, try stat
                 try:
@@ -1622,9 +1628,9 @@ class HardwareCollector:
             storage_devices.append(device_info)
             existing_devices.add(base_device)
 
-        except Exception:
-            # Skip devices we can't access
-            pass
+        except Exception as e:
+            # Skip devices we can't access, log for debugging
+            logger.debug("Skipping device %s: %s", base_device, e)
 
     def _bytes_to_human_readable(self, size_bytes: int) -> str:
         """Convert bytes to human readable format."""
