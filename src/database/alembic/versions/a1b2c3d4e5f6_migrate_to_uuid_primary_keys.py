@@ -31,6 +31,15 @@ def upgrade() -> None:
 
     # For SQLite, we need to recreate all tables since ALTER COLUMN TYPE is not supported
     if conn.dialect.name == "sqlite":
+        # Clean up any existing backup tables from previous failed attempts
+        op.execute("DROP TABLE IF EXISTS message_queue_backup")
+        op.execute("DROP TABLE IF EXISTS queue_metrics_backup")
+        op.execute("DROP TABLE IF EXISTS host_approval_backup")
+        op.execute("DROP TABLE IF EXISTS script_executions_backup")
+        op.execute("DROP TABLE IF EXISTS available_packages_backup")
+        op.execute("DROP TABLE IF EXISTS installation_request_tracking_backup")
+        op.execute("DROP TABLE IF EXISTS system_info_backup")
+
         # Backup existing data
         op.execute(
             """
