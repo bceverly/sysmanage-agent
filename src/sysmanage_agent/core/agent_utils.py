@@ -272,6 +272,7 @@ class MessageProcessor:
             "check_reboot_status": lambda params: self.agent.check_reboot_status(),
             "collect_diagnostics": self.agent.collect_diagnostics,
             "collect_available_packages": lambda params: self.agent.collect_available_packages(),
+            "deploy_ssh_keys": self.agent.deploy_ssh_keys,
         }
 
     async def _handle_execute_script(

@@ -390,6 +390,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Enable Ubuntu Pro service."""
         return await self.system_ops.ubuntu_pro_enable_service(parameters)
 
+    async def deploy_ssh_keys(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy SSH keys to a user account."""
+        return await self.system_ops.deploy_ssh_keys(parameters)
+
     async def ubuntu_pro_disable_service(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
