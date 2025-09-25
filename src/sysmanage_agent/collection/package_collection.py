@@ -361,22 +361,54 @@ class PackageCollector:
             return 0
 
     def _collect_chocolatey_packages(self) -> int:
-        """Collect packages from Chocolatey (Windows)."""
+        """Collect packages from Chocolatey (Windows) with pagination."""
         try:
-            result = subprocess.run(  # nosec B603, B607
-                ["choco", "search"],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
+            all_packages = []
+            page = 0
+            page_size = 100  # Maximum allowed by Chocolatey
+
+            while True:
+                result = subprocess.run(  # nosec B603, B607
+                    [
+                        "choco",
+                        "search",
+                        "*",
+                        "--page-size",
+                        str(page_size),
+                        "--page",
+                        str(page),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    check=False,
+                )
+
+                if result.returncode != 0:
+                    if page == 0:  # Only log error on first page failure
+                        logger.error(_("Failed to get Chocolatey package list"))
+                        return 0
+                    break  # No more pages available
+
+                packages = self._parse_chocolatey_output(result.stdout)
+                if not packages:
+                    break  # No more packages found
+
+                all_packages.extend(packages)
+                logger.debug(
+                    "Collected %d packages from Chocolatey page %d", len(packages), page
+                )
+
+                # If we got fewer packages than page_size, we've reached the end
+                if len(packages) < page_size:
+                    break
+
+                page += 1
+
+            logger.info(
+                "Collected total of %d packages from Chocolatey", len(all_packages)
             )
-
-            if result.returncode != 0:
-                logger.error(_("Failed to get Chocolatey package list"))
-                return 0
-
-            packages = self._parse_chocolatey_output(result.stdout)
-            return self._store_packages("chocolatey", packages)
+            return self._store_packages("chocolatey", all_packages)
 
         except Exception as e:
             logger.error(_("Error collecting Chocolatey packages: %s"), e)

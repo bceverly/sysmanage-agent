@@ -150,7 +150,11 @@ start: start-unprivileged
 # Unprivileged start
 start-unprivileged:
 	@echo "Starting SysManage Agent (unprivileged mode)..."
+ifeq ($(OS),Windows_NT)
+	@powershell.exe -ExecutionPolicy Bypass -File scripts\start.ps1
+else
 	@./scripts/start.sh
+endif
 
 # Privileged start
 start-privileged:

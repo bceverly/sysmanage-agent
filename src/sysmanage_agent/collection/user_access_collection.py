@@ -367,6 +367,29 @@ class UserAccessCollector:
                 check=True,
             )
 
+            # Get user profiles separately
+            profile_result = subprocess.run(  # nosec B603, B607
+                [
+                    "powershell",
+                    "-Command",
+                    "Get-WmiObject -Class Win32_UserProfile | Select-Object SID, LocalPath | ConvertTo-Json -Compress",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            # Parse profile data
+            profile_data = json.loads(profile_result.stdout)
+            if isinstance(profile_data, dict):
+                profile_data = [profile_data]
+
+            # Create a mapping of SID to LocalPath
+            profile_map = {
+                profile.get("SID", ""): profile.get("LocalPath", "")
+                for profile in profile_data
+            }
+
             user_data = json.loads(result.stdout)
 
             # Handle single user case (PowerShell returns dict instead of list)
@@ -381,9 +404,50 @@ class UserAccessCollector:
                     if isinstance(user.get("SID"), dict)
                     else user.get("SID", "")
                 )
-                is_system_user = sid.startswith(
+                # Determine if it's a system user based on Windows RID patterns
+                # System users have well-known RIDs < 1000 or specific patterns
+                is_system_user = False
+                username = user.get("Name", "")
+
+                # Check for well-known system service accounts
+                if sid.startswith(
                     ("S-1-5-18", "S-1-5-19", "S-1-5-20")
-                ) or user.get("Name", "").startswith("NT ")
+                ) or username.startswith("NT "):
+                    is_system_user = True
+                # Check for local domain users with well-known RIDs
+                elif sid.startswith("S-1-5-21-") and sid.count("-") >= 6:
+                    # Extract RID (last part after final hyphen)
+                    try:
+                        rid = int(sid.split("-")[-1])
+                        # Well-known local account RIDs that are considered system accounts:
+                        # 500=Administrator, 501=Guest, 502=KRBTGT, 503=DefaultAccount, etc.
+                        # But NOT all RIDs < 1000 are system accounts - some are regular users
+                        system_usernames = [
+                            "Administrator",
+                            "Guest",
+                            "DefaultAccount",
+                            "WDAGUtilityAccount",
+                        ]
+                        well_known_system_rids = [
+                            500,
+                            501,
+                            502,
+                            503,
+                            504,
+                            505,
+                            506,
+                        ]  # Specific system RIDs
+                        is_system_user = (rid in well_known_system_rids) or (
+                            username in system_usernames
+                        )
+                    except (ValueError, IndexError):
+                        # If we can't parse the RID, default based on username patterns
+                        is_system_user = username in [
+                            "Administrator",
+                            "Guest",
+                            "DefaultAccount",
+                            "WDAGUtilityAccount",
+                        ]
 
                 # Get user's group memberships
                 group_names = []
@@ -420,11 +484,14 @@ class UserAccessCollector:
                         e,
                     )
 
+                # Get home directory from profile mapping
+                home_directory = profile_map.get(sid, None)
+
                 users.append(
                     {
                         "username": user.get("Name", ""),
-                        "uid": None,  # Windows doesn't use UIDs
-                        "home_directory": None,  # Would need additional query
+                        "uid": sid,  # Use Windows SID as identifier instead of Unix UID
+                        "home_directory": home_directory,  # From Win32_UserProfile mapping
                         "shell": None,  # Windows doesn't use shells in the same way
                         "is_system_user": is_system_user,
                         "groups": group_names,
@@ -478,7 +545,7 @@ class UserAccessCollector:
                 groups.append(
                     {
                         "group_name": group.get("Name", ""),
-                        "gid": None,  # Windows doesn't use GIDs
+                        "gid": sid,  # Use Windows SID as group identifier instead of GID
                         "is_system_group": is_system_group,
                     }
                 )

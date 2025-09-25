@@ -335,7 +335,7 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
     @patch("src.sysmanage_agent.collection.user_access_collection.subprocess.run")
     def test_get_windows_users_success(self, mock_subprocess):
         """Test successful _get_windows_users execution."""
-        mock_output = """
+        mock_user_output = """
         [
             {
                 "Name": "testuser",
@@ -346,18 +346,34 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
         ]
         """
 
+        mock_profile_output = """
+        [
+            {
+                "SID": "S-1-5-21-123456789-123456789-123456789-1001",
+                "LocalPath": "C:\\\\Users\\\\testuser"
+            }
+        ]
+        """
+
         def mock_run_side_effect(*args, **kwargs):
             mock_result = Mock()
             mock_result.returncode = 0
 
-            # Check if it's the main Get-LocalUser command
+            # Check if it's the Get-LocalUser command
             if (
                 isinstance(args[0], list)
                 and len(args[0]) > 2
                 and "Get-LocalUser" in str(args[0])
             ):
-                mock_result.stdout = mock_output
-            # Second call gets group memberships - return empty for simplicity
+                mock_result.stdout = mock_user_output
+            # Check if it's the Win32_UserProfile command
+            elif (
+                isinstance(args[0], list)
+                and len(args[0]) > 2
+                and "Win32_UserProfile" in str(args[0])
+            ):
+                mock_result.stdout = mock_profile_output
+            # Other calls (group memberships) - return empty for simplicity
             else:
                 mock_result.stdout = ""
 
@@ -369,8 +385,12 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
 
         assert len(result) == 1
         assert result[0]["username"] == "testuser"
-        assert result[0]["uid"] is None
-        assert result[0]["home_directory"] is None
+        assert (
+            result[0]["uid"] == "S-1-5-21-123456789-123456789-123456789-1001"
+        )  # Updated to expect SID
+        assert (
+            result[0]["home_directory"] == "C:\\Users\\testuser"
+        )  # Updated to expect home directory
         assert result[0]["shell"] is None
         assert result[0]["is_system_user"] is False
         assert result[0]["groups"] == []
@@ -404,7 +424,7 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
 
         assert len(result) == 1
         assert result[0]["group_name"] == "Administrators"
-        assert result[0]["gid"] is None
+        assert result[0]["gid"] == "S-1-5-32-544"  # Updated to expect SID
         assert result[0]["is_system_group"] is True
 
     @patch("src.sysmanage_agent.collection.user_access_collection.grp")
