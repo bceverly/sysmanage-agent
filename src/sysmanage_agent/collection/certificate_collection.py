@@ -235,7 +235,7 @@ class CertificateCollector:
 
     def _execute_powershell_command(self, ps_command: str):
         """Execute PowerShell command and return result."""
-        return subprocess.run(  # nosec B602
+        return subprocess.run(  # nosec B602 B603 B607
             ["powershell", "-Command", ps_command],
             capture_output=True,
             text=True,
@@ -282,7 +282,7 @@ class CertificateCollector:
 
             result = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=10, check=False
-            )  # nosec B602
+            )  # nosec B602 B603
 
             if result.returncode != 0:
                 self.logger.debug(
