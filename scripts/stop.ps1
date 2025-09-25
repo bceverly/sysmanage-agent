@@ -148,11 +148,12 @@ Write-Host 'Killing PIDs: $pidsToKill' -ForegroundColor Yellow
         Write-Host "  Killed PID `$_" -ForegroundColor Green
     }
     catch {
-        Write-Host "  Failed to kill PID `$_: `$(`$_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  Failed to kill PID `$_" -ForegroundColor Red
     }
 }
 Write-Host 'Done. Press Enter to close...' -ForegroundColor Cyan
 Read-Host
+exit
 "@
 
                 # Run the elevated script
