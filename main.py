@@ -10,6 +10,7 @@ import logging
 import os
 import platform
 import secrets
+import socket
 import ssl
 import uuid
 from datetime import datetime, timezone
@@ -37,6 +38,7 @@ from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 from src.database.init import initialize_database
 from src.database.base import get_database_manager
 from src.database.models import HostApproval, ScriptExecution, MessageQueue
@@ -109,6 +111,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         )
         self.auth_helper = AuthenticationHelper(self, self.logger)
         self.message_processor = MessageProcessor(self, self.logger)
+
+        # Initialize certificate collector
+        self.certificate_collector = CertificateCollector()
 
         # Initialize operation modules
         self.update_ops = UpdateOperations(self)
@@ -394,6 +399,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Deploy SSH keys to a user account."""
         return await self.system_ops.deploy_ssh_keys(parameters)
 
+    async def deploy_certificates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy SSL certificates to the system."""
+        return await self.system_ops.deploy_certificates(parameters)
+
     async def ubuntu_pro_disable_service(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -579,6 +588,33 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             except Exception as e:
                 self.logger.error("Failed to perform initial update check: %s", e)
 
+            # Allow time for update check to complete before collecting certificates
+            await asyncio.sleep(2)
+
+            self.logger.info(_("Collecting initial certificate data..."))
+
+            # Collect and send certificate data
+            try:
+                certificate_result = await self.collect_certificates()
+                if certificate_result.get("success", False):
+                    cert_count = certificate_result.get("certificate_count", 0)
+                    if cert_count > 0:
+                        self.logger.info(
+                            "Found and sent %d certificates during initial collection",
+                            cert_count,
+                        )
+                    else:
+                        self.logger.info(
+                            "No certificates found during initial collection"
+                        )
+                else:
+                    error_msg = certificate_result.get("error", "Unknown error")
+                    self.logger.warning("Certificate collection failed: %s", error_msg)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to perform initial certificate collection: %s", e
+                )
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -647,9 +683,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def _handle_server_error(self, data: Dict[str, Any]) -> None:
         """Handle error messages from server."""
-        error_data = data.get("data", {})
-        error_code = error_data.get("error_code", "unknown")
-        error_message = error_data.get("error_message", "No error message provided")
+        # Server sends error_type and message at top level, not in data field
+        error_code = data.get("error_type", "unknown")
+        error_message = data.get("message", "No error message provided")
 
         # Check if this is a stale error message
         message_timestamp = data.get("timestamp")
@@ -860,6 +896,174 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Handle periodic update checking."""
         await self.update_checker_util.run_update_checker_loop()
 
+    async def _send_software_inventory_update(self):
+        """Send software inventory update."""
+        self.logger.debug("AGENT_DEBUG: Collecting software inventory data")
+        software_info = self.registration.get_software_inventory_info()
+        software_info["hostname"] = self.registration.get_system_info()["hostname"]
+
+        # Add host_id if available
+        host_approval = self.get_host_approval_from_db()
+        if host_approval:
+            software_info["host_id"] = str(host_approval.host_id)
+
+        software_message = self.create_message(
+            "software_inventory_update", software_info
+        )
+        self.logger.debug(
+            "AGENT_DEBUG: Sending periodic software inventory message: %s",
+            software_message["message_id"],
+        )
+        success = await self.send_message(software_message)
+        if success:
+            self.logger.debug(
+                "AGENT_DEBUG: Periodic software inventory sent successfully"
+            )
+        else:
+            self.logger.warning("Failed to send periodic software inventory data")
+
+    async def _send_user_access_update(self):
+        """Send user access update."""
+        self.logger.debug("AGENT_DEBUG: Collecting user access data")
+        user_info = self.registration.get_user_access_info()
+        user_info["hostname"] = self.registration.get_system_info()["hostname"]
+
+        # Add host_id if available
+        host_approval = self.get_host_approval_from_db()
+        if host_approval:
+            user_info["host_id"] = str(host_approval.host_id)
+
+        user_message = self.create_message("user_access_update", user_info)
+        self.logger.debug(
+            "AGENT_DEBUG: Sending periodic user access message: %s",
+            user_message["message_id"],
+        )
+        success = await self.send_message(user_message)
+        if success:
+            self.logger.debug(
+                "AGENT_DEBUG: Periodic user access data sent successfully"
+            )
+        else:
+            self.logger.warning("Failed to send periodic user access data")
+
+    async def _send_hardware_update(self):
+        """Send hardware update."""
+        self.logger.debug("AGENT_DEBUG: Collecting hardware data")
+        hardware_info = self.registration.get_hardware_info()
+        hardware_info["hostname"] = self.registration.get_system_info()["hostname"]
+
+        # Add host_id if available
+        host_approval = self.get_host_approval_from_db()
+        if host_approval:
+            hardware_info["host_id"] = str(host_approval.host_id)
+
+        hardware_message = self.create_message("hardware_update", hardware_info)
+        self.logger.debug(
+            "AGENT_DEBUG: Sending periodic hardware message: %s",
+            hardware_message["message_id"],
+        )
+        success = await self.send_message(hardware_message)
+        if success:
+            self.logger.debug("AGENT_DEBUG: Periodic hardware data sent successfully")
+        else:
+            self.logger.warning("Failed to send periodic hardware data")
+
+    async def _send_certificate_update(self):
+        """Send certificate update."""
+        self.logger.debug("AGENT_DEBUG: Collecting certificate data")
+        certificate_result = await self.collect_certificates()
+        if certificate_result.get("success", False):
+            cert_count = certificate_result.get("certificate_count", 0)
+            if cert_count > 0:
+                self.logger.debug(
+                    "AGENT_DEBUG: Periodic certificate collection found and sent %d certificates",
+                    cert_count,
+                )
+            else:
+                self.logger.debug(
+                    "AGENT_DEBUG: No certificates found during periodic collection"
+                )
+        else:
+            error_msg = certificate_result.get("error", "Unknown error")
+            self.logger.warning("Periodic certificate collection failed: %s", error_msg)
+
+    async def _send_os_version_update(self):
+        """Send OS version update."""
+        self.logger.debug("AGENT_DEBUG: About to collect OS version info")
+        os_info = self.registration.get_os_version_info()
+        self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
+
+        os_message = {
+            "message_type": "os_version_update",
+            "message_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data": os_info,
+        }
+
+        self.logger.debug(
+            "AGENT_DEBUG: Sending periodic OS version message: %s",
+            os_message["message_id"],
+        )
+        success = await self.send_message(os_message)
+
+        if success:
+            self.logger.debug("AGENT_DEBUG: Periodic OS version data sent successfully")
+        else:
+            self.logger.warning("Failed to send periodic OS version data")
+
+    async def _send_reboot_status_update(self):
+        """Send reboot status update."""
+        self.logger.debug("AGENT_DEBUG: Checking reboot status")
+        detector = UpdateDetector()
+        requires_reboot = detector.check_reboot_required()
+
+        self.logger.debug("AGENT_DEBUG: Reboot required: %s", requires_reboot)
+        await self.send_reboot_status_update(requires_reboot)
+        self.logger.debug("AGENT_DEBUG: Periodic reboot status sent successfully")
+
+    async def _collect_and_send_periodic_data(self):
+        """Collect and send all periodic data updates."""
+        if not (self.running and self.connected):
+            return
+
+        self.logger.debug("AGENT_DEBUG: Starting periodic data collection")
+
+        # Send software inventory update
+        try:
+            await self._send_software_inventory_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending software inventory: %s", e)
+
+        # Send user access update
+        try:
+            await self._send_user_access_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending user access data: %s", e)
+
+        # Send hardware update
+        try:
+            await self._send_hardware_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending hardware data: %s", e)
+
+        # Send certificate update
+        try:
+            await self._send_certificate_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending certificate data: %s", e)
+
+        # Send OS version update
+        try:
+            await self._send_os_version_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending OS version data: %s", e)
+
+        # Send reboot status update
+        try:
+            await self._send_reboot_status_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending reboot status: %s", e)
+
     async def data_collector(self):
         """Handle periodic data collection and sending."""
         self.logger.debug("Data collector started")
@@ -870,174 +1074,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         while self.running:
             try:
                 await asyncio.sleep(data_collection_interval)
-                if self.running and self.connected:
-                    self.logger.debug("AGENT_DEBUG: Starting periodic data collection")
-
-                    # Send software inventory update
-                    try:
-                        self.logger.debug(
-                            "AGENT_DEBUG: Collecting software inventory data"
-                        )
-                        software_info = self.registration.get_software_inventory_info()
-                        software_info["hostname"] = self.registration.get_system_info()[
-                            "hostname"
-                        ]
-
-                        # Add host_id if available
-                        host_approval = self.get_host_approval_from_db()
-                        if host_approval:
-                            software_info["host_id"] = str(host_approval.host_id)
-
-                        software_message = self.create_message(
-                            "software_inventory_update", software_info
-                        )
-
-                        self.logger.debug(
-                            "AGENT_DEBUG: Sending periodic software inventory message: %s",
-                            software_message["message_id"],
-                        )
-                        success = await self.send_message(software_message)
-                        if success:
-                            self.logger.debug(
-                                "AGENT_DEBUG: Periodic software inventory sent successfully"
-                            )
-                        else:
-                            self.logger.warning(
-                                "Failed to send periodic software inventory data"
-                            )
-
-                    except Exception as e:
-                        self.logger.error(
-                            "Error collecting/sending software inventory: %s", e
-                        )
-
-                    # Send user access update
-                    try:
-                        self.logger.debug("AGENT_DEBUG: Collecting user access data")
-                        user_info = self.registration.get_user_access_info()
-                        user_info["hostname"] = self.registration.get_system_info()[
-                            "hostname"
-                        ]
-
-                        # Add host_id if available
-                        host_approval = self.get_host_approval_from_db()
-                        if host_approval:
-                            user_info["host_id"] = str(host_approval.host_id)
-
-                        user_message = self.create_message(
-                            "user_access_update", user_info
-                        )
-
-                        self.logger.debug(
-                            "AGENT_DEBUG: Sending periodic user access message: %s",
-                            user_message["message_id"],
-                        )
-                        success = await self.send_message(user_message)
-                        if success:
-                            self.logger.debug(
-                                "AGENT_DEBUG: Periodic user access data sent successfully"
-                            )
-                        else:
-                            self.logger.warning(
-                                "Failed to send periodic user access data"
-                            )
-
-                    except Exception as e:
-                        self.logger.error(
-                            "Error collecting/sending user access data: %s", e
-                        )
-
-                    # Send hardware update (if hardware info has changed)
-                    try:
-                        self.logger.debug("AGENT_DEBUG: Collecting hardware data")
-                        hardware_info = self.registration.get_hardware_info()
-                        hardware_info["hostname"] = self.registration.get_system_info()[
-                            "hostname"
-                        ]
-
-                        # Add host_id if available
-                        host_approval = self.get_host_approval_from_db()
-                        if host_approval:
-                            hardware_info["host_id"] = str(host_approval.host_id)
-
-                        hardware_message = self.create_message(
-                            "hardware_update", hardware_info
-                        )
-
-                        self.logger.debug(
-                            "AGENT_DEBUG: Sending periodic hardware message: %s",
-                            hardware_message["message_id"],
-                        )
-                        success = await self.send_message(hardware_message)
-                        if success:
-                            self.logger.debug(
-                                "AGENT_DEBUG: Periodic hardware data sent successfully"
-                            )
-                        else:
-                            self.logger.warning("Failed to send periodic hardware data")
-
-                    except Exception as e:
-                        self.logger.error(
-                            "Error collecting/sending hardware data: %s", e
-                        )
-
-                    # Send OS version update
-                    try:
-                        self.logger.debug(
-                            "AGENT_DEBUG: About to collect OS version info"
-                        )
-                        os_info = self.registration.get_os_version_info()
-                        self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
-
-                        os_message = {
-                            "message_type": "os_version_update",
-                            "message_id": str(uuid.uuid4()),
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                            "data": os_info,
-                        }
-
-                        self.logger.debug(
-                            "AGENT_DEBUG: Sending periodic OS version message: %s",
-                            os_message["message_id"],
-                        )
-                        success = await self.send_message(os_message)
-
-                        if success:
-                            self.logger.debug(
-                                "AGENT_DEBUG: Periodic OS version data sent successfully"
-                            )
-                        else:
-                            self.logger.warning(
-                                "Failed to send periodic OS version data"
-                            )
-
-                    except Exception as e:
-                        self.logger.error(
-                            "Error collecting/sending OS version data: %s", e
-                        )
-
-                    # Send reboot status update
-                    try:
-                        self.logger.debug("AGENT_DEBUG: Checking reboot status")
-                        detector = UpdateDetector()
-                        requires_reboot = detector.check_reboot_required()
-
-                        self.logger.debug(
-                            "AGENT_DEBUG: Reboot required: %s", requires_reboot
-                        )
-
-                        await self.send_reboot_status_update(requires_reboot)
-                        self.logger.debug(
-                            "AGENT_DEBUG: Periodic reboot status sent successfully"
-                        )
-
-                    except Exception as e:
-                        self.logger.error(
-                            "Error collecting/sending reboot status: %s", e
-                        )
-
-                    self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
-
+                await self._collect_and_send_periodic_data()
+                self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
             except asyncio.CancelledError:
                 # Graceful shutdown - re-raise to propagate cancellation
                 self.logger.debug("Data collector cancelled")
@@ -1496,6 +1534,51 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 f"Error sending paginated packages for batch {batch_id}: {e}"
             )
             return False
+
+    async def collect_certificates(self) -> Dict[str, Any]:
+        """Collect SSL certificates from the system and send to server."""
+        try:
+            # Certificate collection can work in unprivileged mode for most system certificates
+            # Only some certificates in restricted directories may require privileged access
+            if not is_running_privileged():
+                self.logger.info(
+                    _(
+                        "Running certificate collection in unprivileged mode - some certificates may not be accessible"
+                    )
+                )
+
+            self.logger.info(_("Collecting SSL certificates from system"))
+
+            # Collect certificate data
+            certificates = self.certificate_collector.collect_certificates()
+
+            if not certificates:
+                self.logger.info(_("No certificates found on system"))
+                return {"success": True, "result": "No certificates found"}
+
+            self.logger.info(_("Found %d certificates"), len(certificates))
+
+            # Send certificate data to server
+            system_info = self.registration.get_system_info()
+            certificate_message = self.create_message(
+                "host_certificates_update",
+                {
+                    "hostname": system_info.get("fqdn", socket.gethostname()),
+                    "certificates": certificates,
+                    "collected_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+
+            await self.send_message(certificate_message)
+
+            return {
+                "success": True,
+                "result": f"Collected and sent {len(certificates)} certificates",
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error collecting certificates: %s"), e)
+            return {"success": False, "error": str(e)}
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""
@@ -2156,7 +2239,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
                 if existing_approval:
                     # Update existing record
-                    existing_approval.host_id = host_id
+                    existing_approval.host_id = uuid.UUID(host_id) if host_id else None
                     existing_approval.host_token = host_token
                     existing_approval.approval_status = approval_status
                     existing_approval.certificate = certificate
@@ -2167,7 +2250,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 else:
                     # Create new approval record
                     new_approval = HostApproval(
-                        host_id=host_id,
+                        host_id=uuid.UUID(host_id) if host_id else None,
                         host_token=host_token,
                         approval_status=approval_status,
                         certificate=certificate,

@@ -1223,3 +1223,220 @@ class SystemOperations:
             "user_uid": user_uid,
             "user_gid": user_gid,
         }
+
+    async def deploy_certificates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy SSL certificates to the appropriate system directory."""
+        certificates = parameters.get("certificates", [])
+
+        # Validate inputs
+        validation_error = self._validate_certificate_inputs(certificates)
+        if validation_error:
+            return validation_error
+
+        try:
+            # Determine the SSL certificate directory based on OS
+            ssl_dir_result = self._get_ssl_directory()
+            if not ssl_dir_result["success"]:
+                return ssl_dir_result
+
+            ssl_dir = ssl_dir_result["ssl_dir"]
+            deployed_certificates = []
+            errors = []
+
+            for certificate in certificates:
+                cert_name = certificate.get("name", "unknown")
+                filename = certificate.get("filename", f"{cert_name}.crt")
+                content = certificate.get("content", "")
+                subtype = certificate.get("subtype", "certificate")
+
+                if not content:
+                    errors.append(f"Empty content for certificate '{cert_name}'")
+                    continue
+
+                try:
+                    # Full path for the certificate file
+                    cert_file_path = os.path.join(ssl_dir, filename)
+
+                    # Write the certificate file
+                    with open(cert_file_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                        # Ensure content ends with newline
+                        if not content.endswith("\n"):
+                            f.write("\n")
+
+                    # Set appropriate permissions for certificates (644 - readable by all)
+                    os.chmod(cert_file_path, 0o644)
+
+                    # Set root ownership (certificates should be owned by root)
+                    os.chown(cert_file_path, 0, 0)
+
+                    deployed_certificates.append(
+                        {
+                            "name": cert_name,
+                            "filename": filename,
+                            "path": cert_file_path,
+                            "subtype": subtype,
+                        }
+                    )
+
+                    self.logger.info(
+                        "Successfully deployed certificate '%s' to %s",
+                        cert_name,
+                        cert_file_path,
+                    )
+
+                except (OSError, IOError) as e:
+                    error_msg = f"Failed to deploy certificate '{cert_name}': {str(e)}"
+                    errors.append(error_msg)
+                    self.logger.error(error_msg)
+
+            # Update certificate bundle if we deployed CA certificates
+            ca_certificates = [
+                c
+                for c in deployed_certificates
+                if c.get("subtype") in ["root", "intermediate", "ca"]
+            ]
+            if ca_certificates:
+                try:
+                    await self._update_ca_certificates()
+                    self.logger.info("Updated CA certificate bundle")
+                except Exception as e:
+                    error_msg = f"Failed to update CA certificate bundle: {str(e)}"
+                    errors.append(error_msg)
+                    self.logger.warning(error_msg)
+
+            # Prepare result
+            result = {
+                "success": len(deployed_certificates) > 0,
+                "deployed_certificates": deployed_certificates,
+                "deployed_count": len(deployed_certificates),
+                "ssl_directory": ssl_dir,
+            }
+
+            if errors:
+                result["errors"] = errors
+                result["error_count"] = len(errors)
+
+            if len(deployed_certificates) == 0:
+                result["error"] = "No certificates were successfully deployed"
+
+            return result
+
+        except Exception as e:
+            self.logger.error(
+                "Unexpected error during certificate deployment: %s", str(e)
+            )
+            return {
+                "success": False,
+                "error": f"Unexpected error during certificate deployment: {str(e)}",
+            }
+
+    def _validate_certificate_inputs(self, certificates: list) -> Dict[str, Any] | None:
+        """Validate certificate deployment inputs."""
+        if not certificates:
+            return {"success": False, "error": "No certificates provided"}
+
+        return None  # No validation errors
+
+    def _get_ssl_directory(self) -> Dict[str, Any]:
+        """Get the appropriate SSL certificate directory for the current OS."""
+        system = platform.system().lower()
+
+        if system == "linux":
+            # Try to detect the Linux distribution
+            if os.path.exists("/etc/os-release"):
+                try:
+                    with open("/etc/os-release", "r", encoding="utf-8") as f:
+                        os_release = f.read().lower()
+
+                    if any(distro in os_release for distro in ["ubuntu", "debian"]):
+                        ssl_dir = "/etc/ssl/certs"
+                    elif any(
+                        distro in os_release
+                        for distro in ["rhel", "centos", "fedora", "red hat"]
+                    ):
+                        ssl_dir = "/etc/pki/tls/certs"
+                    elif "opensuse" in os_release:
+                        ssl_dir = "/etc/ssl/certs"
+                    else:
+                        # Default Linux path
+                        ssl_dir = "/etc/ssl/certs"
+                except Exception:
+                    ssl_dir = "/etc/ssl/certs"  # Fallback
+            else:
+                ssl_dir = "/etc/ssl/certs"  # Fallback
+
+        elif system == "darwin":  # macOS
+            ssl_dir = "/etc/ssl/certs"
+        elif system in ["freebsd", "openbsd"]:
+            ssl_dir = "/etc/ssl/certs"
+        else:
+            return {
+                "success": False,
+                "error": f"Unsupported operating system for certificate deployment: {system}",
+            }
+
+        # Verify the directory exists and is writable
+        if not os.path.exists(ssl_dir):
+            try:
+                os.makedirs(ssl_dir, mode=0o755, exist_ok=True)
+            except PermissionError:
+                return {
+                    "success": False,
+                    "error": f"Permission denied creating SSL directory: {ssl_dir}",
+                }
+            except OSError as e:
+                return {
+                    "success": False,
+                    "error": f"Failed to create SSL directory: {str(e)}",
+                }
+
+        if not os.access(ssl_dir, os.W_OK):
+            return {
+                "success": False,
+                "error": f"No write permission to SSL directory: {ssl_dir}",
+            }
+
+        return {"success": True, "ssl_dir": ssl_dir}
+
+    async def _update_ca_certificates(self):
+        """Update the CA certificate bundle after deploying new CA certificates."""
+        system = platform.system().lower()
+
+        try:
+            if system == "linux":
+                # Try update-ca-certificates for Debian/Ubuntu systems
+                if os.path.exists("/usr/sbin/update-ca-certificates"):
+                    result = await self.execute_shell_command(
+                        {"command": "sudo /usr/sbin/update-ca-certificates"}
+                    )
+                    if result["success"]:
+                        return
+
+                # Try update-ca-trust for RHEL/CentOS/Fedora systems
+                if os.path.exists("/usr/bin/update-ca-trust"):
+                    result = await self.execute_shell_command(
+                        {"command": "sudo /usr/bin/update-ca-trust extract"}
+                    )
+                    if result["success"]:
+                        return
+
+            elif system == "darwin":  # macOS
+                # For macOS, we would need to use the Security framework
+                # This is a simplified approach - in practice you might want to use keychain
+                self.logger.info("macOS certificate bundle update not implemented")
+                return
+
+            elif system in ["freebsd", "openbsd"]:
+                # BSD systems might have their own certificate management
+                self.logger.info("BSD certificate bundle update not implemented")
+                return
+
+            # If we get here, no update mechanism was found
+            self.logger.warning(
+                "No CA certificate update mechanism found for this system"
+            )
+
+        except Exception as e:
+            self.logger.error("Error updating CA certificate bundle: %s", str(e))
+            raise
