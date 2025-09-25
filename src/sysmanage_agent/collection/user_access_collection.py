@@ -410,7 +410,9 @@ class UserAccessCollector:
                 username = user.get("Name", "")
 
                 # Check for well-known system service accounts
-                if sid.startswith(("S-1-5-18", "S-1-5-19", "S-1-5-20")) or username.startswith("NT "):
+                if sid.startswith(
+                    ("S-1-5-18", "S-1-5-19", "S-1-5-20")
+                ) or username.startswith("NT "):
                     is_system_user = True
                 # Check for local domain users with well-known RIDs
                 elif sid.startswith("S-1-5-21-") and sid.count("-") >= 6:
@@ -421,14 +423,30 @@ class UserAccessCollector:
                         # 500=Administrator, 501=Guest, 502=KRBTGT, 503=DefaultAccount, etc.
                         # But NOT all RIDs < 1000 are system accounts - some are regular users
                         system_usernames = [
-                            "Administrator", "Guest", "DefaultAccount", "WDAGUtilityAccount"
+                            "Administrator",
+                            "Guest",
+                            "DefaultAccount",
+                            "WDAGUtilityAccount",
                         ]
-                        well_known_system_rids = [500, 501, 502, 503, 504, 505, 506]  # Specific system RIDs
-                        is_system_user = (rid in well_known_system_rids) or (username in system_usernames)
+                        well_known_system_rids = [
+                            500,
+                            501,
+                            502,
+                            503,
+                            504,
+                            505,
+                            506,
+                        ]  # Specific system RIDs
+                        is_system_user = (rid in well_known_system_rids) or (
+                            username in system_usernames
+                        )
                     except (ValueError, IndexError):
                         # If we can't parse the RID, default based on username patterns
                         is_system_user = username in [
-                            "Administrator", "Guest", "DefaultAccount", "WDAGUtilityAccount"
+                            "Administrator",
+                            "Guest",
+                            "DefaultAccount",
+                            "WDAGUtilityAccount",
                         ]
 
                 # Get user's group memberships
