@@ -218,15 +218,29 @@ class CertificateCollector:
         certificates = []
 
         try:
+            # Comprehensive list of Windows certificate stores
+            # Ordered by importance - start with stores most likely to contain certificates
             stores = [
-                "LocalMachine\\My",
-                "LocalMachine\\Root",
-                "LocalMachine\\CA",
-                "CurrentUser\\My",
+                "LocalMachine\\Root",  # Trusted Root Certification Authorities (usually has many certs)
+                "LocalMachine\\CA",  # Intermediate Certification Authorities
+                "CurrentUser\\My",  # Current User Personal certificates
+                "LocalMachine\\My",  # Local Machine Personal certificates
+                "LocalMachine\\AuthRoot",  # Third-party root CAs
+                "LocalMachine\\TrustedPeople",  # Trusted People
+                "LocalMachine\\TrustedPublisher",  # Trusted Publishers
+                "CurrentUser\\Root",  # Current User Root certificates
+                "CurrentUser\\CA",  # Current User Intermediate CAs
+                "LocalMachine\\WebHosting",  # Web hosting certificates (if available)
+                "CurrentUser\\TrustedPeople",  # Current User Trusted People
             ]
 
             for store in stores:
                 self._process_windows_certificate_store(store, certificates)
+
+            self.logger.info(
+                _("Windows certificate collection completed: %d certificates found"),
+                len(certificates),
+            )
 
         except Exception as e:
             self.logger.error(_("Error collecting Windows certificates: %s"), e)
@@ -241,8 +255,31 @@ class CertificateCollector:
             ps_command = self._build_powershell_command(store)
             result = self._execute_powershell_command(ps_command)
 
-            if result and result.returncode == 0 and result.stdout.strip():
-                self._parse_powershell_output(result.stdout, certificates)
+            if result and result.returncode == 0:
+                if result.stdout.strip():
+                    cert_count_before = len(certificates)
+                    self._parse_powershell_output(result.stdout, certificates)
+                    cert_count_after = len(certificates)
+                    added_certs = cert_count_after - cert_count_before
+                    if added_certs > 0:
+                        self.logger.debug(
+                            _("Found %d certificates in store %s"), added_certs, store
+                        )
+                    else:
+                        self.logger.debug(
+                            _("No valid certificates found in store %s"), store
+                        )
+                else:
+                    self.logger.debug(_("Certificate store %s is empty"), store)
+            else:
+                error_msg = (
+                    result.stderr.strip()
+                    if result and result.stderr
+                    else "Unknown error"
+                )
+                self.logger.debug(
+                    _("Failed to query certificate store %s: %s"), store, error_msg
+                )
 
         except subprocess.TimeoutExpired:
             self.logger.warning(
@@ -275,7 +312,7 @@ class CertificateCollector:
     def _execute_powershell_command(self, ps_command: str):
         """Execute PowerShell command and return result."""
         return subprocess.run(  # nosec B602 B603 B607
-            ["powershell", "-Command", ps_command],
+            ["powershell", "-ExecutionPolicy", "Bypass", "-Command", ps_command],
             capture_output=True,
             text=True,
             timeout=60,
@@ -286,14 +323,24 @@ class CertificateCollector:
         self, stdout: str, certificates: List[Dict[str, Any]]
     ) -> None:
         """Parse PowerShell output and extract certificate information."""
-        for line in stdout.strip().split("\\n"):
-            if line.strip():
+        lines = stdout.strip().split("\n")
+        for line in lines:
+            line = line.strip()
+            if line:
                 try:
                     cert_data = json.loads(line)
                     cert_info = self._format_windows_certificate(cert_data)
                     if cert_info:
                         certificates.append(cert_info)
                 except json.JSONDecodeError:
+                    self.logger.debug(
+                        _("Failed to parse certificate JSON: %s"), line[:100]
+                    )
+                    continue
+                except Exception as e:
+                    self.logger.debug(
+                        _("Error processing certificate data: %s"), str(e)
+                    )
                     continue
 
     def _extract_certificate_info(self, cert_file: str) -> Optional[Dict[str, Any]]:
