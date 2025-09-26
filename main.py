@@ -1441,8 +1441,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             os_info = system_info.get("os_info", {})
 
             # Determine OS name and version
-            os_name = os_info.get("distribution", "Unknown")
-            os_version = os_info.get("distribution_version", "Unknown")
+            # Try Linux-specific fields first, then fall back to platform fields for FreeBSD/other systems
+            os_name = os_info.get("distribution") or system_info.get(
+                "platform", "Unknown"
+            )
+            os_version = os_info.get("distribution_version") or system_info.get(
+                "platform_release", "Unknown"
+            )
 
             # Calculate total packages
             total_packages = sum(

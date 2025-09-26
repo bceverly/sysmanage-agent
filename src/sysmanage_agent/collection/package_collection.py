@@ -417,8 +417,9 @@ class PackageCollector:
     def _collect_pkg_packages(self) -> int:
         """Collect packages from pkg (FreeBSD/OpenBSD)."""
         try:
+            # Use pkg rquery to get all available packages from remote repositories
             result = subprocess.run(  # nosec B603, B607
-                ["pkg", "search", "-q"],
+                ["pkg", "rquery", "--all", "%n-%v %c"],
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -429,7 +430,7 @@ class PackageCollector:
                 logger.error(_("Failed to get pkg package list"))
                 return 0
 
-            packages = self._parse_pkg_output(result.stdout)
+            packages = self._parse_pkg_rquery_output(result.stdout)
             return self._store_packages("pkg", packages)
 
         except Exception as e:
@@ -728,6 +729,34 @@ class PackageCollector:
                 continue
 
             # pkg format: "name-version comment"
+            parts = line.split(" ", 1)
+            if len(parts) >= 1:
+                name_version = parts[0]
+                description = parts[1] if len(parts) > 1 else ""
+
+                # Try to separate name and version
+                if "-" in name_version:
+                    last_dash = name_version.rfind("-")
+                    name = name_version[:last_dash]
+                    version = name_version[last_dash + 1 :]
+                else:
+                    name = name_version
+                    version = "unknown"
+
+                packages.append(
+                    {"name": name, "version": version, "description": description}
+                )
+
+        return packages
+
+    def _parse_pkg_rquery_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse pkg rquery --all output."""
+        packages = []
+        for line in output.splitlines():
+            if not line.strip():
+                continue
+
+            # pkg rquery format: "name-version comment"
             parts = line.split(" ", 1)
             if len(parts) >= 1:
                 name_version = parts[0]
