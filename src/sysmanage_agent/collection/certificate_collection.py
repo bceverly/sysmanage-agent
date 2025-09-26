@@ -84,7 +84,7 @@ class CertificateCollector:
                 "/etc/ssl/certs",
                 "/usr/local/etc/ssl/certs",
                 "/usr/local/etc/pki/tls/certs",
-                "/etc/pki/tls/certs"
+                "/etc/pki/tls/certs",
             ]
         elif system == "OpenBSD":
             paths = ["/etc/ssl/certs"]
