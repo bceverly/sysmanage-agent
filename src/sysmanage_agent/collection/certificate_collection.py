@@ -79,7 +79,13 @@ class CertificateCollector:
                 paths = ["/etc/ssl/certs", "/etc/pki/tls/certs"]
 
         elif system == "FreeBSD":
-            paths = ["/usr/local/share/certs", "/etc/ssl/certs"]
+            paths = [
+                "/usr/local/share/certs",
+                "/etc/ssl/certs",
+                "/usr/local/etc/ssl/certs",
+                "/usr/local/etc/pki/tls/certs",
+                "/etc/pki/tls/certs"
+            ]
         elif system == "OpenBSD":
             paths = ["/etc/ssl/certs"]
 
@@ -91,6 +97,16 @@ class CertificateCollector:
             "/etc/apache2/ssl/certs",
             "/etc/httpd/ssl/certs",
         ]
+
+        # Add FreeBSD-specific application directories
+        if system == "FreeBSD":
+            freebsd_app_paths = [
+                "/usr/local/etc/nginx/ssl",
+                "/usr/local/etc/apache24/ssl",
+                "/usr/local/etc/ssl/certs",
+                "/usr/local/share/ca-certificates",
+            ]
+            app_paths.extend(freebsd_app_paths)
 
         for app_path in app_paths:
             paths.extend(glob.glob(app_path))
