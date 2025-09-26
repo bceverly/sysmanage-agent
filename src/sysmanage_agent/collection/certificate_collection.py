@@ -84,10 +84,17 @@ class CertificateCollector:
                 "/etc/ssl/certs",
                 "/usr/local/etc/ssl/certs",
                 "/usr/local/etc/pki/tls/certs",
-                "/etc/pki/tls/certs"
+                "/etc/pki/tls/certs",
             ]
         elif system == "OpenBSD":
-            paths = ["/etc/ssl/certs"]
+            paths = [
+                "/etc/ssl",  # Include the main SSL directory for cert.pem
+                "/etc/ssl/certs",
+                "/var/www/conf/ssl",
+                "/usr/local/etc/ssl/certs",
+                "/usr/local/share/certs",
+                "/etc/ssl/private",  # Private keys directory
+            ]
 
         # Add common application-specific directories
         app_paths = [
@@ -107,6 +114,17 @@ class CertificateCollector:
                 "/usr/local/share/ca-certificates",
             ]
             app_paths.extend(freebsd_app_paths)
+
+        # Add OpenBSD-specific application directories
+        elif system == "OpenBSD":
+            openbsd_app_paths = [
+                "/var/www/conf/ssl",
+                "/usr/local/etc/nginx/ssl",
+                "/usr/local/share/ca-certificates",
+                "/usr/local/etc/apache2/ssl",
+                "/etc/httpd/ssl",
+            ]
+            app_paths.extend(openbsd_app_paths)
 
         for app_path in app_paths:
             paths.extend(glob.glob(app_path))
@@ -167,7 +185,12 @@ class CertificateCollector:
         seen_fingerprints: set,
     ) -> None:
         """Process certificate files matching a specific pattern."""
-        cert_files = glob.glob(os.path.join(cert_dir, "**", pattern), recursive=True)
+        # Check for files in the directory itself
+        cert_files = glob.glob(os.path.join(cert_dir, pattern))
+        # Also check subdirectories recursively
+        cert_files.extend(
+            glob.glob(os.path.join(cert_dir, "**", pattern), recursive=True)
+        )
 
         for cert_file in cert_files:
             self._process_single_certificate(cert_file, certificates, seen_fingerprints)
@@ -276,8 +299,8 @@ class CertificateCollector:
     def _extract_certificate_info(self, cert_file: str) -> Optional[Dict[str, Any]]:
         """Extract certificate information using OpenSSL."""
         try:
-            # Determine the OpenSSL command (LibreSSL on OpenBSD)
-            openssl_cmd = "libressl" if platform.system() == "OpenBSD" else "openssl"
+            # Use openssl command (OpenBSD also uses openssl command despite having LibreSSL)
+            openssl_cmd = "openssl"
 
             # Extract certificate information including key usage and purpose
             cmd = [
