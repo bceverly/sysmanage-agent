@@ -8,10 +8,15 @@ and stores them in the local SQLite database for later transmission to the serve
 import logging
 import os
 import platform
-import pwd
 import subprocess  # nosec B404
 from datetime import datetime, timezone
 from typing import Dict, List
+
+# Platform-specific imports
+try:
+    import pwd  # Unix/macOS only
+except ImportError:
+    pwd = None  # Windows
 
 from src.database.base import get_database_manager
 from src.database.models import AvailablePackage
@@ -165,7 +170,9 @@ class PackageCollector:
                         )
                         if result.returncode == 0:
                             return True
-                    except Exception:
+                    except (
+                        Exception
+                    ):  # nosec B112 - Continue trying other homebrew paths
                         continue
                 return False
 
@@ -408,9 +415,12 @@ class PackageCollector:
                 if os.path.exists(path):
                     file_stat = os.stat(path)
                     owner_uid = file_stat.st_uid
-                    owner_info = pwd.getpwuid(owner_uid)
-                    return owner_info.pw_name
-            except Exception:
+                    if pwd is not None:
+                        owner_info = pwd.getpwuid(owner_uid)
+                        return owner_info.pw_name
+                    # On Windows, return empty string since Homebrew doesn't exist
+                    return ""
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return ""
 
@@ -438,7 +448,7 @@ class PackageCollector:
 
                     # Normal case
                     return path
-            except Exception:
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return ""
 

@@ -206,18 +206,22 @@ code      1.82.2     148  latest/stable vscode✓    classic
         assert mock_session.commit.called
 
     @patch("subprocess.run")
+    @patch(
+        "src.sysmanage_agent.collection.package_collection.PackageCollector._get_brew_command"
+    )
     def test_collect_homebrew_packages_success(
-        self, mock_run, package_collector, mock_db_manager
+        self, mock_get_brew_command, mock_run, package_collector, mock_db_manager
     ):
         """Test successful Homebrew package collection."""
         _, mock_session = mock_db_manager
 
-        # Mock multiple subprocess calls:
-        # 1. brew --version (to check if brew exists)
-        # 2. brew list --formulae --versions (formulae)
-        # 3. brew list --casks --versions (casks - no output expected)
+        # Mock _get_brew_command to return a simple brew command
+        mock_get_brew_command.return_value = "brew"
+
+        # Mock subprocess calls for brew list commands:
+        # 1. brew list --formulae --versions (formulae)
+        # 2. brew list --casks --versions (casks - no output expected)
         mock_run.side_effect = [
-            Mock(returncode=0, stdout="Homebrew 4.0.0"),  # brew --version
             Mock(
                 returncode=0,
                 stdout="""

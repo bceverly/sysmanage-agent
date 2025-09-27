@@ -25,11 +25,16 @@ import json
 import logging
 import os
 import platform
-import pwd
 import re
 import subprocess  # nosec B404
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+# Platform-specific imports
+try:
+    import pwd  # Unix/macOS only
+except ImportError:
+    pwd = None  # Windows
 
 from src.i18n import _
 
@@ -189,7 +194,7 @@ class UpdateDetector:
                 )
                 if result.returncode == 0:
                     return True
-            except Exception:
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return False
 
@@ -206,9 +211,12 @@ class UpdateDetector:
                 if os.path.exists(path):
                     file_stat = os.stat(path)
                     owner_uid = file_stat.st_uid
-                    owner_info = pwd.getpwuid(owner_uid)
-                    return owner_info.pw_name
-            except Exception:
+                    if pwd is not None:
+                        owner_info = pwd.getpwuid(owner_uid)
+                        return owner_info.pw_name
+                    # On Windows, return empty string since Homebrew doesn't exist
+                    return ""
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return ""
 
@@ -236,7 +244,7 @@ class UpdateDetector:
 
                     # Normal case
                     return path
-            except Exception:
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return "brew"  # Fallback
 

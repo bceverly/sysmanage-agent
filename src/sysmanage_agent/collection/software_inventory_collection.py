@@ -181,7 +181,7 @@ class SoftwareInventoryCollector:
                 )
                 if result.returncode == 0:
                     return True
-            except Exception:
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return False
 
@@ -200,7 +200,7 @@ class SoftwareInventoryCollector:
                 )
                 if result.returncode == 0:
                     return path
-            except Exception:
+            except Exception:  # nosec B112 - Continue trying other homebrew paths
                 continue
         return "brew"  # Fallback
 
