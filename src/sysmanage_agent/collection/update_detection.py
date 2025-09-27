@@ -1013,7 +1013,7 @@ class UpdateDetector:
                             # Get current macOS version for current_version field
                             current_version = "unknown"
                             try:
-                                result = subprocess.run(
+                                result = subprocess.run(  # nosec B603, B607
                                     ["sw_vers", "-productVersion"],
                                     capture_output=True,
                                     text=True,
