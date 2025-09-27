@@ -294,6 +294,20 @@ package3\t3.0"""
             # Should detect multiple managers
             assert "apt" in managers
             assert "snap" in managers
-            assert "homebrew" in managers
+
+            # Platform-specific homebrew detection
+            if self.collector.platform == "darwin":
+                # On macOS, homebrew should be detected if brew command exists
+                # Reset cache and mock homebrew availability
+                self.collector._package_managers = None
+                with patch.object(
+                    self.collector, "_is_homebrew_available", return_value=True
+                ):
+                    managers = self.collector._detect_package_managers()
+                    assert "homebrew" in managers
+            else:
+                # On non-macOS platforms, homebrew should not be detected even if brew exists
+                assert "homebrew" not in managers
+
             assert "flatpak" not in managers
             assert "yum" not in managers
