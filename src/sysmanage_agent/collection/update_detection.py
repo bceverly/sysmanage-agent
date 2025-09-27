@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import platform
+import pwd
 import re
 import subprocess  # nosec B404
 from datetime import datetime
@@ -151,7 +152,12 @@ class UpdateDetector:
 
         for manager, executables in manager_executables.items():
             for executable in executables:
-                if self._command_exists(executable):
+                # Special handling for Homebrew on macOS
+                if manager == "homebrew" and executable == "brew":
+                    if self._is_homebrew_available():
+                        managers.append(manager)
+                        break
+                elif self._command_exists(executable):
                     managers.append(manager)
                     break
 
@@ -168,6 +174,71 @@ class UpdateDetector:
             return True
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
+
+    def _is_homebrew_available(self) -> bool:
+        """Check if Homebrew is available on macOS with proper path detection."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+        ]
+
+        for path in homebrew_paths:
+            try:
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"], capture_output=True, timeout=10, check=False
+                )
+                if result.returncode == 0:
+                    return True
+            except Exception:
+                continue
+        return False
+
+    def _get_homebrew_owner(self) -> str:
+        """Get the owner of the Homebrew installation."""
+
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+        ]
+
+        for path in homebrew_paths:
+            try:
+                if os.path.exists(path):
+                    file_stat = os.stat(path)
+                    owner_uid = file_stat.st_uid
+                    owner_info = pwd.getpwuid(owner_uid)
+                    return owner_info.pw_name
+            except Exception:
+                continue
+        return ""
+
+    def _get_brew_command(self) -> str:
+        """Get the correct brew command path, with sudo -u support when running privileged."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+            "brew",  # If in PATH
+        ]
+
+        for path in homebrew_paths:
+            try:
+                # Test if brew works directly first
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"], capture_output=True, timeout=10, check=False
+                )
+                if result.returncode == 0:
+                    # Check if running as root and Homebrew owner is different
+                    if os.geteuid() == 0:  # Running as root
+                        homebrew_owner = self._get_homebrew_owner()
+                        if homebrew_owner and homebrew_owner != "root":
+                            # Return sudo command to run as homebrew owner
+                            return f"sudo -u {homebrew_owner} {path}"
+
+                    # Normal case
+                    return path
+            except Exception:
+                continue
+        return "brew"  # Fallback
 
     def _detect_linux_updates(self):
         """Detect updates from Linux package managers."""
@@ -199,13 +270,7 @@ class UpdateDetector:
 
     def _detect_macos_updates(self):
         """Detect updates from macOS sources."""
-        # First detect OS-level system updates
-        self._detect_macos_system_updates()
-
-        # Detect OS version upgrades
-        self._detect_macos_version_upgrades()
-
-        # Mac App Store updates
+        # Mac App Store updates (includes both system updates and OS upgrades with proper categorization)
         self._detect_macos_app_store_updates()
 
         # Package managers
@@ -706,15 +771,103 @@ class UpdateDetector:
 
     # macOS Update Detection Implementations
 
+    def _is_macos_major_upgrade(self, title, version):
+        """
+        Determine if a macOS update is a major version upgrade vs a patch update.
+
+        Args:
+            title: The update title (e.g., "macOS Sequoia 15.7", "macOS Tahoe 26")
+            version: The version string (e.g., "15.7", "26.0")
+
+        Returns:
+            bool: True if this is a major version upgrade, False if it's a patch update
+        """
+        try:
+            # Get current macOS version
+            result = subprocess.run(  # nosec B603, B607
+                ["sw_vers", "-productVersion"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                # If we can't determine current version, default to treating as patch update
+                return False
+
+            current_version = result.stdout.strip()
+
+            # Extract major version numbers
+            try:
+                current_major = int(current_version.split(".")[0])
+
+                # Try to extract major version from the available version
+                if "." in version:
+                    available_major = int(version.split(".")[0])
+                else:
+                    # Handle cases like "26" or "26.0"
+                    available_major = int(float(version))
+
+                # If major versions differ significantly, it's a major upgrade
+                # For macOS: 15.x -> 15.y is patch, 15.x -> 16.x+ is major upgrade
+                return available_major > current_major
+
+            except (ValueError, IndexError):
+                # If we can't parse versions, check the title for known patterns
+                # Major upgrades typically have different codenames
+                current_codename = (
+                    self._get_macos_codename(current_major)
+                    if "current_major" in locals()
+                    else ""
+                )
+
+                # Known major version transitions (approximate)
+                major_upgrade_patterns = [
+                    "Tahoe",  # macOS 26
+                    "Ventura",  # macOS 13
+                    "Monterey",  # macOS 12
+                    "Big Sur",  # macOS 11
+                    "Catalina",  # macOS 10.15
+                ]
+
+                # If title contains a different major codename, it's likely a major upgrade
+                for pattern in major_upgrade_patterns:
+                    if pattern in title and pattern not in current_codename:
+                        return True
+
+                return False
+
+        except Exception:
+            # Default to treating as patch update if anything goes wrong
+            return False
+
+    def _get_macos_codename(self, major_version):
+        """Get the codename for a macOS major version."""
+        codenames = {
+            15: "Sequoia",
+            14: "Sonoma",
+            13: "Ventura",
+            12: "Monterey",
+            11: "Big Sur",
+            26: "Tahoe",  # Future version
+        }
+        return codenames.get(major_version, "")
+
     def _detect_homebrew_updates(self):
         """Detect updates from Homebrew (macOS)."""
         try:
             logger.debug(_("Detecting Homebrew updates"))
 
+            # Find the correct brew path
+            brew_cmd = self._get_brew_command()
+
             # First update Homebrew to get the latest package information
             logger.debug(_("Updating Homebrew package information"))
+            # Split brew_cmd in case it contains sudo -u
+            brew_args = brew_cmd.split() + ["update"]
             update_result = subprocess.run(  # nosec B603, B607
-                ["brew", "update"],
+                brew_args,
                 capture_output=True,
                 text=True,
                 timeout=60,  # Give more time for update
@@ -727,8 +880,10 @@ class UpdateDetector:
                 logger.debug(_("Homebrew update completed successfully"))
 
             # Get outdated formulas
+            # Split brew_cmd in case it contains sudo -u
+            brew_args = brew_cmd.split() + ["outdated", "--json=v2"]
             result = subprocess.run(  # nosec B603, B607
-                ["brew", "outdated", "--json=v2"],
+                brew_args,
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -795,7 +950,7 @@ class UpdateDetector:
                         "*" in line and "Label:" in line
                     ):  # Update lines start with * Label:
                         # Parse format: * Label: Name-VersionCode
-                        label_match = re.match(r"\*\s+Label:\s+(.+)", line)
+                        label_match = re.match(r"\s*\*\s+Label:\s+(.+)", line)
                         if label_match:
                             label = label_match.group(1).strip()
 
@@ -842,15 +997,42 @@ class UpdateDetector:
                                 # Check if requires restart
                                 requires_restart = "Action: restart" in details_line
 
+                            # Determine if this is a patch update or major version upgrade
+                            is_major_upgrade = self._is_macos_major_upgrade(
+                                title, version
+                            )
+
+                            # Get current macOS version for current_version field
+                            current_version = "unknown"
+                            try:
+                                result = subprocess.run(
+                                    ["sw_vers", "-productVersion"],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=10,
+                                    check=False,
+                                )
+                                if result.returncode == 0:
+                                    current_version = result.stdout.strip()
+                            except Exception:
+                                current_version = "unknown"
+
                             update = {
                                 "package_name": title,
+                                "current_version": current_version,
                                 "available_version": version,
-                                "package_manager": "mac_app_store",
+                                "package_manager": (
+                                    "mac_app_store"
+                                    if not is_major_upgrade
+                                    else "macos-upgrade"
+                                ),
                                 "label": label,
                                 "size_kb": size_kb,
                                 "is_security_update": "Security" in label,
-                                "is_system_update": "macOS" in title
-                                or "Safari" in title,
+                                "is_system_update": (
+                                    "macOS" in title or "Safari" in title
+                                )
+                                and not is_major_upgrade,
                                 "is_recommended": is_recommended,
                                 "requires_restart": requires_restart,
                             }
@@ -1510,14 +1692,20 @@ class UpdateDetector:
 
     def _apply_homebrew_updates(self, packages: List[Dict], results: Dict):
         """Apply Homebrew updates."""
+        # Get the correct brew command with sudo -u support if needed
+        brew_cmd = self._get_brew_command()
+
         for package in packages:
             try:
                 # Determine if it's a cask or formula
                 source = package.get("source", "homebrew_core")
                 if "cask" in source:
-                    cmd = ["brew", "upgrade", "--cask", package["package_name"]]
+                    cmd_args = ["upgrade", "--cask", package["package_name"]]
                 else:
-                    cmd = ["brew", "upgrade", package["package_name"]]
+                    cmd_args = ["upgrade", package["package_name"]]
+
+                # Split brew_cmd in case it contains sudo -u
+                cmd = brew_cmd.split() + cmd_args
 
                 logger.info(_("Running homebrew command: %s"), " ".join(cmd))
                 result = subprocess.run(  # nosec B603, B607
@@ -2531,93 +2719,6 @@ class UpdateDetector:
         except Exception as e:
             logger.error(_("Failed to detect Windows system updates: %s"), str(e))
 
-    def _detect_macos_system_updates(self):
-        """Detect macOS system updates from Software Update."""
-        try:
-            logger.debug(_("Detecting macOS system updates"))
-
-            # Use softwareupdate command to list available updates
-            result = subprocess.run(  # nosec B603, B607
-                ["softwareupdate", "--list", "--no-scan"],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                output = result.stdout
-
-                # Parse the output to extract update information
-                lines = output.split("\n")
-
-                for line in lines:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    # Look for update entries (usually start with *)
-                    if line.startswith("*"):
-                        # Extract update name and details
-                        parts = line[1:].strip().split("-", 1)
-                        if len(parts) >= 2:
-                            update_name = parts[0].strip()
-                            description = parts[1].strip()
-
-                            # Determine if this is a security update
-                            name_lower = update_name.lower()
-                            desc_lower = description.lower()
-
-                            is_security = (
-                                "security" in name_lower
-                                or "security" in desc_lower
-                                or "safari"
-                                in name_lower  # Safari updates often security-related
-                                or "xprotect"
-                                in name_lower  # XProtect is security software
-                                or "malware" in desc_lower
-                                or "vulnerability" in desc_lower
-                            )
-
-                            # Default to security as requested
-                            update_type = "security" if is_security else "security"
-
-                            self.available_updates.append(
-                                {
-                                    "package_name": update_name,
-                                    "current_version": "installed",
-                                    "available_version": "latest",
-                                    "package_manager": "macOS Update",
-                                    "update_type": update_type,
-                                    "description": description,
-                                    "size": 0,  # Size not available from softwareupdate --list
-                                }
-                            )
-
-                logger.debug(
-                    _("Found %d macOS system updates"),
-                    len(
-                        [
-                            u
-                            for u in self.available_updates
-                            if u.get("package_manager") == "macOS Update"
-                        ]
-                    ),
-                )
-
-            else:
-                logger.warning(
-                    _("softwareupdate command failed with exit code %d"),
-                    result.returncode,
-                )
-                if result.stderr:
-                    logger.warning(_("softwareupdate stderr: %s"), result.stderr)
-
-        except subprocess.TimeoutExpired:
-            logger.warning(_("macOS system update detection timed out"))
-        except Exception as e:
-            logger.error(_("Failed to detect macOS system updates: %s"), str(e))
-
     def _detect_openbsd_system_updates(self):
         """Detect OpenBSD system updates using syspatch."""
         try:
@@ -3588,8 +3689,13 @@ class UpdateDetector:
     def _install_with_brew(self, package_name: str) -> Dict[str, Any]:
         """Install package using Homebrew package manager."""
         try:
+            # Get the correct brew command with sudo -u support if needed
+            brew_cmd = self._get_brew_command()
+            # Split brew_cmd in case it contains sudo -u
+            cmd = brew_cmd.split() + ["install", package_name]
+
             result = subprocess.run(  # nosec B603, B607
-                ["brew", "install", package_name],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=300,

@@ -32,9 +32,8 @@ class CertificateCollector:
             if system == "Windows":
                 certificates = self._collect_windows_certificates()
             elif system == "Darwin":  # macOS
-                certificates = self._collect_unix_certificates(
-                    self._get_macos_cert_paths()
-                )
+                # Collect from both macOS keychains and filesystem paths
+                certificates = self._collect_macos_certificates()
             elif system in ["Linux", "FreeBSD", "OpenBSD"]:
                 certificates = self._collect_unix_certificates(
                     self._get_unix_cert_paths()
@@ -146,6 +145,199 @@ class CertificateCollector:
         ]
 
         return [p for p in (paths + homebrew_paths) if os.path.isdir(p)]
+
+    def _collect_macos_certificates(self) -> List[Dict[str, Any]]:
+        """Collect certificates from macOS keychains and filesystem paths."""
+        certificates = []
+        seen_fingerprints = set()
+
+        # First collect from keychains using the security command
+        keychain_certs = self._collect_macos_keychain_certificates()
+        for cert in keychain_certs:
+            fingerprint = cert.get("fingerprint_sha256")
+            if fingerprint and fingerprint not in seen_fingerprints:
+                seen_fingerprints.add(fingerprint)
+                certificates.append(cert)
+            elif not fingerprint:
+                certificates.append(cert)
+
+        # Then collect from filesystem paths
+        cert_paths = self._get_macos_cert_paths()
+        filesystem_certs = self._collect_unix_certificates(cert_paths)
+        for cert in filesystem_certs:
+            fingerprint = cert.get("fingerprint_sha256")
+            if fingerprint and fingerprint not in seen_fingerprints:
+                seen_fingerprints.add(fingerprint)
+                certificates.append(cert)
+            elif not fingerprint:
+                certificates.append(cert)
+
+        return certificates
+
+    def _collect_macos_keychain_certificates(self) -> List[Dict[str, Any]]:
+        """Collect certificates from macOS keychains using the security command."""
+        certificates = []
+
+        # Define keychains to search
+        keychains = [
+            {
+                "name": "System Root CA",
+                "path": "/System/Library/Keychains/SystemRootCertificates.keychain",
+            },
+            {"name": "User Login", "path": "~/Library/Keychains/login.keychain-db"},
+            {"name": "System", "path": "/Library/Keychains/System.keychain"},
+        ]
+
+        for keychain in keychains:
+            try:
+                keychain_certs = self._extract_certificates_from_keychain(keychain)
+                certificates.extend(keychain_certs)
+                self.logger.debug(
+                    _("Collected %d certificates from keychain: %s"),
+                    len(keychain_certs),
+                    keychain["name"],
+                )
+            except Exception as e:
+                self.logger.debug(
+                    _("Failed to collect certificates from keychain %s: %s"),
+                    keychain["name"],
+                    e,
+                )
+
+        return certificates
+
+    def _extract_certificates_from_keychain(
+        self, keychain: Dict[str, str]
+    ) -> List[Dict[str, Any]]:
+        """Extract certificates from a specific macOS keychain."""
+        certificates = []
+
+        try:
+            # Use security command to find all certificates in the keychain
+            # The -p flag outputs certificates in PEM format
+            cmd = ["security", "find-certificate", "-a", "-p"]
+
+            # Add keychain path if specified
+            if keychain["path"] and keychain["path"] != "default":
+                # Expand ~ to user home directory
+                keychain_path = os.path.expanduser(keychain["path"])
+                if os.path.exists(keychain_path):
+                    cmd.append(keychain_path)
+                else:
+                    self.logger.debug(_("Keychain not found: %s"), keychain_path)
+                    return []
+
+            result = subprocess.run(  # nosec B603, B607
+                cmd, capture_output=True, text=True, timeout=30, check=False
+            )
+
+            if result.returncode != 0:
+                self.logger.debug(
+                    _("Security command failed for keychain %s: %s"),
+                    keychain["name"],
+                    result.stderr,
+                )
+                return []
+
+            # Parse the PEM output to extract individual certificates
+            certificates = self._parse_macos_security_output(result.stdout, keychain)
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(
+                _("Timeout extracting certificates from keychain: %s"), keychain["name"]
+            )
+        except Exception as e:
+            self.logger.debug(
+                _("Error extracting certificates from keychain %s: %s"),
+                keychain["name"],
+                e,
+            )
+
+        return certificates
+
+    def _parse_macos_security_output(
+        self, pem_output: str, keychain: Dict[str, str]
+    ) -> List[Dict[str, Any]]:
+        """Parse PEM certificate output from macOS security command."""
+        certificates = []
+        current_cert = []
+        in_certificate = False
+
+        for line in pem_output.splitlines():
+            if line.strip() == "-----BEGIN CERTIFICATE-----":
+                in_certificate = True
+                current_cert = [line]
+            elif line.strip() == "-----END CERTIFICATE-----":
+                if in_certificate:
+                    current_cert.append(line)
+                    cert_pem = "\n".join(current_cert)
+                    cert_info = self._extract_cert_info_from_pem(cert_pem, keychain)
+                    if cert_info:
+                        certificates.append(cert_info)
+                    current_cert = []
+                    in_certificate = False
+            elif in_certificate:
+                current_cert.append(line)
+
+        return certificates
+
+    def _extract_cert_info_from_pem(
+        self, cert_pem: str, keychain: Dict[str, str]
+    ) -> Optional[Dict[str, Any]]:
+        """Extract certificate information from PEM data using OpenSSL."""
+        try:
+            # Use openssl to parse the PEM certificate
+            cmd = [
+                "openssl",
+                "x509",
+                "-noout",
+                "-subject",
+                "-issuer",
+                "-startdate",
+                "-enddate",
+                "-serial",
+                "-fingerprint",
+                "-sha256",
+                "-purpose",
+            ]
+
+            result = subprocess.run(  # nosec B603, B607
+                cmd,
+                input=cert_pem,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                self.logger.debug(
+                    _("OpenSSL failed to parse certificate: %s"), result.stderr
+                )
+                return None
+
+            # Parse the OpenSSL output
+            cert_info = self._parse_openssl_output(
+                f"macOS Keychain: {keychain['name']}", result.stdout
+            )
+
+            # Override file_path to indicate this came from a keychain
+            cert_info["file_path"] = f"macOS Keychain: {keychain['name']}"
+            cert_info["keychain_name"] = keychain["name"]
+            cert_info["keychain_path"] = keychain["path"]
+
+            return cert_info
+
+        except subprocess.TimeoutExpired:
+            self.logger.debug(
+                _("Timeout parsing certificate from keychain: %s"), keychain["name"]
+            )
+            return None
+        except Exception as e:
+            self.logger.debug(
+                _("Error parsing certificate from keychain %s: %s"), keychain["name"], e
+            )
+            return None
 
     def _collect_unix_certificates(self, cert_paths: List[str]) -> List[Dict[str, Any]]:
         """Collect certificates from Unix/Linux filesystem paths."""

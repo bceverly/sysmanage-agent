@@ -276,6 +276,7 @@ class TestSoftwareInventoryCollector(
     def test_collect_homebrew_packages_success(self, mock_run):
         """Test _collect_homebrew_packages with successful execution."""
         mock_run.side_effect = [
+            Mock(returncode=0, stdout="Homebrew 4.0.0"),  # brew --version check
             Mock(returncode=0, stdout="git 2.30.0\nvim 8.2"),  # formula
             Mock(returncode=0, stdout="visual-studio-code 1.52.1"),  # cask
         ]

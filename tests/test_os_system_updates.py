@@ -101,16 +101,28 @@ Software Update Tool
 
 Finding available software...
 Software Update found the following new or updated software:
-   * macOS Security Update-001
-   	macOS Security Update (001), 250MB [recommended] [restart]
-   * Safari15.6-15613.3.9.1.16
-   	Safari (15.6), 75MB [recommended]
+   * Label: macOS Security Update-001
+   	Title: macOS Security Update (001), Version: 15.6.1, Size: 250000KiB, Recommended: YES, Action: restart
+   * Label: Safari15.6-15613.3.9.1.16
+   	Title: Safari (15.6), Version: 15.6, Size: 75000KiB, Recommended: YES
 """
-        mock_run.return_value = Mock(
-            returncode=0, stdout=softwareupdate_output.strip(), stderr=""
-        )
+        # Set up mock to handle multiple subprocess calls
+        # First call: softwareupdate --list
+        # Second call: sw_vers -productVersion (for first update)
+        # Third call: sw_vers -productVersion (for second update)
+        mock_run.side_effect = [
+            Mock(
+                returncode=0, stdout=softwareupdate_output.strip(), stderr=""
+            ),  # softwareupdate call
+            Mock(
+                returncode=0, stdout="15.6.1", stderr=""
+            ),  # sw_vers call for first update
+            Mock(
+                returncode=0, stdout="15.6.1", stderr=""
+            ),  # sw_vers call for second update
+        ]
 
-        self.detector._detect_macos_system_updates()
+        self.detector._detect_macos_app_store_updates()
 
         assert len(self.detector.available_updates) == 2
 
@@ -120,22 +132,29 @@ Software Update found the following new or updated software:
             for u in self.detector.available_updates
             if "Security Update" in u["package_name"]
         )
-        assert security_update["package_name"] == "macOS Security Update"
-        assert security_update["package_manager"] == "macOS Update"
-        assert security_update["update_type"] == "security"
-        assert security_update["size"] == 0  # Size not parsed yet
-        # Note: restart_required not implemented yet
+        assert security_update["package_name"] == "macOS Security Update (001)"
+        assert (
+            security_update["package_manager"] == "mac_app_store"
+        )  # Updated based on new logic
+        assert security_update["is_security_update"] is True
+        assert security_update["size_kb"] == 250000
+        assert security_update["requires_restart"] is True
+        assert security_update["is_recommended"] is True
 
         # Check Safari update
         safari_update = next(
             u for u in self.detector.available_updates if "Safari" in u["package_name"]
         )
-        assert safari_update["package_name"] == "Safari15.6"
-        assert safari_update["package_manager"] == "macOS Update"
+        assert safari_update["package_name"] == "Safari (15.6)"
         assert (
-            safari_update["update_type"] == "security"
-        )  # Safari updates are classified as security
-        assert safari_update["size"] == 0  # Size not parsed yet
+            safari_update["package_manager"] == "mac_app_store"
+        )  # Updated based on new logic
+        assert (
+            safari_update["is_security_update"] is False
+        )  # Safari updates are not security in the new logic
+        assert safari_update["size_kb"] == 75000
+        assert safari_update["requires_restart"] is False
+        assert safari_update["is_recommended"] is True
 
     @patch("subprocess.run")
     def test_detect_macos_system_updates_no_updates(self, mock_run):
@@ -146,22 +165,29 @@ Software Update Tool
 Finding available software...
 No new software available.
 """
-        mock_run.return_value = Mock(
-            returncode=0, stdout=softwareupdate_output.strip(), stderr=""
-        )
+        # Set up mock to handle multiple subprocess calls
+        mock_run.side_effect = [
+            Mock(returncode=0, stdout="15.6.1", stderr=""),  # sw_vers call
+            Mock(
+                returncode=0, stdout=softwareupdate_output.strip(), stderr=""
+            ),  # softwareupdate call
+        ]
 
-        self.detector._detect_macos_system_updates()
+        self.detector._detect_macos_app_store_updates()
         assert len(self.detector.available_updates) == 0
 
     @patch("subprocess.run")
     def test_detect_macos_system_updates_error(self, mock_run):
         """Test macOS system update detection error handling."""
-        mock_run.return_value = Mock(
-            returncode=1, stdout="", stderr="Permission denied"
-        )
+        # First call fails (sw_vers)
+        mock_run.side_effect = [
+            Mock(
+                returncode=1, stdout="", stderr="Permission denied"
+            ),  # sw_vers call fails
+        ]
 
         # Should not raise exception
-        self.detector._detect_macos_system_updates()
+        self.detector._detect_macos_app_store_updates()
         assert len(self.detector.available_updates) == 0
 
     @patch("subprocess.run")
@@ -410,7 +436,7 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         """Test that the correct platform-specific method is called."""
         test_cases = [
             ("Windows", "_detect_windows_system_updates"),
-            ("Darwin", "_detect_macos_system_updates"),
+            ("Darwin", "_detect_macos_app_store_updates"),
             ("Linux", "_detect_linux_system_updates"),
             ("OpenBSD", "_detect_openbsd_system_updates"),
         ]
@@ -440,7 +466,7 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         with patch("subprocess.run", side_effect=Exception("Test exception")):
             # Should not raise exception
             self.detector._detect_windows_system_updates()
-            self.detector._detect_macos_system_updates()
+            self.detector._detect_macos_app_store_updates()
             self.detector._detect_openbsd_system_updates()
             self.detector._detect_linux_system_updates()
 

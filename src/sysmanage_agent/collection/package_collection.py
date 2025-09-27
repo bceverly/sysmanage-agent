@@ -6,7 +6,9 @@ and stores them in the local SQLite database for later transmission to the serve
 """
 
 import logging
+import os
 import platform
+import pwd
 import subprocess  # nosec B404
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -146,6 +148,28 @@ class PackageCollector:
     def _is_package_manager_available(self, manager: str) -> bool:
         """Check if a package manager is available on the system."""
         try:
+            # For Homebrew on macOS, check both Intel and Apple Silicon paths
+            if manager == "brew":
+                # Check common Homebrew paths on macOS
+                homebrew_paths = [
+                    "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+                    "/usr/local/bin/brew",  # Intel Macs
+                ]
+                for path in homebrew_paths:
+                    try:
+                        result = subprocess.run(  # nosec B603, B607
+                            [path, "--version"],
+                            capture_output=True,
+                            timeout=10,
+                            check=False,
+                        )
+                        if result.returncode == 0:
+                            return True
+                    except Exception:
+                        continue
+                return False
+
+            # For other package managers, use which
             result = subprocess.run(  # nosec B603, B607
                 ["which", manager], capture_output=True, timeout=10, check=False
             )
@@ -319,24 +343,104 @@ class PackageCollector:
     def _collect_homebrew_packages(self) -> int:
         """Collect packages from Homebrew (macOS)."""
         try:
-            result = subprocess.run(  # nosec B603, B607
-                ["brew", "search"],
+            # Find the correct brew path
+            brew_cmd = self._get_brew_command()
+            if not brew_cmd:
+                logger.error(_("Homebrew command not found"))
+                return 0
+
+            total_packages = 0
+
+            # Collect formulae (packages)
+            # Split brew_cmd in case it contains sudo -u
+            brew_args = brew_cmd.split() + ["list", "--formulae", "--versions"]
+            formulae_result = subprocess.run(  # nosec B603, B607
+                brew_args,
                 capture_output=True,
                 text=True,
                 timeout=300,
                 check=False,
             )
 
-            if result.returncode != 0:
-                logger.error(_("Failed to get Homebrew package list"))
-                return 0
+            if formulae_result.returncode == 0:
+                formulae_packages = self._parse_homebrew_list_output(
+                    formulae_result.stdout, "formula"
+                )
+                formulae_count = self._store_packages("homebrew", formulae_packages)
+                total_packages += formulae_count
+                logger.info(_("Collected %d Homebrew formulae"), formulae_count)
 
-            packages = self._parse_homebrew_output(result.stdout)
-            return self._store_packages("homebrew", packages)
+            # Collect casks (applications)
+            # Split brew_cmd in case it contains sudo -u
+            brew_args = brew_cmd.split() + ["list", "--casks", "--versions"]
+            casks_result = subprocess.run(  # nosec B603, B607
+                brew_args,
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=False,
+            )
+
+            if casks_result.returncode == 0:
+                casks_packages = self._parse_homebrew_list_output(
+                    casks_result.stdout, "cask"
+                )
+                casks_count = self._store_packages("homebrew-cask", casks_packages)
+                total_packages += casks_count
+                logger.info(_("Collected %d Homebrew casks"), casks_count)
+
+            return total_packages
 
         except Exception as e:
             logger.error(_("Error collecting Homebrew packages: %s"), e)
             return 0
+
+    def _get_homebrew_owner(self) -> str:
+        """Get the owner of the Homebrew installation."""
+
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+        ]
+
+        for path in homebrew_paths:
+            try:
+                if os.path.exists(path):
+                    file_stat = os.stat(path)
+                    owner_uid = file_stat.st_uid
+                    owner_info = pwd.getpwuid(owner_uid)
+                    return owner_info.pw_name
+            except Exception:
+                continue
+        return ""
+
+    def _get_brew_command(self) -> str:
+        """Get the correct brew command path, with sudo -u support when running privileged."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+            "brew",  # If in PATH
+        ]
+
+        for path in homebrew_paths:
+            try:
+                # Test if brew works directly first
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"], capture_output=True, timeout=10, check=False
+                )
+                if result.returncode == 0:
+                    # Check if running as root and Homebrew owner is different
+                    if os.geteuid() == 0:  # Running as root
+                        homebrew_owner = self._get_homebrew_owner()
+                        if homebrew_owner and homebrew_owner != "root":
+                            # Return sudo command to run as homebrew owner
+                            return f"sudo -u {homebrew_owner} {path}"
+
+                    # Normal case
+                    return path
+            except Exception:
+                continue
+        return ""
 
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget)."""
@@ -673,8 +777,43 @@ class PackageCollector:
 
         return packages
 
+    def _parse_homebrew_list_output(
+        self, output: str, package_type: str
+    ) -> List[Dict[str, str]]:
+        """Parse Homebrew list --versions output."""
+        packages = []
+        for line in output.splitlines():
+            if not line.strip():
+                continue
+
+            # Format: "package_name version1 version2 ..."
+            # We take the first version listed (usually the currently installed one)
+            parts = line.split()
+            if len(parts) >= 2:
+                name = parts[0]
+                version = parts[1]  # First version listed
+
+                # Add package type info to description for clarity
+                description = f"Homebrew {package_type}"
+
+                packages.append(
+                    {"name": name, "version": version, "description": description}
+                )
+            elif len(parts) == 1:
+                # Some packages might not have versions listed
+                name = parts[0]
+                packages.append(
+                    {
+                        "name": name,
+                        "version": "unknown",
+                        "description": f"Homebrew {package_type}",
+                    }
+                )
+
+        return packages
+
     def _parse_homebrew_output(self, output: str) -> List[Dict[str, str]]:
-        """Parse Homebrew package list output."""
+        """Parse Homebrew package list output (legacy method - kept for compatibility)."""
         packages = []
         for line in output.splitlines():
             if not line.strip():

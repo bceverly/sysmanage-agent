@@ -127,7 +127,12 @@ class SoftwareInventoryCollector:
 
         for manager, executables in manager_executables.items():
             for executable in executables:
-                if self._command_exists(executable):
+                # Special handling for Homebrew on macOS
+                if manager == "homebrew" and executable == "brew":
+                    if self._is_homebrew_available():
+                        managers.append(manager)
+                        break
+                elif self._command_exists(executable):
                     managers.append(manager)
                     break
 
@@ -161,6 +166,43 @@ class SoftwareInventoryCollector:
             return True
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
+
+    def _is_homebrew_available(self) -> bool:
+        """Check if Homebrew is available on macOS with proper path detection."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+        ]
+
+        for path in homebrew_paths:
+            try:
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"], capture_output=True, timeout=10, check=False
+                )
+                if result.returncode == 0:
+                    return True
+            except Exception:
+                continue
+        return False
+
+    def _get_brew_command(self) -> str:
+        """Get the correct brew command path."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+            "brew",  # If in PATH
+        ]
+
+        for path in homebrew_paths:
+            try:
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"], capture_output=True, timeout=10, check=False
+                )
+                if result.returncode == 0:
+                    return path
+            except Exception:
+                continue
+        return "brew"  # Fallback
 
     def _collect_linux_packages(self):
         """Collect packages from Linux package managers."""
@@ -410,9 +452,12 @@ class SoftwareInventoryCollector:
         try:
             logger.debug(_("Collecting Homebrew packages"))
 
+            # Find the correct brew path
+            brew_cmd = self._get_brew_command()
+
             # Get list of installed packages
             result = subprocess.run(
-                ["brew", "list", "--formula", "--versions"],  # nosec B603, B607
+                [brew_cmd, "list", "--formula", "--versions"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -436,7 +481,7 @@ class SoftwareInventoryCollector:
 
             # Also collect casks
             result = subprocess.run(
-                ["brew", "list", "--cask", "--versions"],  # nosec B603, B607
+                [brew_cmd, "list", "--cask", "--versions"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=30,

@@ -212,12 +212,22 @@ code      1.82.2     148  latest/stable vscode✓    classic
         """Test successful Homebrew package collection."""
         _, mock_session = mock_db_manager
 
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = """
+        # Mock multiple subprocess calls:
+        # 1. brew --version (to check if brew exists)
+        # 2. brew list --formulae --versions (formulae)
+        # 3. brew list --casks --versions (casks - no output expected)
+        mock_run.side_effect = [
+            Mock(returncode=0, stdout="Homebrew 4.0.0"),  # brew --version
+            Mock(
+                returncode=0,
+                stdout="""
 git 2.42.0
 nginx 1.25.1
 python@3.11 3.11.5
-"""
+""",
+            ),  # formulae
+            Mock(returncode=0, stdout=""),  # casks (empty)
+        ]
 
         count = (
             package_collector._collect_homebrew_packages()
