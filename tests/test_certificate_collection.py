@@ -91,11 +91,47 @@ class TestCertificateCollector:
     @patch("platform.system")
     def test_collect_certificates_exception(self, mock_system):
         """Test certificate collection with exception."""
-        mock_system.return_value = "Linux"
+        mock_system.return_value = "Windows"
 
         with patch.object(
-            self.collector, "_get_unix_cert_paths", side_effect=Exception("Test error")
+            self.collector,
+            "_collect_windows_certificates",
+            side_effect=Exception("Test error"),
         ):
             result = self.collector.collect_certificates()
 
             assert not result
+
+    @patch("subprocess.run")
+    def test_extract_certificate_info_success(self, mock_run):
+        """Test successful certificate info extraction."""
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = (
+            "subject=CN=Test Certificate, O=Test Org\n"
+            "issuer=CN=Test CA\n"
+            "notAfter=Dec 31 23:59:59 2025 GMT\n"
+            "-----BEGIN CERTIFICATE-----\ntest_cert_data\n-----END CERTIFICATE-----"
+        )
+
+        cert_info = self.collector._extract_certificate_info("/path/to/cert.pem")
+
+        assert cert_info is not None
+        assert cert_info["subject"] == "CN=Test Certificate, O=Test Org"
+
+    @patch("subprocess.run")
+    def test_extract_certificate_info_openssl_failure(self, mock_run):
+        """Test certificate info extraction with OpenSSL failure."""
+        mock_run.return_value.returncode = 1
+        mock_run.return_value.stdout = ""
+
+        cert_info = self.collector._extract_certificate_info("/path/to/cert.pem")
+
+        assert cert_info is None
+
+    def test_extract_cn_from_subject(self):
+        """Test CN extraction from certificate subject."""
+        subject = "CN=Test Certificate, O=Test Organization, C=US"
+
+        cn = self.collector._extract_cn_from_subject(subject)
+
+        assert cn == "Test Certificate"
