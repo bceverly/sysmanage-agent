@@ -80,18 +80,28 @@ jobs:
 
     - name: Create Pull Request for coverage badge update
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      id: coverage-pr
       uses: peter-evans/create-pull-request@v5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.AUTO_MERGE_TOKEN }}
         commit-message: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}% [skip ci]"
         title: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}%"
         body: |
-          Automated update of test coverage badge based on latest test results.
+          🔧 **Test Coverage Badge Update**
 
-          Coverage: ${{ steps.coverage.outputs.percentage }}%
-          Badge color: ${{ steps.coverage.outputs.color }}
+          - **Coverage**: ${{ steps.coverage.outputs.percentage }}%
+          - **Badge Color**: ${{ steps.coverage.outputs.color }}
+
+          Generated automatically by CI pipeline.
         branch: update-coverage-badge-${{ github.run_number }}
         delete-branch: true
+
+    - name: Enable auto-merge for coverage badge PR
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.coverage-pr.outputs.pull-request-number
+      run: |
+        gh pr merge ${{ steps.coverage-pr.outputs.pull-request-number }} --auto --squash
+      env:
+        GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
 
     - name: Upload backend coverage to Codecov
       uses: codecov/codecov-action@v5
