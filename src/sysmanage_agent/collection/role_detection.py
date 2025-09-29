@@ -271,7 +271,13 @@ class RoleDetector:
         """Get the status of a service."""
         try:
             if self.system == "linux":
-                # Try systemctl first
+                # Try snap services first (for snap packages)
+                if self._command_exists("snap"):
+                    snap_status = self._get_snap_service_status(service_name)
+                    if snap_status != "unknown":
+                        return snap_status
+
+                # Try systemctl
                 if self._command_exists("systemctl"):
                     result = subprocess.run(
                         ["systemctl", "is-active", service_name],
@@ -304,6 +310,61 @@ class RoleDetector:
             self.logger.debug("Error checking service %s: %s", service_name, e)
 
         return "unknown"
+
+    def _get_snap_service_status(self, service_name: str) -> str:
+        """Check the status of a snap service."""
+        try:
+            result = subprocess.run(
+                ["snap", "services"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return "unknown"
+
+            return self._parse_snap_services_output(result.stdout, service_name)
+
+        except Exception as e:
+            self.logger.debug(
+                "Error checking snap services for %s: %s", service_name, e
+            )
+
+        return "unknown"
+
+    def _parse_snap_services_output(self, output: str, service_name: str) -> str:
+        """Parse snap services output to find service status."""
+        lines = output.strip().split("\n")
+        # Skip the header line
+        for line in lines[1:]:
+            if not line.strip():
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            snap_service_name = parts[0]
+            status = parts[2]
+
+            # Check for service name match
+            if self._is_snap_service_match(snap_service_name, service_name):
+                if status == "active":
+                    return "running"
+                if status in ["inactive", "disabled"]:
+                    return "stopped"
+
+        return "unknown"
+
+    def _is_snap_service_match(self, snap_service_name: str, service_name: str) -> bool:
+        """Check if snap service name matches the target service name."""
+        return (
+            snap_service_name == service_name
+            or service_name in snap_service_name
+            or snap_service_name.endswith(f".{service_name}")
+        )
 
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system."""
