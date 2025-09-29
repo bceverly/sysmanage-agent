@@ -176,3 +176,4 @@ CLAUDE.md
 # Local sysmanage-agent database
 agent.db
 agent.db-journal
+debug_grafana.py

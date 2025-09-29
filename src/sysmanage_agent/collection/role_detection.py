@@ -113,10 +113,13 @@ class RoleDetector:
                 if service_info["service_names"]:
                     for service_name in service_info["service_names"]:
                         status = self._get_service_status(service_name)
-                        if status in ["running", "stopped"]:
+                        if status == "running":
                             service_status = status
                             active_service = service_name
                             break
+                        if status == "stopped" and service_status == "unknown":
+                            service_status = status
+                            active_service = service_name
                 else:
                     # For packages without services (like SQLite), mark as "installed"
                     service_status = "installed"
