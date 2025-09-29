@@ -146,6 +146,10 @@ class RoleDetector:
                 elif self._command_exists("pacman"):
                     packages.update(self._get_pacman_packages())
 
+                # Also check snap packages (can coexist with other package managers)
+                if self._command_exists("snap"):
+                    packages.update(self._get_snap_packages())
+
         except Exception as e:
             self.logger.error("Error getting installed packages: %s", e)
 
@@ -217,6 +221,34 @@ class RoleDetector:
 
         except Exception as e:
             self.logger.debug("Error getting pacman packages: %s", e)
+
+        return packages
+
+    def _get_snap_packages(self) -> Dict[str, str]:
+        """Get packages from snap."""
+        packages = {}
+        try:
+            result = subprocess.run(
+                ["snap", "list"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                # Skip the header line (Name  Version  Rev  Tracking  Publisher  Notes)
+                for line in lines[1:]:
+                    if line.strip():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            package_name = parts[0]
+                            version = parts[1]
+                            packages[package_name] = version
+
+        except Exception as e:
+            self.logger.debug("Error getting snap packages: %s", e)
 
         return packages
 
