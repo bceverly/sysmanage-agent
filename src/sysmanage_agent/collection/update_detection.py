@@ -27,7 +27,7 @@ import os
 import platform
 import re
 import subprocess  # nosec B404
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 # Platform-specific imports
@@ -103,7 +103,7 @@ class UpdateDetector:
 
             return {
                 "available_updates": self.available_updates,
-                "detection_timestamp": datetime.now().isoformat() + "Z",
+                "detection_timestamp": datetime.now(timezone.utc).isoformat(),
                 "platform": self.platform,
                 "total_updates": len(self.available_updates),
                 "security_updates": len(security_updates),
@@ -116,7 +116,7 @@ class UpdateDetector:
             logger.error(_("Failed to detect available updates: %s"), str(e))
             return {
                 "available_updates": [],
-                "detection_timestamp": datetime.now().isoformat() + "Z",
+                "detection_timestamp": datetime.now(timezone.utc).isoformat(),
                 "platform": self.platform,
                 "total_updates": 0,
                 "error": str(e),
@@ -153,6 +153,7 @@ class UpdateDetector:
             "scoop": ["scoop"],
             # BSD package managers
             "pkg": ["pkg"],
+            "pkgin": ["pkgin"],
         }
 
         for manager, executables in manager_executables.items():
@@ -167,7 +168,10 @@ class UpdateDetector:
                     break
 
         self._package_managers = managers
-        logger.debug(_("Detected package managers: %s"), ", ".join(managers))
+        logger.info(
+            _("Detected package managers: %s"),
+            ", ".join(managers) if managers else "none",
+        )
         return managers
 
     def _command_exists(self, command: str) -> bool:
@@ -310,6 +314,8 @@ class UpdateDetector:
 
     def _detect_bsd_updates(self):
         """Detect updates from BSD systems."""
+        logger.info("=== BSD UPDATE DETECTION START ===")
+
         # First detect OS-level system updates (OpenBSD syspatch)
         if platform.system().lower() == "openbsd":
             self._detect_openbsd_system_updates()
@@ -322,6 +328,11 @@ class UpdateDetector:
 
         if "pkg" in managers:
             self._detect_pkg_updates()
+
+        if "pkgin" in managers:
+            self._detect_pkgin_updates()
+
+        logger.info("=== BSD UPDATE DETECTION END ===")
 
     # Linux Update Detection Implementations
 
@@ -1317,6 +1328,96 @@ class UpdateDetector:
         except Exception as e:
             logger.error(_("Failed to detect pkg updates: %s"), str(e))
 
+    def _detect_pkgin_updates(self):
+        """Detect updates from NetBSD pkgin."""
+        logger.debug("=== PKGIN DETECTION START ===")
+        try:
+            logger.debug(_("Detecting pkgin updates"))
+            # Update the package repository
+            # Note: pkgin update requires root, but subprocess doesn't inherit sudo
+            # Try to detect if we're running under sudo and use pkgin directly,
+            # otherwise try with sudo/doas prefix
+            is_root = os.geteuid() == 0
+
+            if is_root:
+                update_cmd = ["pkgin", "update"]
+            elif self._command_exists("doas"):
+                update_cmd = ["doas", "pkgin", "update"]
+            elif self._command_exists("sudo"):
+                update_cmd = ["sudo", "-n", "pkgin", "update"]  # -n = non-interactive
+            else:
+                update_cmd = ["pkgin", "update"]  # Try anyway
+
+            update_result = subprocess.run(  # nosec B603, B607
+                update_cmd, capture_output=True, text=True, timeout=60, check=False
+            )
+
+            # Log if pkgin update failed
+            if update_result.returncode != 0:
+                logger.warning(
+                    _("pkgin update failed (code %d): %s"),
+                    update_result.returncode,
+                    (
+                        update_result.stderr.strip()
+                        if update_result.stderr
+                        else "No error message"
+                    ),
+                )
+                # Continue anyway - we can still check for updates with stale data
+            else:
+                logger.debug(_("pkgin update completed successfully"))
+            result = subprocess.run(  # nosec B603, B607
+                ["pkgin", "list", "-u"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                logger.warning(
+                    _("pkgin list -u failed (code %d): %s"),
+                    result.returncode,
+                    result.stderr.strip() if result.stderr else "No error message",
+                )
+                return
+
+            if result.stdout.strip():
+                update_count = 0
+                line_count = 0
+                for line in result.stdout.strip().split("\n"):
+                    line_count += 1
+                    # Skip header lines and empty lines
+                    if not line.strip() or line.startswith("pkg_summary"):
+                        continue
+
+                    # Parse format: package-version description
+                    # pkgin list -u outputs: "package-name-version description text here"
+                    # We need to extract package name and current version
+                    # The available version is not shown, so we'll mark it as "available"
+                    match = re.match(
+                        r"^([a-zA-Z0-9_][a-zA-Z0-9_+.-]*)-([0-9][^\s]*)\s+",
+                        line,
+                    )
+                    if match:
+                        update = {
+                            "package_name": match.group(1),
+                            "current_version": match.group(2),
+                            "available_version": "available",  # pkgin list -u doesn't show target version
+                            "package_manager": "pkgin",
+                            "is_security_update": False,
+                            "is_system_update": False,
+                        }
+                        self.available_updates.append(update)
+                        update_count += 1
+
+                if update_count > 0:
+                    logger.info(_("Found %d pkgin updates"), update_count)
+
+            logger.debug("=== PKGIN DETECTION END ===")
+        except Exception as e:
+            logger.error(_("Failed to detect pkgin updates: %s"), str(e))
+
     # Helper methods
 
     def _is_system_package_linux(self, package_name: str) -> bool:
@@ -1401,14 +1502,14 @@ class UpdateDetector:
                 "error": _("No packages specified for update"),
                 "updated_packages": [],
                 "failed_packages": [],
-                "update_timestamp": datetime.now().isoformat() + "Z",
+                "update_timestamp": datetime.now(timezone.utc).isoformat(),
                 "requires_reboot": False,
             }
 
         results = {
             "updated_packages": [],
             "failed_packages": [],
-            "update_timestamp": datetime.now().isoformat() + "Z",
+            "update_timestamp": datetime.now(timezone.utc).isoformat(),
             "requires_reboot": False,
         }
 

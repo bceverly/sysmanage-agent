@@ -53,7 +53,7 @@ class PackageCollector:
                 collected_count += self._collect_macos_packages()
             elif system == "windows":
                 collected_count += self._collect_windows_packages()
-            elif system in ["freebsd", "openbsd"]:
+            elif system in ["freebsd", "openbsd", "netbsd"]:
                 collected_count += self._collect_bsd_packages()
             else:
                 logger.warning(_("Unsupported operating system: %s"), system)
@@ -147,6 +147,15 @@ class PackageCollector:
                 logger.info(_("Collected %d packages from pkg"), count)
             except Exception as e:
                 logger.error(_("Failed to collect pkg packages: %s"), e)
+
+        # Try pkgin (NetBSD)
+        if self._is_package_manager_available("pkgin"):
+            try:
+                count = self._collect_pkgin_packages()
+                total_collected += count
+                logger.info(_("Collected %d packages from pkgin"), count)
+            except Exception as e:
+                logger.error(_("Failed to collect pkgin packages: %s"), e)
 
         return total_collected
 
@@ -551,6 +560,29 @@ class PackageCollector:
             logger.error(_("Error collecting pkg packages: %s"), e)
             return 0
 
+    def _collect_pkgin_packages(self) -> int:
+        """Collect packages from pkgin (NetBSD)."""
+        try:
+            # Use pkgin avail to get all available packages from remote repositories
+            result = subprocess.run(  # nosec B603, B607
+                ["pkgin", "avail"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                logger.error(_("Failed to get pkgin package list"))
+                return 0
+
+            packages = self._parse_pkgin_output(result.stdout)
+            return self._store_packages("pkgin", packages)
+
+        except Exception as e:
+            logger.error(_("Error collecting pkgin packages: %s"), e)
+            return 0
+
     def _parse_apt_output(self, output: str) -> List[Dict[str, str]]:
         """Parse APT package list output."""
         packages = []
@@ -923,6 +955,39 @@ class PackageCollector:
                 packages.append(
                     {"name": name, "version": version, "description": description}
                 )
+
+        return packages
+
+    def _parse_pkgin_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse pkgin avail output."""
+        packages = []
+        for line in output.splitlines():
+            if not line.strip() or line.startswith("pkg_summary"):
+                continue
+
+            # pkgin avail format: "package-version;comment"
+            # Sometimes may be just "package-version" without comment
+            if ";" in line:
+                parts = line.split(";", 1)
+                name_version = parts[0].strip()
+                description = parts[1].strip()
+            else:
+                name_version = line.strip()
+                description = ""
+
+            # Try to separate name and version
+            if "-" in name_version:
+                # Find the last dash that separates name from version
+                last_dash = name_version.rfind("-")
+                name = name_version[:last_dash]
+                version = name_version[last_dash + 1 :]
+            else:
+                name = name_version
+                version = "unknown"
+
+            packages.append(
+                {"name": name, "version": version, "description": description}
+            )
 
         return packages
 

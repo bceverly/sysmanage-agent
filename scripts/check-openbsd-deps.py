@@ -11,19 +11,47 @@ import sys
 import warnings
 
 
+def check_bsd_system():
+    """Check if we're running on a BSD system."""
+    system = platform.system().lower()
+    return system in ["openbsd", "netbsd"]
+
+
 def check_openbsd_system():
-    """Check if we're running on OpenBSD."""
+    """Check if we're running on OpenBSD (legacy function)."""
     return platform.system().lower() == "openbsd"
 
 
+def check_netbsd_system():
+    """Check if we're running on NetBSD."""
+    return platform.system().lower() == "netbsd"
+
+
 def check_pkg_installed(package_name):
-    """Check if an OpenBSD package is installed."""
-    try:
-        result = subprocess.run(
-            ["pkg_info", "-e", package_name], capture_output=True, text=True
-        )
-        return result.returncode == 0
-    except FileNotFoundError:
+    """Check if a BSD package is installed."""
+    if check_openbsd_system():
+        # OpenBSD uses pkg_info
+        try:
+            result = subprocess.run(
+                ["pkg_info", "-e", package_name], capture_output=True, text=True
+            )
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
+    elif check_netbsd_system():
+        # NetBSD uses pkgin
+        try:
+            result = subprocess.run(
+                ["pkgin", "list", package_name], capture_output=True, text=True
+            )
+            # pkgin list returns 0 if found, but we need to check if it's actually listed
+            if result.returncode == 0 and result.stdout.strip():
+                # If package is listed and not empty output, it's installed
+                return package_name in result.stdout
+            return False
+        except FileNotFoundError:
+            return False
+    else:
         return False
 
 
@@ -151,9 +179,9 @@ def main():
 
     print("🔧 C tracer not available - checking dependencies...")
 
-    # OpenBSD-specific package checks
+    # BSD-specific package checks
     if check_openbsd_system():
-        # Check if development tools are available
+        # Check if development tools are available on OpenBSD
         required_packages = [
             "gcc",  # C compiler
             "py3-cffi",  # Python CFFI for C extensions
@@ -176,9 +204,33 @@ def main():
             return
 
         print("✅ Required compilation tools are available")
+    elif check_netbsd_system():
+        # Check if development tools are available on NetBSD
+        required_packages = [
+            "gcc13",  # C compiler (NetBSD often uses versioned GCC)
+            "py312-cffi",  # Python CFFI for C extensions
+        ]
+
+        missing_packages = []
+        for package in required_packages:
+            if not check_pkg_installed(package):
+                missing_packages.append(package)
+
+        if missing_packages:
+            print("⚠️  Missing required packages for C extension compilation:")
+            for pkg in missing_packages:
+                print(f"   - {pkg}")
+            print()
+            print("To install missing packages:")
+            print(f"   doas pkgin install {' '.join(missing_packages)}")
+            print()
+            print("Note: C tracer will use Python fallback (slower but functional)")
+            return
+
+        print("✅ Required compilation tools are available")
     else:
-        # Non-OpenBSD systems - assume dev tools are available or user can install them
-        print("ℹ️  Non-OpenBSD system - assuming development tools are available")
+        # Non-BSD systems - assume dev tools are available or user can install them
+        print("ℹ️  Non-BSD system - assuming development tools are available")
 
     # Try to reinstall coverage with C extension (works on all platforms)
     print("🔧 Attempting to reinstall coverage with C extension...")
@@ -194,7 +246,7 @@ def main():
     else:
         print("\n⚠️  Could not install C tracer - using Python fallback")
         print("Coverage will work but run slower")
-        if not check_openbsd_system():
+        if not check_bsd_system():
             print("You may need to install development tools (gcc, python-dev, etc.)")
 
     print("\nNote: This only affects test coverage speed, not functionality")

@@ -31,9 +31,23 @@ class RoleDetector:
             "database_server": {
                 "role": "Database Server",
                 "packages": {
-                    "postgresql": {"service_names": ["postgresql", "postgres"]},
+                    # PostgreSQL - use version-specific server packages to avoid duplicates
+                    "postgresql-server": {
+                        "service_names": ["postgresql", "postgres"]
+                    },  # Generic
+                    "postgresql14-server": {
+                        "service_names": ["postgresql", "postgres"]
+                    },  # NetBSD/BSD
+                    "postgresql15-server": {
+                        "service_names": ["postgresql", "postgres"]
+                    },
+                    "postgresql16-server": {
+                        "service_names": ["postgresql", "postgres"]
+                    },
+                    # MySQL/MariaDB
                     "mysql-server": {"service_names": ["mysql", "mysqld"]},
                     "mariadb-server": {"service_names": ["mariadb", "mysqld"]},
+                    # Other databases
                     "mongodb": {"service_names": ["mongod", "mongodb"]},
                     "redis": {"service_names": ["redis", "redis-server"]},
                     "sqlite3": {"service_names": []},  # No service for SQLite
@@ -153,6 +167,13 @@ class RoleDetector:
                 if self._command_exists("snap"):
                     packages.update(self._get_snap_packages())
 
+            elif self.system in ["netbsd", "freebsd", "openbsd"]:
+                # BSD package managers
+                if self._command_exists("pkgin"):  # NetBSD
+                    packages.update(self._get_pkgin_packages())
+                elif self._command_exists("pkg"):  # FreeBSD/OpenBSD
+                    packages.update(self._get_pkg_packages())
+
         except Exception as e:
             self.logger.error("Error getting installed packages: %s", e)
 
@@ -264,6 +285,8 @@ class RoleDetector:
             return packages[package_pattern]
 
         # Try pattern matching for partial names
+        # Note: Substring matching is intentionally simple to catch variations
+        # like postgresql-server, postgresql14-server, etc.
         for package_name, version in packages.items():
             if package_pattern in package_name.lower():
                 return version
@@ -274,43 +297,85 @@ class RoleDetector:
         """Get the status of a service."""
         try:
             if self.system == "linux":
-                # Try snap services first (for snap packages)
-                if self._command_exists("snap"):
-                    snap_status = self._get_snap_service_status(service_name)
-                    if snap_status != "unknown":
-                        return snap_status
-
-                # Try systemctl
-                if self._command_exists("systemctl"):
-                    result = subprocess.run(
-                        ["systemctl", "is-active", service_name],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0 and result.stdout.strip() == "active":
-                        return "running"
-                    if result.stdout.strip() in ["inactive", "failed"]:
-                        return "stopped"
-
-                # Try service command as fallback
-                if self._command_exists("service"):
-                    result = subprocess.run(
-                        ["service", service_name, "status"],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        return "running"
-                    return "stopped"
-
+                return self._get_linux_service_status(service_name)
+            if self.system in ["netbsd", "freebsd", "openbsd"]:
+                return self._get_bsd_service_status(service_name)
         except Exception as e:
             self.logger.debug("Error checking service %s: %s", service_name, e)
+
+        return "unknown"
+
+    def _get_linux_service_status(self, service_name: str) -> str:
+        """Get the status of a service on Linux."""
+        # Try snap services first (for snap packages)
+        if self._command_exists("snap"):
+            snap_status = self._get_snap_service_status(service_name)
+            if snap_status != "unknown":
+                return snap_status
+
+        # Try systemctl
+        if self._command_exists("systemctl"):
+            result = subprocess.run(
+                ["systemctl", "is-active", service_name],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode == 0 and result.stdout.strip() == "active":
+                return "running"
+            if result.stdout.strip() in ["inactive", "failed"]:
+                return "stopped"
+
+        # Try service command as fallback
+        if self._command_exists("service"):
+            result = subprocess.run(
+                ["service", service_name, "status"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            return "running" if result.returncode == 0 else "stopped"
+
+        return "unknown"
+
+    def _get_bsd_service_status(self, service_name: str) -> str:
+        """Get the status of a service on BSD systems."""
+        # BSD systems - check if process is running
+        result = subprocess.run(
+            ["ps", "aux"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode == 0:
+            # Look for the service process in the output
+            for line in result.stdout.lower().split("\n"):
+                if service_name.lower() in line and "grep" not in line:
+                    return "running"
+                # Also check for common process name variations
+                if (
+                    service_name in ["postgresql", "postgres"]
+                    and "postgres:" in line
+                    and "grep" not in line
+                ):
+                    return "running"
+            # If we checked processes and didn't find it, it's stopped
+            return "stopped"
+
+        # Try service command as fallback for BSD
+        if self._command_exists("service"):
+            result = subprocess.run(
+                ["service", service_name, "onestatus"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            return "running" if result.returncode == 0 else "stopped"
 
         return "unknown"
 
@@ -368,6 +433,68 @@ class RoleDetector:
             or service_name in snap_service_name
             or snap_service_name.endswith(f".{service_name}")
         )
+
+    def _get_pkgin_packages(self) -> Dict[str, str]:
+        """Get packages from pkgin (NetBSD)."""
+        packages = {}
+        try:
+            result = subprocess.run(
+                ["pkgin", "list"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                return packages
+
+            for line in result.stdout.strip().split("\n"):
+                if not line.strip():
+                    continue
+                # pkgin list format: "package-version description"
+                parts = line.split(None, 1)
+                if not parts:
+                    continue
+                # Extract package name and version from "package-version"
+                pkg_full = parts[0]
+                if "-" not in pkg_full:
+                    continue
+                # Split on last dash to separate name from version
+                pkg_name = "-".join(pkg_full.split("-")[:-1])
+                pkg_version = pkg_full.split("-")[-1]
+                packages[pkg_name] = pkg_version
+        except Exception as e:
+            self.logger.error("Error getting pkgin packages: %s", e)
+        return packages
+
+    def _get_pkg_packages(self) -> Dict[str, str]:
+        """Get packages from pkg (FreeBSD/OpenBSD)."""
+        packages = {}
+        try:
+            result = subprocess.run(
+                ["pkg", "info"], capture_output=True, text=True, timeout=30, check=False
+            )
+            if result.returncode != 0:
+                return packages
+
+            for line in result.stdout.strip().split("\n"):
+                if not line.strip():
+                    continue
+                # pkg info format: "package-version description"
+                parts = line.split(None, 1)
+                if not parts:
+                    continue
+                # Extract package name and version from "package-version"
+                pkg_full = parts[0]
+                if "-" not in pkg_full:
+                    continue
+                # Split on last dash to separate name from version
+                pkg_name = "-".join(pkg_full.split("-")[:-1])
+                pkg_version = pkg_full.split("-")[-1]
+                packages[pkg_name] = pkg_version
+        except Exception as e:
+            self.logger.error("Error getting pkg packages: %s", e)
+        return packages
 
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system."""

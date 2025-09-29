@@ -18,7 +18,7 @@ import os
 import platform
 import re
 import subprocess  # nosec B404
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from src.i18n import _
@@ -72,7 +72,7 @@ class SoftwareInventoryCollector:
 
             return {
                 "software_packages": self.collected_packages,
-                "collection_timestamp": datetime.now().isoformat() + "Z",
+                "collection_timestamp": datetime.now(timezone.utc).isoformat(),
                 "platform": self.platform,
                 "total_packages": len(self.collected_packages),
             }
@@ -81,7 +81,7 @@ class SoftwareInventoryCollector:
             logger.error(_("Failed to collect software inventory: %s"), str(e))
             return {
                 "software_packages": [],
-                "collection_timestamp": datetime.now().isoformat() + "Z",
+                "collection_timestamp": datetime.now(timezone.utc).isoformat(),
                 "platform": self.platform,
                 "total_packages": 0,
                 "error": str(e),
@@ -846,11 +846,12 @@ class SoftwareInventoryCollector:
         logger.debug(_("Scoop package collection not yet implemented"))
 
     def _collect_pkg_packages(self):
-        """Collect packages from FreeBSD/OpenBSD pkg."""
+        """Collect packages from FreeBSD pkg (modern pkg tool)."""
         try:
-            logger.debug(_("Collecting BSD pkg packages"))
+            logger.debug(_("Collecting FreeBSD pkg packages"))
 
-            # Try FreeBSD style first: pkg info -a
+            # Use FreeBSD style: pkg info -a
+            # Note: This is only for FreeBSD's modern pkg tool, not OpenBSD/NetBSD pkg_info
             result = subprocess.run(
                 ["pkg", "info", "-a"],  # nosec B603, B607
                 capture_output=True,
@@ -862,29 +863,27 @@ class SoftwareInventoryCollector:
             if result.returncode == 0 and result.stdout.strip():
                 source_name = "freebsd_packages"
                 self._parse_pkg_output(result.stdout, source_name)
+                logger.debug(_("Successfully collected FreeBSD pkg packages"))
             else:
-                # Try OpenBSD style: pkg_info -a
-                result = subprocess.run(
-                    ["pkg_info", "-a"],  # nosec B603, B607
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    check=False,
-                )
-
-                if result.returncode == 0 and result.stdout.strip():
-                    source_name = "openbsd_packages"
-                    self._parse_pkg_output(result.stdout, source_name)
-                else:
-                    logger.warning(_("No BSD package manager output found"))
+                logger.debug(_("FreeBSD pkg tool not available or no packages found"))
 
         except Exception as e:
-            logger.error(_("Failed to collect BSD pkg packages: %s"), str(e))
+            logger.error(_("Failed to collect FreeBSD pkg packages: %s"), str(e))
 
     def _collect_pkg_info_packages(self):
-        """Collect packages from OpenBSD pkg_info."""
+        """Collect packages from OpenBSD/NetBSD pkg_info."""
         try:
-            logger.debug(_("Collecting OpenBSD pkg_info packages"))
+            # Determine the correct source name based on platform
+            platform_name = platform.system().lower()
+            if platform_name == "openbsd":
+                source_name = "openbsd_packages"
+                logger.debug(_("Collecting OpenBSD pkg_info packages"))
+            elif platform_name == "netbsd":
+                source_name = "netbsd_packages"
+                logger.debug(_("Collecting NetBSD pkg_info packages"))
+            else:
+                source_name = "bsd_packages"
+                logger.debug(_("Collecting BSD pkg_info packages"))
 
             # Use pkg_info -a to list all installed packages
             result = subprocess.run(
@@ -896,19 +895,20 @@ class SoftwareInventoryCollector:
             )
 
             if result.returncode == 0 and result.stdout.strip():
-                source_name = "openbsd_packages"
                 self._parse_pkg_output(result.stdout, source_name)
-                logger.debug(_("Successfully collected OpenBSD packages"))
+                logger.debug(
+                    _("Successfully collected %s packages"), platform_name.upper()
+                )
             else:
                 logger.warning(
-                    _("No OpenBSD pkg_info output found. Return code: %d"),
+                    _("No pkg_info output found. Return code: %d"),
                     result.returncode,
                 )
                 if result.stderr:
                     logger.warning(_("pkg_info stderr: %s"), result.stderr)
 
         except Exception as e:
-            logger.error(_("Failed to collect OpenBSD pkg_info packages: %s"), str(e))
+            logger.error(_("Failed to collect pkg_info packages: %s"), str(e))
 
     def _parse_pkg_output(self, output: str, source_name: str):
         """Parse output from BSD pkg commands (both FreeBSD and OpenBSD)."""

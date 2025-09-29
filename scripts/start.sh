@@ -18,7 +18,7 @@ mkdir -p logs
 # Function to check if agent is already running
 check_agent_running() {
     if [ -f "logs/agent.pid" ]; then
-        local pid=$(cat logs/agent.pid)
+        pid=$(cat logs/agent.pid)
         if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
             return 0  # Agent is running
         else
@@ -31,26 +31,26 @@ check_agent_running() {
 
 # Function to check for running agent processes
 check_existing_processes() {
-    local found_processes=false
-    
+    found_processes=false
+
     # Check for agent processes by pattern (cross-platform approach)
-    local agent_pids=""
+    agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
-        # Use pgrep if available (Linux, modern macOS, some BSD)
-        agent_pids=$(pgrep -f "python3.*main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+        # Use pgrep if available - more reliable for finding main.py processes
+        agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
     else
-        # Fallback: use ps and grep for older systems
-        agent_pids=$(ps -ef 2>/dev/null | grep "python3.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
+        # Fallback: use ps and grep for older systems, look for .venv pattern (NetBSD truncation issue)
+        agent_pids=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | awk '{print $2}')
     fi
     
     if [ -n "$agent_pids" ]; then
         echo "⚠️  Found existing agent processes:"
         echo "$agent_pids" | while read pid; do
             if [ -n "$pid" ]; then
-                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
+                cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
                 if [ -z "$cmd" ]; then
                     # Fallback for systems where ps -p doesn't work the same way
-                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
+                    cmd=$(ps aux 2>/dev/null | awk -v p="$pid" '$2==p {for(i=11;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
                 fi
                 echo "   PID $pid: $cmd"
             fi
@@ -60,7 +60,7 @@ check_existing_processes() {
     
     # Check PID file
     if [ -f "logs/agent.pid" ]; then
-        local pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
+        pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
         if [ -n "$pid_file_pid" ] && kill -0 "$pid_file_pid" 2>/dev/null; then
             echo "⚠️  Found agent process from PID file (PID: $pid_file_pid)"
             found_processes=true
@@ -89,13 +89,13 @@ if check_existing_processes; then
         echo "  make stop"
         echo ""
         echo "If that fails, manually check for agent processes:"
-        echo "  ps -ef | grep 'python3.*main.py'"
+        echo "  ps aux | grep 'python3.*main.py'"
         echo ""
         echo "Or manually kill all agent processes:"
         if command -v pkill >/dev/null 2>&1; then
             echo "  pkill -f 'python3.*main.py'"
         else
-            echo "  kill \$(ps -ef | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
+            echo "  kill \$(ps aux | grep 'python3.*main.py' | grep -v grep | awk '{print \$2}')"
         fi
         exit 1
     else
@@ -158,8 +158,8 @@ PLATFORM=$(python3 -c "import platform; print(platform.system())" 2>/dev/null ||
 
 # Function to get configuration value from config file with priority
 get_config_value() {
-    local key=$1
-    local config_file=""
+    key=$1
+    config_file=""
     
     # Use same priority as ConfigManager: /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml
     if [ -f "/etc/sysmanage-agent.yaml" ]; then

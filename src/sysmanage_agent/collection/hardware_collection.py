@@ -63,7 +63,7 @@ class HardwareCollector:
                 # Get network information
                 network_info = self._get_windows_network_info()
 
-            elif system in ("OpenBSD", "FreeBSD"):
+            elif system in ("OpenBSD", "FreeBSD", "NetBSD"):
                 # Get CPU information
                 cpu_info = self._get_bsd_cpu_info()
                 # Get memory information

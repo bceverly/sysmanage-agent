@@ -838,8 +838,14 @@ postgresql13-server-13.12
         """Test BSD package collection with pkg."""
         mock_system.return_value = "FreeBSD"
 
+        # Mock _is_package_manager_available to only return True for pkg
+        def mock_pm_available(manager):
+            return manager == "pkg"
+
         with patch.object(
-            package_collector, "_is_package_manager_available", return_value=True
+            package_collector,
+            "_is_package_manager_available",
+            side_effect=mock_pm_available,
         ):
             with patch.object(
                 package_collector, "_collect_pkg_packages", return_value=12

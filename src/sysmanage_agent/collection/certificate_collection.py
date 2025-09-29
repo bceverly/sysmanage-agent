@@ -34,7 +34,7 @@ class CertificateCollector:
             elif system == "Darwin":  # macOS
                 # Collect from both macOS keychains and filesystem paths
                 certificates = self._collect_macos_certificates()
-            elif system in ["Linux", "FreeBSD", "OpenBSD"]:
+            elif system in ["Linux", "FreeBSD", "OpenBSD", "NetBSD"]:
                 certificates = self._collect_unix_certificates(
                     self._get_unix_cert_paths()
                 )
@@ -94,6 +94,14 @@ class CertificateCollector:
                 "/usr/local/share/certs",
                 "/etc/ssl/private",  # Private keys directory
             ]
+        elif system == "NetBSD":
+            paths = [
+                "/etc/openssl",  # OpenSSL configuration and certificates
+                "/usr/pkg/share/mozilla-rootcerts",  # Mozilla root certificates
+                "/usr/pkg/etc/ssl/certs",  # Package-installed certificates
+                "/usr/local/etc/ssl/certs",  # Locally installed certificates
+                "/etc/ssl/certs",  # System certificates
+            ]
 
         # Add common application-specific directories
         app_paths = [
@@ -124,6 +132,18 @@ class CertificateCollector:
                 "/etc/httpd/ssl",
             ]
             app_paths.extend(openbsd_app_paths)
+
+        # Add NetBSD-specific application directories
+        elif system == "NetBSD":
+            netbsd_app_paths = [
+                "/usr/pkg/etc/nginx/ssl",
+                "/usr/pkg/etc/apache24/ssl",
+                "/usr/pkg/etc/ssl/certs",
+                "/usr/pkg/share/ca-certificates",
+                "/usr/local/etc/nginx/ssl",
+                "/usr/local/etc/apache24/ssl",
+            ]
+            app_paths.extend(netbsd_app_paths)
 
         for app_path in app_paths:
             paths.extend(glob.glob(app_path))

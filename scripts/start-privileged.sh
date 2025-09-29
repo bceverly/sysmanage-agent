@@ -18,7 +18,11 @@ detect_platform() {
     if [ "$(uname)" = "Darwin" ]; then
         echo "macos"
     elif [ "$(uname)" = "OpenBSD" ]; then
-        echo "openbsd"  
+        echo "openbsd"
+    elif [ "$(uname)" = "FreeBSD" ]; then
+        echo "freebsd"
+    elif [ "$(uname)" = "NetBSD" ]; then
+        echo "netbsd"
     elif [ "$(uname)" = "Linux" ]; then
         echo "linux"
     else
@@ -44,7 +48,7 @@ check_venv() {
 
 # Check sudo access
 check_sudo() {
-    local platform="$1"
+    platform="$1"
     
     case "$platform" in
         "macos")
@@ -59,7 +63,7 @@ check_sudo() {
                 echo "📝 You may be prompted for your password."
             fi
             ;;
-        "openbsd")
+        "openbsd"|"netbsd"|"freebsd")
             if ! doas true 2>/dev/null && ! sudo -n true 2>/dev/null; then
                 echo "🔐 This script requires elevated privileges (doas or sudo) for package management."
                 echo "📝 You may be prompted for your password."
@@ -70,11 +74,11 @@ check_sudo() {
 
 # Get the appropriate privilege escalation command
 get_priv_cmd() {
-    local platform="$1"
+    platform="$1"
     
     case "$platform" in
-        "openbsd")
-            # OpenBSD prefers doas, fallback to sudo
+        "openbsd"|"netbsd"|"freebsd")
+            # BSD systems prefer doas, fallback to sudo
             if command -v doas >/dev/null 2>&1; then
                 echo "doas"
             elif command -v sudo >/dev/null 2>&1; then
@@ -98,39 +102,31 @@ get_priv_cmd() {
 
 # Function to check for running agent processes
 check_existing_processes() {
-    local found_processes=false
+    found_processes=false
 
     # More specific pattern to avoid matching other Python processes
     # Look for processes that contain both "python" and the specific path to this agent
-    local agent_dir_pattern="sysmanage-agent"
-    local main_py_pattern="main.py"
+    agent_dir_pattern="sysmanage-agent"
+    main_py_pattern="main.py"
 
     # Check for agent processes by pattern (cross-platform approach)
-    local agent_pids=""
+    agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
-        # Use pgrep with more specific pattern
-        agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$) # Exclude this script's PID
-        # Fallback to broader pattern if no results
-        if [ -z "$agent_pids" ]; then
-            agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
-        fi
+        # Use pgrep - more reliable for finding main.py processes
+        agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
     else
-        # Fallback: use ps and grep with more specific pattern
-        agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
-        # Fallback to broader pattern if no results
-        if [ -z "$agent_pids" ]; then
-            agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
-        fi
+        # Fallback: use ps and grep, look for .venv pattern (NetBSD truncation issue)
+        agent_pids=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | awk '{print $2}')
     fi
 
     if [ -n "$agent_pids" ]; then
         echo "⚠️  Found existing agent processes:"
         echo "$agent_pids" | while read pid; do
             if [ -n "$pid" ]; then
-                local cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
+                cmd=$(ps -p "$pid" -o command= 2>/dev/null | cut -c1-80)
                 if [ -z "$cmd" ]; then
                     # Fallback for systems where ps -p doesn't work the same way
-                    cmd=$(ps -ef 2>/dev/null | awk -v p="$pid" '$2==p {for(i=8;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
+                    cmd=$(ps aux 2>/dev/null | awk -v p="$pid" '$2==p {for(i=11;i<=NF;i++) printf "%s ", $i; print ""}' | cut -c1-80)
                 fi
                 echo "   PID $pid: $cmd"
             fi
@@ -140,7 +136,7 @@ check_existing_processes() {
 
     # Check PID file
     if [ -f "logs/agent.pid" ]; then
-        local pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
+        pid_file_pid=$(cat logs/agent.pid 2>/dev/null)
         if [ -n "$pid_file_pid" ] && kill -0 "$pid_file_pid" 2>/dev/null; then
             echo "⚠️  Found agent process from PID file (PID: $pid_file_pid)"
             found_processes=true
@@ -158,8 +154,8 @@ check_existing_processes() {
 
 # Function to get configuration value from config file with priority
 get_config_value() {
-    local key=$1
-    local config_file=""
+    key=$1
+    config_file=""
     
     # Use same priority as ConfigManager: /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml
     if [ -f "/etc/sysmanage-agent.yaml" ]; then
@@ -235,11 +231,11 @@ check_not_root() {
 
 # Main execution
 main() {
-    local platform
-    local priv_cmd
-    local venv_path
-    local python_path
-    local current_path
+    platform=""
+    priv_cmd=""
+    venv_path=""
+    python_path=""
+    current_path=""
     
     # Check that we're not running with elevated privileges
     check_not_root
@@ -279,21 +275,13 @@ main() {
 
             # First, try to kill processes as regular user (silently)
             # Get process PIDs that match our pattern (using same logic as check_existing_processes)
-            local agent_dir_pattern="sysmanage-agent"
-            local main_py_pattern="main.py"
+            agent_dir_pattern="sysmanage-agent"
+            main_py_pattern="main.py"
             agent_pids=""
             if command -v pgrep >/dev/null 2>&1; then
-                agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$)
-                # Fallback to broader pattern if no results
-                if [ -z "$agent_pids" ]; then
-                    agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
-                fi
+                agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$)
             else
-                agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
-                # Fallback to broader pattern if no results
-                if [ -z "$agent_pids" ]; then
-                    agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
-                fi
+                agent_pids=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | awk '{print $2}')
             fi
 
             regular_user_success=false
@@ -327,17 +315,9 @@ main() {
                 # Re-check for remaining processes that might be owned by root or other users
                 agent_pids=""
                 if command -v pgrep >/dev/null 2>&1; then
-                    agent_pids=$(pgrep -f "$agent_dir_pattern.*$main_py_pattern" 2>/dev/null | grep -v $$)
-                    # Fallback to broader pattern if no results
-                    if [ -z "$agent_pids" ]; then
-                        agent_pids=$(pgrep -f "python.*main.py" 2>/dev/null | grep -v $$)
-                    fi
+                    agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$)
                 else
-                    agent_pids=$(ps -ef 2>/dev/null | grep "$agent_dir_pattern.*$main_py_pattern" | grep -v grep | grep -v $$ | awk '{print $2}')
-                    # Fallback to broader pattern if no results
-                    if [ -z "$agent_pids" ]; then
-                        agent_pids=$(ps -ef 2>/dev/null | grep "python.*main.py" | grep -v grep | grep -v $$ | awk '{print $2}')
-                    fi
+                    agent_pids=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | awk '{print $2}')
                 fi
 
                 if [ -n "$agent_pids" ]; then
@@ -529,15 +509,17 @@ EOF
             fi
             ;;
         *)
-            # sudo with -E flag preserves environment  
+            # sudo with -E flag preserves environment
             echo "🔑 Requesting elevated privileges with sudo..."
             # First, validate sudo access interactively (this will prompt for password if needed)
             if ! $priv_cmd true; then
                 echo "❌ ERROR: Failed to obtain sudo privileges"
                 exit 1
             fi
+
             # Now run the agent in background with nohup (sudo credentials are cached)
-            nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > logs/agent.log 2>&1 &
+            # Use PYTHONDONTWRITEBYTECODE=1 to prevent .pyc caching issues
+            nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" PYTHONDONTWRITEBYTECODE=1 "$python_path" -B main.py "$@" > logs/agent.log 2>&1 &
             AGENT_PID=$!
             ;;
     esac
