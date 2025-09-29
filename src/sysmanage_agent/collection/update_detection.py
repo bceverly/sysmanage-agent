@@ -188,6 +188,8 @@ class UpdateDetector:
         ]
 
         for path in homebrew_paths:
+            if not os.path.exists(path):
+                continue
             try:
                 result = subprocess.run(  # nosec B603, B607
                     [path, "--version"], capture_output=True, timeout=10, check=False
