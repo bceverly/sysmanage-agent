@@ -365,7 +365,7 @@ class RoleDetector:
     def _get_bsd_service_status(self, service_name: str) -> str:
         """Get the status of a service on BSD systems."""
         # BSD systems - check if process is running
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 B607 # ps with controlled args
             ["ps", "aux"],
             capture_output=True,
             text=True,
@@ -388,9 +388,10 @@ class RoleDetector:
             return "stopped"
 
         # Try service command as fallback for BSD
-        if self._command_exists("service"):
-            result = subprocess.run(
-                ["service", service_name, "onestatus"],
+        service_path = self._get_command_path("service")
+        if service_path:
+            result = subprocess.run(  # nosec B603 B607 # service with controlled args
+                [service_path, service_name, "onestatus"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -462,9 +463,13 @@ class RoleDetector:
     def _get_pkgin_packages(self) -> Dict[str, str]:
         """Get packages from pkgin (NetBSD)."""
         packages = {}
+        pkgin_path = self._get_command_path("pkgin")
+        if not pkgin_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["pkgin", "list"],
+            result = subprocess.run(  # nosec B603 B607 # pkgin with controlled args
+                [pkgin_path, "list"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -495,9 +500,17 @@ class RoleDetector:
     def _get_pkg_packages(self) -> Dict[str, str]:
         """Get packages from pkg (FreeBSD/OpenBSD)."""
         packages = {}
+        pkg_path = self._get_command_path("pkg")
+        if not pkg_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["pkg", "info"], capture_output=True, text=True, timeout=30, check=False
+            result = subprocess.run(  # nosec B603 B607 # pkg with controlled args
+                [pkg_path, "info"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
             )
             if result.returncode != 0:
                 return packages
