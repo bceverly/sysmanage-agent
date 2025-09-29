@@ -5,9 +5,10 @@ Utility functions for the SysManage agent to reduce main.py complexity.
 import asyncio
 import logging
 import os
+import shutil
 import socket
 import ssl
-import subprocess
+import subprocess  # nosec B404 # Required for system command execution
 import sys
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -500,13 +501,24 @@ class MessageProcessor:
                 try:
                     self.logger.info(_("Executing %s for service: %s"), action, service)
 
+                    # Get full systemctl path for security
+                    systemctl_path = shutil.which("systemctl")
+                    if not systemctl_path:
+                        self.logger.error(_("systemctl not found"))
+                        results[service] = {
+                            "success": False,
+                            "error": "systemctl not found",
+                        }
+                        overall_success = False
+                        continue
+
                     # Construct systemctl command based on action
                     if action == "start":
-                        cmd = ["systemctl", "start", service]
+                        cmd = [systemctl_path, "start", service]
                     elif action == "stop":
-                        cmd = ["systemctl", "stop", service]
+                        cmd = [systemctl_path, "stop", service]
                     elif action == "restart":
-                        cmd = ["systemctl", "restart", service]
+                        cmd = [systemctl_path, "restart", service]
                     else:
                         self.logger.error(_("Unknown action: %s"), action)
                         results[service] = {
@@ -517,7 +529,7 @@ class MessageProcessor:
                         continue
 
                     # Execute the command
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
                         cmd, capture_output=True, text=True, timeout=30, check=False
                     )
 

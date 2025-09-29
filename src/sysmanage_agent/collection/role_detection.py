@@ -3,7 +3,8 @@ Role detection collection module for detecting server roles based on installed p
 """
 
 import platform
-import subprocess
+import shutil
+import subprocess  # nosec B404 # Required for system package and service management
 from typing import Dict, List, Optional, Any
 import logging
 
@@ -182,13 +183,19 @@ class RoleDetector:
     def _get_dpkg_packages(self) -> Dict[str, str]:
         """Get packages from dpkg (Debian/Ubuntu)."""
         packages = {}
+        dpkg_path = self._get_command_path("dpkg-query")
+        if not dpkg_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["dpkg-query", "-W", "-f=${Package}\\t${Version}\\n"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
+            result = (
+                subprocess.run(  # nosec B603 B607 # dpkg-query with controlled args
+                    [dpkg_path, "-W", "-f=${Package}\\t${Version}\\n"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
             )
 
             if result.returncode == 0:
@@ -205,9 +212,13 @@ class RoleDetector:
     def _get_rpm_packages(self) -> Dict[str, str]:
         """Get packages from RPM (RHEL/CentOS/Fedora)."""
         packages = {}
+        rpm_path = self._get_command_path("rpm")
+        if not rpm_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["rpm", "-qa", "--queryformat", "%{NAME}\\t%{VERSION}\\n"],
+            result = subprocess.run(  # nosec B603 B607 # rpm with controlled args
+                [rpm_path, "-qa", "--queryformat", "%{NAME}\\t%{VERSION}\\n"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -228,9 +239,13 @@ class RoleDetector:
     def _get_pacman_packages(self) -> Dict[str, str]:
         """Get packages from pacman (Arch Linux)."""
         packages = {}
+        pacman_path = self._get_command_path("pacman")
+        if not pacman_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["pacman", "-Q"],
+            result = subprocess.run(  # nosec B603 B607 # pacman with controlled args
+                [pacman_path, "-Q"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -251,9 +266,13 @@ class RoleDetector:
     def _get_snap_packages(self) -> Dict[str, str]:
         """Get packages from snap."""
         packages = {}
+        snap_path = self._get_command_path("snap")
+        if not snap_path:
+            return packages
+
         try:
-            result = subprocess.run(
-                ["snap", "list"],
+            result = subprocess.run(  # nosec B603 B607 # snap with controlled args
+                [snap_path, "list"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -314,9 +333,10 @@ class RoleDetector:
                 return snap_status
 
         # Try systemctl
-        if self._command_exists("systemctl"):
-            result = subprocess.run(
-                ["systemctl", "is-active", service_name],
+        systemctl_path = self._get_command_path("systemctl")
+        if systemctl_path:
+            result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
+                [systemctl_path, "is-active", service_name],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -329,9 +349,10 @@ class RoleDetector:
                 return "stopped"
 
         # Try service command as fallback
-        if self._command_exists("service"):
-            result = subprocess.run(
-                ["service", service_name, "status"],
+        service_path = self._get_command_path("service")
+        if service_path:
+            result = subprocess.run(  # nosec B603 B607 # service with controlled args
+                [service_path, service_name, "status"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -381,9 +402,13 @@ class RoleDetector:
 
     def _get_snap_service_status(self, service_name: str) -> str:
         """Check the status of a snap service."""
+        snap_path = self._get_command_path("snap")
+        if not snap_path:
+            return "unknown"
+
         try:
-            result = subprocess.run(
-                ["snap", "services"],
+            result = subprocess.run(  # nosec B603 B607 # snap with controlled args
+                [snap_path, "services"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -498,10 +523,8 @@ class RoleDetector:
 
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in the system."""
-        try:
-            result = subprocess.run(
-                ["which", command], capture_output=True, timeout=5, check=False
-            )
-            return result.returncode == 0
-        except Exception:
-            return False
+        return shutil.which(command) is not None
+
+    def _get_command_path(self, command: str) -> Optional[str]:
+        """Get the full path to a command."""
+        return shutil.which(command)
