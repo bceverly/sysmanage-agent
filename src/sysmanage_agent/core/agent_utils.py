@@ -7,6 +7,7 @@ import logging
 import os
 import socket
 import ssl
+import subprocess
 import sys
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -273,6 +274,8 @@ class MessageProcessor:
             "collect_diagnostics": self.agent.collect_diagnostics,
             "collect_available_packages": lambda params: self.agent.collect_available_packages(),
             "collect_certificates": lambda params: self.agent.collect_certificates(),
+            "collect_roles": lambda params: self.agent.collect_roles(),
+            "service_control": self._handle_service_control,
             "deploy_ssh_keys": self.agent.deploy_ssh_keys,
             "deploy_certificates": self.agent.deploy_certificates,
         }
@@ -461,6 +464,119 @@ class MessageProcessor:
 
         except Exception as e:
             self.logger.error(_("Error storing execution UUID: %s"), e)
+
+    async def _handle_service_control(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle service control commands (start, stop, restart)."""
+        try:
+            action = parameters.get("action")
+            services = parameters.get("services", [])
+
+            if not action or action not in ["start", "stop", "restart"]:
+                return {
+                    "success": False,
+                    "error": "Invalid or missing action. Must be 'start', 'stop', or 'restart'",
+                }
+
+            if not services:
+                return {"success": False, "error": "No services specified"}
+
+            self.logger.info(
+                _("Service control requested: %s for services: %s"), action, services
+            )
+
+            # Check if running in privileged mode
+            if not is_running_privileged():
+                return {
+                    "success": False,
+                    "error": "Service control requires privileged mode",
+                }
+
+            results = {}
+            overall_success = True
+
+            for service in services:
+                try:
+                    self.logger.info(_("Executing %s for service: %s"), action, service)
+
+                    # Construct systemctl command based on action
+                    if action == "start":
+                        cmd = ["systemctl", "start", service]
+                    elif action == "stop":
+                        cmd = ["systemctl", "stop", service]
+                    elif action == "restart":
+                        cmd = ["systemctl", "restart", service]
+                    else:
+                        self.logger.error(_("Unknown action: %s"), action)
+                        results[service] = {
+                            "success": False,
+                            "error": f"Unknown action: {action}",
+                        }
+                        overall_success = False
+                        continue
+
+                    # Execute the command
+                    result = subprocess.run(
+                        cmd, capture_output=True, text=True, timeout=30, check=False
+                    )
+
+                    if result.returncode == 0:
+                        self.logger.info(
+                            _("Successfully %s service: %s"), action, service
+                        )
+                        results[service] = {
+                            "success": True,
+                            "message": f"Service {action} successful",
+                        }
+                    else:
+                        error_msg = (
+                            result.stderr.strip()
+                            or result.stdout.strip()
+                            or "Unknown error"
+                        )
+                        self.logger.error(
+                            _("Failed to %s service %s: %s"), action, service, error_msg
+                        )
+                        results[service] = {"success": False, "error": error_msg}
+                        overall_success = False
+
+                except subprocess.TimeoutExpired:
+                    error_msg = f"Service {action} timed out after 30 seconds"
+                    self.logger.error(
+                        _("Service control timeout for %s: %s"), service, error_msg
+                    )
+                    results[service] = {"success": False, "error": error_msg}
+                    overall_success = False
+
+                except Exception as e:
+                    error_msg = str(e)
+                    self.logger.error(
+                        _("Service control error for %s: %s"), service, error_msg
+                    )
+                    results[service] = {"success": False, "error": error_msg}
+                    overall_success = False
+
+            # Trigger role collection after service control to update status
+            try:
+                self.logger.info(_("Triggering role collection after service control"))
+                await self.agent.collect_roles()
+            except Exception as e:
+                self.logger.warning(
+                    _("Failed to update roles after service control: %s"), e
+                )
+
+            return {
+                "success": overall_success,
+                "action": action,
+                "services": services,
+                "results": results,
+                "message": f"Service {action} completed for {len(services)} services",
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error in service control handler: %s"), e)
+            return {"success": False, "error": str(e)}
 
 
 def is_running_privileged() -> bool:

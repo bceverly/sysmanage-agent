@@ -39,6 +39,7 @@ from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
+from src.sysmanage_agent.collection.role_detection import RoleDetector
 from src.database.init import initialize_database
 from src.database.base import get_database_manager
 from src.database.models import HostApproval, ScriptExecution, MessageQueue
@@ -114,6 +115,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Initialize certificate collector
         self.certificate_collector = CertificateCollector()
+
+        # Initialize role detector
+        self.role_detector = RoleDetector()
 
         # Initialize operation modules
         self.update_ops = UpdateOperations(self)
@@ -615,6 +619,26 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     "Failed to perform initial certificate collection: %s", e
                 )
 
+            # Collect and send role data
+            try:
+                role_result = await self.collect_roles()
+                if role_result.get("success", False):
+                    role_count = role_result.get("role_count", 0)
+                    if role_count > 0:
+                        self.logger.info(
+                            "Found and sent %d server roles during initial collection",
+                            role_count,
+                        )
+                    else:
+                        self.logger.info(
+                            "No server roles found during initial collection"
+                        )
+                else:
+                    error_msg = role_result.get("error", "Unknown error")
+                    self.logger.warning("Role collection failed: %s", error_msg)
+            except Exception as e:
+                self.logger.error("Failed to perform initial role collection: %s", e)
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -987,6 +1011,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             error_msg = certificate_result.get("error", "Unknown error")
             self.logger.warning("Periodic certificate collection failed: %s", error_msg)
 
+    async def _send_role_update(self):
+        """Send role update."""
+        self.logger.debug("AGENT_DEBUG: Collecting role data")
+        role_result = await self.collect_roles()
+        if role_result.get("success", False):
+            role_count = role_result.get("role_count", 0)
+            if role_count > 0:
+                self.logger.debug(
+                    "AGENT_DEBUG: Periodic role collection found and sent %d server roles",
+                    role_count,
+                )
+            else:
+                self.logger.debug(
+                    "AGENT_DEBUG: No server roles found during periodic collection"
+                )
+        else:
+            error_msg = role_result.get("error", "Unknown error")
+            self.logger.warning("Periodic role collection failed: %s", error_msg)
+
     async def _send_os_version_update(self):
         """Send OS version update."""
         self.logger.debug("AGENT_DEBUG: About to collect OS version info")
@@ -1051,6 +1094,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             await self._send_certificate_update()
         except Exception as e:
             self.logger.error("Error collecting/sending certificate data: %s", e)
+
+        # Send role update
+        try:
+            await self._send_role_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending role data: %s", e)
 
         # Send OS version update
         try:
@@ -1583,6 +1632,52 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(_("Error collecting certificates: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def collect_roles(self) -> Dict[str, Any]:
+        """Collect server roles from the system and send to server."""
+        try:
+            self.logger.info(_("Collecting server roles"))
+
+            # Collect role data
+            roles = self.role_detector.detect_roles()
+
+            if not roles:
+                self.logger.info(_("No server roles detected on system"))
+                return {
+                    "success": True,
+                    "result": "No server roles detected",
+                    "role_count": 0,
+                }
+
+            self.logger.info(_("Found %d server roles"), len(roles))
+
+            # Get hostname for server validation
+            system_info = self.registration.get_system_info()
+            hostname = system_info["hostname"]
+
+            # Create role data message
+            role_message = self.create_message(
+                "role_data",
+                {
+                    "hostname": hostname,
+                    "roles": roles,
+                    "role_count": len(roles),
+                    "collection_timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+
+            # Send role data to server
+            await self.send_message(role_message)
+
+            return {
+                "success": True,
+                "result": f"Collected and sent {len(roles)} server roles",
+                "role_count": len(roles),
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error collecting roles: %s"), e)
             return {"success": False, "error": str(e)}
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
