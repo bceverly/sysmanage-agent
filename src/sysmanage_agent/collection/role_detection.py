@@ -2,6 +2,7 @@
 Role detection collection module for detecting server roles based on installed packages and services.
 """
 
+import fnmatch
 import os
 import platform
 import shutil
@@ -34,9 +35,9 @@ class RoleDetector:
                 "role": "Database Server",
                 "packages": {
                     # PostgreSQL - use version-specific server packages to avoid duplicates
-                    "postgresql-server": {
+                    "postgresql": {
                         "service_names": ["postgresql", "postgres"]
-                    },  # Generic
+                    },  # Windows/Generic without -server suffix
                     "postgresql14-server": {
                         "service_names": ["postgresql", "postgres"]
                     },  # NetBSD/BSD
@@ -52,7 +53,7 @@ class RoleDetector:
                     },  # Homebrew versioned PostgreSQL
                     "postgresql@15": {"service_names": ["postgresql", "postgres"]},
                     "postgresql@16": {"service_names": ["postgresql", "postgres"]},
-                    "postgresql": {
+                    "postgresql-homebrew": {
                         "service_names": ["postgresql", "postgres"]
                     },  # Homebrew generic PostgreSQL
                     # MySQL/MariaDB
@@ -230,6 +231,10 @@ class RoleDetector:
                     packages.update(self._get_pkgin_packages())
                 elif self._command_exists("pkg"):  # FreeBSD/OpenBSD
                     packages.update(self._get_pkg_packages())
+
+            elif self.system == "windows":
+                # Windows package managers and direct detection
+                packages.update(self._get_windows_packages())
 
         except Exception as e:
             self.logger.error("Error getting installed packages: %s", e)
@@ -418,6 +423,8 @@ class RoleDetector:
                 return self._get_macos_service_status(service_name)
             if self.system in ["netbsd", "freebsd", "openbsd"]:
                 return self._get_bsd_service_status(service_name)
+            if self.system == "windows":
+                return self._get_windows_service_status(service_name)
         except Exception as e:
             self.logger.debug("Error checking service %s: %s", service_name, e)
 
@@ -740,3 +747,225 @@ class RoleDetector:
     def _get_command_path(self, command: str) -> Optional[str]:
         """Get the full path to a command."""
         return shutil.which(command)
+
+    def _get_windows_packages(self) -> Dict[str, str]:
+        """Get packages from Windows (check multiple sources)."""
+        packages = {}
+
+        # Check for databases in common installation paths
+        packages.update(self._get_windows_installed_programs())
+
+        # Check for Python's SQLite
+        packages.update(self._get_python_packages())
+
+        # Check for winget packages
+        if self._command_exists("winget"):
+            packages.update(self._get_winget_packages())
+
+        return packages
+
+    def _get_windows_installed_programs(self) -> Dict[str, str]:
+        """Check for databases installed in standard Windows locations."""
+        packages = {}
+
+        # Check for PostgreSQL in Program Files
+        postgres_paths = [
+            r"C:\Program Files\PostgreSQL",
+            r"C:\Program Files (x86)\PostgreSQL",
+        ]
+
+        for base_path in postgres_paths:
+            if os.path.exists(base_path):
+                # Check for version subdirectories
+                try:
+                    for version_dir in os.listdir(base_path):
+                        version_path = os.path.join(base_path, version_dir)
+                        if os.path.isdir(version_path):
+                            # Found PostgreSQL installation
+                            packages["postgresql"] = version_dir
+                            self.logger.info(
+                                "Found PostgreSQL %s in %s", version_dir, base_path
+                            )
+                            break  # Take first version found
+                except Exception as e:
+                    self.logger.debug(
+                        "Error checking PostgreSQL path %s: %s", base_path, e
+                    )
+
+        # Check for MySQL in Program Files
+        mysql_paths = [r"C:\Program Files\MySQL", r"C:\Program Files (x86)\MySQL"]
+
+        for base_path in mysql_paths:
+            if os.path.exists(base_path):
+                try:
+                    for server_dir in os.listdir(base_path):
+                        if "Server" in server_dir:
+                            version = server_dir.replace("MySQL Server ", "")
+                            packages["mysql-server"] = version
+                            self.logger.info(
+                                "Found MySQL Server %s in %s", version, base_path
+                            )
+                            break
+                except Exception as e:
+                    self.logger.debug("Error checking MySQL path %s: %s", base_path, e)
+
+        return packages
+
+    def _get_python_packages(self) -> Dict[str, str]:
+        """Check for Python's built-in SQLite."""
+        packages = {}
+
+        try:
+            # Check if Python has SQLite support
+            result = subprocess.run(
+                ["python", "-c", "import sqlite3; print(sqlite3.sqlite_version)"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                version = result.stdout.strip()
+                packages["sqlite3"] = version
+                self.logger.info("Found SQLite %s via Python", version)
+        except Exception as e:
+            self.logger.debug("Error checking Python SQLite: %s", e)
+
+        return packages
+
+    def _get_winget_packages(self) -> Dict[str, str]:
+        """Get packages from winget (Windows Package Manager)."""
+        packages = {}
+        winget_path = self._get_command_path("winget")
+        if not winget_path:
+            return packages
+
+        try:
+            result = subprocess.run(
+                [winget_path, "list", "--disable-interactivity"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                # Skip header lines
+                for line in lines:
+                    line = line.strip()
+                    if not line or "-" * 5 in line or line.startswith("Name"):
+                        continue
+
+                    # Parse winget output (Name, Id, Version, Available, Source)
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        # Look for database-related packages
+                        name_lower = line.lower()
+                        if any(
+                            db in name_lower
+                            for db in [
+                                "postgresql",
+                                "mysql",
+                                "mariadb",
+                                "sqlite",
+                                "mongodb",
+                                "redis",
+                            ]
+                        ):
+                            # Extract package name and version
+                            # This is approximate due to winget's variable output format
+                            name = parts[0]
+                            # Version is typically 3rd column
+                            version = parts[2] if len(parts) > 2 else "unknown"
+                            packages[name.lower()] = version
+
+        except Exception as e:
+            self.logger.debug("Error getting winget packages: %s", e)
+
+        return packages
+
+    def _get_windows_service_status(self, service_name: str) -> str:
+        """Get the status of a service on Windows."""
+        # Windows services can have different names
+        service_mappings = {
+            "postgresql": ["postgresql-x64-*", "postgresql*"],
+            "postgres": ["postgresql-x64-*", "postgresql*"],
+            "mysql": ["MySQL*", "MySQL", "MySQL80", "MySQL57"],
+            "mysqld": ["MySQL*", "MySQL", "MySQL80", "MySQL57"],
+            "mongodb": ["MongoDB"],
+            "mongod": ["MongoDB"],
+            "redis": ["Redis"],
+        }
+
+        # Get actual service names to check
+        services_to_check = service_mappings.get(service_name, [service_name])
+
+        for svc_pattern in services_to_check:
+            status = self._check_single_service_pattern(svc_pattern)
+            if status != "unknown":
+                return status
+
+        return "unknown"
+
+    def _check_single_service_pattern(self, svc_pattern: str) -> str:
+        """Check a single service pattern and return its status."""
+        try:
+            # Use sc query to list services
+            result = subprocess.run(
+                ["sc", "query", "state=", "all"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                return self._parse_service_output(result.stdout, svc_pattern)
+
+        except Exception as e:
+            self.logger.debug("Error checking Windows service %s: %s", svc_pattern, e)
+
+        return "unknown"
+
+    def _parse_service_output(self, output: str, svc_pattern: str) -> str:
+        """Parse sc query output for a specific service pattern."""
+        lines = output.split("\n")
+        current_service = None
+
+        for line in lines:
+            if "SERVICE_NAME:" in line:
+                current_service = line.split("SERVICE_NAME:")[1].strip()
+            elif "STATE" in line and current_service:
+                # Check if this service matches our pattern
+                if self._matches_service_pattern(current_service, svc_pattern):
+                    if "RUNNING" in line:
+                        self.logger.info(
+                            "Found running Windows service: %s", current_service
+                        )
+                        return "running"
+                    if "STOPPED" in line:
+                        self.logger.info(
+                            "Found stopped Windows service: %s", current_service
+                        )
+                        return "stopped"
+
+        return "unknown"
+
+    def _matches_service_pattern(self, service_name: str, pattern: str) -> bool:
+        """Check if a Windows service name matches a pattern."""
+        # Case-insensitive matching
+        service_lower = service_name.lower()
+        pattern_lower = pattern.lower()
+
+        # Try exact match first
+        if service_lower == pattern_lower:
+            return True
+
+        # Try wildcard match
+        if "*" in pattern:
+            return fnmatch.fnmatch(service_lower, pattern_lower)
+
+        # Try substring match
+        return pattern_lower in service_lower
