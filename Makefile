@@ -77,8 +77,8 @@ ifeq ($(OS),Windows_NT)
 else
 	@$(RM) $(VENV) $(NULL_REDIRECT) || true
 	@$(PYTHON_CMD) -m venv $(VENV)
-	@$(PIP) install --upgrade pip
-	@if [ -f requirements.txt ]; then $(PIP) install -r requirements.txt; fi
+	@$(PYTHON) -m pip install --upgrade pip
+	@if [ -f requirements.txt ]; then $(PYTHON) -m pip install -r requirements.txt; fi
 endif
 
 setup-venv: $(VENV_ACTIVATE)
@@ -86,14 +86,25 @@ setup-venv: $(VENV_ACTIVATE)
 # Install development dependencies
 install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
-	@$(PIP) install pytest pytest-cov pytest-asyncio pylint black isort bandit safety semgrep
-	@echo "Installing requirements.txt..."
-	@$(PIP) install -r requirements.txt
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) scripts/install-dev-deps.py
+else
+	@if [ "$$(uname -s)" = "NetBSD" ]; then \
+		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
+		export TMPDIR=/var/tmp && \
+		export CFLAGS="-I/usr/pkg/include" && \
+		export CXXFLAGS="-std=c++17 -I/usr/pkg/include -fpermissive" && \
+		export LDFLAGS="-L/usr/pkg/lib -Wl,-R/usr/pkg/lib" && \
+		export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 && \
+		export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 && \
+		export GRPC_PYTHON_BUILD_SYSTEM_CARES=1 && \
+		$(PYTHON) scripts/install-dev-deps.py; \
+	else \
+		$(PYTHON) scripts/install-dev-deps.py; \
+	fi
+endif
 	@echo "Checking for BSD C tracer requirements..."
 	@$(PYTHON) scripts/check-openbsd-deps.py
-
-# Setup target that ensures everything is ready
-setup: install-dev
 	@echo "Development environment setup complete!"
 
 # Clean trailing whitespace from Python files (silent operation)
