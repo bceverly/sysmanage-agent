@@ -2,6 +2,7 @@
 Role detection collection module for detecting server roles based on installed packages and services.
 """
 
+import os
 import platform
 import shutil
 import subprocess  # nosec B404 # Required for system package and service management
@@ -45,13 +46,27 @@ class RoleDetector:
                     "postgresql16-server": {
                         "service_names": ["postgresql", "postgres"]
                     },
+                    # macOS Homebrew PostgreSQL packages
+                    "postgresql@14": {
+                        "service_names": ["postgresql", "postgres"]
+                    },  # Homebrew versioned PostgreSQL
+                    "postgresql@15": {"service_names": ["postgresql", "postgres"]},
+                    "postgresql@16": {"service_names": ["postgresql", "postgres"]},
+                    "postgresql": {
+                        "service_names": ["postgresql", "postgres"]
+                    },  # Homebrew generic PostgreSQL
                     # MySQL/MariaDB
                     "mysql-server": {"service_names": ["mysql", "mysqld"]},
                     "mariadb-server": {"service_names": ["mariadb", "mysqld"]},
+                    "mysql": {"service_names": ["mysql", "mysqld"]},  # Homebrew MySQL
+                    "mariadb": {
+                        "service_names": ["mariadb", "mysqld"]
+                    },  # Homebrew MariaDB
                     # Other databases
                     "mongodb": {"service_names": ["mongod", "mongodb"]},
                     "redis": {"service_names": ["redis", "redis-server"]},
                     "sqlite3": {"service_names": []},  # No service for SQLite
+                    "sqlite": {"service_names": []},  # macOS Homebrew SQLite
                     "percona-server": {"service_names": ["mysql", "mysqld"]},
                     "cassandra": {"service_names": ["cassandra"]},
                     "influxdb": {"service_names": ["influxdb"]},
@@ -139,16 +154,49 @@ class RoleDetector:
                     # For packages without services (like SQLite), mark as "installed"
                     service_status = "installed"
 
-                roles.append(
-                    {
-                        "role": role_name,
-                        "package_name": package_pattern,
-                        "package_version": package_version,
-                        "service_name": active_service,
-                        "service_status": service_status,
-                        "is_active": service_status == "running",
-                    }
+                # Check for duplicates based on role + service_name combination
+                role_service_key = (role_name, active_service)
+                self.logger.debug(
+                    "Checking for duplicate: role=%s, service=%s, existing_roles_count=%d",
+                    role_name,
+                    active_service,
+                    len(roles),
                 )
+
+                existing_role = next(
+                    (
+                        r
+                        for r in roles
+                        if (r["role"], r["service_name"]) == role_service_key
+                    ),
+                    None,
+                )
+
+                if existing_role:
+                    # Skip this duplicate - we already have this role+service combination
+                    self.logger.info(
+                        "Skipping duplicate role: %s with service %s (already have package %s)",
+                        role_name,
+                        active_service,
+                        existing_role["package_name"],
+                    )
+                else:
+                    self.logger.debug(
+                        "Adding new role: %s with service %s, package %s",
+                        role_name,
+                        active_service,
+                        package_pattern,
+                    )
+                    roles.append(
+                        {
+                            "role": role_name,
+                            "package_name": package_pattern,
+                            "package_version": package_version,
+                            "service_name": active_service,
+                            "service_status": service_status,
+                            "is_active": service_status == "running",
+                        }
+                    )
 
     def _get_installed_packages(self) -> Dict[str, str]:
         """Get list of installed packages with versions."""
@@ -167,6 +215,14 @@ class RoleDetector:
                 # Also check snap packages (can coexist with other package managers)
                 if self._command_exists("snap"):
                     packages.update(self._get_snap_packages())
+
+            elif self.system == "darwin":  # macOS
+                # macOS package managers
+                if self._command_exists("brew"):
+                    packages.update(self._get_homebrew_packages())
+                # Could also add MacPorts support here in the future
+                # if self._command_exists("port"):
+                #     packages.update(self._get_macports_packages())
 
             elif self.system in ["netbsd", "freebsd", "openbsd"]:
                 # BSD package managers
@@ -295,6 +351,47 @@ class RoleDetector:
 
         return packages
 
+    def _get_homebrew_packages(self) -> Dict[str, str]:
+        """Get packages from Homebrew (macOS)."""
+        packages = {}
+        brew_path = self._get_command_path("brew")
+        if not brew_path:
+            return packages
+
+        try:
+            # If running as root (like via sudo), we need to run brew as the original user
+            # because Homebrew refuses to run as root for security reasons
+            cmd = [brew_path, "list", "--formula", "--versions"]
+            if os.getuid() == 0:  # Running as root
+                # Get the original user from SUDO_USER environment variable
+                original_user = os.environ.get("SUDO_USER")
+                if original_user:
+                    cmd = ["sudo", "-u", original_user] + cmd
+
+            # Get formula packages (command-line tools and libraries)
+            result = subprocess.run(  # nosec B603 B607 # brew with controlled args
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                for line in result.stdout.strip().split("\n"):
+                    if line.strip():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            package_name = parts[0]
+                            # Take the first version if multiple versions are listed
+                            version = parts[1]
+                            packages[package_name] = version
+
+        except Exception as e:
+            self.logger.debug("Error getting Homebrew packages: %s", e)
+
+        return packages
+
     def _find_package_version(
         self, package_pattern: str, packages: Dict[str, str]
     ) -> Optional[str]:
@@ -317,6 +414,8 @@ class RoleDetector:
         try:
             if self.system == "linux":
                 return self._get_linux_service_status(service_name)
+            if self.system == "darwin":  # macOS
+                return self._get_macos_service_status(service_name)
             if self.system in ["netbsd", "freebsd", "openbsd"]:
                 return self._get_bsd_service_status(service_name)
         except Exception as e:
@@ -359,6 +458,106 @@ class RoleDetector:
                 check=False,
             )
             return "running" if result.returncode == 0 else "stopped"
+
+        return "unknown"
+
+    def _get_macos_service_status(self, service_name: str) -> str:
+        """Get the status of a service on macOS."""
+        # Try brew services first
+        brew_status = self._check_brew_services(service_name)
+        if brew_status != "unknown":
+            return brew_status
+
+        # Try checking running processes as fallback
+        return self._check_process_status(service_name)
+
+    def _check_brew_services(self, service_name: str) -> str:
+        """Check service status using brew services."""
+        brew_path = self._get_command_path("brew")
+        if not brew_path:
+            return "unknown"
+
+        try:
+            cmd = self._build_brew_command(brew_path)
+            result = subprocess.run(  # nosec B603 B607 # brew with controlled args
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                return self._parse_brew_services_output(result.stdout, service_name)
+
+        except Exception as e:
+            self.logger.debug(
+                "Error checking brew services for %s: %s", service_name, e
+            )
+
+        return "unknown"
+
+    def _build_brew_command(self, brew_path: str) -> list:
+        """Build the brew services command, handling root user case."""
+        cmd = [brew_path, "services", "list"]
+        if os.getuid() == 0:  # Running as root
+            original_user = os.environ.get("SUDO_USER")
+            if original_user:
+                cmd = ["sudo", "-u", original_user] + cmd
+        return cmd
+
+    def _parse_brew_services_output(self, output: str, service_name: str) -> str:
+        """Parse brew services output to find service status."""
+        for line in output.strip().split("\n"):
+            if not line.strip() or line.startswith("Name"):
+                continue
+
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            name = parts[0]
+            status = parts[1]
+
+            # Check if this service matches our target
+            if (
+                service_name in name.lower()
+                or name.lower() in service_name
+                or service_name == name
+            ):
+                if status == "started":
+                    return "running"
+                if status == "stopped":
+                    return "stopped"
+
+        return "unknown"
+
+    def _check_process_status(self, service_name: str) -> str:
+        """Check if service is running by examining processes."""
+        try:
+            result = subprocess.run(  # nosec B603 B607 # ps with controlled args
+                ["ps", "aux"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0:
+                # Look for the service process in the output
+                for line in result.stdout.lower().split("\n"):
+                    if service_name.lower() in line and "grep" not in line:
+                        return "running"
+                    # Also check for common process name variations
+                    if (
+                        service_name in ["postgresql", "postgres"]
+                        and "postgres:" in line
+                        and "grep" not in line
+                    ):
+                        return "running"
+                # If we checked processes and didn't find it, it's stopped
+                return "stopped"
+        except Exception as e:
+            self.logger.debug("Error checking processes for %s: %s", service_name, e)
 
         return "unknown"
 
