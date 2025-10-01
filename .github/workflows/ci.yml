@@ -81,7 +81,7 @@ jobs:
     - name: Create Pull Request for coverage badge update
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       id: coverage-pr
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.AUTO_MERGE_TOKEN }}
         commit-message: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}% [skip ci]"
