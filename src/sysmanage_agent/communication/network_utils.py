@@ -6,7 +6,7 @@ Handles network-related functionality like IP address detection and hostname res
 import logging
 import os
 import socket
-import subprocess
+import subprocess  # nosec B404 # Required for hostname detection
 from typing import Optional, Tuple
 
 
@@ -32,7 +32,7 @@ class NetworkUtils:
         # First try using hostname -f command (most reliable on Unix systems)
         try:
             result = subprocess.run(
-                ["hostname", "-f"],
+                ["hostname", "-f"],  # nosec B603, B607 # Safe: no user input
                 capture_output=True,
                 text=True,
                 timeout=5,
