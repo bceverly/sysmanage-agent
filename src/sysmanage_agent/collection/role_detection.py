@@ -818,7 +818,11 @@ class RoleDetector:
         try:
             # Check if Python has SQLite support
             result = subprocess.run(
-                ["python", "-c", "import sqlite3; print(sqlite3.sqlite_version)"],
+                [
+                    "python",
+                    "-c",
+                    "import sqlite3; print(sqlite3.sqlite_version)",
+                ],  # nosec B603, B607 # Safe: no user input
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -843,7 +847,11 @@ class RoleDetector:
 
         try:
             result = subprocess.run(
-                [winget_path, "list", "--disable-interactivity"],
+                [
+                    winget_path,
+                    "list",
+                    "--disable-interactivity",
+                ],  # nosec B603 # winget_path from _get_command_path
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -914,7 +922,12 @@ class RoleDetector:
         try:
             # Use sc query to list services
             result = subprocess.run(
-                ["sc", "query", "state=", "all"],
+                [
+                    "sc",
+                    "query",
+                    "state=",
+                    "all",
+                ],  # nosec B603, B607 # Safe: no user input
                 capture_output=True,
                 text=True,
                 timeout=10,
