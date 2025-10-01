@@ -6,6 +6,7 @@ Handles network-related functionality like IP address detection and hostname res
 import logging
 import os
 import socket
+import subprocess
 from typing import Optional, Tuple
 
 
@@ -28,17 +29,41 @@ class NetworkUtils:
         hostname = None
         self.logger.debug("Starting hostname detection...")
 
-        # First try socket.getfqdn()
-        fqdn = socket.getfqdn()
-        self.logger.debug("socket.getfqdn() returned: %r", fqdn)
-        if (
-            fqdn
-            and fqdn.strip()
-            and fqdn != "localhost"
-            and fqdn != "localhost.localdomain"
-        ):
-            hostname = fqdn.strip()
-            self.logger.debug("Using FQDN as hostname: %s", hostname)
+        # First try using hostname -f command (most reliable on Unix systems)
+        try:
+            result = subprocess.run(
+                ["hostname", "-f"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode == 0:
+                cmd_fqdn = result.stdout.strip()
+                self.logger.debug("hostname -f returned: %r", cmd_fqdn)
+                if (
+                    cmd_fqdn
+                    and cmd_fqdn != "localhost"
+                    and cmd_fqdn != "localhost.localdomain"
+                    and "." in cmd_fqdn  # Ensure it looks like an FQDN
+                ):
+                    hostname = cmd_fqdn
+                    self.logger.debug("Using hostname -f result as FQDN: %s", hostname)
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
+            self.logger.debug("hostname -f command failed: %s", e)
+
+        # If that didn't work, try socket.getfqdn()
+        if not hostname:
+            fqdn = socket.getfqdn()
+            self.logger.debug("socket.getfqdn() returned: %r", fqdn)
+            if (
+                fqdn
+                and fqdn.strip()
+                and fqdn != "localhost"
+                and fqdn != "localhost.localdomain"
+            ):
+                hostname = fqdn.strip()
+                self.logger.debug("Using FQDN as hostname: %s", hostname)
 
         # If that didn't work, try socket.gethostname()
         if not hostname:

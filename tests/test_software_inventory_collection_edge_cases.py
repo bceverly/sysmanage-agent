@@ -264,9 +264,12 @@ package3\t3.0"""
 
     def test_stub_methods_coverage(self):
         """Test coverage of stub methods that are not yet implemented."""
+        # Clear collected packages before testing
+        self.collector.collected_packages = []
+
         # These methods should not raise exceptions
         self.collector._collect_yum_packages()
-        self.collector._collect_zypper_packages()
+        # Note: _collect_zypper_packages() is now implemented, so skip it
         self.collector._collect_portage_packages()
         self.collector._collect_apk_packages()
         self.collector._collect_macports_packages()

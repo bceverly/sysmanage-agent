@@ -6,6 +6,7 @@ Tests network utilities for hostname and IP address detection.
 # pylint: disable=attribute-defined-outside-init
 
 import socket
+import subprocess
 from unittest.mock import Mock, mock_open, patch
 
 from src.sysmanage_agent.communication.network_utils import NetworkUtils
@@ -19,6 +20,28 @@ class TestNetworkUtils:  # pylint: disable=too-many-public-methods
         self.mock_config = Mock()
         self.mock_config.get_hostname_override.return_value = None
         self.network_utils = NetworkUtils(self.mock_config)
+
+        # Patch subprocess.run to fail by default (tests fallback logic)
+        self.subprocess_patcher = patch(
+            "src.sysmanage_agent.communication.network_utils.subprocess.run"
+        )
+        self.mock_subprocess = self.subprocess_patcher.start()
+        mock_result = Mock()
+        mock_result.returncode = 1  # Command failed
+        mock_result.stdout = ""
+        self.mock_subprocess.return_value = mock_result
+
+    def teardown_method(self):
+        """Tear down test fixtures."""
+        self.subprocess_patcher.stop()
+
+    @staticmethod
+    def _mock_subprocess_hostname_cmd(hostname=None, returncode=1):
+        """Helper to mock subprocess.run for hostname -f command."""
+        mock_result = Mock()
+        mock_result.returncode = returncode
+        mock_result.stdout = hostname if hostname else ""
+        return mock_result
 
     def test_init_with_config(self):
         """Test NetworkUtils initialization with config manager."""

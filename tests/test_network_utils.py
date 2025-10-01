@@ -37,15 +37,22 @@ class TestNetworkUtils:
         assert network_utils_no_config is not None
         assert network_utils_no_config.config is None
 
+    @patch("subprocess.run")
     @patch("socket.getfqdn")
-    def test_get_hostname_success(self, mock_getfqdn, network_utils):
+    def test_get_hostname_success(self, mock_getfqdn, mock_subprocess, network_utils):
         """Test hostname collection."""
+        # Mock hostname -f command to return test hostname
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "test-host.example.com"
+        mock_subprocess.return_value = mock_result
+
         mock_getfqdn.return_value = "test-host.example.com"
 
         result = network_utils.get_hostname()
 
         assert result == "test-host.example.com"
-        mock_getfqdn.assert_called_once()
+        mock_subprocess.assert_called_once()
 
     @patch("socket.getfqdn")
     def test_get_hostname_with_config_override(self, mock_getfqdn, network_utils):
@@ -64,13 +71,21 @@ class TestNetworkUtils:
 
     def test_get_hostname_fallback(self, network_utils_no_config):
         """Test hostname collection fallback behavior."""
-        with patch("socket.getfqdn") as mock_getfqdn:
+        with patch("subprocess.run") as mock_subprocess, patch(
+            "socket.getfqdn"
+        ) as mock_getfqdn:
+            # Mock hostname -f to return test hostname
+            mock_result = Mock()
+            mock_result.returncode = 0
+            mock_result.stdout = "fallback-host.example.com"
+            mock_subprocess.return_value = mock_result
+
             mock_getfqdn.return_value = "fallback-host.example.com"
 
             result = network_utils_no_config.get_hostname()
 
             assert result == "fallback-host.example.com"
-            mock_getfqdn.assert_called_once()
+            mock_subprocess.assert_called_once()
 
     def test_get_ip_addresses_success(self, network_utils):
         """Test IP address collection success case."""

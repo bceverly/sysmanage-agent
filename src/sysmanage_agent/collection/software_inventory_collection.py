@@ -666,8 +666,62 @@ class SoftwareInventoryCollector:
 
     def _collect_zypper_packages(self):
         """Collect packages from Zypper (openSUSE)."""
-        # Implementation would use 'zypper search --installed-only'
-        logger.debug(_("Zypper package collection not implemented"))
+        try:
+            logger.debug(_("Collecting Zypper packages"))
+
+            # Use rpm -qa for comprehensive package listing
+            result = subprocess.run(
+                [
+                    "rpm",
+                    "-qa",
+                    "--queryformat",
+                    "%{NAME}\t%{VERSION}-%{RELEASE}\t%{ARCH}\t%{SUMMARY}\t%{SIZE}\n",
+                ],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return
+
+            for line in result.stdout.strip().split("\n"):
+                if not line:
+                    continue
+
+                parts = line.split("\t")
+                if len(parts) < 4:
+                    continue
+
+                package = {
+                    "package_name": parts[0],
+                    "version": parts[1],
+                    "architecture": parts[2],
+                    "description": parts[3],
+                    "package_manager": "zypper",
+                    "source": "opensuse_repository",
+                    "is_system_package": self._is_system_package_linux(parts[0]),
+                    "is_user_installed": True,
+                }
+
+                # Add size if available
+                if len(parts) >= 5 and parts[4].isdigit():
+                    package["size_bytes"] = int(parts[4])
+
+                self.collected_packages.append(package)
+
+            zypper_count = len(
+                [
+                    p
+                    for p in self.collected_packages
+                    if p.get("package_manager") == "zypper"
+                ]
+            )
+            logger.debug(_("Successfully collected %d Zypper packages"), zypper_count)
+
+        except Exception as e:
+            logger.error(_("Failed to collect Zypper packages: %s"), str(e))
 
     def _collect_portage_packages(self):
         """Collect packages from Portage (Gentoo)."""
