@@ -2317,6 +2317,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 _("Host approval information stored successfully. Host ID: %s"), host_id
             )
 
+            # Re-send system_info so backend sets connection.host_id
+            message = self.create_system_info_message()
+            await self.message_handler.queue_outbound_message(message)
+            self.logger.info(
+                "Queued system_info after approval to update backend connection"
+            )
+
         except Exception as e:
             self.logger.error(_("Error processing host approval notification: %s"), e)
 

@@ -8,6 +8,8 @@ import logging
 import ssl
 from typing import Any, Dict, Optional
 
+from sqlalchemy import text
+
 from src.database.base import get_db_session
 from src.database.models import HostApproval
 from src.i18n import _
@@ -288,26 +290,16 @@ class ClientRegistration:
         """Store authentication data in database."""
         try:
             with get_db_session() as session:
-                # Check if approval record already exists
-                approval = (
-                    session.query(HostApproval)
-                    .filter(HostApproval.host_id == host_id)
-                    .first()
+                # DELETE ALL ROWS - no questions asked
+                session.execute(text("DELETE FROM host_approval"))
+
+                # Now insert ONE AND ONLY ONE record
+                approval = HostApproval(
+                    host_id=host_id,
+                    host_token=host_token,
+                    approval_status="approved",
                 )
-
-                if approval:
-                    # Update existing record
-                    approval.host_token = host_token
-                    approval.approval_status = "approved"
-                else:
-                    # Create new approval record
-                    approval = HostApproval(
-                        host_id=host_id,
-                        host_token=host_token,
-                        approval_status="approved",
-                    )
-                    session.add(approval)
-
+                session.add(approval)
                 session.commit()
                 self.logger.info("Stored authentication data for host_id: %s", host_id)
         except Exception as e:
