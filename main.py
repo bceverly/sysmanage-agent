@@ -194,20 +194,29 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         log_level = self.config.get_log_level()
         log_file = self.config.get_log_file()
 
+        # Default to logs/agent.log in current directory if not specified
+        if not log_file:
+            logs_dir = os.path.join(os.getcwd(), "logs")
+            os.makedirs(logs_dir, exist_ok=True)
+            log_file = os.path.join(logs_dir, "agent.log")
+
+        # Parse log level - handle pipe-separated levels (use first one)
+        if "|" in log_level:
+            log_level = log_level.split("|")[0].strip()
+
         # Clear any existing handlers to prevent double logging
         root_logger = logging.getLogger()
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
 
-        # Only set up basic file logging if specified - our VerbosityLogger handles console output
-        if log_file:
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(getattr(logging, log_level.upper()))
-            file_handler.setFormatter(
-                UTCTimestampFormatter("%(levelname)s: %(name)s: %(message)s")
-            )
-            root_logger.addHandler(file_handler)
-            root_logger.setLevel(getattr(logging, log_level.upper()))
+        # Always set up file logging - write all output to file
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(getattr(logging, log_level.upper()))
+        file_handler.setFormatter(
+            UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
+        )
+        root_logger.addHandler(file_handler)
+        root_logger.setLevel(getattr(logging, log_level.upper()))
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None

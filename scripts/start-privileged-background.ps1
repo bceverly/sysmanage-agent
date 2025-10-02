@@ -116,16 +116,11 @@ if (Test-Path $SystemConfig) {
 $env:PYTHONPATH = $AgentDir
 $env:PATH = "$VenvPath\Scripts;$env:PATH"
 
-# Prepare output redirection
-$OutputLog = Join-Path $LogsDir "agent_output.log"
-$ErrorLog = Join-Path $LogsDir "agent_error.log"
-
 Write-Log "Starting agent in background..." "INFO"
 Write-Log "Python: $PythonExe" "INFO"
-Write-Log "Output log: $OutputLog" "INFO"
 
 try {
-    # Start the agent process in background
+    # Start the agent process in background (Python logging handles file output)
     $processInfo = New-Object System.Diagnostics.ProcessStartInfo
     $processInfo.FileName = $PythonExe
     $processInfo.Arguments = "main.py"
@@ -133,33 +128,13 @@ try {
     $processInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
     $processInfo.CreateNoWindow = $true
     $processInfo.UseShellExecute = $false
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    
+
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $processInfo
-    
-    # Register event handlers for output
-    $outputHandler = {
-        if ($EventArgs.Data) {
-            Add-Content -Path $OutputLog -Value $EventArgs.Data
-        }
-    }
-    
-    $errorHandler = {
-        if ($EventArgs.Data) {
-            Add-Content -Path $ErrorLog -Value $EventArgs.Data
-        }
-    }
-    
-    Register-ObjectEvent -InputObject $process -EventName OutputDataReceived -Action $outputHandler | Out-Null
-    Register-ObjectEvent -InputObject $process -EventName ErrorDataReceived -Action $errorHandler | Out-Null
-    
+
     # Start the process
     $process.Start() | Out-Null
-    $process.BeginOutputReadLine()
-    $process.BeginErrorReadLine()
-    
+
     # Store the process ID
     $ProcessId = $process.Id
     Write-Log "Agent started with PID: $ProcessId" "INFO"
@@ -187,11 +162,12 @@ try {
         }
     } else {
         Write-Log "Agent process terminated unexpectedly" "ERROR"
-        
-        # Check error log for details
-        if (Test-Path $ErrorLog) {
-            $lastError = Get-Content $ErrorLog -Tail 10 | Out-String
-            Write-Log "Last error output: $lastError" "ERROR"
+
+        # Check agent log for details
+        $AgentLog = Join-Path $LogsDir "agent.log"
+        if (Test-Path $AgentLog) {
+            $lastError = Get-Content $AgentLog -Tail 10 | Out-String
+            Write-Log "Last log output: $lastError" "ERROR"
         }
         
         if (-not $Silent) {

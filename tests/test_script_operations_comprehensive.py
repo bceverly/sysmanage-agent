@@ -236,7 +236,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         ) as mock_subprocess, patch(
             "os.unlink"
         ) as mock_unlink, patch(
-            "time.time", side_effect=[1000, 1001]
+            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
         ):  # Mock execution time
 
             # Mock successful execution
@@ -281,7 +281,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         ) as mock_subprocess, patch(
             "os.unlink"
         ), patch(
-            "time.time", side_effect=[1000, 1001]
+            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
         ):
 
             # Mock successful execution
@@ -323,7 +323,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         ) as mock_subprocess, patch(
             "os.unlink"
         ), patch(
-            "time.time", side_effect=[1000, 1001]
+            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
         ):
 
             # Mock successful execution
@@ -459,7 +459,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         ), patch(
             "os.path.isdir", return_value=True
         ), patch(
-            "time.time", side_effect=[1000, 1001]
+            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
         ):
 
             # Mock successful execution

@@ -462,7 +462,7 @@ main() {
     echo "    You will be prompted for your password if needed."
     echo ""
     
-    # Start the agent in background with proper environment and logging
+    # Start the agent in background (Python logging handles file output)
     case "$priv_cmd" in
         "doas")
             # OpenBSD doas - use exec to replace shell and daemonize properly
@@ -473,28 +473,28 @@ main() {
 # Change to agent directory
 cd "$AGENT_DIR"
 
-# Start the agent and capture output to log file
-env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" > "$AGENT_DIR/logs/agent.log" 2>&1 &
+# Start the agent (Python logging writes to logs/agent.log)
+env PATH="$current_path" PYTHONPATH="$AGENT_DIR" "$python_path" main.py "$@" &
 echo \$! > "$AGENT_DIR/logs/agent.pid"
 EOF
             chmod +x /tmp/sysmanage_agent_$$.sh
-            
+
             # Run the wrapper script with doas (will prompt for password in foreground)
             $priv_cmd /tmp/sysmanage_agent_$$.sh
             DOAS_RESULT=$?
-            
+
             # Clean up
             rm -f /tmp/sysmanage_agent_$$.sh
-            
+
             # Check if doas succeeded
             if [ $DOAS_RESULT -ne 0 ]; then
                 echo "❌ ERROR: doas command failed with exit code $DOAS_RESULT"
                 exit 1
             fi
-            
+
             # Wait a moment for the PID file to be written
             sleep 1
-            
+
             # Get the PID
             if [ -f logs/agent.pid ]; then
                 AGENT_PID=$(cat logs/agent.pid)
@@ -517,9 +517,9 @@ EOF
                 exit 1
             fi
 
-            # Now run the agent in background with nohup (sudo credentials are cached)
+            # Now run the agent in background (Python logging writes to logs/agent.log)
             # Use PYTHONDONTWRITEBYTECODE=1 to prevent .pyc caching issues
-            nohup $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" PYTHONDONTWRITEBYTECODE=1 "$python_path" -B main.py "$@" > logs/agent.log 2>&1 &
+            $priv_cmd PATH="$current_path" PYTHONPATH="$AGENT_DIR" PYTHONDONTWRITEBYTECODE=1 "$python_path" -B main.py "$@" &
             AGENT_PID=$!
             ;;
     esac

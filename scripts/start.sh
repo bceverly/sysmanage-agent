@@ -227,9 +227,9 @@ echo "  🔧 Platform: $PLATFORM"
 echo "  📁 Directory: $SCRIPT_DIR"
 echo "  🌐 Server: $USE_HTTPS://$SERVER_HOST:$SERVER_PORT"
 
-# Start the agent in background
+# Start the agent in background (Python logging writes to logs/agent.log)
 echo "Starting SysManage Agent daemon..."
-nohup python3 main.py > logs/agent.log 2>&1 &
+python3 main.py &
 AGENT_PID=$!
 
 # Save PID

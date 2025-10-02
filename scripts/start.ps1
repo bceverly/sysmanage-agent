@@ -160,22 +160,23 @@ Write-Host "Note: Some features may be limited without admin privileges." -Foreg
 Write-Host "      For full functionality, use run-privileged.ps1" -ForegroundColor Yellow
 Write-Host ""
 
-# Prepare log file paths
+# Agent log file path (Python logging handles the output)
 $AgentLogFile = Join-Path $LogsDir "agent.log"
-$ErrorLogFile = Join-Path $LogsDir "agent_error.log"
 
 try {
-    # Create a simple batch file to handle the redirection properly
-    $BatchFile = Join-Path $AgentDir "temp_run.bat"
-    $BatchContent = @"
-@echo off
-cd /d "$AgentDir"
-"$PythonExe" main.py > "$AgentLogFile" 2>&1
-"@
-    $BatchContent | Out-File -FilePath $BatchFile -Encoding ASCII
-    
-    # Start the batch file in the background
-    $process = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "`"$BatchFile`"" -WindowStyle Hidden -PassThru
+    # Start the agent in background (Python logging handles file output)
+    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $processInfo.FileName = $PythonExe
+    $processInfo.Arguments = "main.py"
+    $processInfo.WorkingDirectory = $AgentDir
+    $processInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+    $processInfo.CreateNoWindow = $true
+    $processInfo.UseShellExecute = $false
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $processInfo
+    $process.Start() | Out-Null
+
     $ProcessId = $process.Id
     
     # Wait a moment for the process to initialize
@@ -197,16 +198,10 @@ cd /d "$AgentDir"
         Write-Host ""
         Write-Host "Logs:" -ForegroundColor Cyan
         Write-Host "   [i] Agent Log: $AgentLogFile" -ForegroundColor Yellow
-        Write-Host "   [i] Error Log: $ErrorLogFile" -ForegroundColor Yellow
         Write-Host "   [i] Live Log: Get-Content '$AgentLogFile' -Wait" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "To stop the agent: make stop" -ForegroundColor Green
         Write-Host ""
-        
-        # Clean up temporary batch file
-        if (Test-Path $BatchFile) {
-            Remove-Item $BatchFile -Force -ErrorAction SilentlyContinue
-        }
     } else {
         Write-Host ""
         Write-Host "[ERROR] Agent process terminated unexpectedly" -ForegroundColor Red
