@@ -21,7 +21,8 @@ class TestAgentI18nConfiguration:
     def config_with_i18n(self, tmp_path):
         """Create a config file with i18n settings."""
         config_file = tmp_path / "test_i18n_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -31,6 +32,7 @@ i18n:
 
 logging:
   level: "INFO"
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
         return str(config_file)
@@ -39,13 +41,15 @@ logging:
     def config_without_i18n(self, tmp_path):
         """Create a config file without i18n settings."""
         config_file = tmp_path / "test_no_i18n_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
 
 logging:
   level: "INFO"
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
         return str(config_file)

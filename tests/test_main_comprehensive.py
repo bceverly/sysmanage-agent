@@ -21,9 +21,16 @@ class TestSysManageAgentAsyncMethods:
     @pytest.fixture
     def agent_with_config(self):
         """Create agent with temporary config for testing."""
+        # Create a temporary log file for this test
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".log", delete=False
+        ) as temp_log:
+            temp_log_path = temp_log.name
+
         config_data = {
             "server": {"hostname": "test.com", "port": 8080},
             "agent": {"id": str(uuid.uuid4())},
+            "logging": {"file": temp_log_path},
         }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -37,6 +44,8 @@ class TestSysManageAgentAsyncMethods:
 
         if os.path.exists(temp_config):
             os.unlink(temp_config)
+        if os.path.exists(temp_log_path):
+            os.unlink(temp_log_path)
 
     def test_try_load_config_exists(self, agent_with_config):
         """Test try_load_config with existing file."""
@@ -371,9 +380,16 @@ class TestUbuntuProOperations:
     @pytest.fixture
     def agent_with_config(self):
         """Create agent with temporary config for testing."""
+        # Create a temporary log file for this test
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".log", delete=False
+        ) as temp_log:
+            temp_log_path = temp_log.name
+
         config_data = {
             "server": {"hostname": "test.com", "port": 8080},
             "agent": {"id": str(uuid.uuid4())},
+            "logging": {"file": temp_log_path},
         }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -387,6 +403,8 @@ class TestUbuntuProOperations:
 
         if os.path.exists(temp_config):
             os.unlink(temp_config)
+        if os.path.exists(temp_log_path):
+            os.unlink(temp_log_path)
 
     @pytest.mark.asyncio
     async def test_ubuntu_pro_attach_success(self, agent_with_config):
@@ -531,9 +549,16 @@ class TestScriptExecution:
     @pytest.fixture
     def agent_with_config(self):
         """Create agent with temporary config for testing."""
+        # Create a temporary log file for this test
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".log", delete=False
+        ) as temp_log:
+            temp_log_path = temp_log.name
+
         config_data = {
             "server": {"hostname": "test.com", "port": 8080},
             "agent": {"id": str(uuid.uuid4())},
+            "logging": {"file": temp_log_path},
         }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -547,6 +572,8 @@ class TestScriptExecution:
 
         if os.path.exists(temp_config):
             os.unlink(temp_config)
+        if os.path.exists(temp_log_path):
+            os.unlink(temp_log_path)
 
     @pytest.mark.asyncio
     async def test_execute_script_success(self, agent_with_config):

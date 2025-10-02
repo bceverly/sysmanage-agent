@@ -99,9 +99,13 @@ def mock_db_manager(test_db_path):  # pylint: disable=redefined-outer-name
 @pytest.fixture
 def agent_config():
     """Create a test agent configuration."""
+    # Create a temporary log file for this test
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as temp_log:
+        temp_log_path = temp_log.name
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(
-            """
+            f"""
 server:
   hostname: "test.example.com"
   port: 8000
@@ -112,6 +116,7 @@ client:
   max_registration_retries: 1
 logging:
   level: "INFO"
+  file: "{temp_log_path}"
 websocket:
   auto_reconnect: false
   reconnect_interval: 1
@@ -124,9 +129,11 @@ database:
 
     yield temp_config_path
 
-    # Clean up temporary file
+    # Clean up temporary files
     if os.path.exists(temp_config_path):
         os.unlink(temp_config_path)
+    if os.path.exists(temp_log_path):
+        os.unlink(temp_log_path)
 
 
 @pytest.fixture
@@ -263,10 +270,14 @@ def isolate_database_operations():
 @pytest.fixture
 def agent_legacy():
     """Legacy agent fixture for backward compatibility."""
+    # Create a temporary log file for this test
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as temp_log:
+        temp_log_path = temp_log.name
+
     # Create a secure temporary file for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(
-            """
+            f"""
 server:
   hostname: "test.example.com"
   port: 8000
@@ -277,6 +288,7 @@ client:
   max_registration_retries: 1
 logging:
   level: "INFO"
+  file: "{temp_log_path}"
 websocket:
   auto_reconnect: false
   reconnect_interval: 1
@@ -290,9 +302,11 @@ websocket:
             agent_instance = SysManageAgent(temp_config_path)
             yield agent_instance
     finally:
-        # Clean up temporary file
+        # Clean up temporary files
         if os.path.exists(temp_config_path):
             os.unlink(temp_config_path)
+        if os.path.exists(temp_log_path):
+            os.unlink(temp_log_path)
 
 
 # Pytest hooks for better test isolation

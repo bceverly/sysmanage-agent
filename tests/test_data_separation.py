@@ -20,7 +20,8 @@ class TestDataSeparation:
     def mock_config(self, tmp_path):
         """Create a mock configuration manager."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -32,6 +33,9 @@ client:
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
         return ConfigManager(str(config_file))
@@ -192,13 +196,17 @@ i18n:
     async def test_send_initial_data_updates_separate_message(self, tmp_path):
         """Test that send_initial_data_updates() sends OS data in separate message."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 
@@ -334,12 +342,16 @@ i18n:
     def test_message_creation_os_version_update(self, tmp_path):
         """Test that OS version update messages are created correctly."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 

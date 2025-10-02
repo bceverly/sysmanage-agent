@@ -19,7 +19,8 @@ class TestAgentHeartbeat:
     def agent_config(self, tmp_path):
         """Create a temporary config file for testing."""
         config_file = tmp_path / "test_sysmanage_agent.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -33,7 +34,7 @@ client:
 
 logging:
   level: "INFO"
-  file: null
+  file: "{log_file}"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 websocket:
@@ -201,11 +202,15 @@ class TestAgentConfiguration:
         """Create a config manager with test configuration."""
 
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 websocket:
   ping_interval: 60
   reconnect_interval: 10
   auto_reconnect: true
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
         return ConfigManager(str(config_file))
@@ -268,7 +273,8 @@ class TestSystemInfoMessage:
         """Create a mock agent with registration handler."""
         # Create a temporary config file
         config_file = tmp_path / "test_sysmanage_agent.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -277,6 +283,9 @@ server:
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 
@@ -309,7 +318,8 @@ class TestMessageHandling:
         """Create a mock SysManage agent for testing."""
         # Create a temporary config file
         config_file = tmp_path / "test_sysmanage_agent.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -318,6 +328,9 @@ server:
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 

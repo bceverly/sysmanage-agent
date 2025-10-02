@@ -21,7 +21,8 @@ class TestOSVersionCapture:
     def mock_config(self, tmp_path):
         """Create a mock configuration manager."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
@@ -33,6 +34,9 @@ client:
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
         return ConfigManager(str(config_file))
@@ -182,13 +186,17 @@ i18n:
     async def test_update_os_version_command(self, tmp_path):
         """Test handling of update_os_version command."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
   port: 8000
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 
@@ -243,12 +251,16 @@ i18n:
     async def test_handle_update_os_version_command(self, tmp_path):
         """Test agent handles update_os_version command correctly."""
         config_file = tmp_path / "test_config.yaml"
-        config_content = """
+        log_file = tmp_path / "test.log"
+        config_content = f"""
 server:
   hostname: "test-server.example.com"
 
 i18n:
   language: "en"
+
+logging:
+  file: "{log_file}"
 """
         config_file.write_text(config_content)
 
