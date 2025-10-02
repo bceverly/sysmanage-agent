@@ -2348,39 +2348,38 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
-                # Check if we already have an approval record
-                existing_approval = session.query(HostApproval).first()
-
-                if existing_approval:
-                    # Update existing record
-                    existing_approval.host_id = uuid.UUID(host_id) if host_id else None
-                    existing_approval.host_token = host_token
-                    existing_approval.approval_status = approval_status
-                    existing_approval.certificate = certificate
-                    existing_approval.updated_at = datetime.now(timezone.utc)
-
-                    if approval_status == "approved":
-                        existing_approval.approved_at = datetime.now(timezone.utc)
-                else:
-                    # Create new approval record
-                    new_approval = HostApproval(
-                        host_id=uuid.UUID(host_id) if host_id else None,
-                        host_token=host_token,
-                        approval_status=approval_status,
-                        certificate=certificate,
-                        approved_at=(
-                            datetime.now(timezone.utc)
-                            if approval_status == "approved"
-                            else None
+                # CRITICAL: Delete ALL existing host approval records first
+                # This ensures we only ever have ONE record, preventing old host_id caching issues
+                deleted_count = session.query(HostApproval).delete()
+                if deleted_count > 0:
+                    self.logger.info(
+                        _(
+                            "Deleted %d old host approval record(s) before storing new approval"
                         ),
-                        created_at=datetime.now(timezone.utc),
-                        updated_at=datetime.now(timezone.utc),
+                        deleted_count,
                     )
-                    session.add(new_approval)
+
+                # Always create fresh new approval record (never update)
+                new_approval = HostApproval(
+                    host_id=uuid.UUID(host_id) if host_id else None,
+                    host_token=host_token,
+                    approval_status=approval_status,
+                    certificate=certificate,
+                    approved_at=(
+                        datetime.now(timezone.utc)
+                        if approval_status == "approved"
+                        else None
+                    ),
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
+                )
+                session.add(new_approval)
 
                 session.commit()
-                self.logger.debug(
-                    _("Host approval record stored in database: host_id=%s"), host_id
+                self.logger.info(
+                    _("Host approval record stored in database: host_id=%s, status=%s"),
+                    host_id,
+                    approval_status,
                 )
 
             finally:

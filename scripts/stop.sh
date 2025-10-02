@@ -58,9 +58,9 @@ kill_by_pidfile() {
             while [ $count -lt 10 ] && kill -0 "$pid" 2>/dev/null; do
                 sleep 1
                 count=$((count + 1))
-                echo -n "."
+                printf "."
             done
-            echo
+            printf "\n"
             
             # Force kill if still running
             if kill -0 "$pid" 2>/dev/null; then
