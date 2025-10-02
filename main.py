@@ -42,7 +42,7 @@ from src.sysmanage_agent.collection.certificate_collection import CertificateCol
 from src.sysmanage_agent.collection.role_detection import RoleDetector
 from src.database.init import initialize_database
 from src.database.base import get_database_manager
-from src.database.models import HostApproval, ScriptExecution, MessageQueue
+from src.database.models import HostApproval
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
 
 
@@ -52,10 +52,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     def __init__(self, config_file: str = "sysmanage-agent.yaml"):
         # Try to discover server if no config file exists
         self.config_file = config_file
-        # Setup minimal logging first - our VerbosityLogger will handle most output
+        # Setup minimal logging first - file only, no console output
         logging.basicConfig(
-            level=logging.WARNING
-        )  # Only warnings/errors during startup
+            level=logging.WARNING,
+            handlers=[],  # Explicitly no handlers to prevent console output
+        )
 
         self.logger = get_logger(__name__, None)  # Will pass config_manager later
         if not self.try_load_config(config_file):
@@ -83,6 +84,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         # Initialize database
         if not initialize_database(self.config):
             raise RuntimeError(_("Failed to initialize agent database"))
+
+        # Clean up any corrupt data from the database (e.g., invalid UUIDs)
+        self.cleanup_corrupt_database_entries()
 
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
@@ -140,10 +144,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     def auto_discover_and_configure(self) -> bool:
         """Auto-discover server and create configuration."""
 
-        # Setup basic logging for discovery process
+        # Setup basic logging for discovery process - file only, no console
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[],  # Explicitly no handlers to prevent console output
         )
 
         # Apply UTC timestamp formatter to all handlers
@@ -2629,6 +2634,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         HostApproval.approval_status == "approved",
                         HostApproval.host_id.isnot(None),
                     )
+                    .order_by(HostApproval.created_at.desc())
                     .first()
                 )
 
@@ -2644,34 +2650,59 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error retrieving stored host_id synchronously: %s"), e)
             return None
 
+    def cleanup_corrupt_database_entries(self) -> None:
+        """Clean up any corrupt entries from database (e.g., invalid UUIDs)."""
+        try:
+            db_manager = get_database_manager()
+            session = db_manager.get_session()
+            try:
+                # Delete rows with invalid UUIDs using raw SQL
+                # Check host_approval table for non-UUID values
+                result = session.execute(
+                    "SELECT COUNT(*) FROM host_approval WHERE "
+                    "LENGTH(host_id) != 36 OR "
+                    "host_id NOT LIKE '%-%-%-%-%' OR "
+                    "host_id IS NOT NULL"
+                ).fetchone()
+
+                if result and result[0] > 0:
+                    self.logger.warning(
+                        "Found %d corrupt entries in host_approval table, cleaning up...",
+                        result[0],
+                    )
+                    session.execute(
+                        "DELETE FROM host_approval WHERE "
+                        "LENGTH(host_id) != 36 OR "
+                        "host_id NOT LIKE '%-%-%-%-%'"
+                    )
+                    session.commit()
+                    self.logger.info("Corrupt database entries cleaned up")
+
+            finally:
+                session.close()
+
+        except Exception as e:
+            self.logger.warning("Error during database cleanup: %s", e)
+            # Don't raise - this is best-effort cleanup
+
     async def clear_stored_host_id(self) -> None:
         """Clear the stored host_id from local database and related data."""
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
-                # Find and remove all host approval records
-                approvals = session.query(HostApproval).all()
-                for approval in approvals:
-                    session.delete(approval)
+                # Use raw SQL to delete ALL host approval records to avoid UUID parsing errors
+                # This is necessary because corrupt UUIDs in the database will cause
+                # SQLAlchemy to fail when trying to load them as objects
+                session.execute("DELETE FROM host_approval")
 
                 # Clear any pending script executions since they're tied to the old host
-                script_executions = session.query(ScriptExecution).all()
-                for execution in script_executions:
-                    session.delete(execution)
+                session.execute("DELETE FROM script_execution")
 
                 # Clear any queued messages with host_id data
-                queued_messages = session.query(MessageQueue).all()
-                for message in queued_messages:
-                    try:
-                        # Parse message data to check for host_id
-                        message_data = json.loads(message.message_data)
-                        if "host_id" in message_data:
-                            # Remove messages containing the old host_id
-                            session.delete(message)
-                    except (json.JSONDecodeError, KeyError):
-                        # Keep messages that can't be parsed or don't have host_id
-                        pass
+                session.execute(
+                    "DELETE FROM message_queue WHERE message_data LIKE '%host_id%'"
+                )
 
                 session.commit()
                 self.logger.info(
@@ -2683,7 +2714,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         except Exception as e:
             self.logger.error(_("Error clearing host approval records: %s"), e)
-            raise
+            # Don't raise - allow the agent to continue even if cleanup fails
+            self.logger.warning(_("Continuing despite cleanup error..."))
 
     async def run(self):
         """Main agent execution loop."""

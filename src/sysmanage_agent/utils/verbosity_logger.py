@@ -8,8 +8,6 @@ Supports custom formats and selective level filtering.
 import logging
 from typing import Set
 
-from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
-
 
 class FlexibleLogger:
     """
@@ -31,15 +29,9 @@ class FlexibleLogger:
         # Parse enabled levels from config
         self.enabled_levels = self._parse_enabled_levels()
 
-        # Configure logger if not already done
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            log_format = self._get_log_format()
-            handler.setFormatter(UTCTimestampFormatter(log_format))
-            self.logger.addHandler(handler)
-            self.logger.setLevel(
-                logging.DEBUG
-            )  # Let our filtering logic control output
+        # Don't add handlers here - main.py sets up the file handler
+        # We only control the logger level, not the handler destination
+        self.logger.setLevel(logging.DEBUG)  # Let our filtering logic control output
 
     def _parse_enabled_levels(self) -> Set[int]:
         """Parse pipe-separated levels from config into a set of logging constants."""

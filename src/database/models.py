@@ -2,6 +2,7 @@
 Database models for SysManage Agent message queues.
 """
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
@@ -30,15 +31,27 @@ class GUID(TypeDecorator):  # pylint: disable=too-many-ancestors
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
+        # Validate that value is a valid UUID before storing
+        if not isinstance(value, uuid.UUID):
+            try:
+                value = uuid.UUID(str(value))
+            except (ValueError, AttributeError) as e:
+                raise ValueError(f"Invalid UUID value: {value}") from e
         if dialect.name == "postgresql":
-            return str(value) if not isinstance(value, uuid.UUID) else value
+            return value
         return str(value)
 
     def process_result_value(self, value, dialect):
         if value is None:
             return value
         if not isinstance(value, uuid.UUID):
-            return uuid.UUID(value)
+            try:
+                return uuid.UUID(value)
+            except (ValueError, AttributeError):
+                # Handle corrupt data gracefully - log and return None
+                logger = logging.getLogger(__name__)
+                logger.warning("Corrupt UUID in database: %s", value)
+                return None
         return value
 
     def process_literal_param(self, value, dialect):
