@@ -277,8 +277,10 @@ class MessageProcessor:
             "collect_certificates": lambda params: self.agent.collect_certificates(),
             "collect_roles": lambda params: self.agent.collect_roles(),
             "service_control": self._handle_service_control,
+            "get_service_status": self._handle_get_service_status,
             "deploy_ssh_keys": self.agent.deploy_ssh_keys,
             "deploy_certificates": self.agent.deploy_certificates,
+            "deploy_opentelemetry": self.agent.deploy_opentelemetry,
         }
 
     async def _handle_execute_script(
@@ -588,6 +590,100 @@ class MessageProcessor:
 
         except Exception as e:
             self.logger.error(_("Error in service control handler: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _handle_get_service_status(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Get status of one or more systemd services."""
+        try:
+            services = parameters.get("services", [])
+
+            if not services:
+                return {"success": False, "error": "No services specified"}
+
+            self.logger.info(_("Service status check requested for: %s"), services)
+
+            # Check if running in privileged mode
+            if not is_running_privileged():
+                return {
+                    "success": False,
+                    "error": "Service status check requires privileged mode",
+                }
+
+            results = {}
+            overall_success = True
+
+            for service in services:
+                try:
+                    self.logger.info(_("Checking status for service: %s"), service)
+
+                    # Get full systemctl path for security
+                    systemctl_path = shutil.which("systemctl")
+                    if not systemctl_path:
+                        self.logger.error(_("systemctl not found"))
+                        results[service] = {
+                            "success": False,
+                            "status": "unknown",
+                            "error": "systemctl not found",
+                        }
+                        overall_success = False
+                        continue
+
+                    # Check if service is running
+                    cmd = [systemctl_path, "is-active", service]
+                    result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
+                        cmd, capture_output=True, text=True, timeout=10, check=False
+                    )
+
+                    # systemctl is-active returns:
+                    # - 0 if active
+                    # - 3 if inactive/stopped
+                    # - other codes for failed, unknown, etc.
+                    status = (
+                        result.stdout.strip()
+                    )  # active, inactive, failed, unknown, etc.
+
+                    self.logger.info(_("Service %s status: %s"), service, status)
+                    results[service] = {
+                        "success": True,
+                        "status": status,
+                        "active": status == "active",
+                    }
+
+                except subprocess.TimeoutExpired:
+                    error_msg = "Service status check timed out after 10 seconds"
+                    self.logger.error(
+                        _("Service status timeout for %s: %s"), service, error_msg
+                    )
+                    results[service] = {
+                        "success": False,
+                        "status": "unknown",
+                        "error": error_msg,
+                    }
+                    overall_success = False
+
+                except Exception as e:
+                    error_msg = str(e)
+                    self.logger.error(
+                        _("Service status error for %s: %s"), service, error_msg
+                    )
+                    results[service] = {
+                        "success": False,
+                        "status": "unknown",
+                        "error": error_msg,
+                    }
+                    overall_success = False
+
+            return {
+                "success": overall_success,
+                "services": services,
+                "results": results,
+                "message": f"Service status check completed for {len(services)} services",
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error in service status handler: %s"), e)
             return {"success": False, "error": str(e)}
 
 

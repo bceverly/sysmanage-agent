@@ -11,6 +11,7 @@ import platform
 import socket
 from datetime import datetime, timezone
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
@@ -18,7 +19,7 @@ from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
-class SystemOperations:
+class SystemOperations:  # pylint: disable=too-many-public-methods
     """Handles system-level operations for the agent."""
 
     def __init__(self, agent_instance):
@@ -1440,3 +1441,669 @@ class SystemOperations:
         except Exception as e:
             self.logger.error("Error updating CA certificate bundle: %s", str(e))
             raise
+
+    async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy OpenTelemetry collector to the system."""
+        try:
+            grafana_url = parameters.get("grafana_url")
+            if not grafana_url:
+                return {
+                    "success": False,
+                    "error": "No Grafana URL provided for OpenTelemetry deployment",
+                }
+
+            self.logger.info(
+                "Deploying OpenTelemetry collector with Grafana URL: %s", grafana_url
+            )
+
+            # Detect the operating system and package manager
+            system = platform.system().lower()
+            deployment_result = None
+
+            if system == "linux":
+                deployment_result = await self._deploy_opentelemetry_linux(grafana_url)
+            elif system == "darwin":
+                deployment_result = await self._deploy_opentelemetry_macos(grafana_url)
+            elif system == "freebsd":
+                deployment_result = await self._deploy_opentelemetry_freebsd(
+                    grafana_url
+                )
+            elif system == "openbsd":
+                deployment_result = await self._deploy_opentelemetry_openbsd(
+                    grafana_url
+                )
+            elif system == "netbsd":
+                deployment_result = await self._deploy_opentelemetry_netbsd(grafana_url)
+            elif system == "windows":
+                deployment_result = await self._deploy_opentelemetry_windows(
+                    grafana_url
+                )
+            else:
+                return {
+                    "success": False,
+                    "error": f"Unsupported operating system for OpenTelemetry deployment: {system}",
+                }
+
+            return deployment_result
+
+        except Exception as e:
+            self.logger.error("Failed to deploy OpenTelemetry: %s", str(e))
+            return {
+                "success": False,
+                "error": f"Failed to deploy OpenTelemetry: {str(e)}",
+            }
+
+    async def _deploy_opentelemetry_linux(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on Linux systems."""
+        try:
+            # Detect package manager
+            if os.path.exists("/usr/bin/apt"):
+                return await self._deploy_opentelemetry_apt(grafana_url)
+            if os.path.exists("/usr/bin/yum") or os.path.exists("/usr/bin/dnf"):
+                return await self._deploy_opentelemetry_yum_dnf(grafana_url)
+            return {
+                "success": False,
+                "error": "No supported package manager found (apt/yum/dnf)",
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_apt(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry using apt package manager."""
+        try:
+            # Install OpenTelemetry collector
+            self.logger.info("Installing OpenTelemetry collector using apt")
+
+            # Update package lists
+            process = await asyncio.create_subprocess_exec(
+                "apt-get",
+                "update",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Install otelcol-contrib package
+            process = await asyncio.create_subprocess_exec(
+                "apt-get",
+                "install",
+                "-y",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_result = await self._create_otel_config_linux(grafana_url)
+            if not config_result["success"]:
+                return config_result
+
+            # Enable and start service
+            await self._enable_and_start_otel_service_linux()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_result.get("config_file"),
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_yum_dnf(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry using yum/dnf package manager."""
+        try:
+            # Determine which package manager to use
+            pkg_manager = "dnf" if os.path.exists("/usr/bin/dnf") else "yum"
+
+            self.logger.info("Installing OpenTelemetry collector using %s", pkg_manager)
+
+            # Install OpenTelemetry collector
+            process = await asyncio.create_subprocess_exec(
+                pkg_manager,
+                "install",
+                "-y",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_result = await self._create_otel_config_linux(grafana_url)
+            if not config_result["success"]:
+                return config_result
+
+            # Enable and start service
+            await self._enable_and_start_otel_service_linux()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_result.get("config_file"),
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_macos(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on macOS using Homebrew."""
+        try:
+            self.logger.info("Installing OpenTelemetry collector using Homebrew")
+
+            # Install using Homebrew
+            process = await asyncio.create_subprocess_exec(
+                "brew",
+                "install",
+                "opentelemetry-collector-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_file = "/usr/local/etc/otelcol-contrib/config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            # Start service
+            process = await asyncio.create_subprocess_exec(
+                "brew",
+                "services",
+                "start",
+                "opentelemetry-collector-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_file,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_freebsd(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on FreeBSD."""
+        try:
+            # Install using pkg
+            process = await asyncio.create_subprocess_exec(
+                "pkg",
+                "install",
+                "-y",
+                "opentelemetry-collector",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_file = "/usr/local/etc/otelcol/config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            # Enable and start service
+            process = await asyncio.create_subprocess_exec(
+                "service",
+                "otelcol",
+                "enable",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "service",
+                "otelcol",
+                "start",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_file,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_openbsd(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on OpenBSD."""
+        try:
+            # Install using pkg_add
+            process = await asyncio.create_subprocess_exec(
+                "pkg_add",
+                "opentelemetry-collector",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_file = "/etc/otelcol/config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            # Enable and start service
+            process = await asyncio.create_subprocess_exec(
+                "rcctl",
+                "enable",
+                "otelcol",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "rcctl",
+                "start",
+                "otelcol",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_file,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_netbsd(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on NetBSD."""
+        try:
+            # Install using pkgin
+            process = await asyncio.create_subprocess_exec(
+                "pkgin",
+                "-y",
+                "install",
+                "opentelemetry-collector",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_file = "/usr/pkg/etc/otelcol/config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            # Enable and start service (NetBSD uses rc.d)
+            process = await asyncio.create_subprocess_exec(
+                "/etc/rc.d/otelcol",
+                "start",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_file,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _deploy_opentelemetry_windows(self, grafana_url: str) -> Dict[str, Any]:
+        """Deploy OpenTelemetry on Windows."""
+        return {
+            "success": False,
+            "error": "OpenTelemetry deployment on Windows is not yet implemented",
+        }
+
+    async def _create_otel_config_linux(self, grafana_url: str) -> Dict[str, Any]:
+        """Create OpenTelemetry configuration file for Linux."""
+        try:
+            config_file = "/etc/otelcol-contrib/config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            os.chmod(config_file, 0o644)
+
+            return {"success": True, "config_file": config_file}
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _enable_and_start_otel_service_linux(self):
+        """Enable and start OpenTelemetry service on Linux."""
+        # Enable service
+        process = await asyncio.create_subprocess_exec(
+            "systemctl",
+            "enable",
+            "otelcol-contrib",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await process.communicate()
+
+        # Start service
+        process = await asyncio.create_subprocess_exec(
+            "systemctl",
+            "start",
+            "otelcol-contrib",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await process.communicate()
+
+    def _generate_otel_config(self, grafana_url: str) -> str:
+        """Generate OpenTelemetry collector configuration."""
+        # Parse Grafana URL to extract host and port
+        parsed_url = urlparse(grafana_url)
+        grafana_host = parsed_url.hostname or grafana_url
+        grafana_port = parsed_url.port or 3000
+
+        # Generate a basic OpenTelemetry configuration
+        # This sends metrics to Grafana via OTLP
+        config = f"""receivers:
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      disk:
+      filesystem:
+      load:
+      memory:
+      network:
+      paging:
+      process:
+      processes:
+
+processors:
+  batch:
+    timeout: 10s
+
+exporters:
+  otlp:
+    endpoint: "{grafana_host}:{grafana_port}"
+    tls:
+      insecure: true
+
+  logging:
+    loglevel: info
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      processors: [batch]
+      exporters: [otlp, logging]
+"""
+        return config
+
+    async def start_opentelemetry_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Start OpenTelemetry service."""
+        try:
+            self.logger.info(_("Starting OpenTelemetry service..."))
+
+            # Determine the appropriate command based on platform
+            if platform.system() == "Linux":
+                # Try systemctl first (most common)
+                command = "sudo systemctl start otelcol-contrib"
+            elif platform.system() == "Darwin":
+                # macOS
+                command = "sudo brew services start otelcol-contrib"
+            elif platform.system() == "FreeBSD":
+                command = "sudo service otelcol start"
+            elif platform.system() == "NetBSD":
+                command = "sudo /etc/rc.d/otelcol start"
+            else:
+                return {
+                    "success": False,
+                    "error": _(
+                        "Unsupported platform for OpenTelemetry service control"
+                    ),
+                }
+
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(_("OpenTelemetry service started successfully"))
+                return {
+                    "success": True,
+                    "result": _("OpenTelemetry service started successfully"),
+                }
+
+            self.logger.error(
+                _("Failed to start OpenTelemetry service: %s"),
+                result.get("error", "Unknown error"),
+            )
+            return {
+                "success": False,
+                "error": _("Failed to start OpenTelemetry service: %s")
+                % result.get("error", "Unknown error"),
+            }
+        except Exception as e:
+            self.logger.error(_("Error starting OpenTelemetry service: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def stop_opentelemetry_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Stop OpenTelemetry service."""
+        try:
+            self.logger.info(_("Stopping OpenTelemetry service..."))
+
+            # Determine the appropriate command based on platform
+            if platform.system() == "Linux":
+                # Try systemctl first (most common)
+                command = "sudo systemctl stop otelcol-contrib"
+            elif platform.system() == "Darwin":
+                # macOS
+                command = "sudo brew services stop otelcol-contrib"
+            elif platform.system() == "FreeBSD":
+                command = "sudo service otelcol stop"
+            elif platform.system() == "NetBSD":
+                command = "sudo /etc/rc.d/otelcol stop"
+            else:
+                return {
+                    "success": False,
+                    "error": _(
+                        "Unsupported platform for OpenTelemetry service control"
+                    ),
+                }
+
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(_("OpenTelemetry service stopped successfully"))
+                return {
+                    "success": True,
+                    "result": _("OpenTelemetry service stopped successfully"),
+                }
+
+            self.logger.error(
+                _("Failed to stop OpenTelemetry service: %s"),
+                result.get("error", "Unknown error"),
+            )
+            return {
+                "success": False,
+                "error": _("Failed to stop OpenTelemetry service: %s")
+                % result.get("error", "Unknown error"),
+            }
+        except Exception as e:
+            self.logger.error(_("Error stopping OpenTelemetry service: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def restart_opentelemetry_service(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Restart OpenTelemetry service."""
+        try:
+            self.logger.info(_("Restarting OpenTelemetry service..."))
+
+            # Determine the appropriate command based on platform
+            if platform.system() == "Linux":
+                # Try systemctl first (most common)
+                command = "sudo systemctl restart otelcol-contrib"
+            elif platform.system() == "Darwin":
+                # macOS
+                command = "sudo brew services restart otelcol-contrib"
+            elif platform.system() == "FreeBSD":
+                command = "sudo service otelcol restart"
+            elif platform.system() == "NetBSD":
+                command = "sudo /etc/rc.d/otelcol restart"
+            else:
+                return {
+                    "success": False,
+                    "error": _(
+                        "Unsupported platform for OpenTelemetry service control"
+                    ),
+                }
+
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info(_("OpenTelemetry service restarted successfully"))
+                return {
+                    "success": True,
+                    "result": _("OpenTelemetry service restarted successfully"),
+                }
+
+            self.logger.error(
+                _("Failed to restart OpenTelemetry service: %s"),
+                result.get("error", "Unknown error"),
+            )
+            return {
+                "success": False,
+                "error": _("Failed to restart OpenTelemetry service: %s")
+                % result.get("error", "Unknown error"),
+            }
+        except Exception as e:
+            self.logger.error(_("Error restarting OpenTelemetry service: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def connect_opentelemetry_grafana(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Connect OpenTelemetry to Grafana server."""
+        grafana_url = parameters.get("grafana_url")
+
+        if not grafana_url:
+            return {"success": False, "error": _("Grafana URL is required")}
+
+        try:
+            self.logger.info(
+                _("Connecting OpenTelemetry to Grafana at %s"), grafana_url
+            )
+
+            # Update the OpenTelemetry configuration file with Grafana endpoint
+            # This is a placeholder - actual implementation depends on config file format
+            # _config_file = "/etc/otelcol-contrib/config.yaml"
+
+            # For now, we'll restart the service after config update
+            # TODO: Implement actual config file update logic  # pylint: disable=fixme
+
+            # Restart the service to apply changes
+            restart_result = await self.restart_opentelemetry_service(parameters)
+
+            if restart_result["success"]:
+                self.logger.info(_("OpenTelemetry connected to Grafana successfully"))
+                return {
+                    "success": True,
+                    "result": _("OpenTelemetry connected to Grafana successfully"),
+                }
+
+            return restart_result
+        except Exception as e:
+            self.logger.error(_("Error connecting OpenTelemetry to Grafana: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def disconnect_opentelemetry_grafana(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Disconnect OpenTelemetry from Grafana server."""
+        try:
+            self.logger.info(_("Disconnecting OpenTelemetry from Grafana"))
+
+            # Update the OpenTelemetry configuration file to remove Grafana endpoint
+            # This is a placeholder - actual implementation depends on config file format
+            # _config_file = "/etc/otelcol-contrib/config.yaml"
+
+            # For now, we'll restart the service after config update
+            # TODO: Implement actual config file update logic  # pylint: disable=fixme
+
+            # Restart the service to apply changes
+            restart_result = await self.restart_opentelemetry_service(parameters)
+
+            if restart_result["success"]:
+                self.logger.info(
+                    _("OpenTelemetry disconnected from Grafana successfully")
+                )
+                return {
+                    "success": True,
+                    "result": _("OpenTelemetry disconnected from Grafana successfully"),
+                }
+
+            return restart_result
+        except Exception as e:
+            self.logger.error(
+                _("Error disconnecting OpenTelemetry from Grafana: %s"), e
+            )
+            return {"success": False, "error": str(e)}

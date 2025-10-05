@@ -82,6 +82,15 @@ class RoleDetector:
                         "service_names": ["grafana-server", "grafana"]
                     },
                     "grafana-oss": {"service_names": ["grafana-server", "grafana"]},
+                    "otelcol": {"service_names": ["otelcol", "otelcol-contrib"]},
+                    "otelcol-contrib": {
+                        "service_names": ["otelcol-contrib", "otelcol"]
+                    },
+                    "opentelemetry-collector": {
+                        "service_names": ["otelcol", "otelcol-contrib"]
+                    },
+                    "prometheus": {"service_names": ["prometheus"]},
+                    "prometheus2": {"service_names": ["prometheus"]},
                 },
             },
         }

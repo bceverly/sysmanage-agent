@@ -421,6 +421,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Deploy SSL certificates to the system."""
         return await self.system_ops.deploy_certificates(parameters)
 
+    async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy OpenTelemetry collector to the system."""
+        return await self.system_ops.deploy_opentelemetry(parameters)
+
     async def ubuntu_pro_disable_service(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
