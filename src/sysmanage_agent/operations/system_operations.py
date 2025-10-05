@@ -1519,7 +1519,12 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Install OpenTelemetry collector
             self.logger.info("Installing OpenTelemetry collector using apt")
 
+            # Set environment to prevent interactive prompts
+            env = os.environ.copy()
+            env["DEBIAN_FRONTEND"] = "noninteractive"
+
             # Install prerequisites
+            self.logger.info("Installing prerequisites...")
             process = await asyncio.create_subprocess_exec(
                 "apt-get",
                 "install",
@@ -1529,10 +1534,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 "software-properties-common",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=env,
             )
-            await process.communicate()
+            _stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                error_msg = f"Failed to install prerequisites: {stderr.decode()}"
+                self.logger.error(error_msg)
+                return {"success": False, "error": error_msg}
 
-            # Add OpenTelemetry GPG key
+            # Download OpenTelemetry package
+            self.logger.info("Downloading OpenTelemetry collector package...")
             process = await asyncio.create_subprocess_exec(
                 "wget",
                 "-qO-",
@@ -1543,9 +1554,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             deb_content, stderr = await process.communicate()
 
             if process.returncode != 0:
+                error_msg = (
+                    f"Failed to download OpenTelemetry package: {stderr.decode()}"
+                )
+                self.logger.error(error_msg)
                 return {
                     "success": False,
-                    "error": f"Failed to download OpenTelemetry package: {stderr.decode()}",
+                    "error": error_msg,
                 }
 
             # Write the package to a temp file
@@ -1557,17 +1572,20 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             try:
                 # Install the package
+                self.logger.info("Installing OpenTelemetry collector package...")
                 process = await asyncio.create_subprocess_exec(
                     "dpkg",
                     "-i",
                     deb_file,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
+                    env=env,
                 )
                 _stdout, stderr = await process.communicate()
 
                 if process.returncode != 0:
                     # Try to fix dependencies
+                    self.logger.info("Fixing dependencies...")
                     process = await asyncio.create_subprocess_exec(
                         "apt-get",
                         "install",
@@ -1575,13 +1593,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         "-y",
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
+                        env=env,
                     )
                     await process.communicate()
 
                     if process.returncode != 0:
+                        error_msg = f"Failed to install OpenTelemetry collector: {stderr.decode()}"
+                        self.logger.error(error_msg)
                         return {
                             "success": False,
-                            "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                            "error": error_msg,
                         }
             finally:
                 # Clean up temp file
@@ -1908,12 +1929,19 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         """Create OpenTelemetry configuration file for Linux."""
         try:
             config_file = "/etc/otelcol-contrib/config.yaml"
-            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+            config_dir = os.path.dirname(config_file)
 
+            # Create config directory
+            os.makedirs(config_dir, exist_ok=True)
+
+            # Generate config content
             config_content = self._generate_otel_config(grafana_url)
+
+            # Write config file
             with open(config_file, "w", encoding="utf-8") as f:
                 f.write(config_content)
 
+            # Set proper permissions
             os.chmod(config_file, 0o644)
 
             return {"success": True, "config_file": config_file}
