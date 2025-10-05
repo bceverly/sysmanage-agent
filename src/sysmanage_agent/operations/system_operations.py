@@ -1544,14 +1544,28 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             # Download OpenTelemetry package
             self.logger.info("Downloading OpenTelemetry collector package...")
+            download_url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.112.0/otelcol-contrib_0.112.0_linux_amd64.deb"
+            self.logger.info("Download URL: %s", download_url)
+
             process = await asyncio.create_subprocess_exec(
                 "wget",
-                "-qO-",
-                "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.112.0/otelcol-contrib_0.112.0_linux_amd64.deb",
+                "-O-",  # Output to stdout
+                download_url,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             deb_content, stderr = await process.communicate()
+
+            self.logger.info(
+                "Download completed. Return code: %d, Content size: %d bytes",
+                process.returncode,
+                len(deb_content),
+            )
+
+            if stderr:
+                self.logger.info(
+                    "Download stderr: %s", stderr.decode()[:500]
+                )  # Log first 500 chars
 
             if process.returncode != 0:
                 error_msg = (
@@ -1563,16 +1577,28 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "error": error_msg,
                 }
 
+            if len(deb_content) == 0:
+                error_msg = "Downloaded file is empty"
+                self.logger.error(error_msg)
+                return {
+                    "success": False,
+                    "error": error_msg,
+                }
+
             # Write the package to a temp file
+            self.logger.info("Writing package to temporary file...")
             with tempfile.NamedTemporaryFile(
                 mode="wb", suffix=".deb", delete=False
             ) as f:
                 f.write(deb_content)
                 deb_file = f.name
+            self.logger.info("Package written to: %s", deb_file)
 
             try:
                 # Install the package
-                self.logger.info("Installing OpenTelemetry collector package...")
+                self.logger.info(
+                    "Installing OpenTelemetry collector package with dpkg..."
+                )
                 process = await asyncio.create_subprocess_exec(
                     "dpkg",
                     "-i",
@@ -1581,11 +1607,19 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stderr=asyncio.subprocess.PIPE,
                     env=env,
                 )
-                _stdout, stderr = await process.communicate()
+                dpkg_stdout, dpkg_stderr = await process.communicate()
+
+                self.logger.info(
+                    "dpkg install completed. Return code: %d", process.returncode
+                )
+                if dpkg_stdout:
+                    self.logger.info("dpkg stdout: %s", dpkg_stdout.decode()[:500])
+                if dpkg_stderr:
+                    self.logger.info("dpkg stderr: %s", dpkg_stderr.decode()[:500])
 
                 if process.returncode != 0:
                     # Try to fix dependencies
-                    self.logger.info("Fixing dependencies...")
+                    self.logger.info("Fixing dependencies with apt-get install -f...")
                     process = await asyncio.create_subprocess_exec(
                         "apt-get",
                         "install",
@@ -1595,10 +1629,22 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stderr=asyncio.subprocess.PIPE,
                         env=env,
                     )
-                    await process.communicate()
+                    fix_stdout, fix_stderr = await process.communicate()
+
+                    self.logger.info(
+                        "apt-get fix completed. Return code: %d", process.returncode
+                    )
+                    if fix_stdout:
+                        self.logger.info(
+                            "apt-get stdout: %s", fix_stdout.decode()[:500]
+                        )
+                    if fix_stderr:
+                        self.logger.info(
+                            "apt-get stderr: %s", fix_stderr.decode()[:500]
+                        )
 
                     if process.returncode != 0:
-                        error_msg = f"Failed to install OpenTelemetry collector: {stderr.decode()}"
+                        error_msg = f"Failed to install OpenTelemetry collector: {dpkg_stderr.decode()}"
                         self.logger.error(error_msg)
                         return {
                             "success": False,
@@ -1606,16 +1652,26 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         }
             finally:
                 # Clean up temp file
+                self.logger.info("Cleaning up temporary file: %s", deb_file)
                 if os.path.exists(deb_file):
                     os.unlink(deb_file)
 
             # Create configuration file
+            self.logger.info("Creating OpenTelemetry configuration file...")
             config_result = await self._create_otel_config_linux(grafana_url)
             if not config_result["success"]:
+                self.logger.error(
+                    "Failed to create config: %s", config_result.get("error")
+                )
                 return config_result
+            self.logger.info(
+                "Configuration file created: %s", config_result.get("config_file")
+            )
 
             # Enable and start service
+            self.logger.info("Enabling and starting OpenTelemetry service...")
             await self._enable_and_start_otel_service_linux()
+            self.logger.info("OpenTelemetry service started successfully")
 
             return {
                 "success": True,
@@ -1624,6 +1680,9 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             }
 
         except Exception as e:
+            self.logger.error(
+                "Exception during OpenTelemetry deployment: %s", str(e), exc_info=True
+            )
             return {"success": False, "error": str(e)}
 
     async def _deploy_opentelemetry_yum_dnf(self, grafana_url: str) -> Dict[str, Any]:
