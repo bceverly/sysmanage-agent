@@ -1988,6 +1988,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         """Create OpenTelemetry configuration file for Linux."""
         try:
             config_file = "/etc/otelcol-contrib/config.yaml"
+            env_file = "/etc/otelcol-contrib/otelcol-contrib.conf"
             config_dir = os.path.dirname(config_file)
 
             # Create config directory
@@ -2003,6 +2004,14 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Set proper permissions
             os.chmod(config_file, 0o644)
 
+            # Create environment file with config path
+            env_content = f'OTELCOL_OPTIONS="--config={config_file}"\n'
+            with open(env_file, "w", encoding="utf-8") as f:
+                f.write(env_content)
+
+            # Set proper permissions
+            os.chmod(env_file, 0o644)
+
             return {"success": True, "config_file": config_file}
 
         except Exception as e:
@@ -2011,6 +2020,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
     async def _enable_and_start_otel_service_linux(self):
         """Enable and start OpenTelemetry service on Linux."""
         # Enable service
+        self.logger.info("Enabling otelcol-contrib service...")
         process = await asyncio.create_subprocess_exec(
             "systemctl",
             "enable",
@@ -2018,9 +2028,21 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        await process.communicate()
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            self.logger.error(
+                "Failed to enable service. Return code: %d", process.returncode
+            )
+            if stdout:
+                self.logger.error("Enable stdout: %s", stdout.decode())
+            if stderr:
+                self.logger.error("Enable stderr: %s", stderr.decode())
+        else:
+            self.logger.info("Service enabled successfully")
 
         # Start service
+        self.logger.info("Starting otelcol-contrib service...")
         process = await asyncio.create_subprocess_exec(
             "systemctl",
             "start",
@@ -2028,7 +2050,18 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        await process.communicate()
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            self.logger.error(
+                "Failed to start service. Return code: %d", process.returncode
+            )
+            if stdout:
+                self.logger.error("Start stdout: %s", stdout.decode())
+            if stderr:
+                self.logger.error("Start stderr: %s", stderr.decode())
+        else:
+            self.logger.info("Service started successfully")
 
     def _generate_otel_config(self, grafana_url: str) -> str:
         """Generate OpenTelemetry collector configuration."""
