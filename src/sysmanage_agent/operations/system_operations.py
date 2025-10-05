@@ -9,6 +9,7 @@ import logging
 import os
 import platform
 import socket
+import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import urlparse
@@ -1469,11 +1470,15 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     grafana_url
                 )
             elif system == "openbsd":
-                deployment_result = await self._deploy_opentelemetry_openbsd(
-                    grafana_url
-                )
+                return {
+                    "success": False,
+                    "error": "OpenTelemetry deployment on OpenBSD is not currently supported. Manual installation required.",
+                }
             elif system == "netbsd":
-                deployment_result = await self._deploy_opentelemetry_netbsd(grafana_url)
+                return {
+                    "success": False,
+                    "error": "OpenTelemetry deployment on NetBSD is not currently supported. Manual installation required.",
+                }
             elif system == "windows":
                 deployment_result = await self._deploy_opentelemetry_windows(
                     grafana_url
@@ -1514,31 +1519,74 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Install OpenTelemetry collector
             self.logger.info("Installing OpenTelemetry collector using apt")
 
-            # Update package lists
+            # Install prerequisites
             process = await asyncio.create_subprocess_exec(
                 "apt-get",
-                "update",
+                "install",
+                "-y",
+                "wget",
+                "gnupg2",
+                "software-properties-common",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             await process.communicate()
 
-            # Install otelcol-contrib package
+            # Add OpenTelemetry GPG key
             process = await asyncio.create_subprocess_exec(
-                "apt-get",
-                "install",
-                "-y",
-                "otelcol-contrib",
+                "wget",
+                "-qO-",
+                "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.112.0/otelcol-contrib_0.112.0_linux_amd64.deb",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            _stdout, stderr = await process.communicate()
+            deb_content, stderr = await process.communicate()
 
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": f"Failed to download OpenTelemetry package: {stderr.decode()}",
                 }
+
+            # Write the package to a temp file
+            with tempfile.NamedTemporaryFile(
+                mode="wb", suffix=".deb", delete=False
+            ) as f:
+                f.write(deb_content)
+                deb_file = f.name
+
+            try:
+                # Install the package
+                process = await asyncio.create_subprocess_exec(
+                    "dpkg",
+                    "-i",
+                    deb_file,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _stdout, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    # Try to fix dependencies
+                    process = await asyncio.create_subprocess_exec(
+                        "apt-get",
+                        "install",
+                        "-f",
+                        "-y",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    if process.returncode != 0:
+                        return {
+                            "success": False,
+                            "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                        }
+            finally:
+                # Clean up temp file
+                if os.path.exists(deb_file):
+                    os.unlink(deb_file)
 
             # Create configuration file
             config_result = await self._create_otel_config_linux(grafana_url)
@@ -1649,14 +1697,18 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             return {"success": False, "error": str(e)}
 
     async def _deploy_opentelemetry_freebsd(self, grafana_url: str) -> Dict[str, Any]:
-        """Deploy OpenTelemetry on FreeBSD."""
+        """Deploy OpenTelemetry on FreeBSD using Grafana Alloy."""
         try:
-            # Install using pkg
+            self.logger.info(
+                "Installing Grafana Alloy (OpenTelemetry Collector) on FreeBSD"
+            )
+
+            # Install Grafana Alloy using pkg
             process = await asyncio.create_subprocess_exec(
                 "pkg",
                 "install",
                 "-y",
-                "opentelemetry-collector",
+                "alloy",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -1665,22 +1717,21 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": f"Failed to install Grafana Alloy: {stderr.decode()}",
                 }
 
-            # Create configuration file
-            config_file = "/usr/local/etc/otelcol/config.yaml"
+            # Create configuration file for Alloy
+            config_file = "/usr/local/etc/alloy/config.alloy"
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
-            config_content = self._generate_otel_config(grafana_url)
+            config_content = self._generate_alloy_config(grafana_url)
             with open(config_file, "w", encoding="utf-8") as f:
                 f.write(config_content)
 
             # Enable and start service
             process = await asyncio.create_subprocess_exec(
-                "service",
-                "otelcol",
-                "enable",
+                "sysrc",
+                "alloy_enable=YES",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -1688,7 +1739,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             process = await asyncio.create_subprocess_exec(
                 "service",
-                "otelcol",
+                "alloy",
                 "start",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -1697,7 +1748,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector deployed successfully",
+                "message": "Grafana Alloy (OpenTelemetry Collector) deployed successfully",
                 "config_file": config_file,
             }
 
@@ -1805,11 +1856,53 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             return {"success": False, "error": str(e)}
 
     async def _deploy_opentelemetry_windows(self, grafana_url: str) -> Dict[str, Any]:
-        """Deploy OpenTelemetry on Windows."""
-        return {
-            "success": False,
-            "error": "OpenTelemetry deployment on Windows is not yet implemented",
-        }
+        """Deploy OpenTelemetry on Windows using Chocolatey."""
+        try:
+            self.logger.info("Installing OpenTelemetry collector using Chocolatey")
+
+            # Install using Chocolatey
+            process = await asyncio.create_subprocess_exec(
+                "choco",
+                "install",
+                "opentelemetry-collector-contrib",
+                "-y",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                }
+
+            # Create configuration file
+            config_file = "C:\\Program Files\\OpenTelemetry Collector\\config.yaml"
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+
+            config_content = self._generate_otel_config(grafana_url)
+            with open(config_file, "w", encoding="utf-8") as f:
+                f.write(config_content)
+
+            # Start service using sc.exe
+            process = await asyncio.create_subprocess_exec(
+                "sc",
+                "start",
+                "otelcol",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector deployed successfully",
+                "config_file": config_file,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     async def _create_otel_config_linux(self, grafana_url: str) -> Dict[str, Any]:
         """Create OpenTelemetry configuration file for Linux."""
@@ -1892,6 +1985,53 @@ service:
       receivers: [hostmetrics]
       processors: [batch]
       exporters: [otlp, logging]
+"""
+        return config
+
+    def _generate_alloy_config(self, grafana_url: str) -> str:
+        """Generate Grafana Alloy configuration for FreeBSD."""
+        # Parse Grafana URL
+        parsed_url = urlparse(grafana_url)
+        grafana_host = parsed_url.hostname or grafana_url
+        grafana_port = parsed_url.port or 3000
+
+        # Alloy uses a different configuration format (River)
+        config = f"""// Grafana Alloy configuration
+otelcol.receiver.hostmetrics "default" {{
+  collection_interval = "30s"
+
+  scrapers {{
+    cpu {{}}
+    disk {{}}
+    filesystem {{}}
+    load {{}}
+    memory {{}}
+    network {{}}
+    paging {{}}
+    process {{}}
+  }}
+
+  output {{
+    metrics = [otelcol.processor.batch.default.input]
+  }}
+}}
+
+otelcol.processor.batch "default" {{
+  timeout = "10s"
+
+  output {{
+    metrics = [otelcol.exporter.otlp.grafana.input]
+  }}
+}}
+
+otelcol.exporter.otlp "grafana" {{
+  client {{
+    endpoint = "{grafana_host}:{grafana_port}"
+    tls {{
+      insecure = true
+    }}
+  }}
+}}
 """
         return config
 

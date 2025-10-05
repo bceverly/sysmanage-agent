@@ -886,6 +886,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         self.logger.debug(
                             "Server confirmed diagnostic processing: %s", status
                         )
+                    elif message_type == "available_packages_batch_queued":
+                        status = data.get("status", "unknown")
+                        self.logger.debug(
+                            "Server confirmed packages batch queued: %s", status
+                        )
                     else:
                         self.logger.warning("Unknown message type: %s", message_type)
 
