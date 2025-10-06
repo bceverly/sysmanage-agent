@@ -425,6 +425,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Deploy OpenTelemetry collector to the system."""
         return await self.system_ops.deploy_opentelemetry(parameters)
 
+    async def remove_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove OpenTelemetry collector from the system."""
+        return await self.system_ops.remove_opentelemetry(parameters)
+
     async def ubuntu_pro_disable_service(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:

@@ -281,6 +281,7 @@ class MessageProcessor:
             "deploy_ssh_keys": self.agent.deploy_ssh_keys,
             "deploy_certificates": self.agent.deploy_certificates,
             "deploy_opentelemetry": self.agent.deploy_opentelemetry,
+            "remove_opentelemetry": self.agent.remove_opentelemetry,
         }
 
     async def _handle_execute_script(

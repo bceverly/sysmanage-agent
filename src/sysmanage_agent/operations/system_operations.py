@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import platform
+import shutil
 import socket
 import tempfile
 from datetime import datetime, timezone
@@ -1497,6 +1498,215 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 "success": False,
                 "error": f"Failed to deploy OpenTelemetry: {str(e)}",
             }
+
+    async def remove_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove OpenTelemetry collector from the system."""
+        try:
+            self.logger.info("Starting OpenTelemetry removal")
+
+            # Detect operating system and call appropriate removal function
+            if self.os_type == "Linux":
+                removal_result = await self._remove_opentelemetry_linux()
+            elif self.os_type == "Darwin":
+                removal_result = await self._remove_opentelemetry_macos()
+            elif self.os_type in ["FreeBSD", "OpenBSD", "NetBSD"]:
+                removal_result = await self._remove_opentelemetry_bsd()
+            elif self.os_type == "Windows":
+                removal_result = await self._remove_opentelemetry_windows()
+            else:
+                return {
+                    "success": False,
+                    "error": f"Unsupported operating system: {self.os_type}",
+                }
+
+            return removal_result
+
+        except Exception as e:
+            self.logger.error("Failed to remove OpenTelemetry: %s", str(e))
+            return {
+                "success": False,
+                "error": f"Failed to remove OpenTelemetry: {str(e)}",
+            }
+
+    async def _remove_opentelemetry_linux(self) -> Dict[str, Any]:
+        """Remove OpenTelemetry from Linux systems."""
+        try:
+            self.logger.info("Removing OpenTelemetry from Linux system")
+
+            # Stop service
+            self.logger.info("Stopping otelcol-contrib service...")
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "stop",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Disable service
+            self.logger.info("Disabling otelcol-contrib service...")
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "disable",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Remove package
+            if os.path.exists("/usr/bin/apt"):
+                self.logger.info("Removing package with apt...")
+                process = await asyncio.create_subprocess_exec(
+                    "apt-get",
+                    "remove",
+                    "-y",
+                    "otelcol-contrib",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
+                )
+                await process.communicate()
+            elif os.path.exists("/usr/bin/yum"):
+                self.logger.info("Removing package with yum...")
+                process = await asyncio.create_subprocess_exec(
+                    "yum",
+                    "remove",
+                    "-y",
+                    "otelcol-contrib",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+            elif os.path.exists("/usr/bin/dnf"):
+                self.logger.info("Removing package with dnf...")
+                process = await asyncio.create_subprocess_exec(
+                    "dnf",
+                    "remove",
+                    "-y",
+                    "otelcol-contrib",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+            # Remove config files
+            self.logger.info("Removing config files...")
+            config_dir = "/etc/otelcol-contrib"
+            if os.path.exists(config_dir):
+                shutil.rmtree(config_dir)
+
+            self.logger.info("OpenTelemetry removed successfully")
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector removed successfully",
+            }
+
+        except Exception as e:
+            self.logger.error("Error removing OpenTelemetry: %s", str(e))
+            return {"success": False, "error": str(e)}
+
+    async def _remove_opentelemetry_macos(self) -> Dict[str, Any]:
+        """Remove OpenTelemetry from macOS systems."""
+        try:
+            self.logger.info("Removing OpenTelemetry from macOS system")
+
+            # Stop service if running
+            process = await asyncio.create_subprocess_exec(
+                "brew",
+                "services",
+                "stop",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Uninstall package
+            process = await asyncio.create_subprocess_exec(
+                "brew",
+                "uninstall",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector removed successfully",
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _remove_opentelemetry_bsd(self) -> Dict[str, Any]:
+        """Remove OpenTelemetry from BSD systems."""
+        try:
+            self.logger.info("Removing OpenTelemetry from BSD system")
+
+            # Stop service
+            process = await asyncio.create_subprocess_exec(
+                "service",
+                "alloy",
+                "stop",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Remove package
+            process = await asyncio.create_subprocess_exec(
+                "pkg",
+                "delete",
+                "-y",
+                "grafana-alloy",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector removed successfully",
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _remove_opentelemetry_windows(self) -> Dict[str, Any]:
+        """Remove OpenTelemetry from Windows systems."""
+        try:
+            self.logger.info("Removing OpenTelemetry from Windows system")
+
+            # Stop service
+            process = await asyncio.create_subprocess_exec(
+                "sc",
+                "stop",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            # Delete service
+            process = await asyncio.create_subprocess_exec(
+                "sc",
+                "delete",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            return {
+                "success": True,
+                "message": "OpenTelemetry collector removed successfully",
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     async def _deploy_opentelemetry_linux(self, grafana_url: str) -> Dict[str, Any]:
         """Deploy OpenTelemetry on Linux systems."""
