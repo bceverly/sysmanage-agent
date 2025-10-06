@@ -1515,6 +1515,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
     async def _deploy_opentelemetry_apt(self, grafana_url: str) -> Dict[str, Any]:
         """Deploy OpenTelemetry using apt package manager."""
+        # pylint: disable=too-many-return-statements
         try:
             # Install OpenTelemetry collector
             self.logger.info("Installing OpenTelemetry collector using apt")
@@ -1655,6 +1656,18 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 self.logger.info("Cleaning up temporary file: %s", deb_file)
                 if os.path.exists(deb_file):
                     os.unlink(deb_file)
+
+            # Stop service if it was auto-started by dpkg (it will have wrong config)
+            self.logger.info("Stopping otelcol-contrib service...")
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "stop",
+                "otelcol-contrib",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            # Ignore return code - service may not be running
 
             # Create configuration file
             self.logger.info("Creating OpenTelemetry configuration file...")
@@ -2096,15 +2109,15 @@ exporters:
     tls:
       insecure: true
 
-  logging:
-    loglevel: info
+  debug:
+    verbosity: normal
 
 service:
   pipelines:
     metrics:
       receivers: [hostmetrics]
       processors: [batch]
-      exporters: [otlp, logging]
+      exporters: [otlp, debug]
 """
         return config
 
