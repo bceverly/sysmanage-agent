@@ -1521,6 +1521,20 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "error": f"Unsupported operating system: {system}",
                 }
 
+            # If removal was successful, trigger a software inventory refresh
+            # so the server knows the package is gone
+            if removal_result.get("success"):
+                self.logger.info(
+                    "OpenTelemetry removed successfully, triggering software refresh"
+                )
+                try:
+                    await self.get_installed_packages({})
+                except Exception as refresh_error:
+                    self.logger.warning(
+                        "Failed to refresh software inventory: %s", str(refresh_error)
+                    )
+                    # Don't fail the removal if refresh fails
+
             return removal_result
 
         except Exception as e:
@@ -1563,6 +1577,19 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 process = await asyncio.create_subprocess_exec(
                     "apt-get",
                     "remove",
+                    "-y",
+                    "otelcol-contrib",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env={**os.environ, "DEBIAN_FRONTEND": "noninteractive"},
+                )
+                await process.communicate()
+
+                # Purge to remove residual config
+                self.logger.info("Purging package with apt...")
+                process = await asyncio.create_subprocess_exec(
+                    "apt-get",
+                    "purge",
                     "-y",
                     "otelcol-contrib",
                     stdout=asyncio.subprocess.PIPE,
