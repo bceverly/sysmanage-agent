@@ -1505,18 +1505,20 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             self.logger.info("Starting OpenTelemetry removal")
 
             # Detect operating system and call appropriate removal function
-            if self.os_type == "Linux":
+            system = platform.system().lower()
+
+            if system == "linux":
                 removal_result = await self._remove_opentelemetry_linux()
-            elif self.os_type == "Darwin":
+            elif system == "darwin":
                 removal_result = await self._remove_opentelemetry_macos()
-            elif self.os_type in ["FreeBSD", "OpenBSD", "NetBSD"]:
+            elif system in ["freebsd", "openbsd", "netbsd"]:
                 removal_result = await self._remove_opentelemetry_bsd()
-            elif self.os_type == "Windows":
+            elif system == "windows":
                 removal_result = await self._remove_opentelemetry_windows()
             else:
                 return {
                     "success": False,
-                    "error": f"Unsupported operating system: {self.os_type}",
+                    "error": f"Unsupported operating system: {system}",
                 }
 
             return removal_result
