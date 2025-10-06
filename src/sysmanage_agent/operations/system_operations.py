@@ -2271,6 +2271,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
     async def _enable_and_start_otel_service_linux(self):
         """Enable and start OpenTelemetry service on Linux."""
+        # Reload systemd to pick up environment file changes
+        self.logger.info("Reloading systemd daemon...")
+        process = await asyncio.create_subprocess_exec(
+            "systemctl",
+            "daemon-reload",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await process.communicate()
+
         # Enable service
         self.logger.info("Enabling otelcol-contrib service...")
         process = await asyncio.create_subprocess_exec(
@@ -2320,7 +2330,8 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         # Parse Grafana URL to extract host and port
         parsed_url = urlparse(grafana_url)
         grafana_host = parsed_url.hostname or grafana_url
-        grafana_port = parsed_url.port or 3000
+        # Use port 4317 for OTLP gRPC (Grafana Alloy default)
+        grafana_port = parsed_url.port or 4317
 
         # Generate a basic OpenTelemetry configuration
         # This sends metrics to Grafana via OTLP
@@ -2334,9 +2345,6 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
       load:
       memory:
       network:
-      paging:
-      process:
-      processes:
 
 processors:
   batch:
