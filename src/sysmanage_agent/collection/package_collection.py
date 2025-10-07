@@ -11,7 +11,6 @@ import logging
 import os
 import platform
 import subprocess  # nosec B404
-import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -637,9 +636,6 @@ class PackageCollector:
                             break
 
                         page += 1
-
-                        # Small delay to avoid rate limiting
-                        time.sleep(0.1)
 
                 except Exception as e:
                     logger.error(
