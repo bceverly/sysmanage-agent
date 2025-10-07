@@ -138,15 +138,27 @@ class PackageCollector:
     def _collect_bsd_packages(self) -> int:
         """Collect packages from BSD package managers."""
         total_collected = 0
+        system = platform.system().lower()
 
-        # Try pkg (FreeBSD/OpenBSD)
-        if self._is_package_manager_available("pkg"):
-            try:
-                count = self._collect_pkg_packages()
-                total_collected += count
-                logger.info(_("Collected %d packages from pkg"), count)
-            except Exception as e:
-                logger.error(_("Failed to collect pkg packages: %s"), e)
+        # Try pkg (FreeBSD) or pkg_info (OpenBSD)
+        if system == "openbsd":
+            # OpenBSD uses pkg_info command
+            if self._is_package_manager_available("pkg_info"):
+                try:
+                    count = self._collect_pkg_packages()
+                    total_collected += count
+                    logger.info(_("Collected %d packages from pkg_info"), count)
+                except Exception as e:
+                    logger.error(_("Failed to collect pkg_info packages: %s"), e)
+        elif system == "freebsd":
+            # FreeBSD uses pkg command
+            if self._is_package_manager_available("pkg"):
+                try:
+                    count = self._collect_pkg_packages()
+                    total_collected += count
+                    logger.info(_("Collected %d packages from pkg"), count)
+                except Exception as e:
+                    logger.error(_("Failed to collect pkg packages: %s"), e)
 
         # Try pkgin (NetBSD)
         if self._is_package_manager_available("pkgin"):
