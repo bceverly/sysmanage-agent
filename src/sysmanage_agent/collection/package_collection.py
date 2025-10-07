@@ -197,10 +197,18 @@ class PackageCollector:
                         continue
                 return False
 
-            # For other package managers, use which
-            result = subprocess.run(  # nosec B603, B607
-                ["which", manager], capture_output=True, timeout=10, check=False
-            )
+            # For other package managers, use which (Unix) or where (Windows)
+            system = platform.system().lower()
+            if system == "windows":
+                # Windows uses 'where' command
+                result = subprocess.run(  # nosec B603, B607
+                    ["where", manager], capture_output=True, timeout=10, check=False
+                )
+            else:
+                # Unix/Linux/BSD/macOS use 'which' command
+                result = subprocess.run(  # nosec B603, B607
+                    ["which", manager], capture_output=True, timeout=10, check=False
+                )
             return result.returncode == 0
         except Exception:
             return False
