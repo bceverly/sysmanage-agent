@@ -606,6 +606,18 @@ class PackageCollector:
                     ) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
 
+                        # Debug: log API response structure on first page
+                        if page == 1:
+                            logger.debug(
+                                _("API response keys: %s"),
+                                list(data.keys()) if data else "None",
+                            )
+                            if data:
+                                logger.debug(
+                                    _("API response 'Packages' type: %s"),
+                                    type(data.get("Packages")),
+                                )
+
                         # Check if we got packages
                         if not data or "Packages" not in data:
                             logger.debug(_("No more packages found at page %d"), page)
