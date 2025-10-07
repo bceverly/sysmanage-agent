@@ -632,6 +632,10 @@ class PackageCollector:
                             logger.debug(
                                 _("Sample package from API: %s"), page_packages[0]
                             )
+                            logger.debug(
+                                _("Sample package keys: %s"),
+                                list(page_packages[0].keys()),
+                            )
 
                         for pkg in page_packages:
                             package_id = pkg.get("PackageIdentifier", "")
