@@ -640,17 +640,9 @@ class PackageCollector:
                         for pkg in page_packages:
                             # The API uses different field names than we expected
                             package_id = pkg.get("Id", "")
-                            # Name is in the Latest.PackageName field
+                            # Name is in the Latest.Name field
                             latest = pkg.get("Latest", {})
-
-                            # Debug: log Latest object structure on first page
-                            if page == 1 and latest:
-                                logger.debug(
-                                    _("Latest object keys: %s"),
-                                    list(latest.keys()),
-                                )
-
-                            package_name = latest.get("PackageName", "")
+                            package_name = latest.get("Name", "")
                             latest_version = latest.get("PackageVersion", "unknown")
 
                             if package_id and package_name:
