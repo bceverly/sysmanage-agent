@@ -616,6 +616,11 @@ class PackageCollector:
                             break
 
                         # Convert API response to our package format
+                        if page == 1 and page_packages:
+                            logger.debug(
+                                _("Sample package from API: %s"), page_packages[0]
+                            )
+
                         for pkg in page_packages:
                             package_id = pkg.get("PackageIdentifier", "")
                             package_name = pkg.get("PackageName", "")
@@ -631,6 +636,13 @@ class PackageCollector:
                                         "id": package_id,
                                     }
                                 )
+                            else:
+                                if page == 1:
+                                    logger.debug(
+                                        _("Skipping package - id: %s, name: %s"),
+                                        package_id,
+                                        package_name,
+                                    )
 
                         logger.debug(
                             _(
