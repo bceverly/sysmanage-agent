@@ -2953,8 +2953,8 @@ otelcol.exporter.otlp "grafana" {{
         try:
             # Check if it's a COPR repo (format: user/project)
             if "/" in repo_identifier and not repo_identifier.startswith("http"):
-                # COPR format
-                command = f"sudo dnf copr enable -y {repo_identifier}"
+                # COPR format - use sudo -n for non-interactive
+                command = f"sudo -n dnf copr enable -y {repo_identifier}"
             else:
                 # Manual repo URL - would need to create .repo file
                 return {
@@ -2964,13 +2964,28 @@ otelcol.exporter.otlp "grafana" {{
 
             result = await self.execute_shell_command({"command": command})
 
+            # Log the result for debugging
+            self.logger.debug(
+                "dnf copr enable command result: success=%s, exit_code=%s, stdout=%s, stderr=%s",
+                result.get("success"),
+                result.get("exit_code"),
+                result.get("result", {}).get("stdout", "")[:200],
+                result.get("result", {}).get("stderr", "")[:200],
+            )
+
             if result["success"]:
+                self.logger.info("Repository %s added successfully", repo_identifier)
                 return {
                     "success": True,
                     "result": _("Repository added successfully"),
                     "output": result["result"]["stdout"],
                 }
 
+            self.logger.error(
+                "Failed to add repository %s: %s",
+                repo_identifier,
+                result["result"].get("stderr", ""),
+            )
             return {
                 "success": False,
                 "error": _("Failed to add repository: %s") % result["result"]["stderr"],
@@ -2989,16 +3004,32 @@ otelcol.exporter.otlp "grafana" {{
                     "error": _("Repository URL is required for Zypper"),
                 }
 
-            command = f"sudo zypper addrepo -f {url} {alias}"
+            # Use sudo -n for non-interactive
+            command = f"sudo -n zypper addrepo -f {url} {alias}"
             result = await self.execute_shell_command({"command": command})
 
+            # Log the result for debugging
+            self.logger.debug(
+                "zypper addrepo command result: success=%s, exit_code=%s, stdout=%s, stderr=%s",
+                result.get("success"),
+                result.get("exit_code"),
+                result.get("result", {}).get("stdout", "")[:200],
+                result.get("result", {}).get("stderr", "")[:200],
+            )
+
             if result["success"]:
+                self.logger.info("Repository %s added successfully", alias)
                 return {
                     "success": True,
                     "result": _("Repository added successfully"),
                     "output": result["result"]["stdout"],
                 }
 
+            self.logger.error(
+                "Failed to add repository %s: %s",
+                alias,
+                result["result"].get("stderr", ""),
+            )
             return {
                 "success": False,
                 "error": _("Failed to add repository: %s") % result["result"]["stderr"],
