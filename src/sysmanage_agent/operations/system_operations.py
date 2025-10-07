@@ -2708,25 +2708,51 @@ otelcol.exporter.otlp "grafana" {{
                                         continue
 
                                     # Check if it's a PPA or other third-party repo
-                                    if not (
-                                        "ppa.launchpad.net" in line or "deb " in line
-                                    ):
+                                    # Use proper URL parsing to check for PPA domains
+                                    is_ppa = False
+                                    if "ppa.launchpad.net" in line:
+                                        # Parse URL to validate it's actually the hostname
+                                        parts = line.split()
+                                        for part in parts:
+                                            if part.startswith("http"):
+                                                parsed = urlparse(part)
+                                                if parsed.hostname and (
+                                                    parsed.hostname
+                                                    == "ppa.launchpad.net"
+                                                    or parsed.hostname.endswith(
+                                                        ".ppa.launchpad.net"
+                                                    )
+                                                ):
+                                                    is_ppa = True
+                                                    break
+
+                                    if not (is_ppa or "deb " in line):
                                         continue
 
                                     enabled = not line.startswith("#")
-                                    repo_type = (
-                                        "PPA" if "ppa.launchpad.net" in line else "APT"
-                                    )
+                                    repo_type = "PPA" if is_ppa else "APT"
 
                                     # Extract PPA name if it's a PPA
                                     name = filename.replace(".list", "").replace(
                                         ".sources", ""
                                     )
-                                    if "ppa.launchpad.net" in line:
+                                    if is_ppa:
                                         # Try to extract ppa:user/name format
                                         parts = line.split()
                                         for part in parts:
-                                            if "ppa.launchpad.net" not in part:
+                                            if not part.startswith("http"):
+                                                continue
+                                            parsed = urlparse(part)
+                                            if not (
+                                                parsed.hostname
+                                                and (
+                                                    parsed.hostname
+                                                    == "ppa.launchpad.net"
+                                                    or parsed.hostname.endswith(
+                                                        ".ppa.launchpad.net"
+                                                    )
+                                                )
+                                            ):
                                                 continue
                                             # Extract user/ppa from URL
                                             url_parts = part.split("/")
@@ -2803,6 +2829,22 @@ otelcol.exporter.otlp "grafana" {{
 
         return repositories
 
+    def _check_obs_url(self, url: str) -> bool:
+        """Check if a URL is from opensuse.org domain."""
+        if not url:
+            return False
+        try:
+            parsed = urlparse(url)
+            return bool(
+                parsed.hostname
+                and (
+                    parsed.hostname == "opensuse.org"
+                    or parsed.hostname.endswith(".opensuse.org")
+                )
+            )
+        except Exception:
+            return False
+
     async def _list_zypper_repositories(self) -> list:
         """List Zypper repositories including OBS."""
         repositories = []
@@ -2819,15 +2861,15 @@ otelcol.exporter.otlp "grafana" {{
                     if "|" in line and not line.startswith("#"):
                         parts = [p.strip() for p in line.split("|")]
                         if len(parts) >= 4:
+                            # Determine if it's an OBS repository by parsing the URL
+                            url = parts[3] if len(parts) > 3 else ""
+                            is_obs = self._check_obs_url(url)
+
                             repositories.append(
                                 {
                                     "name": parts[1],
-                                    "type": (
-                                        "OBS"
-                                        if "opensuse.org" in parts[3]
-                                        else "Zypper"
-                                    ),
-                                    "url": parts[3] if len(parts) > 3 else "",
+                                    "type": "OBS" if is_obs else "Zypper",
+                                    "url": url,
                                     "enabled": (
                                         parts[2] == "Yes" if len(parts) > 2 else True
                                     ),
@@ -3216,9 +3258,9 @@ otelcol.exporter.otlp "grafana" {{
     async def _trigger_update_detection(self) -> None:
         """Trigger update detection and send results to server."""
         try:
-            # Use the UpdateDetector to check for updates
-            update_detector = UpdateDetector()
-            await update_detector.detect_and_send_updates()
+            # Trigger an immediate update check to detect new packages from the repository
+            self.logger.debug("Triggering update detection after repository change")
+            await self.agent.check_updates()
         except Exception as e:
             self.logger.error(_("Error triggering update detection: %s"), e)
 
