@@ -107,7 +107,7 @@ class PackageCollectionScheduler:
             loop = asyncio.get_event_loop()
             success = await loop.run_in_executor(
                 None,  # Use default ThreadPoolExecutor
-                self.package_collector.collect_all_available_packages
+                self.package_collector.collect_all_available_packages,
             )
             if success:
                 self.logger.info(_("Package collection completed successfully"))

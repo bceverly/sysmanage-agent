@@ -639,7 +639,9 @@ class PackageCollector:
 
                 except Exception as e:
                     logger.error(
-                        _("Error fetching winget page %d (collected %d packages so far): %s"),
+                        _(
+                            "Error fetching winget page %d (collected %d packages so far): %s"
+                        ),
                         page,
                         len(packages),
                         str(e),
@@ -734,12 +736,16 @@ class PackageCollector:
 
             if packages:
                 logger.info(
-                    _("Successfully collected %d packages from Chocolatey community repository"),
+                    _(
+                        "Successfully collected %d packages from Chocolatey community repository"
+                    ),
                     len(packages),
                 )
                 return self._store_packages("chocolatey", packages)
 
-            logger.warning(_("No packages collected from Chocolatey community repository"))
+            logger.warning(
+                _("No packages collected from Chocolatey community repository")
+            )
             return 0
 
         except Exception as e:

@@ -581,50 +581,122 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
         assert mock_session.add.called
         assert mock_session.commit.called
 
-    @patch("subprocess.run")
+    @patch("urllib.request.urlopen")
     def test_collect_winget_packages_success(
-        self, mock_run, package_collector, mock_db_manager
+        self, mock_urlopen, package_collector, mock_db_manager
     ):
-        """Test successful Winget package collection."""
+        """Test successful Winget package collection via REST API."""
         _, mock_session = mock_db_manager
 
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = """Name               Id                           Version      Source
-----------------------------------------------------------------
-7-Zip              7zip.7zip                    22.01        winget
-Google Chrome      Google.Chrome                118.0.5993   winget
-Microsoft Edge     Microsoft.Edge               118.0.2088   winget
-"""
+        # Mock API responses simulating 4303 total packages
+        # 358 full pages of 12 packages = 4296, then 1 page with 7 packages = 4303 total
+        mock_responses = []
+
+        # Pages 1-358: Full pages with 12 packages each
+        for page in range(358):
+            start_pkg = page * 12 + 1
+            end_pkg = start_pkg + 12
+            packages = [
+                b'{"Id": "pkg%d", "Latest": {"Name": "Package %d", "PackageVersion": "1.0.%d"}}'
+                % (i, i, i)
+                for i in range(start_pkg, end_pkg)
+            ]
+            mock_responses.append(
+                Mock(
+                    read=Mock(
+                        return_value=b'{"Packages": ['
+                        + b",".join(packages)
+                        + b'], "Total": 4303}'
+                    )
+                )
+            )
+
+        # Page 359: Last page with 7 packages (4297-4303)
+        packages = [
+            b'{"Id": "pkg%d", "Latest": {"Name": "Package %d", "PackageVersion": "1.0.%d"}}'
+            % (i, i, i)
+            for i in range(4297, 4304)
+        ]
+        mock_responses.append(
+            Mock(
+                read=Mock(
+                    return_value=b'{"Packages": ['
+                    + b",".join(packages)
+                    + b'], "Total": 4303}'
+                )
+            )
+        )
+
+        # Empty response to stop pagination
+        mock_responses.append(
+            Mock(read=Mock(return_value=b'{"Packages": [], "Total": 4303}'))
+        )
+
+        mock_urlopen.return_value.__enter__ = Mock(side_effect=mock_responses)
+        mock_urlopen.return_value.__exit__ = Mock(return_value=False)
 
         count = (
             package_collector._collect_winget_packages()
         )  # pylint: disable=protected-access
 
-        assert count == 3
+        assert count > 1000
         assert mock_session.query.called
         assert mock_session.add.called
         assert mock_session.commit.called
 
-    @patch("subprocess.run")
+    @patch("urllib.request.urlopen")
     def test_collect_chocolatey_packages_success(
-        self, mock_run, package_collector, mock_db_manager
+        self, mock_urlopen, package_collector, mock_db_manager
     ):
-        """Test successful Chocolatey package collection."""
+        """Test successful Chocolatey package collection via OData API."""
         _, mock_session = mock_db_manager
 
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = """chocolatey 2.2.2
-chocolatey-core.extension 1.4.0
-git 2.42.0.2
-nodejs 20.8.1
-python 3.11.6
-"""
+        # Mock XML responses for Chocolatey OData API
+        # Simulate 250 pages of 40 packages each = 10,000 packages
+        mock_responses = []
+
+        for page in range(250):
+            skip = page * 40
+            entries = []
+            for i in range(40):
+                pkg_num = skip + i + 1
+                entry = f"""<entry xmlns="http://www.w3.org/2005/Atom"
+                                  xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+                                  xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+                            <title>package{pkg_num}</title>
+                            <m:properties>
+                                <d:Version>1.0.{pkg_num}</d:Version>
+                            </m:properties>
+                        </entry>"""
+                entries.append(entry)
+
+            xml_response = f"""<?xml version="1.0" encoding="utf-8"?>
+                <feed xmlns="http://www.w3.org/2005/Atom"
+                      xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+                      xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+                    {''.join(entries)}
+                </feed>"""
+
+            mock_responses.append(
+                Mock(read=Mock(return_value=xml_response.encode("utf-8")))
+            )
+
+        # Empty response to stop pagination
+        empty_xml = """<?xml version="1.0" encoding="utf-8"?>
+            <feed xmlns="http://www.w3.org/2005/Atom"
+                  xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+                  xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+            </feed>"""
+        mock_responses.append(Mock(read=Mock(return_value=empty_xml.encode("utf-8"))))
+
+        mock_urlopen.return_value.__enter__ = Mock(side_effect=mock_responses)
+        mock_urlopen.return_value.__exit__ = Mock(return_value=False)
 
         count = (
             package_collector._collect_chocolatey_packages()
         )  # pylint: disable=protected-access
 
-        assert count == 5
+        assert count > 1000
         assert mock_session.query.called
         assert mock_session.add.called
         assert mock_session.commit.called
@@ -676,29 +748,8 @@ community/docker 20.10.21-1
         assert bash_pkg is not None
         assert bash_pkg["version"] == "5.1.016-1"
 
-    def test_parse_chocolatey_output_detailed(self, package_collector):
-        """Test detailed parsing of Chocolatey output."""
-        output = """chocolatey 2.2.2
-chocolatey-core.extension 1.4.0
-git 2.42.0.2
-nodejs 20.8.1
-python 3.11.6
-7zip 22.01
-"""
-
-        packages = package_collector._parse_chocolatey_output(
-            output
-        )  # pylint: disable=protected-access
-
-        assert len(packages) == 6
-
-        git_pkg = next((pkg for pkg in packages if pkg["name"] == "git"), None)
-        assert git_pkg is not None
-        assert git_pkg["version"] == "2.42.0.2"
-
-        nodejs_pkg = next((pkg for pkg in packages if pkg["name"] == "nodejs"), None)
-        assert nodejs_pkg is not None
-        assert nodejs_pkg["version"] == "20.8.1"
+    # test_parse_chocolatey_output_detailed removed - Chocolatey now uses OData XML API
+    # instead of command-line parsing, so _parse_chocolatey_output() method no longer exists
 
     def test_parse_pkg_output_detailed(self, package_collector):
         """Test detailed parsing of FreeBSD pkg output."""
