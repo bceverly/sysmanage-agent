@@ -591,9 +591,8 @@ class PackageCollector:
 
             packages = []
             page = 1
-            max_pages = 100  # Safety limit to avoid infinite loops
 
-            while page <= max_pages:
+            while True:
                 try:
                     # Add pagination parameters
                     url = f"{api_url}?page={page}&limit=100"
@@ -606,21 +605,8 @@ class PackageCollector:
                     ) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
 
-                        # Debug: log API response structure on first page
-                        if page == 1:
-                            logger.debug(
-                                _("API response keys: %s"),
-                                list(data.keys()) if data else "None",
-                            )
-                            if data:
-                                logger.debug(
-                                    _("API response 'Packages' type: %s"),
-                                    type(data.get("Packages")),
-                                )
-
                         # Check if we got packages
                         if not data or "Packages" not in data:
-                            logger.debug(_("No more packages found at page %d"), page)
                             break
 
                         page_packages = data.get("Packages", [])
@@ -628,19 +614,8 @@ class PackageCollector:
                             break
 
                         # Convert API response to our package format
-                        if page == 1 and page_packages:
-                            logger.debug(
-                                _("Sample package from API: %s"), page_packages[0]
-                            )
-                            logger.debug(
-                                _("Sample package keys: %s"),
-                                list(page_packages[0].keys()),
-                            )
-
                         for pkg in page_packages:
-                            # The API uses different field names than we expected
                             package_id = pkg.get("Id", "")
-                            # Name is in the Latest.Name field
                             latest = pkg.get("Latest", {})
                             package_name = latest.get("Name", "")
                             latest_version = latest.get("PackageVersion", "unknown")
@@ -653,33 +628,10 @@ class PackageCollector:
                                         "id": package_id,
                                     }
                                 )
-                            else:
-                                if page == 1:
-                                    logger.debug(
-                                        _("Skipping package - id: %s, name: %s"),
-                                        package_id,
-                                        package_name,
-                                    )
-
-                        logger.debug(
-                            _(
-                                "Fetched %d packages from page %d (total collected so far: %d)"
-                            ),
-                            len(page_packages),
-                            page,
-                            len(packages),
-                        )
 
                         # Check if there are more pages
                         total = data.get("Total", 0)
-                        logger.debug(
-                            _("API reports total: %d, we have: %d"),
-                            total,
-                            len(packages),
-                        )
-
                         if 0 < total <= len(packages):
-                            logger.debug(_("Reached total, breaking"))
                             break
 
                         page += 1
@@ -1128,7 +1080,24 @@ class PackageCollector:
         """Parse Chocolatey package list output."""
         packages = []
         for line in output.splitlines():
-            if not line.strip() or "packages found" in line:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Skip header/footer lines
+            if any(
+                skip in line.lower()
+                for skip in [
+                    "chocolatey",
+                    "packages found",
+                    "validating",
+                    "loading",
+                    "page",
+                    "http",
+                    "features?",
+                    "did you",
+                ]
+            ):
                 continue
 
             # Chocolatey format: "name version"
@@ -1136,6 +1105,10 @@ class PackageCollector:
             if len(parts) >= 2:
                 name = parts[0]
                 version = parts[1]
+
+                # Validate package name (should not contain common HTML/text words)
+                if name.lower() in ["the", "did", "you", "page", "this"]:
+                    continue
 
                 packages.append({"name": name, "version": version, "description": ""})
 
