@@ -5,6 +5,7 @@ This module handles the collection of available packages from various package ma
 and stores them in the local SQLite database for later transmission to the server.
 """
 
+import glob
 import logging
 import os
 import platform
@@ -171,64 +172,65 @@ class PackageCollector:
 
         return total_collected
 
+    def _check_homebrew_available(self) -> bool:
+        """Check if Homebrew is available."""
+        homebrew_paths = [
+            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
+            "/usr/local/bin/brew",  # Intel Macs
+        ]
+        for path in homebrew_paths:
+            try:
+                result = subprocess.run(  # nosec B603, B607
+                    [path, "--version"],
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    return True
+            except Exception:  # nosec B112
+                continue
+        return False
+
+    def _check_winget_available(self) -> bool:
+        """Check if winget is available on Windows."""
+        winget_paths = [
+            os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"),
+            r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
+        ]
+        for path in winget_paths:
+            # Handle wildcards in path
+            if "*" in path:
+                matching_paths = glob.glob(path)
+                if matching_paths:
+                    path = matching_paths[0]
+                else:
+                    continue
+
+            if os.path.exists(path):
+                try:
+                    result = subprocess.run(  # nosec B603, B607
+                        [path, "--version"],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0:
+                        return True
+                except Exception:  # nosec B112
+                    continue
+        return False
+
     def _is_package_manager_available(self, manager: str) -> bool:
         """Check if a package manager is available on the system."""
         try:
-            # For Homebrew on macOS, check both Intel and Apple Silicon paths
+            # For Homebrew on macOS, use dedicated checker
             if manager == "brew":
-                # Check common Homebrew paths on macOS
-                homebrew_paths = [
-                    "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-                    "/usr/local/bin/brew",  # Intel Macs
-                ]
-                for path in homebrew_paths:
-                    try:
-                        result = subprocess.run(  # nosec B603, B607
-                            [path, "--version"],
-                            capture_output=True,
-                            timeout=10,
-                            check=False,
-                        )
-                        if result.returncode == 0:
-                            return True
-                    except (
-                        Exception
-                    ):  # nosec B112 - Continue trying other homebrew paths
-                        continue
-                return False
+                return self._check_homebrew_available()
 
-            # For winget on Windows, check common paths
+            # For winget on Windows, use dedicated checker
             if manager == "winget" and platform.system().lower() == "windows":
-                winget_paths = [
-                    os.path.expandvars(
-                        r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"
-                    ),
-                    r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
-                ]
-                for path in winget_paths:
-                    # Handle wildcards in path
-                    if "*" in path:
-                        import glob
-
-                        matching_paths = glob.glob(path)
-                        if matching_paths:
-                            path = matching_paths[0]
-                        else:
-                            continue
-
-                    if os.path.exists(path):
-                        try:
-                            result = subprocess.run(  # nosec B603, B607
-                                [path, "--version"],
-                                capture_output=True,
-                                timeout=10,
-                                check=False,
-                            )
-                            if result.returncode == 0:
-                                return True
-                        except Exception:  # nosec B112
-                            continue
-                return False
+                return self._check_winget_available()
 
             # For other package managers, use which (Unix) or where (Windows)
             system = platform.system().lower()
@@ -516,8 +518,6 @@ class PackageCollector:
 
     def _get_winget_command(self) -> str:
         """Get the correct winget command path."""
-        import glob
-
         winget_paths = [
             os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"),
             r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
@@ -580,15 +580,18 @@ class PackageCollector:
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget)."""
         try:
-            # Get the winget command path
-            winget_cmd = self._get_winget_command()
-            if not winget_cmd:
-                logger.error(_("winget command not found"))
-                return 0
+            # On Windows, use PowerShell to run winget to handle App Execution Aliases properly
+            # This works around the issue where winget.exe in WindowsApps is user-specific
+            powershell_cmd = [
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "winget search . --accept-source-agreements",
+            ]
 
-            # Use "winget search ." to search all packages (. matches everything)
             result = subprocess.run(  # nosec B603, B607
-                [winget_cmd, "search", ".", "--accept-source-agreements"],
+                powershell_cmd,
                 capture_output=True,
                 text=True,
                 timeout=600,  # Increased timeout for full catalog
