@@ -2710,21 +2710,19 @@ otelcol.exporter.otlp "grafana" {{
                                     # Check if it's a PPA or other third-party repo
                                     # Use proper URL parsing to check for PPA domains
                                     is_ppa = False
-                                    if "ppa.launchpad.net" in line:
-                                        # Parse URL to validate it's actually the hostname
-                                        parts = line.split()
-                                        for part in parts:
-                                            if part.startswith("http"):
-                                                parsed = urlparse(part)
-                                                if parsed.hostname and (
-                                                    parsed.hostname
-                                                    == "ppa.launchpad.net"
-                                                    or parsed.hostname.endswith(
-                                                        ".ppa.launchpad.net"
-                                                    )
-                                                ):
-                                                    is_ppa = True
-                                                    break
+                                    # Parse URL to validate it's actually the hostname
+                                    parts = line.split()
+                                    for part in parts:
+                                        if part.startswith("http"):
+                                            parsed = urlparse(part)
+                                            if parsed.hostname and (
+                                                parsed.hostname == "ppa.launchpad.net"
+                                                or parsed.hostname.endswith(
+                                                    ".ppa.launchpad.net"
+                                                )
+                                            ):
+                                                is_ppa = True
+                                                break
 
                                     if not (is_ppa or "deb " in line):
                                         continue
