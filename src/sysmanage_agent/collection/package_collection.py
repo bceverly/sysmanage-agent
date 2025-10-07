@@ -633,14 +633,24 @@ class PackageCollector:
                                 )
 
                         logger.debug(
-                            _("Fetched %d packages from page %d"),
+                            _(
+                                "Fetched %d packages from page %d (total collected so far: %d)"
+                            ),
                             len(page_packages),
                             page,
+                            len(packages),
                         )
 
                         # Check if there are more pages
                         total = data.get("Total", 0)
-                        if len(packages) >= total:
+                        logger.debug(
+                            _("API reports total: %d, we have: %d"),
+                            total,
+                            len(packages),
+                        )
+
+                        if 0 < total <= len(packages):
+                            logger.debug(_("Reached total, breaking"))
                             break
 
                         page += 1
@@ -655,9 +665,9 @@ class PackageCollector:
                     len(packages),
                 )
                 return self._store_packages("winget", packages)
-            else:
-                logger.warning(_("No packages collected from winget REST API"))
-                return 0
+
+            logger.warning(_("No packages collected from winget REST API"))
+            return 0
 
         except Exception as e:
             logger.error(_("Error collecting winget packages via REST API: %s"), e)
