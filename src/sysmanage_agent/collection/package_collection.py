@@ -6,10 +6,12 @@ and stores them in the local SQLite database for later transmission to the serve
 """
 
 import glob
+import json
 import logging
 import os
 import platform
 import subprocess  # nosec B404
+import urllib.request
 from datetime import datetime, timezone
 from typing import Dict, List
 
@@ -578,44 +580,87 @@ class PackageCollector:
         return ""
 
     def _collect_winget_packages(self) -> int:
-        """Collect packages from Windows Package Manager (winget)."""
+        """Collect packages from Windows Package Manager (winget) via REST API."""
         try:
-            # On Windows, use PowerShell to run winget to handle App Execution Aliases properly
-            # This works around the issue where winget.exe in WindowsApps is user-specific
-            powershell_cmd = [
-                "powershell.exe",
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "winget search . --accept-source-agreements",
-            ]
+            # Use winget.run REST API to get the full catalog
+            # This works from SYSTEM context without needing winget installed
+            logger.info(_("Fetching winget catalog via REST API"))
 
-            result = subprocess.run(  # nosec B603, B607
-                powershell_cmd,
-                capture_output=True,
-                text=True,
-                timeout=600,  # Increased timeout for full catalog
-                check=False,
-            )
+            # winget.run API endpoint for getting all packages
+            api_url = "https://api.winget.run/v2/packages"
 
-            if result.returncode != 0:
-                logger.error(
-                    _("Failed to get winget package list: return code %d"),
-                    result.returncode,
+            packages = []
+            page = 1
+            max_pages = 100  # Safety limit to avoid infinite loops
+
+            while page <= max_pages:
+                try:
+                    # Add pagination parameters
+                    url = f"{api_url}?page={page}&limit=100"
+
+                    req = urllib.request.Request(url)  # nosec B310
+                    req.add_header("User-Agent", "SysManage-Agent/1.0")
+
+                    with urllib.request.urlopen(
+                        req, timeout=30
+                    ) as response:  # nosec B310
+                        data = json.loads(response.read().decode("utf-8"))
+
+                        # Check if we got packages
+                        if not data or "Packages" not in data:
+                            logger.debug(_("No more packages found at page %d"), page)
+                            break
+
+                        page_packages = data.get("Packages", [])
+                        if not page_packages:
+                            break
+
+                        # Convert API response to our package format
+                        for pkg in page_packages:
+                            package_id = pkg.get("PackageIdentifier", "")
+                            package_name = pkg.get("PackageName", "")
+                            latest_version = pkg.get("Latest", {}).get(
+                                "PackageVersion", "unknown"
+                            )
+
+                            if package_id and package_name:
+                                packages.append(
+                                    {
+                                        "name": package_name,
+                                        "version": latest_version,
+                                        "id": package_id,
+                                    }
+                                )
+
+                        logger.debug(
+                            _("Fetched %d packages from page %d"),
+                            len(page_packages),
+                            page,
+                        )
+
+                        # Check if there are more pages
+                        total = data.get("Total", 0)
+                        if len(packages) >= total:
+                            break
+
+                        page += 1
+
+                except Exception as e:
+                    logger.warning(_("Error fetching page %d: %s"), page, e)
+                    break
+
+            if packages:
+                logger.info(
+                    _("Successfully collected %d packages from winget REST API"),
+                    len(packages),
                 )
-                if result.stderr:
-                    logger.error(_("winget error: %s"), result.stderr)
+                return self._store_packages("winget", packages)
+            else:
+                logger.warning(_("No packages collected from winget REST API"))
                 return 0
-
-            if not result.stdout:
-                logger.error(_("winget returned no output"))
-                return 0
-
-            packages = self._parse_winget_output(result.stdout)
-            return self._store_packages("winget", packages)
 
         except Exception as e:
-            logger.error(_("Error collecting winget packages: %s"), e)
+            logger.error(_("Error collecting winget packages via REST API: %s"), e)
             return 0
 
     def _collect_chocolatey_packages(self) -> int:
