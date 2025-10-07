@@ -700,22 +700,27 @@ class PackageCollector:
                             break
 
                         for entry in entries:
-                            # Get package properties
+                            # Get package ID from title element
+                            title_elem = entry.find("atom:title", ns)
+                            if title_elem is None or not title_elem.text:
+                                continue
+
+                            # Get version from properties
                             props = entry.find("m:properties", ns)
                             if props is None:
                                 continue
 
-                            package_id = props.find("d:Id", ns)
-                            version = props.find("d:Version", ns)
+                            version_elem = props.find("d:Version", ns)
+                            if version_elem is None or not version_elem.text:
+                                continue
 
-                            if package_id is not None and version is not None:
-                                packages.append(
-                                    {
-                                        "name": package_id.text,
-                                        "version": version.text,
-                                        "description": "",
-                                    }
-                                )
+                            packages.append(
+                                {
+                                    "name": title_elem.text,
+                                    "version": version_elem.text,
+                                    "description": "",
+                                }
+                            )
 
                         # If we got fewer entries than requested, we're done
                         if len(entries) < top:
