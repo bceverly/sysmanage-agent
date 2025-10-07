@@ -638,11 +638,12 @@ class PackageCollector:
                             )
 
                         for pkg in page_packages:
-                            package_id = pkg.get("PackageIdentifier", "")
-                            package_name = pkg.get("PackageName", "")
-                            latest_version = pkg.get("Latest", {}).get(
-                                "PackageVersion", "unknown"
-                            )
+                            # The API uses different field names than we expected
+                            package_id = pkg.get("Id", "")
+                            # Name is in the Latest.PackageName field
+                            latest = pkg.get("Latest", {})
+                            package_name = latest.get("PackageName", "")
+                            latest_version = latest.get("PackageVersion", "unknown")
 
                             if package_id and package_name:
                                 packages.append(
