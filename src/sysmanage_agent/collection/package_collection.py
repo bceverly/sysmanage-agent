@@ -722,11 +722,11 @@ class PackageCollector:
                                 }
                             )
 
-                        # If we got fewer entries than requested, we're done
-                        if len(entries) < top:
+                        # If we got no entries, we're done
+                        if not entries:
                             break
 
-                        skip += top
+                        skip += len(entries)
 
                 except Exception as e:
                     logger.warning(_("Error fetching page at skip %d: %s"), skip, e)
