@@ -197,6 +197,39 @@ class PackageCollector:
                         continue
                 return False
 
+            # For winget on Windows, check common paths
+            if manager == "winget" and platform.system().lower() == "windows":
+                winget_paths = [
+                    os.path.expandvars(
+                        r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"
+                    ),
+                    r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
+                ]
+                for path in winget_paths:
+                    # Handle wildcards in path
+                    if "*" in path:
+                        import glob
+
+                        matching_paths = glob.glob(path)
+                        if matching_paths:
+                            path = matching_paths[0]
+                        else:
+                            continue
+
+                    if os.path.exists(path):
+                        try:
+                            result = subprocess.run(  # nosec B603, B607
+                                [path, "--version"],
+                                capture_output=True,
+                                timeout=10,
+                                check=False,
+                            )
+                            if result.returncode == 0:
+                                return True
+                        except Exception:  # nosec B112
+                            continue
+                return False
+
             # For other package managers, use which (Unix) or where (Windows)
             system = platform.system().lower()
             if system == "windows":
@@ -481,12 +514,81 @@ class PackageCollector:
                 continue
         return ""
 
+    def _get_winget_command(self) -> str:
+        """Get the correct winget command path."""
+        import glob
+
+        winget_paths = [
+            os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"),
+            r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
+        ]
+
+        # Also check common user profile locations
+        users_dir = r"C:\Users"
+        if os.path.exists(users_dir):
+            for user_dir in os.listdir(users_dir):
+                user_winget = os.path.join(
+                    users_dir,
+                    user_dir,
+                    r"AppData\Local\Microsoft\WindowsApps\winget.exe",
+                )
+                winget_paths.append(user_winget)
+
+        # Add PATH fallback
+        winget_paths.append("winget")
+
+        for path in winget_paths:
+            # Handle wildcards in path
+            if "*" in path:
+                matching_paths = glob.glob(path)
+                if matching_paths:
+                    path = matching_paths[0]
+                else:
+                    continue
+
+            if path == "winget":
+                # Try using it from PATH
+                try:
+                    result = subprocess.run(  # nosec B603, B607
+                        [path, "--version"],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0:
+                        return path
+                except Exception:  # nosec B112
+                    continue
+            elif os.path.exists(path):
+                # Verify it works before returning
+                try:
+                    result = subprocess.run(  # nosec B603, B607
+                        [path, "--version"],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0:
+                        logger.info(_("Found winget at: %s"), path)
+                        return path
+                except Exception:  # nosec B112
+                    continue
+
+        logger.warning(_("winget not found in any common location"))
+        return ""
+
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget)."""
         try:
+            # Get the winget command path
+            winget_cmd = self._get_winget_command()
+            if not winget_cmd:
+                logger.error(_("winget command not found"))
+                return 0
+
             # Use "winget search ." to search all packages (. matches everything)
             result = subprocess.run(  # nosec B603, B607
-                ["winget", "search", ".", "--accept-source-agreements"],
+                [winget_cmd, "search", ".", "--accept-source-agreements"],
                 capture_output=True,
                 text=True,
                 timeout=600,  # Increased timeout for full catalog
@@ -494,7 +596,16 @@ class PackageCollector:
             )
 
             if result.returncode != 0:
-                logger.error(_("Failed to get winget package list"))
+                logger.error(
+                    _("Failed to get winget package list: return code %d"),
+                    result.returncode,
+                )
+                if result.stderr:
+                    logger.error(_("winget error: %s"), result.stderr)
+                return 0
+
+            if not result.stdout:
+                logger.error(_("winget returned no output"))
                 return 0
 
             packages = self._parse_winget_output(result.stdout)
