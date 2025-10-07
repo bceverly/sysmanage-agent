@@ -282,6 +282,11 @@ class MessageProcessor:
             "deploy_certificates": self.agent.deploy_certificates,
             "deploy_opentelemetry": self.agent.deploy_opentelemetry,
             "remove_opentelemetry": self.agent.remove_opentelemetry,
+            "list_third_party_repositories": self.agent.list_third_party_repositories,
+            "add_third_party_repository": self.agent.add_third_party_repository,
+            "delete_third_party_repositories": self.agent.delete_third_party_repositories,
+            "enable_third_party_repositories": self.agent.enable_third_party_repositories,
+            "disable_third_party_repositories": self.agent.disable_third_party_repositories,
         }
 
     async def _handle_execute_script(

@@ -661,6 +661,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             except Exception as e:
                 self.logger.error("Failed to perform initial role collection: %s", e)
 
+            # Send third-party repository data
+            try:
+                self.logger.info(_("Collecting initial third-party repository data..."))
+                await self._send_third_party_repository_update()
+            except Exception as e:
+                self.logger.error(
+                    "Failed to send initial third-party repository data: %s", e
+                )
+
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as e:
             self.logger.error(_("Failed to send initial data updates: %s"), e)
@@ -1091,6 +1100,50 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         await self.send_reboot_status_update(requires_reboot)
         self.logger.debug("AGENT_DEBUG: Periodic reboot status sent successfully")
 
+    async def _send_third_party_repository_update(self):
+        """Send third-party repository update."""
+        self.logger.debug("AGENT_DEBUG: Collecting third-party repository data")
+
+        # Call system_ops to list repositories
+        repo_result = await self.system_ops.list_third_party_repositories({})
+
+        if not repo_result.get("success", False):
+            error_msg = repo_result.get("error", "Unknown error")
+            self.logger.warning(
+                "Failed to collect third-party repositories: %s", error_msg
+            )
+            return
+
+        repositories = repo_result.get("repositories", [])
+
+        # Create message data
+        repo_info = {
+            "repositories": repositories,
+            "count": len(repositories),
+            "hostname": self.registration.get_system_info()["hostname"],
+        }
+
+        # Add host_id if available
+        host_approval = self.get_host_approval_from_db()
+        if host_approval:
+            repo_info["host_id"] = str(host_approval.host_id)
+
+        # Create and send message
+        repo_message = self.create_message("third_party_repository_update", repo_info)
+        self.logger.debug(
+            "AGENT_DEBUG: Sending third-party repository message: %s",
+            repo_message["message_id"],
+        )
+        success = await self.send_message(repo_message)
+
+        if success:
+            self.logger.debug(
+                "AGENT_DEBUG: Third-party repository data sent successfully (%d repositories)",
+                len(repositories),
+            )
+        else:
+            self.logger.warning("Failed to send third-party repository data")
+
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
         if not (self.running and self.connected):
@@ -1139,6 +1192,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             await self._send_reboot_status_update()
         except Exception as e:
             self.logger.error("Error collecting/sending reboot status: %s", e)
+
+        # Send third-party repository update
+        try:
+            await self._send_third_party_repository_update()
+        except Exception as e:
+            self.logger.error(
+                "Error collecting/sending third-party repository data: %s", e
+            )
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
@@ -1706,6 +1767,36 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         except Exception as e:
             self.logger.error(_("Error collecting roles: %s"), e)
             return {"success": False, "error": str(e)}
+
+    async def list_third_party_repositories(
+        self, parameters: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """List all third-party repositories on the system."""
+        return await self.system_ops.list_third_party_repositories(parameters or {})
+
+    async def add_third_party_repository(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Add a third-party repository to the system."""
+        return await self.system_ops.add_third_party_repository(parameters)
+
+    async def delete_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Delete third-party repositories from the system."""
+        return await self.system_ops.delete_third_party_repositories(parameters)
+
+    async def enable_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Enable third-party repositories on the system."""
+        return await self.system_ops.enable_third_party_repositories(parameters)
+
+    async def disable_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Disable third-party repositories on the system."""
+        return await self.system_ops.disable_third_party_repositories(parameters)
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""

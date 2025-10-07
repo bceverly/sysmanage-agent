@@ -2627,3 +2627,833 @@ otelcol.exporter.otlp "grafana" {{
                 _("Error disconnecting OpenTelemetry from Grafana: %s"), e
             )
             return {"success": False, "error": str(e)}
+
+    async def list_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """List all third-party repositories on the system."""
+        try:
+            self.logger.info(_("Listing third-party repositories"))
+            repositories = []
+            system = platform.system()
+
+            if system == "Linux":
+                # Detect distribution
+                distro_info = await self._detect_linux_distro()
+                distro = distro_info.get("distro", "").lower()
+
+                if "ubuntu" in distro or "debian" in distro:
+                    # List PPAs and other apt repositories
+                    repos = await self._list_apt_repositories()
+                    repositories.extend(repos)
+                elif (
+                    "fedora" in distro
+                    or "rhel" in distro
+                    or "centos" in distro
+                    or "rocky" in distro
+                    or "alma" in distro
+                ):
+                    # List COPR and other yum/dnf repositories
+                    repos = await self._list_yum_repositories()
+                    repositories.extend(repos)
+                elif "opensuse" in distro or "suse" in distro:
+                    # List OBS and other zypper repositories
+                    repos = await self._list_zypper_repositories()
+                    repositories.extend(repos)
+
+            return {
+                "success": True,
+                "repositories": repositories,
+                "count": len(repositories),
+            }
+        except Exception as e:
+            self.logger.error(_("Error listing third-party repositories: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _detect_linux_distro(self) -> Dict[str, str]:
+        """Detect Linux distribution."""
+        try:
+            # Try /etc/os-release first
+            if os.path.exists("/etc/os-release"):
+                with open("/etc/os-release", "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                    for line in lines:
+                        if line.startswith("ID="):
+                            distro = line.split("=")[1].strip().strip('"')
+                            return {"distro": distro}
+
+            # Fallback to platform
+            return {"distro": platform.system()}
+        except Exception as e:
+            self.logger.error(_("Error detecting Linux distribution: %s"), e)
+            return {"distro": "unknown"}
+
+    async def _list_apt_repositories(self) -> list:
+        """List APT repositories including PPAs."""
+        repositories = []
+        sources_dir = "/etc/apt/sources.list.d"
+
+        try:
+            if os.path.exists(sources_dir):
+                for filename in os.listdir(sources_dir):
+                    if filename.endswith((".list", ".sources")):
+                        filepath = os.path.join(sources_dir, filename)
+                        try:
+                            with open(filepath, "r", encoding="utf-8") as f:
+                                content = f.read()
+                                # Parse repository info
+                                for line in content.splitlines():
+                                    line = line.strip()
+                                    if not line or line.startswith("#"):
+                                        continue
+
+                                    # Check if it's a PPA or other third-party repo
+                                    if not (
+                                        "ppa.launchpad.net" in line or "deb " in line
+                                    ):
+                                        continue
+
+                                    enabled = not line.startswith("#")
+                                    repo_type = (
+                                        "PPA" if "ppa.launchpad.net" in line else "APT"
+                                    )
+
+                                    # Extract PPA name if it's a PPA
+                                    name = filename.replace(".list", "").replace(
+                                        ".sources", ""
+                                    )
+                                    if "ppa.launchpad.net" in line:
+                                        # Try to extract ppa:user/name format
+                                        parts = line.split()
+                                        for part in parts:
+                                            if "ppa.launchpad.net" not in part:
+                                                continue
+                                            # Extract user/ppa from URL
+                                            url_parts = part.split("/")
+                                            if len(url_parts) >= 4:
+                                                user = url_parts[-3]
+                                                ppa = url_parts[-2]
+                                                name = f"ppa:{user}/{ppa}"
+                                            break
+
+                                    repositories.append(
+                                        {
+                                            "name": name,
+                                            "type": repo_type,
+                                            "url": line,
+                                            "enabled": enabled,
+                                            "file_path": filepath,
+                                        }
+                                    )
+                        except Exception as e:
+                            self.logger.warning(_("Error reading %s: %s"), filepath, e)
+        except Exception as e:
+            self.logger.error(_("Error listing APT repositories: %s"), e)
+
+        return repositories
+
+    async def _list_yum_repositories(self) -> list:
+        """List YUM/DNF repositories including COPR."""
+        repositories = []
+        repos_dir = "/etc/yum.repos.d"
+
+        try:
+            if os.path.exists(repos_dir):
+                for filename in os.listdir(repos_dir):
+                    if filename.endswith(".repo"):
+                        filepath = os.path.join(repos_dir, filename)
+                        try:
+                            with open(filepath, "r", encoding="utf-8") as f:
+                                content = f.read()
+                                # Parse INI-style repo file
+                                current_repo = None
+                                for line in content.splitlines():
+                                    line = line.strip()
+                                    if line.startswith("[") and line.endswith("]"):
+                                        if current_repo:
+                                            repositories.append(current_repo)
+                                        current_repo = {
+                                            "name": line[1:-1],
+                                            "type": (
+                                                "COPR"
+                                                if "copr" in filename.lower()
+                                                else "YUM"
+                                            ),
+                                            "url": "",
+                                            "enabled": True,
+                                            "file_path": filepath,
+                                        }
+                                    elif current_repo is not None and "=" in line:
+                                        key, value = line.split("=", 1)
+                                        key = key.strip()
+                                        value = value.strip()
+                                        if key == "baseurl":
+                                            # pylint: disable=unsupported-assignment-operation
+                                            current_repo["url"] = value
+                                        elif key == "enabled":
+                                            # pylint: disable=unsupported-assignment-operation
+                                            current_repo["enabled"] = value == "1"
+
+                                if current_repo:
+                                    repositories.append(current_repo)
+                        except Exception as e:
+                            self.logger.warning(_("Error reading %s: %s"), filepath, e)
+        except Exception as e:
+            self.logger.error(_("Error listing YUM repositories: %s"), e)
+
+        return repositories
+
+    async def _list_zypper_repositories(self) -> list:
+        """List Zypper repositories including OBS."""
+        repositories = []
+
+        try:
+            # Use zypper lr command to list repos
+            command = "zypper lr -u"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                output = result["result"]["stdout"]
+                for line in output.splitlines():
+                    # Parse zypper output
+                    if "|" in line and not line.startswith("#"):
+                        parts = [p.strip() for p in line.split("|")]
+                        if len(parts) >= 4:
+                            repositories.append(
+                                {
+                                    "name": parts[1],
+                                    "type": (
+                                        "OBS"
+                                        if "opensuse.org" in parts[3]
+                                        else "Zypper"
+                                    ),
+                                    "url": parts[3] if len(parts) > 3 else "",
+                                    "enabled": (
+                                        parts[2] == "Yes" if len(parts) > 2 else True
+                                    ),
+                                    "file_path": f"/etc/zypp/repos.d/{parts[1]}.repo",
+                                }
+                            )
+        except Exception as e:
+            self.logger.error(_("Error listing Zypper repositories: %s"), e)
+
+        return repositories
+
+    async def add_third_party_repository(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Add a third-party repository to the system."""
+        try:
+            repo_identifier = parameters.get("repository")
+
+            if not repo_identifier:
+                return {
+                    "success": False,
+                    "error": _("Repository identifier is required"),
+                }
+
+            self.logger.info(_("Adding third-party repository: %s"), repo_identifier)
+
+            system = platform.system()
+            if system != "Linux":
+                return {
+                    "success": False,
+                    "error": _("Unsupported operating system: %s") % system,
+                }
+
+            self.logger.debug("Detecting Linux distribution for repository add")
+            distro_info = await self._detect_linux_distro()
+            distro = distro_info.get("distro", "").lower()
+            self.logger.debug("Detected distribution: %s", distro)
+
+            if "ubuntu" in distro or "debian" in distro:
+                self.logger.debug("Calling _add_apt_repository for %s", repo_identifier)
+                result = await self._add_apt_repository(repo_identifier)
+                self.logger.debug("_add_apt_repository returned: %s", result)
+            elif (
+                "fedora" in distro
+                or "rhel" in distro
+                or "centos" in distro
+                or "rocky" in distro
+                or "alma" in distro
+            ):
+                result = await self._add_yum_repository(repo_identifier)
+            elif "opensuse" in distro or "suse" in distro:
+                result = await self._add_zypper_repository(
+                    repo_identifier, parameters.get("url", "")
+                )
+            else:
+                return {
+                    "success": False,
+                    "error": _("Unsupported distribution: %s") % distro,
+                }
+
+            if result["success"]:
+                # After successful add, run package manager update
+                await self._run_package_update()
+
+                # Trigger update detection to send fresh updates list
+                await self._trigger_update_detection()
+
+                # Re-scan and send third-party repository data
+                await self._trigger_third_party_repository_rescan()
+
+            return result
+
+        except Exception as e:
+            self.logger.error(_("Error adding third-party repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _add_apt_repository(self, repo_identifier: str) -> Dict[str, Any]:
+        """Add APT repository (PPA or manual)."""
+        try:
+            # Validate PPA format
+            # Use sudo even though agent runs as root - add-apt-repository checks effective UID
+            if repo_identifier.startswith("ppa:"):
+                command = f"sudo -n add-apt-repository -y {repo_identifier}"
+            else:
+                # Manual repository line
+                command = f"sudo -n add-apt-repository -y '{repo_identifier}'"
+
+            result = await self.execute_shell_command({"command": command})
+
+            # Log the result for debugging
+            self.logger.debug(
+                "add-apt-repository command result: success=%s, exit_code=%s, stdout=%s, stderr=%s",
+                result.get("success"),
+                result.get("exit_code"),
+                result.get("result", {}).get("stdout", "")[:200],
+                result.get("result", {}).get("stderr", "")[:200],
+            )
+
+            if result["success"]:
+                self.logger.info("Repository %s added successfully", repo_identifier)
+                return {
+                    "success": True,
+                    "result": _("Repository added successfully"),
+                    "output": result["result"]["stdout"],
+                }
+
+            self.logger.error(
+                "Failed to add repository %s: %s",
+                repo_identifier,
+                result["result"].get("stderr", ""),
+            )
+            return {
+                "success": False,
+                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "output": result["result"]["stderr"],
+            }
+        except Exception as e:
+            self.logger.error(_("Error adding APT repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _add_yum_repository(self, repo_identifier: str) -> Dict[str, Any]:
+        """Add YUM/DNF repository (COPR or manual)."""
+        try:
+            # Check if it's a COPR repo (format: user/project)
+            if "/" in repo_identifier and not repo_identifier.startswith("http"):
+                # COPR format
+                command = f"sudo dnf copr enable -y {repo_identifier}"
+            else:
+                # Manual repo URL - would need to create .repo file
+                return {
+                    "success": False,
+                    "error": _("Manual YUM repository addition not yet implemented"),
+                }
+
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("Repository added successfully"),
+                    "output": result["result"]["stdout"],
+                }
+
+            return {
+                "success": False,
+                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "output": result["result"]["stderr"],
+            }
+        except Exception as e:
+            self.logger.error(_("Error adding YUM repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _add_zypper_repository(self, alias: str, url: str) -> Dict[str, Any]:
+        """Add Zypper repository (OBS or manual)."""
+        try:
+            if not url:
+                return {
+                    "success": False,
+                    "error": _("Repository URL is required for Zypper"),
+                }
+
+            command = f"sudo zypper addrepo -f {url} {alias}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("Repository added successfully"),
+                    "output": result["result"]["stdout"],
+                }
+
+            return {
+                "success": False,
+                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "output": result["result"]["stderr"],
+            }
+        except Exception as e:
+            self.logger.error(_("Error adding Zypper repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def delete_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Delete third-party repositories from the system."""
+        try:
+            repositories = parameters.get("repositories", [])
+
+            if not repositories:
+                return {
+                    "success": False,
+                    "error": _("No repositories specified for deletion"),
+                }
+
+            self.logger.info(
+                _("Deleting %d third-party repositories"), len(repositories)
+            )
+
+            system = platform.system()
+            results = []
+
+            for repo in repositories:
+                repo_name = repo.get("name")
+
+                if system == "Linux":
+                    distro_info = await self._detect_linux_distro()
+                    distro = distro_info.get("distro", "").lower()
+
+                    if "ubuntu" in distro or "debian" in distro:
+                        result = await self._delete_apt_repository(repo)
+                    elif (
+                        "fedora" in distro
+                        or "rhel" in distro
+                        or "centos" in distro
+                        or "rocky" in distro
+                        or "alma" in distro
+                    ):
+                        result = await self._delete_yum_repository(repo)
+                    elif "opensuse" in distro or "suse" in distro:
+                        result = await self._delete_zypper_repository(repo)
+                    else:
+                        result = {
+                            "success": False,
+                            "error": _("Unsupported distribution: %s") % distro,
+                        }
+                else:
+                    result = {
+                        "success": False,
+                        "error": _("Unsupported operating system: %s") % system,
+                    }
+
+                results.append(
+                    {
+                        "repository": repo_name,
+                        "success": result.get("success", False),
+                        "message": result.get("result", result.get("error", "")),
+                    }
+                )
+
+            # After deletions, run package manager update
+            await self._run_package_update()
+
+            # Trigger update detection to send fresh updates list
+            await self._trigger_update_detection()
+
+            # Re-scan and send third-party repository data
+            await self._trigger_third_party_repository_rescan()
+
+            overall_success = all(r["success"] for r in results)
+            return {
+                "success": overall_success,
+                "results": results,
+                "message": _("Deleted %d of %d repositories")
+                % (sum(1 for r in results if r["success"]), len(results)),
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error deleting third-party repositories: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _delete_apt_repository(self, repo: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete APT repository."""
+        try:
+            repo_name = repo.get("name", "")
+            file_path = repo.get("file_path", "")
+
+            # If it's a PPA, use add-apt-repository --remove
+            if repo_name.startswith("ppa:"):
+                command = f"sudo add-apt-repository --remove -y {repo_name}"
+                result = await self.execute_shell_command({"command": command})
+            elif file_path and os.path.exists(file_path):
+                # Delete the repository file
+                command = f"sudo rm -f {file_path}"
+                result = await self.execute_shell_command({"command": command})
+            else:
+                return {"success": False, "error": _("Repository file not found")}
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository removed successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error deleting APT repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _delete_yum_repository(self, repo: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete YUM/DNF repository."""
+        try:
+            repo_name = repo.get("name", "")
+            repo_type = repo.get("type", "")
+            file_path = repo.get("file_path", "")
+
+            # If it's a COPR repo, use dnf copr remove
+            if "copr" in repo_type.lower() or "copr" in repo_name.lower():
+                # Extract user/project from repo name
+                command = f"sudo dnf copr remove -y {repo_name}"
+                result = await self.execute_shell_command({"command": command})
+            elif file_path and os.path.exists(file_path):
+                # Delete the repository file
+                command = f"sudo rm -f {file_path}"
+                result = await self.execute_shell_command({"command": command})
+            else:
+                return {"success": False, "error": _("Repository file not found")}
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository removed successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error deleting YUM repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _delete_zypper_repository(self, repo: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete Zypper repository."""
+        try:
+            repo_name = repo.get("name", "")
+
+            command = f"sudo zypper removerepo {repo_name}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository removed successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error deleting Zypper repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _run_package_update(self) -> None:
+        """Run package manager update after repository changes."""
+        try:
+            system = platform.system()
+            if system == "Linux":
+                distro_info = await self._detect_linux_distro()
+                distro = distro_info.get("distro", "").lower()
+
+                if "ubuntu" in distro or "debian" in distro:
+                    command = "sudo apt-get update"
+                elif (
+                    "fedora" in distro
+                    or "rhel" in distro
+                    or "centos" in distro
+                    or "rocky" in distro
+                    or "alma" in distro
+                ):
+                    command = "sudo dnf check-update"
+                elif "opensuse" in distro or "suse" in distro:
+                    command = "sudo zypper refresh"
+                else:
+                    return
+
+                await self.execute_shell_command({"command": command})
+        except Exception as e:
+            self.logger.error(_("Error running package update: %s"), e)
+
+    async def _trigger_update_detection(self) -> None:
+        """Trigger update detection and send results to server."""
+        try:
+            # Use the UpdateDetector to check for updates
+            update_detector = UpdateDetector()
+            await update_detector.detect_and_send_updates()
+        except Exception as e:
+            self.logger.error(_("Error triggering update detection: %s"), e)
+
+    async def _trigger_third_party_repository_rescan(self) -> None:
+        """Re-scan and send third-party repository data to server."""
+        try:
+            # Call the agent's method to send third-party repository update
+            if hasattr(self.agent, "_send_third_party_repository_update"):
+                # pylint: disable=protected-access
+                await self.agent._send_third_party_repository_update()
+        except Exception as e:
+            self.logger.error(_("Error re-scanning third-party repositories: %s"), e)
+
+    async def enable_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Enable third-party repositories on the system."""
+        try:
+            repositories = parameters.get("repositories", [])
+
+            if not repositories:
+                return {
+                    "success": False,
+                    "error": _("No repositories specified for enabling"),
+                }
+
+            self.logger.info(
+                _("Enabling %d third-party repositories"), len(repositories)
+            )
+
+            system = platform.system()
+            if system != "Linux":
+                return {
+                    "success": False,
+                    "error": _("Unsupported operating system: %s") % system,
+                }
+
+            distro_info = await self._detect_linux_distro()
+            distro = distro_info.get("distro", "").lower()
+
+            results = []
+            for repo in repositories:
+                repo_name = repo.get("name")
+                file_path = repo.get("file_path")
+
+                if "ubuntu" in distro or "debian" in distro:
+                    result = await self._enable_apt_repository(file_path)
+                elif (
+                    "fedora" in distro
+                    or "rhel" in distro
+                    or "centos" in distro
+                    or "rocky" in distro
+                    or "alma" in distro
+                ):
+                    result = await self._enable_yum_repository(repo_name)
+                elif "opensuse" in distro or "suse" in distro:
+                    result = await self._enable_zypper_repository(repo_name)
+                else:
+                    result = {
+                        "success": False,
+                        "error": _("Unsupported distribution: %s") % distro,
+                    }
+
+                results.append(
+                    {
+                        "repository": repo_name,
+                        "success": result.get("success", False),
+                        "message": result.get("result", result.get("error", "")),
+                    }
+                )
+
+            # After enabling, run package manager update
+            await self._run_package_update()
+
+            # Trigger update detection to send fresh updates list
+            await self._trigger_update_detection()
+
+            # Re-scan and send third-party repository data
+            await self._trigger_third_party_repository_rescan()
+
+            overall_success = all(r["success"] for r in results)
+            return {
+                "success": overall_success,
+                "results": results,
+                "message": _("Enabled %d of %d repositories")
+                % (sum(1 for r in results if r["success"]), len(results)),
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error enabling third-party repositories: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def disable_third_party_repositories(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Disable third-party repositories on the system."""
+        try:
+            repositories = parameters.get("repositories", [])
+
+            if not repositories:
+                return {
+                    "success": False,
+                    "error": _("No repositories specified for disabling"),
+                }
+
+            self.logger.info(
+                _("Disabling %d third-party repositories"), len(repositories)
+            )
+
+            system = platform.system()
+            if system != "Linux":
+                return {
+                    "success": False,
+                    "error": _("Unsupported operating system: %s") % system,
+                }
+
+            distro_info = await self._detect_linux_distro()
+            distro = distro_info.get("distro", "").lower()
+
+            results = []
+            for repo in repositories:
+                repo_name = repo.get("name")
+                file_path = repo.get("file_path")
+
+                if "ubuntu" in distro or "debian" in distro:
+                    result = await self._disable_apt_repository(file_path)
+                elif (
+                    "fedora" in distro
+                    or "rhel" in distro
+                    or "centos" in distro
+                    or "rocky" in distro
+                    or "alma" in distro
+                ):
+                    result = await self._disable_yum_repository(repo_name)
+                elif "opensuse" in distro or "suse" in distro:
+                    result = await self._disable_zypper_repository(repo_name)
+                else:
+                    result = {
+                        "success": False,
+                        "error": _("Unsupported distribution: %s") % distro,
+                    }
+
+                results.append(
+                    {
+                        "repository": repo_name,
+                        "success": result.get("success", False),
+                        "message": result.get("result", result.get("error", "")),
+                    }
+                )
+
+            # After disabling, run package manager update
+            await self._run_package_update()
+
+            # Trigger update detection to send fresh updates list
+            await self._trigger_update_detection()
+
+            # Re-scan and send third-party repository data
+            await self._trigger_third_party_repository_rescan()
+
+            overall_success = all(r["success"] for r in results)
+            return {
+                "success": overall_success,
+                "results": results,
+                "message": _("Disabled %d of %d repositories")
+                % (sum(1 for r in results if r["success"]), len(results)),
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error disabling third-party repositories: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _enable_apt_repository(self, file_path: str) -> Dict[str, Any]:
+        """Enable APT repository by uncommenting lines in the file."""
+        try:
+            if not file_path or not os.path.exists(file_path):
+                return {"success": False, "error": _("Repository file not found")}
+
+            command = f"sudo sed -i 's/^# *deb /deb /' {file_path}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository enabled successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error enabling APT repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _disable_apt_repository(self, file_path: str) -> Dict[str, Any]:
+        """Disable APT repository by commenting out lines in the file."""
+        try:
+            if not file_path or not os.path.exists(file_path):
+                return {"success": False, "error": _("Repository file not found")}
+
+            command = f"sudo sed -i 's/^deb /# deb /' {file_path}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("Repository disabled successfully"),
+                }
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error disabling APT repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _enable_yum_repository(self, repo_name: str) -> Dict[str, Any]:
+        """Enable YUM/DNF repository."""
+        try:
+            command = f"sudo dnf config-manager --set-enabled {repo_name}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository enabled successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error enabling YUM repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _disable_yum_repository(self, repo_name: str) -> Dict[str, Any]:
+        """Disable YUM/DNF repository."""
+        try:
+            command = f"sudo dnf config-manager --set-disabled {repo_name}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("Repository disabled successfully"),
+                }
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error disabling YUM repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _enable_zypper_repository(self, repo_name: str) -> Dict[str, Any]:
+        """Enable Zypper repository."""
+        try:
+            command = f"sudo zypper modifyrepo --enable {repo_name}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {"success": True, "result": _("Repository enabled successfully")}
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error enabling Zypper repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _disable_zypper_repository(self, repo_name: str) -> Dict[str, Any]:
+        """Disable Zypper repository."""
+        try:
+            command = f"sudo zypper modifyrepo --disable {repo_name}"
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                return {
+                    "success": True,
+                    "result": _("Repository disabled successfully"),
+                }
+
+            return {"success": False, "error": result["result"]["stderr"]}
+        except Exception as e:
+            self.logger.error(_("Error disabling Zypper repository: %s"), e)
+            return {"success": False, "error": str(e)}
