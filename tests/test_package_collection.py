@@ -359,14 +359,9 @@ python@3.11 3.11.5
 
         result = package_collector.get_packages_for_transmission()
 
-        # Check top-level structure includes OS information
-        assert "os_name" in result
-        assert "os_version" in result
+        # Check top-level structure
+        # Note: OS info is now added by the caller (main.py) using get_system_info()
         assert "package_managers" in result
-
-        # Check OS information is present (will vary by platform)
-        assert result["os_name"] is not None
-        assert result["os_version"] is not None
 
         package_managers = result["package_managers"]
         assert "apt" in package_managers

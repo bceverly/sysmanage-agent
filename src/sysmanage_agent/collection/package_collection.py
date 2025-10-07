@@ -1144,7 +1144,12 @@ class PackageCollector:
             return []
 
     def get_packages_for_transmission(self) -> Dict[str, any]:
-        """Get all packages organized by package manager for transmission to server."""
+        """Get all packages organized by package manager for transmission to server.
+
+        Note: This method only returns package data. The OS name and version
+        should be determined by the caller using the registration system's
+        get_system_info() to ensure consistency with host registration.
+        """
         try:
             with self.db_manager.get_session() as session:
                 packages = session.query(AvailablePackage).all()
@@ -1164,10 +1169,9 @@ class PackageCollector:
                         }
                     )
 
-                # Include OS information for the server
+                # Return only package manager data
+                # OS info should be added by caller from registration system
                 return {
-                    "os_name": platform.system(),
-                    "os_version": platform.release(),
                     "package_managers": packages_by_manager,
                 }
 

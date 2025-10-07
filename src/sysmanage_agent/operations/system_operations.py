@@ -2673,6 +2673,10 @@ otelcol.exporter.otlp "grafana" {{
                 # NetBSD - list pkgsrc repositories
                 repos = await self._list_netbsd_repositories()
                 repositories.extend(repos)
+            elif system == "Windows":
+                # Windows - list Chocolatey sources and winget sources
+                repos = await self._list_windows_repositories()
+                repositories.extend(repos)
 
             return {
                 "success": True,
@@ -2950,6 +2954,13 @@ otelcol.exporter.otlp "grafana" {{
                 # NetBSD - add pkgsrc repository
                 result = await self._add_netbsd_repository(
                     repo_identifier, parameters.get("url", "")
+                )
+            elif system == "Windows":
+                # Windows - add Chocolatey source or winget source
+                result = await self._add_windows_repository(
+                    repo_identifier,
+                    parameters.get("url", ""),
+                    parameters.get("type", ""),
                 )
             else:
                 return {
@@ -3374,6 +3385,160 @@ otelcol.exporter.otlp "grafana" {{
             }
         except Exception as e:
             self.logger.error(_("Error adding NetBSD repository: %s"), e)
+            return {"success": False, "error": str(e)}
+
+    async def _list_windows_repositories(self) -> list:
+        """List Chocolatey sources and winget sources on Windows."""
+        repositories = []
+
+        try:
+            # List Chocolatey sources
+            choco_repos = await self._list_chocolatey_sources()
+            repositories.extend(choco_repos)
+
+            # List winget sources
+            winget_repos = await self._list_winget_sources()
+            repositories.extend(winget_repos)
+
+        except Exception as e:
+            self.logger.error(_("Error listing Windows repositories: %s"), e)
+
+        return repositories
+
+    async def _list_chocolatey_sources(self) -> list:
+        """List Chocolatey sources."""
+        repositories = []
+        choco_result = await self.execute_shell_command(
+            {"command": "choco source list"}
+        )
+
+        if not choco_result.get("success"):
+            return repositories
+
+        output = choco_result["result"]["stdout"]
+        for line in output.splitlines():
+            line = line.strip()
+            # Chocolatey sources are listed as "name - url | Priority | Bypass Proxy | Self-Service | Admin Only."
+            if not (" - " in line and "http" in line):
+                continue
+
+            parts = line.split(" - ")
+            if len(parts) < 2:
+                continue
+
+            name = parts[0].strip()
+            # Skip the official chocolatey source
+            if name.lower() == "chocolatey":
+                continue
+
+            url_part = parts[1].split("|")[0].strip()
+            enabled = "Disabled" not in line
+            repositories.append(
+                {
+                    "name": name,
+                    "type": "Chocolatey",
+                    "url": url_part,
+                    "enabled": enabled,
+                    "file_path": None,
+                }
+            )
+
+        return repositories
+
+    async def _list_winget_sources(self) -> list:
+        """List winget sources."""
+        repositories = []
+        winget_result = await self.execute_shell_command(
+            {"command": "winget source list"}
+        )
+
+        if not winget_result.get("success"):
+            return repositories
+
+        output = winget_result["result"]["stdout"]
+        lines = output.splitlines()
+
+        for i, line in enumerate(lines):
+            line = line.strip()
+            # Skip header lines
+            if "Name" in line and "Argument" in line:
+                continue
+            if line.startswith("---"):
+                continue
+            # Parse winget source lines
+            if not (line and i > 1):  # Skip first two header lines
+                continue
+
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            name = parts[0]
+            url = parts[1] if len(parts) > 1 else ""
+            # Skip the official msstore and winget sources
+            if name.lower() in ["msstore", "winget"]:
+                continue
+
+            repositories.append(
+                {
+                    "name": name,
+                    "type": "winget",
+                    "url": url,
+                    "enabled": True,
+                    "file_path": None,
+                }
+            )
+
+        return repositories
+
+    async def _add_windows_repository(
+        self, repo_name: str, url: str, repo_type: str
+    ) -> Dict[str, Any]:
+        """Add a Chocolatey source or winget source on Windows."""
+        try:
+            if not url:
+                return {
+                    "success": False,
+                    "error": _("Repository URL is required for Windows repositories"),
+                }
+
+            if not repo_type or repo_type.lower() not in ["chocolatey", "winget"]:
+                return {
+                    "success": False,
+                    "error": _("Repository type must be 'chocolatey' or 'winget'"),
+                }
+
+            if repo_type.lower() == "chocolatey":
+                # Add Chocolatey source
+                command = f'choco source add --name="{repo_name}" --source="{url}"'
+            else:  # winget
+                # Add winget source
+                command = f'winget source add --name "{repo_name}" --arg "{url}" --type Microsoft.Rest'
+
+            result = await self.execute_shell_command({"command": command})
+
+            if result["success"]:
+                self.logger.info("Windows repository %s added successfully", repo_name)
+                return {
+                    "success": True,
+                    "result": _("Repository added successfully"),
+                    "output": result["result"]["stdout"],
+                }
+
+            self.logger.error(
+                "Failed to add Windows repository %s: %s",
+                repo_name,
+                result.get("result", {}).get("stderr", ""),
+            )
+            return {
+                "success": False,
+                "error": _("Failed to add repository: %s")
+                % result.get("result", {}).get("stderr", "Unknown error"),
+                "output": result.get("result", {}).get("stderr", ""),
+            }
+
+        except Exception as e:
+            self.logger.error(_("Error adding Windows repository: %s"), e)
             return {"success": False, "error": str(e)}
 
     async def delete_third_party_repositories(
