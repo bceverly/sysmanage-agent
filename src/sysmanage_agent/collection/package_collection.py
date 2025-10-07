@@ -642,6 +642,14 @@ class PackageCollector:
                             package_id = pkg.get("Id", "")
                             # Name is in the Latest.PackageName field
                             latest = pkg.get("Latest", {})
+
+                            # Debug: log Latest object structure on first page
+                            if page == 1 and latest:
+                                logger.debug(
+                                    _("Latest object keys: %s"),
+                                    list(latest.keys()),
+                                )
+
                             package_name = latest.get("PackageName", "")
                             latest_version = latest.get("PackageVersion", "unknown")
 
