@@ -12,6 +12,7 @@ import os
 import platform
 import subprocess  # nosec B404
 import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Dict, List
 
@@ -655,57 +656,84 @@ class PackageCollector:
             return 0
 
     def _collect_chocolatey_packages(self) -> int:
-        """Collect packages from Chocolatey (Windows) with pagination."""
+        """Collect packages from Chocolatey community repository API."""
         try:
-            all_packages = []
-            page = 0
-            page_size = 100  # Maximum allowed by Chocolatey
+            logger.info(_("Fetching Chocolatey catalog via community repository API"))
+
+            # Chocolatey community repository API endpoint
+            api_url = "https://community.chocolatey.org/api/v2/Packages()"
+
+            packages = []
+            skip = 0
+            top = 100  # Fetch 100 packages at a time
 
             while True:
-                result = subprocess.run(  # nosec B603, B607
-                    [
-                        "choco",
-                        "search",
-                        "*",
-                        "--page-size",
-                        str(page_size),
-                        "--page",
-                        str(page),
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
-                )
+                try:
+                    # OData pagination parameters
+                    url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
 
-                if result.returncode != 0:
-                    if page == 0:  # Only log error on first page failure
-                        logger.error(_("Failed to get Chocolatey package list"))
-                        return 0
-                    break  # No more pages available
+                    req = urllib.request.Request(url)  # nosec B310
+                    req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                packages = self._parse_chocolatey_output(result.stdout)
-                if not packages:
-                    break  # No more packages found
+                    with urllib.request.urlopen(
+                        req, timeout=30
+                    ) as response:  # nosec B310
+                        # Parse XML response
+                        data = response.read().decode("utf-8")
+                        root = ET.fromstring(data)
 
-                all_packages.extend(packages)
-                logger.debug(
-                    "Collected %d packages from Chocolatey page %d", len(packages), page
-                )
+                        # Define namespaces
+                        ns = {
+                            "atom": "http://www.w3.org/2005/Atom",
+                            "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
+                            "m": "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+                        }
 
-                # If we got fewer packages than page_size, we've reached the end
-                if len(packages) < page_size:
+                        # Extract packages from feed
+                        entries = root.findall("atom:entry", ns)
+                        if not entries:
+                            break
+
+                        for entry in entries:
+                            # Get package properties
+                            props = entry.find("m:properties", ns)
+                            if props is None:
+                                continue
+
+                            package_id = props.find("d:Id", ns)
+                            version = props.find("d:Version", ns)
+
+                            if package_id is not None and version is not None:
+                                packages.append(
+                                    {
+                                        "name": package_id.text,
+                                        "version": version.text,
+                                        "description": "",
+                                    }
+                                )
+
+                        # If we got fewer entries than requested, we're done
+                        if len(entries) < top:
+                            break
+
+                        skip += top
+
+                except Exception as e:
+                    logger.warning(_("Error fetching page at skip %d: %s"), skip, e)
                     break
 
-                page += 1
+            if packages:
+                logger.info(
+                    _("Successfully collected %d packages from Chocolatey community repository"),
+                    len(packages),
+                )
+                return self._store_packages("chocolatey", packages)
 
-            logger.info(
-                "Collected total of %d packages from Chocolatey", len(all_packages)
-            )
-            return self._store_packages("chocolatey", all_packages)
+            logger.warning(_("No packages collected from Chocolatey community repository"))
+            return 0
 
         except Exception as e:
-            logger.error(_("Error collecting Chocolatey packages: %s"), e)
+            logger.error(_("Error collecting Chocolatey packages via API: %s"), e)
             return 0
 
     def _collect_pkg_packages(self) -> int:
