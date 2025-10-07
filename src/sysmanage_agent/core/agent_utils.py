@@ -92,6 +92,9 @@ class PackageCollectionScheduler:
         """
         Perform a single package collection run.
         Returns True if successful, False otherwise.
+
+        Runs the blocking package collection in a thread pool to prevent
+        blocking the async event loop and causing WebSocket keepalive timeouts.
         """
         if not self.agent.config.is_package_collection_enabled():
             self.logger.debug("Package collection is disabled in configuration")
@@ -99,7 +102,13 @@ class PackageCollectionScheduler:
 
         self.logger.info(_("Starting package collection"))
         try:
-            success = self.package_collector.collect_all_available_packages()
+            # Run the blocking package collection in a thread pool executor
+            # to prevent blocking the async event loop during long HTTP operations
+            loop = asyncio.get_event_loop()
+            success = await loop.run_in_executor(
+                None,  # Use default ThreadPoolExecutor
+                self.package_collector.collect_all_available_packages
+            )
             if success:
                 self.logger.info(_("Package collection completed successfully"))
             else:
