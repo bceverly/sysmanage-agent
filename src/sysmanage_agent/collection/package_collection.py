@@ -11,6 +11,7 @@ import logging
 import os
 import platform
 import subprocess  # nosec B404
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -637,8 +638,16 @@ class PackageCollector:
 
                         page += 1
 
+                        # Small delay to avoid rate limiting
+                        time.sleep(0.1)
+
                 except Exception as e:
-                    logger.warning(_("Error fetching page %d: %s"), page, e)
+                    logger.error(
+                        _("Error fetching winget page %d (collected %d packages so far): %s"),
+                        page,
+                        len(packages),
+                        str(e),
+                    )
                     break
 
             if packages:
