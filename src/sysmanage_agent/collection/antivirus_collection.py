@@ -452,8 +452,8 @@ class AntivirusCollector:
                     file_path, command
                 ):
                     return True
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.debug("Error checking cron directory %s: %s", cron_dir, e)
         return False
 
     def _is_in_cron(self, command: str) -> Optional[bool]:

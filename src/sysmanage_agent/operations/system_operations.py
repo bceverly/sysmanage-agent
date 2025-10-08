@@ -1596,6 +1596,28 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stderr.decode() if stderr else "unknown error",
                     )
 
+                # Configure clamd@scan service
+                config_file = "/etc/clamd.d/scan.conf"
+                self.logger.info("Configuring %s", config_file)
+
+                # Read the config file
+                with open(config_file, "r", encoding="utf-8") as f:
+                    config_content = f.read()
+
+                # Uncomment LocalSocket and remove Example line
+                config_content = config_content.replace(
+                    "#Example", "# Example"
+                ).replace(
+                    "#LocalSocket /run/clamd.scan/clamd.sock",
+                    "LocalSocket /run/clamd.scan/clamd.sock",
+                )
+
+                # Write back the config file
+                with open(config_file, "w", encoding="utf-8") as f:
+                    f.write(config_content)
+
+                self.logger.info("Configuration updated successfully")
+
                 # Enable and start clamd@scan service
                 service_name = "clamd@scan"
                 self.logger.info("Enabling and starting service: %s", service_name)
@@ -1879,8 +1901,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             self.logger.info("Detected antivirus software: %s", software_name)
 
             # Map antivirus software to removal commands
-            if software_name.lower() == "clamav":
-                # Remove ClamAV and its dependencies
+            if software_name.lower() != "clamav":
+                return {
+                    "success": False,
+                    "error": f"Unknown antivirus software: {software_name}",
+                }
+
+            # Remove ClamAV - detect package manager and use appropriate commands
+            error = None
+            if os.path.exists("/usr/bin/apt"):
+                # Debian/Ubuntu
                 process = await asyncio.create_subprocess_exec(
                     "apt",
                     "remove",
@@ -1896,36 +1926,86 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 _, stderr = await process.communicate()
 
                 if process.returncode != 0:
-                    self.logger.error("Failed to remove antivirus: %s", stderr.decode())
-                    return {
-                        "success": False,
-                        "error": stderr.decode(),
-                    }
+                    error = stderr.decode()
+                else:
+                    # Run autoremove to clean up unused dependencies
+                    process = await asyncio.create_subprocess_exec(
+                        "apt",
+                        "autoremove",
+                        "-y",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
 
-                # Run autoremove to clean up unused dependencies
+            elif os.path.exists("/usr/bin/dnf") or os.path.exists("/usr/bin/yum"):
+                # RHEL/CentOS - determine which command to use
+                pkg_manager = "dnf" if os.path.exists("/usr/bin/dnf") else "yum"
+
+                # Stop and disable the service first
                 process = await asyncio.create_subprocess_exec(
-                    "apt",
-                    "autoremove",
-                    "-y",
+                    "systemctl",
+                    "stop",
+                    "clamd@scan",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                _, _ = await process.communicate()
+                await process.communicate()
 
-                self.logger.info("Antivirus software removed successfully")
+                process = await asyncio.create_subprocess_exec(
+                    "systemctl",
+                    "disable",
+                    "clamd@scan",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
 
-                # Send updated status (should show no antivirus)
-                antivirus_status = antivirus_collector.collect_antivirus_status()
-                await self._send_antivirus_status_update(antivirus_status)
+                # Remove ClamAV packages
+                process = await asyncio.create_subprocess_exec(
+                    pkg_manager,
+                    "remove",
+                    "-y",
+                    "clamav",
+                    "clamd",
+                    "clamav-update",
+                    "clamav-data",
+                    "clamav-lib",
+                    "clamav-filesystem",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
 
-                return {
-                    "success": True,
-                    "software_name": software_name,
-                }
+                if process.returncode != 0:
+                    error = stderr.decode()
+                else:
+                    # Run autoremove
+                    process = await asyncio.create_subprocess_exec(
+                        pkg_manager,
+                        "autoremove",
+                        "-y",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+            else:
+                error = "Unsupported package manager"
+
+            if error:
+                self.logger.error("Failed to remove antivirus: %s", error)
+                return {"success": False, "error": error}
+
+            self.logger.info("Antivirus software removed successfully")
+
+            # Send updated status (should show no antivirus)
+            antivirus_status = antivirus_collector.collect_antivirus_status()
+            await self._send_antivirus_status_update(antivirus_status)
 
             return {
-                "success": False,
-                "error": f"Unknown antivirus software: {software_name}",
+                "success": True,
+                "software_name": software_name,
             }
 
         except Exception as e:

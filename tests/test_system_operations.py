@@ -130,33 +130,42 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     @pytest.mark.asyncio
     async def test_get_detailed_system_info_success(self):
         """Test successful system info collection."""
-        with patch("platform.architecture", return_value=("64bit", "ELF")):
-            with patch("platform.processor", return_value="x86_64"):
-                with patch("platform.system", return_value="Linux"):
-                    with patch("platform.release", return_value="5.4.0"):
-                        with patch("platform.version", return_value="Ubuntu 20.04"):
-                            result = await self.system_ops.get_detailed_system_info()
+        # Mock the async methods
+        self.mock_agent.update_os_version = AsyncMock()
+        self.mock_agent.update_hardware = AsyncMock()
 
-                            assert result["success"] is True
-                            info = result["result"]
-                            assert info["hostname"] == "test-host"
-                            assert info["platform"] == "Linux"
-                            assert info["ipv4"] == "192.168.1.100"
-                            assert info["ipv6"] == "::1"
-                            assert info["architecture"] == "64bit"
-                            assert info["processor"] == "x86_64"
-                            assert info["system"] == "Linux"
-                            assert info["release"] == "5.4.0"
-                            assert info["version"] == "Ubuntu 20.04"
+        with patch(
+            "src.sysmanage_agent.operations.system_operations.AntivirusCollector"
+        ) as mock_av_collector:
+            mock_av_instance = Mock()
+            mock_av_instance.collect_antivirus_status.return_value = {
+                "software_name": "clamav",
+                "enabled": True,
+            }
+            mock_av_collector.return_value = mock_av_instance
+
+            self.system_ops._send_antivirus_status_update = AsyncMock()
+
+            result = await self.system_ops.get_detailed_system_info()
+
+            assert result["success"] is True
+            assert result["result"] == "System info refresh initiated"
+            self.mock_agent.update_os_version.assert_called_once()
+            self.mock_agent.update_hardware.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_detailed_system_info_exception(self):
         """Test system info collection with exception."""
-        with patch("platform.architecture", side_effect=Exception("Platform error")):
-            result = await self.system_ops.get_detailed_system_info()
+        # Mock the async methods with one raising an exception
+        self.mock_agent.update_os_version = AsyncMock(
+            side_effect=Exception("Platform error")
+        )
+        self.mock_agent.update_hardware = AsyncMock()
 
-            assert result["success"] is False
-            assert "Platform error" in result["error"]
+        result = await self.system_ops.get_detailed_system_info()
+
+        assert result["success"] is False
+        assert "Platform error" in result["error"]
 
     @pytest.mark.asyncio
     async def test_install_package_success(self):
