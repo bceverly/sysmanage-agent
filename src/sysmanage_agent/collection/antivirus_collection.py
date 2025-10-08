@@ -384,9 +384,23 @@ class AntivirusCollector:
         }
 
     def _is_service_running(self, service_name: str) -> bool:
-        """Check if a systemd/init service is running."""
+        """Check if a systemd/init/rcctl service is running."""
         try:
-            # Try systemctl first (systemd)
+            # Try rcctl first (OpenBSD)
+            if os.path.exists("/usr/sbin/rcctl"):
+                result = subprocess.run(
+                    ["rcctl", "check", service_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )  # nosec B603 B607
+
+                # rcctl check returns 0 if running, 1 if not
+                if result.returncode == 0:
+                    return True
+
+            # Try systemctl (systemd)
             result = subprocess.run(
                 ["systemctl", "is-active", service_name],
                 capture_output=True,
