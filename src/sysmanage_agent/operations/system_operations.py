@@ -1575,12 +1575,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 # Configure ClamAV on OpenBSD
                 self.logger.info("Configuring ClamAV on OpenBSD")
 
-                # Create freshclam.conf from sample if it doesn't exist
-                freshclam_conf = "/etc/clamd/freshclam.conf"
-                freshclam_sample = "/etc/clamd/freshclam.conf.sample"
-                if not os.path.exists(freshclam_conf) and os.path.exists(
-                    freshclam_sample
-                ):
+                # Copy sample config files and comment out Example line
+                # freshclam.conf
+                freshclam_conf = "/etc/freshclam.conf"
+                freshclam_sample = (
+                    "/usr/local/share/examples/clamav/freshclam.conf.sample"
+                )
+                if os.path.exists(freshclam_sample):
                     self.logger.info("Creating freshclam.conf from sample")
                     process = await asyncio.create_subprocess_exec(
                         "cp",
@@ -1601,11 +1602,12 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stderr=asyncio.subprocess.PIPE,
                     )
                     await process.communicate()
+                    self.logger.info("freshclam.conf configured")
 
-                # Create clamd.conf from sample if it doesn't exist
-                clamd_conf = "/etc/clamd/clamd.conf"
-                clamd_sample = "/etc/clamd/clamd.conf.sample"
-                if not os.path.exists(clamd_conf) and os.path.exists(clamd_sample):
+                # clamd.conf
+                clamd_conf = "/etc/clamd.conf"
+                clamd_sample = "/usr/local/share/examples/clamav/clamd.conf.sample"
+                if os.path.exists(clamd_sample):
                     self.logger.info("Creating clamd.conf from sample")
                     process = await asyncio.create_subprocess_exec(
                         "cp",
@@ -1626,6 +1628,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stderr=asyncio.subprocess.PIPE,
                     )
                     await process.communicate()
+                    self.logger.info("clamd.conf configured")
 
                 # Enable and start clamd service (OpenBSD uses clamd)
                 self.logger.info("Enabling and starting clamd service")
