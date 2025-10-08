@@ -1572,12 +1572,12 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 result = update_detector.install_package("clamav", "auto")
                 self.logger.info("clamav installation result: %s", result)
 
-                # Enable and start clamd service (OpenBSD uses clamav_clamd)
-                self.logger.info("Enabling and starting clamav_clamd service")
+                # Enable and start clamd service (OpenBSD uses clamd)
+                self.logger.info("Enabling and starting clamd service")
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
                     "enable",
-                    "clamav_clamd",
+                    "clamd",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
@@ -1586,27 +1586,25 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
                     "start",
-                    "clamav_clamd",
+                    "clamd",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
-                    self.logger.info(
-                        "clamav_clamd service enabled and started successfully"
-                    )
+                    self.logger.info("clamd service enabled and started successfully")
                 else:
                     self.logger.warning(
-                        "Failed to start clamav_clamd: %s",
+                        "Failed to start clamd: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
-                # Enable and start freshclam service (OpenBSD uses clamav_freshclam)
-                self.logger.info("Enabling and starting clamav_freshclam service")
+                # Enable and start freshclam service (OpenBSD uses freshclam)
+                self.logger.info("Enabling and starting freshclam service")
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
                     "enable",
-                    "clamav_freshclam",
+                    "freshclam",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
@@ -1615,18 +1613,18 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
                     "start",
-                    "clamav_freshclam",
+                    "freshclam",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
                     self.logger.info(
-                        "clamav_freshclam service enabled and started successfully"
+                        "freshclam service enabled and started successfully"
                     )
                 else:
                     self.logger.warning(
-                        "Failed to start clamav_freshclam: %s",
+                        "Failed to start freshclam: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
@@ -1921,7 +1919,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 # Check OS type and use appropriate service name
                 if os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
-                    service_name = "clamav_clamd"
+                    service_name = "clamd"
                     use_rcctl = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
@@ -2019,7 +2017,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 # Check OS type and use appropriate service name
                 if os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
-                    service_name = "clamav_clamd"
+                    service_name = "clamd"
                     use_rcctl = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
@@ -2122,7 +2120,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             if os.path.exists("/usr/sbin/pkg_delete"):
                 # OpenBSD
                 # Stop and disable services first
-                for service in ["clamav_clamd", "clamav_freshclam"]:
+                for service in ["clamd", "freshclam"]:
                     process = await asyncio.create_subprocess_exec(
                         "rcctl",
                         "stop",
