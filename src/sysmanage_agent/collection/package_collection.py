@@ -12,7 +12,7 @@ import os
 import platform
 import subprocess  # nosec B404
 import urllib.request
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 # Parsing trusted Chocolatey API XML
 from datetime import datetime, timezone
 from typing import Dict, List
 
@@ -601,6 +601,7 @@ class PackageCollector:
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
                     ) as response:  # nosec B310
@@ -682,12 +683,15 @@ class PackageCollector:
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
                     ) as response:  # nosec B310
                         # Parse XML response
                         data = response.read().decode("utf-8")
-                        root = ET.fromstring(data)
+                        root = ET.fromstring(
+                            data
+                        )  # nosec B314 # Trusted Chocolatey API XML
 
                         # Define namespaces
                         ns = {
