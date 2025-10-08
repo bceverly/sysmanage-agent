@@ -2141,11 +2141,14 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                     await process.communicate()
 
-                # Remove ClamAV package using doas
+                # Remove ClamAV package (use doas only if not root)
+                if os.geteuid() == 0:
+                    cmd = ["pkg_delete", "clamav"]
+                else:
+                    cmd = ["doas", "pkg_delete", "clamav"]
+
                 process = await asyncio.create_subprocess_exec(
-                    "doas",
-                    "pkg_delete",
-                    "clamav",
+                    *cmd,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )

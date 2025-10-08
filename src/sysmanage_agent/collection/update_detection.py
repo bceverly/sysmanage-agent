@@ -3781,11 +3781,19 @@ class UpdateDetector:
     def _install_with_pkg(self, package_name: str) -> Dict[str, Any]:
         """Install package using pkg package manager (BSD systems)."""
         try:
-            # OpenBSD uses doas and pkg_add, FreeBSD uses sudo and pkg
+            # OpenBSD uses pkg_add, FreeBSD uses pkg
             if platform.system() == "OpenBSD":
-                cmd = ["doas", "pkg_add", package_name]
+                # Check if running as root
+                if os.geteuid() == 0:
+                    cmd = ["pkg_add", package_name]
+                else:
+                    cmd = ["doas", "pkg_add", package_name]
             else:
-                cmd = ["sudo", "pkg", "install", "-y", package_name]
+                # FreeBSD
+                if os.geteuid() == 0:
+                    cmd = ["pkg", "install", "-y", package_name]
+                else:
+                    cmd = ["sudo", "pkg", "install", "-y", package_name]
 
             result = subprocess.run(  # nosec B603, B607
                 cmd,
