@@ -40,6 +40,7 @@ from src.sysmanage_agent.communication.message_handler import QueuedMessageHandl
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 from src.sysmanage_agent.collection.role_detection import RoleDetector
+from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
 from src.database.init import initialize_database
 from src.database.base import get_database_manager
 from src.database.models import HostApproval
@@ -122,6 +123,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
         # Initialize role detector
         self.role_detector = RoleDetector()
+
+        # Initialize antivirus collector
+        self.antivirus_collector = AntivirusCollector()
 
         # Initialize operation modules
         self.update_ops = UpdateOperations(self)
@@ -1154,6 +1158,40 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         else:
             self.logger.warning("Failed to send third-party repository data")
 
+    async def _send_antivirus_status_update(self):
+        """Send antivirus status update."""
+        self.logger.debug("AGENT_DEBUG: Collecting antivirus status data")
+
+        antivirus_info = self.antivirus_collector.collect_antivirus_status()
+
+        # Add host_id if available
+        host_approval = self.get_host_approval_from_db()
+        if host_approval:
+            antivirus_message_data = {
+                "host_id": str(host_approval.host_id),
+                "software_name": antivirus_info["software_name"],
+                "install_path": antivirus_info["install_path"],
+                "version": antivirus_info["version"],
+                "enabled": antivirus_info["enabled"],
+            }
+
+            antivirus_message = self.create_message(
+                "antivirus_status_update", antivirus_message_data
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: Sending antivirus status message: %s",
+                antivirus_message["message_id"],
+            )
+            success = await self.send_message(antivirus_message)
+            if success:
+                self.logger.debug(
+                    "AGENT_DEBUG: Antivirus status data sent successfully"
+                )
+            else:
+                self.logger.warning("Failed to send antivirus status data")
+        else:
+            self.logger.warning("Cannot send antivirus status data: no host approval")
+
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
         if not (self.running and self.connected):
@@ -1210,6 +1248,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             self.logger.error(
                 "Error collecting/sending third-party repository data: %s", e
             )
+
+        # Send antivirus status update
+        try:
+            await self._send_antivirus_status_update()
+        except Exception as e:
+            self.logger.error("Error collecting/sending antivirus status: %s", e)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
@@ -1807,6 +1851,22 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
     ) -> Dict[str, Any]:
         """Disable third-party repositories on the system."""
         return await self.system_ops.disable_third_party_repositories(parameters)
+
+    async def deploy_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy antivirus software to the system."""
+        return await self.system_ops.deploy_antivirus(parameters)
+
+    async def enable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable antivirus service(s)."""
+        return await self.system_ops.enable_antivirus(parameters)
+
+    async def disable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable antivirus service(s)."""
+        return await self.system_ops.disable_antivirus(parameters)
+
+    async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove antivirus software from the system."""
+        return await self.system_ops.remove_antivirus(parameters)
 
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""

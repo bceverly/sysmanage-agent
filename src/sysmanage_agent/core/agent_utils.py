@@ -296,6 +296,10 @@ class MessageProcessor:
             "delete_third_party_repositories": self.agent.delete_third_party_repositories,
             "enable_third_party_repositories": self.agent.enable_third_party_repositories,
             "disable_third_party_repositories": self.agent.disable_third_party_repositories,
+            "deploy_antivirus": self.agent.deploy_antivirus,
+            "enable_antivirus": self.agent.enable_antivirus,
+            "disable_antivirus": self.agent.disable_antivirus,
+            "remove_antivirus": self.agent.remove_antivirus,
         }
 
     async def _handle_execute_script(

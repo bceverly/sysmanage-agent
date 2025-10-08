@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
 from src.i18n import _
+from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
@@ -61,23 +62,27 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             return {"success": False, "error": str(e)}
 
     async def get_detailed_system_info(self) -> Dict[str, Any]:
-        """Get detailed system information."""
+        """
+        Get detailed system information and send all data to server.
+        This triggers collection and sending of OS version, hardware, storage,
+        network, users, groups, software, Ubuntu Pro info, and antivirus status.
+        """
         try:
-            # Get basic system info
-            system_info = self.agent.registration.get_system_info()
-            info = {
-                "hostname": system_info.get("hostname") or socket.gethostname(),
-                "platform": self.agent.platform,
-                "ipv4": self.agent.ipv4,
-                "ipv6": self.agent.ipv6,
-                "architecture": platform.architecture()[0],
-                "processor": platform.processor(),
-                "system": platform.system(),
-                "release": platform.release(),
-                "version": platform.version(),
-            }
+            # Trigger all the standard data collection and sending
+            await self.agent.update_os_version()
+            await self.agent.update_hardware()
 
-            return {"success": True, "result": info}
+            # Collect and send antivirus status
+            try:
+                antivirus_collector = AntivirusCollector()
+                antivirus_status = antivirus_collector.collect_antivirus_status()
+                await self._send_antivirus_status_update(antivirus_status)
+            except Exception as e:
+                self.logger.warning(
+                    "Failed to collect/send antivirus status: %s", str(e)
+                )
+
+            return {"success": True, "result": "System info refresh initiated"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -1544,6 +1549,388 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 "success": False,
                 "error": f"Failed to remove OpenTelemetry: {str(e)}",
             }
+
+    async def deploy_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy antivirus software to the system."""
+        antivirus_package = parameters.get("antivirus_package")
+
+        if not antivirus_package:
+            return {"success": False, "error": "No antivirus package specified"}
+
+        self.logger.info("Deploying antivirus package: %s", antivirus_package)
+
+        try:
+            # Special handling for ClamAV on RHEL/CentOS - need EPEL and multiple packages
+            if "clamav" in antivirus_package.lower() and (
+                os.path.exists("/usr/bin/yum") or os.path.exists("/usr/bin/dnf")
+            ):
+                self.logger.info(
+                    "Detected RHEL/CentOS system, enabling EPEL and installing ClamAV packages"
+                )
+
+                # Enable EPEL repository
+                update_detector = UpdateDetector()
+                epel_result = update_detector.install_package("epel-release", "auto")
+                self.logger.info("EPEL installation result: %s", epel_result)
+
+                # Install ClamAV packages
+                packages = ["clamav", "clamd", "clamav-update"]
+                for pkg in packages:
+                    self.logger.info("Installing %s", pkg)
+                    result = update_detector.install_package(pkg, "auto")
+                    self.logger.info("%s installation result: %s", pkg, result)
+
+                # Update virus definitions
+                self.logger.info("Updating virus definitions with freshclam")
+                process = await asyncio.create_subprocess_exec(
+                    "freshclam",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+                if process.returncode == 0:
+                    self.logger.info("Virus definitions updated successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to update virus definitions: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                # Enable and start clamd@scan service
+                service_name = "clamd@scan"
+                self.logger.info("Enabling and starting service: %s", service_name)
+                process = await asyncio.create_subprocess_exec(
+                    "systemctl",
+                    "enable",
+                    "--now",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+
+                if process.returncode == 0:
+                    self.logger.info(
+                        "Service %s enabled and started successfully", service_name
+                    )
+                    await asyncio.sleep(2)
+                else:
+                    self.logger.warning(
+                        "Failed to enable/start service %s: %s",
+                        service_name,
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                success = True
+                error_message = None
+                installed_version = None
+                result = "ClamAV installed successfully on RHEL/CentOS"
+
+            else:
+                # Standard installation for other distros (Debian/Ubuntu)
+                update_detector = UpdateDetector()
+                result = update_detector.install_package(antivirus_package, "auto")
+
+                # Determine success based on result
+                success = True
+                error_message = None
+                installed_version = None
+
+                if isinstance(result, dict):
+                    success = result.get("success", True)
+                    error_message = result.get("error")
+                    installed_version = result.get("version")
+                elif isinstance(result, str):
+                    if "error" in result.lower() or "failed" in result.lower():
+                        success = False
+                        error_message = result
+
+                # After installation, enable and start the service
+                if success and "clamav" in antivirus_package.lower():
+                    self.logger.info(
+                        "Antivirus package %s installed successfully, enabling and starting service",
+                        antivirus_package,
+                    )
+                    try:
+                        # Ubuntu/Debian uses clamav-freshclam
+                        service_name = "clamav-freshclam"
+                        self.logger.info(
+                            "Enabling and starting service: %s", service_name
+                        )
+                        process = await asyncio.create_subprocess_exec(
+                            "systemctl",
+                            "enable",
+                            "--now",
+                            service_name,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                        )
+                        _, stderr = await process.communicate()
+
+                        if process.returncode == 0:
+                            self.logger.info(
+                                "Service %s enabled and started successfully",
+                                service_name,
+                            )
+                            await asyncio.sleep(2)
+                        else:
+                            self.logger.warning(
+                                "Failed to enable/start service %s: %s",
+                                service_name,
+                                stderr.decode() if stderr else "unknown error",
+                            )
+                    except Exception as service_error:
+                        self.logger.warning(
+                            "Failed to enable service: %s", str(service_error)
+                        )
+
+            # Collect antivirus status and send it back to server
+            try:
+                antivirus_collector = AntivirusCollector()
+                antivirus_status = antivirus_collector.collect_antivirus_status()
+                await self._send_antivirus_status_update(antivirus_status)
+            except Exception as status_error:
+                self.logger.warning(
+                    "Failed to collect/send antivirus status after installation: %s",
+                    str(status_error),
+                )
+
+            return {
+                "success": success,
+                "result": result,
+                "package_name": antivirus_package,
+                "installed_version": installed_version,
+                "error": error_message,
+            }
+
+        except Exception as e:
+            error_message = str(e)
+            self.logger.error("Failed to deploy antivirus %s: %s", antivirus_package, e)
+
+            return {
+                "success": False,
+                "error": error_message,
+                "package_name": antivirus_package,
+            }
+
+    async def _send_antivirus_status_update(self, antivirus_status: Dict[str, Any]):
+        """Send antivirus status update to server."""
+        try:
+            system_info = self.agent.registration.get_system_info()
+            message = self.agent.create_message(
+                "antivirus_status_update",
+                {
+                    "hostname": system_info.get("hostname") or socket.gethostname(),
+                    "software_name": antivirus_status.get("software_name"),
+                    "install_path": antivirus_status.get("install_path"),
+                    "version": antivirus_status.get("version"),
+                    "enabled": antivirus_status.get("enabled"),
+                },
+            )
+            await self.agent.send_message(message)
+            self.logger.info("Sent antivirus status update to server")
+        except Exception as e:
+            self.logger.error("Failed to send antivirus status update: %s", e)
+
+    async def enable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable antivirus service(s)."""
+        self.logger.info("Enabling antivirus service")
+
+        try:
+            # Collect current antivirus status to determine what service to enable
+            antivirus_collector = AntivirusCollector()
+            antivirus_status = antivirus_collector.collect_antivirus_status()
+
+            if not antivirus_status or not antivirus_status.get("software_name"):
+                return {
+                    "success": False,
+                    "error": "No antivirus software detected",
+                }
+
+            software_name = antivirus_status["software_name"]
+            self.logger.info("Detected antivirus software: %s", software_name)
+
+            # Map antivirus software names to their service names
+            service_mapping = {
+                "clamav": "clamav-freshclam",  # ClamAV's main service
+            }
+
+            service_name = service_mapping.get(software_name.lower())
+            if not service_name:
+                return {
+                    "success": False,
+                    "error": f"Unknown antivirus software: {software_name}",
+                }
+
+            # Start and enable the service
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "enable",
+                "--now",
+                service_name,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await process.communicate()
+
+            success = process.returncode == 0
+            if success:
+                self.logger.info(
+                    "Antivirus service %s enabled successfully", service_name
+                )
+                # Collect and send updated status
+                antivirus_status = antivirus_collector.collect_antivirus_status()
+                await self._send_antivirus_status_update(antivirus_status)
+            else:
+                self.logger.error(
+                    "Failed to enable antivirus service: %s", stderr.decode()
+                )
+
+            return {
+                "success": success,
+                "service_name": service_name,
+                "error": stderr.decode() if not success else None,
+            }
+
+        except Exception as e:
+            self.logger.error("Failed to enable antivirus: %s", e)
+            return {"success": False, "error": str(e)}
+
+    async def disable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable antivirus service(s)."""
+        self.logger.info("Disabling antivirus service")
+
+        try:
+            # Collect current antivirus status to determine what service to disable
+            antivirus_collector = AntivirusCollector()
+            antivirus_status = antivirus_collector.collect_antivirus_status()
+
+            if not antivirus_status or not antivirus_status.get("software_name"):
+                return {
+                    "success": False,
+                    "error": "No antivirus software detected",
+                }
+
+            software_name = antivirus_status["software_name"]
+            self.logger.info("Detected antivirus software: %s", software_name)
+
+            # Map antivirus software names to their service names
+            service_mapping = {
+                "clamav": "clamav-freshclam",
+            }
+
+            service_name = service_mapping.get(software_name.lower())
+            if not service_name:
+                return {
+                    "success": False,
+                    "error": f"Unknown antivirus software: {software_name}",
+                }
+
+            # Stop and disable the service
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "disable",
+                "--now",
+                service_name,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await process.communicate()
+
+            success = process.returncode == 0
+            if success:
+                self.logger.info(
+                    "Antivirus service %s disabled successfully", service_name
+                )
+                # Collect and send updated status
+                antivirus_status = antivirus_collector.collect_antivirus_status()
+                await self._send_antivirus_status_update(antivirus_status)
+            else:
+                self.logger.error(
+                    "Failed to disable antivirus service: %s", stderr.decode()
+                )
+
+            return {
+                "success": success,
+                "service_name": service_name,
+                "error": stderr.decode() if not success else None,
+            }
+
+        except Exception as e:
+            self.logger.error("Failed to disable antivirus: %s", e)
+            return {"success": False, "error": str(e)}
+
+    async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove antivirus software from the system."""
+        self.logger.info("Removing antivirus software")
+
+        try:
+            # Collect current antivirus status to determine what to remove
+            antivirus_collector = AntivirusCollector()
+            antivirus_status = antivirus_collector.collect_antivirus_status()
+
+            if not antivirus_status or not antivirus_status.get("software_name"):
+                return {
+                    "success": False,
+                    "error": "No antivirus software detected",
+                }
+
+            software_name = antivirus_status["software_name"]
+            self.logger.info("Detected antivirus software: %s", software_name)
+
+            # Map antivirus software to removal commands
+            if software_name.lower() == "clamav":
+                # Remove ClamAV and its dependencies
+                process = await asyncio.create_subprocess_exec(
+                    "apt",
+                    "remove",
+                    "--purge",
+                    "-y",
+                    "clamav",
+                    "clamav-base",
+                    "clamav-freshclam",
+                    "libclamav12",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    self.logger.error("Failed to remove antivirus: %s", stderr.decode())
+                    return {
+                        "success": False,
+                        "error": stderr.decode(),
+                    }
+
+                # Run autoremove to clean up unused dependencies
+                process = await asyncio.create_subprocess_exec(
+                    "apt",
+                    "autoremove",
+                    "-y",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, _ = await process.communicate()
+
+                self.logger.info("Antivirus software removed successfully")
+
+                # Send updated status (should show no antivirus)
+                antivirus_status = antivirus_collector.collect_antivirus_status()
+                await self._send_antivirus_status_update(antivirus_status)
+
+                return {
+                    "success": True,
+                    "software_name": software_name,
+                }
+
+            return {
+                "success": False,
+                "error": f"Unknown antivirus software: {software_name}",
+            }
+
+        except Exception as e:
+            self.logger.error("Failed to remove antivirus: %s", e)
+            return {"success": False, "error": str(e)}
 
     async def _remove_opentelemetry_linux(self) -> Dict[str, Any]:
         """Remove OpenTelemetry from Linux systems."""
