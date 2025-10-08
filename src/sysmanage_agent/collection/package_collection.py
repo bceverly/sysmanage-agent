@@ -598,13 +598,16 @@ class PackageCollector:
                     # Add pagination parameters
                     url = f"{api_url}?page={page}&limit=100"
 
+                    # Validate URL scheme for security
+                    if not url.startswith("https://"):
+                        raise ValueError("Only HTTPS URLs are allowed")
+
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
-                    ) as response:  # nosec B310 # nosemgrep
+                    ) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
 
                         # Check if we got packages
@@ -680,13 +683,16 @@ class PackageCollector:
                     # OData pagination parameters
                     url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
 
+                    # Validate URL scheme for security
+                    if not url.startswith("https://"):
+                        raise ValueError("Only HTTPS URLs are allowed")
+
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
-                    ) as response:  # nosec B310 # nosemgrep
+                    ) as response:  # nosec B310
                         # Parse XML response
                         data = response.read().decode("utf-8")
                         root = ET.fromstring(
