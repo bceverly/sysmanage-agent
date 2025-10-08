@@ -1618,11 +1618,15 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                     await process.communicate()
 
-                    # Comment out Example line in clamd.conf
+                    # Comment out Example line and configure LocalSocket in clamd.conf
+                    # Use sed to do multiple edits
                     process = await asyncio.create_subprocess_exec(
                         "sed",
                         "-i",
+                        "-e",
                         "s/^Example/#Example/",
+                        "-e",
+                        "s/^#LocalSocket /LocalSocket /",
                         clamd_conf,
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
@@ -1630,46 +1634,8 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     await process.communicate()
                     self.logger.info("clamd.conf configured")
 
-                # Enable and start clamd service (OpenBSD uses clamd)
-                self.logger.info("Enabling and starting clamd service")
-                process = await asyncio.create_subprocess_exec(
-                    "rcctl",
-                    "enable",
-                    "clamd",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await process.communicate()
-                self.logger.debug(
-                    "rcctl enable clamd: stdout=%s stderr=%s returncode=%d",
-                    stdout.decode() if stdout else "",
-                    stderr.decode() if stderr else "",
-                    process.returncode,
-                )
-
-                process = await asyncio.create_subprocess_exec(
-                    "rcctl",
-                    "start",
-                    "clamd",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await process.communicate()
-                self.logger.debug(
-                    "rcctl start clamd: stdout=%s stderr=%s returncode=%d",
-                    stdout.decode() if stdout else "",
-                    stderr.decode() if stderr else "",
-                    process.returncode,
-                )
-                if process.returncode == 0:
-                    self.logger.info("clamd service enabled and started successfully")
-                else:
-                    self.logger.warning(
-                        "Failed to start clamd: %s",
-                        stderr.decode() if stderr else "unknown error",
-                    )
-
-                # Enable and start freshclam service (OpenBSD uses freshclam)
+                # Enable and start freshclam service first (OpenBSD uses freshclam)
+                # Note: freshclam must run first to download virus database before clamd can start
                 self.logger.info("Enabling and starting freshclam service")
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
@@ -1707,6 +1673,62 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 else:
                     self.logger.warning(
                         "Failed to start freshclam: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                # Wait for freshclam to download the database (give it up to 30 seconds)
+                self.logger.info("Waiting for freshclam to download virus database")
+                database_ready = False
+                for _ in range(30):
+                    if os.path.exists("/var/db/clamav/main.cvd") or os.path.exists(
+                        "/var/db/clamav/main.cld"
+                    ):
+                        self.logger.info("Virus database downloaded successfully")
+                        database_ready = True
+                        break
+                    await asyncio.sleep(1)
+
+                if not database_ready:
+                    self.logger.warning(
+                        "Virus database not downloaded after 30 seconds, proceeding anyway"
+                    )
+
+                # Enable and start clamd service (OpenBSD uses clamd)
+                self.logger.info("Enabling and starting clamd service")
+                process = await asyncio.create_subprocess_exec(
+                    "rcctl",
+                    "enable",
+                    "clamd",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl enable clamd: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
+
+                process = await asyncio.create_subprocess_exec(
+                    "rcctl",
+                    "start",
+                    "clamd",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl start clamd: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
+                if process.returncode == 0:
+                    self.logger.info("clamd service enabled and started successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to start clamd: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
