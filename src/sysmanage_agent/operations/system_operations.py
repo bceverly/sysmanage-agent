@@ -1572,6 +1572,61 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 result = update_detector.install_package("clamav", "auto")
                 self.logger.info("clamav installation result: %s", result)
 
+                # Configure ClamAV on OpenBSD
+                self.logger.info("Configuring ClamAV on OpenBSD")
+
+                # Create freshclam.conf from sample if it doesn't exist
+                freshclam_conf = "/etc/clamd/freshclam.conf"
+                freshclam_sample = "/etc/clamd/freshclam.conf.sample"
+                if not os.path.exists(freshclam_conf) and os.path.exists(
+                    freshclam_sample
+                ):
+                    self.logger.info("Creating freshclam.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        freshclam_sample,
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line in freshclam.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "s/^Example/#Example/",
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                # Create clamd.conf from sample if it doesn't exist
+                clamd_conf = "/etc/clamd/clamd.conf"
+                clamd_sample = "/etc/clamd/clamd.conf.sample"
+                if not os.path.exists(clamd_conf) and os.path.exists(clamd_sample):
+                    self.logger.info("Creating clamd.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        clamd_sample,
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line in clamd.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "s/^Example/#Example/",
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
                 # Enable and start clamd service (OpenBSD uses clamd)
                 self.logger.info("Enabling and starting clamd service")
                 process = await asyncio.create_subprocess_exec(
@@ -1581,7 +1636,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                await process.communicate()
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl enable clamd: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
 
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
@@ -1590,7 +1651,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                _, stderr = await process.communicate()
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl start clamd: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
                 if process.returncode == 0:
                     self.logger.info("clamd service enabled and started successfully")
                 else:
@@ -1608,7 +1675,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                await process.communicate()
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl enable freshclam: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
 
                 process = await asyncio.create_subprocess_exec(
                     "rcctl",
@@ -1617,7 +1690,13 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                _, stderr = await process.communicate()
+                stdout, stderr = await process.communicate()
+                self.logger.debug(
+                    "rcctl start freshclam: stdout=%s stderr=%s returncode=%d",
+                    stdout.decode() if stdout else "",
+                    stderr.decode() if stderr else "",
+                    process.returncode,
+                )
                 if process.returncode == 0:
                     self.logger.info(
                         "freshclam service enabled and started successfully"
