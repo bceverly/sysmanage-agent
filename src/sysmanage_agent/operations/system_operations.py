@@ -1619,6 +1619,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     await process.communicate()
 
                     # Comment out Example line and configure LocalSocket in clamd.conf
+                    # On OpenBSD, use /var/run instead of /run
                     # Use sed to do multiple edits
                     process = await asyncio.create_subprocess_exec(
                         "sed",
@@ -1627,12 +1628,39 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         "s/^Example/#Example/",
                         "-e",
                         "s/^#LocalSocket /LocalSocket /",
+                        "-e",
+                        "s|/run/clamav/|/var/run/clamav/|g",
                         clamd_conf,
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
                     )
                     await process.communicate()
                     self.logger.info("clamd.conf configured")
+
+                # Create required runtime directories for clamd
+                # On OpenBSD, runtime directory is /var/run, not /run
+                self.logger.info("Creating runtime directories for ClamAV")
+                clamav_run_dir = "/var/run/clamav"
+                if not os.path.exists(clamav_run_dir):
+                    process = await asyncio.create_subprocess_exec(
+                        "mkdir",
+                        "-p",
+                        clamav_run_dir,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Set ownership to _clamav user
+                    process = await asyncio.create_subprocess_exec(
+                        "chown",
+                        "_clamav:_clamav",
+                        clamav_run_dir,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    self.logger.info("Created and configured /var/run/clamav directory")
 
                 # Enable and start freshclam service first (OpenBSD uses freshclam)
                 # Note: freshclam must run first to download virus database before clamd can start
