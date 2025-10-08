@@ -1772,12 +1772,15 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             software_name = antivirus_status["software_name"]
             self.logger.info("Detected antivirus software: %s", software_name)
 
-            # Map antivirus software names to their service names
-            service_mapping = {
-                "clamav": "clamav-freshclam",  # ClamAV's main service
-            }
+            # Determine service name based on OS and antivirus software
+            service_name = None
+            if software_name.lower() == "clamav":
+                # Check if RHEL/CentOS or Debian/Ubuntu
+                if os.path.exists("/usr/bin/dnf") or os.path.exists("/usr/bin/yum"):
+                    service_name = "clamd@scan"
+                else:
+                    service_name = "clamav-freshclam"
 
-            service_name = service_mapping.get(software_name.lower())
             if not service_name:
                 return {
                     "success": False,
@@ -1836,12 +1839,15 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             software_name = antivirus_status["software_name"]
             self.logger.info("Detected antivirus software: %s", software_name)
 
-            # Map antivirus software names to their service names
-            service_mapping = {
-                "clamav": "clamav-freshclam",
-            }
+            # Determine service name based on OS and antivirus software
+            service_name = None
+            if software_name.lower() == "clamav":
+                # Check if RHEL/CentOS or Debian/Ubuntu
+                if os.path.exists("/usr/bin/dnf") or os.path.exists("/usr/bin/yum"):
+                    service_name = "clamd@scan"
+                else:
+                    service_name = "clamav-freshclam"
 
-            service_name = service_mapping.get(software_name.lower())
             if not service_name:
                 return {
                     "success": False,

@@ -145,7 +145,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if which_result.returncode == 0:
                 install_path = which_result.stdout.strip()
@@ -159,7 +159,7 @@ class AntivirusCollector:
                         text=True,
                         timeout=5,
                         check=False,
-                    )  # nosec B603
+                    )  # nosec B603 B607
                     if version_result.returncode == 0:
                         # Parse version from output like "ClamAV 0.103.8/26853/..."
                         version_line = version_result.stdout.strip()
@@ -257,7 +257,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
             if version_result.returncode != 0:
                 return None
 
@@ -282,7 +282,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if which_result.returncode != 0:
                 return {
@@ -333,7 +333,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B607 B603
             if version_result.returncode == 0:
                 return self._parse_rkhunter_version(version_result.stdout)
         except Exception as e:
@@ -350,7 +350,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if which_result.returncode != 0:
                 return {
@@ -391,7 +391,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if result.returncode == 0 and result.stdout.strip() == "active":
                 return True
@@ -403,7 +403,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if result.returncode == 0:
                 return True
@@ -422,7 +422,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if result.returncode == 0 and "RUNNING" in result.stdout:
                 return True
@@ -466,7 +466,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if result.returncode == 0 and command in result.stdout:
                 return True
