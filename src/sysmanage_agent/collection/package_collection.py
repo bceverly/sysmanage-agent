@@ -604,7 +604,7 @@ class PackageCollector:
                     # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
-                    ) as response:  # nosec B310
+                    ) as response:  # nosec B310 # nosemgrep
                         data = json.loads(response.read().decode("utf-8"))
 
                         # Check if we got packages
@@ -686,7 +686,7 @@ class PackageCollector:
                     # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         req, timeout=30
-                    ) as response:  # nosec B310
+                    ) as response:  # nosec B310 # nosemgrep
                         # Parse XML response
                         data = response.read().decode("utf-8")
                         root = ET.fromstring(
