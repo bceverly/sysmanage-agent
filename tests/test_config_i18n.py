@@ -22,6 +22,8 @@ class TestAgentI18nConfiguration:
         """Create a config file with i18n settings."""
         config_file = tmp_path / "test_i18n_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -32,7 +34,7 @@ i18n:
 
 logging:
   level: "INFO"
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
         return str(config_file)
@@ -42,6 +44,8 @@ logging:
         """Create a config file without i18n settings."""
         config_file = tmp_path / "test_no_i18n_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -49,7 +53,7 @@ server:
 
 logging:
   level: "INFO"
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
         return str(config_file)

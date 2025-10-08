@@ -4,6 +4,7 @@ Focuses on improving coverage for async methods, message handlers,
 system operations, and diagnostics collection.
 """
 
+import logging
 import os
 import tempfile
 import uuid
@@ -41,6 +42,11 @@ class TestSysManageAgentAsyncMethods:
             agent = SysManageAgent(temp_config)
 
         yield agent
+
+        # Close all logging handlers to release file locks (Windows compatibility)
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
 
         if os.path.exists(temp_config):
             os.unlink(temp_config)
@@ -401,6 +407,11 @@ class TestUbuntuProOperations:
 
         yield agent
 
+        # Close all logging handlers to release file locks (Windows compatibility)
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
+
         if os.path.exists(temp_config):
             os.unlink(temp_config)
         if os.path.exists(temp_log_path):
@@ -569,6 +580,11 @@ class TestScriptExecution:
             agent = SysManageAgent(temp_config)
 
         yield agent
+
+        # Close all logging handlers to release file locks (Windows compatibility)
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
 
         if os.path.exists(temp_config):
             os.unlink(temp_config)

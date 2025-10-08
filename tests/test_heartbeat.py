@@ -20,6 +20,8 @@ class TestAgentHeartbeat:
         """Create a temporary config file for testing."""
         config_file = tmp_path / "test_sysmanage_agent.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -34,7 +36,7 @@ client:
 
 logging:
   level: "INFO"
-  file: "{log_file}"
+  file: "{log_file_str}"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 websocket:
@@ -203,6 +205,8 @@ class TestAgentConfiguration:
 
         config_file = tmp_path / "test_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 websocket:
   ping_interval: 60
@@ -210,7 +214,7 @@ websocket:
   auto_reconnect: true
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
         return ConfigManager(str(config_file))
@@ -274,6 +278,8 @@ class TestSystemInfoMessage:
         # Create a temporary config file
         config_file = tmp_path / "test_sysmanage_agent.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -285,7 +291,7 @@ i18n:
   language: "en"
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
 
@@ -319,6 +325,8 @@ class TestMessageHandling:
         # Create a temporary config file
         config_file = tmp_path / "test_sysmanage_agent.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -330,7 +338,7 @@ i18n:
   language: "en"
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
 

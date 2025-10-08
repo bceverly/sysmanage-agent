@@ -773,8 +773,11 @@ postgresql13-server-13.12
         assert apache_pkg is not None
         assert apache_pkg["version"] == "2.4.54"
 
-    def test_is_package_manager_available_success(self, package_collector):
+    @patch("platform.system")
+    def test_is_package_manager_available_success(self, mock_system, package_collector):
         """Test package manager availability detection."""
+        mock_system.return_value = "Linux"
+
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 0
 

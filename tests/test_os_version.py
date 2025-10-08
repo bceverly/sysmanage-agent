@@ -22,6 +22,8 @@ class TestOSVersionCapture:
         """Create a mock configuration manager."""
         config_file = tmp_path / "test_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -36,7 +38,7 @@ i18n:
   language: "en"
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
         return ConfigManager(str(config_file))
@@ -187,6 +189,8 @@ logging:
         """Test handling of update_os_version command."""
         config_file = tmp_path / "test_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -196,7 +200,7 @@ i18n:
   language: "en"
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
 
@@ -252,6 +256,8 @@ logging:
         """Test agent handles update_os_version command correctly."""
         config_file = tmp_path / "test_config.yaml"
         log_file = tmp_path / "test.log"
+        # Convert to forward slashes for YAML compatibility on Windows
+        log_file_str = str(log_file).replace("\\", "/")
         config_content = f"""
 server:
   hostname: "test-server.example.com"
@@ -260,7 +266,7 @@ i18n:
   language: "en"
 
 logging:
-  file: "{log_file}"
+  file: "{log_file_str}"
 """
         config_file.write_text(config_content)
 

@@ -103,6 +103,9 @@ def agent_config():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as temp_log:
         temp_log_path = temp_log.name
 
+    # Convert to forward slashes for YAML compatibility on Windows
+    temp_log_path_str = temp_log_path.replace("\\", "/")
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(
             f"""
@@ -116,7 +119,7 @@ client:
   max_registration_retries: 1
 logging:
   level: "INFO"
-  file: "{temp_log_path}"
+  file: "{temp_log_path_str}"
 websocket:
   auto_reconnect: false
   reconnect_interval: 1
@@ -274,6 +277,9 @@ def agent_legacy():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as temp_log:
         temp_log_path = temp_log.name
 
+    # Convert to forward slashes for YAML compatibility on Windows
+    temp_log_path_str = temp_log_path.replace("\\", "/")
+
     # Create a secure temporary file for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(
@@ -288,7 +294,7 @@ client:
   max_registration_retries: 1
 logging:
   level: "INFO"
-  file: "{temp_log_path}"
+  file: "{temp_log_path_str}"
 websocket:
   auto_reconnect: false
   reconnect_interval: 1
