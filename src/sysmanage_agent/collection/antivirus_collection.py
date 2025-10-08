@@ -172,12 +172,14 @@ class AntivirusCollector:
                 # Different distros use different service names:
                 # - Ubuntu/Debian: clamav-freshclam, clamav-daemon
                 # - RHEL/CentOS: clamd@scan
+                # - openSUSE: clamd.service
                 # - Generic: clamd
                 enabled = (
                     self._is_service_running("clamd")
                     or self._is_service_running("clamav-daemon")
                     or self._is_service_running("clamav-freshclam")
                     or self._is_service_running("clamd@scan")
+                    or self._is_service_running("clamd.service")
                 )
 
                 return {
