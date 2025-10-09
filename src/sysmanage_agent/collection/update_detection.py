@@ -3861,6 +3861,16 @@ class UpdateDetector:
                 check=True,
             )
 
+            # Link the package to create symlinks in /opt/homebrew/bin or /usr/local/bin
+            link_cmd = brew_cmd.split() + ["link", package_name]
+            subprocess.run(  # nosec B603, B607
+                link_cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=True,
+            )
+
             return {"success": True, "version": "unknown", "output": result.stdout}
 
         except subprocess.CalledProcessError as e:

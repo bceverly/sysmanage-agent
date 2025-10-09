@@ -1676,8 +1676,14 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
                 # Update virus definitions with freshclam
                 self.logger.info("Updating virus definitions with freshclam")
+                # Use full path since brew link creates symlinks in /opt/homebrew/bin or /usr/local/bin
+                freshclam_cmd = (
+                    "/opt/homebrew/bin/freshclam"
+                    if os.path.exists("/opt/homebrew/bin/freshclam")
+                    else "/usr/local/bin/freshclam"
+                )
                 process = await asyncio.create_subprocess_exec(
-                    "freshclam",
+                    freshclam_cmd,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
@@ -2940,10 +2946,66 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
                     )
-                _, stderr = await process.communicate()
+                stdout, stderr = await process.communicate()
 
                 if process.returncode != 0:
                     error = stderr.decode()
+                    # If brew uninstall failed, try manual removal with sudo rm -rf
+                    # This handles cases where files are locked or permissions prevent removal
+                    self.logger.warning(
+                        "brew uninstall failed: %s, attempting manual cleanup", error
+                    )
+
+                    # Determine the Cellar directory based on architecture
+                    cellar_dir = (
+                        "/opt/homebrew/Cellar"
+                        if os.path.exists("/opt/homebrew")
+                        else "/usr/local/Cellar"
+                    )
+
+                    # Find all clamav version directories
+                    clamav_path = f"{cellar_dir}/clamav"
+                    if os.path.exists(clamav_path):
+                        # Get all version directories
+                        import glob  # pylint: disable=import-outside-toplevel
+
+                        version_dirs = glob.glob(f"{clamav_path}/*")
+
+                        if version_dirs:
+                            for version_dir in version_dirs:
+                                self.logger.info(
+                                    "Removing clamav directory: %s", version_dir
+                                )
+                                process = await asyncio.create_subprocess_exec(
+                                    "sudo",
+                                    "rm",
+                                    "-rf",
+                                    version_dir,
+                                    stdout=asyncio.subprocess.PIPE,
+                                    stderr=asyncio.subprocess.PIPE,
+                                )
+                                _, stderr = await process.communicate()
+
+                                if process.returncode != 0:
+                                    error = stderr.decode()
+                                    self.logger.error(
+                                        "Manual cleanup of %s failed: %s",
+                                        version_dir,
+                                        error,
+                                    )
+                                else:
+                                    self.logger.info(
+                                        "Manual cleanup of %s successful", version_dir
+                                    )
+
+                            # Remove the parent clamav directory if empty
+                            try:
+                                os.rmdir(clamav_path)
+                                self.logger.info("Removed empty clamav directory")
+                                error = None
+                            except OSError:
+                                # Directory not empty or doesn't exist, that's fine
+                                pass
 
             elif os.path.exists("/usr/pkg/bin/pkgin"):
                 # NetBSD - service name is freshclamd (with d)
