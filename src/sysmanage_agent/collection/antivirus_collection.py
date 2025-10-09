@@ -415,7 +415,7 @@ class AntivirusCollector:
             if result.returncode == 0 and result.stdout.strip() == "active":
                 return True
 
-            # Try service command (SysV init)
+            # Try service command (SysV init and FreeBSD)
             result = subprocess.run(
                 ["service", service_name, "status"],
                 capture_output=True,
@@ -423,6 +423,14 @@ class AntivirusCollector:
                 timeout=5,
                 check=False,
             )  # nosec B603 B607
+
+            self.logger.debug(
+                "Service status check for %s: returncode=%s, stdout=%s, stderr=%s",
+                service_name,
+                result.returncode,
+                result.stdout,
+                result.stderr,
+            )
 
             if result.returncode == 0:
                 return True
