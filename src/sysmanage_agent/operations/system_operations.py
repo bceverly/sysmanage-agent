@@ -2915,7 +2915,10 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                 await process.communicate()
 
-                # Remove package
+                # Wait a moment for service to fully stop
+                await asyncio.sleep(2)
+
+                # Remove package with --force flag to handle any locked files
                 if brew_user:
                     process = await asyncio.create_subprocess_exec(
                         "sudo",
@@ -2923,6 +2926,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         brew_user,
                         brew_cmd,
                         "uninstall",
+                        "--force",
                         "clamav",
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
@@ -2931,6 +2935,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     process = await asyncio.create_subprocess_exec(
                         brew_cmd,
                         "uninstall",
+                        "--force",
                         "clamav",
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
