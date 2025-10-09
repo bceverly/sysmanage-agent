@@ -1560,8 +1560,161 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         self.logger.info("Deploying antivirus package: %s", antivirus_package)
 
         try:
+            # Special handling for ClamAV on NetBSD
+            if "clamav" in antivirus_package.lower() and os.path.exists(
+                "/usr/pkg/bin/pkgin"
+            ):
+                self.logger.info("Detected NetBSD system, installing ClamAV package")
+
+                # Install ClamAV package using pkgin
+                update_detector = UpdateDetector()
+                self.logger.info("Installing clamav")
+                result = update_detector.install_package("clamav", "auto")
+                self.logger.info("clamav installation result: %s", result)
+
+                # Configure ClamAV on NetBSD
+                self.logger.info("Configuring ClamAV on NetBSD")
+
+                # NetBSD config files are typically in /usr/pkg/etc
+                # Copy sample config files and comment out Example line
+                # freshclam.conf
+                freshclam_conf = "/usr/pkg/etc/freshclam.conf"
+                freshclam_sample = "/usr/pkg/etc/freshclam.conf.sample"
+                if os.path.exists(freshclam_sample):
+                    self.logger.info("Creating freshclam.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        freshclam_sample,
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line in freshclam.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "",
+                        "-e",
+                        "s/^Example/#Example/",
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    self.logger.info("freshclam.conf configured")
+
+                # clamd.conf
+                clamd_conf = "/usr/pkg/etc/clamd.conf"
+                clamd_sample = "/usr/pkg/etc/clamd.conf.sample"
+                if os.path.exists(clamd_sample):
+                    self.logger.info("Creating clamd.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        clamd_sample,
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line and configure LocalSocket in clamd.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "",
+                        "-e",
+                        "s/^Example/#Example/",
+                        "-e",
+                        "s/^#LocalSocket /LocalSocket /",
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    self.logger.info("clamd.conf configured")
+
+                # Enable services in rc.conf using sysrc
+                self.logger.info("Enabling ClamAV services in rc.conf")
+                process = await asyncio.create_subprocess_exec(
+                    "sysrc",
+                    "freshclam=YES",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                process = await asyncio.create_subprocess_exec(
+                    "sysrc",
+                    "clamd=YES",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                # Start freshclam service first
+                self.logger.info("Starting freshclam service")
+                process = await asyncio.create_subprocess_exec(
+                    "service",
+                    "freshclam",
+                    "start",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+                if process.returncode == 0:
+                    self.logger.info("freshclam service started successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to start freshclam: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                # Wait for virus database download
+                self.logger.info("Waiting for freshclam to download virus database")
+                database_ready = False
+                for _ in range(30):
+                    if os.path.exists("/var/clamav/main.cvd") or os.path.exists(
+                        "/var/clamav/main.cld"
+                    ):
+                        self.logger.info("Virus database downloaded successfully")
+                        database_ready = True
+                        break
+                    await asyncio.sleep(1)
+
+                if not database_ready:
+                    self.logger.warning(
+                        "Virus database not downloaded after 30 seconds, proceeding anyway"
+                    )
+
+                # Start clamd service
+                self.logger.info("Starting clamd service")
+                process = await asyncio.create_subprocess_exec(
+                    "service",
+                    "clamd",
+                    "start",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+                if process.returncode == 0:
+                    self.logger.info("clamd service started successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to start clamd: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                await asyncio.sleep(2)
+
+                success = True
+                error_message = None
+                installed_version = None
+                result = "ClamAV installed successfully on NetBSD"
+
             # Special handling for ClamAV on FreeBSD
-            if (
+            elif (
                 "clamav" in antivirus_package.lower()
                 and os.path.exists("/usr/sbin/pkg")
                 and not os.path.exists("/usr/sbin/pkg_add")
@@ -2178,19 +2331,23 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Determine service name and command based on OS and antivirus software
             service_name = None
             use_rcctl = False
-            use_freebsd_service = False
+            use_bsd_service = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
                 if os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
                     service_name = "clamd"
                     use_rcctl = True
+                elif os.path.exists("/usr/pkg/bin/pkgin"):
+                    # NetBSD - use service command
+                    service_name = "clamd"
+                    use_bsd_service = True
                 elif os.path.exists("/usr/sbin/pkg") and not os.path.exists(
                     "/usr/sbin/pkg_add"
                 ):
                     # FreeBSD - use service command
                     service_name = "clamav_clamd"
-                    use_freebsd_service = True
+                    use_bsd_service = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
                     service_name = "clamd.service"
@@ -2208,7 +2365,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 }
 
             # Start and enable the service
-            if use_freebsd_service:
+            if use_bsd_service:
                 # FreeBSD uses service command and sysrc for rc.conf
                 process = await asyncio.create_subprocess_exec(
                     "service",
@@ -2305,19 +2462,23 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Determine service name and command based on OS and antivirus software
             service_name = None
             use_rcctl = False
-            use_freebsd_service = False
+            use_bsd_service = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
                 if os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
                     service_name = "clamd"
                     use_rcctl = True
+                elif os.path.exists("/usr/pkg/bin/pkgin"):
+                    # NetBSD - use service command
+                    service_name = "clamd"
+                    use_bsd_service = True
                 elif os.path.exists("/usr/sbin/pkg") and not os.path.exists(
                     "/usr/sbin/pkg_add"
                 ):
                     # FreeBSD - use service command
                     service_name = "clamav_clamd"
-                    use_freebsd_service = True
+                    use_bsd_service = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
                     service_name = "clamd.service"
@@ -2335,7 +2496,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 }
 
             # Stop and disable the service
-            if use_freebsd_service:
+            if use_bsd_service:
                 # FreeBSD uses service command
                 process = await asyncio.create_subprocess_exec(
                     "service",
@@ -2436,7 +2597,53 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             # Remove ClamAV - detect package manager and use appropriate commands
             error = None
-            if os.path.exists("/usr/sbin/pkg") and not os.path.exists(
+            if os.path.exists("/usr/pkg/bin/pkgin"):
+                # NetBSD
+                # Stop and disable services first
+                for service in ["clamd", "freshclam"]:
+                    process = await asyncio.create_subprocess_exec(
+                        "service",
+                        service,
+                        "stop",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                # Disable services in rc.conf
+                process = await asyncio.create_subprocess_exec(
+                    "sysrc",
+                    "clamd=NO",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                process = await asyncio.create_subprocess_exec(
+                    "sysrc",
+                    "freshclam=NO",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                # Remove ClamAV package
+                if os.geteuid() == 0:
+                    cmd = ["pkgin", "-y", "remove", "clamav"]
+                else:
+                    cmd = ["sudo", "pkgin", "-y", "remove", "clamav"]
+
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    error = stderr.decode()
+
+            elif os.path.exists("/usr/sbin/pkg") and not os.path.exists(
                 "/usr/sbin/pkg_add"
             ):
                 # FreeBSD

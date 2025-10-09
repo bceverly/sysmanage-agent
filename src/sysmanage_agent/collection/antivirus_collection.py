@@ -174,6 +174,7 @@ class AntivirusCollector:
                 # - RHEL/CentOS: clamd@scan
                 # - openSUSE: clamd.service
                 # - OpenBSD: clamd
+                # - NetBSD: clamd
                 # - FreeBSD: clamav_clamd (underscore not hyphen)
                 # - Generic: clamd
                 enabled = (
@@ -389,11 +390,8 @@ class AntivirusCollector:
     def _is_service_running(self, service_name: str) -> bool:
         """Check if a systemd/init/rcctl service is running."""
         try:
-            self.logger.info("Checking if service %s is running", service_name)
-
             # Try rcctl first (OpenBSD)
             if os.path.exists("/usr/sbin/rcctl"):
-                self.logger.info("Using rcctl to check %s", service_name)
                 result = subprocess.run(
                     ["rcctl", "check", service_name],
                     capture_output=True,
@@ -404,11 +402,9 @@ class AntivirusCollector:
 
                 # rcctl check returns 0 if running, 1 if not
                 if result.returncode == 0:
-                    self.logger.info("Service %s is running (via rcctl)", service_name)
                     return True
 
             # Try systemctl (systemd)
-            self.logger.info("Trying systemctl for %s", service_name)
             try:
                 result = subprocess.run(
                     ["systemctl", "is-active", service_name],
@@ -418,23 +414,12 @@ class AntivirusCollector:
                     check=False,
                 )  # nosec B603 B607
 
-                self.logger.info(
-                    "systemctl check for %s: returncode=%s, stdout='%s'",
-                    service_name,
-                    result.returncode,
-                    result.stdout.strip(),
-                )
-
                 if result.returncode == 0 and result.stdout.strip() == "active":
-                    self.logger.info(
-                        "Service %s is active (via systemctl)", service_name
-                    )
                     return True
             except FileNotFoundError:
-                self.logger.info("systemctl not found, trying service command")
+                pass
 
             # Try service command (SysV init and FreeBSD)
-            self.logger.info("Trying service command for %s", service_name)
             try:
                 result = subprocess.run(
                     ["service", service_name, "status"],
@@ -444,23 +429,10 @@ class AntivirusCollector:
                     check=False,
                 )  # nosec B603 B607
 
-                self.logger.info(
-                    "Service command check for %s: returncode=%s, stdout='%s', stderr='%s'",
-                    service_name,
-                    result.returncode,
-                    result.stdout.strip(),
-                    result.stderr.strip(),
-                )
-
                 if result.returncode == 0:
-                    self.logger.info(
-                        "Service %s is running (via service command)", service_name
-                    )
                     return True
             except FileNotFoundError:
-                self.logger.info("service command not found")
-
-            self.logger.info("Service %s is NOT running", service_name)
+                pass
 
         except Exception as e:
             self.logger.debug("Error checking service %s: %s", service_name, e)
