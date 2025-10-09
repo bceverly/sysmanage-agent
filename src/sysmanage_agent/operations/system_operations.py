@@ -1560,6 +1560,24 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         self.logger.info("Deploying antivirus package: %s", antivirus_package)
 
         try:
+            # Helper function to get Homebrew user
+            def _get_brew_user():
+                """Get the user that owns the Homebrew installation."""
+                import pwd  # pylint: disable=import-outside-toplevel
+
+                # Check both possible Homebrew locations
+                brew_dirs = ["/opt/homebrew", "/usr/local/Homebrew"]
+                for brew_dir in brew_dirs:
+                    if os.path.exists(brew_dir):
+                        try:
+                            stat_info = os.stat(brew_dir)
+                            return pwd.getpwuid(stat_info.st_uid).pw_name
+                        except (OSError, KeyError):
+                            continue
+
+                # Fallback to SUDO_USER if available
+                return os.environ.get("SUDO_USER")
+
             # Special handling for ClamAV on macOS
             if "clamav" in antivirus_package.lower() and (
                 os.path.exists("/usr/local/bin/brew")
@@ -1589,8 +1607,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
                 self.logger.info("Configuring ClamAV on macOS")
 
-                # Create log directory
+                # Create log and database directories
                 os.makedirs(log_dir, exist_ok=True)
+
+                # Create database directory for virus definitions
+                db_dir = (
+                    "/opt/homebrew/var/lib/clamav"
+                    if os.path.exists("/opt/homebrew")
+                    else "/usr/local/var/lib/clamav"
+                )
+                os.makedirs(db_dir, exist_ok=True)
 
                 # Configure freshclam.conf
                 freshclam_conf = f"{config_base}/freshclam.conf"
@@ -1671,14 +1697,33 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     if os.path.exists("/opt/homebrew/bin/brew")
                     else "/usr/local/bin/brew"
                 )
-                process = await asyncio.create_subprocess_exec(
-                    brew_cmd,
-                    "services",
-                    "start",
-                    "clamav",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+
+                # If running as root, use sudo -u to run as the actual user
+                # Homebrew doesn't allow running as root
+                brew_user = _get_brew_user() if os.geteuid() == 0 else None
+
+                if brew_user:
+                    self.logger.info("Running brew as user: %s", brew_user)
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "-u",
+                        brew_user,
+                        brew_cmd,
+                        "services",
+                        "start",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        brew_cmd,
+                        "services",
+                        "start",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
                     self.logger.info("ClamAV service started successfully")
@@ -2791,6 +2836,24 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         self.logger.info("Removing antivirus software")
 
         try:
+            # Helper function to get Homebrew user
+            def _get_brew_user():
+                """Get the user that owns the Homebrew installation."""
+                import pwd  # pylint: disable=import-outside-toplevel
+
+                # Check both possible Homebrew locations
+                brew_dirs = ["/opt/homebrew", "/usr/local/Homebrew"]
+                for brew_dir in brew_dirs:
+                    if os.path.exists(brew_dir):
+                        try:
+                            stat_info = os.stat(brew_dir)
+                            return pwd.getpwuid(stat_info.st_uid).pw_name
+                        except (OSError, KeyError):
+                            continue
+
+                # Fallback to SUDO_USER if available
+                return os.environ.get("SUDO_USER")
+
             # Collect current antivirus status to determine what to remove
             antivirus_collector = AntivirusCollector()
             antivirus_status = antivirus_collector.collect_antivirus_status()
@@ -2823,25 +2886,55 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     else "/usr/local/bin/brew"
                 )
 
+                # If running as root, use sudo -u to run as the actual user
+                # Homebrew doesn't allow running as root
+                brew_user = _get_brew_user() if os.geteuid() == 0 else None
+
                 # Stop service first
-                process = await asyncio.create_subprocess_exec(
-                    brew_cmd,
-                    "services",
-                    "stop",
-                    "clamav",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+                if brew_user:
+                    self.logger.info("Running brew as user: %s", brew_user)
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "-u",
+                        brew_user,
+                        brew_cmd,
+                        "services",
+                        "stop",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        brew_cmd,
+                        "services",
+                        "stop",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
                 await process.communicate()
 
                 # Remove package
-                process = await asyncio.create_subprocess_exec(
-                    brew_cmd,
-                    "uninstall",
-                    "clamav",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+                if brew_user:
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "-u",
+                        brew_user,
+                        brew_cmd,
+                        "uninstall",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        brew_cmd,
+                        "uninstall",
+                        "clamav",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
                 _, stderr = await process.communicate()
 
                 if process.returncode != 0:
