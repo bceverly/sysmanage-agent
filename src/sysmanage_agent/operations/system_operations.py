@@ -1635,56 +1635,62 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     await process.communicate()
                     self.logger.info("clamd.conf configured")
 
-                # Enable services in rc.conf (NetBSD doesn't have sysrc)
+                # Copy rc.d scripts to /etc/rc.d/ (NetBSD requirement)
+                self.logger.info("Copying rc.d scripts to /etc/rc.d/")
+                for script in ["clamd", "freshclamd"]:
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "cp",
+                        f"/usr/pkg/share/examples/rc.d/{script}",
+                        "/etc/rc.d/",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                # Enable services in rc.conf using shell commands
+                # NetBSD service name is freshclamd (with d), not freshclam
                 self.logger.info("Enabling ClamAV services in rc.conf")
-                rc_conf = "/etc/rc.conf"
 
-                # Read current rc.conf
-                rc_lines = []
-                if os.path.exists(rc_conf):
-                    with open(rc_conf, "r", encoding="utf-8") as f:
-                        rc_lines = f.readlines()
-
-                # Update or add service entries
-                freshclam_found = False
-                clamd_found = False
-                for i, line in enumerate(rc_lines):
-                    if line.startswith("freshclam="):
-                        rc_lines[i] = "freshclam=YES\n"
-                        freshclam_found = True
-                    elif line.startswith("clamd="):
-                        rc_lines[i] = "clamd=YES\n"
-                        clamd_found = True
-
-                if not freshclam_found:
-                    rc_lines.append("freshclam=YES\n")
-                if not clamd_found:
-                    rc_lines.append("clamd=YES\n")
-
-                # Write updated rc.conf
-                with open(rc_conf, "w", encoding="utf-8") as f:
-                    f.writelines(rc_lines)
-
-                # Start freshclam service first
-                self.logger.info("Starting freshclam service")
                 process = await asyncio.create_subprocess_exec(
+                    "sh",
+                    "-c",
+                    "grep -q '^freshclamd=' /etc/rc.conf 2>/dev/null || echo 'freshclamd=YES' | sudo tee -a /etc/rc.conf > /dev/null",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                process = await asyncio.create_subprocess_exec(
+                    "sh",
+                    "-c",
+                    "grep -q '^clamd=' /etc/rc.conf 2>/dev/null || echo 'clamd=YES' | sudo tee -a /etc/rc.conf > /dev/null",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                # Start freshclamd service first
+                self.logger.info("Starting freshclamd service")
+                process = await asyncio.create_subprocess_exec(
+                    "sudo",
                     "service",
-                    "freshclam",
+                    "freshclamd",
                     "start",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
-                    self.logger.info("freshclam service started successfully")
+                    self.logger.info("freshclamd service started successfully")
                 else:
                     self.logger.warning(
-                        "Failed to start freshclam: %s",
+                        "Failed to start freshclamd: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
                 # Wait for virus database download
-                self.logger.info("Waiting for freshclam to download virus database")
+                self.logger.info("Waiting for freshclamd to download virus database")
                 database_ready = False
                 for _ in range(30):
                     if os.path.exists("/var/clamav/main.cvd") or os.path.exists(
@@ -1703,6 +1709,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 # Start clamd service
                 self.logger.info("Starting clamd service")
                 process = await asyncio.create_subprocess_exec(
+                    "sudo",
                     "service",
                     "clamd",
                     "start",
@@ -2610,10 +2617,11 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             # Remove ClamAV - detect package manager and use appropriate commands
             error = None
             if os.path.exists("/usr/pkg/bin/pkgin"):
-                # NetBSD
+                # NetBSD - service name is freshclamd (with d)
                 # Stop and disable services first
-                for service in ["clamd", "freshclam"]:
+                for service in ["clamd", "freshclamd"]:
                     process = await asyncio.create_subprocess_exec(
+                        "sudo",
                         "service",
                         service,
                         "stop",
@@ -2622,22 +2630,15 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                     await process.communicate()
 
-                # Disable services in rc.conf (NetBSD doesn't have sysrc)
-                rc_conf = "/etc/rc.conf"
-                if os.path.exists(rc_conf):
-                    with open(rc_conf, "r", encoding="utf-8") as f:
-                        rc_lines = f.readlines()
-
-                    # Remove or disable service entries
-                    new_lines = []
-                    for line in rc_lines:
-                        if line.startswith("freshclam=") or line.startswith("clamd="):
-                            # Skip these lines to remove them
-                            continue
-                        new_lines.append(line)
-
-                    with open(rc_conf, "w", encoding="utf-8") as f:
-                        f.writelines(new_lines)
+                # Disable services in rc.conf using sed
+                process = await asyncio.create_subprocess_exec(
+                    "sh",
+                    "-c",
+                    "sudo sed -i '' '/^freshclamd=/d; /^clamd=/d' /etc/rc.conf",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
 
                 # Remove ClamAV package
                 if os.geteuid() == 0:

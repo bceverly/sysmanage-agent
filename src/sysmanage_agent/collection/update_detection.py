@@ -3839,6 +3839,11 @@ class UpdateDetector:
                 "success": False,
                 "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
             }
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "error": f"Installation of {package_name} timed out after 300 seconds",
+            }
 
     def _install_with_brew(self, package_name: str) -> Dict[str, Any]:
         """Install package using Homebrew package manager."""

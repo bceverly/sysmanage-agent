@@ -174,11 +174,12 @@ class AntivirusCollector:
                 # - RHEL/CentOS: clamd@scan
                 # - openSUSE: clamd.service
                 # - OpenBSD: clamd
-                # - NetBSD: clamd
+                # - NetBSD: clamd, freshclamd
                 # - FreeBSD: clamav_clamd (underscore not hyphen)
                 # - Generic: clamd
                 enabled = (
                     self._is_service_running("clamd")
+                    or self._is_service_running("freshclamd")
                     or self._is_service_running("clamav_clamd")
                     or self._is_service_running("clamav-daemon")
                     or self._is_service_running("clamav-freshclam")
