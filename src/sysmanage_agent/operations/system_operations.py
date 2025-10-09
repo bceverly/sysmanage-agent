@@ -2422,6 +2422,94 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 installed_version = None
                 result = "ClamAV installed successfully on RHEL/CentOS"
 
+            # Special handling for ClamAV on Windows with Chocolatey
+            elif (
+                "clamav" in antivirus_package.lower() and platform.system() == "Windows"
+            ):
+                self.logger.info(
+                    "Detected Windows system, installing ClamAV via Chocolatey"
+                )
+
+                # Install ClamAV via Chocolatey
+                update_detector = UpdateDetector()
+                self.logger.info("Installing clamav")
+                result = update_detector.install_package("clamav", "auto")
+                self.logger.info("clamav installation result: %s", result)
+
+                # Determine success based on result
+                success = isinstance(result, dict) and result.get("success", False)
+                error_message = (
+                    result.get("error") if isinstance(result, dict) else None
+                )
+
+                if not success:
+                    return {
+                        "success": False,
+                        "result": str(result),
+                        "package_name": antivirus_package,
+                        "error": error_message or "Installation failed",
+                    }
+
+                self.logger.info("Configuring ClamAV on Windows")
+
+                # Common ClamAV installation paths on Windows (Chocolatey)
+                common_paths = [
+                    "C:\\Program Files\\ClamAV",
+                    "C:\\Program Files (x86)\\ClamAV",
+                    "C:\\ProgramData\\chocolatey\\lib\\clamav\\tools",
+                ]
+
+                clamav_path = None
+                for path in common_paths:
+                    if os.path.exists(path):
+                        clamav_path = path
+                        break
+
+                if not clamav_path:
+                    self.logger.warning(
+                        "Could not locate ClamAV installation directory"
+                    )
+                    return {
+                        "success": False,
+                        "result": "ClamAV installation directory not found",
+                        "package_name": antivirus_package,
+                        "error": "Installation directory not found",
+                    }
+
+                # Path to freshclam.exe
+                freshclam_exe = os.path.join(clamav_path, "freshclam.exe")
+                if not os.path.exists(freshclam_exe):
+                    self.logger.warning("freshclam.exe not found at %s", freshclam_exe)
+
+                # Update virus definitions with freshclam
+                self.logger.info("Updating virus definitions with freshclam")
+                try:
+                    process = await asyncio.create_subprocess_exec(
+                        freshclam_exe,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    _, stderr = await process.communicate()
+                    if process.returncode == 0:
+                        self.logger.info("Virus definitions updated successfully")
+                    else:
+                        self.logger.warning(
+                            "Failed to update virus definitions: %s",
+                            stderr.decode() if stderr else "unknown error",
+                        )
+                except Exception as e:
+                    self.logger.warning("Error running freshclam: %s", e)
+
+                # Note: On Windows, ClamAV doesn't run as a service by default after Chocolatey install
+                # The service needs to be manually configured if desired
+                # For now, we consider the installation successful if the binaries are present
+                await asyncio.sleep(2)
+
+                success = True
+                error_message = None
+                installed_version = None
+                result = "ClamAV installed successfully on Windows"
+
             else:
                 # Standard installation for other distros (Debian/Ubuntu)
                 update_detector = UpdateDetector()
@@ -2551,9 +2639,14 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             use_rcctl = False
             use_bsd_service = False
             use_brew_services = False
+            use_windows_service = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
-                if os.path.exists("/usr/local/bin/brew") or os.path.exists(
+                if platform.system() == "Windows":
+                    # Windows - use sc command for service management
+                    service_name = "ClamAV"
+                    use_windows_service = True
+                elif os.path.exists("/usr/local/bin/brew") or os.path.exists(
                     "/opt/homebrew/bin/brew"
                 ):
                     # macOS - use brew services
@@ -2653,6 +2746,35 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
+            elif use_windows_service:
+                # Windows uses sc command for service management
+                # First check if service exists
+                process = await asyncio.create_subprocess_exec(
+                    "sc",
+                    "query",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, _ = await process.communicate()
+
+                if process.returncode != 0:
+                    # Service doesn't exist yet - this is expected after fresh install
+                    # Note: Manual service setup is required for ClamAV on Windows
+                    return {
+                        "success": False,
+                        "error": "ClamAV service not configured. Windows ClamAV requires manual service setup.",
+                    }
+
+                # Service exists, try to start it
+                process = await asyncio.create_subprocess_exec(
+                    "sc",
+                    "start",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
             else:
                 # Linux uses systemctl
                 process = await asyncio.create_subprocess_exec(
@@ -2711,9 +2833,14 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             use_rcctl = False
             use_bsd_service = False
             use_brew_services = False
+            use_windows_service = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
-                if os.path.exists("/usr/local/bin/brew") or os.path.exists(
+                if platform.system() == "Windows":
+                    # Windows - use sc command for service management
+                    service_name = "ClamAV"
+                    use_windows_service = True
+                elif os.path.exists("/usr/local/bin/brew") or os.path.exists(
                     "/opt/homebrew/bin/brew"
                 ):
                     # macOS - use brew services
@@ -2809,6 +2936,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 process = await asyncio.create_subprocess_exec(
                     brew_cmd,
                     "services",
+                    "stop",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+            elif use_windows_service:
+                # Windows uses sc command for service management
+                process = await asyncio.create_subprocess_exec(
+                    "sc",
                     "stop",
                     service_name,
                     stdout=asyncio.subprocess.PIPE,
@@ -3273,6 +3410,46 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stderr=asyncio.subprocess.PIPE,
                     )
                     await process.communicate()
+
+            elif platform.system() == "Windows":
+                # Windows - stop service (if running) and remove via chocolatey
+                self.logger.info("Removing ClamAV from Windows using Chocolatey")
+
+                # Try to stop the service if it exists
+                process = await asyncio.create_subprocess_exec(
+                    "sc",
+                    "query",
+                    "ClamAV",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                if process.returncode == 0:
+                    # Service exists, stop it
+                    process = await asyncio.create_subprocess_exec(
+                        "sc",
+                        "stop",
+                        "ClamAV",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    await asyncio.sleep(2)
+
+                # Remove ClamAV via Chocolatey
+                process = await asyncio.create_subprocess_exec(
+                    "choco",
+                    "uninstall",
+                    "clamav",
+                    "-y",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    error = stderr.decode()
 
             else:
                 error = "Unsupported package manager"
