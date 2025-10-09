@@ -1660,18 +1660,28 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                     await process.communicate()
 
-                    # Comment out Example line in clamd.conf
-                    process = await asyncio.create_subprocess_exec(
-                        "sed",
-                        "-i",
-                        "",
-                        "-e",
+                    # Comment out Example line and configure clamd
+                    sed_commands = [
                         "s/^Example/#Example/",
-                        clamd_conf,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                    await process.communicate()
+                        f"s|^#LogFile.*|LogFile {log_dir}/clamd.log|",
+                        f"s|^#PidFile.*|PidFile {log_dir}/clamd.pid|",
+                        f"s|^#DatabaseDirectory.*|DatabaseDirectory {db_dir}|",
+                        f"s|^#LocalSocket.*|LocalSocket {log_dir}/clamd.sock|",
+                    ]
+
+                    for sed_cmd in sed_commands:
+                        process = await asyncio.create_subprocess_exec(
+                            "sed",
+                            "-i",
+                            "",
+                            "-e",
+                            sed_cmd,
+                            clamd_conf,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                        )
+                        await process.communicate()
+
                     self.logger.info("clamd.conf configured")
 
                 # Update virus definitions with freshclam
