@@ -1656,20 +1656,20 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                 await process.communicate()
 
                 # Start freshclam service first
-                self.logger.info("Starting clamav-freshclam service")
+                self.logger.info("Starting clamav_freshclam service")
                 process = await asyncio.create_subprocess_exec(
                     "service",
-                    "clamav-freshclam",
+                    "clamav_freshclam",
                     "start",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
-                    self.logger.info("clamav-freshclam service started successfully")
+                    self.logger.info("clamav_freshclam service started successfully")
                 else:
                     self.logger.warning(
-                        "Failed to start clamav-freshclam: %s",
+                        "Failed to start clamav_freshclam: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
@@ -1691,20 +1691,20 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
 
                 # Start clamd service
-                self.logger.info("Starting clamav-clamd service")
+                self.logger.info("Starting clamav_clamd service")
                 process = await asyncio.create_subprocess_exec(
                     "service",
-                    "clamav-clamd",
+                    "clamav_clamd",
                     "start",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
-                    self.logger.info("clamav-clamd service started successfully")
+                    self.logger.info("clamav_clamd service started successfully")
                 else:
                     self.logger.warning(
-                        "Failed to start clamav-clamd: %s",
+                        "Failed to start clamav_clamd: %s",
                         stderr.decode() if stderr else "unknown error",
                     )
 
@@ -1906,7 +1906,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
                 # Install ClamAV packages
                 update_detector = UpdateDetector()
-                packages = ["clamav", "clamav-freshclam", "clamav-daemon"]
+                packages = ["clamav", "clamav_freshclam", "clamav-daemon"]
                 for pkg in packages:
                     self.logger.info("Installing %s", pkg)
                     result = update_detector.install_package(pkg, "auto")
@@ -2077,8 +2077,8 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         antivirus_package,
                     )
                     try:
-                        # Ubuntu/Debian uses clamav-freshclam
-                        service_name = "clamav-freshclam"
+                        # Ubuntu/Debian uses clamav_freshclam
+                        service_name = "clamav_freshclam"
                         self.logger.info(
                             "Enabling and starting service: %s", service_name
                         )
@@ -2189,7 +2189,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "/usr/sbin/pkg_add"
                 ):
                     # FreeBSD - use service command
-                    service_name = "clamav-clamd"
+                    service_name = "clamav_clamd"
                     use_freebsd_service = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
@@ -2199,7 +2199,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     service_name = "clamd@scan"
                 else:
                     # Debian/Ubuntu
-                    service_name = "clamav-freshclam"
+                    service_name = "clamav_freshclam"
 
             if not service_name:
                 return {
@@ -2316,7 +2316,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "/usr/sbin/pkg_add"
                 ):
                     # FreeBSD - use service command
-                    service_name = "clamav-clamd"
+                    service_name = "clamav_clamd"
                     use_freebsd_service = True
                 elif os.path.exists("/usr/bin/zypper"):
                     # openSUSE
@@ -2326,7 +2326,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     service_name = "clamd@scan"
                 else:
                     # Debian/Ubuntu
-                    service_name = "clamav-freshclam"
+                    service_name = "clamav_freshclam"
 
             if not service_name:
                 return {
@@ -2441,7 +2441,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             ):
                 # FreeBSD
                 # Stop and disable services first
-                for service in ["clamav-clamd", "clamav-freshclam"]:
+                for service in ["clamav_clamd", "clamav_freshclam"]:
                     process = await asyncio.create_subprocess_exec(
                         "service",
                         service,
@@ -2550,7 +2550,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "remove",
                     "-y",
                     "clamav",
-                    "clamav-freshclam",
+                    "clamav_freshclam",
                     "clamav-daemon",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -2569,7 +2569,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     "-y",
                     "clamav",
                     "clamav-base",
-                    "clamav-freshclam",
+                    "clamav_freshclam",
                     "libclamav12",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
