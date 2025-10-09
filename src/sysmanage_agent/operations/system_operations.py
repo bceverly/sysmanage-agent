@@ -2385,26 +2385,32 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             # Start and enable the service
             if use_bsd_service:
-                # FreeBSD uses service command and sysrc for rc.conf
-                process = await asyncio.create_subprocess_exec(
-                    "service",
-                    service_name,
-                    "start",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                _, stderr = await process.communicate()
+                # BSD uses service command
+                # NetBSD has two services: freshclamd and clamd
+                services_to_start = [service_name]
+                if os.path.exists("/usr/pkg/bin/pkgin"):
+                    # NetBSD - also start freshclamd
+                    services_to_start = ["freshclamd", "clamd"]
 
-                if process.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": f"Failed to start service {service_name}: {stderr.decode() if stderr else 'unknown error'}",
-                    }
+                for svc in services_to_start:
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "service",
+                        svc,
+                        "start",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    _, stderr = await process.communicate()
 
-                self.logger.info(
-                    "Service %s enabled and started successfully", service_name
-                )
-                await asyncio.sleep(2)
+                    if process.returncode != 0:
+                        return {
+                            "success": False,
+                            "error": f"Failed to start service {svc}: {stderr.decode() if stderr else 'unknown error'}",
+                        }
+
+                    self.logger.info("Service %s enabled and started successfully", svc)
+                    await asyncio.sleep(1)
 
             elif use_rcctl:
                 # OpenBSD uses rcctl
@@ -2516,24 +2522,34 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             # Stop and disable the service
             if use_bsd_service:
-                # FreeBSD uses service command
-                process = await asyncio.create_subprocess_exec(
-                    "service",
-                    service_name,
-                    "stop",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                _, stderr = await process.communicate()
+                # BSD uses service command
+                # NetBSD has two services: freshclamd and clamd
+                services_to_stop = [service_name]
+                if os.path.exists("/usr/pkg/bin/pkgin"):
+                    # NetBSD - also stop freshclamd
+                    services_to_stop = ["clamd", "freshclamd"]
 
-                if process.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": f"Failed to stop service {service_name}: {stderr.decode() if stderr else 'unknown error'}",
-                    }
+                for svc in services_to_stop:
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "service",
+                        svc,
+                        "stop",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    _, stderr = await process.communicate()
 
-                self.logger.info("Service %s disabled successfully", service_name)
-                await asyncio.sleep(2)
+                    if process.returncode != 0:
+                        self.logger.warning(
+                            "Failed to stop service %s: %s",
+                            svc,
+                            stderr.decode() if stderr else "unknown error",
+                        )
+                    else:
+                        self.logger.info("Service %s disabled successfully", svc)
+
+                await asyncio.sleep(1)
 
             elif use_rcctl:
                 # OpenBSD uses rcctl
