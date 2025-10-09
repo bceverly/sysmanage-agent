@@ -1560,8 +1560,143 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
         self.logger.info("Deploying antivirus package: %s", antivirus_package)
 
         try:
+            # Special handling for ClamAV on macOS
+            if "clamav" in antivirus_package.lower() and (
+                os.path.exists("/usr/local/bin/brew")
+                or os.path.exists("/opt/homebrew/bin/brew")
+            ):
+                self.logger.info(
+                    "Detected macOS system, installing ClamAV via Homebrew"
+                )
+
+                # Install ClamAV via Homebrew
+                update_detector = UpdateDetector()
+                self.logger.info("Installing clamav")
+                result = update_detector.install_package("clamav", "auto")
+                self.logger.info("clamav installation result: %s", result)
+
+                # Determine the correct config path based on architecture
+                config_base = (
+                    "/opt/homebrew/etc/clamav"
+                    if os.path.exists("/opt/homebrew")
+                    else "/usr/local/etc/clamav"
+                )
+                log_dir = (
+                    "/opt/homebrew/var/log/clamav"
+                    if os.path.exists("/opt/homebrew")
+                    else "/usr/local/var/log/clamav"
+                )
+
+                self.logger.info("Configuring ClamAV on macOS")
+
+                # Create log directory
+                os.makedirs(log_dir, exist_ok=True)
+
+                # Configure freshclam.conf
+                freshclam_conf = f"{config_base}/freshclam.conf"
+                freshclam_sample = f"{config_base}/freshclam.conf.sample"
+                if os.path.exists(freshclam_sample):
+                    self.logger.info("Creating freshclam.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        freshclam_sample,
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line in freshclam.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "",
+                        "-e",
+                        "s/^Example/#Example/",
+                        freshclam_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    self.logger.info("freshclam.conf configured")
+
+                # Configure clamd.conf
+                clamd_conf = f"{config_base}/clamd.conf"
+                clamd_sample = f"{config_base}/clamd.conf.sample"
+                if os.path.exists(clamd_sample):
+                    self.logger.info("Creating clamd.conf from sample")
+                    process = await asyncio.create_subprocess_exec(
+                        "cp",
+                        clamd_sample,
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+
+                    # Comment out Example line in clamd.conf
+                    process = await asyncio.create_subprocess_exec(
+                        "sed",
+                        "-i",
+                        "",
+                        "-e",
+                        "s/^Example/#Example/",
+                        clamd_conf,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await process.communicate()
+                    self.logger.info("clamd.conf configured")
+
+                # Update virus definitions with freshclam
+                self.logger.info("Updating virus definitions with freshclam")
+                process = await asyncio.create_subprocess_exec(
+                    "freshclam",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+                if process.returncode == 0:
+                    self.logger.info("Virus definitions updated successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to update virus definitions: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                # Start ClamAV service via Homebrew
+                self.logger.info("Starting ClamAV service via brew services")
+                brew_cmd = (
+                    "/opt/homebrew/bin/brew"
+                    if os.path.exists("/opt/homebrew/bin/brew")
+                    else "/usr/local/bin/brew"
+                )
+                process = await asyncio.create_subprocess_exec(
+                    brew_cmd,
+                    "services",
+                    "start",
+                    "clamav",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+                if process.returncode == 0:
+                    self.logger.info("ClamAV service started successfully")
+                else:
+                    self.logger.warning(
+                        "Failed to start ClamAV service: %s",
+                        stderr.decode() if stderr else "unknown error",
+                    )
+
+                await asyncio.sleep(2)
+
+                success = True
+                error_message = None
+                installed_version = None
+                result = "ClamAV installed successfully on macOS"
+
             # Special handling for ClamAV on NetBSD
-            if "clamav" in antivirus_package.lower() and os.path.exists(
+            elif "clamav" in antivirus_package.lower() and os.path.exists(
                 "/usr/pkg/bin/pkgin"
             ):
                 self.logger.info("Detected NetBSD system, installing ClamAV package")
@@ -2351,9 +2486,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             service_name = None
             use_rcctl = False
             use_bsd_service = False
+            use_brew_services = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
-                if os.path.exists("/usr/sbin/rcctl"):
+                if os.path.exists("/usr/local/bin/brew") or os.path.exists(
+                    "/opt/homebrew/bin/brew"
+                ):
+                    # macOS - use brew services
+                    service_name = "clamav"
+                    use_brew_services = True
+                elif os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
                     service_name = "clamd"
                     use_rcctl = True
@@ -2431,6 +2573,22 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
+            elif use_brew_services:
+                # macOS uses brew services
+                brew_cmd = (
+                    "/opt/homebrew/bin/brew"
+                    if os.path.exists("/opt/homebrew/bin/brew")
+                    else "/usr/local/bin/brew"
+                )
+                process = await asyncio.create_subprocess_exec(
+                    brew_cmd,
+                    "services",
+                    "start",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
             else:
                 # Linux uses systemctl
                 process = await asyncio.create_subprocess_exec(
@@ -2488,9 +2646,16 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             service_name = None
             use_rcctl = False
             use_bsd_service = False
+            use_brew_services = False
             if software_name.lower() == "clamav":
                 # Check OS type and use appropriate service name
-                if os.path.exists("/usr/sbin/rcctl"):
+                if os.path.exists("/usr/local/bin/brew") or os.path.exists(
+                    "/opt/homebrew/bin/brew"
+                ):
+                    # macOS - use brew services
+                    service_name = "clamav"
+                    use_brew_services = True
+                elif os.path.exists("/usr/sbin/rcctl"):
                     # OpenBSD - use rcctl instead of systemctl
                     service_name = "clamd"
                     use_rcctl = True
@@ -2570,6 +2735,22 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await process.communicate()
+            elif use_brew_services:
+                # macOS uses brew services
+                brew_cmd = (
+                    "/opt/homebrew/bin/brew"
+                    if os.path.exists("/opt/homebrew/bin/brew")
+                    else "/usr/local/bin/brew"
+                )
+                process = await asyncio.create_subprocess_exec(
+                    brew_cmd,
+                    "services",
+                    "stop",
+                    service_name,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
             else:
                 # Linux uses systemctl
                 process = await asyncio.create_subprocess_exec(
@@ -2632,7 +2813,41 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
 
             # Remove ClamAV - detect package manager and use appropriate commands
             error = None
-            if os.path.exists("/usr/pkg/bin/pkgin"):
+            if os.path.exists("/usr/local/bin/brew") or os.path.exists(
+                "/opt/homebrew/bin/brew"
+            ):
+                # macOS - stop service and remove via brew
+                brew_cmd = (
+                    "/opt/homebrew/bin/brew"
+                    if os.path.exists("/opt/homebrew/bin/brew")
+                    else "/usr/local/bin/brew"
+                )
+
+                # Stop service first
+                process = await asyncio.create_subprocess_exec(
+                    brew_cmd,
+                    "services",
+                    "stop",
+                    "clamav",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await process.communicate()
+
+                # Remove package
+                process = await asyncio.create_subprocess_exec(
+                    brew_cmd,
+                    "uninstall",
+                    "clamav",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    error = stderr.decode()
+
+            elif os.path.exists("/usr/pkg/bin/pkgin"):
                 # NetBSD - service name is freshclamd (with d)
                 # Stop and disable services first
                 for service in ["clamd", "freshclamd"]:
