@@ -1713,6 +1713,8 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
 
                 # Start ClamAV service via Homebrew
+                # Note: ClamAV service must be started with sudo (as root) to run at system startup
+                # This is different from other brew commands which shouldn't run as root
                 self.logger.info("Starting ClamAV service via brew services")
                 brew_cmd = (
                     "/opt/homebrew/bin/brew"
@@ -1720,32 +1722,17 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     else "/usr/local/bin/brew"
                 )
 
-                # If running as root, use sudo -u to run as the actual user
-                # Homebrew doesn't allow running as root
-                brew_user = _get_brew_user() if os.geteuid() == 0 else None
-
-                if brew_user:
-                    self.logger.info("Running brew as user: %s", brew_user)
-                    process = await asyncio.create_subprocess_exec(
-                        "sudo",
-                        "-u",
-                        brew_user,
-                        brew_cmd,
-                        "services",
-                        "start",
-                        "clamav",
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                else:
-                    process = await asyncio.create_subprocess_exec(
-                        brew_cmd,
-                        "services",
-                        "start",
-                        "clamav",
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
+                # Always use sudo for brew services start clamav
+                # ClamAV requires root to start at system startup
+                process = await asyncio.create_subprocess_exec(
+                    "sudo",
+                    brew_cmd,
+                    "services",
+                    "start",
+                    "clamav",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
                     self.logger.info("ClamAV service started successfully")
