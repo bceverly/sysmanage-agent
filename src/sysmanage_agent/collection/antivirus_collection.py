@@ -92,6 +92,9 @@ class AntivirusCollector:
         # Check for ClamAV on macOS
         clamav_info = self._check_clamav()
         if clamav_info["software_name"]:
+            # On macOS with Homebrew, check brew services for enabled status
+            if self._is_brew_service_running("clamav"):
+                clamav_info["enabled"] = True
             return clamav_info
 
         return {
@@ -514,3 +517,34 @@ class AntivirusCollector:
         except Exception as e:
             self.logger.debug("Error checking cron for %s: %s", command, e)
             return None
+
+    def _is_brew_service_running(self, service_name: str) -> bool:
+        """Check if a Homebrew service is running on macOS."""
+        try:
+            # Determine brew path based on architecture
+            brew_cmd = (
+                "/opt/homebrew/bin/brew"
+                if os.path.exists("/opt/homebrew/bin/brew")
+                else "/usr/local/bin/brew"
+            )
+
+            # Run brew services list and check if service is started
+            result = subprocess.run(
+                ["sudo", brew_cmd, "services", "list"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )  # nosec B603
+
+            if result.returncode == 0:
+                # Parse output to find service status
+                # Format: "service_name  status  user  plist_path"
+                for line in result.stdout.split("\n"):
+                    if service_name in line and "started" in line:
+                        return True
+
+        except Exception as e:
+            self.logger.debug("Error checking brew service %s: %s", service_name, e)
+
+        return False
