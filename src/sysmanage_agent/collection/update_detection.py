@@ -3616,6 +3616,8 @@ class UpdateDetector:
                 return self._install_with_zypper(package_name)
             if package_manager == "pkg":
                 return self._install_with_pkg(package_name)
+            if package_manager == "pkgin":
+                return self._install_with_pkgin(package_name)
             if package_manager == "brew":
                 return self._install_with_brew(package_name)
             if package_manager == "winget":
@@ -3641,8 +3643,10 @@ class UpdateDetector:
             "windows": ["winget", "choco"],
         }
 
-        # Handle BSD platforms
-        if self.platform in ["freebsd", "openbsd", "netbsd"]:
+        # Handle BSD platforms - each has its own package manager
+        if self.platform == "netbsd":
+            return "pkgin"
+        if self.platform in ["freebsd", "openbsd"]:
             return "pkg"
 
         # Get manager list for platform
@@ -3794,6 +3798,31 @@ class UpdateDetector:
                     cmd = ["pkg", "install", "-y", package_name]
                 else:
                     cmd = ["sudo", "pkg", "install", "-y", package_name]
+
+            result = subprocess.run(  # nosec B603, B607
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {e.stderr or e.stdout}",
+            }
+
+    def _install_with_pkgin(self, package_name: str) -> Dict[str, Any]:
+        """Install package using pkgin package manager (NetBSD)."""
+        try:
+            # Check if running as root
+            if os.geteuid() == 0:
+                cmd = ["pkgin", "-y", "install", package_name]
+            else:
+                cmd = ["sudo", "pkgin", "-y", "install", package_name]
 
             result = subprocess.run(  # nosec B603, B607
                 cmd,

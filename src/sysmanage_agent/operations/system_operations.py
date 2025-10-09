@@ -1635,23 +1635,35 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     await process.communicate()
                     self.logger.info("clamd.conf configured")
 
-                # Enable services in rc.conf using sysrc
+                # Enable services in rc.conf (NetBSD doesn't have sysrc)
                 self.logger.info("Enabling ClamAV services in rc.conf")
-                process = await asyncio.create_subprocess_exec(
-                    "sysrc",
-                    "freshclam=YES",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await process.communicate()
+                rc_conf = "/etc/rc.conf"
 
-                process = await asyncio.create_subprocess_exec(
-                    "sysrc",
-                    "clamd=YES",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await process.communicate()
+                # Read current rc.conf
+                rc_lines = []
+                if os.path.exists(rc_conf):
+                    with open(rc_conf, "r", encoding="utf-8") as f:
+                        rc_lines = f.readlines()
+
+                # Update or add service entries
+                freshclam_found = False
+                clamd_found = False
+                for i, line in enumerate(rc_lines):
+                    if line.startswith("freshclam="):
+                        rc_lines[i] = "freshclam=YES\n"
+                        freshclam_found = True
+                    elif line.startswith("clamd="):
+                        rc_lines[i] = "clamd=YES\n"
+                        clamd_found = True
+
+                if not freshclam_found:
+                    rc_lines.append("freshclam=YES\n")
+                if not clamd_found:
+                    rc_lines.append("clamd=YES\n")
+
+                # Write updated rc.conf
+                with open(rc_conf, "w", encoding="utf-8") as f:
+                    f.writelines(rc_lines)
 
                 # Start freshclam service first
                 self.logger.info("Starting freshclam service")
@@ -2610,22 +2622,22 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     )
                     await process.communicate()
 
-                # Disable services in rc.conf
-                process = await asyncio.create_subprocess_exec(
-                    "sysrc",
-                    "clamd=NO",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await process.communicate()
+                # Disable services in rc.conf (NetBSD doesn't have sysrc)
+                rc_conf = "/etc/rc.conf"
+                if os.path.exists(rc_conf):
+                    with open(rc_conf, "r", encoding="utf-8") as f:
+                        rc_lines = f.readlines()
 
-                process = await asyncio.create_subprocess_exec(
-                    "sysrc",
-                    "freshclam=NO",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await process.communicate()
+                    # Remove or disable service entries
+                    new_lines = []
+                    for line in rc_lines:
+                        if line.startswith("freshclam=") or line.startswith("clamd="):
+                            # Skip these lines to remove them
+                            continue
+                        new_lines.append(line)
+
+                    with open(rc_conf, "w", encoding="utf-8") as f:
+                        f.writelines(new_lines)
 
                 # Remove ClamAV package
                 if os.geteuid() == 0:
