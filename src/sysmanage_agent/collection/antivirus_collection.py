@@ -409,48 +409,56 @@ class AntivirusCollector:
 
             # Try systemctl (systemd)
             self.logger.info("Trying systemctl for %s", service_name)
-            result = subprocess.run(
-                ["systemctl", "is-active", service_name],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )  # nosec B603 B607
+            try:
+                result = subprocess.run(
+                    ["systemctl", "is-active", service_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )  # nosec B603 B607
 
-            self.logger.info(
-                "systemctl check for %s: returncode=%s, stdout='%s'",
-                service_name,
-                result.returncode,
-                result.stdout.strip(),
-            )
+                self.logger.info(
+                    "systemctl check for %s: returncode=%s, stdout='%s'",
+                    service_name,
+                    result.returncode,
+                    result.stdout.strip(),
+                )
 
-            if result.returncode == 0 and result.stdout.strip() == "active":
-                self.logger.info("Service %s is active (via systemctl)", service_name)
-                return True
+                if result.returncode == 0 and result.stdout.strip() == "active":
+                    self.logger.info(
+                        "Service %s is active (via systemctl)", service_name
+                    )
+                    return True
+            except FileNotFoundError:
+                self.logger.info("systemctl not found, trying service command")
 
             # Try service command (SysV init and FreeBSD)
             self.logger.info("Trying service command for %s", service_name)
-            result = subprocess.run(
-                ["service", service_name, "status"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )  # nosec B603 B607
+            try:
+                result = subprocess.run(
+                    ["service", service_name, "status"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )  # nosec B603 B607
 
-            self.logger.info(
-                "Service command check for %s: returncode=%s, stdout='%s', stderr='%s'",
-                service_name,
-                result.returncode,
-                result.stdout.strip(),
-                result.stderr.strip(),
-            )
-
-            if result.returncode == 0:
                 self.logger.info(
-                    "Service %s is running (via service command)", service_name
+                    "Service command check for %s: returncode=%s, stdout='%s', stderr='%s'",
+                    service_name,
+                    result.returncode,
+                    result.stdout.strip(),
+                    result.stderr.strip(),
                 )
-                return True
+
+                if result.returncode == 0:
+                    self.logger.info(
+                        "Service %s is running (via service command)", service_name
+                    )
+                    return True
+            except FileNotFoundError:
+                self.logger.info("service command not found")
 
             self.logger.info("Service %s is NOT running", service_name)
 
