@@ -13,7 +13,7 @@ import shutil
 import socket
 import tempfile
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from src.database.base import get_database_manager
@@ -1682,11 +1682,27 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     if os.path.exists("/opt/homebrew/bin/freshclam")
                     else "/usr/local/bin/freshclam"
                 )
-                process = await asyncio.create_subprocess_exec(
-                    freshclam_cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+
+                # If running as root, use sudo -u to run as the brew user
+                # This ensures freshclam has proper permissions to write to Homebrew directories
+                brew_user = _get_brew_user() if os.geteuid() == 0 else None
+
+                if brew_user:
+                    self.logger.info("Running freshclam as user: %s", brew_user)
+                    process = await asyncio.create_subprocess_exec(
+                        "sudo",
+                        "-u",
+                        brew_user,
+                        freshclam_cmd,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        freshclam_cmd,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
                 _, stderr = await process.communicate()
                 if process.returncode == 0:
                     self.logger.info("Virus definitions updated successfully")
@@ -2837,6 +2853,63 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
             self.logger.error("Failed to disable antivirus: %s", e)
             return {"success": False, "error": str(e)}
 
+    async def _cleanup_clamav_cellar_macos(self) -> Optional[str]:
+        """
+        Manually remove ClamAV from Homebrew Cellar directory.
+
+        Returns:
+            None if successful, error message string if failed
+        """
+        import glob  # pylint: disable=import-outside-toplevel
+
+        # Determine the Cellar directory based on architecture
+        cellar_dir = (
+            "/opt/homebrew/Cellar"
+            if os.path.exists("/opt/homebrew")
+            else "/usr/local/Cellar"
+        )
+
+        # Find all clamav version directories
+        clamav_path = f"{cellar_dir}/clamav"
+        if not os.path.exists(clamav_path):
+            return None
+
+        version_dirs = glob.glob(f"{clamav_path}/*")
+        if not version_dirs:
+            return None
+
+        last_error = None
+        for version_dir in version_dirs:
+            self.logger.info("Removing clamav directory: %s", version_dir)
+            process = await asyncio.create_subprocess_exec(
+                "sudo",
+                "rm",
+                "-rf",
+                version_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                error_msg = stderr.decode()
+                self.logger.error(
+                    "Manual cleanup of %s failed: %s", version_dir, error_msg
+                )
+                last_error = error_msg
+            else:
+                self.logger.info("Manual cleanup of %s successful", version_dir)
+
+        # Remove the parent clamav directory if empty
+        try:
+            os.rmdir(clamav_path)
+            self.logger.info("Removed empty clamav directory")
+        except OSError:
+            # Directory not empty or doesn't exist, that's fine
+            pass
+
+        return last_error
+
     async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Remove antivirus software from the system."""
         self.logger.info("Removing antivirus software")
@@ -2946,7 +3019,7 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
                     )
-                stdout, stderr = await process.communicate()
+                _, stderr = await process.communicate()
 
                 if process.returncode != 0:
                     error = stderr.decode()
@@ -2955,57 +3028,9 @@ class SystemOperations:  # pylint: disable=too-many-public-methods
                     self.logger.warning(
                         "brew uninstall failed: %s, attempting manual cleanup", error
                     )
-
-                    # Determine the Cellar directory based on architecture
-                    cellar_dir = (
-                        "/opt/homebrew/Cellar"
-                        if os.path.exists("/opt/homebrew")
-                        else "/usr/local/Cellar"
-                    )
-
-                    # Find all clamav version directories
-                    clamav_path = f"{cellar_dir}/clamav"
-                    if os.path.exists(clamav_path):
-                        # Get all version directories
-                        import glob  # pylint: disable=import-outside-toplevel
-
-                        version_dirs = glob.glob(f"{clamav_path}/*")
-
-                        if version_dirs:
-                            for version_dir in version_dirs:
-                                self.logger.info(
-                                    "Removing clamav directory: %s", version_dir
-                                )
-                                process = await asyncio.create_subprocess_exec(
-                                    "sudo",
-                                    "rm",
-                                    "-rf",
-                                    version_dir,
-                                    stdout=asyncio.subprocess.PIPE,
-                                    stderr=asyncio.subprocess.PIPE,
-                                )
-                                _, stderr = await process.communicate()
-
-                                if process.returncode != 0:
-                                    error = stderr.decode()
-                                    self.logger.error(
-                                        "Manual cleanup of %s failed: %s",
-                                        version_dir,
-                                        error,
-                                    )
-                                else:
-                                    self.logger.info(
-                                        "Manual cleanup of %s successful", version_dir
-                                    )
-
-                            # Remove the parent clamav directory if empty
-                            try:
-                                os.rmdir(clamav_path)
-                                self.logger.info("Removed empty clamav directory")
-                                error = None
-                            except OSError:
-                                # Directory not empty or doesn't exist, that's fine
-                                pass
+                    cleanup_error = await self._cleanup_clamav_cellar_macos()
+                    if cleanup_error is None:
+                        error = None  # Manual cleanup succeeded
 
             elif os.path.exists("/usr/pkg/bin/pkgin"):
                 # NetBSD - service name is freshclamd (with d)
