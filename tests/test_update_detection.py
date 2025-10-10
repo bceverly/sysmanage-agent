@@ -2,7 +2,7 @@
 Unit tests for update detection module.
 """
 
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init
 
 from unittest.mock import Mock, patch
 

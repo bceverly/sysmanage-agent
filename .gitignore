@@ -177,3 +177,5 @@ CLAUDE.md
 agent.db
 agent.db-journal
 debug_grafana.py
+
+coverage.json
