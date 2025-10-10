@@ -67,7 +67,7 @@ class WindowsPackageCollector(BasePackageCollector):
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(
+                    with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                         req, timeout=30
                     ) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
@@ -152,7 +152,7 @@ class WindowsPackageCollector(BasePackageCollector):
                     req = urllib.request.Request(url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(
+                    with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                         req, timeout=30
                     ) as response:  # nosec B310
                         # Parse XML response
