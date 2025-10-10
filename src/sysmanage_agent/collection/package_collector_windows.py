@@ -6,6 +6,7 @@ This module handles the collection of available packages from Windows package ma
 
 import json
 import logging
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET  # nosec B405 # Parsing trusted Chocolatey API XML
 from typing import Dict, List
@@ -14,6 +15,19 @@ from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_https_url(url: str) -> str:
+    """
+    Validate that a URL uses HTTPS scheme and return it.
+
+    This prevents file:// and other dangerous URL schemes.
+    Raises ValueError if URL is not HTTPS.
+    """
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https":
+        raise ValueError(f"Only HTTPS URLs are allowed, got: {parsed.scheme}")
+    return url
 
 
 class WindowsPackageCollector(BasePackageCollector):
@@ -60,16 +74,13 @@ class WindowsPackageCollector(BasePackageCollector):
                     # Add pagination parameters
                     url = f"{api_url}?page={page}&limit=100"
 
-                    # Validate URL scheme for security
-                    if not url.startswith("https://"):
-                        raise ValueError("Only HTTPS URLs are allowed")
+                    # Validate URL scheme for security - prevents file:// and other attacks
+                    validated_url = _validate_https_url(url)
 
-                    req = urllib.request.Request(url)  # nosec B310
+                    req = urllib.request.Request(validated_url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-                        req, timeout=30
-                    ) as response:  # nosec B310
+                    with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
 
                         # Check if we got packages
@@ -145,16 +156,13 @@ class WindowsPackageCollector(BasePackageCollector):
                     # OData pagination parameters
                     url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
 
-                    # Validate URL scheme for security
-                    if not url.startswith("https://"):
-                        raise ValueError("Only HTTPS URLs are allowed")
+                    # Validate URL scheme for security - prevents file:// and other attacks
+                    validated_url = _validate_https_url(url)
 
-                    req = urllib.request.Request(url)  # nosec B310
+                    req = urllib.request.Request(validated_url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-                        req, timeout=30
-                    ) as response:  # nosec B310
+                    with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
                         # Parse XML response
                         data = response.read().decode("utf-8")
                         root = ET.fromstring(
