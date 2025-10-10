@@ -246,9 +246,9 @@ class ScriptOperations:
             # Clean up script file
             try:
                 os.unlink(script_path)
-            except OSError as e:
+            except OSError as error:
                 self.logger.warning(
-                    _("Failed to delete script file %s: %s"), script_path, e
+                    _("Failed to delete script file %s: %s"), script_path, error
                 )
 
     async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,6 +295,6 @@ class ScriptOperations:
                 script_content, shell_path, timeout, working_directory
             )
 
-        except Exception as e:
-            self.logger.error(_("Script execution failed: %s"), e)
-            return {"success": False, "error": str(e)}
+        except Exception as error:
+            self.logger.error(_("Script execution failed: %s"), error)
+            return {"success": False, "error": str(error)}

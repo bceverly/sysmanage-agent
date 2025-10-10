@@ -50,7 +50,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             self.script_ops._detect_shell("python")
 
     @patch("platform.system", return_value="Linux")
-    def test_detect_shell_default_linux(self, mock_system):
+    def test_detect_shell_default_linux(self, _mock_system):
         """Test shell detection with default for Linux."""
         with patch("os.path.exists", return_value=True), patch(
             "os.access", return_value=True
@@ -61,7 +61,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     @patch("platform.system", return_value="Windows")
     @patch("shutil.which", return_value="powershell.exe")
-    def test_detect_shell_windows(self, mock_which, mock_system):
+    def test_detect_shell_windows(self, _mock_which, _mock_system):
         """Test shell detection on Windows."""
         self.mock_config.get_allowed_shells.return_value = ["powershell"]
 
@@ -85,7 +85,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
                 self.script_ops._detect_shell("bash")
 
     @patch("platform.system", return_value="Linux")
-    def test_create_script_file_unix(self, mock_system):
+    def test_create_script_file_unix(self, _mock_system):
         """Test script file creation on Unix systems."""
         script_content = "echo 'Hello World'"
         shell_path = "/bin/bash"
@@ -106,7 +106,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             mock_chmod.assert_called_once_with("/tmp/script12345.sh", 0o700)
 
     @patch("platform.system", return_value="Windows")
-    def test_create_script_file_windows_powershell(self, mock_system):
+    def test_create_script_file_windows_powershell(self, _mock_system):
         """Test script file creation on Windows with PowerShell."""
         script_content = "Write-Host 'Hello World'"
         shell_path = "powershell.exe"
@@ -122,7 +122,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             mock_file.write.assert_called_once_with(script_content)
 
     @patch("platform.system", return_value="Windows")
-    def test_create_script_file_windows_cmd(self, mock_system):
+    def test_create_script_file_windows_cmd(self, _mock_system):
         """Test script file creation on Windows with CMD."""
         script_content = "echo Hello World"
         shell_path = "cmd.exe"
@@ -219,7 +219,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     @patch("platform.system", return_value="Linux")
-    async def test_execute_script_success_unix(self, mock_system):
+    async def test_execute_script_success_unix(self, _mock_system):
         """Test successful script execution on Unix."""
         parameters = {
             "script_content": "echo 'Hello World'",
@@ -264,7 +264,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     @patch("platform.system", return_value="Windows")
-    async def test_execute_script_success_windows_powershell(self, mock_system):
+    async def test_execute_script_success_windows_powershell(self, _mock_system):
         """Test successful script execution on Windows with PowerShell."""
         parameters = {
             "script_content": "Write-Host 'Hello World'",
@@ -308,7 +308,7 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     @patch("platform.system", return_value="Windows")
-    async def test_execute_script_success_windows_cmd(self, mock_system):
+    async def test_execute_script_success_windows_cmd(self, _mock_system):
         """Test successful script execution on Windows with CMD."""
         parameters = {"script_content": "echo Hello World", "shell_type": "cmd"}
 

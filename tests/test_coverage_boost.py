@@ -160,13 +160,13 @@ class TestCoverageBoost:
     def test_message_handler_basic_init(self):
         """Test message handler basic initialization."""
         from src.sysmanage_agent.communication.message_handler import (
-            QueuedMessageHandler,
+            MessageHandler,
         )
 
         mock_agent = Mock()
         mock_agent.logger = Mock()
 
-        handler = QueuedMessageHandler(mock_agent)
+        handler = MessageHandler(mock_agent)
         assert handler is not None
 
     def test_network_utils_basic_functionality(self):

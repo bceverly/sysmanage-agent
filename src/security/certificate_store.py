@@ -78,8 +78,8 @@ class CertificateStore:
                       ca_certificate, and server_fingerprint
         """
         # Store client certificate
-        with open(self.client_cert_path, "w", encoding="utf-8") as f:
-            f.write(cert_data["certificate"])
+        with open(self.client_cert_path, "w", encoding="utf-8") as file_handle:
+            file_handle.write(cert_data["certificate"])
         if os.name != "nt":  # Unix only
             os.chmod(
                 self.client_cert_path,
@@ -87,14 +87,14 @@ class CertificateStore:
             )
 
         # Store client private key with restrictive permissions
-        with open(self.client_key_path, "w", encoding="utf-8") as f:
-            f.write(cert_data["private_key"])
+        with open(self.client_key_path, "w", encoding="utf-8") as file_handle:
+            file_handle.write(cert_data["private_key"])
         if os.name != "nt":  # Unix only
             os.chmod(self.client_key_path, stat.S_IRUSR | stat.S_IWUSR)
 
         # Store CA certificate
-        with open(self.ca_cert_path, "w", encoding="utf-8") as f:
-            f.write(cert_data["ca_certificate"])
+        with open(self.ca_cert_path, "w", encoding="utf-8") as file_handle:
+            file_handle.write(cert_data["ca_certificate"])
         if os.name != "nt":  # Unix only
             os.chmod(
                 self.ca_cert_path,
@@ -102,8 +102,8 @@ class CertificateStore:
             )
 
         # Store server fingerprint
-        with open(self.server_fingerprint_path, "w", encoding="utf-8") as f:
-            f.write(cert_data["server_fingerprint"])
+        with open(self.server_fingerprint_path, "w", encoding="utf-8") as file_handle:
+            file_handle.write(cert_data["server_fingerprint"])
         if os.name != "nt":  # Unix only
             os.chmod(
                 self.server_fingerprint_path,
@@ -137,8 +137,8 @@ class CertificateStore:
         if not self.server_fingerprint_path.exists():
             return None
 
-        with open(self.server_fingerprint_path, "r", encoding="utf-8") as f:
-            return f.read().strip()
+        with open(self.server_fingerprint_path, "r", encoding="utf-8") as file_handle:
+            return file_handle.read().strip()
 
     def validate_server_certificate(self, cert_der: bytes) -> bool:
         """
@@ -165,8 +165,8 @@ class CertificateStore:
             return False
 
         try:
-            with open(self.client_cert_path, "rb") as f:
-                cert = x509.load_pem_x509_certificate(f.read())
+            with open(self.client_cert_path, "rb") as file_handle:
+                cert = x509.load_pem_x509_certificate(file_handle.read())
 
             now = datetime.now(timezone.utc)
 

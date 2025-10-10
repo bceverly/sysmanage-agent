@@ -16,24 +16,27 @@ unsafe-load-any-extension=no
 
 [MESSAGES CONTROL]
 # Disable specific warnings/errors for agent code
+# Keep these disabled for legitimate reasons:
+# - too-few-public-methods: Data classes and utilities are fine with few methods
+# - line-too-long: Already enforced via max-line-length=100
+# - no-member: Too many false positives with dynamic attributes and C extensions
+# - broad-except: Agent code needs resilience, catching Exception is often necessary
+# - duplicate-code: Cross-platform code will have legitimate similar patterns
+# - cyclic-import: Intentional design pattern with import-outside-toplevel to handle cycles
+# - too-many-*: Complexity warnings for large methods that handle multi-platform logic
 disable=
-    missing-module-docstring,
-    missing-class-docstring,
-    missing-function-docstring,
     too-few-public-methods,
-    too-many-arguments,
-    too-many-locals,
-    too-many-branches,
-    too-many-statements,
-    too-many-instance-attributes,
-    too-many-lines,
     line-too-long,
-    import-error,
     no-member,
-    unused-argument,
     broad-except,
-    invalid-name,
-    duplicate-code
+    duplicate-code,
+    cyclic-import,
+    too-many-branches,
+    too-many-locals,
+    too-many-statements,
+    too-many-return-statements,
+    too-many-positional-arguments,
+    too-many-public-methods
 
 [REPORTS]
 # Set the output format

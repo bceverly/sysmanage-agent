@@ -9,11 +9,13 @@ from src.i18n import get_language, set_language
 from src.sysmanage_agent.core.config import ConfigManager
 
 
-def test_config_manager_language_default():
+def test_config_lang_default():
     """Test that config manager returns default language."""
     # Create a temporary config file without i18n section
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write(
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        config_file.write(
             """
 server:
   hostname: "localhost"
@@ -22,7 +24,7 @@ logging:
   level: "INFO"
 """
         )
-        temp_config = f.name
+        temp_config = config_file.name
 
     try:
         config = ConfigManager(temp_config)
@@ -31,11 +33,13 @@ logging:
         os.unlink(temp_config)
 
 
-def test_config_manager_language_configured():
+def test_config_lang_configured():
     """Test that config manager returns configured language."""
     # Create a temporary config file with i18n section
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write(
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        config_file.write(
             """
 server:
   hostname: "localhost"
@@ -46,7 +50,7 @@ logging:
   level: "INFO"
 """
         )
-        temp_config = f.name
+        temp_config = config_file.name
 
     try:
         config = ConfigManager(temp_config)
@@ -55,7 +59,7 @@ logging:
         os.unlink(temp_config)
 
 
-def test_language_setting_integration():
+def test_lang_integration():
     """Test that language setting works with i18n system."""
     # Test setting different languages
     original_language = get_language()

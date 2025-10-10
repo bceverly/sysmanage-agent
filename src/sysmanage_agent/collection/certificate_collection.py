@@ -46,8 +46,8 @@ class CertificateCollector:
             self.logger.info(_("Collected %d certificates"), len(certificates))
             return certificates
 
-        except Exception as e:
-            self.logger.error(_("Error collecting certificates: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error collecting certificates: %s"), error)
             return []
 
     def _get_unix_cert_paths(self) -> List[str]:
@@ -58,8 +58,8 @@ class CertificateCollector:
         if system == "Linux":
             # Detect distribution-specific paths
             if os.path.exists("/etc/os-release"):
-                with open("/etc/os-release", "r", encoding="utf-8") as f:
-                    os_release = f.read()
+                with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
+                    os_release = file_handle.read()
 
                 if "ubuntu" in os_release.lower() or "debian" in os_release.lower():
                     paths = ["/etc/ssl/certs", "/usr/local/share/ca-certificates"]
@@ -217,11 +217,11 @@ class CertificateCollector:
                     len(keychain_certs),
                     keychain["name"],
                 )
-            except Exception as e:
+            except Exception as error:
                 self.logger.debug(
                     _("Failed to collect certificates from keychain %s: %s"),
                     keychain["name"],
-                    e,
+                    error,
                 )
 
         return certificates
@@ -266,11 +266,11 @@ class CertificateCollector:
             self.logger.warning(
                 _("Timeout extracting certificates from keychain: %s"), keychain["name"]
             )
-        except Exception as e:
+        except Exception as error:
             self.logger.debug(
                 _("Error extracting certificates from keychain %s: %s"),
                 keychain["name"],
-                e,
+                error,
             )
 
         return certificates
@@ -353,9 +353,11 @@ class CertificateCollector:
                 _("Timeout parsing certificate from keychain: %s"), keychain["name"]
             )
             return None
-        except Exception as e:
+        except Exception as error:
             self.logger.debug(
-                _("Error parsing certificate from keychain %s: %s"), keychain["name"], e
+                _("Error parsing certificate from keychain %s: %s"),
+                keychain["name"],
+                error,
             )
             return None
 
@@ -384,9 +386,9 @@ class CertificateCollector:
                     cert_dir, pattern, certificates, seen_fingerprints
                 )
 
-        except Exception as e:
+        except Exception as error:
             self.logger.warning(
-                _("Failed to scan certificate directory %s: %s"), cert_dir, e
+                _("Failed to scan certificate directory %s: %s"), cert_dir, error
             )
 
     def _process_certificate_pattern(
@@ -422,8 +424,10 @@ class CertificateCollector:
                     # If no fingerprint, include it anyway
                     certificates.append(cert_info)
 
-        except Exception as e:
-            self.logger.debug(_("Failed to process certificate %s: %s"), cert_file, e)
+        except Exception as error:
+            self.logger.debug(
+                _("Failed to process certificate %s: %s"), cert_file, error
+            )
 
     def _collect_windows_certificates(self) -> List[Dict[str, Any]]:
         """Collect certificates from Windows Certificate Store."""
@@ -454,8 +458,8 @@ class CertificateCollector:
                 len(certificates),
             )
 
-        except Exception as e:
-            self.logger.error(_("Error collecting Windows certificates: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error collecting Windows certificates: %s"), error)
 
         return certificates
 
@@ -497,9 +501,9 @@ class CertificateCollector:
             self.logger.warning(
                 _("Timeout querying Windows certificate store: %s"), store
             )
-        except Exception as e:
+        except Exception as error:
             self.logger.warning(
-                _("Failed to query Windows certificate store %s: %s"), store, e
+                _("Failed to query Windows certificate store %s: %s"), store, error
             )
 
     def _build_powershell_command(self, store: str) -> str:
@@ -549,9 +553,9 @@ class CertificateCollector:
                         _("Failed to parse certificate JSON: %s"), line[:100]
                     )
                     continue
-                except Exception as e:
+                except Exception as error:
                     self.logger.debug(
-                        _("Error processing certificate data: %s"), str(e)
+                        _("Error processing certificate data: %s"), str(error)
                     )
                     continue
 
@@ -600,9 +604,9 @@ class CertificateCollector:
                 _("OpenSSL/LibreSSL not found, skipping certificate: %s"), cert_file
             )
             return None
-        except Exception as e:
+        except Exception as error:
             self.logger.debug(
-                _("Error extracting certificate info from %s: %s"), cert_file, e
+                _("Error extracting certificate info from %s: %s"), cert_file, error
             )
             return None
 
@@ -644,13 +648,13 @@ class CertificateCollector:
                     if date_str.endswith(" GMT"):
                         date_str = date_str[:-4]
                     # Convert OpenSSL date format to ISO format
-                    dt = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
-                    cert_info["not_before"] = dt.replace(
+                    date_time = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
+                    cert_info["not_before"] = date_time.replace(
                         tzinfo=timezone.utc
                     ).isoformat()
-                except ValueError as e:
+                except ValueError as error:
                     self.logger.debug(
-                        _("Failed to parse notBefore date '%s': %s"), date_str, e
+                        _("Failed to parse notBefore date '%s': %s"), date_str, error
                     )
 
             elif line.startswith("notAfter="):
@@ -660,11 +664,13 @@ class CertificateCollector:
                     if date_str.endswith(" GMT"):
                         date_str = date_str[:-4]
                     # Convert OpenSSL date format to ISO format
-                    dt = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
-                    cert_info["not_after"] = dt.replace(tzinfo=timezone.utc).isoformat()
-                except ValueError as e:
+                    date_time = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
+                    cert_info["not_after"] = date_time.replace(
+                        tzinfo=timezone.utc
+                    ).isoformat()
+                except ValueError as error:
                     self.logger.debug(
-                        _("Failed to parse notAfter date '%s': %s"), date_str, e
+                        _("Failed to parse notAfter date '%s': %s"), date_str, error
                     )
 
             elif line.startswith("serial="):

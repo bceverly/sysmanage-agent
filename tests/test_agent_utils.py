@@ -101,6 +101,7 @@ class TestUpdateChecker:
             call_count = 0
 
             async def mock_sleep(duration):
+                _ = duration
                 nonlocal call_count
                 call_count += 1
                 if call_count >= 1:
@@ -129,6 +130,7 @@ class TestUpdateChecker:
         call_count = 0
 
         async def mock_sleep(duration):
+            _ = duration
             nonlocal call_count
             call_count += 1
             if call_count == 1:

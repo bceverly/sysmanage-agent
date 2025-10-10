@@ -51,7 +51,7 @@ class MessageQueueManager:
         finally:
             session.close()
 
-    def enqueue_message(
+    def enqueue_message(  # pylint: disable=too-many-arguments
         self,
         message_type: str,
         message_data: Dict[str, Any],
@@ -416,8 +416,8 @@ class MessageQueueManager:
         """
         try:
             return json.loads(message.message_data)
-        except (json.JSONDecodeError, TypeError) as e:
+        except (json.JSONDecodeError, TypeError) as error:
             logger.error(
-                _("Failed to deserialize message %s: %s"), message.message_id, e
+                _("Failed to deserialize message %s: %s"), message.message_id, error
             )
             return {}

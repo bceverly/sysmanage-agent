@@ -254,7 +254,7 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
         """Test successful _get_macos_users execution."""
 
         # Mock multiple subprocess calls for dscl commands
-        def mock_run_side_effect(*args, **kwargs):
+        def mock_run_side_effect(*args, **_kwargs):
             cmd = args[0]
             mock_result = Mock()
             mock_result.returncode = 0
@@ -308,7 +308,7 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
         """Test successful _get_macos_groups execution."""
 
         # Mock multiple subprocess calls for dscl commands
-        def mock_run_side_effect(*args, **kwargs):
+        def mock_run_side_effect(*args, **_kwargs):
             cmd = args[0]
             mock_result = Mock()
             mock_result.returncode = 0
@@ -355,7 +355,7 @@ class TestUserAccessCollector:  # pylint: disable=too-many-public-methods
         ]
         """
 
-        def mock_run_side_effect(*args, **kwargs):
+        def mock_run_side_effect(*args, **_kwargs):
             mock_result = Mock()
             mock_result.returncode = 0
 

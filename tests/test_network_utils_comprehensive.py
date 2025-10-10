@@ -306,7 +306,7 @@ class TestNetworkUtils:  # pylint: disable=too-many-public-methods
             mock_ipv6_sock.getsockname.return_value = ("2001:db8::1", 12345, 0, 0)
 
             # Return different mocks for different socket families
-            def socket_side_effect(family, *args):
+            def socket_side_effect(family, *_args):
                 if family == socket.AF_INET:
                     return mock_ipv4_sock
                 if family == socket.AF_INET6:
@@ -339,7 +339,7 @@ class TestNetworkUtils:  # pylint: disable=too-many-public-methods
             mock_ipv6_sock.__enter__ = Mock(return_value=mock_ipv6_sock)
             mock_ipv6_sock.__exit__ = Mock(return_value=None)
 
-            def socket_side_effect(family, *args):
+            def socket_side_effect(family, *_args):
                 if family == socket.AF_INET:
                     return mock_ipv4_sock
                 if family == socket.AF_INET6:
@@ -368,7 +368,7 @@ class TestNetworkUtils:  # pylint: disable=too-many-public-methods
             mock_ipv6_sock.__enter__ = Mock(return_value=mock_ipv6_sock)
             mock_ipv6_sock.__exit__ = Mock(return_value=None)
 
-            def socket_side_effect(family, *args):
+            def socket_side_effect(family, *_args):
                 if family == socket.AF_INET:
                     return mock_ipv4_sock
                 if family == socket.AF_INET6:

@@ -18,10 +18,12 @@ def test_config_manager_basic():
     """Test basic ConfigManager functionality."""
     config_data = {"server": {"hostname": "test.example.com", "port": 8443}}
 
-    with temp_module.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml_module.dump(config_data, f)
-        f.flush()
-        temp_file_name = f.name
+    with temp_module.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        yaml_module.dump(config_data, config_file)
+        config_file.flush()
+        temp_file_name = config_file.name
 
     try:
         config = ConfigManager(temp_file_name)
@@ -36,10 +38,12 @@ def test_config_manager_defaults():
     """Test ConfigManager default values."""
     config_data = {}
 
-    with temp_module.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml_module.dump(config_data, f)
-        f.flush()
-        temp_file_name = f.name
+    with temp_module.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        yaml_module.dump(config_data, config_file)
+        config_file.flush()
+        temp_file_name = config_file.name
 
     try:
         config = ConfigManager(temp_file_name)
@@ -50,7 +54,7 @@ def test_config_manager_defaults():
             os.unlink(temp_file_name)
 
 
-def test_config_manager_url_building():
+def test_config_manager_url_build():
     """Test URL building functionality."""
     config_data = {
         "server": {
@@ -61,10 +65,12 @@ def test_config_manager_url_building():
         }
     }
 
-    with temp_module.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml_module.dump(config_data, f)
-        f.flush()
-        temp_file_name = f.name
+    with temp_module.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        yaml_module.dump(config_data, config_file)
+        config_file.flush()
+        temp_file_name = config_file.name
 
     try:
         config = ConfigManager(temp_file_name)
@@ -92,10 +98,12 @@ def test_agent_basic_creation():
     """Test basic agent creation."""
     config_data = {"server": {"hostname": "test.com"}, "logging": {"level": "INFO"}}
 
-    with temp_module.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml_module.dump(config_data, f)
-        f.flush()
-        temp_file_name = f.name
+    with temp_module.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        yaml_module.dump(config_data, config_file)
+        config_file.flush()
+        temp_file_name = config_file.name
 
     try:
         # Mock logging and database initialization to avoid setup issues

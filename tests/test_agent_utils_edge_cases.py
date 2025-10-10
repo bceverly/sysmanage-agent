@@ -71,6 +71,8 @@ class TestUpdateCheckerEdgeCases:
         call_count = [0]
 
         def side_effect(*args, **kwargs):
+            _ = args
+            _ = kwargs
             call_count[0] += 1
             if call_count[0] == 1:
                 raise RuntimeError("First error")

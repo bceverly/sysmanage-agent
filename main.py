@@ -4,50 +4,52 @@ on all clients. It provides real-time bidirectional communication with the
 SysManage server using WebSockets with concurrent send/receive operations.
 """
 
+# pylint: disable=too-many-lines
+
 import asyncio
 import json
 import logging
 import os
-import platform
 import secrets
-import socket
 import ssl
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 
 import aiohttp
 import websockets
 import yaml
 
-from src.sysmanage_agent.core.config import ConfigManager
-from src.sysmanage_agent.registration.registration import ClientRegistration
+from src.database.base import get_database_manager  # pylint: disable=unused-import
+from src.database.init import initialize_database
+from src.database.models import HostApproval  # pylint: disable=unused-import
 from src.i18n import _, set_language
-from src.sysmanage_agent.registration.discovery import discovery_client
 from src.security.certificate_store import CertificateStore
-from src.sysmanage_agent.utils.verbosity_logger import get_logger
-from src.sysmanage_agent.core.agent_utils import (
-    UpdateChecker,
-    PackageCollectionScheduler,
-    AuthenticationHelper,
-    MessageProcessor,
-    is_running_privileged,
-)
-from src.sysmanage_agent.operations.update_operations import UpdateOperations
-from src.sysmanage_agent.operations.system_operations import SystemOperations
-from src.sysmanage_agent.operations.script_operations import ScriptOperations
-from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
-from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 from src.sysmanage_agent.collection.role_detection import RoleDetector
-from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
-from src.database.init import initialize_database
-from src.database.base import get_database_manager
-from src.database.models import HostApproval
+from src.sysmanage_agent.communication.data_collector import DataCollector
+from src.sysmanage_agent.communication.message_handler import MessageHandler
+from src.sysmanage_agent.core.agent_utils import (
+    AuthenticationHelper,
+    MessageProcessor,
+    PackageCollectionScheduler,
+    UpdateChecker,
+    is_running_privileged,
+)
+from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
+from src.sysmanage_agent.operations.script_operations import ScriptOperations
+from src.sysmanage_agent.operations.system_operations import SystemOperations
+from src.sysmanage_agent.operations.update_manager import UpdateManager
+from src.sysmanage_agent.registration.discovery import discovery_client
+from src.sysmanage_agent.registration.registration import ClientRegistration
+from src.sysmanage_agent.registration.registration_manager import RegistrationManager
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
+from src.sysmanage_agent.utils.verbosity_logger import get_logger
 
 
-class SysManageAgent:  # pylint: disable=too-many-public-methods
+class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instance-attributes
     """Main agent class for SysManage fleet management."""
 
     def __init__(self, config_file: str = "sysmanage-agent.yaml"):
@@ -86,8 +88,11 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         if not initialize_database(self.config):
             raise RuntimeError(_("Failed to initialize agent database"))
 
+        # Initialize registration manager (must be before cleanup as cleanup uses it)
+        self.registration_manager = RegistrationManager(self)
+
         # Clean up any corrupt data from the database (e.g., invalid UUIDs)
-        self.cleanup_corrupt_database_entries()
+        self.registration_manager.cleanup_corrupt_database_entries()
 
         # Initialize agent properties
         self.agent_id = str(uuid.uuid4())
@@ -128,12 +133,18 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self.antivirus_collector = AntivirusCollector()
 
         # Initialize operation modules
-        self.update_ops = UpdateOperations(self)
+        self.update_manager = UpdateManager(self)
         self.system_ops = SystemOperations(self)
         self.script_ops = ScriptOperations(self)
 
+        # Initialize diagnostic collector
+        self.diagnostic_collector = DiagnosticCollector(self)
+
+        # Initialize data collector
+        self.data_collector = DataCollector(self)
+
         # Initialize message handler with persistent queues
-        self.message_handler = QueuedMessageHandler(self)
+        self.message_handler = MessageHandler(self)
 
         # Get server URL from config
         self.server_url = self.config.get_server_url()
@@ -188,14 +199,16 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             )
 
             # Write configuration file
-            with open(self.config_file, "w", encoding="utf-8") as f:
-                yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+            with open(self.config_file, "w", encoding="utf-8") as file_handle:
+                yaml.dump(
+                    config_data, file_handle, default_flow_style=False, sort_keys=False
+                )
 
             logger.info("Configuration written to %s", self.config_file)
             return True
 
-        except Exception as e:
-            logger.error("Auto-discovery failed: %s", e)
+        except Exception as error:
+            logger.error("Auto-discovery failed: %s", error)
             return False
 
     def setup_logging(self):
@@ -244,8 +257,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             # where we might handle async context differently
 
             # For now, we'll get the host_id and host_token synchronously
-            stored_host_id = self.get_stored_host_id_sync()
-            stored_host_token = self.get_stored_host_token_sync()
+            stored_host_id = self.registration_manager.get_stored_host_id_sync()
+            stored_host_token = self.registration_manager.get_stored_host_token_sync()
             self.logger.debug(
                 "AGENT_DEBUG: Retrieved stored_host_id",
             )
@@ -328,8 +341,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             ) as session:
                 async with session.get(f"{http_url}/") as response:
                     return response.status == 200
-        except Exception as e:
-            self.logger.debug("Server health check failed: %s", e)
+        except Exception as error:
+            self.logger.debug("Server health check failed: %s", error)
             return False
 
     def create_heartbeat_message(self):
@@ -359,8 +372,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 "Queued message: %s (ID: %s)", message.get("message_type"), message_id
             )
             return True
-        except Exception as e:
-            self.logger.error("Failed to queue message: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to queue message: %s", error)
             return False
 
     async def handle_command(self, message: Dict[str, Any]):
@@ -445,300 +458,19 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
     async def send_initial_data_updates(self):
         """Send initial data updates after WebSocket connection."""
-        try:
-            self.logger.info(_("Sending initial OS version data..."))
-
-            # Send OS version data
-            self.logger.debug("AGENT_DEBUG: About to collect OS version info")
-            os_info = self.registration.get_os_version_info()
-            self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
-            # Add hostname to OS data for server processing
-            system_info = self.registration.get_system_info()
-            os_info["hostname"] = system_info["hostname"]
-            self.logger.debug("AGENT_DEBUG: OS info with hostname: %s", os_info)
-            os_message = self.create_message("os_version_update", os_info)
-            self.logger.debug(
-                "AGENT_DEBUG: About to send OS version message: %s",
-                os_message["message_id"],
-            )
-            await self.send_message(os_message)
-            self.logger.debug("AGENT_DEBUG: OS version message sent successfully")
-
-            # Allow queue processing tasks to run
-            await asyncio.sleep(0)
-
-            self.logger.info(_("Sending initial hardware data..."))
-
-            # Send hardware data
-            self.logger.debug("AGENT_DEBUG: About to collect hardware info")
-            hardware_info = self.registration.get_hardware_info()
-            self.logger.debug(
-                "AGENT_DEBUG: Hardware info collected with keys: %s",
-                list(hardware_info.keys()),
-            )
-            # Add hostname to hardware data for server processing
-            system_info = self.registration.get_system_info()
-            hardware_info["hostname"] = system_info["hostname"]
-            self.logger.info("Hardware info keys: %s", list(hardware_info.keys()))
-            self.logger.info(
-                "Storage devices count: %s",
-                len(hardware_info.get("storage_devices", [])),
-            )
-            self.logger.info(
-                "Network interfaces count: %s",
-                len(hardware_info.get("network_interfaces", [])),
-            )
-            # Log detailed CPU information
-            self.logger.debug(
-                "AGENT_DEBUG: CPU vendor: %s", hardware_info.get("cpu_vendor", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: CPU model: %s", hardware_info.get("cpu_model", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: CPU cores: %s", hardware_info.get("cpu_cores", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: Memory total: %s MB",
-                hardware_info.get("memory_total_mb", "N/A"),
-            )
-            hardware_message = self.create_message("hardware_update", hardware_info)
-            self.logger.debug(
-                "AGENT_DEBUG: About to send hardware message: %s",
-                hardware_message["message_id"],
-            )
-            await self.send_message(hardware_message)
-            self.logger.debug("AGENT_DEBUG: Hardware message sent successfully")
-
-            # Allow time for the large hardware message to be sent before sending more data
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Sending initial user access data..."))
-
-            # Send user access data
-            self.logger.debug("AGENT_DEBUG: About to collect user access info")
-            user_access_info = self.registration.get_user_access_info()
-            self.logger.debug(
-                "AGENT_DEBUG: User access info collected with keys: %s",
-                list(user_access_info.keys()),
-            )
-            # Add hostname to user access data for server processing
-            system_info = self.registration.get_system_info()
-            user_access_info["hostname"] = system_info["hostname"]
-            self.logger.info("User access info keys: %s", list(user_access_info.keys()))
-            self.logger.info(
-                "Users count: %s",
-                user_access_info.get("total_users", 0),
-            )
-            self.logger.info(
-                "Groups count: %s",
-                user_access_info.get("total_groups", 0),
-            )
-            # Log detailed user/group counts
-            self.logger.debug(
-                "AGENT_DEBUG: Regular users: %s",
-                user_access_info.get("regular_users", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: System users: %s",
-                user_access_info.get("system_users", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: Regular groups: %s",
-                user_access_info.get("regular_groups", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: System groups: %s",
-                user_access_info.get("system_groups", "N/A"),
-            )
-            user_access_message = self.create_message(
-                "user_access_update", user_access_info
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: About to send user access message: %s",
-                user_access_message["message_id"],
-            )
-            await self.send_message(user_access_message)
-            self.logger.debug("AGENT_DEBUG: User access message sent successfully")
-
-            # Allow time for the large user access message to be sent before sending more data
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Sending initial software inventory data..."))
-
-            # Send software inventory data
-            self.logger.debug("AGENT_DEBUG: About to collect software inventory info")
-            software_info = self.registration.get_software_inventory_info()
-            self.logger.debug(
-                "AGENT_DEBUG: Software info collected with keys: %s",
-                list(software_info.keys()),
-            )
-            # Add hostname to software inventory data for server processing
-            system_info = self.registration.get_system_info()
-            software_info["hostname"] = system_info["hostname"]
-            self.logger.info(
-                "Software inventory info keys: %s", list(software_info.keys())
-            )
-            self.logger.info(
-                "Software packages count: %s",
-                software_info.get("total_packages", 0),
-            )
-            # Log sample software packages
-            software_packages = software_info.get("software_packages", [])
-            if software_packages:
-                self.logger.debug(
-                    "AGENT_DEBUG: First 3 software packages: %s", software_packages[:3]
-                )
-            else:
-                self.logger.debug("AGENT_DEBUG: No software packages found!")
-            software_message = self.create_message(
-                "software_inventory_update", software_info
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: About to send software inventory message: %s",
-                software_message["message_id"],
-            )
-            await self.send_message(software_message)
-            self.logger.debug(
-                "AGENT_DEBUG: Software inventory message sent successfully"
-            )
-
-            self.logger.info(_("Sending initial update check..."))
-
-            # Send initial update check
-            try:
-                update_result = await self.check_updates()
-                if update_result.get("total_updates", 0) > 0:
-                    self.logger.info(
-                        "Found %d available updates during initial check",
-                        update_result["total_updates"],
-                    )
-                else:
-                    self.logger.info("No updates found during initial check")
-            except Exception as e:
-                self.logger.error("Failed to perform initial update check: %s", e)
-
-            # Allow time for update check to complete before collecting certificates
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Collecting initial certificate data..."))
-
-            # Collect and send certificate data
-            try:
-                certificate_result = await self.collect_certificates()
-                if certificate_result.get("success", False):
-                    cert_count = certificate_result.get("certificate_count", 0)
-                    if cert_count > 0:
-                        self.logger.info(
-                            "Found and sent %d certificates during initial collection",
-                            cert_count,
-                        )
-                    else:
-                        self.logger.info(
-                            "No certificates found during initial collection"
-                        )
-                else:
-                    error_msg = certificate_result.get("error", "Unknown error")
-                    self.logger.warning("Certificate collection failed: %s", error_msg)
-            except Exception as e:
-                self.logger.error(
-                    "Failed to perform initial certificate collection: %s", e
-                )
-
-            # Collect and send role data
-            try:
-                role_result = await self.collect_roles()
-                if role_result.get("success", False):
-                    role_count = role_result.get("role_count", 0)
-                    if role_count > 0:
-                        self.logger.info(
-                            "Found and sent %d server roles during initial collection",
-                            role_count,
-                        )
-                    else:
-                        self.logger.info(
-                            "No server roles found during initial collection"
-                        )
-                else:
-                    error_msg = role_result.get("error", "Unknown error")
-                    self.logger.warning("Role collection failed: %s", error_msg)
-            except Exception as e:
-                self.logger.error("Failed to perform initial role collection: %s", e)
-
-            # Send third-party repository data
-            try:
-                self.logger.info(_("Collecting initial third-party repository data..."))
-                await self._send_third_party_repository_update()
-            except Exception as e:
-                self.logger.error(
-                    "Failed to send initial third-party repository data: %s", e
-                )
-
-            self.logger.info(_("Initial data updates sent successfully"))
-        except Exception as e:
-            self.logger.error(_("Failed to send initial data updates: %s"), e)
+        await self.data_collector.send_initial_data_updates()
 
     async def update_os_version(self) -> Dict[str, Any]:
         """Gather and send updated OS version information to the server."""
-        try:
-            # Get fresh OS version info
-            os_info = self.registration.get_os_version_info()
-            # Add hostname to OS data for server processing
-            system_info = self.registration.get_system_info()
-            os_info["hostname"] = system_info["hostname"]
-
-            # Create OS version message
-            os_message = self.create_message("os_version_update", os_info)
-
-            # Send OS version update to server
-            await self.send_message(os_message)
-
-            return {"success": True, "result": "OS version information sent"}
-        except Exception as e:
-            self.logger.error("Failed to update OS version: %s", e)
-            return {"success": False, "error": str(e)}
+        return await self.data_collector.update_os_version()
 
     async def update_hardware(self) -> Dict[str, Any]:
         """Gather and send updated hardware information to the server."""
-        try:
-            # Get fresh hardware info
-            hardware_info = self.registration.get_hardware_info()
-            # Add hostname to hardware data for server processing
-            system_info = self.registration.get_system_info()
-            hardware_info["hostname"] = system_info["hostname"]
-
-            # Create hardware message
-            hardware_message = self.create_message("hardware_update", hardware_info)
-
-            # Send hardware update to server
-            await self.send_message(hardware_message)
-
-            return {"success": True, "result": "Hardware information sent"}
-        except Exception as e:
-            self.logger.error("Failed to update hardware: %s", e)
-            return {"success": False, "error": str(e)}
+        return await self.data_collector.update_hardware()
 
     async def update_user_access(self) -> Dict[str, Any]:
         """Gather and send updated user access information to the server."""
-        try:
-            # Get fresh user access info
-            user_access_info = self.registration.get_user_access_info()
-            # Add hostname to user access data for server processing
-            system_info = self.registration.get_system_info()
-            user_access_info["hostname"] = system_info["hostname"]
-
-            # Create user access message
-            user_access_message = self.create_message(
-                "user_access_update", user_access_info
-            )
-
-            # Send user access update to server
-            await self.send_message(user_access_message)
-
-            return {"success": True, "result": "User access information sent"}
-        except Exception as e:
-            self.logger.error("Failed to update user access: %s", e)
-            return {"success": False, "error": str(e)}
+        return await self.data_collector.update_user_access()
 
     async def _handle_server_error(self, data: Dict[str, Any]) -> None:
         """Handle error messages from server."""
@@ -796,9 +528,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     msg_time,
                     self.last_registration_time,
                 )
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError) as error:
                 self.logger.warning(
-                    "Could not parse message timestamp for stale check: %s", e
+                    "Could not parse message timestamp for stale check: %s", error
                 )
         else:
             if not message_timestamp:
@@ -834,8 +566,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         try:
             await self.clear_stored_host_id()
             self.logger.info("Stored host_id cleared from database")
-        except Exception as e:
-            self.logger.error("Error clearing stored host_id: %s", e)
+        except Exception as error:
+            self.logger.error("Error clearing stored host_id: %s", error)
 
         # Clear any existing registration state and force re-registration
         self.registration_status = None
@@ -847,7 +579,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         self.logger.info("Disconnecting to trigger re-registration...")
         self.running = False
 
-    async def message_receiver(self):
+    async def message_receiver(self):  # pylint: disable=too-many-branches
         """Handle incoming messages from server."""
         self.logger.debug("Message receiver started")
         try:
@@ -923,8 +655,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
 
                 except json.JSONDecodeError:
                     self.logger.error("Invalid JSON received: %s", message)
-                except Exception as e:
-                    self.logger.error("Error processing message: %s", e)
+                except Exception as error:
+                    self.logger.error("Error processing message: %s", error)
 
         except websockets.ConnectionClosed:
             self.logger.info(
@@ -932,8 +664,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             )
             self.connected = False
             self.websocket = None
-        except Exception as e:
-            self.logger.error("WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", e)
+        except Exception as error:
+            self.logger.error(
+                "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", error
+            )
             self.connected = False
             self.websocket = None
 
@@ -961,706 +695,94 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 # Graceful shutdown - re-raise to propagate cancellation
                 self.logger.debug("Message sender cancelled")
                 raise
-            except Exception as e:
-                self.logger.error("Message sender error: %s", e)
+            except Exception as error:
+                self.logger.error("Message sender error: %s", error)
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
     async def update_checker(self):
-        """Handle periodic update checking."""
-        await self.update_checker_util.run_update_checker_loop()
+        """Delegate to data_collector."""
+        return await self.data_collector.update_checker()
 
     async def _send_software_inventory_update(self):
-        """Send software inventory update."""
-        self.logger.debug("AGENT_DEBUG: Collecting software inventory data")
-        software_info = self.registration.get_software_inventory_info()
-        software_info["hostname"] = self.registration.get_system_info()["hostname"]
-
-        # Add host_id if available
-        host_approval = self.get_host_approval_from_db()
-        if host_approval:
-            software_info["host_id"] = str(host_approval.host_id)
-
-        software_message = self.create_message(
-            "software_inventory_update", software_info
-        )
-        self.logger.debug(
-            "AGENT_DEBUG: Sending periodic software inventory message: %s",
-            software_message["message_id"],
-        )
-        success = await self.send_message(software_message)
-        if success:
-            self.logger.debug(
-                "AGENT_DEBUG: Periodic software inventory sent successfully"
-            )
-        else:
-            self.logger.warning("Failed to send periodic software inventory data")
+        """Delegate to data_collector."""
+        await self.data_collector._send_software_inventory_update()  # pylint: disable=protected-access
 
     async def _send_user_access_update(self):
-        """Send user access update."""
-        self.logger.debug("AGENT_DEBUG: Collecting user access data")
-        user_info = self.registration.get_user_access_info()
-        user_info["hostname"] = self.registration.get_system_info()["hostname"]
-
-        # Add host_id if available
-        host_approval = self.get_host_approval_from_db()
-        if host_approval:
-            user_info["host_id"] = str(host_approval.host_id)
-
-        user_message = self.create_message("user_access_update", user_info)
-        self.logger.debug(
-            "AGENT_DEBUG: Sending periodic user access message: %s",
-            user_message["message_id"],
-        )
-        success = await self.send_message(user_message)
-        if success:
-            self.logger.debug(
-                "AGENT_DEBUG: Periodic user access data sent successfully"
-            )
-        else:
-            self.logger.warning("Failed to send periodic user access data")
+        """Delegate to data_collector."""
+        await self.data_collector._send_user_access_update()  # pylint: disable=protected-access
 
     async def _send_hardware_update(self):
-        """Send hardware update."""
-        self.logger.debug("AGENT_DEBUG: Collecting hardware data")
-        hardware_info = self.registration.get_hardware_info()
-        hardware_info["hostname"] = self.registration.get_system_info()["hostname"]
-
-        # Add host_id if available
-        host_approval = self.get_host_approval_from_db()
-        if host_approval:
-            hardware_info["host_id"] = str(host_approval.host_id)
-
-        hardware_message = self.create_message("hardware_update", hardware_info)
-        self.logger.debug(
-            "AGENT_DEBUG: Sending periodic hardware message: %s",
-            hardware_message["message_id"],
-        )
-        success = await self.send_message(hardware_message)
-        if success:
-            self.logger.debug("AGENT_DEBUG: Periodic hardware data sent successfully")
-        else:
-            self.logger.warning("Failed to send periodic hardware data")
+        """Delegate to data_collector."""
+        await self.data_collector._send_hardware_update()  # pylint: disable=protected-access
 
     async def _send_certificate_update(self):
-        """Send certificate update."""
-        self.logger.debug("AGENT_DEBUG: Collecting certificate data")
-        certificate_result = await self.collect_certificates()
-        if certificate_result.get("success", False):
-            cert_count = certificate_result.get("certificate_count", 0)
-            if cert_count > 0:
-                self.logger.debug(
-                    "AGENT_DEBUG: Periodic certificate collection found and sent %d certificates",
-                    cert_count,
-                )
-            else:
-                self.logger.debug(
-                    "AGENT_DEBUG: No certificates found during periodic collection"
-                )
-        else:
-            error_msg = certificate_result.get("error", "Unknown error")
-            self.logger.warning("Periodic certificate collection failed: %s", error_msg)
+        """Delegate to data_collector."""
+        await self.data_collector._send_certificate_update()  # pylint: disable=protected-access
 
     async def _send_role_update(self):
-        """Send role update."""
-        self.logger.debug("AGENT_DEBUG: Collecting role data")
-        role_result = await self.collect_roles()
-        if role_result.get("success", False):
-            role_count = role_result.get("role_count", 0)
-            if role_count > 0:
-                self.logger.debug(
-                    "AGENT_DEBUG: Periodic role collection found and sent %d server roles",
-                    role_count,
-                )
-            else:
-                self.logger.debug(
-                    "AGENT_DEBUG: No server roles found during periodic collection"
-                )
-        else:
-            error_msg = role_result.get("error", "Unknown error")
-            self.logger.warning("Periodic role collection failed: %s", error_msg)
+        """Delegate to data_collector."""
+        await self.data_collector._send_role_update()  # pylint: disable=protected-access
 
     async def _send_os_version_update(self):
-        """Send OS version update."""
-        self.logger.debug("AGENT_DEBUG: About to collect OS version info")
-        os_info = self.registration.get_os_version_info()
-        self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
-
-        os_message = {
-            "message_type": "os_version_update",
-            "message_id": str(uuid.uuid4()),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "data": os_info,
-        }
-
-        self.logger.debug(
-            "AGENT_DEBUG: Sending periodic OS version message: %s",
-            os_message["message_id"],
-        )
-        success = await self.send_message(os_message)
-
-        if success:
-            self.logger.debug("AGENT_DEBUG: Periodic OS version data sent successfully")
-        else:
-            self.logger.warning("Failed to send periodic OS version data")
+        """Delegate to data_collector."""
+        await self.data_collector._send_os_version_update()  # pylint: disable=protected-access
 
     async def _send_reboot_status_update(self):
-        """Send reboot status update."""
-        self.logger.debug("AGENT_DEBUG: Checking reboot status")
-        detector = UpdateDetector()
-        requires_reboot = detector.check_reboot_required()
-
-        self.logger.debug("AGENT_DEBUG: Reboot required: %s", requires_reboot)
-        await self.send_reboot_status_update(requires_reboot)
-        self.logger.debug("AGENT_DEBUG: Periodic reboot status sent successfully")
+        """Delegate to data_collector."""
+        await self.data_collector._send_reboot_status_update()  # pylint: disable=protected-access
 
     async def _send_third_party_repository_update(self):
-        """Send third-party repository update."""
-        self.logger.debug("AGENT_DEBUG: Collecting third-party repository data")
-
-        # Call system_ops to list repositories
-        repo_result = await self.system_ops.list_third_party_repositories({})
-
-        if not repo_result.get("success", False):
-            error_msg = repo_result.get("error", "Unknown error")
-            self.logger.warning(
-                "Failed to collect third-party repositories: %s", error_msg
-            )
-            return
-
-        repositories = repo_result.get("repositories", [])
-
-        # Create message data
-        repo_info = {
-            "repositories": repositories,
-            "count": len(repositories),
-            "hostname": self.registration.get_system_info()["hostname"],
-        }
-
-        # Add host_id if available
-        host_approval = self.get_host_approval_from_db()
-        if host_approval:
-            repo_info["host_id"] = str(host_approval.host_id)
-
-        # Create and send message
-        repo_message = self.create_message("third_party_repository_update", repo_info)
-        self.logger.debug(
-            "AGENT_DEBUG: Sending third-party repository message: %s",
-            repo_message["message_id"],
-        )
-        success = await self.send_message(repo_message)
-
-        if success:
-            self.logger.debug(
-                "AGENT_DEBUG: Third-party repository data sent successfully (%d repositories)",
-                len(repositories),
-            )
-        else:
-            self.logger.warning("Failed to send third-party repository data")
+        """Delegate to data_collector."""
+        await self.data_collector._send_third_party_repository_update()  # pylint: disable=protected-access
 
     async def _send_antivirus_status_update(self):
-        """Send antivirus status update."""
-        self.logger.debug("AGENT_DEBUG: Collecting antivirus status data")
-
-        antivirus_info = self.antivirus_collector.collect_antivirus_status()
-
-        # Add host_id if available
-        host_approval = self.get_host_approval_from_db()
-        if host_approval:
-            antivirus_message_data = {
-                "host_id": str(host_approval.host_id),
-                "software_name": antivirus_info["software_name"],
-                "install_path": antivirus_info["install_path"],
-                "version": antivirus_info["version"],
-                "enabled": antivirus_info["enabled"],
-            }
-
-            antivirus_message = self.create_message(
-                "antivirus_status_update", antivirus_message_data
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: Sending antivirus status message: %s",
-                antivirus_message["message_id"],
-            )
-            success = await self.send_message(antivirus_message)
-            if success:
-                self.logger.debug(
-                    "AGENT_DEBUG: Antivirus status data sent successfully"
-                )
-            else:
-                self.logger.warning("Failed to send antivirus status data")
-        else:
-            self.logger.warning("Cannot send antivirus status data: no host approval")
+        """Delegate to data_collector."""
+        await self.data_collector._send_antivirus_status_update()  # pylint: disable=protected-access
 
     async def _collect_and_send_periodic_data(self):
-        """Collect and send all periodic data updates."""
-        if not (self.running and self.connected):
-            return
-
-        self.logger.debug("AGENT_DEBUG: Starting periodic data collection")
-
-        # Send software inventory update
-        try:
-            await self._send_software_inventory_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending software inventory: %s", e)
-
-        # Send user access update
-        try:
-            await self._send_user_access_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending user access data: %s", e)
-
-        # Send hardware update
-        try:
-            await self._send_hardware_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending hardware data: %s", e)
-
-        # Send certificate update
-        try:
-            await self._send_certificate_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending certificate data: %s", e)
-
-        # Send role update
-        try:
-            await self._send_role_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending role data: %s", e)
-
-        # Send OS version update
-        try:
-            await self._send_os_version_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending OS version data: %s", e)
-
-        # Send reboot status update
-        try:
-            await self._send_reboot_status_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending reboot status: %s", e)
-
-        # Send third-party repository update
-        try:
-            await self._send_third_party_repository_update()
-        except Exception as e:
-            self.logger.error(
-                "Error collecting/sending third-party repository data: %s", e
-            )
-
-        # Send antivirus status update
-        try:
-            await self._send_antivirus_status_update()
-        except Exception as e:
-            self.logger.error("Error collecting/sending antivirus status: %s", e)
-
-    async def data_collector(self):
-        """Handle periodic data collection and sending."""
-        self.logger.debug("Data collector started")
-
-        # Send periodic data updates every 5 minutes
-        data_collection_interval = 300  # 5 minutes
-
-        while self.running:
-            try:
-                await asyncio.sleep(data_collection_interval)
-                await self._collect_and_send_periodic_data()
-                self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
-            except asyncio.CancelledError:
-                # Graceful shutdown - re-raise to propagate cancellation
-                self.logger.debug("Data collector cancelled")
-                raise
-            except Exception as e:
-                self.logger.error("Data collector error: %s", e)
-                # Don't break the loop on non-critical errors, but return to trigger reconnection
-                return
+        """Delegate to data_collector."""
+        await self.data_collector._collect_and_send_periodic_data()  # pylint: disable=protected-access
 
     async def package_collector(self):
-        """Handle periodic package collection."""
-        await self.package_collection_scheduler.run_package_collection_loop()
+        """Delegate to data_collector."""
+        return await self.data_collector.package_collector()
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
-        return await self.auth_helper.get_auth_token()
+        return await self.registration_manager.get_auth_token()
 
     async def fetch_certificates(self, host_id: str) -> bool:
         """Fetch certificates from server after approval."""
-        try:
-            server_config = self.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
-
-            # Build certificate URL - authenticated endpoint requires /api prefix
-            protocol = "https" if use_https else "http"
-            cert_url = (
-                f"{protocol}://{hostname}:{port}/api/certificates/client/{host_id}"
-            )
-
-            # Set up SSL context if needed
-            ssl_context = None
-            if use_https:
-                ssl_context = ssl.create_default_context()
-                if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
-
-            # Get authentication token
-            auth_token = await self.get_auth_token()
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
-            async with aiohttp.ClientSession(connector=connector) as session:
-                headers = {"Authorization": f"Bearer {auth_token}"}
-
-                async with session.get(cert_url, headers=headers) as response:
-                    if response.status == 200:
-                        cert_data = await response.json()
-                        self.cert_store.store_certificates(cert_data)
-                        self.logger.info(
-                            "Certificates retrieved and stored successfully"
-                        )
-                        return True
-                    if response.status == 403:
-                        self.logger.warning(
-                            "Host not yet approved for certificate retrieval"
-                        )
-                        return False
-                    self.logger.error(
-                        "Failed to fetch certificates: HTTP %s", response.status
-                    )
-                    return False
-
-        except Exception as e:
-            self.logger.error("Error fetching certificates: %s", e)
-            return False
+        return await self.registration_manager.fetch_certificates(host_id)
 
     async def ensure_certificates(self) -> bool:
         """Ensure agent has valid certificates for mTLS."""
-        # Check if we already have valid certificates
-        if self.cert_store.has_certificates():
-            self.logger.debug("Valid certificates already available")
-            return True
-
-        # If no certificates, we need to check if host is approved and fetch them
-        self.logger.info(
-            "No valid certificates found, checking host approval status..."
-        )
-
-        # Get server fingerprint first for security validation
-        try:
-            server_config = self.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
-
-            protocol = "https" if use_https else "http"
-            fingerprint_url = (
-                f"{protocol}://{hostname}:{port}/certificates/server-fingerprint"
-            )
-
-            ssl_context = None
-            if use_https:
-                ssl_context = ssl.create_default_context()
-                if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.get(fingerprint_url) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        server_fingerprint = data.get("fingerprint")
-                        self.logger.info(
-                            "Retrieved server fingerprint for validation: %s",
-                            "***REDACTED***" if server_fingerprint else "None",
-                        )
-                        # We'll store it when we get the full cert data
-
-        except Exception as e:
-            self.logger.error("Failed to get server fingerprint: %s", type(e).__name__)
-            return False
-
-        # Check if we can find our host ID from previous registration
-        # This is a simplified approach - in a real implementation you might
-        # store the host ID during registration
-        system_info = self.registration.get_system_info()
-        hostname = system_info["hostname"]
-
-        # For now, we'll try to fetch with a known host ID or wait for manual approval
-        # This would be improved with a more sophisticated approval checking mechanism
-        self.logger.warning(
-            "Certificate-based authentication requires manual host approval"
-        )
-        self.logger.warning("Please approve this host in the SysManage web interface")
-        return False
+        return await self.registration_manager.ensure_certificates()
 
     async def check_updates(self) -> Dict[str, Any]:
         """Check for available updates for installed packages."""
-        return await self.update_ops.check_updates()
+        return await self.update_manager.check_updates()
 
     async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply updates for specified packages."""
-        return await self.update_ops.apply_updates(parameters)
+        return await self.update_manager.apply_updates(parameters)
 
     async def check_reboot_status(self) -> Dict[str, Any]:
         """Check if the system requires a reboot."""
-        try:
-            detector = UpdateDetector()
-            requires_reboot = detector.check_reboot_required()
-
-            result = {
-                "success": True,
-                "reboot_required": requires_reboot,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-
-            # Send reboot status update to server
-            await self.send_reboot_status_update(requires_reboot)
-
-            return result
-
-        except Exception as e:
-            self.logger.error(_("Failed to check reboot status: %s"), e)
-            return {
-                "success": False,
-                "error": str(e),
-                "reboot_required": False,
-            }
+        return await self.update_manager.check_reboot_status()
 
     async def send_reboot_status_update(self, requires_reboot: bool) -> None:
         """Send reboot status update to server."""
-        try:
-            self.logger.info(_("Sending reboot status update: %s"), requires_reboot)
-
-            # Get hostname for server processing
-            system_info = self.registration.get_system_info()
-            hostname = system_info.get("hostname", "unknown")
-
-            reboot_data = {
-                "hostname": hostname,
-                "reboot_required": requires_reboot,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-
-            reboot_message = self.create_message("reboot_status_update", reboot_data)
-            await self.send_message(reboot_message)
-
-            self.logger.debug("Reboot status message sent successfully")
-
-        except Exception as e:
-            self.logger.error(_("Failed to send reboot status update: %s"), e)
+        await self.update_manager.send_reboot_status_update(requires_reboot)
 
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server."""
-        try:
-            collection_id = parameters.get("collection_id")
-            collection_types = parameters.get("collection_types", [])
-
-            self.logger.info(
-                _("Starting diagnostics collection for ID: %s"), collection_id
-            )
-            self.logger.info(_("Collection types requested: %s"), collection_types)
-
-            # Dictionary to store collected data
-            system_info = self.registration.get_system_info()
-            diagnostic_data = {
-                "collection_id": collection_id,
-                "success": True,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "hostname": system_info["hostname"],
-            }
-
-            # Collect requested diagnostic data
-            for i, collection_type in enumerate(collection_types, 1):
-                try:
-                    self.logger.info(
-                        _("Starting collection %d/%d: %s"),
-                        i,
-                        len(collection_types),
-                        collection_type,
-                    )
-                    start_time = datetime.now(timezone.utc)
-
-                    if collection_type == "system_logs":
-                        self.logger.info("Collecting system logs...")
-                        diagnostic_data["system_logs"] = (
-                            await self._collect_system_logs()
-                        )
-                    elif collection_type == "configuration_files":
-                        self.logger.info("Collecting configuration files...")
-                        diagnostic_data["configuration_files"] = (
-                            await self._collect_configuration_files()
-                        )
-                    elif collection_type == "network_info":
-                        self.logger.info("Collecting network information...")
-                        diagnostic_data["network_info"] = (
-                            await self._collect_network_info()
-                        )
-                    elif collection_type == "process_info":
-                        self.logger.info("Collecting process information...")
-                        diagnostic_data["process_info"] = (
-                            await self._collect_process_info()
-                        )
-                    elif collection_type == "disk_usage":
-                        self.logger.info("Collecting disk usage information...")
-                        diagnostic_data["disk_usage"] = await self._collect_disk_usage()
-                    elif collection_type == "environment_variables":
-                        self.logger.info("Collecting environment variables...")
-                        diagnostic_data["environment_variables"] = (
-                            await self._collect_environment_variables()
-                        )
-                    elif collection_type == "agent_logs":
-                        self.logger.info("Collecting agent logs...")
-                        diagnostic_data["agent_logs"] = await self._collect_agent_logs()
-                    elif collection_type == "error_logs":
-                        self.logger.info("Collecting error logs...")
-                        diagnostic_data["error_logs"] = await self._collect_error_logs()
-                    else:
-                        self.logger.warning(
-                            _("Unknown collection type: %s"), collection_type
-                        )
-                        continue
-
-                    elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                    self.logger.info(
-                        _("Completed collection of %s in %.2f seconds"),
-                        collection_type,
-                        elapsed,
-                    )
-
-                except Exception as e:
-                    elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                    self.logger.error(
-                        _("Failed to collect %s after %.2f seconds: %s"),
-                        collection_type,
-                        elapsed,
-                        e,
-                    )
-                    # Continue collecting other types even if one fails
-
-            # Calculate collection statistics
-            self.logger.info("Calculating collection statistics...")
-            collection_size = 0
-            files_collected = 0
-            for key, value in diagnostic_data.items():
-                if isinstance(value, (dict, list)) and key != "collection_id":
-                    collection_size += len(str(value))
-                    if isinstance(value, dict) and "files" in value:
-                        files_collected += len(value.get("files", []))
-                    elif isinstance(value, list):
-                        files_collected += len(value)
-
-            diagnostic_data["collection_size_bytes"] = collection_size
-            diagnostic_data["files_collected"] = files_collected
-
-            self.logger.info(
-                "Collection statistics: %d bytes, %d files/entries collected",
-                collection_size,
-                files_collected,
-            )
-
-            # Send diagnostic data to server
-            self.logger.info("Preparing to send diagnostic data to server...")
-            send_start_time = datetime.now(timezone.utc)
-            diagnostic_message = self.create_message(
-                "diagnostic_collection_result", diagnostic_data
-            )
-
-            self.logger.info(
-                "Sending diagnostic message (ID: %s)...",
-                diagnostic_message.get("message_id"),
-            )
-            await self.send_message(diagnostic_message)
-
-            send_elapsed = (
-                datetime.now(timezone.utc) - send_start_time
-            ).total_seconds()
-            self.logger.info("Diagnostic message sent in %.2f seconds", send_elapsed)
-
-            self.logger.info(
-                _("Diagnostics collection completed for ID: %s"), collection_id
-            )
-
-            return {
-                "success": True,
-                "collection_id": collection_id,
-                "message": "Diagnostics collected and sent to server",
-            }
-
-        except Exception as e:
-            self.logger.error(_("Failed to collect diagnostics: %s"), e)
-
-            # Send error result to server if we have collection_id
-            if parameters.get("collection_id"):
-                system_info = self.registration.get_system_info()
-                error_data = {
-                    "collection_id": parameters["collection_id"],
-                    "success": False,
-                    "error": str(e),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "hostname": system_info["hostname"],
-                }
-                try:
-                    error_message = self.create_message(
-                        "diagnostic_collection_result", error_data
-                    )
-                    await self.send_message(error_message)
-                except Exception as send_error:
-                    self.logger.error(_("Failed to send error message: %s"), send_error)
-
-            return {"success": False, "error": str(e)}
+        return await self.diagnostic_collector.collect_diagnostics(parameters)
 
     async def collect_available_packages(self) -> Dict[str, Any]:
-        """Collect and send available packages from all package managers using pagination."""
-        try:
-            # Trigger package collection
-            success = (
-                await self.package_collection_scheduler.perform_package_collection()
-            )
-            if not success:
-                return {"success": False, "error": "Package collection failed"}
-
-            # Get packages for transmission
-            packages = (
-                self.package_collection_scheduler.package_collector.get_packages_for_transmission()
-            )
-
-            # Get current OS information from registration system
-            system_info = self.registration.get_system_info()
-            os_info = system_info.get("os_info", {})
-
-            # Determine OS name and version
-            # Try Linux-specific fields first, then fall back to platform fields for FreeBSD/other systems
-            os_name = os_info.get("distribution") or system_info.get(
-                "platform", "Unknown"
-            )
-            os_version = os_info.get("distribution_version") or system_info.get(
-                "platform_release", "Unknown"
-            )
-
-            # Calculate total packages
-            total_packages = sum(
-                len(pkg_list) for pkg_list in packages["package_managers"].values()
-            )
-
-            # Send packages using pagination to avoid large message issues
-            success = await self._send_available_packages_paginated(
-                packages["package_managers"], os_name, os_version, total_packages
-            )
-
-            if success:
-                return {
-                    "success": True,
-                    "message": f"Successfully sent {total_packages} packages using pagination",
-                    "total_packages": total_packages,
-                }
-            return {"success": False, "error": "Failed to send paginated packages"}
-
-        except Exception as e:
-            self.logger.error(_("Error collecting available packages: %s"), e)
-            return {"success": False, "error": str(e)}
+        """Delegate to data_collector."""
+        return await self.data_collector.collect_available_packages()
 
     async def _send_available_packages_paginated(
         self,
@@ -1670,157 +792,17 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         total_packages: int,
     ) -> bool:
         """Send available packages using pagination to avoid large message issues."""
-        batch_id = str(uuid.uuid4())
-        batch_size = 1000  # Send packages in batches of 1000
-
-        try:
-            # Send batch start message
-            batch_start_message = self.create_message(
-                "available_packages_batch_start",
-                {
-                    "batch_id": batch_id,
-                    "os_name": os_name,
-                    "os_version": os_version,
-                    "package_managers": list(package_managers.keys()),
-                    "total_packages": total_packages,
-                },
-            )
-            await self.send_message(batch_start_message)
-            self.logger.info(
-                f"Started packages batch {batch_id} with {total_packages} total packages"
-            )
-
-            # Send packages in batches for each package manager
-            for manager_name, packages_list in package_managers.items():
-                if not packages_list:
-                    continue
-
-                # Split packages into batches
-                for i in range(0, len(packages_list), batch_size):
-                    batch_packages = packages_list[i : i + batch_size]
-
-                    batch_message = self.create_message(
-                        "available_packages_batch",
-                        {
-                            "batch_id": batch_id,
-                            "package_managers": {manager_name: batch_packages},
-                        },
-                    )
-                    await self.send_message(batch_message)
-                    self.logger.info(
-                        f"Sent batch with {len(batch_packages)} packages from {manager_name} "
-                        f"(batch {batch_id}, packages {i+1}-{i+len(batch_packages)})"
-                    )
-
-            # Send batch end message
-            batch_end_message = self.create_message(
-                "available_packages_batch_end",
-                {
-                    "batch_id": batch_id,
-                    "total_packages": total_packages,
-                },
-            )
-            await self.send_message(batch_end_message)
-            self.logger.info(f"Completed packages batch {batch_id}")
-
-            return True
-
-        except Exception as e:
-            self.logger.error(
-                f"Error sending paginated packages for batch {batch_id}: {e}"
-            )
-            return False
+        return await self.data_collector._send_available_packages_paginated(  # pylint: disable=protected-access
+            package_managers, os_name, os_version, total_packages
+        )
 
     async def collect_certificates(self) -> Dict[str, Any]:
-        """Collect SSL certificates from the system and send to server."""
-        try:
-            # Certificate collection can work in unprivileged mode for most system certificates
-            # Only some certificates in restricted directories may require privileged access
-            if not is_running_privileged():
-                self.logger.info(
-                    _(
-                        "Running certificate collection in unprivileged mode - some certificates may not be accessible"
-                    )
-                )
-
-            self.logger.info(_("Collecting SSL certificates from system"))
-
-            # Collect certificate data
-            certificates = self.certificate_collector.collect_certificates()
-
-            if not certificates:
-                self.logger.info(_("No certificates found on system"))
-                return {"success": True, "result": "No certificates found"}
-
-            self.logger.info(_("Found %d certificates"), len(certificates))
-
-            # Send certificate data to server
-            system_info = self.registration.get_system_info()
-            certificate_message = self.create_message(
-                "host_certificates_update",
-                {
-                    "hostname": system_info.get("fqdn", socket.gethostname()),
-                    "certificates": certificates,
-                    "collected_at": datetime.now(timezone.utc).isoformat(),
-                },
-            )
-
-            await self.send_message(certificate_message)
-
-            return {
-                "success": True,
-                "result": f"Collected and sent {len(certificates)} certificates",
-            }
-
-        except Exception as e:
-            self.logger.error(_("Error collecting certificates: %s"), e)
-            return {"success": False, "error": str(e)}
+        """Delegate to data_collector."""
+        return await self.data_collector.collect_certificates()
 
     async def collect_roles(self) -> Dict[str, Any]:
-        """Collect server roles from the system and send to server."""
-        try:
-            self.logger.info(_("Collecting server roles"))
-
-            # Collect role data
-            roles = self.role_detector.detect_roles()
-
-            if not roles:
-                self.logger.info(_("No server roles detected on system"))
-                return {
-                    "success": True,
-                    "result": "No server roles detected",
-                    "role_count": 0,
-                }
-
-            self.logger.info(_("Found %d server roles"), len(roles))
-
-            # Get hostname for server validation
-            system_info = self.registration.get_system_info()
-            hostname = system_info["hostname"]
-
-            # Create role data message
-            role_message = self.create_message(
-                "role_data",
-                {
-                    "hostname": hostname,
-                    "roles": roles,
-                    "role_count": len(roles),
-                    "collection_timestamp": datetime.now(timezone.utc).isoformat(),
-                },
-            )
-
-            # Send role data to server
-            await self.send_message(role_message)
-
-            return {
-                "success": True,
-                "result": f"Collected and sent {len(roles)} server roles",
-                "role_count": len(roles),
-            }
-
-        except Exception as e:
-            self.logger.error(_("Error collecting roles: %s"), e)
-            return {"success": False, "error": str(e)}
+        """Delegate to data_collector."""
+        return await self.data_collector.collect_roles()
 
     async def list_third_party_repositories(
         self, parameters: Dict[str, Any] = None
@@ -1868,654 +850,13 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         """Remove antivirus software from the system."""
         return await self.system_ops.remove_antivirus(parameters)
 
-    async def _collect_system_logs(self) -> Dict[str, Any]:
-        """Collect system log information."""
-        try:
-            system_logs = {}
-            current_platform = platform.system()
-
-            if current_platform == "Windows":
-                # Get Windows Event Log entries
-                self.logger.info(
-                    "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": 'powershell -Command "Get-WinEvent -LogName System -MaxEvents 100 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json"'
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_system_log"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Windows System Event Log collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows System Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get Application Event Log entries
-                self.logger.info("Collecting Windows Application Event Log...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": 'powershell -Command "Get-WinEvent -LogName Application -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json"'
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_application_log"] = result.get(
-                        "result", {}
-                    ).get("stdout", "")
-                    self.logger.info(
-                        "Windows Application Event Log collected in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows Application Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get Security Event Log entries (may require admin privileges)
-                self.logger.info(
-                    "Collecting Windows Security Event Log (may require admin privileges)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"try { Get-WinEvent -LogName Security -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json } catch { 'Security logs not accessible - admin privileges required' }\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_security_log"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Windows Security Event Log collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows Security Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-            else:
-                # Linux/Unix systems
-                # Try to get recent system log entries
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
-                )
-                if result.get("success"):
-                    system_logs["journalctl_recent"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get kernel messages
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "dmesg | tail -n 50"}
-                )
-                if result.get("success"):
-                    system_logs["dmesg_recent"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get auth log if available
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
-                    }
-                )
-                if result.get("success"):
-                    system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
-
-            return system_logs
-
-        except Exception as e:
-            self.logger.error(_("Error collecting system logs: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_configuration_files(self) -> Dict[str, Any]:
-        """Collect relevant configuration files."""
-        try:
-            config_files = {}
-            current_platform = platform.system()
-
-            if current_platform == "Windows":
-                # Get Windows network configuration
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ipconfig /all"}
-                )
-                if result.get("success"):
-                    config_files["network_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get Windows services configuration (key system services)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object Name, Status, StartType | ConvertTo-Json\""
-                    }
-                )
-                if result.get("success"):
-                    config_files["services_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get Windows firewall configuration
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "netsh advfirewall show allprofiles"}
-                )
-                if result.get("success"):
-                    config_files["firewall_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-            else:
-                # Linux/Unix systems
-                # Get network configuration
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "cat /etc/network/interfaces 2>/dev/null || cat /etc/sysconfig/network-scripts/ifcfg-* 2>/dev/null || echo 'Network config not found'"
-                    }
-                )
-                if result.get("success"):
-                    config_files["network_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get SSH configuration
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "cat /etc/ssh/sshd_config 2>/dev/null || echo 'SSH config not accessible'"
-                    }
-                )
-                if result.get("success"):
-                    config_files["ssh_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-            # Get agent configuration (our own config) - works on both platforms
-            try:
-                with open("config.yaml", "r", encoding="utf-8") as f:
-                    config_files["agent_config"] = f.read()
-            except Exception:
-                config_files["agent_config"] = "Agent config not readable"
-
-            return config_files
-
-        except Exception as e:
-            self.logger.error(_("Error collecting configuration files: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_network_info(self) -> Dict[str, Any]:
-        """Collect network information."""
-        try:
-            network_info = {}
-            current_platform = platform.system()
-
-            if current_platform == "Windows":
-                # Get network interfaces
-                self.logger.info("Collecting network interfaces (ipconfig /all)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ipconfig /all"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["interfaces"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Network interfaces collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Network interfaces collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get routing table
-                self.logger.info("Collecting routing table (route print)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "route print"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["routes"] = result.get("result", {}).get("stdout", "")
-                    self.logger.info("Routing table collected in %.2f seconds", elapsed)
-                else:
-                    self.logger.warning(
-                        "Routing table collection failed after %.2f seconds", elapsed
-                    )
-
-                # Get network connections
-                self.logger.info("Collecting network connections (netstat -an)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "netstat -an"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["connections"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Network connections collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Network connections collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get DNS configuration (using safer command)
-                self.logger.info(
-                    "Collecting DNS configuration (ipconfig /displaydns)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ipconfig /displaydns"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["dns_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "DNS configuration collected in %.2f seconds", elapsed
-                    )
-                else:
-                    # Fallback to getting DNS servers from network adapters
-                    self.logger.info("Trying alternative DNS configuration method...")
-                    start_time = datetime.now(timezone.utc)
-                    result = await self.system_ops.execute_shell_command(
-                        {
-                            "command": 'powershell -Command "Get-DnsClientServerAddress | ConvertTo-Json"'
-                        }
-                    )
-                    elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                    if result.get("success"):
-                        network_info["dns_config"] = result.get("result", {}).get(
-                            "stdout", ""
-                        )
-                        self.logger.info(
-                            "DNS configuration (alternative) collected in %.2f seconds",
-                            elapsed,
-                        )
-                    else:
-                        self.logger.warning(
-                            "DNS configuration collection failed after %.2f seconds",
-                            elapsed,
-                        )
-                        network_info["dns_config"] = "DNS configuration not available"
-
-            else:
-                # Linux/Unix systems
-                # Get network interfaces
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ip addr show"}
-                )
-                if result.get("success"):
-                    network_info["interfaces"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get routing table
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ip route show"}
-                )
-                if result.get("success"):
-                    network_info["routes"] = result.get("result", {}).get("stdout", "")
-
-                # Get network connections
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ss -tulpn"}
-                )
-                if result.get("success"):
-                    network_info["connections"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get DNS configuration
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'"
-                    }
-                )
-                if result.get("success"):
-                    network_info["dns_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-            return network_info
-
-        except Exception as e:
-            self.logger.error(_("Error collecting network info: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_process_info(self) -> Dict[str, Any]:
-        """Collect process information."""
-        try:
-            process_info = {}
-
-            # Get process list
-            result = await self.system_ops.execute_shell_command(
-                {"command": "ps aux --sort=-%cpu | head -n 20"}
-            )
-            if result.get("success"):
-                process_info["top_processes_cpu"] = result.get("result", {}).get(
-                    "stdout", ""
-                )
-
-            # Get memory usage
-            result = await self.system_ops.execute_shell_command(
-                {"command": "ps aux --sort=-%mem | head -n 20"}
-            )
-            if result.get("success"):
-                process_info["top_processes_memory"] = result.get("result", {}).get(
-                    "stdout", ""
-                )
-
-            # Get system load
-            result = await self.system_ops.execute_shell_command({"command": "uptime"})
-            if result.get("success"):
-                process_info["system_load"] = result.get("result", {}).get("stdout", "")
-
-            # Get memory info
-            result = await self.system_ops.execute_shell_command({"command": "free -h"})
-            if result.get("success"):
-                process_info["memory_info"] = result.get("result", {}).get("stdout", "")
-
-            return process_info
-
-        except Exception as e:
-            self.logger.error(_("Error collecting process info: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_disk_usage(self) -> Dict[str, Any]:
-        """Collect disk usage information."""
-        try:
-            disk_info = {}
-            current_platform = platform.system()
-
-            if current_platform == "Windows":
-                # Get filesystem usage
-                self.logger.info("Collecting Windows filesystem usage...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, Size, FreeSpace, @{Name='UsedSpace';Expression={$_.Size - $_.FreeSpace}} | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["filesystem_usage"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Windows filesystem usage collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows filesystem usage collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get disk performance counters
-                self.logger.info("Collecting Windows disk performance counters...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-Counter -Counter '\\LogicalDisk(*)\\% Disk Time' -MaxSamples 1 | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
-                    self.logger.info(
-                        "Windows disk performance counters collected in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows disk performance counters collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get largest directories using PowerShell (this can be very slow)
-                self.logger.info(
-                    "Collecting largest directories (this may take 30+ seconds)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-ChildItem -Path C:\\ -Directory | Get-ChildItem -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | Select-Object @{Name='Path';Expression={$_.PSPath}}, @{Name='Size';Expression={$_.Sum}} | Sort-Object Size -Descending | Select-Object -First 10 | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["largest_directories"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Largest directories analysis completed in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Largest directories analysis failed after %.2f seconds",
-                        elapsed,
-                    )
-
-            else:
-                # Linux/Unix systems
-                # Get filesystem usage
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "df -h"}
-                )
-                if result.get("success"):
-                    disk_info["filesystem_usage"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get disk I/O stats
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "iostat -x 1 1 2>/dev/null || echo 'iostat not available'"
-                    }
-                )
-                if result.get("success"):
-                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
-
-                # Get largest files/directories
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'"
-                    }
-                )
-                if result.get("success"):
-                    disk_info["largest_directories"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-            return disk_info
-
-        except Exception as e:
-            self.logger.error(_("Error collecting disk usage: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_environment_variables(self) -> Dict[str, Any]:
-        """Collect environment variables (filtered for security)."""
-        try:
-            env_vars = {}
-            current_platform = platform.system()
-
-            if current_platform == "Windows":
-                # Get safe environment variables (exclude sensitive ones)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-ChildItem Env: | Where-Object {$_.Name -match '^(PATH|HOME|USERNAME|COMPUTERNAME|PROCESSOR_|OS|TEMP|TMP)$'} | Sort-Object Name | ConvertTo-Json\""
-                    }
-                )
-                if result.get("success"):
-                    env_vars["safe_env_vars"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get Python path if available
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "python -c \"import sys; print('\\n'.join(sys.path))\" 2>NUL || echo Python path not available"
-                    }
-                )
-                if result.get("success"):
-                    env_vars["python_path"] = result.get("result", {}).get("stdout", "")
-
-            else:
-                # Linux/Unix systems
-                # Get safe environment variables (exclude sensitive ones)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "env | grep -E '^(PATH|HOME|USER|SHELL|LANG|LC_|TZ|TERM)=' | sort"
-                    }
-                )
-                if result.get("success"):
-                    env_vars["safe_env_vars"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get Python path if available
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "python3 -c 'import sys; print(\"\\n\".join(sys.path))' 2>/dev/null || echo 'Python path not available'"
-                    }
-                )
-                if result.get("success"):
-                    env_vars["python_path"] = result.get("result", {}).get("stdout", "")
-
-            return env_vars
-
-        except Exception as e:
-            self.logger.error(_("Error collecting environment variables: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_agent_logs(self) -> Dict[str, Any]:
-        """Collect agent log information."""
-        try:
-            agent_logs = {}
-
-            # Get recent agent logs
-            try:
-                with open("logs/agent.log", "r", encoding="utf-8") as f:
-                    # Get last 100 lines
-                    lines = f.readlines()
-                    agent_logs["recent_logs"] = "".join(lines[-100:])
-            except Exception:
-                agent_logs["recent_logs"] = "Agent logs not accessible"
-
-            # Get agent status
-            agent_logs["agent_status"] = {
-                "running": self.running,
-                "connected": self.connected,
-                "reconnect_attempts": getattr(self, "reconnect_attempts", 0),
-                "last_ping": getattr(self, "last_ping", None),
-                "uptime": datetime.now(timezone.utc).isoformat(),
-            }
-
-            return agent_logs
-
-        except Exception as e:
-            self.logger.error(_("Error collecting agent logs: %s"), e)
-            return {"error": str(e)}
-
-    async def _collect_error_logs(self) -> Dict[str, Any]:
-        """Collect error logs from various sources."""
-        try:
-            error_logs = {}
-
-            # Get system error logs
-            result = await self.system_ops.execute_shell_command(
-                {"command": "journalctl -p err --since '1 hour ago' --no-pager -n 50"}
-            )
-            if result.get("success"):
-                error_logs["system_errors"] = result.get("result", {}).get("stdout", "")
-
-            # Get kernel errors
-            result = await self.system_ops.execute_shell_command(
-                {"command": "dmesg | grep -i error | tail -n 20"}
-            )
-            if result.get("success"):
-                error_logs["kernel_errors"] = result.get("result", {}).get("stdout", "")
-
-            # Get agent error logs
-            try:
-                with open("logs/agent.log", "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    error_lines = [line for line in lines if "ERROR" in line.upper()]
-                    error_logs["agent_errors"] = "".join(error_lines[-50:])
-            except Exception:
-                error_logs["agent_errors"] = "Agent error logs not accessible"
-
-            return error_logs
-
-        except Exception as e:
-            self.logger.error(_("Error collecting error logs: %s"), e)
-            return {"error": str(e)}
-
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""
-        try:
-            data = message.get("data", {})
-            host_id = data.get("host_id")
-            approval_status = data.get("approval_status", "approved")
-            certificate = data.get("certificate")
-
-            self.logger.info(
-                _("Received host approval notification: host_id=%s, status=%s"),
-                host_id,
-                approval_status,
-            )
-
-            # Store the approval information in the database
-            await self.store_host_approval(host_id, approval_status, certificate)
-
-            self.logger.info(
-                _("Host approval information stored successfully. Host ID: %s"), host_id
-            )
-
-            # Re-send system_info so backend sets connection.host_id
-            message = self.create_system_info_message()
-            await self.message_handler.queue_outbound_message(message)
-            self.logger.info(
-                "Queued system_info after approval to update backend connection"
-            )
-
-        except Exception as e:
-            self.logger.error(_("Error processing host approval notification: %s"), e)
+        await self.registration_manager.handle_host_approval(message)
 
     async def clear_host_approval(self) -> None:
         """Clear all host approval records from local database."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                # Delete all existing host approval records
-                session.query(HostApproval).delete()
-                session.commit()
-                self.logger.debug("Host approval records cleared from database")
-            finally:
-                session.close()
-        except Exception as e:
-            self.logger.error(_("Error clearing host approval records: %s"), e)
-            raise
+        await self.registration_manager.clear_host_approval()
 
     async def store_host_approval(
         self,
@@ -2525,184 +866,25 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         host_token: str = None,
     ) -> None:
         """Store host approval information in local database."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                # CRITICAL: Delete ALL existing host approval records first
-                # This ensures we only ever have ONE record, preventing old host_id caching issues
-                deleted_count = session.query(HostApproval).delete()
-                if deleted_count > 0:
-                    self.logger.info(
-                        _(
-                            "Deleted %d old host approval record(s) before storing new approval"
-                        ),
-                        deleted_count,
-                    )
-
-                # Always create fresh new approval record (never update)
-                new_approval = HostApproval(
-                    host_id=uuid.UUID(host_id) if host_id else None,
-                    host_token=host_token,
-                    approval_status=approval_status,
-                    certificate=certificate,
-                    approved_at=(
-                        datetime.now(timezone.utc)
-                        if approval_status == "approved"
-                        else None
-                    ),
-                    created_at=datetime.now(timezone.utc),
-                    updated_at=datetime.now(timezone.utc),
-                )
-                session.add(new_approval)
-
-                session.commit()
-                self.logger.info(
-                    _("Host approval record stored in database: host_id=%s, status=%s"),
-                    host_id,
-                    approval_status,
-                )
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.error(_("Error storing host approval in database: %s"), e)
-            raise
+        await self.registration_manager.store_host_approval(
+            host_id, approval_status, certificate, host_token
+        )
 
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
-        try:
-            self.logger.info(
-                _("Received registration success notification from server")
-            )
-
-            # Record the registration timestamp
-            self.last_registration_time = datetime.now(timezone.utc)
-
-            # Extract host_id and host_token from registration success if available
-            host_id = message.get("host_id")
-            host_token = message.get("host_token")
-            approved = message.get("approved", False)
-
-            if (host_id or host_token) and approved:
-                self.logger.info(
-                    "Registration approved",
-                )
-
-                # Clear any existing host approval and store the new one
-                await self.clear_stored_host_id()
-                await self.store_host_approval(
-                    host_id, "approved", host_token=host_token
-                )
-                self.logger.info("Host approval stored for host_id: %s", host_id)
-
-                # Mark registration as confirmed and send initial data
-                self.registration_confirmed = True
-                self.logger.info(
-                    "Registration confirmed, sending initial inventory data..."
-                )
-                await self.send_initial_data_updates()
-
-            elif host_id or host_token:
-                self.logger.info(
-                    "Registration received but approval pending",
-                )
-                await self.clear_stored_host_id()
-                await self.store_host_approval(
-                    host_id, "pending", host_token=host_token
-                )
-                self.registration_confirmed = True
-            else:
-                self.logger.info(
-                    "Registration success but no host_id provided - approval may come separately"
-                )
-
-        except Exception as e:
-            self.logger.error(
-                _("Error processing registration success notification: %s"), e
-            )
+        await self.registration_manager.handle_registration_success(message)
 
     async def get_stored_host_id(self) -> str:
         """Get the stored host_id from local database."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                approval = (
-                    session.query(HostApproval)
-                    .filter(
-                        HostApproval.approval_status == "approved",
-                        HostApproval.host_id.isnot(None),
-                    )
-                    .first()
-                )
-
-                if approval and approval.has_host_id:
-                    return str(approval.host_id)
-
-                return None
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.error(_("Error retrieving stored host_id: %s"), e)
-            return None
+        return await self.registration_manager.get_stored_host_id()
 
     async def get_stored_host_token(self) -> str:
         """Get the stored host_token from local database."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                approval = (
-                    session.query(HostApproval)
-                    .filter(
-                        HostApproval.approval_status == "approved",
-                        HostApproval.host_token.isnot(None),
-                    )
-                    .first()
-                )
-
-                if approval and approval.host_token:
-                    return approval.host_token
-
-                return None
-
-            finally:
-                session.close()
-
-        except Exception:
-            self.logger.error(_("Error retrieving stored credentials"))
-            return None
+        return await self.registration_manager.get_stored_host_token()
 
     def get_stored_host_token_sync(self) -> str:
         """Get the stored host_token from local database synchronously."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                approval = (
-                    session.query(HostApproval)
-                    .filter(
-                        HostApproval.approval_status == "approved",
-                        HostApproval.host_token.isnot(None),
-                    )
-                    .first()
-                )
-
-                if approval and approval.host_token:
-                    return approval.host_token
-
-                return None
-
-            finally:
-                session.close()
-
-        except Exception:
-            self.logger.error(_("Error retrieving stored credentials"))
-            return None
+        return self.registration_manager.get_stored_host_token_sync()
 
     async def call_server_api(
         self, endpoint: str, method: str = "POST", data: Dict[str, Any] = None
@@ -2718,186 +900,27 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
         Returns:
             Response data as dictionary, or None if request failed
         """
-        try:
-            # Get server configuration
-            config = self.config
-            server_host = config.get("server", {}).get("host", "localhost")
-            server_port = config.get("server", {}).get("port", 8080)
-            use_ssl = config.get("server", {}).get("ssl", {}).get("enabled", False)
-
-            # Construct full URL with /api prefix
-            protocol = "https" if use_ssl else "http"
-            url = f"{protocol}://{server_host}:{server_port}/api/{endpoint}"
-
-            # Get authentication token
-            host_token = self.get_stored_host_token_sync()
-            if not host_token:
-                self.logger.error(_("No host token available for API authentication"))
-                return None
-
-            # Prepare headers
-            headers = {
-                "Authorization": f"Bearer {host_token}",
-                "Content-Type": "application/json",
-            }
-
-            # Create SSL context if needed
-            ssl_context = None
-            if use_ssl:
-                ssl_context = ssl.create_default_context()
-                if not config.get("server", {}).get("ssl", {}).get("verify", True):
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
-
-            # Make the HTTP request
-            async with aiohttp.ClientSession() as session:
-                async with session.request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    json=data if data else None,
-                    ssl=ssl_context,
-                ) as response:
-                    if response.status == 200:
-                        try:
-                            return await response.json()
-                        except Exception:
-                            return {"success": True}
-                    else:
-                        error_text = await response.text()
-                        self.logger.error(
-                            _(
-                                "API call failed: {} {} - Status: {}, Response: {}"
-                            ).format(method, url, response.status, error_text)
-                        )
-                        return None
-
-        except Exception as e:
-            self.logger.error(
-                _("Error making API call to {}: {}").format(endpoint, str(e))
-            )
-            return None
+        return await self.registration_manager.call_server_api(endpoint, method, data)
 
     def get_host_approval_from_db(self):
         """Get the host approval record from local database."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                approval = (
-                    session.query(HostApproval)
-                    .filter(
-                        HostApproval.approval_status == "approved",
-                        HostApproval.host_id.isnot(None),
-                    )
-                    .first()
-                )
-
-                return approval
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.error(_("Error retrieving host approval: %s"), type(e).__name__)
-            return None
+        return self.registration_manager.get_host_approval_from_db()
 
     def get_stored_host_id_sync(self) -> str:
         """Get the stored host_id from local database synchronously."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                approval = (
-                    session.query(HostApproval)
-                    .filter(
-                        HostApproval.approval_status == "approved",
-                        HostApproval.host_id.isnot(None),
-                    )
-                    .order_by(HostApproval.created_at.desc())
-                    .first()
-                )
-
-                if approval and approval.has_host_id:
-                    return str(approval.host_id)
-
-                return None
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.error(_("Error retrieving stored host_id synchronously: %s"), e)
-            return None
+        return self.registration_manager.get_stored_host_id_sync()
 
     def cleanup_corrupt_database_entries(self) -> None:
         """Clean up any corrupt entries from database (e.g., invalid UUIDs)."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                # Delete rows with invalid UUIDs using raw SQL
-                # Check host_approval table for non-UUID values
-                result = session.execute(
-                    "SELECT COUNT(*) FROM host_approval WHERE "
-                    "LENGTH(host_id) != 36 OR "
-                    "host_id NOT LIKE '%-%-%-%-%' OR "
-                    "host_id IS NOT NULL"
-                ).fetchone()
-
-                if result and result[0] > 0:
-                    self.logger.warning(
-                        "Found %d corrupt entries in host_approval table, cleaning up...",
-                        result[0],
-                    )
-                    session.execute(
-                        "DELETE FROM host_approval WHERE "
-                        "LENGTH(host_id) != 36 OR "
-                        "host_id NOT LIKE '%-%-%-%-%'"
-                    )
-                    session.commit()
-                    self.logger.info("Corrupt database entries cleaned up")
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.warning("Error during database cleanup: %s", e)
-            # Don't raise - this is best-effort cleanup
+        self.registration_manager.cleanup_corrupt_database_entries()
 
     async def clear_stored_host_id(self) -> None:
         """Clear the stored host_id from local database and related data."""
-        try:
-            db_manager = get_database_manager()
-            session = db_manager.get_session()
-            try:
-                # Use raw SQL to delete ALL host approval records to avoid UUID parsing errors
-                # This is necessary because corrupt UUIDs in the database will cause
-                # SQLAlchemy to fail when trying to load them as objects
-                session.execute("DELETE FROM host_approval")
+        await self.registration_manager.clear_stored_host_id()
 
-                # Clear any pending script executions since they're tied to the old host
-                session.execute("DELETE FROM script_execution")
-
-                # Clear any queued messages with host_id data
-                session.execute(
-                    "DELETE FROM message_queue WHERE message_data LIKE '%host_id%'"
-                )
-
-                session.commit()
-                self.logger.info(
-                    _("Host approval records and related data cleared from database")
-                )
-
-            finally:
-                session.close()
-
-        except Exception as e:
-            self.logger.error(_("Error clearing host approval records: %s"), e)
-            # Don't raise - allow the agent to continue even if cleanup fails
-            self.logger.warning(_("Continuing despite cleanup error..."))
-
-    async def run(self):
+    async def run(
+        self,
+    ):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
 
@@ -3007,9 +1030,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                     # Notify message handler that connection is established
                     try:
                         await self.message_handler.on_connection_established()
-                    except Exception as e:
+                    except Exception as error:
                         self.logger.error(
-                            "Failed to start queue processing: %s", e, exc_info=True
+                            "Failed to start queue processing: %s", error, exc_info=True
                         )
 
                     # Wait for registration_success before sending inventory data
@@ -3024,7 +1047,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                         sender_task = asyncio.create_task(self.message_sender())
                         receiver_task = asyncio.create_task(self.message_receiver())
                         update_checker_task = asyncio.create_task(self.update_checker())
-                        data_collector_task = asyncio.create_task(self.data_collector())
+                        data_collector_task = asyncio.create_task(
+                            self._collect_and_send_periodic_data()
+                        )
                         package_collector_task = asyncio.create_task(
                             self.package_collector()
                         )
@@ -3074,12 +1099,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
                 self.logger.warning(
                     "WEBSOCKET_COMMUNICATION_ERROR: WebSocket connection closed by server"
                 )
-            except websockets.InvalidStatusCode as e:
+            except websockets.InvalidStatusCode as error:
                 self.logger.error(
-                    "WEBSOCKET_PROTOCOL_ERROR: WebSocket connection rejected: %s", e
+                    "WEBSOCKET_PROTOCOL_ERROR: WebSocket connection rejected: %s", error
                 )
-            except Exception as e:
-                self.logger.error("WEBSOCKET_UNKNOWN_ERROR: Connection error: %s", e)
+            except Exception as error:
+                self.logger.error(
+                    "WEBSOCKET_UNKNOWN_ERROR: Connection error: %s", error
+                )
 
             # Clean up connection state
             self.connected = False
@@ -3090,9 +1117,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods
             # Notify message handler that connection is lost
             try:
                 await self.message_handler.on_connection_lost()
-            except Exception as e:
+            except Exception as error:
                 self.logger.error(
-                    "Error notifying message handler of connection loss: %s", e
+                    "Error notifying message handler of connection loss: %s", error
                 )
 
             self.logger.info(

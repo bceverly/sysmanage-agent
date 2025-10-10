@@ -1,3 +1,8 @@
+"""
+Internationalization (i18n) module for SysManage Agent.
+Provides translation support for multiple languages.
+"""
+
 import gettext
 import os
 from typing import Optional

@@ -64,7 +64,7 @@ i18n:
         }
         with patch("main.ClientRegistration", return_value=mock_registration), patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+        ), patch("main.MessageHandler") as mock_handler_class, patch(
             "main.initialize_database", return_value=True
         ):
             # Mock the message handler
@@ -77,9 +77,13 @@ i18n:
             agent.connected = True  # Set connected flag for tests
             agent.logger = Mock()
 
-            # Mock the database access for host_id and host_token after agent creation
-            agent.get_stored_host_id_sync = Mock(return_value=3)
-            agent.get_stored_host_token_sync = Mock(return_value=None)
+            # Mock the registration_manager methods for host_id and host_token
+            agent.registration_manager.get_stored_host_id_sync = Mock(
+                return_value="6ce40931-2889-4fa2-bc7e-8e5c62f7b18b"
+            )
+            agent.registration_manager.get_stored_host_token_sync = Mock(
+                return_value=None
+            )
             return agent
 
     def test_create_heartbeat_message(self, mock_agent):
@@ -106,7 +110,9 @@ i18n:
         assert "timestamp" in message
         # Message data should include the original data plus host_id
         assert message["data"]["test_key"] == "test_value"
-        assert message["data"]["host_id"] == 3  # From mock database
+        assert (
+            message["data"]["host_id"] == "6ce40931-2889-4fa2-bc7e-8e5c62f7b18b"
+        )  # From mock database
 
     def test_create_message_with_empty_data(self, mock_agent):
         """Test message creation with empty data."""
@@ -115,7 +121,9 @@ i18n:
         assert message["message_type"] == "test_type"
         # Message should now include host_id automatically
         assert "host_id" in message["data"]
-        assert message["data"]["host_id"] == 3  # From mock database
+        assert (
+            message["data"]["host_id"] == "6ce40931-2889-4fa2-bc7e-8e5c62f7b18b"
+        )  # From mock database
 
     @pytest.mark.asyncio
     async def test_send_message_success(self, mock_agent):
@@ -343,7 +351,7 @@ logging:
         config_file.write_text(config_content)
 
         with patch("main.ClientRegistration"), patch("main.set_language"), patch(
-            "main.QueuedMessageHandler"
+            "main.MessageHandler"
         ), patch("main.initialize_database", return_value=True):
             agent = SysManageAgent(str(config_file))
             agent.logger = Mock()

@@ -120,8 +120,8 @@ class RoleDetector:
                     role_name, role_info["packages"], installed_packages, roles
                 )
 
-        except Exception as e:
-            self.logger.error("Error detecting roles: %s", e)
+        except Exception as error:
+            self.logger.error("Error detecting roles: %s", error)
 
         return roles
 
@@ -245,8 +245,8 @@ class RoleDetector:
                 # Windows package managers and direct detection
                 packages.update(self._get_windows_packages())
 
-        except Exception as e:
-            self.logger.error("Error getting installed packages: %s", e)
+        except Exception as error:
+            self.logger.error("Error getting installed packages: %s", error)
 
         return packages
 
@@ -274,8 +274,8 @@ class RoleDetector:
                         package, version = line.split("\t", 1)
                         packages[package] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting dpkg packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting dpkg packages: %s", error)
 
         return packages
 
@@ -301,8 +301,8 @@ class RoleDetector:
                         package, version = line.split("\t", 1)
                         packages[package] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting RPM packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting RPM packages: %s", error)
 
         return packages
 
@@ -328,8 +328,8 @@ class RoleDetector:
                         package, version = line.split(" ", 1)
                         packages[package] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting pacman packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting pacman packages: %s", error)
 
         return packages
 
@@ -360,8 +360,8 @@ class RoleDetector:
                             version = parts[1]
                             packages[package_name] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting snap packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting snap packages: %s", error)
 
         return packages
 
@@ -401,8 +401,8 @@ class RoleDetector:
                             version = parts[1]
                             packages[package_name] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting Homebrew packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting Homebrew packages: %s", error)
 
         return packages
 
@@ -434,8 +434,8 @@ class RoleDetector:
                 return self._get_bsd_service_status(service_name)
             if self.system == "windows":
                 return self._get_windows_service_status(service_name)
-        except Exception as e:
-            self.logger.debug("Error checking service %s: %s", service_name, e)
+        except Exception as error:
+            self.logger.debug("Error checking service %s: %s", service_name, error)
 
         return "unknown"
 
@@ -506,9 +506,9 @@ class RoleDetector:
             if result.returncode == 0:
                 return self._parse_brew_services_output(result.stdout, service_name)
 
-        except Exception as e:
+        except Exception as error:
             self.logger.debug(
-                "Error checking brew services for %s: %s", service_name, e
+                "Error checking brew services for %s: %s", service_name, error
             )
 
         return "unknown"
@@ -572,8 +572,10 @@ class RoleDetector:
                         return "running"
                 # If we checked processes and didn't find it, it's stopped
                 return "stopped"
-        except Exception as e:
-            self.logger.debug("Error checking processes for %s: %s", service_name, e)
+        except Exception as error:
+            self.logger.debug(
+                "Error checking processes for %s: %s", service_name, error
+            )
 
         return "unknown"
 
@@ -636,9 +638,9 @@ class RoleDetector:
 
             return self._parse_snap_services_output(result.stdout, service_name)
 
-        except Exception as e:
+        except Exception as error:
             self.logger.debug(
-                "Error checking snap services for %s: %s", service_name, e
+                "Error checking snap services for %s: %s", service_name, error
             )
 
         return "unknown"
@@ -708,8 +710,8 @@ class RoleDetector:
                 pkg_name = "-".join(pkg_full.split("-")[:-1])
                 pkg_version = pkg_full.split("-")[-1]
                 packages[pkg_name] = pkg_version
-        except Exception as e:
-            self.logger.error("Error getting pkgin packages: %s", e)
+        except Exception as error:
+            self.logger.error("Error getting pkgin packages: %s", error)
         return packages
 
     def _get_pkg_packages(self) -> Dict[str, str]:
@@ -745,8 +747,8 @@ class RoleDetector:
                 pkg_name = "-".join(pkg_full.split("-")[:-1])
                 pkg_version = pkg_full.split("-")[-1]
                 packages[pkg_name] = pkg_version
-        except Exception as e:
-            self.logger.error("Error getting pkg packages: %s", e)
+        except Exception as error:
+            self.logger.error("Error getting pkg packages: %s", error)
         return packages
 
     def _command_exists(self, command: str) -> bool:
@@ -796,9 +798,9 @@ class RoleDetector:
                                 "Found PostgreSQL %s in %s", version_dir, base_path
                             )
                             break  # Take first version found
-                except Exception as e:
+                except Exception as error:
                     self.logger.debug(
-                        "Error checking PostgreSQL path %s: %s", base_path, e
+                        "Error checking PostgreSQL path %s: %s", base_path, error
                     )
 
         # Check for MySQL in Program Files
@@ -815,8 +817,10 @@ class RoleDetector:
                                 "Found MySQL Server %s in %s", version, base_path
                             )
                             break
-                except Exception as e:
-                    self.logger.debug("Error checking MySQL path %s: %s", base_path, e)
+                except Exception as error:
+                    self.logger.debug(
+                        "Error checking MySQL path %s: %s", base_path, error
+                    )
 
         return packages
 
@@ -842,8 +846,8 @@ class RoleDetector:
                 version = result.stdout.strip()
                 packages["sqlite3"] = version
                 self.logger.info("Found SQLite %s via Python", version)
-        except Exception as e:
-            self.logger.debug("Error checking Python SQLite: %s", e)
+        except Exception as error:
+            self.logger.debug("Error checking Python SQLite: %s", error)
 
         return packages
 
@@ -898,8 +902,8 @@ class RoleDetector:
                             version = parts[2] if len(parts) > 2 else "unknown"
                             packages[name.lower()] = version
 
-        except Exception as e:
-            self.logger.debug("Error getting winget packages: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting winget packages: %s", error)
 
         return packages
 
@@ -946,8 +950,10 @@ class RoleDetector:
             if result.returncode == 0:
                 return self._parse_service_output(result.stdout, svc_pattern)
 
-        except Exception as e:
-            self.logger.debug("Error checking Windows service %s: %s", svc_pattern, e)
+        except Exception as error:
+            self.logger.debug(
+                "Error checking Windows service %s: %s", svc_pattern, error
+            )
 
         return "unknown"
 

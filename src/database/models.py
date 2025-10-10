@@ -35,8 +35,8 @@ class GUID(TypeDecorator):  # pylint: disable=too-many-ancestors
         if not isinstance(value, uuid.UUID):
             try:
                 value = uuid.UUID(str(value))
-            except (ValueError, AttributeError) as e:
-                raise ValueError(f"Invalid UUID value: {value}") from e
+            except (ValueError, AttributeError) as error:
+                raise ValueError(f"Invalid UUID value: {value}") from error
         if dialect.name == "postgresql":
             return value
         return str(value)

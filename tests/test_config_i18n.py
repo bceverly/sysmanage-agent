@@ -111,9 +111,9 @@ i18n:
 """
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".yaml", delete=False
-            ) as f:
-                f.write(config_content)
-                temp_config = f.name
+            ) as config_file:
+                config_file.write(config_content)
+                temp_config = config_file.name
 
             try:
                 config = ConfigManager(temp_config)

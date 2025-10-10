@@ -9,24 +9,31 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from src.database.models import Priority, QueueDirection
-from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
+from src.sysmanage_agent.communication.message_handler import MessageHandler
 
 
-class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
-    """Test edge cases for QueuedMessageHandler class."""
+class TestMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
+    """Test edge cases for MessageHandler class."""
 
     def setup_method(self):
         """Set up test environment."""
         # pylint: disable=attribute-defined-outside-init
         self.mock_agent = Mock()
         self.mock_agent.connected = False
-        self.handler = QueuedMessageHandler(self.mock_agent)
+        self.mock_agent.registration_manager = Mock()
+        self.mock_agent.registration_manager.get_stored_host_id_sync = Mock(
+            return_value="test-host-id"
+        )
+        self.mock_agent.registration_manager.get_stored_host_token_sync = Mock(
+            return_value="test-host-token"
+        )
+        self.handler = MessageHandler(self.mock_agent)
 
-    def test_init_with_custom_database_path(self):
-        """Test initialization with custom database path."""
-        custom_path = "/tmp/test.db"
-        handler = QueuedMessageHandler(self.mock_agent, custom_path)
+    def test_init_with_agent_instance(self):
+        """Test initialization with agent instance."""
+        handler = MessageHandler(self.mock_agent)
         assert handler is not None
+        assert handler.agent == self.mock_agent
 
     @pytest.mark.asyncio
     async def test_queue_outbound_message_priority_mapping(self):
@@ -171,6 +178,7 @@ class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-meth
                 with patch("asyncio.sleep") as mock_sleep:
                     # Stop after first iteration
                     def side_effect(delay):
+                        _ = delay
                         self.mock_agent.connected = False
 
                     mock_sleep.side_effect = side_effect
@@ -206,6 +214,8 @@ class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-meth
                         ) as mock_failed:
                             # Stop after first iteration
                             def side_effect(*args, **kwargs):
+                                _ = args
+                                _ = kwargs
                                 self.mock_agent.connected = False
 
                             mock_failed.side_effect = side_effect
@@ -241,6 +251,7 @@ class TestQueuedMessageHandlerEdgeCases:  # pylint: disable=too-many-public-meth
                         with patch("asyncio.sleep") as mock_sleep:
                             # Stop after first iteration
                             def side_effect(delay):
+                                _ = delay
                                 self.mock_agent.connected = False
 
                             mock_sleep.side_effect = side_effect

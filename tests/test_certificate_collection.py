@@ -132,6 +132,6 @@ class TestCertificateCollector:
         """Test CN extraction from certificate subject."""
         subject = "CN=Test Certificate, O=Test Organization, C=US"
 
-        cn = self.collector._extract_cn_from_subject(subject)
+        common_name = self.collector._extract_cn_from_subject(subject)
 
-        assert cn == "Test Certificate"
+        assert common_name == "Test Certificate"

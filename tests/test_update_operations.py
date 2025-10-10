@@ -274,7 +274,7 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         self.mock_agent.websocket = None
 
         # Use a simple side effect that sets connection status
-        def simulate_reconnection(*args):
+        def simulate_reconnection(*_args):
             self.mock_agent.connected = True
             self.mock_agent.websocket = Mock()
 

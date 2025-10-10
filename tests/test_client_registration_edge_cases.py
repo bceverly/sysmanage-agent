@@ -149,6 +149,8 @@ class TestClientRegistrationEdgeCases:
 
         # Mock the session context manager properly
         class MockSessionContext:
+            """Mock session context for testing."""
+
             async def __aenter__(self):
                 return mock_response
 
@@ -156,7 +158,12 @@ class TestClientRegistrationEdgeCases:
                 return None
 
         class MockSession:
+            """Mock session for testing."""
+
             def post(self, *args, **kwargs):
+                """Mock post method."""
+                _ = args
+                _ = kwargs
                 return MockSessionContext()
 
             async def __aenter__(self):

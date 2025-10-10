@@ -1,6 +1,6 @@
 """
 Comprehensive unit tests for src.sysmanage_agent.communication.message_handler module.
-Tests the QueuedMessageHandler class for message queuing and processing.
+Tests the MessageHandler class for message queuing and processing.
 """
 
 from unittest.mock import patch
@@ -8,31 +8,32 @@ from unittest.mock import patch
 import pytest
 
 from src.database.models import Priority, QueueDirection
-from src.sysmanage_agent.communication.message_handler import QueuedMessageHandler
+from src.sysmanage_agent.communication.message_handler import MessageHandler
 from tests.message_handler_test_base import MessageHandlerTestBase
 
 
-class TestQueuedMessageHandler(
+class TestMessageHandler(
     MessageHandlerTestBase
 ):  # pylint: disable=too-many-public-methods
-    """Test cases for QueuedMessageHandler class."""
+    """Test cases for MessageHandler class."""
 
-    def test_init_with_database_path(self):
-        """Test QueuedMessageHandler initialization with database path."""
+    def test_init_creates_queue_manager(self):
+        """Test MessageHandler initialization creates queue manager."""
         with patch(
             "src.sysmanage_agent.communication.message_handler.MessageQueueManager"
         ) as mock_qm:
-            handler = QueuedMessageHandler(self.mock_agent, "/custom/path.db")
-            mock_qm.assert_called_once_with("/custom/path.db")
+            handler = MessageHandler(self.mock_agent)
+            mock_qm.assert_called_once_with()
             assert handler.agent == self.mock_agent
 
-    def test_init_without_database_path(self):
-        """Test QueuedMessageHandler initialization without database path."""
+    def test_init_sets_processing_state(self):
+        """Test MessageHandler initialization sets processing state correctly."""
         with patch(
             "src.sysmanage_agent.communication.message_handler.MessageQueueManager"
-        ) as mock_qm:
-            handler = QueuedMessageHandler(self.mock_agent)
-            mock_qm.assert_called_once_with(None)
+        ):
+            handler = MessageHandler(self.mock_agent)
+            assert handler.queue_processor_running is False
+            assert handler.processing_task is None
             assert handler.agent == self.mock_agent
 
     @pytest.mark.asyncio

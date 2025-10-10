@@ -45,8 +45,8 @@ class UpdateChecker:
                     update_result["total_updates"],
                 )
             return True
-        except Exception as e:
-            self.logger.error(_("Error during periodic update check: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error during periodic update check: %s"), error)
             return False
 
     async def run_update_checker_loop(self):
@@ -73,8 +73,8 @@ class UpdateChecker:
             except asyncio.CancelledError:
                 self.logger.debug("Update checker cancelled")
                 raise
-            except Exception as e:
-                self.logger.error(_("Update checker error: %s"), e)
+            except Exception as error:
+                self.logger.error(_("Update checker error: %s"), error)
                 # Wait before next attempt instead of terminating
                 await asyncio.sleep(30)
                 continue
@@ -114,8 +114,8 @@ class PackageCollectionScheduler:
             else:
                 self.logger.warning(_("Package collection completed with some issues"))
             return success
-        except Exception as e:
-            self.logger.error(_("Error during package collection: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error during package collection: %s"), error)
             return False
 
     async def run_package_collection_loop(self):
@@ -153,8 +153,8 @@ class PackageCollectionScheduler:
             except asyncio.CancelledError:
                 self.logger.debug("Package collection scheduler cancelled")
                 raise
-            except Exception as e:
-                self.logger.error(_("Package collection scheduler error: %s"), e)
+            except Exception as error:
+                self.logger.error(_("Package collection scheduler error: %s"), error)
                 # Wait before next attempt instead of terminating
                 await asyncio.sleep(60)
                 continue
@@ -229,8 +229,8 @@ class MessageProcessor:
 
         try:
             result = await self._dispatch_command(command_type, parameters)
-        except Exception as e:
-            result = {"success": False, "error": str(e)}
+        except Exception as error:
+            result = {"success": False, "error": str(error)}
 
         # Send result back to server (skip for script execution as it sends dedicated result)
         if command_type != "execute_script":
@@ -415,8 +415,8 @@ class MessageProcessor:
                 _("Queued script execution result for execution_id: %s"), execution_id
             )
 
-        except Exception as e:
-            self.logger.error(_("Failed to queue script execution result: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Failed to queue script execution result: %s"), error)
 
     async def _check_execution_uuid_processed(self, execution_uuid: str) -> bool:
         """Check if an execution UUID has already been processed."""
@@ -432,8 +432,8 @@ class MessageProcessor:
                 return execution is not None
             finally:
                 session.close()
-        except Exception as e:
-            self.logger.error(_("Error checking execution UUID: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error checking execution UUID: %s"), error)
             return False  # Allow processing if we can't check
 
     async def _store_execution_uuid(self, parameters: Dict[str, Any]):
@@ -484,8 +484,8 @@ class MessageProcessor:
             finally:
                 session.close()
 
-        except Exception as e:
-            self.logger.error(_("Error storing execution UUID: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Error storing execution UUID: %s"), error)
 
     async def _handle_service_control(
         self, parameters: Dict[str, Any]
@@ -582,8 +582,8 @@ class MessageProcessor:
                     results[service] = {"success": False, "error": error_msg}
                     overall_success = False
 
-                except Exception as e:
-                    error_msg = str(e)
+                except Exception as error:
+                    error_msg = str(error)
                     self.logger.error(
                         _("Service control error for %s: %s"), service, error_msg
                     )
@@ -594,9 +594,9 @@ class MessageProcessor:
             try:
                 self.logger.info(_("Triggering role collection after service control"))
                 await self.agent.collect_roles()
-            except Exception as e:
+            except Exception as error:
                 self.logger.warning(
-                    _("Failed to update roles after service control: %s"), e
+                    _("Failed to update roles after service control: %s"), error
                 )
 
             return {
@@ -607,9 +607,9 @@ class MessageProcessor:
                 "message": f"Service {action} completed for {len(services)} services",
             }
 
-        except Exception as e:
-            self.logger.error(_("Error in service control handler: %s"), e)
-            return {"success": False, "error": str(e)}
+        except Exception as error:
+            self.logger.error(_("Error in service control handler: %s"), error)
+            return {"success": False, "error": str(error)}
 
     async def _handle_get_service_status(
         self, parameters: Dict[str, Any]
@@ -682,8 +682,8 @@ class MessageProcessor:
                     }
                     overall_success = False
 
-                except Exception as e:
-                    error_msg = str(e)
+                except Exception as error:
+                    error_msg = str(error)
                     self.logger.error(
                         _("Service status error for %s: %s"), service, error_msg
                     )
@@ -701,9 +701,9 @@ class MessageProcessor:
                 "message": f"Service status check completed for {len(services)} services",
             }
 
-        except Exception as e:
-            self.logger.error(_("Error in service status handler: %s"), e)
-            return {"success": False, "error": str(e)}
+        except Exception as error:
+            self.logger.error(_("Error in service status handler: %s"), error)
+            return {"success": False, "error": str(error)}
 
 
 def is_running_privileged() -> bool:

@@ -75,10 +75,14 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         try:
             with open(self.config_file, "r", encoding="utf-8") as file:
                 self.config_data = yaml.safe_load(file) or {}
-        except yaml.YAMLError as e:
-            raise ValueError(_("Invalid YAML in configuration file: %s") % e) from e
-        except Exception as e:
-            raise RuntimeError(_("Failed to load configuration file: %s") % e) from e
+        except yaml.YAMLError as error:
+            raise ValueError(
+                _("Invalid YAML in configuration file: %s") % error
+            ) from error
+        except Exception as error:
+            raise RuntimeError(
+                _("Failed to load configuration file: %s") % error
+            ) from error
 
     def get(self, key_path: str, default: Any = None) -> Any:
         """

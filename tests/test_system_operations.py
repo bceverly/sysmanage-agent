@@ -28,8 +28,15 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         self.mock_agent.registration.get_system_info.return_value = {
             "hostname": "test-host"
         }
+        # Mock registration.get_os_version_info() to return a dict
+        self.mock_agent.registration.get_os_version_info.return_value = {
+            "os": "Ubuntu",
+            "version": "22.04",
+        }
 
         self.system_ops = SystemOperations(self.mock_agent)
+        # Link agent to system_ops for delegated operations
+        self.mock_agent.system_ops = self.system_ops
 
     def test_init(self):
         """Test SystemOperations initialization."""
@@ -135,7 +142,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         self.mock_agent.update_hardware = AsyncMock()
 
         with patch(
-            "src.sysmanage_agent.operations.system_operations.AntivirusCollector"
+            "src.sysmanage_agent.operations.system_control.AntivirusCollector"
         ) as mock_av_collector:
             mock_av_instance = Mock()
             mock_av_instance.collect_antivirus_status.return_value = {
@@ -176,7 +183,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         )
 
         with patch(
-            "src.sysmanage_agent.operations.system_operations.UpdateDetector"
+            "src.sysmanage_agent.operations.package_operations.UpdateDetector"
         ) as mock_detector_class:
             mock_detector_class.return_value = mock_update_detector
 
@@ -203,7 +210,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         mock_update_detector.install_package.side_effect = Exception("Install failed")
 
         with patch(
-            "src.sysmanage_agent.operations.system_operations.UpdateDetector"
+            "src.sysmanage_agent.operations.package_operations.UpdateDetector"
         ) as mock_detector_class:
             mock_detector_class.return_value = mock_update_detector
 
@@ -220,7 +227,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         mock_update_detector.update_system.return_value = "System updated successfully"
 
         with patch(
-            "src.sysmanage_agent.operations.system_operations.UpdateDetector"
+            "src.sysmanage_agent.operations.system_control.UpdateDetector"
         ) as mock_detector_class:
             mock_detector_class.return_value = mock_update_detector
 
@@ -237,7 +244,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         mock_update_detector.update_system.side_effect = Exception("Update failed")
 
         with patch(
-            "src.sysmanage_agent.operations.system_operations.UpdateDetector"
+            "src.sysmanage_agent.operations.system_control.UpdateDetector"
         ) as mock_detector_class:
             mock_detector_class.return_value = mock_update_detector
 
@@ -250,7 +257,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_restart_service_success(self):
         """Test successful service restart."""
         with patch.object(
-            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+            self.system_ops.system_control,
+            "execute_shell_command",
+            new_callable=AsyncMock,
         ) as mock_execute:
             mock_execute.return_value = {"success": True, "result": "Service restarted"}
 
@@ -275,7 +284,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_restart_service_exception(self):
         """Test service restart with exception."""
         with patch.object(
-            self.system_ops,
+            self.system_ops.system_control,
             "execute_shell_command",
             side_effect=Exception("Service error"),
         ):
@@ -289,7 +298,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_reboot_system_success(self):
         """Test successful system reboot."""
         with patch.object(
-            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+            self.system_ops.system_control,
+            "execute_shell_command",
+            new_callable=AsyncMock,
         ) as mock_execute:
             mock_execute.return_value = {"success": True}
 
@@ -303,7 +314,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_reboot_system_command_failure(self):
         """Test system reboot with command failure."""
         with patch.object(
-            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+            self.system_ops.system_control,
+            "execute_shell_command",
+            new_callable=AsyncMock,
         ) as mock_execute:
             mock_execute.return_value = {"success": False, "error": "Permission denied"}
 
@@ -316,7 +329,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_reboot_system_exception(self):
         """Test system reboot with exception."""
         with patch.object(
-            self.system_ops,
+            self.system_ops.system_control,
             "execute_shell_command",
             side_effect=Exception("Reboot error"),
         ):
@@ -329,7 +342,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_shutdown_system_success(self):
         """Test successful system shutdown."""
         with patch.object(
-            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+            self.system_ops.system_control,
+            "execute_shell_command",
+            new_callable=AsyncMock,
         ) as mock_execute:
             mock_execute.return_value = {"success": True}
 
@@ -343,7 +358,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_shutdown_system_command_failure(self):
         """Test system shutdown with command failure."""
         with patch.object(
-            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+            self.system_ops.system_control,
+            "execute_shell_command",
+            new_callable=AsyncMock,
         ) as mock_execute:
             mock_execute.return_value = {"success": False, "error": "Permission denied"}
 
@@ -356,7 +373,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
     async def test_shutdown_system_exception(self):
         """Test system shutdown with exception."""
         with patch.object(
-            self.system_ops,
+            self.system_ops.system_control,
             "execute_shell_command",
             side_effect=Exception("Shutdown error"),
         ):
@@ -412,7 +429,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             self.system_ops, "execute_shell_command", new_callable=AsyncMock
         ) as mock_execute:
             with patch.object(
-                self.system_ops,
+                self.system_ops.ubuntu_pro_ops,
                 "_send_os_update_after_pro_change",
                 new_callable=AsyncMock,
             ):
@@ -435,7 +452,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             self.system_ops, "execute_shell_command", new_callable=AsyncMock
         ) as mock_execute:
             with patch.object(
-                self.system_ops,
+                self.system_ops.ubuntu_pro_ops,
                 "_send_os_update_after_pro_change",
                 new_callable=AsyncMock,
             ) as mock_update:
@@ -461,7 +478,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             self.system_ops, "execute_shell_command", new_callable=AsyncMock
         ) as mock_execute:
             with patch.object(
-                self.system_ops,
+                self.system_ops.ubuntu_pro_ops,
                 "_send_os_update_after_pro_change",
                 new_callable=AsyncMock,
             ) as mock_update:
@@ -519,7 +536,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             self.system_ops, "execute_shell_command", new_callable=AsyncMock
         ) as mock_execute:
             with patch.object(
-                self.system_ops,
+                self.system_ops.ubuntu_pro_ops,
                 "_send_os_update_after_pro_change",
                 new_callable=AsyncMock,
             ) as mock_update:
@@ -588,7 +605,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             self.system_ops, "execute_shell_command", new_callable=AsyncMock
         ) as mock_execute:
             with patch.object(
-                self.system_ops,
+                self.system_ops.ubuntu_pro_ops,
                 "_send_os_update_after_pro_change",
                 new_callable=AsyncMock,
             ) as mock_update:

@@ -3,7 +3,7 @@ Comprehensive unit tests for src.sysmanage_agent.core.config module.
 Tests configuration management with YAML files and security priority.
 """
 
-# pylint: disable=attribute-defined-outside-init
+# pylint: disable=attribute-defined-outside-init,unused-argument
 
 from unittest.mock import mock_open, patch
 

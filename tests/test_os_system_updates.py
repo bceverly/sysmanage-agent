@@ -4,6 +4,7 @@ Unit tests for OS-level system update detection functionality (Feature #50).
 
 # pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init
 
+import subprocess
 from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
@@ -14,12 +15,21 @@ class TestOSSystemUpdateDetection:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.detector = UpdateDetector()
-        self.detector.available_updates = []
+        # Will be initialized per test with appropriate platform
+        self.detector = None
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_windows_system_updates_success(self, mock_run):
+    def test_detect_windows_system_updates_success(self, mock_run, mock_platform):
         """Test Windows system update detection with available updates."""
+        mock_platform.return_value = "Windows"
+
+        # Mock subprocess.CREATE_NO_WINDOW for Linux environment
+        if not hasattr(subprocess, "CREATE_NO_WINDOW"):
+            subprocess.CREATE_NO_WINDOW = 0x08000000
+
+        self.detector = UpdateDetector()
+
         # Mock PowerShell output with Windows updates
         powershell_output = """
 [
@@ -54,7 +64,9 @@ class TestOSSystemUpdateDetection:
         assert security_update["package_name"] == "Security Update for Windows"
         assert security_update["package_manager"] == "Windows Update"
         assert security_update["update_type"] == "security"
-        assert security_update["size"] == "50.0 MB"
+        assert (
+            security_update["size"] == 50.0
+        )  # _format_size_mb returns float, not string
 
         # Check feature update
         feature_update = next(
@@ -65,37 +77,55 @@ class TestOSSystemUpdateDetection:
         assert feature_update["package_name"] == "Feature Update for Windows"
         assert feature_update["package_manager"] == "Windows Update"
         assert feature_update["update_type"] == "regular"
-        assert feature_update["size"] == "100.0 MB"
+        assert (
+            feature_update["size"] == 100.0
+        )  # _format_size_mb returns float, not string
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_windows_system_updates_no_updates(self, mock_run):
+    def test_detect_windows_system_updates_no_updates(self, mock_run, mock_platform):
         """Test Windows system update detection with no updates."""
+        mock_platform.return_value = "Windows"
+        self.detector = UpdateDetector()
+
         mock_run.return_value = Mock(returncode=0, stdout="[]", stderr="")
 
         self.detector._detect_windows_system_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_windows_system_updates_error(self, mock_run):
+    def test_detect_windows_system_updates_error(self, mock_run, mock_platform):
         """Test Windows system update detection error handling."""
+        mock_platform.return_value = "Windows"
+        self.detector = UpdateDetector()
+
         mock_run.return_value = Mock(returncode=1, stdout="", stderr="Access denied")
 
         # Should not raise exception
         self.detector._detect_windows_system_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_windows_system_updates_invalid_json(self, mock_run):
+    def test_detect_windows_system_updates_invalid_json(self, mock_run, mock_platform):
         """Test Windows system update detection with invalid JSON."""
+        mock_platform.return_value = "Windows"
+        self.detector = UpdateDetector()
+
         mock_run.return_value = Mock(returncode=0, stdout="invalid json", stderr="")
 
         # Should not raise exception
         self.detector._detect_windows_system_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_macos_system_updates_success(self, mock_run):
+    def test_detect_macos_system_updates_success(self, mock_run, mock_platform):
         """Test macOS system update detection with available updates."""
+        mock_platform.return_value = "Darwin"
+        self.detector = UpdateDetector()
+
         softwareupdate_output = """
 Software Update Tool
 
@@ -156,9 +186,13 @@ Software Update found the following new or updated software:
         assert safari_update["requires_restart"] is False
         assert safari_update["is_recommended"] is True
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_macos_system_updates_no_updates(self, mock_run):
+    def test_detect_macos_system_updates_no_updates(self, mock_run, mock_platform):
         """Test macOS system update detection with no updates."""
+        mock_platform.return_value = "Darwin"
+        self.detector = UpdateDetector()
+
         softwareupdate_output = """
 Software Update Tool
 
@@ -176,9 +210,13 @@ No new software available.
         self.detector._detect_macos_app_store_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_macos_system_updates_error(self, mock_run):
+    def test_detect_macos_system_updates_error(self, mock_run, mock_platform):
         """Test macOS system update detection error handling."""
+        mock_platform.return_value = "Darwin"
+        self.detector = UpdateDetector()
+
         # First call fails (sw_vers)
         mock_run.side_effect = [
             Mock(
@@ -190,9 +228,13 @@ No new software available.
         self.detector._detect_macos_app_store_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_openbsd_system_updates_success(self, mock_run):
+    def test_detect_openbsd_system_updates_success(self, mock_run, mock_platform):
         """Test OpenBSD syspatch detection with available patches."""
+        mock_platform.return_value = "OpenBSD"
+        self.detector = UpdateDetector()
+
         syspatch_output = """
 001_rsa
 002_ssh
@@ -217,17 +259,25 @@ No new software available.
             assert update["is_security_update"] is True
             assert update["is_system_update"] is True
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_openbsd_system_updates_no_patches(self, mock_run):
+    def test_detect_openbsd_system_updates_no_patches(self, mock_run, mock_platform):
         """Test OpenBSD syspatch detection with no patches."""
+        mock_platform.return_value = "OpenBSD"
+        self.detector = UpdateDetector()
+
         mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         self.detector._detect_openbsd_system_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
-    def test_detect_openbsd_system_updates_error(self, mock_run):
+    def test_detect_openbsd_system_updates_error(self, mock_run, mock_platform):
         """Test OpenBSD syspatch detection error handling."""
+        mock_platform.return_value = "OpenBSD"
+        self.detector = UpdateDetector()
+
         mock_run.return_value = Mock(
             returncode=1, stdout="", stderr="syspatch: command not found"
         )
@@ -236,10 +286,16 @@ No new software available.
         self.detector._detect_openbsd_system_updates()
         assert len(self.detector.available_updates) == 0
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
     @patch("os.path.exists")
-    def test_detect_debian_system_updates_success(self, mock_exists, mock_run):
+    def test_detect_debian_system_updates_success(
+        self, mock_exists, mock_run, mock_platform
+    ):
         """Test Debian system update detection."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
+
         mock_exists.return_value = True
 
         # Mock apt list --upgradable command with system packages
@@ -255,10 +311,16 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         assert mock_run.call_count == 3
         assert len(self.detector.available_updates) == 2
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
     @patch("os.path.exists")
-    def test_detect_redhat_system_updates_success(self, mock_exists, mock_run):
+    def test_detect_redhat_system_updates_success(
+        self, mock_exists, mock_run, mock_platform
+    ):
         """Test Red Hat system update detection."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
+
         mock_exists.return_value = True
 
         # Mock dnf/yum check-update
@@ -273,10 +335,16 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         # Should call dnf/yum check-update
         mock_run.assert_called()
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
     @patch("os.path.exists")
-    def test_detect_arch_system_updates_success(self, mock_exists, mock_run):
+    def test_detect_arch_system_updates_success(
+        self, mock_exists, mock_run, mock_platform
+    ):
         """Test Arch Linux system update detection."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
+
         mock_exists.return_value = True
 
         # Mock pacman -Qu
@@ -291,10 +359,16 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         # Should call pacman
         mock_run.assert_called()
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
     @patch("os.path.exists")
-    def test_detect_suse_system_updates_success(self, mock_exists, mock_run):
+    def test_detect_suse_system_updates_success(
+        self, mock_exists, mock_run, mock_platform
+    ):
         """Test SUSE system update detection."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
+
         mock_exists.return_value = True
 
         # Mock zypper list-updates
@@ -309,9 +383,12 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         # Should call zypper
         mock_run.assert_called()
 
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("os.path.exists")
-    def test_detect_linux_system_updates_debian(self, mock_exists):
+    def test_detect_linux_system_updates_debian(self, mock_exists, mock_platform):
         """Test Linux system update detection on Debian."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
 
         # Mock /etc/debian_version exists
         def exists_side_effect(path):
@@ -320,89 +397,97 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         mock_exists.side_effect = exists_side_effect
 
         with patch.object(
-            self.detector, "_detect_debian_system_updates"
+            self.detector.detector, "_detect_debian_system_updates"
         ) as mock_debian:
             self.detector._detect_linux_system_updates()
             mock_debian.assert_called_once()
 
-    @patch("os.path.exists")
-    def test_detect_linux_system_updates_redhat(self, mock_exists):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    @patch("builtins.open", create=True)
+    def test_detect_linux_system_updates_redhat(self, mock_open, mock_platform):
         """Test Linux system update detection on Red Hat."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
 
-        # Mock /etc/redhat-release exists
-        def exists_side_effect(path):
-            return path == "/etc/redhat-release"
-
-        mock_exists.side_effect = exists_side_effect
+        # Mock /etc/os-release with Red Hat ID
+        mock_open.return_value.__enter__.return_value = ["ID=rhel\n"]
 
         with patch.object(
-            self.detector, "_detect_redhat_system_updates"
+            self.detector.detector, "_detect_redhat_system_updates"
         ) as mock_redhat:
             self.detector._detect_linux_system_updates()
             mock_redhat.assert_called_once()
 
-    @patch("os.path.exists")
-    def test_detect_linux_system_updates_arch(self, mock_exists):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    @patch("builtins.open", create=True)
+    def test_detect_linux_system_updates_arch(self, mock_open, mock_platform):
         """Test Linux system update detection on Arch."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
 
-        # Mock /etc/arch-release exists
-        def exists_side_effect(path):
-            return path == "/etc/arch-release"
+        # Mock /etc/os-release with Arch ID
+        mock_open.return_value.__enter__.return_value = ["ID=arch\n"]
 
-        mock_exists.side_effect = exists_side_effect
-
-        with patch.object(self.detector, "_detect_arch_system_updates") as mock_arch:
+        with patch.object(
+            self.detector.detector, "_detect_arch_system_updates"
+        ) as mock_arch:
             self.detector._detect_linux_system_updates()
             mock_arch.assert_called_once()
 
-    @patch("os.path.exists")
-    def test_detect_linux_system_updates_suse(self, mock_exists):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    @patch("builtins.open", create=True)
+    def test_detect_linux_system_updates_suse(self, mock_open, mock_platform):
         """Test Linux system update detection on SUSE."""
+        mock_platform.return_value = "Linux"
+        self.detector = UpdateDetector()
 
-        # Mock /etc/SUSE-brand exists
-        def exists_side_effect(path):
-            return path == "/etc/SUSE-brand"
+        # Mock /etc/os-release with openSUSE ID
+        mock_open.return_value.__enter__.return_value = ["ID=opensuse\n"]
 
-        mock_exists.side_effect = exists_side_effect
-
-        with patch.object(self.detector, "_detect_suse_system_updates") as mock_suse:
+        with patch.object(
+            self.detector.detector, "_detect_suse_system_updates"
+        ) as mock_suse:
             self.detector._detect_linux_system_updates()
             mock_suse.assert_called_once()
 
-    def test_integration_os_system_updates_called_first(self):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    def test_integration_os_system_updates_called_first(self, mock_platform):
         """Test that OS system updates are detected within Linux updates."""
+        mock_platform.return_value = "Linux"
+        # Create a new detector with the mocked platform
+        detector = UpdateDetector()
 
-        with patch("platform.system", return_value="Linux"):
-            # Create a new detector with the mocked platform
-            detector = UpdateDetector()
+        with patch.object(
+            detector.detector, "_detect_linux_system_updates"
+        ) as mock_os_updates, patch.object(
+            detector.detector, "_detect_package_managers"
+        ) as mock_pkg_mgrs:
 
-            with patch.object(
-                detector, "_detect_linux_system_updates"
-            ) as mock_os_updates, patch.object(
-                detector, "_detect_package_managers"
-            ) as mock_pkg_mgrs:
+            mock_pkg_mgrs.return_value = []
 
-                mock_pkg_mgrs.return_value = []
+            result = detector.get_available_updates()
 
-                result = detector.get_available_updates()
+            # OS system updates should be called within _detect_linux_updates
+            mock_os_updates.assert_called_once()
+            assert "available_updates" in result
 
-                # OS system updates should be called within _detect_linux_updates
-                mock_os_updates.assert_called_once()
-                assert "available_updates" in result
-
-    def test_windows_update_size_conversion(self):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    def test_windows_update_size_conversion(self, mock_platform):
         """Test Windows update size conversion."""
+        mock_platform.return_value = "Windows"
+        self.detector = UpdateDetector()
+
         # Test with 52,428,800 bytes (50 MB)
         size_mb = self.detector._format_size_mb(52428800)
-        assert size_mb == "50.0 MB"
+        assert size_mb == 50.0  # Returns float
 
         # Test with 1,073,741,824 bytes (1 GB)
         size_mb = self.detector._format_size_mb(1073741824)
-        assert size_mb == "1024.0 MB"
+        assert size_mb == 1024.0  # Returns float
 
         # Test with 0 bytes
         size_mb = self.detector._format_size_mb(0)
-        assert size_mb == "0.0 MB"
+        assert size_mb == 0.0  # Returns float
 
     def test_macos_update_parsing(self):
         """Test macOS update line parsing."""
@@ -431,9 +516,9 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         )
         assert is_regular is False
 
-    @patch("platform.system")
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     def test_platform_specific_update_detection(self, mock_system):
-        """Test that the correct platform-specific method is called."""
+        """Test that the correct platform-specific system update method is called."""
         test_cases = [
             ("Windows", "_detect_windows_system_updates"),
             ("Darwin", "_detect_macos_app_store_updates"),
@@ -441,34 +526,67 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
             ("OpenBSD", "_detect_openbsd_system_updates"),
         ]
 
-        for platform, expected_method in test_cases:
-            mock_system.return_value = platform
+        for platform_name, expected_method in test_cases:
+            mock_system.return_value = platform_name
             detector = UpdateDetector()
 
-            with patch.object(detector, expected_method) as mock_method, patch.object(
-                detector, "_detect_package_managers", return_value=[]
+            # Mock all the methods that detect_updates might call
+            with patch.object(
+                detector.detector, expected_method
+            ) as mock_method, patch.object(
+                detector.detector, "_detect_package_managers", return_value=[]
+            ), patch.object(
+                detector.detector,
+                "_detect_windows_version_upgrades",
+                return_value=None,
+                create=True,
+            ), patch.object(
+                detector.detector,
+                "_detect_macos_version_upgrades",
+                return_value=None,
+                create=True,
+            ), patch.object(
+                detector.detector,
+                "_detect_linux_version_upgrades",
+                return_value=None,
+                create=True,
+            ), patch.object(
+                detector.detector,
+                "_detect_freebsd_system_updates",
+                return_value=None,
+                create=True,
+            ), patch.object(
+                detector.detector,
+                "_detect_freebsd_version_upgrades",
+                return_value=None,
+                create=True,
             ):
 
-                # Call the platform-specific update method directly
-                if platform == "Windows":
-                    detector._detect_windows_updates()
-                elif platform == "Darwin":
-                    detector._detect_macos_updates()
-                elif platform == "Linux":
-                    detector._detect_linux_updates()
-                elif platform == "OpenBSD":
-                    detector._detect_bsd_updates()
+                # Call the platform-specific detect_updates method which should call the system update method
+                detector.detect_updates()
 
+                # The system update method should be called as part of detect_updates
                 mock_method.assert_called_once()
 
-    def test_error_resilience(self):
+    @patch("src.sysmanage_agent.collection.update_detection.platform.system")
+    def test_error_resilience(self, mock_platform):
         """Test that system update detection is resilient to errors."""
-        with patch("subprocess.run", side_effect=Exception("Test exception")):
-            # Should not raise exception
-            self.detector._detect_windows_system_updates()
-            self.detector._detect_macos_app_store_updates()
-            self.detector._detect_openbsd_system_updates()
-            self.detector._detect_linux_system_updates()
+        # Test each platform's error resilience separately
+        platforms = [
+            ("Windows", "_detect_windows_system_updates"),
+            ("Darwin", "_detect_macos_app_store_updates"),
+            ("OpenBSD", "_detect_openbsd_system_updates"),
+            ("Linux", "_detect_linux_system_updates"),
+        ]
 
-            # Should have no updates but not crash
-            assert len(self.detector.available_updates) == 0
+        for platform_name, method_name in platforms:
+            mock_platform.return_value = platform_name
+            detector = UpdateDetector()
+
+            with patch("subprocess.run", side_effect=Exception("Test exception")):
+                # Should not raise exception
+                method = getattr(detector, method_name)
+                method()
+
+                # Should have no updates but not crash
+                assert len(detector.available_updates) == 0

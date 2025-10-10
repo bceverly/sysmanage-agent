@@ -34,9 +34,11 @@ class TestSysManageAgentAsyncMethods:
             "logging": {"file": temp_log_path},
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(config_data, f)
-            temp_config = f.name
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as config_file:
+            yaml.dump(config_data, config_file)
+            temp_config = config_file.name
 
         with patch("main.initialize_database"), patch("main.get_database_manager"):
             agent = SysManageAgent(temp_config)
@@ -398,9 +400,11 @@ class TestUbuntuProOperations:
             "logging": {"file": temp_log_path},
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(config_data, f)
-            temp_config = f.name
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as config_file:
+            yaml.dump(config_data, config_file)
+            temp_config = config_file.name
 
         with patch("main.initialize_database"), patch("main.get_database_manager"):
             agent = SysManageAgent(temp_config)
@@ -572,9 +576,11 @@ class TestScriptExecution:
             "logging": {"file": temp_log_path},
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(config_data, f)
-            temp_config = f.name
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as config_file:
+            yaml.dump(config_data, config_file)
+            temp_config = config_file.name
 
         with patch("main.initialize_database"), patch("main.get_database_manager"):
             agent = SysManageAgent(temp_config)

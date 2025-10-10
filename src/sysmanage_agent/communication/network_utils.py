@@ -17,19 +17,21 @@ class NetworkUtils:
         self.config = config_manager
         self.logger = logging.getLogger(__name__)
 
-    def get_hostname(self) -> str:
-        """Get the hostname, with optional override from config."""
-        if self.config:
-            override = self.config.get_hostname_override()
-            if override:
-                self.logger.debug("Using hostname override: %s", override)
-                return override
+    def _is_valid_hostname(self, hostname: Optional[str]) -> bool:
+        """Check if a hostname is valid and not a localhost variant."""
+        if not hostname or not hostname.strip():
+            return False
+        hostname = hostname.strip()
+        if hostname in ("localhost", "localhost.localdomain"):
+            return False
+        return True
 
-        # Try multiple methods to get a proper hostname, especially for FreeBSD/OpenBSD
-        hostname = None
-        self.logger.debug("Starting hostname detection...")
+    def _is_valid_fqdn(self, hostname: Optional[str]) -> bool:
+        """Check if a hostname is a valid FQDN."""
+        return self._is_valid_hostname(hostname) and "." in hostname
 
-        # First try using hostname -f command (most reliable on Unix systems)
+    def _try_hostname_command(self) -> Optional[str]:
+        """Try to get hostname using the hostname -f command."""
         try:
             result = subprocess.run(
                 ["hostname", "-f"],  # nosec B603, B607 # Safe: no user input
@@ -41,97 +43,118 @@ class NetworkUtils:
             if result.returncode == 0:
                 cmd_fqdn = result.stdout.strip()
                 self.logger.debug("hostname -f returned: %r", cmd_fqdn)
-                if (
-                    cmd_fqdn
-                    and cmd_fqdn != "localhost"
-                    and cmd_fqdn != "localhost.localdomain"
-                    and "." in cmd_fqdn  # Ensure it looks like an FQDN
-                ):
-                    hostname = cmd_fqdn
-                    self.logger.debug("Using hostname -f result as FQDN: %s", hostname)
-        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as e:
-            self.logger.debug("hostname -f command failed: %s", e)
+                if self._is_valid_fqdn(cmd_fqdn):
+                    self.logger.debug("Using hostname -f result as FQDN: %s", cmd_fqdn)
+                    return cmd_fqdn
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as error:
+            self.logger.debug("hostname -f command failed: %s", error)
+        return None
 
-        # If that didn't work, try socket.getfqdn()
-        if not hostname:
-            fqdn = socket.getfqdn()
-            self.logger.debug("socket.getfqdn() returned: %r", fqdn)
-            if (
-                fqdn
-                and fqdn.strip()
-                and fqdn != "localhost"
-                and fqdn != "localhost.localdomain"
-            ):
-                hostname = fqdn.strip()
-                self.logger.debug("Using FQDN as hostname: %s", hostname)
+    def _try_socket_getfqdn(self) -> Optional[str]:
+        """Try to get hostname using socket.getfqdn()."""
+        fqdn = socket.getfqdn()
+        self.logger.debug("socket.getfqdn() returned: %r", fqdn)
+        if self._is_valid_hostname(fqdn):
+            self.logger.debug("Using FQDN as hostname: %s", fqdn)
+            return fqdn.strip()
+        return None
 
-        # If that didn't work, try socket.gethostname()
-        if not hostname:
-            try:
-                hostname = socket.gethostname()
-                if hostname and hostname.strip() and hostname != "localhost":
-                    hostname = hostname.strip()
-                    # Try to get FQDN from hostname
-                    try:
-                        fqdn = socket.getfqdn(hostname)
-                        if (
-                            fqdn
-                            and fqdn.strip()
-                            and fqdn != "localhost"
-                            and fqdn != hostname
-                        ):
-                            hostname = fqdn.strip()
-                    except (socket.error, OSError):
-                        pass
-            except (socket.error, OSError):
-                pass
+    def _try_socket_gethostname(self) -> Optional[str]:
+        """Try to get hostname using socket.gethostname()."""
+        try:
+            hostname = socket.gethostname()
+            if self._is_valid_hostname(hostname):
+                hostname = hostname.strip()
+                # Try to enhance with FQDN
+                enhanced = self._enhance_hostname_with_fqdn(hostname)
+                return enhanced if enhanced else hostname
+        except (socket.error, OSError):
+            pass
+        return None
 
-        # If still no good hostname, try reading from system files (Unix/Linux/BSD)
-        if not hostname or hostname == "localhost":
-            try:
-                # Try reading /etc/hostname (common on BSD systems)
-                if os.path.exists("/etc/hostname"):
-                    with open("/etc/hostname", "r", encoding="utf-8") as f:
-                        file_hostname = f.read().strip()
-                        if file_hostname and file_hostname != "localhost":
-                            hostname = file_hostname
-                # Try reading /etc/myname (OpenBSD specific)
-                elif os.path.exists("/etc/myname"):
-                    with open("/etc/myname", "r", encoding="utf-8") as f:
-                        file_hostname = f.read().strip()
-                        if file_hostname and file_hostname != "localhost":
-                            hostname = file_hostname
-            except (OSError, IOError):
-                pass
+    def _enhance_hostname_with_fqdn(self, hostname: str) -> Optional[str]:
+        """Try to enhance a hostname by getting its FQDN."""
+        try:
+            fqdn = socket.getfqdn(hostname)
+            if self._is_valid_hostname(fqdn) and fqdn != hostname:
+                return fqdn.strip()
+        except (socket.error, OSError):
+            pass
+        return None
 
-        # If still no hostname, use the IP-based approach as fallback
-        if not hostname or hostname == "localhost":
-            try:
-                # Connect to a remote address to determine local IP
-                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                    s.connect(("8.8.8.8", 80))
-                    local_ip = s.getsockname()[0]
-                    if local_ip:
-                        try:
-                            hostname = socket.gethostbyaddr(local_ip)[0]
-                        except (socket.error, OSError):
-                            hostname = f"host-{local_ip.replace('.', '-')}"
-            except (socket.error, OSError):
-                pass
+    def _try_hostname_from_files(self) -> Optional[str]:
+        """Try to read hostname from system files (Unix/Linux/BSD)."""
+        try:
+            # Try reading /etc/hostname (common on BSD systems)
+            if os.path.exists("/etc/hostname"):
+                hostname = self._read_hostname_file("/etc/hostname")
+                if hostname:
+                    return hostname
+            # Try reading /etc/myname (OpenBSD specific)
+            elif os.path.exists("/etc/myname"):
+                hostname = self._read_hostname_file("/etc/myname")
+                if hostname:
+                    return hostname
+        except (OSError, IOError):
+            pass
+        return None
 
-        # Final fallback
-        if not hostname:
+    def _read_hostname_file(self, filepath: str) -> Optional[str]:
+        """Read and validate hostname from a file."""
+        with open(filepath, "r", encoding="utf-8") as file_handle:
+            file_hostname = file_handle.read().strip()
+            if self._is_valid_hostname(file_hostname):
+                return file_hostname
+        return None
+
+    def _try_hostname_from_ip(self) -> Optional[str]:
+        """Try to determine hostname using IP-based reverse DNS lookup."""
+        try:
+            # Connect to a remote address to determine local IP
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.connect(("8.8.8.8", 80))
+                local_ip = sock.getsockname()[0]
+                if local_ip:
+                    return self._resolve_ip_to_hostname(local_ip)
+        except (socket.error, OSError):
+            pass
+        return None
+
+    def _resolve_ip_to_hostname(self, ip_address: str) -> str:
+        """Resolve an IP address to a hostname."""
+        try:
+            return socket.gethostbyaddr(ip_address)[0]
+        except (socket.error, OSError):
+            return f"host-{ip_address.replace('.', '-')}"
+
+    def get_hostname(self) -> str:
+        """Get the hostname, with optional override from config."""
+        # Check for config override first
+        if self.config:
+            override = self.config.get_hostname_override()
+            if override:
+                self.logger.debug("Using hostname override: %s", override)
+                return override
+
+        self.logger.debug("Starting hostname detection...")
+
+        # Try multiple methods in order of preference
+        hostname = (
+            self._try_hostname_command()
+            or self._try_socket_getfqdn()
+            or self._try_socket_gethostname()
+            or self._try_hostname_from_files()
+            or self._try_hostname_from_ip()
+        )
+
+        # Final fallback and validation
+        if not hostname or not hostname.strip():
             hostname = "unknown-host"
             self.logger.warning(
                 "Could not determine hostname, using fallback: %s", hostname
             )
         else:
             self.logger.debug("Final hostname determined: %s", hostname)
-
-        # Ensure hostname is never empty or None
-        if not hostname or not hostname.strip():
-            hostname = "unknown-host"
-            self.logger.warning("Hostname was empty, using fallback: %s", hostname)
 
         return hostname.strip()
 
@@ -142,18 +165,18 @@ class NetworkUtils:
 
         try:
             # Get IPv4 address by connecting to a remote host
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.connect(("8.8.8.8", 80))
-                ipv4 = s.getsockname()[0]
-        except Exception as e:
-            self.logger.debug("Could not determine IPv4 address: %s", e)
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.connect(("8.8.8.8", 80))
+                ipv4 = sock.getsockname()[0]
+        except Exception as error:
+            self.logger.debug("Could not determine IPv4 address: %s", error)
 
         try:
             # Get IPv6 address by connecting to a remote host
-            with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as s:
-                s.connect(("2001:4860:4860::8888", 80))
-                ipv6 = s.getsockname()[0]
-        except Exception as e:
-            self.logger.debug("Could not determine IPv6 address: %s", e)
+            with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as sock:
+                sock.connect(("2001:4860:4860::8888", 80))
+                ipv6 = sock.getsockname()[0]
+        except Exception as error:
+            self.logger.debug("Could not determine IPv6 address: %s", error)
 
         return ipv4, ipv6

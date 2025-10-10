@@ -112,8 +112,8 @@ class ServerDiscoveryClient:
                         broadcast_addr,
                         self.discovery_port,
                     )
-                except Exception as e:
-                    logger.debug("Failed to send to %s: %s", broadcast_addr, e)
+                except Exception as error:
+                    logger.debug("Failed to send to %s: %s", broadcast_addr, error)
 
             # Collect responses
             start_time = asyncio.get_event_loop().time()
@@ -135,16 +135,16 @@ class ServerDiscoveryClient:
                         _("Invalid JSON response from %s"),
                         addr[0] if "addr" in locals() else "unknown",
                     )
-                except Exception as e:
+                except Exception as error:
                     logger.debug(
-                        "Error receiving discovery response: %s", type(e).__name__
+                        "Error receiving discovery response: %s", type(error).__name__
                     )
                     continue
 
             sock.close()
 
-        except Exception as e:
-            logger.error(_("Error during broadcast discovery: %s"), e)
+        except Exception as error:
+            logger.error(_("Error during broadcast discovery: %s"), error)
 
         return servers
 
@@ -198,14 +198,14 @@ class ServerDiscoveryClient:
                         _("Invalid JSON announcement from %s"),
                         addr[0] if "addr" in locals() else "unknown",
                     )
-                except Exception as e:
-                    logger.debug("Error receiving announcement: %s", e)
+                except Exception as error:
+                    logger.debug("Error receiving announcement: %s", error)
                     continue
 
             sock.close()
 
-        except Exception as e:
-            logger.error(_("Error listening for announcements: %s"), e)
+        except Exception as error:
+            logger.error(_("Error listening for announcements: %s"), error)
 
         return servers
 
@@ -341,13 +341,13 @@ class ServerDiscoveryClient:
                     broadcast = addr_info.get("broadcast")
                     if broadcast and broadcast not in addresses:
                         addresses.append(broadcast)
-        except Exception as e:
-            logger.debug("Error determining broadcast addresses: %s", e)
+        except Exception as error:
+            logger.debug("Error determining broadcast addresses: %s", error)
 
         return addresses
 
     def _validate_server_response(
-        self, response: Dict[str, Any], addr: Tuple[str, int]
+        self, response: Dict[str, Any], _addr: Tuple[str, int]
     ) -> bool:
         """Validate a server discovery response."""
         try:
@@ -371,7 +371,7 @@ class ServerDiscoveryClient:
             return False
 
     def _validate_server_announcement(
-        self, announcement: Dict[str, Any], addr: Tuple[str, int]
+        self, announcement: Dict[str, Any], _addr: Tuple[str, int]
     ) -> bool:
         """Validate a server announcement."""
         try:
@@ -407,7 +407,7 @@ class ServerDiscoveryClient:
 
 # Global instance with configurable but secure defaults
 try:
-    from config import ConfigManager
+    from config import ConfigManager  # pylint: disable=import-error
 
     config = ConfigManager()
     bind_address = config.get(

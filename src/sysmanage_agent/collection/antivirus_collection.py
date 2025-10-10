@@ -58,8 +58,8 @@ class AntivirusCollector:
             else:
                 self.logger.info(_("No antivirus software detected"))
 
-        except Exception as e:
-            self.logger.error(_("Error detecting antivirus: %s"), e, exc_info=True)
+        except Exception as error:
+            self.logger.error(_("Error detecting antivirus: %s"), error, exc_info=True)
 
         return antivirus_info
 
@@ -168,8 +168,8 @@ class AntivirusCollector:
                         version_line = version_result.stdout.strip()
                         if version_line.startswith("ClamAV "):
                             version = version_line.split()[1].split("/")[0]
-                except Exception as e:
-                    self.logger.debug("Error getting ClamAV version: %s", e)
+                except Exception as error:
+                    self.logger.debug("Error getting ClamAV version: %s", error)
 
                 # Check if clamd daemon or freshclam is running (indicates enabled)
                 # Different distros use different service names:
@@ -197,8 +197,8 @@ class AntivirusCollector:
                     "enabled": enabled,
                 }
 
-        except Exception as e:
-            self.logger.debug("Error checking ClamAV: %s", e)
+        except Exception as error:
+            self.logger.debug("Error checking ClamAV: %s", error)
 
         return {
             "software_name": None,
@@ -221,8 +221,8 @@ class AntivirusCollector:
                 version_line = version_result.stdout.strip()
                 if version_line.startswith("ClamAV "):
                     return version_line.split()[1].split("/")[0]
-        except Exception as e:
-            self.logger.debug("Error getting ClamAV version: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting ClamAV version: %s", error)
         return None
 
     def _check_clamav_windows(self) -> Dict[str, Optional[str]]:
@@ -248,8 +248,8 @@ class AntivirusCollector:
                     "enabled": enabled,
                 }
 
-        except Exception as e:
-            self.logger.debug("Error checking ClamAV on Windows: %s", e)
+        except Exception as error:
+            self.logger.debug("Error checking ClamAV on Windows: %s", error)
 
         return {
             "software_name": None,
@@ -278,8 +278,8 @@ class AntivirusCollector:
             parts = version_line.split()
             if len(parts) >= 2:
                 return parts[-1]
-        except Exception as e:
-            self.logger.debug("Error getting chkrootkit version: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting chkrootkit version: %s", error)
         return None
 
     def _check_chkrootkit(self) -> Dict[str, Optional[str]]:
@@ -313,8 +313,8 @@ class AntivirusCollector:
                 "enabled": enabled if enabled is not None else True,
             }
 
-        except Exception as e:
-            self.logger.debug("Error checking chkrootkit: %s", e)
+        except Exception as error:
+            self.logger.debug("Error checking chkrootkit: %s", error)
 
         return {
             "software_name": None,
@@ -346,8 +346,8 @@ class AntivirusCollector:
             )  # nosec B607 B603
             if version_result.returncode == 0:
                 return self._parse_rkhunter_version(version_result.stdout)
-        except Exception as e:
-            self.logger.debug("Error getting rkhunter version: %s", e)
+        except Exception as error:
+            self.logger.debug("Error getting rkhunter version: %s", error)
         return None
 
     def _check_rkhunter(self) -> Dict[str, Optional[str]]:
@@ -381,8 +381,8 @@ class AntivirusCollector:
                 "enabled": enabled if enabled is not None else True,
             }
 
-        except Exception as e:
-            self.logger.debug("Error checking rkhunter: %s", e)
+        except Exception as error:
+            self.logger.debug("Error checking rkhunter: %s", error)
 
         return {
             "software_name": None,
@@ -438,8 +438,8 @@ class AntivirusCollector:
             except FileNotFoundError:
                 pass
 
-        except Exception as e:
-            self.logger.debug("Error checking service %s: %s", service_name, e)
+        except Exception as error:
+            self.logger.debug("Error checking service %s: %s", service_name, error)
 
         return False
 
@@ -457,16 +457,18 @@ class AntivirusCollector:
             if result.returncode == 0 and "RUNNING" in result.stdout:
                 return True
 
-        except Exception as e:
-            self.logger.debug("Error checking Windows service %s: %s", service_name, e)
+        except Exception as error:
+            self.logger.debug(
+                "Error checking Windows service %s: %s", service_name, error
+            )
 
         return False
 
     def _check_cron_file(self, file_path: str, command: str) -> bool:
         """Check if command exists in a cron file."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                return command in f.read()
+            with open(file_path, "r", encoding="utf-8") as file_handle:
+                return command in file_handle.read()
         except Exception:
             return False
 
@@ -482,8 +484,8 @@ class AntivirusCollector:
                     file_path, command
                 ):
                     return True
-        except Exception as e:
-            self.logger.debug("Error checking cron directory %s: %s", cron_dir, e)
+        except Exception as error:
+            self.logger.debug("Error checking cron directory %s: %s", cron_dir, error)
         return False
 
     def _is_in_cron(self, command: str) -> Optional[bool]:
@@ -514,8 +516,8 @@ class AntivirusCollector:
 
             return False
 
-        except Exception as e:
-            self.logger.debug("Error checking cron for %s: %s", command, e)
+        except Exception as error:
+            self.logger.debug("Error checking cron for %s: %s", command, error)
             return None
 
     def _is_brew_service_running(self, service_name: str) -> bool:
@@ -544,7 +546,7 @@ class AntivirusCollector:
                     if service_name in line and "started" in line:
                         return True
 
-        except Exception as e:
-            self.logger.debug("Error checking brew service %s: %s", service_name, e)
+        except Exception as error:
+            self.logger.debug("Error checking brew service %s: %s", service_name, error)
 
         return False

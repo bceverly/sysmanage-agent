@@ -3,7 +3,7 @@ Comprehensive unit tests for SysManage Agent main lifecycle and core functionali
 Tests agent initialization, configuration, discovery, logging, and lifecycle management.
 """
 
-# pylint: disable=invalid-name,too-many-positional-arguments,protected-access
+# pylint: disable=invalid-name,too-many-positional-arguments,protected-access,unused-argument
 
 import asyncio
 import os
@@ -70,7 +70,7 @@ class TestSysManageAgentInitialization:
             assert agent.update_checker_util is not None
             assert agent.auth_helper is not None
             assert agent.message_processor is not None
-            assert agent.update_ops is not None
+            assert agent.update_manager is not None
             assert agent.system_ops is not None
             assert agent.script_ops is not None
             assert agent.message_handler is not None

@@ -196,8 +196,8 @@ class ClientRegistration:
 
         except (
             Exception
-        ) as e:  # Catch all since aiohttp.ClientError might not be available
-            self.logger.error("Error during registration: %s", e)
+        ) as error:  # Catch all since aiohttp.ClientError might not be available
+            self.logger.error("Error during registration: %s", error)
             return False
 
     async def register_with_retry(self) -> bool:
@@ -283,8 +283,8 @@ class ClientRegistration:
                     )
                 else:
                     self.logger.debug("No stored authentication data found")
-        except Exception as e:
-            self.logger.error("Error loading stored auth data: %s", e)
+        except Exception as error:
+            self.logger.error("Error loading stored auth data: %s", error)
 
     def _store_auth_data(self, host_id: str, host_token: Optional[str]) -> None:
         """Store authentication data in database."""
@@ -302,8 +302,8 @@ class ClientRegistration:
                 session.add(approval)
                 session.commit()
                 self.logger.info("Stored authentication data for host_id: %s", host_id)
-        except Exception as e:
-            self.logger.error("Error storing auth data: %s", e)
+        except Exception as error:
+            self.logger.error("Error storing auth data: %s", error)
 
     def _get_stored_host_id(self) -> Optional[str]:
         """Get host_id from database."""
@@ -315,8 +315,8 @@ class ClientRegistration:
                     .first()
                 )
                 return str(approval.host_id) if approval and approval.host_id else None
-        except Exception as e:
-            self.logger.error("Error getting stored host_id: %s", e)
+        except Exception as error:
+            self.logger.error("Error getting stored host_id: %s", error)
             return None
 
     def _get_stored_host_token(self) -> Optional[str]:
@@ -329,9 +329,9 @@ class ClientRegistration:
                     .first()
                 )
                 return approval.host_token if approval else None
-        except Exception as e:
+        except Exception as error:
             self.logger.error(
-                "Error retrieving stored approval data: %s", type(e).__name__
+                "Error retrieving stored approval data: %s", type(error).__name__
             )
-            self.logger.debug("Error details: %s", str(e))
+            self.logger.debug("Error details: %s", str(error))
             return None

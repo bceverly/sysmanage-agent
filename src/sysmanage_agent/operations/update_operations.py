@@ -51,9 +51,9 @@ class UpdateOperations:
                 "result": "Update check completed",
                 "total_updates": update_info.get("total_updates", 0),
             }
-        except Exception as e:
-            self.logger.error("Failed to check updates: %s", e)
-            return {"success": False, "error": str(e)}
+        except Exception as error:
+            self.logger.error("Failed to check updates: %s", error)
+            return {"success": False, "error": str(error)}
 
     async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply updates for specified packages."""
@@ -77,9 +77,9 @@ class UpdateOperations:
                 "result": _("Updates started in background"),
                 "packages": package_names,
             }
-        except Exception as e:
-            self.logger.error(_("Failed to start updates: %s"), e)
-            return {"success": False, "error": str(e)}
+        except Exception as error:
+            self.logger.error(_("Failed to start updates: %s"), error)
+            return {"success": False, "error": str(error)}
 
     async def _apply_updates_background(self, package_names: list, package_managers):
         """Apply updates in background to avoid blocking WebSocket connection."""
@@ -198,5 +198,5 @@ class UpdateOperations:
                     _("Failed to send update results after %d attempts"), max_retries
                 )
 
-        except Exception as e:
-            self.logger.error(_("Background update process failed: %s"), e)
+        except Exception as error:
+            self.logger.error(_("Background update process failed: %s"), error)

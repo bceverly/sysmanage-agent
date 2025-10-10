@@ -1,0 +1,1 @@
+"""Diagnostics collection module."""

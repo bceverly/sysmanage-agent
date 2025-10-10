@@ -2,6 +2,8 @@
 Unit tests for agent-side package installation functionality
 """
 
+# pylint: disable=cyclic-import
+
 import os
 import sys
 from datetime import datetime, timezone
@@ -12,7 +14,7 @@ import pytest
 # Add the parent directory to sys.path to allow imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-# pylint: disable=wrong-import-position,protected-access
+# pylint: disable=wrong-import-position,protected-access,cyclic-import
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 
@@ -304,6 +306,7 @@ class TestPackageInstallation:
 
     def test_package_installation_logging(self, system_operations):
         """Test that package installation logs the correct information"""
+        _ = system_operations
         with patch(
             "src.sysmanage_agent.operations.system_operations.logging"
         ) as mock_logging:
@@ -321,6 +324,7 @@ class TestPackageInstallation:
         self, system_operations, mock_agent
     ):
         """Test package installation with auto package manager detection"""
+        _ = mock_agent
         with patch.object(UpdateDetector, "install_package") as mock_install:
             mock_install.return_value = {"success": True, "version": "1.0.0"}
 

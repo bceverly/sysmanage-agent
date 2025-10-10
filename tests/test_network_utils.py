@@ -103,7 +103,7 @@ class TestNetworkUtils:
 
         with patch("socket.socket") as mock_socket:
 
-            def socket_side_effect(family, sock_type):
+            def socket_side_effect(family, _sock_type):
                 if family == socket.AF_INET:
                     return mock_ipv4_socket
                 if family == socket.AF_INET6:
@@ -133,7 +133,7 @@ class TestNetworkUtils:
 
         with patch("socket.socket") as mock_socket:
 
-            def socket_side_effect(family, sock_type):
+            def socket_side_effect(family, _sock_type):
                 if family == socket.AF_INET:
                     return mock_ipv4_socket
                 if family == socket.AF_INET6:
@@ -155,7 +155,7 @@ class TestNetworkUtils:
         mock_ipv4_socket.__enter__ = Mock(return_value=mock_ipv4_socket)
         mock_ipv4_socket.__exit__ = Mock(return_value=None)
 
-        def socket_side_effect(family, sock_type):
+        def socket_side_effect(family, _sock_type):
             if family == socket.AF_INET:
                 return mock_ipv4_socket
             if family == socket.AF_INET6:

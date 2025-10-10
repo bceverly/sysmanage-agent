@@ -34,9 +34,9 @@ def get_database_path_from_config(config_manager) -> str:
 
         return db_path
 
-    except Exception as e:
+    except Exception as error:
         logger.warning(
-            _("Failed to get database path from config: %s, using default"), e
+            _("Failed to get database path from config: %s, using default"), error
         )
         return os.path.join(os.getcwd(), "agent.db")
 
@@ -105,8 +105,8 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
     except subprocess.TimeoutExpired:
         logger.error(_("Alembic %s timed out after 60 seconds"), operation)
         return False
-    except Exception as e:
-        logger.error(_("Failed to run alembic %s: %s"), operation, e)
+    except Exception as error:
+        logger.error(_("Failed to run alembic %s: %s"), operation, error)
         return False
 
 
@@ -152,6 +152,6 @@ def initialize_database(config_manager) -> bool:
 
         return True
 
-    except Exception as e:
-        logger.error(_("Failed to initialize database: %s"), e)
+    except Exception as error:
+        logger.error(_("Failed to initialize database: %s"), error)
         return False

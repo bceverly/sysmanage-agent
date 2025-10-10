@@ -122,8 +122,8 @@ class UserAccessCollector:
                         "is_system_group": is_system_group,
                     }
                 )
-        except Exception as e:
-            self.logger.error("Failed to collect Linux groups: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect Linux groups: %s", error)
 
         return groups
 
@@ -203,11 +203,11 @@ class UserAccessCollector:
                             group_names = [
                                 g.strip() for g in groups_line.split() if g.strip()
                             ]
-                    except Exception as e:
+                    except Exception as error:
                         self.logger.debug(
                             "Failed to get group memberships for user %s: %s",
                             username,
-                            e,
+                            error,
                         )
 
                     users.append(
@@ -221,14 +221,14 @@ class UserAccessCollector:
                         }
                     )
 
-                except subprocess.CalledProcessError as e:
+                except subprocess.CalledProcessError as error:
                     self.logger.debug(
-                        "Failed to get details for user %s: %s", username, e
+                        "Failed to get details for user %s: %s", username, error
                     )
                     continue
 
-        except Exception as e:
-            self.logger.error("Failed to collect macOS users: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect macOS users: %s", error)
             # Fallback to pwd module if dscl fails
             if pwd is not None:  # pylint: disable=too-many-nested-blocks
                 try:  # pylint: disable=too-many-nested-blocks
@@ -322,14 +322,14 @@ class UserAccessCollector:
                         }
                     )
 
-                except subprocess.CalledProcessError as e:
+                except subprocess.CalledProcessError as error:
                     self.logger.debug(
-                        "Failed to get details for group %s: %s", group_name, e
+                        "Failed to get details for group %s: %s", group_name, error
                     )
                     continue
 
-        except Exception as e:
-            self.logger.error("Failed to collect macOS groups: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect macOS groups: %s", error)
             # Fallback to grp module if dscl fails
             if grp is not None:
                 try:
@@ -477,11 +477,11 @@ class UserAccessCollector:
                             for line in group_result.stdout.strip().split("\n")
                             if line.strip()
                         ]
-                except Exception as e:
+                except Exception as error:
                     self.logger.debug(
                         "Failed to get group memberships for user %s: %s",
                         user.get("Name", ""),
-                        e,
+                        error,
                     )
 
                 # Get home directory from profile mapping
@@ -498,8 +498,8 @@ class UserAccessCollector:
                     }
                 )
 
-        except Exception as e:
-            self.logger.error("Failed to collect Windows users: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect Windows users: %s", error)
 
         return users
 
@@ -550,8 +550,8 @@ class UserAccessCollector:
                     }
                 )
 
-        except Exception as e:
-            self.logger.error("Failed to collect Windows groups: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect Windows groups: %s", error)
 
         return groups
 
@@ -581,11 +581,11 @@ class UserAccessCollector:
                                 group_names.append(primary_group.gr_name)
                         except KeyError:
                             pass
-                    except Exception as e:
+                    except Exception as error:
                         self.logger.debug(
                             "Failed to get group memberships for user %s: %s",
                             user.pw_name,
-                            e,
+                            error,
                         )
 
                 user_info = {
@@ -601,8 +601,8 @@ class UserAccessCollector:
 
                 users.append(user_info)
 
-        except Exception as e:
-            self.logger.error("Failed to collect BSD users: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect BSD users: %s", error)
 
         return users
 
@@ -626,8 +626,8 @@ class UserAccessCollector:
 
                 groups.append(group_info)
 
-        except Exception as e:
-            self.logger.error("Failed to collect BSD groups: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect BSD groups: %s", error)
 
         return groups
 
@@ -655,8 +655,8 @@ class UserAccessCollector:
                 ),
             }
 
-        except Exception as e:
-            self.logger.error("Failed to collect access info: %s", e)
+        except Exception as error:
+            self.logger.error("Failed to collect access info: %s", error)
             return {
                 "users": [],
                 "groups": [],
@@ -667,5 +667,5 @@ class UserAccessCollector:
                 "regular_users": 0,
                 "system_groups": 0,
                 "regular_groups": 0,
-                "error": str(e),
+                "error": str(error),
             }

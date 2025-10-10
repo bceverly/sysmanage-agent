@@ -465,7 +465,7 @@ def test_get_logger_function():
         assert result == mock_logger_class.return_value
 
 
-def test_get_logger_function_no_config():
+def test_get_logger_no_config():
     """Test get_logger convenience function without config."""
     with patch(
         "src.sysmanage_agent.utils.verbosity_logger.FlexibleLogger"

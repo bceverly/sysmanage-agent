@@ -45,9 +45,11 @@ class TestMainTargeted:
         agent = object.__new__(SysManageAgent)
         agent.logger = Mock()
 
-        # Mock the sync methods that create_message calls
-        agent.get_stored_host_id_sync = Mock(return_value=None)
-        agent.get_stored_host_token_sync = Mock(return_value=None)
+        # Mock the registration_manager that create_message uses
+        mock_reg_mgr = Mock()
+        mock_reg_mgr.get_stored_host_id_sync = Mock(return_value=None)
+        mock_reg_mgr.get_stored_host_token_sync = Mock(return_value=None)
+        agent.registration_manager = mock_reg_mgr
 
         # Test create_message method
         result = agent.create_message("test_type")
@@ -67,9 +69,11 @@ class TestMainTargeted:
         agent = object.__new__(SysManageAgent)
         agent.logger = Mock()
 
-        # Mock the sync methods
-        agent.get_stored_host_id_sync = Mock(return_value=None)
-        agent.get_stored_host_token_sync = Mock(return_value=None)
+        # Mock the registration_manager that create_message uses
+        mock_reg_mgr = Mock()
+        mock_reg_mgr.get_stored_host_id_sync = Mock(return_value=None)
+        mock_reg_mgr.get_stored_host_token_sync = Mock(return_value=None)
+        agent.registration_manager = mock_reg_mgr
 
         test_data = {"key": "value", "number": 42}
         result = agent.create_message("test_type", test_data)
@@ -85,9 +89,11 @@ class TestMainTargeted:
         agent = object.__new__(SysManageAgent)
         agent.logger = Mock()
 
-        # Mock the sync methods to return values
-        agent.get_stored_host_id_sync = Mock(return_value="test-host-id")
-        agent.get_stored_host_token_sync = Mock(return_value="test-token")
+        # Mock the registration_manager that create_message uses
+        mock_reg_mgr = Mock()
+        mock_reg_mgr.get_stored_host_id_sync = Mock(return_value="test-host-id")
+        mock_reg_mgr.get_stored_host_token_sync = Mock(return_value="test-token")
+        agent.registration_manager = mock_reg_mgr
 
         result = agent.create_message("test_type")
 

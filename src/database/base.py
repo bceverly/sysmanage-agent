@@ -46,7 +46,8 @@ class DatabaseManager:
         )
 
         # Create session factory
-        self.SessionLocal = sessionmaker(
+        # SessionLocal is a SQLAlchemy naming convention, not snake_case
+        self.SessionLocal = sessionmaker(  # pylint: disable=invalid-name
             autocommit=False, autoflush=False, bind=self.engine
         )
 
@@ -62,8 +63,8 @@ class DatabaseManager:
         directory = os.path.dirname(self.database_path)
         try:
             Path(directory).mkdir(parents=True, exist_ok=True)
-        except (OSError, PermissionError) as e:
-            logger.error("Failed to create database directory %s: %s", directory, e)
+        except (OSError, PermissionError) as error:
+            logger.error("Failed to create database directory %s: %s", directory, error)
             raise
 
     def create_tables(self):
@@ -71,8 +72,8 @@ class DatabaseManager:
         try:
             Base.metadata.create_all(bind=self.engine)
             logger.info("Database tables created successfully")
-        except Exception as e:
-            logger.error("Failed to create database tables: %s", e)
+        except Exception as error:
+            logger.error("Failed to create database tables: %s", error)
             raise
 
     def get_session(self):
@@ -85,8 +86,8 @@ class DatabaseManager:
         logger.info("Database connection closed")
 
 
-# Global database manager instance
-_db_manager = None
+# Global database manager instance (module-level private variable)
+_db_manager = None  # pylint: disable=invalid-name
 
 
 def get_database_manager(database_path: str = None) -> DatabaseManager:

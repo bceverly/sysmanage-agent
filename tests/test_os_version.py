@@ -206,7 +206,7 @@ logging:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+        ), patch("main.MessageHandler") as mock_handler_class, patch(
             "main.initialize_database", return_value=True
         ):
 
@@ -272,7 +272,7 @@ logging:
 
         with patch("main.ClientRegistration") as mock_reg_class, patch(
             "main.set_language"
-        ), patch("main.QueuedMessageHandler") as mock_handler_class, patch(
+        ), patch("main.MessageHandler") as mock_handler_class, patch(
             "main.initialize_database", return_value=True
         ), patch(
             "main.get_database_manager"
@@ -316,7 +316,7 @@ logging:
             agent.handle_command = mock_handle_command
 
             # Mock the processor's handle_command to queue messages like the real implementation
-            async def mock_processor_handle_command(message):
+            async def mock_processor_handle_command(_message):
                 # Simulate calling update_os_version and sending result
                 result = {"success": True, "result": "OS version information sent"}
                 response = {"message_type": "command_result", "data": result}

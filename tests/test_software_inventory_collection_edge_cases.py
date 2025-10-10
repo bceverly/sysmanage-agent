@@ -11,6 +11,18 @@ import pytest
 from src.sysmanage_agent.collection.software_inventory_collection import (
     SoftwareInventoryCollector,
 )
+from src.sysmanage_agent.collection.software_inventory_windows import (
+    WindowsSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_bsd import (
+    BSDSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_macos import (
+    MacOSSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_linux import (
+    LinuxSoftwareInventoryCollector,
+)
 
 
 class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-public-methods
@@ -61,12 +73,14 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
 
     def test_collect_linux_packages_unsupported_platform(self):
         """Test collecting packages on unsupported platform."""
-        # Mock platform to return unsupported system
-        with patch.object(self.collector, "platform", "unsupported"):
-            result = self.collector.get_software_inventory()
+        # Mock platform.system to return unsupported OS
+        with patch("platform.system", return_value="UnknownOS"):
+            unsupported_collector = SoftwareInventoryCollector()
+            result = unsupported_collector.get_software_inventory()
 
             assert result["total_packages"] == 0
-            assert result["platform"] == "unsupported"
+            assert result["platform"] == "unknownos"
+            assert result["error"] == "Unsupported platform"
 
     def test_collect_apt_packages_subprocess_error(self):
         """Test apt package collection with subprocess error."""
@@ -127,16 +141,18 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         """Test homebrew package collection error handling."""
         with patch("subprocess.run", side_effect=Exception("Homebrew error")):
             # Should not raise exception
-            self.collector._collect_homebrew_packages()
-            assert len(self.collector.collected_packages) == 0
+            macos_collector = MacOSSoftwareInventoryCollector()
+            macos_collector._collect_homebrew_packages()
+            assert len(macos_collector.collected_packages) == 0
 
     def test_collect_macos_applications_file_operations_error(self):
         """Test macOS applications collection with file operation errors."""
         with patch("os.path.exists", return_value=True):
             with patch("os.listdir", side_effect=OSError("Permission denied")):
                 # Should handle OS errors gracefully
-                self.collector._collect_macos_applications()
-                assert len(self.collector.collected_packages) == 0
+                macos_collector = MacOSSoftwareInventoryCollector()
+                macos_collector._collect_macos_applications()
+                assert len(macos_collector.collected_packages) == 0
 
     def test_collect_macos_app_store_json_decode_error(self):
         """Test Mac App Store collection with JSON decode error."""
@@ -146,8 +162,9 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
 
         with patch("subprocess.run", return_value=mock_result):
             # Should handle JSON decode error gracefully
-            self.collector._collect_macos_app_store()
-            assert len(self.collector.collected_packages) == 0
+            macos_collector = MacOSSoftwareInventoryCollector()
+            macos_collector._collect_macos_app_store()
+            assert len(macos_collector.collected_packages) == 0
 
     def test_collect_dnf_packages_no_packages_section(self):
         """Test DNF package collection with output missing packages section."""
@@ -166,8 +183,9 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         mock_result.stdout = "Some output\nWithout proper headers\nMore data"
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_winget_packages()
-            assert len(self.collector.collected_packages) == 0
+            windows_collector = WindowsSoftwareInventoryCollector()
+            windows_collector._collect_winget_packages()
+            assert len(windows_collector.collected_packages) == 0
 
     def test_collect_pkg_packages_both_commands_fail(self):
         """Test pkg package collection when both FreeBSD and OpenBSD commands fail."""
@@ -176,8 +194,9 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         mock_result.stdout = ""
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_pkg_packages()
-            assert len(self.collector.collected_packages) == 0
+            bsd_collector = BSDSoftwareInventoryCollector()
+            bsd_collector._collect_pkg_packages()
+            assert len(bsd_collector.collected_packages) == 0
 
     def test_is_system_package_linux_edge_cases(self):
         """Test Linux system package detection with edge cases."""
@@ -199,13 +218,15 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
 
     def test_is_bsd_system_package_edge_cases(self):
         """Test BSD system package detection with edge cases."""
+        bsd_collector = BSDSoftwareInventoryCollector()
+
         # Test case sensitivity
-        assert self.collector._is_bsd_system_package("LIB-something")  # Mixed case
-        assert self.collector._is_bsd_system_package("Python-module")  # Capital P
+        assert bsd_collector._is_bsd_system_package("LIB-something")  # Mixed case
+        assert bsd_collector._is_bsd_system_package("Python-module")  # Capital P
 
         # Test non-system packages
-        assert not self.collector._is_bsd_system_package("firefox")
-        assert not self.collector._is_bsd_system_package("user-app")
+        assert not bsd_collector._is_bsd_system_package("firefox")
+        assert not bsd_collector._is_bsd_system_package("user-app")
 
     def test_package_manager_cache_functionality(self):
         """Test package manager detection caching."""
@@ -251,66 +272,85 @@ package3\t3.0"""
             collector = SoftwareInventoryCollector()
             collector.platform = bsd_platform
 
-            with patch.object(collector, "_collect_bsd_packages") as mock_bsd:
+            with patch.object(collector.collector, "collect_packages") as mock_collect:
+
+                def mock_collect_side_effect(
+                    coll=collector,
+                ):  # pylint: disable=cell-var-from-loop
+                    coll.collector.collected_packages = []
+
+                mock_collect.side_effect = mock_collect_side_effect
+
                 collector.get_software_inventory()
-                mock_bsd.assert_called_once()
+                mock_collect.assert_called_once()
 
     def test_collect_pkg_info_packages_error_handling(self):
         """Test OpenBSD pkg_info collection error handling."""
         with patch("subprocess.run", side_effect=Exception("pkg_info error")):
             # Should handle exception gracefully
-            self.collector._collect_pkg_info_packages()
-            assert len(self.collector.collected_packages) == 0
+            bsd_collector = BSDSoftwareInventoryCollector()
+            bsd_collector._collect_pkg_info_packages()
+            assert len(bsd_collector.collected_packages) == 0
 
     def test_stub_methods_coverage(self):
         """Test coverage of stub methods that are not yet implemented."""
-        # Clear collected packages before testing
-        self.collector.collected_packages = []
+        # Test Linux stub methods
+        linux_collector = LinuxSoftwareInventoryCollector()
+        linux_collector._collect_yum_packages()
+        linux_collector._collect_portage_packages()
+        linux_collector._collect_apk_packages()
 
-        # These methods should not raise exceptions
-        self.collector._collect_yum_packages()
-        # Note: _collect_zypper_packages() is now implemented, so skip it
-        self.collector._collect_portage_packages()
-        self.collector._collect_apk_packages()
-        self.collector._collect_macports_packages()
-        self.collector._collect_windows_registry_programs()
-        self.collector._collect_microsoft_store_apps()
-        self.collector._collect_chocolatey_packages()
-        self.collector._collect_scoop_packages()
-        self.collector._collect_ports_packages()
+        # Test macOS stub methods
+        macos_collector = MacOSSoftwareInventoryCollector()
+        macos_collector._collect_macports_packages()
+
+        # Test Windows stub methods
+        windows_collector = WindowsSoftwareInventoryCollector()
+        windows_collector._collect_windows_registry_programs()
+        windows_collector._collect_microsoft_store_apps()
+        windows_collector._collect_chocolatey_packages()
+        windows_collector._collect_scoop_packages()
+
+        # Test BSD stub methods
+        bsd_collector = BSDSoftwareInventoryCollector()
+        bsd_collector._collect_ports_packages()
 
         # Verify no packages were added by stub methods
-        assert len(self.collector.collected_packages) == 0
+        assert len(linux_collector.collected_packages) == 0
+        assert len(macos_collector.collected_packages) == 0
+        assert len(windows_collector.collected_packages) == 0
+        assert len(bsd_collector.collected_packages) == 0
 
     def test_package_managers_detection_partial_availability(self):
         """Test package manager detection with some commands available."""
 
-        def mock_command_exists(cmd):
-            # Only some commands exist
-            return cmd in ["apt", "snap", "brew"]
+        # Test Linux package manager detection
+        linux_collector = LinuxSoftwareInventoryCollector()
+
+        def mock_command_exists_linux(cmd):
+            return cmd in ["apt", "snap"]
 
         with patch.object(
-            self.collector, "_command_exists", side_effect=mock_command_exists
+            linux_collector, "_command_exists", side_effect=mock_command_exists_linux
         ):
-            managers = self.collector._detect_package_managers()
+            managers = linux_collector.detect_package_managers()
 
             # Should detect multiple managers
             assert "apt" in managers
             assert "snap" in managers
-
-            # Platform-specific homebrew detection
-            if self.collector.platform == "darwin":
-                # On macOS, homebrew should be detected if brew command exists
-                # Reset cache and mock homebrew availability
-                self.collector._package_managers = None
-                with patch.object(
-                    self.collector, "_is_homebrew_available", return_value=True
-                ):
-                    managers = self.collector._detect_package_managers()
-                    assert "homebrew" in managers
-            else:
-                # On non-macOS platforms, homebrew should not be detected even if brew exists
-                assert "homebrew" not in managers
-
             assert "flatpak" not in managers
             assert "yum" not in managers
+
+        # Test macOS package manager detection
+        macos_collector = MacOSSoftwareInventoryCollector()
+
+        with patch.object(macos_collector, "_is_homebrew_available", return_value=True):
+            managers = macos_collector.detect_package_managers()
+            assert "homebrew" in managers
+
+        with patch.object(
+            macos_collector, "_is_homebrew_available", return_value=False
+        ):
+            macos_collector._package_managers = None  # Reset cache
+            managers = macos_collector.detect_package_managers()
+            assert "homebrew" not in managers

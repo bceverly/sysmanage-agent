@@ -70,9 +70,9 @@ def engine(test_db_path):  # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="function")
 def session(engine):  # pylint: disable=redefined-outer-name
     """Create a test database session with proper isolation."""
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    session_instance = TestingSessionLocal()
+    session_instance = testing_session_local()
 
     try:
         yield session_instance
@@ -106,8 +106,10 @@ def agent_config():
     # Convert to forward slashes for YAML compatibility on Windows
     temp_log_path_str = temp_log_path.replace("\\", "/")
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write(
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as config_file:
+        config_file.write(
             f"""
 server:
   hostname: "test.example.com"
@@ -128,7 +130,7 @@ database:
   path: ":memory:"  # Use in-memory database for tests
 """
         )
-        temp_config_path = f.name
+        temp_config_path = config_file.name
 
     yield temp_config_path
 
@@ -142,6 +144,7 @@ database:
 @pytest.fixture
 def agent(agent_config, mock_db_manager):  # pylint: disable=redefined-outer-name
     """Create a SysManage agent instance for testing with mocked database."""
+    _ = mock_db_manager
     with patch("main.initialize_database", return_value=True):
         agent_instance = SysManageAgent(agent_config)
         yield agent_instance
@@ -281,8 +284,10 @@ def agent_legacy():
     temp_log_path_str = temp_log_path.replace("\\", "/")
 
     # Create a secure temporary file for testing
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write(
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as legacy_config_file:
+        legacy_config_file.write(
             f"""
 server:
   hostname: "test.example.com"
@@ -301,7 +306,7 @@ websocket:
   ping_interval: 5
 """
         )
-        temp_config_path = f.name
+        temp_config_path = legacy_config_file.name
 
     try:
         with patch("main.initialize_database", return_value=True):
@@ -318,11 +323,14 @@ websocket:
 # Pytest hooks for better test isolation
 def pytest_runtest_setup(item):
     """Setup for each test run."""
+    _ = item
     # Ensure no existing database connections interfere
     gc.collect()
 
 
 def pytest_runtest_teardown(item, nextitem):
     """Teardown after each test run."""
+    _ = item
+    _ = nextitem
     # Clean up any remaining database connections
     gc.collect()

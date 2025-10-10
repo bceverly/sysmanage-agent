@@ -15,6 +15,18 @@ from unittest.mock import Mock, patch
 from src.sysmanage_agent.collection.software_inventory_collection import (
     SoftwareInventoryCollector,
 )
+from src.sysmanage_agent.collection.software_inventory_windows import (
+    WindowsSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_bsd import (
+    BSDSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_macos import (
+    MacOSSoftwareInventoryCollector,
+)
+from src.sysmanage_agent.collection.software_inventory_linux import (
+    LinuxSoftwareInventoryCollector,
+)
 
 
 class TestSoftwareInventoryCollector(
@@ -125,75 +137,97 @@ class TestSoftwareInventoryCollector(
         )  # pylint: disable=protected-access
         self.assertEqual(managers, cached_managers)
 
-    @patch.object(SoftwareInventoryCollector, "_collect_linux_packages")
     @patch("platform.system")
-    def test_get_software_inventory_linux(self, mock_platform, mock_collect_linux):
+    def test_get_software_inventory_linux(self, mock_platform):
         """Test get_software_inventory for Linux platform."""
         mock_platform.return_value = "Linux"
         self.collector.platform = "linux"
 
-        # Mock the collect method to add packages
-        def mock_collect():
-            self.collector.collected_packages = [
-                {"package_name": "test-package", "version": "1.0.0"}
-            ]
+        # Mock the collect method to add packages to the platform collector
+        with patch.object(self.collector.collector, "collect_packages") as mock_collect:
 
-        mock_collect_linux.side_effect = mock_collect
+            def mock_collect_side_effect():
+                self.collector.collector.collected_packages = [
+                    {"package_name": "test-package", "version": "1.0.0"}
+                ]
 
-        result = self.collector.get_software_inventory()
+            mock_collect.side_effect = mock_collect_side_effect
 
-        mock_collect_linux.assert_called_once()
-        self.assertEqual(result["platform"], "linux")
-        self.assertEqual(result["total_packages"], 1)
-        self.assertIn("collection_timestamp", result)
-        self.assertEqual(len(result["software_packages"]), 1)
+            result = self.collector.get_software_inventory()
 
-    @patch.object(SoftwareInventoryCollector, "_collect_macos_packages")
+            mock_collect.assert_called_once()
+            self.assertEqual(result["platform"], "linux")
+            self.assertEqual(result["total_packages"], 1)
+            self.assertIn("collection_timestamp", result)
+            self.assertEqual(len(result["software_packages"]), 1)
+
     @patch("platform.system")
-    def test_get_software_inventory_macos(self, mock_platform, mock_collect_macos):
+    def test_get_software_inventory_macos(self, mock_platform):
         """Test get_software_inventory for macOS platform."""
         mock_platform.return_value = "Darwin"
         self.collector.platform = "darwin"
 
-        result = self.collector.get_software_inventory()
+        with patch.object(self.collector.collector, "collect_packages") as mock_collect:
 
-        mock_collect_macos.assert_called_once()
-        self.assertEqual(result["platform"], "darwin")
+            def mock_collect_side_effect():
+                self.collector.collector.collected_packages = []
 
-    @patch.object(SoftwareInventoryCollector, "_collect_windows_packages")
+            mock_collect.side_effect = mock_collect_side_effect
+
+            result = self.collector.get_software_inventory()
+
+            mock_collect.assert_called_once()
+            self.assertEqual(result["platform"], "darwin")
+
     @patch("platform.system")
-    def test_get_software_inventory_windows(self, mock_platform, mock_collect_windows):
+    def test_get_software_inventory_windows(self, mock_platform):
         """Test get_software_inventory for Windows platform."""
         mock_platform.return_value = "Windows"
         self.collector.platform = "windows"
 
-        result = self.collector.get_software_inventory()
+        with patch.object(self.collector.collector, "collect_packages") as mock_collect:
 
-        mock_collect_windows.assert_called_once()
-        self.assertEqual(result["platform"], "windows")
+            def mock_collect_side_effect():
+                self.collector.collector.collected_packages = []
 
-    @patch.object(SoftwareInventoryCollector, "_collect_bsd_packages")
+            mock_collect.side_effect = mock_collect_side_effect
+
+            result = self.collector.get_software_inventory()
+
+            mock_collect.assert_called_once()
+            self.assertEqual(result["platform"], "windows")
+
     @patch("platform.system")
-    def test_get_software_inventory_bsd(self, mock_platform, mock_collect_bsd):
+    def test_get_software_inventory_bsd(self, mock_platform):
         """Test get_software_inventory for BSD platform."""
         mock_platform.return_value = "FreeBSD"
         self.collector.platform = "freebsd"
 
-        result = self.collector.get_software_inventory()
+        with patch.object(self.collector.collector, "collect_packages") as mock_collect:
 
-        mock_collect_bsd.assert_called_once()
-        self.assertEqual(result["platform"], "freebsd")
+            def mock_collect_side_effect():
+                self.collector.collector.collected_packages = []
+
+            mock_collect.side_effect = mock_collect_side_effect
+
+            result = self.collector.get_software_inventory()
+
+            mock_collect.assert_called_once()
+            self.assertEqual(result["platform"], "freebsd")
 
     @patch("platform.system")
     def test_get_software_inventory_unsupported_platform(self, mock_platform):
         """Test get_software_inventory for unsupported platform."""
         mock_platform.return_value = "UnknownOS"
-        self.collector.platform = "unknownos"
 
-        result = self.collector.get_software_inventory()
+        # Create a new collector with unsupported platform
+        unsupported_collector = SoftwareInventoryCollector()
+
+        result = unsupported_collector.get_software_inventory()
 
         self.assertEqual(result["platform"], "unknownos")
         self.assertEqual(result["total_packages"], 0)
+        self.assertEqual(result["error"], "Unsupported platform")
 
     @patch("subprocess.run")
     def test_collect_apt_packages_success(self, mock_run):
@@ -281,17 +315,19 @@ class TestSoftwareInventoryCollector(
             Mock(returncode=0, stdout="visual-studio-code 1.52.1"),  # cask
         ]
 
-        self.collector._collect_homebrew_packages()  # pylint: disable=protected-access
+        # Test macOS-specific method directly
+        macos_collector = MacOSSoftwareInventoryCollector()
+        macos_collector._collect_homebrew_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 3)
+        self.assertEqual(len(macos_collector.collected_packages), 3)
 
         # Check formula package
-        git_package = self.collector.collected_packages[0]
+        git_package = macos_collector.collected_packages[0]
         self.assertEqual(git_package["package_name"], "git")
         self.assertEqual(git_package["source"], "homebrew_core")
 
         # Check cask package
-        vscode_package = self.collector.collected_packages[2]
+        vscode_package = macos_collector.collected_packages[2]
         self.assertEqual(vscode_package["package_name"], "visual-studio-code")
         self.assertEqual(vscode_package["source"], "homebrew_cask")
 
@@ -311,13 +347,15 @@ class TestSoftwareInventoryCollector(
             stdout='"CFBundleIdentifier" => "org.mozilla.firefox"\n"CFBundleShortVersionString" => "75.0"',
         )
 
-        self.collector._collect_macos_applications()  # pylint: disable=protected-access
+        # Test macOS-specific method directly
+        macos_collector = MacOSSoftwareInventoryCollector()
+        macos_collector._collect_macos_applications()  # pylint: disable=protected-access
 
         self.assertEqual(
-            len(self.collector.collected_packages), 4
+            len(macos_collector.collected_packages), 4
         )  # 2 apps x 2 directories
 
-        app_package = self.collector.collected_packages[0]
+        app_package = macos_collector.collected_packages[0]
         self.assertEqual(app_package["package_name"], "Firefox")
         self.assertEqual(app_package["package_manager"], "macos_applications")
 
@@ -327,11 +365,13 @@ class TestSoftwareInventoryCollector(
         mock_output = "Name               Id                           Version\n---------------------------------------------------------\nFirefox            Mozilla.Firefox                75.0.0\nVSCode             Microsoft.VisualStudioCode    1.52.1"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_winget_packages()  # pylint: disable=protected-access
+        # Test Windows-specific method directly
+        windows_collector = WindowsSoftwareInventoryCollector()
+        windows_collector._collect_winget_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 2)
+        self.assertEqual(len(windows_collector.collected_packages), 2)
 
-        firefox_package = self.collector.collected_packages[0]
+        firefox_package = windows_collector.collected_packages[0]
         self.assertEqual(firefox_package["package_name"], "Firefox")
         self.assertEqual(firefox_package["bundle_id"], "Mozilla.Firefox")
         self.assertEqual(firefox_package["package_manager"], "winget")
@@ -342,11 +382,13 @@ class TestSoftwareInventoryCollector(
         mock_output = "git-2.30.0                     Version control system\nvim-8.2.0                      Vi IMproved text editor"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_pkg_packages()  # pylint: disable=protected-access
+        # Test BSD-specific method directly
+        bsd_collector = BSDSoftwareInventoryCollector()
+        bsd_collector._collect_pkg_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 2)
+        self.assertEqual(len(bsd_collector.collected_packages), 2)
 
-        git_package = self.collector.collected_packages[0]
+        git_package = bsd_collector.collected_packages[0]
         self.assertEqual(git_package["package_name"], "git")
         self.assertEqual(git_package["version"], "2.30.0")
         self.assertEqual(git_package["package_manager"], "pkg")
@@ -367,11 +409,13 @@ class TestSoftwareInventoryCollector(
         }
         mock_run.return_value = Mock(returncode=0, stdout=json.dumps(mock_json_data))
 
-        self.collector._collect_macos_app_store()  # pylint: disable=protected-access
+        # Test macOS-specific method directly
+        macos_collector = MacOSSoftwareInventoryCollector()
+        macos_collector._collect_macos_app_store()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 1)
+        self.assertEqual(len(macos_collector.collected_packages), 1)
 
-        app_package = self.collector.collected_packages[0]
+        app_package = macos_collector.collected_packages[0]
         self.assertEqual(app_package["package_name"], "TestApp")
         self.assertEqual(app_package["package_manager"], "mac_app_store")
 
@@ -380,32 +424,52 @@ class TestSoftwareInventoryCollector(
         """Test error handling in package collection methods."""
         mock_run.side_effect = subprocess.CalledProcessError(1, "command")
 
-        # Test that errors don't crash the collector
+        # Test that errors don't crash the collector for each platform-specific collector
         # pylint: disable=protected-access
-        methods_to_test = [
-            self.collector._collect_apt_packages,
-            self.collector._collect_snap_packages,
-            self.collector._collect_flatpak_packages,
-            self.collector._collect_dnf_packages,
-            self.collector._collect_pacman_packages,
-            self.collector._collect_homebrew_packages,
-            self.collector._collect_winget_packages,
-            self.collector._collect_pkg_packages,
+
+        # Test Linux methods
+        linux_collector = LinuxSoftwareInventoryCollector()
+        linux_methods = [
+            linux_collector._collect_apt_packages,
+            linux_collector._collect_snap_packages,
+            linux_collector._collect_flatpak_packages,
+            linux_collector._collect_dnf_packages,
+            linux_collector._collect_pacman_packages,
         ]
 
-        for method in methods_to_test:
+        # Test macOS methods
+        macos_collector = MacOSSoftwareInventoryCollector()
+        macos_methods = [
+            macos_collector._collect_homebrew_packages,
+        ]
+
+        # Test Windows methods
+        windows_collector = WindowsSoftwareInventoryCollector()
+        windows_methods = [
+            windows_collector._collect_winget_packages,
+        ]
+
+        # Test BSD methods
+        bsd_collector = BSDSoftwareInventoryCollector()
+        bsd_methods = [
+            bsd_collector._collect_pkg_packages,
+        ]
+
+        all_methods = linux_methods + macos_methods + windows_methods + bsd_methods
+
+        for method in all_methods:
             with self.subTest(method=method.__name__):
                 try:
                     method()
                     # Should not raise an exception
-                except Exception as e:
-                    self.fail(f"Method {method.__name__} raised an exception: {e}")
+                except Exception as error:
+                    self.fail(f"Method {method.__name__} raised an exception: {error}")
 
     def test_get_software_inventory_with_exception(self):
         """Test get_software_inventory handles exceptions gracefully."""
         with patch.object(
-            self.collector,
-            "_collect_linux_packages",
+            self.collector.collector,
+            "collect_packages",
             side_effect=Exception("Test error"),
         ):
             self.collector.platform = "linux"
@@ -416,41 +480,45 @@ class TestSoftwareInventoryCollector(
             self.assertIn("error", result)
             self.assertEqual(result["error"], "Test error")
 
-    @patch.object(SoftwareInventoryCollector, "_detect_package_managers")
-    def test_collect_linux_packages_calls_detected_managers(self, mock_detect):
+    def test_collect_linux_packages_calls_detected_managers(self):
         """Test _collect_linux_packages calls methods for detected managers."""
-        mock_detect.return_value = ["apt", "snap"]
+        # Test Linux-specific method directly
+        linux_collector = LinuxSoftwareInventoryCollector()
 
         with patch.object(
-            self.collector, "_collect_apt_packages"
+            linux_collector, "detect_package_managers", return_value=["apt", "snap"]
+        ), patch.object(
+            linux_collector, "_collect_apt_packages"
         ) as mock_apt, patch.object(
-            self.collector, "_collect_snap_packages"
+            linux_collector, "_collect_snap_packages"
         ) as mock_snap, patch.object(
-            self.collector, "_collect_flatpak_packages"
+            linux_collector, "_collect_flatpak_packages"
         ) as mock_flatpak:
 
-            self.collector._collect_linux_packages()  # pylint: disable=protected-access
+            linux_collector.collect_packages()  # pylint: disable=protected-access
 
             mock_apt.assert_called_once()
             mock_snap.assert_called_once()
             mock_flatpak.assert_not_called()
 
-    @patch.object(SoftwareInventoryCollector, "_detect_package_managers")
-    def test_collect_macos_packages_calls_detected_managers(self, mock_detect):
+    def test_collect_macos_packages_calls_detected_managers(self):
         """Test _collect_macos_packages calls methods for detected managers."""
-        mock_detect.return_value = ["homebrew"]
+        # Test macOS-specific method directly
+        macos_collector = MacOSSoftwareInventoryCollector()
 
         with patch.object(
-            self.collector, "_collect_homebrew_packages"
+            macos_collector, "detect_package_managers", return_value=["homebrew"]
+        ), patch.object(
+            macos_collector, "_collect_homebrew_packages"
         ) as mock_brew, patch.object(
-            self.collector, "_collect_macos_applications"
+            macos_collector, "_collect_macos_applications"
         ) as mock_apps, patch.object(
-            self.collector, "_collect_macos_app_store"
+            macos_collector, "_collect_macos_app_store"
         ) as mock_store, patch.object(
-            self.collector, "_collect_macports_packages"
+            macos_collector, "_collect_macports_packages"
         ) as mock_ports:
 
-            self.collector._collect_macos_packages()  # pylint: disable=protected-access
+            macos_collector.collect_packages()  # pylint: disable=protected-access
 
             mock_apps.assert_called_once()
             mock_store.assert_called_once()

@@ -188,13 +188,13 @@ class OSInfoCollector:
                         len(service_list),
                     )
 
-                except json.JSONDecodeError as e:
+                except json.JSONDecodeError as error:
                     self.logger.warning(
-                        _("Failed to parse Ubuntu Pro JSON output: %s"), str(e)
+                        _("Failed to parse Ubuntu Pro JSON output: %s"), str(error)
                     )
-                except Exception as e:
+                except Exception as error:
                     self.logger.warning(
-                        _("Error processing Ubuntu Pro data: %s"), str(e)
+                        _("Error processing Ubuntu Pro data: %s"), str(error)
                     )
 
         except subprocess.TimeoutExpired:
@@ -202,8 +202,8 @@ class OSInfoCollector:
         except FileNotFoundError:
             # pro command not available - this is normal on non-Ubuntu systems
             self.logger.debug(_("Ubuntu Pro not available on this system"))
-        except Exception as e:
-            self.logger.warning(_("Failed to get Ubuntu Pro status: %s"), str(e))
+        except Exception as error:
+            self.logger.warning(_("Failed to get Ubuntu Pro status: %s"), str(error))
 
         return ubuntu_pro_info
 

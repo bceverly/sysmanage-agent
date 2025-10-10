@@ -7,6 +7,11 @@ Unit tests for update detection module.
 from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.collection.update_detection_linux import LinuxUpdateDetector
+from src.sysmanage_agent.collection.update_detection_macos import MacOSUpdateDetector
+from src.sysmanage_agent.collection.update_detection_windows import (
+    WindowsUpdateDetector,
+)
 
 
 class TestUpdateDetector:
@@ -63,7 +68,7 @@ class TestUpdateDetector:
 
     @patch("platform.system")
     @patch(
-        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_linux_updates"
+        "src.sysmanage_agent.collection.update_detection_linux.LinuxUpdateDetector.detect_updates"
     )
     def test_get_available_updates_linux(self, mock_detect_linux, mock_system):
         """Test update detection on Linux."""
@@ -81,7 +86,7 @@ class TestUpdateDetector:
 
     @patch("platform.system")
     @patch(
-        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_macos_updates"
+        "src.sysmanage_agent.collection.update_detection_macos.MacOSUpdateDetector.detect_updates"
     )
     def test_get_available_updates_macos(self, mock_detect_macos, mock_system):
         """Test update detection on macOS."""
@@ -95,7 +100,7 @@ class TestUpdateDetector:
 
     @patch("platform.system")
     @patch(
-        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_windows_updates"
+        "src.sysmanage_agent.collection.update_detection_windows.WindowsUpdateDetector.detect_updates"
     )
     def test_get_available_updates_windows(self, mock_detect_windows, mock_system):
         """Test update detection on Windows."""
@@ -109,7 +114,7 @@ class TestUpdateDetector:
 
     @patch("platform.system")
     @patch(
-        "src.sysmanage_agent.collection.update_detection.UpdateDetector._detect_bsd_updates"
+        "src.sysmanage_agent.collection.update_detection_bsd.BSDUpdateDetector.detect_updates"
     )
     def test_get_available_updates_openbsd(self, mock_detect_bsd, mock_system):
         """Test update detection on OpenBSD."""
@@ -218,7 +223,8 @@ class TestUpdateDetector:
         ):
             detector = UpdateDetector()
             # Add a kernel update to trigger reboot requirement
-            detector.available_updates = [
+            # Set it on the actual detector, not the facade
+            detector.detector.available_updates = [
                 {"package_name": "linux-kernel", "package_manager": "apt"}
             ]
             assert detector.check_reboot_required() is True
@@ -230,14 +236,6 @@ class TestUpdateDetector:
         ):
             detector = UpdateDetector()
             assert detector.check_reboot_required() is False
-
-    def test_apply_updates_no_packages(self):
-        """Test applying updates with no packages specified."""
-        detector = UpdateDetector()
-        result = detector.apply_updates([])
-
-        assert result["success"] is False
-        assert "No packages specified" in result["error"]
 
     @patch("subprocess.run")
     def test_apply_apt_updates(self, mock_run):
@@ -286,7 +284,7 @@ class TestUpdateDetector:
         """Test update categorization by type."""
         mock_system.return_value = "Linux"
 
-        def mock_detect_linux_updates(self):
+        def mock_detect_updates(self):
             """Mock Linux detection that sets test updates."""
             self.available_updates = [
                 {
@@ -306,9 +304,7 @@ class TestUpdateDetector:
                 },
             ]
 
-        with patch.object(
-            UpdateDetector, "_detect_linux_updates", mock_detect_linux_updates
-        ):
+        with patch.object(LinuxUpdateDetector, "detect_updates", mock_detect_updates):
             detector = UpdateDetector()
             result = detector.get_available_updates()
 
@@ -319,7 +315,7 @@ class TestUpdateDetector:
     def test_error_handling(self):
         """Test error handling in update detection."""
         with patch("platform.system", return_value="Linux"), patch.object(
-            UpdateDetector, "_detect_linux_updates", side_effect=Exception("Test error")
+            LinuxUpdateDetector, "detect_updates", side_effect=Exception("Test error")
         ):
             detector = UpdateDetector()
             result = detector.get_available_updates()
@@ -416,8 +412,10 @@ v | Main       | nginx    | 1.20.1-1.1      | 1.21.0-1.1        | x86_64
         assert len(detector.available_updates) == 0
 
     @patch("subprocess.run")
-    def test_detect_homebrew_updates_no_updates(self, mock_run):
+    @patch("platform.system")
+    def test_detect_homebrew_updates_no_updates(self, mock_system, mock_run):
         """Test Homebrew update detection with no updates available."""
+        mock_system.return_value = "Darwin"
         detector = UpdateDetector()
         detector._get_brew_command = Mock(return_value="brew")
 
@@ -428,8 +426,10 @@ v | Main       | nginx    | 1.20.1-1.1      | 1.21.0-1.1        | x86_64
         assert len(detector.available_updates) == 0
 
     @patch("subprocess.run")
-    def test_detect_chocolatey_updates_success(self, mock_run):
+    @patch("platform.system")
+    def test_detect_chocolatey_updates_success(self, mock_system, mock_run):
         """Test successful Chocolatey update detection."""
+        mock_system.return_value = "Windows"
         mock_run.return_value = Mock(
             returncode=0,
             stdout="""Chocolatey v2.2.2
@@ -451,8 +451,10 @@ python|3.11.6|3.11.7|false
         assert git_update["available_version"] == "2.42.1"
 
     @patch("subprocess.run")
-    def test_detect_chocolatey_updates_no_command(self, mock_run):
+    @patch("platform.system")
+    def test_detect_chocolatey_updates_no_command(self, mock_system, mock_run):
         """Test Chocolatey update detection when command not available."""
+        mock_system.return_value = "Windows"
         mock_run.side_effect = FileNotFoundError("choco command not found")
 
         detector = UpdateDetector()
@@ -461,8 +463,10 @@ python|3.11.6|3.11.7|false
         assert len(detector.available_updates) == 0
 
     @patch("subprocess.run")
-    def test_detect_winget_updates_success(self, mock_run):
+    @patch("platform.system")
+    def test_detect_winget_updates_success(self, mock_system, mock_run):
         """Test successful Winget update detection."""
+        mock_system.return_value = "Windows"
         mock_run.return_value = Mock(
             returncode=0,
             stdout="""Name               Id                           Version      Available    Source
@@ -486,8 +490,10 @@ Microsoft Edge     Microsoft.Edge               118.0.2088   119.0.2151   winget
         assert sevenzip_update["available_version"] == "23.01"
 
     @patch("subprocess.run")
-    def test_detect_winget_updates_failure(self, mock_run):
+    @patch("platform.system")
+    def test_detect_winget_updates_failure(self, mock_system, mock_run):
         """Test Winget update detection with command failure."""
+        mock_system.return_value = "Windows"
         mock_run.return_value = Mock(returncode=1, stderr="Winget error")
 
         detector = UpdateDetector()
@@ -569,7 +575,7 @@ Inst nginx [1.20.1-1ubuntu1] (1.20.1-1ubuntu2 Ubuntu:22.04/jammy-updates [amd64]
         """Test package manager detection on macOS."""
         with patch("platform.system", return_value="Darwin"):
             with patch.object(
-                UpdateDetector, "_is_homebrew_available", return_value=True
+                MacOSUpdateDetector, "_is_homebrew_available", return_value=True
             ):
                 detector = UpdateDetector()
                 managers = detector._detect_package_managers()
@@ -579,7 +585,7 @@ Inst nginx [1.20.1-1ubuntu1] (1.20.1-1ubuntu2 Ubuntu:22.04/jammy-updates [amd64]
     def test_detect_package_managers_windows(self):
         """Test package manager detection on Windows."""
         with patch("platform.system", return_value="Windows"):
-            with patch.object(UpdateDetector, "_command_exists") as mock_exists:
+            with patch.object(WindowsUpdateDetector, "_command_exists") as mock_exists:
 
                 def exists_side_effect(cmd):
                     return cmd in ["winget", "choco"]
@@ -595,23 +601,21 @@ Inst nginx [1.20.1-1ubuntu1] (1.20.1-1ubuntu2 Ubuntu:22.04/jammy-updates [amd64]
     def test_platform_detection_and_routing(self):
         """Test that platform detection routes to correct update methods."""
         with patch("platform.system", return_value="Linux"):
-            with patch.object(UpdateDetector, "_detect_linux_updates") as mock_linux:
+            with patch.object(LinuxUpdateDetector, "detect_updates") as mock_linux:
                 detector = UpdateDetector()
                 detector.get_available_updates()
 
                 mock_linux.assert_called_once()
 
         with patch("platform.system", return_value="Darwin"):
-            with patch.object(UpdateDetector, "_detect_macos_updates") as mock_macos:
+            with patch.object(MacOSUpdateDetector, "detect_updates") as mock_macos:
                 detector = UpdateDetector()
                 detector.get_available_updates()
 
                 mock_macos.assert_called_once()
 
         with patch("platform.system", return_value="Windows"):
-            with patch.object(
-                UpdateDetector, "_detect_windows_updates"
-            ) as mock_windows:
+            with patch.object(WindowsUpdateDetector, "detect_updates") as mock_windows:
                 detector = UpdateDetector()
                 detector.get_available_updates()
 

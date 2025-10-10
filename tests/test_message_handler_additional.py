@@ -12,10 +12,10 @@ from src.database.models import Priority, QueueDirection
 from tests.message_handler_test_base import MessageHandlerTestBase
 
 
-class TestQueuedMessageHandlerAdditional(
+class TestMessageHandlerAdditional(
     MessageHandlerTestBase
 ):  # pylint: disable=too-many-public-methods
-    """Additional test cases for QueuedMessageHandler class coverage."""
+    """Additional test cases for MessageHandler class coverage."""
 
     @patch("asyncio.create_task")
     @pytest.mark.asyncio
@@ -226,6 +226,7 @@ class TestQueuedMessageHandlerAdditional(
         self.handler.queue_manager.dequeue_messages.return_value = [mock_message]
 
         def lose_connection_after_mark(*args):
+            _ = args
             self.mock_agent.connected = False
             return True
 

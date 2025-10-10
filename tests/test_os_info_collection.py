@@ -32,7 +32,7 @@ class TestOSInfoCollector:
     @patch("platform.architecture")
     @patch("platform.python_version")
     @patch("platform.mac_ver")
-    def test_get_basic_platform_info(  # pylint: disable=too-many-positional-arguments
+    def test_get_basic_platform_info(  # pylint: disable=too-many-positional-arguments,too-many-arguments
         self,
         mock_mac_ver,
         mock_python_version,
