@@ -37,6 +37,8 @@ class TestSoftwareInventoryCollector(
     def setUp(self):
         """Set up test fixtures."""
         self.collector = SoftwareInventoryCollector()
+        # Create Linux-specific collector for Linux-specific tests
+        self.linux_collector = LinuxSoftwareInventoryCollector()
 
     def test_init(self):
         """Test collector initialization."""
@@ -107,7 +109,7 @@ class TestSoftwareInventoryCollector(
 
         for package_name, expected in test_cases:
             with self.subTest(package_name=package_name):
-                result = self.collector._is_system_package_linux(
+                result = self.linux_collector._is_system_package_linux(
                     package_name
                 )  # pylint: disable=protected-access
                 self.assertEqual(result, expected)
@@ -235,11 +237,11 @@ class TestSoftwareInventoryCollector(
         mock_output = "firefox\t75.0-1ubuntu1\tamd64\tWeb browser\t200000\nlibc6\t2.31-0ubuntu9.2\tamd64\tGNU C Library\t12000"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_apt_packages()  # pylint: disable=protected-access
+        self.linux_collector._collect_apt_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 2)
+        self.assertEqual(len(self.linux_collector.collected_packages), 2)
 
-        firefox_package = self.collector.collected_packages[0]
+        firefox_package = self.linux_collector.collected_packages[0]
         self.assertEqual(firefox_package["package_name"], "firefox")
         self.assertEqual(firefox_package["version"], "75.0-1ubuntu1")
         self.assertEqual(firefox_package["package_manager"], "apt")
@@ -251,11 +253,11 @@ class TestSoftwareInventoryCollector(
         mock_output = "Name      Version    Rev   Tracking       Publisher   Notes\ncode      1.52.1     54    latest/stable  vscode*     classic\n"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_snap_packages()  # pylint: disable=protected-access
+        self.linux_collector._collect_snap_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 1)
+        self.assertEqual(len(self.linux_collector.collected_packages), 1)
 
-        package = self.collector.collected_packages[0]
+        package = self.linux_collector.collected_packages[0]
         self.assertEqual(package["package_name"], "code")
         self.assertEqual(package["version"], "1.52.1")
         self.assertEqual(package["package_manager"], "snap")
@@ -266,11 +268,11 @@ class TestSoftwareInventoryCollector(
         mock_output = "Name\tApplication ID\tVersion\tInstalled size\tOrigin\nVSCode\tcom.visualstudio.code\t1.52.1\t200 MB\tflathub\n"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_flatpak_packages()  # pylint: disable=protected-access
+        self.linux_collector._collect_flatpak_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 1)
+        self.assertEqual(len(self.linux_collector.collected_packages), 1)
 
-        package = self.collector.collected_packages[0]
+        package = self.linux_collector.collected_packages[0]
         self.assertEqual(package["package_name"], "VSCode")
         self.assertEqual(package["bundle_id"], "com.visualstudio.code")
         self.assertEqual(package["package_manager"], "flatpak")
@@ -281,11 +283,11 @@ class TestSoftwareInventoryCollector(
         mock_output = "Installed Packages\nfirefox.x86_64      75.0-1.fc32     @anaconda\nvim.x86_64          8.2.0-1.fc32    @anaconda"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_dnf_packages()  # pylint: disable=protected-access
+        self.linux_collector._collect_dnf_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 2)
+        self.assertEqual(len(self.linux_collector.collected_packages), 2)
 
-        firefox_package = self.collector.collected_packages[0]
+        firefox_package = self.linux_collector.collected_packages[0]
         self.assertEqual(firefox_package["package_name"], "firefox")
         self.assertEqual(firefox_package["version"], "75.0-1.fc32")
         self.assertEqual(firefox_package["package_manager"], "dnf")
@@ -297,11 +299,11 @@ class TestSoftwareInventoryCollector(
         mock_output = "firefox 75.0-1\nvim 8.2.0-1"
         mock_run.return_value = Mock(returncode=0, stdout=mock_output)
 
-        self.collector._collect_pacman_packages()  # pylint: disable=protected-access
+        self.linux_collector._collect_pacman_packages()  # pylint: disable=protected-access
 
-        self.assertEqual(len(self.collector.collected_packages), 2)
+        self.assertEqual(len(self.linux_collector.collected_packages), 2)
 
-        firefox_package = self.collector.collected_packages[0]
+        firefox_package = self.linux_collector.collected_packages[0]
         self.assertEqual(firefox_package["package_name"], "firefox")
         self.assertEqual(firefox_package["version"], "75.0-1")
         self.assertEqual(firefox_package["package_manager"], "pacman")

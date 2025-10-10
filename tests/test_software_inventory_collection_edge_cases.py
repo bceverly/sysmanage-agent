@@ -34,6 +34,8 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         """Set up test environment."""
         # pylint: disable=attribute-defined-outside-init
         self.collector = SoftwareInventoryCollector()
+        # Create Linux-specific collector for Linux-specific tests
+        self.linux_collector = LinuxSoftwareInventoryCollector()
 
     def test_command_exists_timeout_exception(self):
         """Test command_exists with timeout exception."""
@@ -84,14 +86,11 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
 
     def test_collect_apt_packages_subprocess_error(self):
         """Test apt package collection with subprocess error."""
-        # Mock platform detection to return apt available
-        with patch.object(
-            self.collector, "_detect_package_managers", return_value=["apt"]
-        ):
-            with patch("subprocess.run", side_effect=Exception("Subprocess error")):
-                # Should not raise exception, should handle gracefully
-                self.collector._collect_apt_packages()
-                assert len(self.collector.collected_packages) == 0
+        # Test that subprocess errors are handled gracefully
+        with patch("subprocess.run", side_effect=Exception("Subprocess error")):
+            # Should not raise exception, should handle gracefully
+            self.linux_collector._collect_apt_packages()
+            assert len(self.linux_collector.collected_packages) == 0
 
     def test_collect_snap_packages_malformed_output(self):
         """Test snap package collection with malformed output."""
@@ -100,9 +99,9 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         mock_result.stdout = "Name\tVersion\tRev\tTracking\nmalformed line"
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_snap_packages()
+            self.linux_collector._collect_snap_packages()
             # Should handle malformed lines gracefully
-            assert len(self.collector.collected_packages) == 0
+            assert len(self.linux_collector.collected_packages) == 0
 
     def test_collect_flatpak_packages_empty_output(self):
         """Test flatpak package collection with empty output."""
@@ -111,8 +110,8 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         mock_result.stdout = "Name\tApp ID\tVersion\tSize\tOrigin\n"  # Header only
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_flatpak_packages()
-            assert len(self.collector.collected_packages) == 0
+            self.linux_collector._collect_flatpak_packages()
+            assert len(self.linux_collector.collected_packages) == 0
 
     def test_parse_size_string_edge_cases(self):
         """Test _parse_size_string with various edge cases."""
@@ -173,8 +172,8 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
         mock_result.stdout = "Some header\nBut no Installed Packages line"
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_dnf_packages()
-            assert len(self.collector.collected_packages) == 0
+            self.linux_collector._collect_dnf_packages()
+            assert len(self.linux_collector.collected_packages) == 0
 
     def test_collect_winget_packages_no_header_found(self):
         """Test winget package collection when header line is not found."""
@@ -201,20 +200,20 @@ class TestSoftwareInventoryCollectorEdgeCases:  # pylint: disable=too-many-publi
     def test_is_system_package_linux_edge_cases(self):
         """Test Linux system package detection with edge cases."""
         # Test empty string
-        assert not self.collector._is_system_package_linux("")
+        assert not self.linux_collector._is_system_package_linux("")
 
         # Test None (should handle gracefully)
         with pytest.raises(AttributeError):
-            self.collector._is_system_package_linux(None)
+            self.linux_collector._is_system_package_linux(None)
 
         # Test system packages
-        assert self.collector._is_system_package_linux("libssl1.1")
-        assert self.collector._is_system_package_linux("python3-pip")
-        assert self.collector._is_system_package_linux("linux-headers")
+        assert self.linux_collector._is_system_package_linux("libssl1.1")
+        assert self.linux_collector._is_system_package_linux("python3-pip")
+        assert self.linux_collector._is_system_package_linux("linux-headers")
 
         # Test non-system packages
-        assert not self.collector._is_system_package_linux("firefox")
-        assert not self.collector._is_system_package_linux("user-application")
+        assert not self.linux_collector._is_system_package_linux("firefox")
+        assert not self.linux_collector._is_system_package_linux("user-application")
 
     def test_is_bsd_system_package_edge_cases(self):
         """Test BSD system package detection with edge cases."""
@@ -257,10 +256,10 @@ package2\t2.0\tarch
 package3\t3.0"""
 
         with patch("subprocess.run", return_value=mock_result):
-            self.collector._collect_apt_packages()
+            self.linux_collector._collect_apt_packages()
 
             # Should handle lines with different numbers of fields
-            packages = self.collector.collected_packages
+            packages = self.linux_collector.collected_packages
             assert len(packages) == 1  # Only first line has >= 4 fields
             assert packages[0]["package_name"] == "package1"
             assert packages[0]["size_bytes"] == 1024 * 1024  # Converted to bytes
