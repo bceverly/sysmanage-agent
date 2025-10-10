@@ -10,6 +10,9 @@ from typing import Any, Dict
 
 from src.i18n import _
 from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
+from src.sysmanage_agent.collection.commercial_antivirus_collection import (
+    CommercialAntivirusCollector,
+)
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 
 
@@ -62,7 +65,7 @@ class SystemControl:
             await self.agent_instance.update_os_version()
             await self.agent_instance.update_hardware()
 
-            # Collect and send antivirus status
+            # Collect and send antivirus status (open source)
             try:
                 antivirus_collector = AntivirusCollector()
                 antivirus_status = antivirus_collector.collect_antivirus_status()
@@ -70,6 +73,21 @@ class SystemControl:
             except Exception as error:
                 self.logger.warning(
                     "Failed to collect/send antivirus status: %s", str(error)
+                )
+
+            # Collect and send commercial antivirus status
+            try:
+                commercial_antivirus_collector = CommercialAntivirusCollector()
+                commercial_antivirus_status = (
+                    commercial_antivirus_collector.collect_commercial_antivirus_status()
+                )
+                if commercial_antivirus_status:
+                    await self._send_commercial_antivirus_status_update(
+                        commercial_antivirus_status
+                    )
+            except Exception as error:
+                self.logger.warning(
+                    "Failed to collect/send commercial antivirus status: %s", str(error)
                 )
 
             return {"success": True, "result": "System info refresh initiated"}
@@ -156,3 +174,55 @@ class SystemControl:
             self.logger.info("Sent antivirus status update to server")
         except Exception as error:
             self.logger.error("Failed to send antivirus status update: %s", error)
+
+    async def _send_commercial_antivirus_status_update(
+        self, commercial_antivirus_status: Dict[str, Any]
+    ):
+        """Send commercial antivirus status update to server."""
+        try:
+            system_info = self.agent_instance.registration.get_system_info()
+            message = self.agent_instance.create_message(
+                "commercial_antivirus_status_update",
+                {
+                    "hostname": system_info.get("hostname") or socket.gethostname(),
+                    "product_name": commercial_antivirus_status.get("product_name"),
+                    "product_version": commercial_antivirus_status.get(
+                        "product_version"
+                    ),
+                    "service_enabled": commercial_antivirus_status.get(
+                        "service_enabled"
+                    ),
+                    "antispyware_enabled": commercial_antivirus_status.get(
+                        "antispyware_enabled"
+                    ),
+                    "antivirus_enabled": commercial_antivirus_status.get(
+                        "antivirus_enabled"
+                    ),
+                    "realtime_protection_enabled": commercial_antivirus_status.get(
+                        "realtime_protection_enabled"
+                    ),
+                    "full_scan_age": commercial_antivirus_status.get("full_scan_age"),
+                    "quick_scan_age": commercial_antivirus_status.get("quick_scan_age"),
+                    "full_scan_end_time": commercial_antivirus_status.get(
+                        "full_scan_end_time"
+                    ),
+                    "quick_scan_end_time": commercial_antivirus_status.get(
+                        "quick_scan_end_time"
+                    ),
+                    "signature_last_updated": commercial_antivirus_status.get(
+                        "signature_last_updated"
+                    ),
+                    "signature_version": commercial_antivirus_status.get(
+                        "signature_version"
+                    ),
+                    "tamper_protection_enabled": commercial_antivirus_status.get(
+                        "tamper_protection_enabled"
+                    ),
+                },
+            )
+            await self.agent_instance.send_message(message)
+            self.logger.info("Sent commercial antivirus status update to server")
+        except Exception as error:
+            self.logger.error(
+                "Failed to send commercial antivirus status update: %s", error
+            )
