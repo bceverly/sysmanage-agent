@@ -6,6 +6,7 @@ Tests for BSDMacOSRepositoryOperations class.
 # pylint: disable=redefined-outer-name,protected-access
 
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from urllib.parse import urlparse
 
 import pytest
 
@@ -129,7 +130,8 @@ class TestFreeBSDOperations:
     @pytest.mark.asyncio
     async def test_list_freebsd_repositories(self, bsd_macos_ops):
         """Test listing FreeBSD repositories."""
-        repo_content = 'myrepo: {\n  url: "http://pkg.freebsd.org/FreeBSD:13:amd64/latest",\n  enabled: yes\n}\n'
+        repo_url = "http://pkg.freebsd.org/FreeBSD:13:amd64/latest"
+        repo_content = f'myrepo: {{\n  url: "{repo_url}",\n  enabled: yes\n}}\n'
         with patch("os.path.exists", return_value=True), patch(
             "os.listdir", return_value=["myrepo.conf"]
         ), patch("builtins.open", mock_open(read_data=repo_content)):
@@ -138,7 +140,9 @@ class TestFreeBSDOperations:
             assert repos[0]["name"] == "myrepo"
             assert repos[0]["type"] == "FreeBSD pkg"
             assert repos[0]["enabled"] is True
-            assert "pkg.freebsd.org" in repos[0]["url"]
+            # Properly parse URL to verify hostname
+            parsed = urlparse(repos[0]["url"])
+            assert parsed.hostname == "pkg.freebsd.org"
 
     @pytest.mark.asyncio
     async def test_list_freebsd_repositories_disabled(self, bsd_macos_ops):
