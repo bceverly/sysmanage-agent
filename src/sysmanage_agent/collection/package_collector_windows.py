@@ -77,12 +77,11 @@ class WindowsPackageCollector(BasePackageCollector):
                     # Validate URL scheme for security - prevents file:// and other attacks
                     validated_url = _validate_https_url(url)
 
-                    req = urllib.request.Request(
-                        validated_url
-                    )  # nosec B310  # nosemgrep
+                    req = urllib.request.Request(validated_url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(  # nosemgrep
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+                    with urllib.request.urlopen(
                         req, timeout=30
                     ) as response:  # nosec B310
                         data = json.loads(response.read().decode("utf-8"))
@@ -163,12 +162,11 @@ class WindowsPackageCollector(BasePackageCollector):
                     # Validate URL scheme for security - prevents file:// and other attacks
                     validated_url = _validate_https_url(url)
 
-                    req = urllib.request.Request(
-                        validated_url
-                    )  # nosec B310  # nosemgrep
+                    req = urllib.request.Request(validated_url)  # nosec B310
                     req.add_header("User-Agent", "SysManage-Agent/1.0")
 
-                    with urllib.request.urlopen(  # nosemgrep
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+                    with urllib.request.urlopen(
                         req, timeout=30
                     ) as response:  # nosec B310
                         # Parse XML response
