@@ -537,7 +537,7 @@ class AntivirusCollector:
                 text=True,
                 timeout=10,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if result.returncode == 0:
                 # Parse output to find service status

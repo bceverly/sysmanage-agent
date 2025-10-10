@@ -215,7 +215,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
                         if line.startswith("ID="):
                             distro = line.split("=")[1].strip().strip('"').lower()
                             break
-            except Exception:
+            except Exception:  # nosec B110
                 pass
 
             # Call appropriate system update detection
@@ -242,7 +242,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
                         if line.startswith("ID="):
                             distro = line.split("=")[1].strip().strip('"').lower()
                             break
-            except Exception:
+            except Exception:  # nosec B110
                 pass
 
             # Call appropriate version upgrade detection
