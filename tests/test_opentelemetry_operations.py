@@ -5,6 +5,7 @@ Unit tests for OpenTelemetry Operations (opentelemetry_operations.py).
 # pylint: disable=protected-access,unused-variable
 
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import urlparse
 
 import pytest
 
@@ -30,39 +31,65 @@ class TestOpenTelemetryOperations:
         agent_instance = MagicMock()
         operations = OpenTelemetryOperations(agent_instance)
 
-        config = operations._generate_otel_config("http://grafana.example.com")
+        test_url = "http://grafana.example.com"
+        config = operations._generate_otel_config(test_url)
+
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_endpoint = f"{expected_host}:4317"
 
         assert "receivers:" in config
         assert "hostmetrics:" in config
-        assert "grafana.example.com:4317" in config
+        assert expected_endpoint in config
 
     def test_generate_otel_config_with_port(self):
         """Test OpenTelemetry config generation with custom port."""
         agent_instance = MagicMock()
         operations = OpenTelemetryOperations(agent_instance)
 
-        config = operations._generate_otel_config("http://grafana.example.com:9090")
+        test_url = "http://grafana.example.com:9090"
+        config = operations._generate_otel_config(test_url)
 
-        assert "grafana.example.com:9090" in config
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_port = parsed.port or 4317
+        expected_endpoint = f"{expected_host}:{expected_port}"
+
+        assert expected_endpoint in config
 
     def test_generate_alloy_config(self):
         """Test Alloy configuration generation."""
         agent_instance = MagicMock()
         operations = OpenTelemetryOperations(agent_instance)
 
-        config = operations._generate_alloy_config("http://grafana.example.com")
+        test_url = "http://grafana.example.com"
+        config = operations._generate_alloy_config(test_url)
+
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_endpoint = f"{expected_host}:3000"
 
         assert "otelcol.receiver.hostmetrics" in config
-        assert "grafana.example.com:3000" in config
+        assert expected_endpoint in config
 
     def test_generate_alloy_config_with_port(self):
         """Test Alloy config generation with custom port."""
         agent_instance = MagicMock()
         operations = OpenTelemetryOperations(agent_instance)
 
-        config = operations._generate_alloy_config("http://grafana.example.com:8080")
+        test_url = "http://grafana.example.com:8080"
+        config = operations._generate_alloy_config(test_url)
 
-        assert "grafana.example.com:8080" in config
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_port = parsed.port or 3000
+        expected_endpoint = f"{expected_host}:{expected_port}"
+
+        assert expected_endpoint in config
 
     # ========== Deploy Tests ==========
 

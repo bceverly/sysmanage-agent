@@ -5,6 +5,7 @@ Unit tests for OpenTelemetry base module (otel_base.py).
 # pylint: disable=protected-access,unused-variable
 
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import urlparse
 
 import pytest
 
@@ -39,13 +40,19 @@ class TestOtelDeployerBase:
         agent_instance = MagicMock()
         deployer = ConcreteOtelDeployer(agent_instance)
 
-        config = deployer._generate_otel_config("http://grafana.example.com")
+        test_url = "http://grafana.example.com"
+        config = deployer._generate_otel_config(test_url)
+
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_endpoint = f"{expected_host}:4317"
 
         assert "receivers:" in config
         assert "hostmetrics:" in config
         assert "exporters:" in config
         assert "otlp:" in config
-        assert "grafana.example.com:4317" in config
+        assert expected_endpoint in config
         assert "insecure: true" in config
 
     def test_generate_otel_config_with_port(self):
@@ -53,18 +60,31 @@ class TestOtelDeployerBase:
         agent_instance = MagicMock()
         deployer = ConcreteOtelDeployer(agent_instance)
 
-        config = deployer._generate_otel_config("http://grafana.example.com:9090")
+        test_url = "http://grafana.example.com:9090"
+        config = deployer._generate_otel_config(test_url)
 
-        assert "grafana.example.com:9090" in config
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_port = parsed.port or 4317
+        expected_endpoint = f"{expected_host}:{expected_port}"
+
+        assert expected_endpoint in config
 
     def test_generate_otel_config_no_scheme(self):
         """Test OpenTelemetry configuration with URL without scheme."""
         agent_instance = MagicMock()
         deployer = ConcreteOtelDeployer(agent_instance)
 
-        config = deployer._generate_otel_config("grafana.example.com")
+        test_url = "grafana.example.com"
+        config = deployer._generate_otel_config(test_url)
 
-        assert "grafana.example.com:4317" in config
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_endpoint = f"{expected_host}:4317"
+
+        assert expected_endpoint in config
 
     def test_generate_otel_config_scrapers(self):
         """Test that all required scrapers are in configuration."""
@@ -110,21 +130,34 @@ class TestOtelDeployerBase:
         agent_instance = MagicMock()
         deployer = ConcreteOtelDeployer(agent_instance)
 
-        config = deployer._generate_alloy_config("http://grafana.example.com")
+        test_url = "http://grafana.example.com"
+        config = deployer._generate_alloy_config(test_url)
+
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_endpoint = f"{expected_host}:3000"
 
         assert "otelcol.receiver.hostmetrics" in config
         assert "otelcol.processor.batch" in config
         assert "otelcol.exporter.otlp" in config
-        assert "grafana.example.com:3000" in config
+        assert expected_endpoint in config
 
     def test_generate_alloy_config_with_port(self):
         """Test Alloy configuration with custom port."""
         agent_instance = MagicMock()
         deployer = ConcreteOtelDeployer(agent_instance)
 
-        config = deployer._generate_alloy_config("http://grafana.example.com:8080")
+        test_url = "http://grafana.example.com:8080"
+        config = deployer._generate_alloy_config(test_url)
 
-        assert "grafana.example.com:8080" in config
+        # Properly parse URL to extract expected values
+        parsed = urlparse(test_url)
+        expected_host = parsed.hostname or test_url
+        expected_port = parsed.port or 3000
+        expected_endpoint = f"{expected_host}:{expected_port}"
+
+        assert expected_endpoint in config
 
     def test_generate_alloy_config_scrapers(self):
         """Test that all scrapers are in Alloy configuration."""
