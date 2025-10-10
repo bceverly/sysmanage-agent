@@ -88,11 +88,14 @@ class TestAntivirusServiceManager:
             return_value=mock_collector,
         ):
             with patch("os.path.exists", return_value=False):
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.service_manager.enable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.service_manager.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamav_freshclam"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamav_freshclam"
 
     @pytest.mark.asyncio
     async def test_disable_antivirus_success(self):
@@ -237,15 +240,16 @@ class TestAntivirusServiceManager:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/pkg/bin/pkgin"
-                with patch(
-                    "asyncio.create_subprocess_exec",
-                    side_effect=[mock_process_fail, mock_process_success],
-                ):
-                    with patch("asyncio.sleep", return_value=None):
-                        result = await self.service_manager.disable_antivirus({})
+                with patch("platform.system", return_value="NetBSD"):
+                    with patch(
+                        "asyncio.create_subprocess_exec",
+                        side_effect=[mock_process_fail, mock_process_success],
+                    ):
+                        with patch("asyncio.sleep", return_value=None):
+                            result = await self.service_manager.disable_antivirus({})
 
-                        # Last process determines success
-                        assert result["success"] is True
+                            # Last process determines success
+                            assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_exception(self):

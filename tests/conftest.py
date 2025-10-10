@@ -136,9 +136,15 @@ database:
 
     # Clean up temporary files
     if os.path.exists(temp_config_path):
-        os.unlink(temp_config_path)
+        try:
+            os.unlink(temp_config_path)
+        except PermissionError:
+            pass  # File may be locked on Windows
     if os.path.exists(temp_log_path):
-        os.unlink(temp_log_path)
+        try:
+            os.unlink(temp_log_path)
+        except PermissionError:
+            pass  # File may be locked on Windows
 
 
 @pytest.fixture

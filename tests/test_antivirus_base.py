@@ -5,6 +5,7 @@ Tests base class for antivirus operations.
 
 # pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init
 
+import sys
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -25,9 +26,12 @@ class TestGetBrewUserFunction:
         mock_pwd_entry = Mock()
         mock_pwd_entry.pw_name = "testuser"
 
-        with patch("os.path.exists", return_value=True):
-            with patch("os.stat", return_value=mock_stat):
-                with patch("pwd.getpwuid", return_value=mock_pwd_entry):
+        mock_pwd = Mock()
+        mock_pwd.getpwuid = Mock(return_value=mock_pwd_entry)
+
+        with patch.dict(sys.modules, {"pwd": mock_pwd}):
+            with patch("os.path.exists", return_value=True):
+                with patch("os.stat", return_value=mock_stat):
                     result = _get_brew_user()
                     assert result == "testuser"
 
@@ -123,11 +127,14 @@ class TestAntivirusOperationsBase:
             return_value=mock_collector,
         ):
             with patch("os.path.exists", return_value=False):
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamav_freshclam"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamav_freshclam"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_linux_systemctl_failure(self):
@@ -146,11 +153,14 @@ class TestAntivirusOperationsBase:
             return_value=mock_collector,
         ):
             with patch("os.path.exists", return_value=False):
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is False
-                    assert "Service failed" in result["error"]
+                        assert result["success"] is False
+                        assert "Service failed" in result["error"]
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_openbsd_rcctl(self):
@@ -170,11 +180,14 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/sbin/rcctl"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="OpenBSD"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamd"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamd"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_macos_brew_services(self):
@@ -194,11 +207,14 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/opt/homebrew/bin/brew"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="Darwin"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamav"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamav"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_windows_service_not_configured(self):
@@ -272,12 +288,15 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/pkg/bin/pkgin"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    with patch("asyncio.sleep", return_value=None):
-                        result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="NetBSD"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        with patch("asyncio.sleep", return_value=None):
+                            result = await self.base_ops.enable_antivirus({})
 
-                        assert result["success"] is True
-                        assert result["service_name"] == "clamd"
+                            assert result["success"] is True
+                            assert result["service_name"] == "clamd"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_netbsd_service_failure(self):
@@ -297,11 +316,14 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/pkg/bin/pkgin"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="NetBSD"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is False
-                    assert "Failed to start" in result["error"]
+                        assert result["success"] is False
+                        assert "Failed to start" in result["error"]
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_freebsd_service(self):
@@ -348,11 +370,14 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/bin/zypper"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamd.service"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamd.service"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_rhel(self):
@@ -372,11 +397,14 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/bin/dnf"
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.enable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.enable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamd@scan"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamd@scan"
 
     @pytest.mark.asyncio
     async def test_enable_antivirus_exception(self):
@@ -422,11 +450,14 @@ class TestAntivirusOperationsBase:
             return_value=mock_collector,
         ):
             with patch("os.path.exists", return_value=False):
-                with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                    result = await self.base_ops.disable_antivirus({})
+                with patch("platform.system", return_value="Linux"):
+                    with patch(
+                        "asyncio.create_subprocess_exec", return_value=mock_process
+                    ):
+                        result = await self.base_ops.disable_antivirus({})
 
-                    assert result["success"] is True
-                    assert result["service_name"] == "clamav_freshclam"
+                        assert result["success"] is True
+                        assert result["service_name"] == "clamav_freshclam"
 
     @pytest.mark.asyncio
     async def test_disable_antivirus_openbsd(self):
@@ -474,15 +505,16 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/usr/pkg/bin/pkgin"
-                with patch(
-                    "asyncio.create_subprocess_exec",
-                    side_effect=[mock_process_fail, mock_process_success],
-                ):
-                    with patch("asyncio.sleep", return_value=None):
-                        result = await self.base_ops.disable_antivirus({})
+                with patch("platform.system", return_value="NetBSD"):
+                    with patch(
+                        "asyncio.create_subprocess_exec",
+                        side_effect=[mock_process_fail, mock_process_success],
+                    ):
+                        with patch("asyncio.sleep", return_value=None):
+                            result = await self.base_ops.disable_antivirus({})
 
-                        # Last process determines success
-                        assert result["success"] is True
+                            # Last process determines success
+                            assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_disable_antivirus_exception(self):
@@ -546,15 +578,20 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/opt/homebrew/bin/brew"
-                with patch("os.geteuid", return_value=1000):
+                with patch("platform.system", return_value="Darwin"):
                     with patch(
-                        "asyncio.create_subprocess_exec", return_value=mock_process
+                        "src.sysmanage_agent.operations.antivirus_base.os.geteuid",
+                        return_value=1000,
+                        create=True,
                     ):
-                        with patch("asyncio.sleep", return_value=None):
-                            result = await self.base_ops.remove_antivirus({})
+                        with patch(
+                            "asyncio.create_subprocess_exec", return_value=mock_process
+                        ):
+                            with patch("asyncio.sleep", return_value=None):
+                                result = await self.base_ops.remove_antivirus({})
 
-                            assert result["success"] is True
-                            assert result["software_name"] == "ClamAV"
+                                assert result["success"] is True
+                                assert result["software_name"] == "ClamAV"
 
     @pytest.mark.asyncio
     async def test_remove_antivirus_macos_as_root(self):
@@ -574,18 +611,24 @@ class TestAntivirusOperationsBase:
         ):
             with patch("os.path.exists") as mock_exists:
                 mock_exists.side_effect = lambda path: path == "/opt/homebrew/bin/brew"
-                with patch("os.geteuid", return_value=0):
+                with patch("platform.system", return_value="Darwin"):
                     with patch(
-                        "src.sysmanage_agent.operations.antivirus_base._get_brew_user",
-                        return_value="brewuser",
+                        "src.sysmanage_agent.operations.antivirus_base.os.geteuid",
+                        return_value=0,
+                        create=True,
                     ):
                         with patch(
-                            "asyncio.create_subprocess_exec", return_value=mock_process
+                            "src.sysmanage_agent.operations.antivirus_base._get_brew_user",
+                            return_value="brewuser",
                         ):
-                            with patch("asyncio.sleep", return_value=None):
-                                result = await self.base_ops.remove_antivirus({})
+                            with patch(
+                                "asyncio.create_subprocess_exec",
+                                return_value=mock_process,
+                            ):
+                                with patch("asyncio.sleep", return_value=None):
+                                    result = await self.base_ops.remove_antivirus({})
 
-                                assert result["success"] is True
+                                    assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_remove_antivirus_macos_brew_fails_cleanup_succeeds(self):
@@ -611,20 +654,25 @@ class TestAntivirusOperationsBase:
             return_value=mock_collector,
         ):
             with patch("os.path.exists", return_value=True):
-                with patch("os.geteuid", return_value=1000):
+                with patch("platform.system", return_value="Darwin"):
                     with patch(
-                        "asyncio.create_subprocess_exec",
-                        side_effect=[mock_process_stop, mock_process_uninstall],
+                        "src.sysmanage_agent.operations.antivirus_base.os.geteuid",
+                        return_value=1000,
+                        create=True,
                     ):
-                        with patch("asyncio.sleep", return_value=None):
-                            with patch.object(
-                                self.base_ops,
-                                "_cleanup_clamav_cellar_macos",
-                                return_value=None,
-                            ):
-                                result = await self.base_ops.remove_antivirus({})
+                        with patch(
+                            "asyncio.create_subprocess_exec",
+                            side_effect=[mock_process_stop, mock_process_uninstall],
+                        ):
+                            with patch("asyncio.sleep", return_value=None):
+                                with patch.object(
+                                    self.base_ops,
+                                    "_cleanup_clamav_cellar_macos",
+                                    return_value=None,
+                                ):
+                                    result = await self.base_ops.remove_antivirus({})
 
-                                assert result["success"] is True
+                                    assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_remove_antivirus_debian(self):

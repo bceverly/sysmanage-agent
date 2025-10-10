@@ -205,7 +205,11 @@ class TestAntivirusRemoverBSD:
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
         with patch("os.path.exists", return_value=True):
-            with patch("os.geteuid", return_value=1000):
+            with patch(
+                "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+                return_value=1000,
+                create=True,
+            ):
                 with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                     with patch("asyncio.sleep", return_value=None):
                         result = await self.remover.remove_macos()
@@ -220,7 +224,11 @@ class TestAntivirusRemoverBSD:
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
         with patch("os.path.exists", return_value=True):
-            with patch("os.geteuid", return_value=0):
+            with patch(
+                "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+                return_value=0,
+                create=True,
+            ):
                 with patch(
                     "src.sysmanage_agent.operations.antivirus_remove_bsd._get_brew_user",
                     return_value="brewuser",
@@ -248,7 +256,11 @@ class TestAntivirusRemoverBSD:
         )
 
         with patch("os.path.exists", return_value=True):
-            with patch("os.geteuid", return_value=1000):
+            with patch(
+                "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+                return_value=1000,
+                create=True,
+            ):
                 with patch(
                     "asyncio.create_subprocess_exec",
                     side_effect=[mock_process_stop, mock_process_uninstall],
@@ -278,7 +290,11 @@ class TestAntivirusRemoverBSD:
         )
 
         with patch("os.path.exists", return_value=True):
-            with patch("os.geteuid", return_value=1000):
+            with patch(
+                "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+                return_value=1000,
+                create=True,
+            ):
                 with patch(
                     "asyncio.create_subprocess_exec",
                     side_effect=[mock_process_stop, mock_process_uninstall],
@@ -300,7 +316,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_netbsd()
 
@@ -313,7 +333,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=0):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=0,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_netbsd()
 
@@ -333,7 +357,11 @@ class TestAntivirusRemoverBSD:
             return_value=(b"", b"Package not found")
         )
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch(
                 "asyncio.create_subprocess_exec",
                 side_effect=[
@@ -354,7 +382,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_freebsd()
 
@@ -367,7 +399,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=0):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=0,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_freebsd()
 
@@ -385,7 +421,11 @@ class TestAntivirusRemoverBSD:
         mock_process_fail.returncode = 1
         mock_process_fail.communicate = AsyncMock(return_value=(b"", b"Remove failed"))
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch(
                 "asyncio.create_subprocess_exec",
                 side_effect=[
@@ -407,7 +447,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_openbsd()
 
@@ -420,7 +464,11 @@ class TestAntivirusRemoverBSD:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        with patch("os.geteuid", return_value=0):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=0,
+            create=True,
+        ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
                 result = await self.remover.remove_openbsd()
 
@@ -440,7 +488,11 @@ class TestAntivirusRemoverBSD:
             return_value=(b"", b"Package not found")
         )
 
-        with patch("os.geteuid", return_value=1000):
+        with patch(
+            "src.sysmanage_agent.operations.antivirus_remove_bsd.os.geteuid",
+            return_value=1000,
+            create=True,
+        ):
             with patch(
                 "asyncio.create_subprocess_exec",
                 side_effect=[

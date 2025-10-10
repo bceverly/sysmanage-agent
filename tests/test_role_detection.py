@@ -465,7 +465,7 @@ class TestPackageManagerMethods:
 
     @patch("subprocess.run")
     @patch.object(RoleDetector, "_get_command_path")
-    @patch("os.getuid")
+    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
     @patch("os.environ.get")
     def test_get_homebrew_packages_as_root(
         self, mock_env_get, mock_getuid, mock_cmd_path, mock_run, detector
@@ -487,7 +487,7 @@ class TestPackageManagerMethods:
 
     @patch("subprocess.run")
     @patch.object(RoleDetector, "_get_command_path")
-    @patch("os.getuid")
+    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
     def test_get_homebrew_packages_as_regular_user(
         self, mock_getuid, mock_cmd_path, mock_run, detector
     ):
@@ -864,7 +864,7 @@ class TestMacOSServiceStatus:
 
     @patch("subprocess.run")
     @patch.object(RoleDetector, "_get_command_path")
-    @patch("os.getuid")
+    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
     @patch("os.environ.get")
     def test_check_brew_services_as_root(
         self, mock_env_get, mock_getuid, mock_cmd_path, mock_run, detector
@@ -883,7 +883,14 @@ class TestMacOSServiceStatus:
 
     @patch("subprocess.run")
     @patch.object(RoleDetector, "_get_command_path")
-    def test_check_brew_services_stopped(self, mock_cmd_path, mock_run, detector):
+    @patch(
+        "src.sysmanage_agent.collection.role_detection.os.getuid",
+        return_value=1000,
+        create=True,
+    )
+    def test_check_brew_services_stopped(
+        self, mock_getuid, mock_cmd_path, mock_run, detector
+    ):
         """Test brew services check - stopped."""
         mock_cmd_path.return_value = "/usr/local/bin/brew"
         mock_run.return_value = Mock(

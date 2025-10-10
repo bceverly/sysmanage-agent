@@ -263,7 +263,11 @@ class TestAntivirusDeployerBSD:
                         "asyncio.create_subprocess_exec", return_value=mock_process
                     ):
                         with patch("asyncio.sleep", return_value=None):
-                            with patch("os.geteuid", return_value=1000):
+                            with patch(
+                                "src.sysmanage_agent.operations.antivirus_deploy_bsd.os.geteuid",
+                                return_value=1000,
+                                create=True,
+                            ):
                                 result = await self.deployer.deploy_macos("clamav")
 
                                 assert result["success"] is True
@@ -289,7 +293,11 @@ class TestAntivirusDeployerBSD:
                         "asyncio.create_subprocess_exec", return_value=mock_process
                     ):
                         with patch("asyncio.sleep", return_value=None):
-                            with patch("os.geteuid", return_value=0):
+                            with patch(
+                                "src.sysmanage_agent.operations.antivirus_deploy_bsd.os.geteuid",
+                                return_value=0,
+                                create=True,
+                            ):
                                 with patch(
                                     "src.sysmanage_agent.operations.antivirus_deploy_bsd._get_brew_user",
                                     return_value="brewuser",
@@ -326,7 +334,11 @@ class TestAntivirusDeployerBSD:
                         "asyncio.create_subprocess_exec", return_value=mock_process
                     ):
                         with patch("asyncio.sleep", return_value=None):
-                            with patch("os.geteuid", return_value=1000):
+                            with patch(
+                                "src.sysmanage_agent.operations.antivirus_deploy_bsd.os.geteuid",
+                                return_value=1000,
+                                create=True,
+                            ):
                                 result = await self.deployer.deploy_macos("clamav")
 
                                 assert result["success"] is True
