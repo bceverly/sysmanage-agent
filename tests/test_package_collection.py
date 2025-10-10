@@ -38,6 +38,22 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
             collector = PackageCollector()
         return collector
 
+    @pytest.fixture
+    def linux_package_collector(self, mock_db_manager):
+        """Create a Linux PackageCollector instance for testing Linux-specific methods."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.collection.package_collector_linux import (
+            LinuxPackageCollector,
+        )
+
+        db_manager, _ = mock_db_manager
+        with patch(
+            "src.sysmanage_agent.collection.package_collector_base.get_database_manager",
+            return_value=db_manager,
+        ):
+            collector = LinuxPackageCollector()
+        return collector
+
     def test_init(self, package_collector):
         """Test PackageCollector initialization."""
         assert package_collector is not None
@@ -479,7 +495,7 @@ python@3.11 3.11.5
             assert "snap" in result
             assert "yum" in result
 
-    def test_parse_apt_output_complex(self, package_collector):
+    def test_parse_apt_output_complex(self, linux_package_collector):
         """Test parsing complex APT output with various formats."""
         output = """
 nginx/jammy-updates,jammy-security 1.18.0-6ubuntu14.4 all
@@ -493,7 +509,7 @@ package-without-description/jammy 1.0.0 all
 malformed-line-without-slash 1.0.0
 """
 
-        packages = package_collector._parse_apt_output(
+        packages = linux_package_collector._parse_apt_output(
             output
         )  # pylint: disable=protected-access
 
@@ -504,7 +520,7 @@ malformed-line-without-slash 1.0.0
         assert nginx_pkg is not None
         assert nginx_pkg["version"] == "1.18.0-6ubuntu14.4"
 
-    def test_parse_yum_output_formats(self, package_collector):
+    def test_parse_yum_output_formats(self, linux_package_collector):
         """Test parsing different YUM output formats."""
         output = """Available Packages
 httpd.x86_64                    2.4.37-62.module+el8             appstream
@@ -512,7 +528,7 @@ nginx.x86_64                    1:1.20.1-1.el8                   epel
 package-with-long-name.x86_64   1.0.0-1.el8.very.long.version   extras
 """
 
-        packages = package_collector._parse_yum_output(
+        packages = linux_package_collector._parse_yum_output(
             output
         )  # pylint: disable=protected-access
 
@@ -521,22 +537,22 @@ package-with-long-name.x86_64   1.0.0-1.el8.very.long.version   extras
         httpd_pkg = next(pkg for pkg in packages if pkg["name"] == "httpd")
         assert httpd_pkg["version"] == "2.4.37-62.module+el8"
 
-    def test_error_handling_in_collection_methods(self, package_collector):
+    def test_error_handling_in_collection_methods(self, linux_package_collector):
         """Test error handling in various collection methods."""
         # Test with subprocess that raises exception
         with patch("subprocess.run", side_effect=Exception("Command failed")):
             count = (
-                package_collector._collect_apt_packages()
+                linux_package_collector._collect_apt_packages()
             )  # pylint: disable=protected-access
             assert count == 0
 
             count = (
-                package_collector._collect_yum_packages()
+                linux_package_collector._collect_yum_packages()
             )  # pylint: disable=protected-access
             assert count == 0
 
             count = (
-                package_collector._collect_snap_packages()
+                linux_package_collector._collect_snap_packages()
             )  # pylint: disable=protected-access
             assert count == 0
 
@@ -889,7 +905,7 @@ python39-3.9.16
             assert mock_session.add.called
             assert mock_session.commit.called
 
-    def test_parse_pacman_output_detailed(self, package_collector):
+    def test_parse_pacman_output_detailed(self, linux_package_collector):
         """Test detailed parsing of Pacman output."""
         output = """extra/nginx 1.20.1-1
     Lightweight HTTP server and IMAP/POP3 proxy server
@@ -899,7 +915,7 @@ community/docker 20.10.21-1
     Pack, ship and run any application as a lightweight container
 """
 
-        packages = package_collector._parse_pacman_output(
+        packages = linux_package_collector._parse_pacman_output(
             output
         )  # pylint: disable=protected-access
 
@@ -1112,7 +1128,7 @@ postgresql13-server-13.12
                     assert count == 12
                     mock_pkg.assert_called_once()
 
-    def test_parse_apt_dumpavail_output_detailed(self, package_collector):
+    def test_parse_apt_dumpavail_output_detailed(self, linux_package_collector):
         """Test detailed parsing of apt-cache dumpavail output."""
         output = """Package: nginx
 Version: 1.18.0-6ubuntu14.4
@@ -1133,7 +1149,7 @@ Description: Apache HTTP Server
  extensible HTTP server.
 """
 
-        packages = package_collector._parse_apt_dumpavail_output(
+        packages = linux_package_collector._parse_apt_dumpavail_output(
             output
         )  # pylint: disable=protected-access
 
@@ -1148,7 +1164,7 @@ Description: Apache HTTP Server
         assert python_pkg is not None
         assert python_pkg["version"] == "3.10.6-1~22.04"
 
-    def test_package_collection_error_handling(self, package_collector):
+    def test_package_collection_error_handling(self, linux_package_collector):
         """Test error handling in various package collection scenarios."""
 
         # Test command failure
@@ -1157,19 +1173,19 @@ Description: Apache HTTP Server
             mock_run.return_value.stderr = "Command failed"
 
             count = (
-                package_collector._collect_apt_packages()
+                linux_package_collector._collect_apt_packages()
             )  # pylint: disable=protected-access
             assert count == 0
 
         # Test parsing empty output
-        empty_packages = package_collector._parse_apt_output(
+        empty_packages = linux_package_collector._parse_apt_output(
             ""
         )  # pylint: disable=protected-access
         assert empty_packages == []
 
         # Test malformed output handling
         malformed_output = "This is not valid package output"
-        malformed_packages = package_collector._parse_yum_output(
+        malformed_packages = linux_package_collector._parse_yum_output(
             malformed_output
         )  # pylint: disable=protected-access
         assert malformed_packages == []

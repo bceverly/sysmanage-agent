@@ -17,6 +17,11 @@ from src.sysmanage_agent.collection.update_detection_windows import (
 class TestUpdateDetector:
     """Test cases for UpdateDetector class."""
 
+    def setup_method(self):
+        """Set up test fixtures."""
+        # Create Linux-specific detector for Linux-specific tests
+        self.linux_detector = LinuxUpdateDetector()
+
     def test_init(self):
         """Test UpdateDetector initialization."""
         detector = UpdateDetector()
@@ -242,7 +247,6 @@ class TestUpdateDetector:
         """Test applying APT updates."""
         mock_run.return_value = Mock(returncode=0, stderr="")
 
-        detector = UpdateDetector()
         packages = [
             {
                 "package_name": "test-pkg",
@@ -253,7 +257,7 @@ class TestUpdateDetector:
         ]
         results = {"updated_packages": [], "failed_packages": []}
 
-        detector._apply_apt_updates(packages, results)
+        self.linux_detector._apply_apt_updates(packages, results)
 
         assert len(results["updated_packages"]) == 1
         assert results["updated_packages"][0]["package_name"] == "test-pkg"
@@ -263,7 +267,6 @@ class TestUpdateDetector:
         """Test applying APT updates with failure."""
         mock_run.return_value = Mock(returncode=1, stderr="Error message")
 
-        detector = UpdateDetector()
         packages = [
             {
                 "package_name": "test-pkg",
@@ -274,7 +277,7 @@ class TestUpdateDetector:
         ]
         results = {"updated_packages": [], "failed_packages": []}
 
-        detector._apply_apt_updates(packages, results)
+        self.linux_detector._apply_apt_updates(packages, results)
 
         assert len(results["failed_packages"]) == 1
         assert results["failed_packages"][0]["package_name"] == "test-pkg"
@@ -329,19 +332,17 @@ class TestUpdateDetector:
         """Test APT security update detection."""
         mock_run.return_value = Mock(returncode=0, stdout="security update info")
 
-        detector = UpdateDetector()
-        assert detector._is_apt_security_update("test-package") is True
+        assert self.linux_detector._is_apt_security_update("test-package") is True
 
         mock_run.return_value = Mock(returncode=0, stdout="regular update")
-        assert detector._is_apt_security_update("test-package") is False
+        assert self.linux_detector._is_apt_security_update("test-package") is False
 
     @patch("subprocess.run")
     def test_get_apt_update_size(self, mock_run):
         """Test APT update size retrieval."""
         mock_run.return_value = Mock(returncode=0, stdout="Size: 1024000")
 
-        detector = UpdateDetector()
-        size = detector._get_apt_update_size("test-package")
+        size = self.linux_detector._get_apt_update_size("test-package")
         assert size == 1024000
 
     @patch("subprocess.run")
@@ -351,31 +352,28 @@ class TestUpdateDetector:
             returncode=0, stdout="test-package security update"
         )
 
-        detector = UpdateDetector()
-        assert detector._is_dnf_security_update("test-package") is True
+        assert self.linux_detector._is_dnf_security_update("test-package") is True
 
         mock_run.return_value = Mock(returncode=1, stdout="")
-        assert detector._is_dnf_security_update("test-package") is False
+        assert self.linux_detector._is_dnf_security_update("test-package") is False
 
     @patch("subprocess.run")
     def test_detect_yum_updates_failure(self, mock_run):
         """Test YUM update detection with command failure."""
         mock_run.return_value = Mock(returncode=1, stderr="Failed to check updates")
 
-        detector = UpdateDetector()
-        detector._detect_yum_updates()
+        self.linux_detector._detect_yum_updates()
 
-        assert len(detector.available_updates) == 0
+        assert len(self.linux_detector.available_updates) == 0
 
     @patch("subprocess.run")
     def test_detect_pacman_updates_no_updates(self, mock_run):
         """Test Pacman update detection with no updates available."""
         mock_run.return_value = Mock(returncode=0, stdout="")
 
-        detector = UpdateDetector()
-        detector._detect_pacman_updates()
+        self.linux_detector._detect_pacman_updates()
 
-        assert len(detector.available_updates) == 0
+        assert len(self.linux_detector.available_updates) == 0
 
     @patch("subprocess.run")
     def test_detect_zypper_updates_success(self, mock_run):
@@ -389,12 +387,15 @@ v | Main       | nginx    | 1.20.1-1.1      | 1.21.0-1.1        | x86_64
 """,
         )
 
-        detector = UpdateDetector()
-        detector._detect_zypper_updates()
+        self.linux_detector._detect_zypper_updates()
 
-        assert len(detector.available_updates) == 2
+        assert len(self.linux_detector.available_updates) == 2
         apache_update = next(
-            (u for u in detector.available_updates if u["package_name"] == "apache2"),
+            (
+                u
+                for u in self.linux_detector.available_updates
+                if u["package_name"] == "apache2"
+            ),
             None,
         )
         assert apache_update is not None
@@ -406,10 +407,9 @@ v | Main       | nginx    | 1.20.1-1.1      | 1.21.0-1.1        | x86_64
         """Test Zypper update detection with command failure."""
         mock_run.return_value = Mock(returncode=1, stderr="Repository error")
 
-        detector = UpdateDetector()
-        detector._detect_zypper_updates()
+        self.linux_detector._detect_zypper_updates()
 
-        assert len(detector.available_updates) == 0
+        assert len(self.linux_detector.available_updates) == 0
 
     @patch("subprocess.run")
     @patch("platform.system")
@@ -506,8 +506,7 @@ Microsoft Edge     Microsoft.Edge               118.0.2088   119.0.2151   winget
         """Test APT update size calculation failure."""
         mock_run.return_value = Mock(returncode=1, stderr="Package not found")
 
-        detector = UpdateDetector()
-        size = detector._get_apt_update_size("nonexistent")
+        size = self.linux_detector._get_apt_update_size("nonexistent")
 
         assert size is None
 
@@ -525,8 +524,7 @@ Inst nginx [1.20.1-1ubuntu1] (1.20.1-1ubuntu1.1 Ubuntu:22.04/jammy-security [amd
 """,
         )
 
-        detector = UpdateDetector()
-        is_security = detector._is_apt_security_update("nginx")
+        is_security = self.linux_detector._is_apt_security_update("nginx")
 
         assert is_security is True
 
@@ -544,8 +542,7 @@ Inst nginx [1.20.1-1ubuntu1] (1.20.1-1ubuntu2 Ubuntu:22.04/jammy-updates [amd64]
 """,
         )
 
-        detector = UpdateDetector()
-        is_security = detector._is_apt_security_update("nginx")
+        is_security = self.linux_detector._is_apt_security_update("nginx")
 
         assert is_security is False
 

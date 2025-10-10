@@ -8,6 +8,7 @@ import subprocess
 from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.collection.update_detection_linux import LinuxUpdateDetector
 
 
 class TestOSSystemUpdateDetection:
@@ -17,6 +18,8 @@ class TestOSSystemUpdateDetection:
         """Set up test fixtures."""
         # Will be initialized per test with appropriate platform
         self.detector = None
+        # Create Linux-specific detector for Linux-specific tests
+        self.linux_detector = LinuxUpdateDetector()
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
@@ -384,22 +387,18 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         mock_run.assert_called()
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("os.path.exists")
-    def test_detect_linux_system_updates_debian(self, mock_exists, mock_platform):
+    @patch("builtins.open", create=True)
+    def test_detect_linux_system_updates_debian(self, mock_open, mock_platform):
         """Test Linux system update detection on Debian."""
         mock_platform.return_value = "Linux"
-        self.detector = UpdateDetector()
 
-        # Mock /etc/debian_version exists
-        def exists_side_effect(path):
-            return path == "/etc/debian_version"
-
-        mock_exists.side_effect = exists_side_effect
+        # Mock /etc/os-release with Debian ID
+        mock_open.return_value.__enter__.return_value = ["ID=debian\n"]
 
         with patch.object(
-            self.detector.detector, "_detect_debian_system_updates"
+            self.linux_detector, "_detect_debian_system_updates"
         ) as mock_debian:
-            self.detector._detect_linux_system_updates()
+            self.linux_detector._detect_linux_system_updates()
             mock_debian.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
