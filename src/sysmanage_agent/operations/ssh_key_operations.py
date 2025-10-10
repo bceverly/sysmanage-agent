@@ -168,7 +168,7 @@ class SSHKeyOperations:
 
     def _setup_ssh_environment(self, username: str) -> Dict[str, Any]:
         """Setup SSH environment for a user."""
-        import pwd  # pylint: disable=import-outside-toplevel
+        import pwd  # pylint: disable=import-outside-toplevel,import-error
 
         try:
             user_info = pwd.getpwnam(username)

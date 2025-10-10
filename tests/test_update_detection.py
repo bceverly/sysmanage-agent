@@ -20,6 +20,7 @@ class TestUpdateDetector:
     def setup_method(self):
         """Set up test fixtures."""
         # Create Linux-specific detector for Linux-specific tests
+        # pylint: disable=attribute-defined-outside-init
         self.linux_detector = LinuxUpdateDetector()
 
     def test_init(self):

@@ -28,7 +28,7 @@ from src.sysmanage_agent.operations import antivirus_removal_helpers
 
 def _get_brew_user():
     """Get the user that owns the Homebrew installation."""
-    import pwd  # pylint: disable=import-outside-toplevel
+    import pwd  # pylint: disable=import-outside-toplevel,import-error
 
     # Check both possible Homebrew locations
     brew_dirs = ["/opt/homebrew", "/usr/local/Homebrew"]
