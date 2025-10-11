@@ -8,7 +8,7 @@ Focuses on uncovered methods and code paths to increase coverage from 42% to 70%
 import asyncio
 import json
 import ssl
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -415,10 +415,8 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
         # Set last registration time to now
         self.mock_agent.last_registration_time = datetime.now(timezone.utc)
 
-        # Create error message from 1 hour ago
-        old_time = datetime.now(timezone.utc).replace(
-            hour=datetime.now(timezone.utc).hour - 1
-        )
+        # Create error message from 1 hour ago using timedelta
+        old_time = datetime.now(timezone.utc) - timedelta(hours=1)
         data = {
             "error_type": "host_not_registered",
             "message": "Host not found",
@@ -436,10 +434,8 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
     @pytest.mark.asyncio
     async def test_handle_server_error_fresh_error(self):
         """Test _handle_server_error processing fresh error messages."""
-        # Set last registration time to 1 hour ago
-        old_time = datetime.now(timezone.utc).replace(
-            hour=datetime.now(timezone.utc).hour - 1
-        )
+        # Set last registration time to 1 hour ago using timedelta
+        old_time = datetime.now(timezone.utc) - timedelta(hours=1)
         self.mock_agent.last_registration_time = old_time
 
         # Create error message from now

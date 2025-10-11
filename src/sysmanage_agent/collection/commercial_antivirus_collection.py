@@ -255,7 +255,7 @@ class CommercialAntivirusCollector:
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603
+            )  # nosec B603 B607
 
             if which_result.returncode != 0:
                 self.logger.info(_("Microsoft Defender CLI (mdatp) not found on macOS"))
