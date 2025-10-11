@@ -365,16 +365,23 @@ class BSDFirewallOperations(FirewallBase):
                 port_list = [22] + list(ports)
                 port_rules = []
                 for port in port_list:
-                    port_rules.append(f"    pass in final proto tcp to any port {port}")
+                    port_rules.append(
+                        f"    pass stateful in proto tcp from any to any port {port}"
+                    )
 
                 # Create complete valid NPF config with required group structure
+                # Using 'stateful' keeps existing connections alive
+                # 'pass stateful out all' allows outbound connections
+                # 'pass stateful all' allows established connections to continue
                 config_content = f"""# NPF configuration - managed by SysManage Agent
 # Generated on {datetime.now().isoformat()}
 
 # Default group - allow SSH and agent communication, block everything else
 group default {{
 {chr(10).join(port_rules)}
-    block in all
+    pass stateful out all
+    pass stateful all
+    block all
 }}
 """
 
