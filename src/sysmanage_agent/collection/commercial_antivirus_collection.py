@@ -210,6 +210,36 @@ class CommercialAntivirusCollector:
             )
             return None
 
+    def _parse_mdatp_output(self, output: str) -> Dict:
+        """Parse mdatp command output into a dictionary."""
+        data = {}
+        for line in output.split("\n"):
+            line = line.strip()
+            if ":" not in line:
+                continue
+
+            key, value = line.split(":", 1)
+            key = key.strip()
+            value = value.strip()
+
+            # Remove [managed] or other bracketed suffixes
+            if "[" in value:
+                value = value.split("[")[0].strip()
+
+            # Remove quotes if present
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
+
+            # Convert boolean strings to actual booleans
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+
+            data[key] = value
+
+        return data
+
     def _detect_macos_commercial_antivirus(self) -> Optional[Dict]:
         """
         Detect Microsoft Defender on macOS systems using mdatp CLI.
@@ -246,21 +276,7 @@ class CommercialAntivirusCollector:
                 return None
 
             # Parse the health output (key-value pairs)
-            health_data = {}
-            for line in health_result.stdout.split("\n"):
-                line = line.strip()
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    key = key.strip()
-                    value = value.strip()
-
-                    # Convert boolean strings to actual booleans
-                    if value.lower() == "true":
-                        value = True
-                    elif value.lower() == "false":
-                        value = False
-
-                    health_data[key] = value
+            health_data = self._parse_mdatp_output(health_result.stdout)
 
             # Get version information
             version_cmd = ["mdatp", "version"]
@@ -270,13 +286,8 @@ class CommercialAntivirusCollector:
 
             product_version = None
             if version_result.returncode == 0:
-                # Parse version output (usually "app_version: X.Y.Z")
-                for line in version_result.stdout.split("\n"):
-                    if "app_version" in line.lower():
-                        parts = line.split(":", 1)
-                        if len(parts) == 2:
-                            product_version = parts[1].strip()
-                            break
+                version_data = self._parse_mdatp_output(version_result.stdout)
+                product_version = version_data.get("app_version")
 
             # Get definitions status
             definitions_cmd = ["mdatp", "definitions", "list"]
@@ -287,19 +298,11 @@ class CommercialAntivirusCollector:
             signature_version = None
             signature_last_updated = None
             if definitions_result.returncode == 0:
-                for line in definitions_result.stdout.split("\n"):
-                    if "version" in line.lower():
-                        parts = line.split(":", 1)
-                        if len(parts) == 2:
-                            signature_version = parts[1].strip()
-                    elif "last_updated" in line.lower() or "updated" in line.lower():
-                        parts = line.split(":", 1)
-                        if len(parts) == 2:
-                            # Try to parse the datetime
-                            date_str = parts[1].strip()
-                            signature_last_updated = self._parse_macos_datetime(
-                                date_str
-                            )
+                defs_data = self._parse_mdatp_output(definitions_result.stdout)
+                signature_version = defs_data.get("definitions_version")
+                updated_str = defs_data.get("definitions_updated")
+                if updated_str:
+                    signature_last_updated = self._parse_macos_datetime(updated_str)
 
             # Extract relevant fields from health data
             realtime_protection = health_data.get("real_time_protection_enabled")
