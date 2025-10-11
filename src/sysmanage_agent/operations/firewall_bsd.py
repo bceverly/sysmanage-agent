@@ -427,17 +427,26 @@ class BSDFirewallOperations(FirewallBase):
                 check=False,
             )
 
-            # Note: npfctl start returns error if already started
-            if result.returncode == 0 or "already running" in result.stderr:
-                self.logger.info("NPF firewall enabled successfully")
-                await self._send_firewall_status_update()
-                return {
-                    "success": True,
-                    "message": _("NPF firewall enabled successfully"),
-                }
+            # npfctl start may fail with non-zero returncode if already running
+            # Log the actual output to help debug
+            self.logger.debug("npfctl start returncode: %s", result.returncode)
+            self.logger.debug("npfctl start stdout: %s", result.stdout)
+            self.logger.debug("npfctl start stderr: %s", result.stderr)
+
+            if result.returncode != 0:
+                # Check if it's already running - that's OK
+                output_combined = (result.stdout + result.stderr).lower()
+                if not any(msg in output_combined for msg in ["already", "running"]):
+                    return {
+                        "success": False,
+                        "error": f"Failed to enable NPF: {result.stderr}",
+                    }
+
+            self.logger.info("NPF firewall enabled successfully")
+            await self._send_firewall_status_update()
             return {
-                "success": False,
-                "error": f"Failed to enable NPF: {result.stderr}",
+                "success": True,
+                "message": _("NPF firewall enabled successfully"),
             }
 
         except Exception as exc:
