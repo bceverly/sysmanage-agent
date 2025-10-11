@@ -8,6 +8,7 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
 import subprocess  # nosec B404
+from datetime import datetime
 from typing import Dict, List
 
 from src.i18n import _
@@ -330,7 +331,9 @@ class BSDFirewallOperations(FirewallBase):
             self.logger.error("Error enabling IPFW firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
 
-    async def _enable_npf_firewall(self, ports: List[int], protocol: str) -> Dict:
+    async def _enable_npf_firewall(
+        self, ports: List[int], protocol: str  # pylint: disable=unused-argument
+    ) -> Dict:
         """
         Enable NPF (NetBSD Packet Filter).
 
@@ -344,49 +347,59 @@ class BSDFirewallOperations(FirewallBase):
         try:
             self.logger.info("Enabling NPF firewall")
 
-            # Check if NPF config exists
+            # Build complete NPF configuration
             npf_conf = "/etc/npf.conf"
+
+            # Check if config already exists
             try:
                 with open(npf_conf, "r", encoding="utf-8") as file_handle:
-                    existing_rules = file_handle.read()
+                    existing_config = file_handle.read()
             except FileNotFoundError:
-                existing_rules = ""
+                existing_config = ""
 
-            # Build rules to add
-            rules_to_add = []
+            # Only create config if it doesn't exist or is empty
+            if not existing_config.strip():
+                self.logger.info("Creating NPF configuration")
 
-            # Always allow SSH (port 22)
-            if "pass in proto tcp to port 22" not in existing_rules:
-                rules_to_add.append("pass in proto tcp to port 22")
+                # Build port list for SSH + agent ports
+                port_list = [22] + list(ports)
+                port_rules = []
+                for port in port_list:
+                    port_rules.append(f"    pass in final proto tcp to port {port}")
 
-            # Add agent/server ports
-            for port in ports:
-                rule = f"pass in proto {protocol} to port {port}"
-                if rule not in existing_rules:
-                    rules_to_add.append(rule)
+                # Create complete valid NPF config with required group structure
+                config_content = f"""# NPF configuration - managed by SysManage Agent
+# Generated on {datetime.now().isoformat()}
 
-            if rules_to_add:
-                # Append rules to npf.conf
-                self.logger.info("Adding %d rules to npf.conf", len(rules_to_add))
+# Default group - allow SSH and agent communication, block everything else
+group default {{
+{chr(10).join(port_rules)}
+    block in all
+}}
+"""
+
+                # Write the configuration
                 try:
-                    with open(npf_conf, "a", encoding="utf-8") as file_handle:
-                        file_handle.write("\n# SysManage Agent rules\n")
-                        for rule in rules_to_add:
-                            file_handle.write(f"{rule}\n")
+                    with open(npf_conf, "w", encoding="utf-8") as file_handle:
+                        file_handle.write(config_content)
                 except PermissionError:
-                    # Try with sudo
-                    rules_content = (
-                        "\n# SysManage Agent rules\n" + "\n".join(rules_to_add) + "\n"
-                    )
-                    subprocess.run(  # nosec B603 B607
+                    # Try with sudo if not running as root
+                    result = subprocess.run(  # nosec B603 B607
                         self._build_command(
-                            ["sh", "-c", f"echo '{rules_content}' >> {npf_conf}"]
+                            ["sh", "-c", f"cat > {npf_conf} << 'EOF'\n{config_content}EOF"]
                         ),
                         capture_output=True,
                         text=True,
                         timeout=10,
                         check=False,
                     )
+                    if result.returncode != 0:
+                        return {
+                            "success": False,
+                            "error": f"Failed to write NPF config: {result.stderr}",
+                        }
+            else:
+                self.logger.info("NPF config already exists, skipping creation")
 
             # Validate the configuration
             result = subprocess.run(  # nosec B603 B607
