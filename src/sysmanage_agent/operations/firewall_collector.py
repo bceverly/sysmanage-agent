@@ -349,9 +349,14 @@ class FirewallCollector:
                     check=False,
                 )
                 if result.returncode == 0:
-                    # Check if NPF is active - look for "filtering: active" not just "active"
-                    # because "inactive" contains "active" substring
-                    enabled = "filtering: active" in result.stdout.lower()
+                    # Check if NPF is active - must have "filtering:" and "active" but NOT "inactive"
+                    # Output format: "# filtering:    active" or "# filtering:    inactive"
+                    output_lower = result.stdout.lower()
+                    enabled = (
+                        "filtering:" in output_lower
+                        and "active" in output_lower
+                        and "inactive" not in output_lower
+                    )
                     ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
                         self._parse_npf_rules(result.stdout)
                     )
