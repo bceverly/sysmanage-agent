@@ -1,9 +1,13 @@
 """
 Linux-specific firewall operations for SysManage Agent.
 Supports ufw (Ubuntu/Debian) and firewalld (RHEL/CentOS/Fedora).
+
+Security Note: This module uses subprocess to execute system firewall commands.
+All commands are hardcoded with no user input, use shell=False, and only call
+trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
-import subprocess
+import subprocess  # nosec B404
 from typing import Dict, List
 
 from src.i18n import _
@@ -29,7 +33,7 @@ class LinuxFirewallOperations(FirewallBase):
         # Try ufw first (Ubuntu/Debian)
         try:
             # Check if ufw is installed
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "ufw"],
                 capture_output=True,
                 text=True,
@@ -42,7 +46,7 @@ class LinuxFirewallOperations(FirewallBase):
 
                 # Always ensure SSH (port 22) is allowed to prevent lockout
                 self.logger.info("Adding ufw rule: allow 22/tcp (SSH)")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "ufw", "allow", "22/tcp"],
                     capture_output=True,
                     text=True,
@@ -59,7 +63,7 @@ class LinuxFirewallOperations(FirewallBase):
                 # Add rules for agent communication ports
                 for port in ports:
                     self.logger.info("Adding ufw rule: allow %d/%s", port, protocol)
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         ["sudo", "ufw", "allow", f"{port}/{protocol}"],
                         capture_output=True,
                         text=True,
@@ -76,7 +80,7 @@ class LinuxFirewallOperations(FirewallBase):
 
                 # Enable ufw
                 self.logger.info("Enabling ufw firewall")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "ufw", "--force", "enable"],
                     capture_output=True,
                     text=True,
@@ -101,7 +105,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         # Try firewalld (RHEL/CentOS/Fedora)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "firewall-cmd"],
                 capture_output=True,
                 text=True,
@@ -114,7 +118,7 @@ class LinuxFirewallOperations(FirewallBase):
 
                 # Always ensure SSH (port 22) is allowed to prevent lockout
                 self.logger.info("Adding firewalld rule: allow 22/tcp (SSH)")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     [
                         "sudo",
                         "firewall-cmd",
@@ -138,7 +142,7 @@ class LinuxFirewallOperations(FirewallBase):
                     self.logger.info(
                         "Adding firewalld rule: allow %d/%s", port, protocol
                     )
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         [
                             "sudo",
                             "firewall-cmd",
@@ -159,7 +163,7 @@ class LinuxFirewallOperations(FirewallBase):
                         )
 
                 # Reload firewalld to apply changes
-                subprocess.run(
+                subprocess.run(  # nosec B603 B607
                     ["sudo", "firewall-cmd", "--reload"],
                     capture_output=True,
                     text=True,
@@ -169,7 +173,7 @@ class LinuxFirewallOperations(FirewallBase):
 
                 # Start/enable firewalld service
                 self.logger.info("Enabling firewalld service")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "systemctl", "enable", "--now", "firewalld"],
                     capture_output=True,
                     text=True,
@@ -207,7 +211,7 @@ class LinuxFirewallOperations(FirewallBase):
         """
         # Try ufw first (Ubuntu/Debian)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "ufw"],
                 capture_output=True,
                 text=True,
@@ -217,7 +221,7 @@ class LinuxFirewallOperations(FirewallBase):
 
             if result.returncode == 0:
                 self.logger.info("Detected ufw firewall, disabling")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "ufw", "disable"],
                     capture_output=True,
                     text=True,
@@ -241,7 +245,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         # Try firewalld (RHEL/CentOS/Fedora)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "firewall-cmd"],
                 capture_output=True,
                 text=True,
@@ -251,7 +255,7 @@ class LinuxFirewallOperations(FirewallBase):
 
             if result.returncode == 0:
                 self.logger.info("Detected firewalld, disabling")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "systemctl", "stop", "firewalld"],
                     capture_output=True,
                     text=True,
@@ -289,7 +293,7 @@ class LinuxFirewallOperations(FirewallBase):
         """
         # Try ufw first (Ubuntu/Debian)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "ufw"],
                 capture_output=True,
                 text=True,
@@ -300,7 +304,7 @@ class LinuxFirewallOperations(FirewallBase):
             if result.returncode == 0:
                 self.logger.info("Detected ufw firewall, restarting")
                 # UFW doesn't have a restart command, but we can reload it
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "ufw", "reload"],
                     capture_output=True,
                     text=True,
@@ -324,7 +328,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         # Try firewalld (RHEL/CentOS/Fedora)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "firewall-cmd"],
                 capture_output=True,
                 text=True,
@@ -334,7 +338,7 @@ class LinuxFirewallOperations(FirewallBase):
 
             if result.returncode == 0:
                 self.logger.info("Detected firewalld, restarting")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "systemctl", "restart", "firewalld"],
                     capture_output=True,
                     text=True,

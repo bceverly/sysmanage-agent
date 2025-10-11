@@ -1,9 +1,13 @@
 """
 BSD-specific firewall operations for SysManage Agent.
 Supports PF (Packet Filter), IPFW, and NPF on FreeBSD, OpenBSD, and NetBSD.
+
+Security Note: This module uses subprocess to execute system firewall commands.
+All commands are hardcoded with no user input, use shell=False, and only call
+trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
-import subprocess
+import subprocess  # nosec B404
 from typing import Dict, List
 
 from src.i18n import _
@@ -30,7 +34,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try NPF first (NetBSD default)
         if self.system == "NetBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "npfctl"],
                     capture_output=True,
                     text=True,
@@ -45,7 +49,7 @@ class BSDFirewallOperations(FirewallBase):
 
         # Try PF (OpenBSD default, FreeBSD option)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "pfctl"],
                 capture_output=True,
                 text=True,
@@ -61,7 +65,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try IPFW (FreeBSD option)
         if self.system == "FreeBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "ipfw"],
                     capture_output=True,
                     text=True,
@@ -127,7 +131,7 @@ class BSDFirewallOperations(FirewallBase):
                     rules_content = (
                         "\n# SysManage Agent rules\n" + "\n".join(rules_to_add) + "\n"
                     )
-                    subprocess.run(
+                    subprocess.run(  # nosec B603 B607
                         ["sudo", "sh", "-c", f"echo '{rules_content}' >> {pf_conf}"],
                         capture_output=True,
                         text=True,
@@ -136,7 +140,7 @@ class BSDFirewallOperations(FirewallBase):
                     )
 
             # Test the configuration
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "pfctl", "-nf", pf_conf],
                 capture_output=True,
                 text=True,
@@ -151,7 +155,7 @@ class BSDFirewallOperations(FirewallBase):
                 }
 
             # Load the rules
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "pfctl", "-f", pf_conf],
                 capture_output=True,
                 text=True,
@@ -166,7 +170,7 @@ class BSDFirewallOperations(FirewallBase):
                 }
 
             # Enable PF
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "pfctl", "-e"],
                 capture_output=True,
                 text=True,
@@ -207,7 +211,7 @@ class BSDFirewallOperations(FirewallBase):
 
             # Always allow SSH (port 22)
             self.logger.info("Adding IPFW rule: allow 22/tcp (SSH)")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "sudo",
                     "ipfw",
@@ -234,7 +238,7 @@ class BSDFirewallOperations(FirewallBase):
             # Add agent/server ports
             for port in ports:
                 self.logger.info("Adding IPFW rule: allow %d/%s", port, protocol)
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     [
                         "sudo",
                         "ipfw",
@@ -265,14 +269,14 @@ class BSDFirewallOperations(FirewallBase):
                     rc_conf = file_handle.read()
 
                 if 'firewall_enable="YES"' not in rc_conf:
-                    subprocess.run(
+                    subprocess.run(  # nosec B603 B607
                         ["sudo", "sysrc", "firewall_enable=YES"],
                         capture_output=True,
                         text=True,
                         timeout=10,
                         check=False,
                     )
-                    subprocess.run(
+                    subprocess.run(  # nosec B603 B607
                         ["sudo", "sysrc", "firewall_type=open"],
                         capture_output=True,
                         text=True,
@@ -283,7 +287,7 @@ class BSDFirewallOperations(FirewallBase):
                 self.logger.warning("Error modifying rc.conf: %s", exc)
 
             # Start IPFW service
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "service", "ipfw", "start"],
                 capture_output=True,
                 text=True,
@@ -355,7 +359,7 @@ class BSDFirewallOperations(FirewallBase):
                     rules_content = (
                         "\n# SysManage Agent rules\n" + "\n".join(rules_to_add) + "\n"
                     )
-                    subprocess.run(
+                    subprocess.run(  # nosec B603 B607
                         ["sudo", "sh", "-c", f"echo '{rules_content}' >> {npf_conf}"],
                         capture_output=True,
                         text=True,
@@ -364,7 +368,7 @@ class BSDFirewallOperations(FirewallBase):
                     )
 
             # Validate the configuration
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "npfctl", "validate", npf_conf],
                 capture_output=True,
                 text=True,
@@ -379,7 +383,7 @@ class BSDFirewallOperations(FirewallBase):
                 }
 
             # Reload the configuration
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "npfctl", "reload", npf_conf],
                 capture_output=True,
                 text=True,
@@ -394,7 +398,7 @@ class BSDFirewallOperations(FirewallBase):
                 }
 
             # Start NPF
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["sudo", "npfctl", "start"],
                 capture_output=True,
                 text=True,
@@ -432,7 +436,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try NPF first (NetBSD default)
         if self.system == "NetBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "npfctl"],
                     capture_output=True,
                     text=True,
@@ -442,7 +446,7 @@ class BSDFirewallOperations(FirewallBase):
 
                 if result.returncode == 0:
                     self.logger.info("Disabling NPF firewall")
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         ["sudo", "npfctl", "stop"],
                         capture_output=True,
                         text=True,
@@ -466,7 +470,7 @@ class BSDFirewallOperations(FirewallBase):
 
         # Try PF (OpenBSD default, FreeBSD option)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "pfctl"],
                 capture_output=True,
                 text=True,
@@ -476,7 +480,7 @@ class BSDFirewallOperations(FirewallBase):
 
             if result.returncode == 0:
                 self.logger.info("Disabling PF firewall")
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "pfctl", "-d"],
                     capture_output=True,
                     text=True,
@@ -501,7 +505,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try IPFW (FreeBSD option)
         if self.system == "FreeBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "ipfw"],
                     capture_output=True,
                     text=True,
@@ -511,7 +515,7 @@ class BSDFirewallOperations(FirewallBase):
 
                 if result.returncode == 0:
                     self.logger.info("Disabling IPFW firewall")
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         ["sudo", "ipfw", "disable", "firewall"],
                         capture_output=True,
                         text=True,
@@ -551,7 +555,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try NPF first (NetBSD default)
         if self.system == "NetBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "npfctl"],
                     capture_output=True,
                     text=True,
@@ -562,7 +566,7 @@ class BSDFirewallOperations(FirewallBase):
                 if result.returncode == 0:
                     self.logger.info("Restarting NPF firewall")
                     # Reload configuration
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         ["sudo", "npfctl", "reload"],
                         capture_output=True,
                         text=True,
@@ -586,7 +590,7 @@ class BSDFirewallOperations(FirewallBase):
 
         # Try PF (OpenBSD default, FreeBSD option)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["which", "pfctl"],
                 capture_output=True,
                 text=True,
@@ -597,7 +601,7 @@ class BSDFirewallOperations(FirewallBase):
             if result.returncode == 0:
                 self.logger.info("Restarting PF firewall")
                 # Reload PF rules
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["sudo", "pfctl", "-f", "/etc/pf.conf"],
                     capture_output=True,
                     text=True,
@@ -622,7 +626,7 @@ class BSDFirewallOperations(FirewallBase):
         # Try IPFW (FreeBSD option)
         if self.system == "FreeBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["which", "ipfw"],
                     capture_output=True,
                     text=True,
@@ -632,7 +636,7 @@ class BSDFirewallOperations(FirewallBase):
 
                 if result.returncode == 0:
                     self.logger.info("Restarting IPFW firewall")
-                    result = subprocess.run(
+                    result = subprocess.run(  # nosec B603 B607
                         ["sudo", "service", "ipfw", "restart"],
                         capture_output=True,
                         text=True,

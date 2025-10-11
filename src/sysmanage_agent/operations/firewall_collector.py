@@ -1,12 +1,17 @@
 """
 Firewall status collection for SysManage Agent.
 Detects firewall software and collects open ports across different operating systems.
+
+Security Note: This module uses subprocess to execute system firewall commands (ufw,
+firewall-cmd, iptables, etc.). All commands are hardcoded with no user input, use
+shell=False, and only call trusted system utilities. B603/B607 warnings are suppressed
+as these subprocess calls are safe by design.
 """
 
 import json
 import logging
 import platform
-import subprocess
+import subprocess  # nosec B404
 from typing import Dict, Optional
 
 
@@ -95,7 +100,7 @@ class FirewallCollector:
         """Collect firewall status on Linux (ufw, firewalld, iptables, nftables)."""
         # Try ufw first (Ubuntu/Debian)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["ufw", "status"],
                 capture_output=True,
                 text=True,
@@ -137,7 +142,7 @@ class FirewallCollector:
 
         # Try firewalld (RHEL/CentOS/Fedora)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["firewall-cmd", "--state"],
                 capture_output=True,
                 text=True,
@@ -181,7 +186,7 @@ class FirewallCollector:
 
         # Try iptables (legacy)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["iptables", "-L", "-n"],
                 capture_output=True,
                 text=True,
@@ -214,7 +219,7 @@ class FirewallCollector:
 
         # Try nftables
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["nft", "list", "ruleset"],
                 capture_output=True,
                 text=True,
@@ -250,7 +255,7 @@ class FirewallCollector:
         """Collect firewall status on Windows."""
         try:
             # Check if Windows Firewall is enabled
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["netsh", "advfirewall", "show", "allprofiles", "state"],
                 capture_output=True,
                 text=True,
@@ -287,7 +292,7 @@ class FirewallCollector:
         """Collect firewall status on macOS (pf)."""
         try:
             # Check if pf (packet filter) is enabled
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["pfctl", "-s", "info"],
                 capture_output=True,
                 text=True,
@@ -334,7 +339,7 @@ class FirewallCollector:
         # Try NPF first (NetBSD default)
         if self.system == "NetBSD":
             try:
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     ["npfctl", "show"],
                     capture_output=True,
                     text=True,
@@ -380,7 +385,7 @@ class FirewallCollector:
 
         # Try pf (OpenBSD default, FreeBSD option)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["pfctl", "-s", "info"],
                 capture_output=True,
                 text=True,
@@ -422,7 +427,7 @@ class FirewallCollector:
 
         # Try ipfw (FreeBSD option)
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["ipfw", "show"],
                 capture_output=True,
                 text=True,
@@ -511,7 +516,7 @@ class FirewallCollector:
         ipv4_udp_ports = []
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["firewall-cmd", "--list-ports"],
                 capture_output=True,
                 text=True,
@@ -549,7 +554,7 @@ class FirewallCollector:
 
         # Parse IPv4 iptables rules
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["iptables", "-L", "INPUT", "-n", "--line-numbers"],
                 capture_output=True,
                 text=True,
@@ -570,7 +575,7 @@ class FirewallCollector:
 
         # Parse IPv6 ip6tables rules
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["ip6tables", "-L", "INPUT", "-n", "--line-numbers"],
                 capture_output=True,
                 text=True,
@@ -689,7 +694,7 @@ class FirewallCollector:
         ipv6_udp_ports = []
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["netsh", "advfirewall", "firewall", "show", "rule", "name=all"],
                 capture_output=True,
                 text=True,
@@ -752,7 +757,7 @@ class FirewallCollector:
         ipv6_udp_ports = []
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["pfctl", "-s", "rules"],
                 capture_output=True,
                 text=True,

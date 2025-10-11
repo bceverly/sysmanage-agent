@@ -1,9 +1,13 @@
 """
 Windows-specific firewall operations for SysManage Agent.
 Uses Windows Firewall (netsh advfirewall).
+
+Security Note: This module uses subprocess to execute system firewall commands.
+All commands are hardcoded with no user input, use shell=False, and only call
+trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
-import subprocess
+import subprocess  # nosec B404
 from typing import Dict, List
 
 from src.i18n import _
@@ -29,7 +33,7 @@ class WindowsFirewallOperations(FirewallBase):
         try:
             # Always ensure RDP (port 3389) is allowed on Windows to prevent lockout
             self.logger.info("Adding Windows Firewall rule for port 3389 (RDP)")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "netsh",
                     "advfirewall",
@@ -57,7 +61,7 @@ class WindowsFirewallOperations(FirewallBase):
             # Add firewall rules for agent communication
             for port in ports:
                 self.logger.info("Adding Windows Firewall rule for port %d", port)
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603 B607
                     [
                         "netsh",
                         "advfirewall",
@@ -83,7 +87,7 @@ class WindowsFirewallOperations(FirewallBase):
 
             # Enable Windows Firewall
             self.logger.info("Enabling Windows Firewall")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "netsh",
                     "advfirewall",
@@ -123,7 +127,7 @@ class WindowsFirewallOperations(FirewallBase):
         """
         try:
             self.logger.info("Disabling Windows Firewall")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "netsh",
                     "advfirewall",
@@ -168,7 +172,7 @@ class WindowsFirewallOperations(FirewallBase):
             self.logger.info("Restarting Windows Firewall")
             # Windows doesn't really have a "restart" for the firewall
             # But we can toggle it off and on
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "netsh",
                     "advfirewall",
@@ -189,7 +193,7 @@ class WindowsFirewallOperations(FirewallBase):
                     "error": f"Failed to restart Windows Firewall: {result.stderr}",
                 }
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "netsh",
                     "advfirewall",

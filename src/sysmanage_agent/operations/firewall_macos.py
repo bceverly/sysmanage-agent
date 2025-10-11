@@ -1,9 +1,13 @@
 """
 macOS-specific firewall operations for SysManage Agent.
 Uses macOS Application Firewall (socketfilterfw).
+
+Security Note: This module uses subprocess to execute system firewall commands.
+All commands are hardcoded with no user input, use shell=False, and only call
+trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
-import subprocess
+import subprocess  # nosec B404
 from typing import Dict, List
 
 from src.i18n import _
@@ -31,7 +35,7 @@ class MacOSFirewallOperations(FirewallBase):
         try:
             # Enable macOS firewall
             self.logger.info("Enabling macOS firewall")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "sudo",
                     "/usr/libexec/ApplicationFirewall/socketfilterfw",
@@ -69,7 +73,7 @@ class MacOSFirewallOperations(FirewallBase):
         """
         try:
             self.logger.info("Disabling macOS firewall")
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "sudo",
                     "/usr/libexec/ApplicationFirewall/socketfilterfw",
@@ -110,7 +114,7 @@ class MacOSFirewallOperations(FirewallBase):
         try:
             self.logger.info("Restarting macOS firewall")
             # macOS doesn't have a restart, so we toggle it off and on
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "sudo",
                     "/usr/libexec/ApplicationFirewall/socketfilterfw",
@@ -129,7 +133,7 @@ class MacOSFirewallOperations(FirewallBase):
                     "error": f"Failed to restart macOS firewall: {result.stderr}",
                 }
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 [
                     "sudo",
                     "/usr/libexec/ApplicationFirewall/socketfilterfw",
