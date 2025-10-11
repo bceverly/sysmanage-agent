@@ -39,6 +39,7 @@ from src.sysmanage_agent.core.agent_utils import (
 )
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
+from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.operations.update_manager import UpdateManager
@@ -136,6 +137,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         self.update_manager = UpdateManager(self)
         self.system_ops = SystemOperations(self)
         self.script_ops = ScriptOperations(self)
+        self.firewall_ops = FirewallOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)
@@ -849,6 +851,18 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
     async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Remove antivirus software from the system."""
         return await self.system_ops.remove_antivirus(parameters)
+
+    async def enable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable firewall and ensure agent communication ports are open."""
+        return await self.firewall_ops.enable_firewall(parameters)
+
+    async def disable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable firewall on the system."""
+        return await self.firewall_ops.disable_firewall(parameters)
+
+    async def restart_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Restart firewall service on the system."""
+        return await self.firewall_ops.restart_firewall(parameters)
 
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""

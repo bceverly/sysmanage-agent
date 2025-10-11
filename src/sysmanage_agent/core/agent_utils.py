@@ -300,6 +300,9 @@ class MessageProcessor:
             "enable_antivirus": self.agent.enable_antivirus,
             "disable_antivirus": self.agent.disable_antivirus,
             "remove_antivirus": self.agent.remove_antivirus,
+            "enable_firewall": self.agent.enable_firewall,
+            "disable_firewall": self.agent.disable_firewall,
+            "restart_firewall": self.agent.restart_firewall,
         }
 
     async def _handle_execute_script(

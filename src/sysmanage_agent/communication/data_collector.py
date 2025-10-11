@@ -15,6 +15,7 @@ from typing import Any, Dict
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 
 
 class DataCollector:
@@ -29,6 +30,7 @@ class DataCollector:
         """
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
+        self.firewall_collector = FirewallCollector(self.logger)
 
     async def send_initial_data_updates(
         self,
@@ -265,6 +267,15 @@ class DataCollector:
             except Exception as error:
                 self.logger.error(
                     "Failed to send initial third-party repository data: %s", error
+                )
+
+            # Send firewall status data
+            try:
+                self.logger.info(_("Collecting initial firewall status data..."))
+                await self._send_firewall_status_update()
+            except Exception as error:
+                self.logger.error(
+                    "Failed to send initial firewall status data: %s", error
                 )
 
             self.logger.info(_("Initial data updates sent successfully"))
@@ -562,6 +573,41 @@ class DataCollector:
         else:
             self.logger.warning("Cannot send antivirus status data: no host approval")
 
+    async def _send_firewall_status_update(self):
+        """Send firewall status update."""
+        self.logger.debug("AGENT_DEBUG: Collecting firewall status data")
+
+        firewall_info = self.firewall_collector.collect_firewall_status()
+
+        # Add host_id and hostname if available
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if host_approval:
+            firewall_message_data = {
+                "hostname": self.agent.registration.get_system_info()["hostname"],
+                "host_id": str(host_approval.host_id),
+                "firewall_name": firewall_info["firewall_name"],
+                "enabled": firewall_info["enabled"],
+                "tcp_open_ports": firewall_info["tcp_open_ports"],
+                "udp_open_ports": firewall_info["udp_open_ports"],
+                "ipv4_ports": firewall_info.get("ipv4_ports"),
+                "ipv6_ports": firewall_info.get("ipv6_ports"),
+            }
+
+            firewall_message = self.agent.create_message(
+                "firewall_status_update", firewall_message_data
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: Sending firewall status message: %s",
+                firewall_message["message_id"],
+            )
+            success = await self.agent.send_message(firewall_message)
+            if success:
+                self.logger.debug("AGENT_DEBUG: Firewall status data sent successfully")
+            else:
+                self.logger.warning("Failed to send firewall status data")
+        else:
+            self.logger.warning("Cannot send firewall status data: no host approval")
+
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
         if not (self.agent.running and self.agent.connected):
@@ -624,6 +670,12 @@ class DataCollector:
             await self._send_antivirus_status_update()
         except Exception as error:
             self.logger.error("Error collecting/sending antivirus status: %s", error)
+
+        # Send firewall status update
+        try:
+            await self._send_firewall_status_update()
+        except Exception as error:
+            self.logger.error("Error collecting/sending firewall status: %s", error)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
