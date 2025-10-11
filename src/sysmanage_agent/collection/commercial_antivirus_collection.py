@@ -278,31 +278,15 @@ class CommercialAntivirusCollector:
             # Parse the health output (key-value pairs)
             health_data = self._parse_mdatp_output(health_result.stdout)
 
-            # Get version information
-            version_cmd = ["mdatp", "version"]
-            version_result = subprocess.run(
-                version_cmd, capture_output=True, text=True, timeout=5, check=False
-            )  # nosec B603
+            # Extract version and definitions info from health data
+            product_version = health_data.get("app_version")
+            signature_version = health_data.get("definitions_version")
 
-            product_version = None
-            if version_result.returncode == 0:
-                version_data = self._parse_mdatp_output(version_result.stdout)
-                product_version = version_data.get("app_version")
-
-            # Get definitions status
-            definitions_cmd = ["mdatp", "definitions", "list"]
-            definitions_result = subprocess.run(
-                definitions_cmd, capture_output=True, text=True, timeout=5, check=False
-            )  # nosec B603
-
-            signature_version = None
+            # Parse definitions_updated timestamp
             signature_last_updated = None
-            if definitions_result.returncode == 0:
-                defs_data = self._parse_mdatp_output(definitions_result.stdout)
-                signature_version = defs_data.get("definitions_version")
-                updated_str = defs_data.get("definitions_updated")
-                if updated_str:
-                    signature_last_updated = self._parse_macos_datetime(updated_str)
+            updated_str = health_data.get("definitions_updated")
+            if updated_str:
+                signature_last_updated = self._parse_macos_datetime(updated_str)
 
             # Extract relevant fields from health data
             realtime_protection = health_data.get("real_time_protection_enabled")
