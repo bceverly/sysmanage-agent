@@ -353,6 +353,7 @@ class CommercialAntivirusCollector:
         try:
             # Try various common macOS date formats
             for fmt in [
+                "%b %d, %Y at %I:%M:%S %p",  # mdatp format: "Oct 10, 2025 at 06:15:49 PM"
                 "%Y-%m-%d %H:%M:%S",  # Standard format
                 "%Y-%m-%dT%H:%M:%S",  # ISO format
                 "%Y-%m-%dT%H:%M:%S.%f",  # ISO with microseconds
