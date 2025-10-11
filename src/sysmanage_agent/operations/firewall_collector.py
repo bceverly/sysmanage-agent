@@ -144,7 +144,9 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
+            # If firewall-cmd exists, report firewalld regardless of state
             if result.returncode == 0 and "running" in result.stdout:
+                # Firewall is running
                 ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
                     self._get_firewalld_ports()
                 )
@@ -163,6 +165,16 @@ class FirewallCollector:
                     "udp_open_ports": json.dumps(udp_ports) if udp_ports else None,
                     "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
                     "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
+                }
+            if "not running" in result.stdout or result.returncode != 0:
+                # Firewalld exists but is disabled/not running
+                return {
+                    "firewall_name": "firewalld",
+                    "enabled": False,
+                    "tcp_open_ports": None,
+                    "udp_open_ports": None,
+                    "ipv4_ports": None,
+                    "ipv6_ports": None,
                 }
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
