@@ -365,7 +365,7 @@ class BSDFirewallOperations(FirewallBase):
                 port_list = [22] + list(ports)
                 port_rules = []
                 for port in port_list:
-                    port_rules.append(f"    pass in final proto tcp to port {port}")
+                    port_rules.append(f"    pass in final proto tcp to any port {port}")
 
                 # Create complete valid NPF config with required group structure
                 config_content = f"""# NPF configuration - managed by SysManage Agent
@@ -386,7 +386,11 @@ group default {{
                     # Try with sudo if not running as root
                     result = subprocess.run(  # nosec B603 B607
                         self._build_command(
-                            ["sh", "-c", f"cat > {npf_conf} << 'EOF'\n{config_content}EOF"]
+                            [
+                                "sh",
+                                "-c",
+                                f"cat > {npf_conf} << 'EOF'\n{config_content}EOF",
+                            ]
                         ),
                         capture_output=True,
                         text=True,
