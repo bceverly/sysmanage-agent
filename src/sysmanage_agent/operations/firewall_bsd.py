@@ -371,16 +371,46 @@ class BSDFirewallOperations(FirewallBase):
 
                 # Create complete valid NPF config with required group structure
                 # Using 'stateful' keeps existing connections alive
-                # 'pass stateful out all' allows outbound connections
-                # 'pass stateful all' allows established connections to continue
+                # Must explicitly allow loopback, outbound TCP, and DNS (UDP port 53)
                 config_content = f"""# NPF configuration - managed by SysManage Agent
 # Generated on {datetime.now().isoformat()}
 
-# Default group - allow SSH and agent communication, block everything else
 group default {{
-{chr(10).join(port_rules)}
+
+    # ----------------------------
+    # LOOPBACK TRAFFIC
+    # ----------------------------
+    # Allow all traffic on loopback (127.0.0.1, ::1)
+    pass stateful in all
     pass stateful out all
+
+    # ----------------------------
+    # ALLOWED INBOUND PORTS
+    # ----------------------------
+{chr(10).join(port_rules)}
+
+    # ----------------------------
+    # OUTBOUND TCP
+    # ----------------------------
+    # Allow outbound TCP for updates, agent communication, etc.
+    pass stateful out proto tcp all
+
+    # ----------------------------
+    # OUTBOUND DNS (UDP)
+    # ----------------------------
+    # Allow outbound UDP to port 53 for DNS queries
+    pass stateful out proto udp from any to any port 53
+
+    # ----------------------------
+    # ESTABLISHED / RELATED CONNECTIONS
+    # ----------------------------
+    # Allow replies to all established connections
     pass stateful all
+
+    # ----------------------------
+    # DEFAULT BLOCK
+    # ----------------------------
+    # Block everything else
     block all
 }}
 """
