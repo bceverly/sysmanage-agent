@@ -364,3 +364,15 @@ class LinuxFirewallOperations(FirewallBase):
             "success": False,
             "error": _("No supported firewall found on this system"),
         }
+
+    async def deploy_firewall(self) -> Dict:
+        """Deploy (enable) firewall on Linux systems."""
+        try:
+            self.logger.info("Deploying firewall on Linux system")
+            ports, protocol = self._get_agent_communication_ports()
+            server_ports = self._get_local_server_ports()
+            all_ports = list(set(ports + server_ports))
+            return await self.enable_firewall(all_ports, protocol)
+        except Exception as exc:
+            self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}

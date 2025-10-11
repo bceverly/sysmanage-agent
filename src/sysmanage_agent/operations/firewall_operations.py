@@ -163,3 +163,28 @@ class FirewallOperations:
         except Exception as exc:
             self.logger.error("Error restarting firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
+
+    async def deploy_firewall(self, _parameters: Dict) -> Dict:
+        """
+        Deploy (install and enable) firewall on the system.
+
+        Args:
+            _parameters: Command parameters (unused)
+
+        Returns:
+            Dict with success status and message
+        """
+        try:
+            self.logger.info("Starting firewall deploy operation")
+
+            # Get the appropriate firewall handler for the OS
+            handler = self._get_firewall_handler()
+
+            # Deploy the firewall
+            return await handler.deploy_firewall()
+
+        except ValueError as exc:
+            return {"success": False, "error": str(exc)}
+        except Exception as exc:
+            self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}

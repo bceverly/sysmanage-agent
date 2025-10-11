@@ -126,3 +126,7 @@ class FirewallBase:
             self.logger.error(
                 "Error sending firewall status update: %s", exc, exc_info=True
             )
+
+    async def deploy_firewall(self):
+        """Deploy (install and enable) firewall on the system. Must be implemented by subclasses."""
+        raise NotImplementedError("deploy_firewall must be implemented by subclass")

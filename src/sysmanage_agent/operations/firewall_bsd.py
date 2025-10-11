@@ -701,3 +701,34 @@ group default {
             "success": False,
             "error": _("No supported firewall found on this BSD system"),
         }
+
+    async def deploy_firewall(self) -> Dict:
+        """
+        Deploy (enable) firewall on BSD systems.
+
+        BSD firewalls are built into the kernel, so "deploy" means enabling them.
+        - FreeBSD: Enable IPFW (built into kernel)
+        - OpenBSD: Enable PF (built in)
+        - NetBSD: Enable NPF (built in)
+
+        Returns:
+            Dict with success status and message
+        """
+        try:
+            self.logger.info("Deploying firewall on BSD system")
+
+            # Get agent communication ports
+            ports, protocol = self._get_agent_communication_ports()
+
+            # Also detect if server is running locally
+            server_ports = self._get_local_server_ports()
+            all_ports = list(set(ports + server_ports))
+
+            self.logger.info("Ports to allow: %s (protocol: %s)", all_ports, protocol)
+
+            # Deploy means enable on BSD systems (firewall software is built-in)
+            return await self.enable_firewall(all_ports, protocol)
+
+        except Exception as exc:
+            self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}

@@ -223,3 +223,15 @@ class WindowsFirewallOperations(FirewallBase):
         except Exception as exc:
             self.logger.error("Error restarting Windows Firewall: %s", exc)
             return {"success": False, "error": str(exc)}
+
+    async def deploy_firewall(self) -> Dict:
+        """Deploy (enable) firewall on Windows systems."""
+        try:
+            self.logger.info("Deploying firewall on Windows system")
+            ports, protocol = self._get_agent_communication_ports()
+            server_ports = self._get_local_server_ports()
+            all_ports = list(set(ports + server_ports))
+            return await self.enable_firewall(all_ports, protocol)
+        except Exception as exc:
+            self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}
