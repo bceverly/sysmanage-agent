@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 from src.sysmanage_agent.operations.antivirus_operations import AntivirusOperations
 from src.sysmanage_agent.operations.certificate_operations import CertificateOperations
+from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
 from src.sysmanage_agent.operations.opentelemetry_operations import (
     OpenTelemetryOperations,
 )
@@ -22,7 +23,7 @@ from src.sysmanage_agent.operations.system_control import SystemControl
 from src.sysmanage_agent.operations.ubuntu_pro_operations import UbuntuProOperations
 
 
-class SystemOperations:
+class SystemOperations:  # pylint: disable=too-many-instance-attributes
     """Handles system-level operations for the agent via delegation to specialized handlers."""
 
     def __init__(self, agent_instance):
@@ -36,6 +37,7 @@ class SystemOperations:
         self.package_ops = PackageOperations(agent_instance)
         self.otel_ops = OpenTelemetryOperations(agent_instance)
         self.antivirus_ops = AntivirusOperations(agent_instance)
+        self.firewall_ops = FirewallOperations(agent_instance)
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)
         self.ssh_ops = SSHKeyOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
@@ -298,3 +300,21 @@ class SystemOperations:
     def _check_obs_url(self, url: str) -> bool:
         """Check if URL is a valid OpenBuildService URL."""
         return self.repo_ops._check_obs_url(url)  # pylint: disable=protected-access
+
+    # ========== Firewall Operations Delegation ==========
+
+    async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy (install and enable) firewall."""
+        return await self.firewall_ops.deploy_firewall(parameters)
+
+    async def enable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable firewall."""
+        return await self.firewall_ops.enable_firewall(parameters)
+
+    async def disable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable firewall."""
+        return await self.firewall_ops.disable_firewall(parameters)
+
+    async def restart_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Restart firewall."""
+        return await self.firewall_ops.restart_firewall(parameters)
