@@ -52,10 +52,22 @@ class FirewallCollector:
             if "udp" not in port_map[port]:
                 port_map[port].append("udp")
 
-        # Convert to list format and sort
+        # Convert to list format and sort numerically by port number
+        def port_sort_key(item):
+            """Extract numeric value from port for sorting (handles ranges like 33434-33600)."""
+            port = item[0]
+            # Handle port ranges - sort by first port number
+            if "-" in str(port):
+                port = str(port).split("-", maxsplit=1)[0]
+            try:
+                return int(port)
+            except (ValueError, TypeError):
+                # If not numeric, sort alphabetically at the end
+                return float("inf")
+
         result = [
             {"port": port, "protocols": sorted(protocols)}
-            for port, protocols in sorted(port_map.items())
+            for port, protocols in sorted(port_map.items(), key=port_sort_key)
         ]
         return result
 
