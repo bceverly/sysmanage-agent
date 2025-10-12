@@ -360,13 +360,50 @@ class BSDFirewallOperations(FirewallBase):
             if not existing_config.strip():
                 self.logger.info("Creating NPF configuration")
 
-                # Create minimal NPF config that allows all traffic
-                # NOTE: NPF syntax is complex - using permissive config for now
+                # Create NPF config with proper firewall rules
                 config_content = """# NPF configuration - managed by SysManage Agent
 # Minimal configuration - allows all traffic
 
+# Introduce 2 variables to list opened TCP and UDP ports[3]
+$services_tcp = { http, https, smtp, smtps, domain, 587, 6000 }
+$services_udp = { domain, ntp, 6000, 51413 }
+
 group default {
-    pass all
+    # Allow all loopback traffic
+    pass final on lo0 all
+
+    # Allow all outgoing traffic
+    pass stateful out final all
+
+    # Allow ICMP
+    pass in final proto icmp icmp-type timxceed all
+    pass in final proto icmp icmp-type unreach all
+    pass in final proto icmp icmp-type echoreply all
+    pass in final proto icmp icmp-type sourcequench all
+    pass in final proto icmp icmp-type paramprob all
+
+    # Allow SSH
+    pass stateful in final proto tcp from any to any port 22
+
+    # Allow SysManage-Agent
+    pass stateful in final proto tcp from any to any port 8080
+
+    # Allow DHCP
+    pass out final proto udp from any port bootpc to any port bootps
+    pass in final proto udp from any port bootps to any port bootpc
+    pass in final proto udp from any port bootps to 255.255.255.0 port bootpc
+
+    # Allow incoming TCP/UDP packets on selected ports
+    pass stateful in final proto tcp to any port $services_tcp
+    pass stateful in final proto udp to any port $services_udp
+
+    # Allow Traceroute
+    pass stateful in final proto udp to any port 33434-33600
+
+    # Reject everything else [9]
+    block return-rst in final proto tcp all
+    block return-icmp in final proto udp all
+    block return in final all
 }
 """
 

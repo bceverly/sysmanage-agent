@@ -890,6 +890,8 @@ class FirewallCollector:
             # NPF rule format: pass in proto tcp to port 22
             # or: pass in family inet proto tcp to port 80
             # or: pass in family inet6 proto tcp to port 80
+            # or: pass in proto tcp to any port { 80, 443, 25 }  (port list)
+            # or: pass in proto udp to any port 33434-33600  (port range)
             if "pass" not in line or "port" not in line:
                 continue
 
@@ -897,37 +899,54 @@ class FirewallCollector:
             is_ipv6 = False
             if "family inet6" in line or "inet6" in line:
                 is_ipv6 = True
-            elif "family inet" in line or " inet " in line:
+            elif "family inet" in line or " inet " in line or "family inet4" in line:
                 is_ipv6 = False
             # If neither specified, could be either - default to IPv4
 
-            # Extract port number
+            # Extract port number(s)
             parts = line.split("port")
             if len(parts) <= 1:
                 continue
 
-            port_str = parts[1].strip().split()[0].strip(",")
+            port_part = parts[1].strip()
+
+            # Handle port lists: { 80, 443, 25 }
+            if port_part.startswith("{"):
+                # Extract everything between { and }
+                if "}" in port_part:
+                    port_list_str = port_part[
+                        port_part.index("{") + 1 : port_part.index("}")
+                    ].strip()
+                    port_strings = [p.strip() for p in port_list_str.split(",")]
+                else:
+                    continue
+            # Handle port ranges: 33434-33600
+            elif "-" in port_part.split()[0]:
+                port_strings = [port_part.split()[0].strip()]
+            # Handle single ports: 22
+            else:
+                port_strings = [port_part.split()[0].strip(",")]
 
             # Check protocol
             line_lower = line.lower()
             if "proto tcp" in line_lower or " tcp " in line_lower:
                 if is_ipv6:
-                    ipv6_tcp_ports.append(port_str)
+                    ipv6_tcp_ports.extend(port_strings)
                 else:
-                    ipv4_tcp_ports.append(port_str)
+                    ipv4_tcp_ports.extend(port_strings)
             elif "proto udp" in line_lower or " udp " in line_lower:
                 if is_ipv6:
-                    ipv6_udp_ports.append(port_str)
+                    ipv6_udp_ports.extend(port_strings)
                 else:
-                    ipv4_udp_ports.append(port_str)
+                    ipv4_udp_ports.extend(port_strings)
             # If no specific protocol, might be both - add to both
             elif "proto" not in line_lower:
                 if is_ipv6:
-                    ipv6_tcp_ports.append(port_str)
-                    ipv6_udp_ports.append(port_str)
+                    ipv6_tcp_ports.extend(port_strings)
+                    ipv6_udp_ports.extend(port_strings)
                 else:
-                    ipv4_tcp_ports.append(port_str)
-                    ipv4_udp_ports.append(port_str)
+                    ipv4_tcp_ports.extend(port_strings)
+                    ipv4_udp_ports.extend(port_strings)
 
         return ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports
 
