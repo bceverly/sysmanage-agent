@@ -852,6 +852,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Remove antivirus software from the system."""
         return await self.system_ops.remove_antivirus(parameters)
 
+    async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy (install and enable) firewall on the system."""
+        return await self.firewall_ops.deploy_firewall(parameters)
+
     async def enable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Enable firewall and ensure agent communication ports are open."""
         return await self.firewall_ops.enable_firewall(parameters)
