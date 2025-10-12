@@ -467,6 +467,21 @@ class FirewallCollector:
                 check=False,
             )
             if result.returncode == 0 and result.stdout.strip():
+                # Check if IPFW is enabled via sysctl
+                enabled = False
+                try:
+                    sysctl_result = subprocess.run(  # nosec B603 B607
+                        ["sysctl", "-n", "net.inet.ip.fw.enable"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if sysctl_result.returncode == 0:
+                        enabled = sysctl_result.stdout.strip() == "1"
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
                 ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
                     self._parse_ipfw_rules(result.stdout)
                 )
@@ -485,7 +500,7 @@ class FirewallCollector:
 
                 return {
                     "firewall_name": "ipfw",
-                    "enabled": True,
+                    "enabled": enabled,
                     "tcp_open_ports": (
                         json.dumps(all_tcp_ports) if all_tcp_ports else None
                     ),

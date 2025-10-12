@@ -543,8 +543,9 @@ group default {
 
                 if result.returncode == 0:
                     self.logger.info("Disabling IPFW firewall")
+                    # Disable IPFW using sysctl
                     result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["ipfw", "disable", "firewall"]),
+                        self._build_command(["sysctl", "net.inet.ip.fw.enable=0"]),
                         capture_output=True,
                         text=True,
                         timeout=10,
