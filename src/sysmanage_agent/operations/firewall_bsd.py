@@ -227,12 +227,19 @@ class BSDFirewallOperations(FirewallBase):
             self.logger.info("Enabling IPFW firewall")
 
             # Load IPFW kernel module if not already loaded
+            self.logger.info("Loading IPFW kernel module with kldload")
             result = subprocess.run(  # nosec B603 B607
                 self._build_command(["kldload", "ipfw"]),
                 capture_output=True,
                 text=True,
                 timeout=10,
                 check=False,
+            )
+            self.logger.info(
+                "kldload result: returncode=%d, stdout='%s', stderr='%s'",
+                result.returncode,
+                result.stdout.strip(),
+                result.stderr.strip(),
             )
             # kldload returns 1 if already loaded, which is fine
             if result.returncode not in [0, 1]:
@@ -517,82 +524,13 @@ group default {
         """
         Disable firewall on BSD systems.
 
-        Tries NPF first (NetBSD default), then PF (OpenBSD default, FreeBSD option),
-        then IPFW (FreeBSD option).
+        Tries IPFW first (FreeBSD default), NPF (NetBSD default),
+        then PF (OpenBSD default, also available on FreeBSD/NetBSD).
 
         Returns:
             Dict with success status and message
         """
-        # Try NPF first (NetBSD default)
-        if self.system == "NetBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "npfctl"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Disabling NPF firewall")
-                    result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["npfctl", "stop"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info("NPF firewall disabled successfully")
-                        await self._send_firewall_status_update()
-                        return {
-                            "success": True,
-                            "message": _("NPF firewall disabled successfully"),
-                        }
-                    return {
-                        "success": False,
-                        "error": f"Failed to disable NPF: {result.stderr}",
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
-
-        # Try PF (OpenBSD default, FreeBSD option)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "pfctl"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Disabling PF firewall")
-                result = subprocess.run(  # nosec B603 B607
-                    self._build_command(["pfctl", "-d"]),
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("PF firewall disabled successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("PF firewall disabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to disable PF: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
-
-        # Try IPFW (FreeBSD option)
+        # Try IPFW first (FreeBSD default)
         if self.system == "FreeBSD":
             try:
                 result = subprocess.run(  # nosec B603 B607
@@ -627,22 +565,7 @@ group default {
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass
 
-        return {
-            "success": False,
-            "error": _("No supported firewall found on this BSD system"),
-        }
-
-    async def restart_firewall(self) -> Dict:
-        """
-        Restart firewall on BSD systems.
-
-        Tries NPF first (NetBSD default), then PF (OpenBSD default, FreeBSD option),
-        then IPFW (FreeBSD option).
-
-        Returns:
-            Dict with success status and message
-        """
-        # Try NPF first (NetBSD default)
+        # Try NPF (NetBSD default)
         if self.system == "NetBSD":
             try:
                 result = subprocess.run(  # nosec B603 B607
@@ -654,10 +577,9 @@ group default {
                 )
 
                 if result.returncode == 0:
-                    self.logger.info("Restarting NPF firewall")
-                    # Reload configuration
+                    self.logger.info("Disabling NPF firewall")
                     result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["npfctl", "reload"]),
+                        self._build_command(["npfctl", "stop"]),
                         capture_output=True,
                         text=True,
                         timeout=10,
@@ -665,20 +587,20 @@ group default {
                     )
 
                     if result.returncode == 0:
-                        self.logger.info("NPF firewall restarted successfully")
+                        self.logger.info("NPF firewall disabled successfully")
                         await self._send_firewall_status_update()
                         return {
                             "success": True,
-                            "message": _("NPF firewall restarted successfully"),
+                            "message": _("NPF firewall disabled successfully"),
                         }
                     return {
                         "success": False,
-                        "error": f"Failed to restart NPF: {result.stderr}",
+                        "error": f"Failed to disable NPF: {result.stderr}",
                     }
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass
 
-        # Try PF (OpenBSD default, FreeBSD option)
+        # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["which", "pfctl"],
@@ -689,10 +611,9 @@ group default {
             )
 
             if result.returncode == 0:
-                self.logger.info("Restarting PF firewall")
-                # Reload PF rules
+                self.logger.info("Disabling PF firewall")
                 result = subprocess.run(  # nosec B603 B607
-                    self._build_command(["pfctl", "-f", "/etc/pf.conf"]),
+                    self._build_command(["pfctl", "-d"]),
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -700,20 +621,35 @@ group default {
                 )
 
                 if result.returncode == 0:
-                    self.logger.info("PF firewall restarted successfully")
+                    self.logger.info("PF firewall disabled successfully")
                     await self._send_firewall_status_update()
                     return {
                         "success": True,
-                        "message": _("PF firewall restarted successfully"),
+                        "message": _("PF firewall disabled successfully"),
                     }
                 return {
                     "success": False,
-                    "error": f"Failed to restart PF: {result.stderr}",
+                    "error": f"Failed to disable PF: {result.stderr}",
                 }
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
 
-        # Try IPFW (FreeBSD option)
+        return {
+            "success": False,
+            "error": _("No supported firewall found on this BSD system"),
+        }
+
+    async def restart_firewall(self) -> Dict:
+        """
+        Restart firewall on BSD systems.
+
+        Tries IPFW first (FreeBSD default), NPF (NetBSD default),
+        then PF (OpenBSD default, also available on FreeBSD/NetBSD).
+
+        Returns:
+            Dict with success status and message
+        """
+        # Try IPFW first (FreeBSD default)
         if self.system == "FreeBSD":
             try:
                 result = subprocess.run(  # nosec B603 B607
@@ -747,6 +683,75 @@ group default {
                     }
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass
+
+        # Try NPF (NetBSD default)
+        if self.system == "NetBSD":
+            try:
+                result = subprocess.run(  # nosec B603 B607
+                    ["which", "npfctl"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    self.logger.info("Restarting NPF firewall")
+                    result = subprocess.run(  # nosec B603 B607
+                        self._build_command(["npfctl", "reload"]),
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+
+                    if result.returncode == 0:
+                        self.logger.info("NPF firewall restarted successfully")
+                        await self._send_firewall_status_update()
+                        return {
+                            "success": True,
+                            "message": _("NPF firewall restarted successfully"),
+                        }
+                    return {
+                        "success": False,
+                        "error": f"Failed to restart NPF: {result.stderr}",
+                    }
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
+
+        # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
+        try:
+            result = subprocess.run(  # nosec B603 B607
+                ["which", "pfctl"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                self.logger.info("Restarting PF firewall")
+                result = subprocess.run(  # nosec B603 B607
+                    self._build_command(["pfctl", "-f", "/etc/pf.conf"]),
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    self.logger.info("PF firewall restarted successfully")
+                    await self._send_firewall_status_update()
+                    return {
+                        "success": True,
+                        "message": _("PF firewall restarted successfully"),
+                    }
+                return {
+                    "success": False,
+                    "error": f"Failed to restart PF: {result.stderr}",
+                }
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
 
         return {
             "success": False,
