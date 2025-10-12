@@ -247,6 +247,46 @@ class BSDFirewallOperations(FirewallBase):
                     "Failed to load IPFW kernel module: %s", result.stderr
                 )
 
+            # Enable IPFW (requires rc.conf modification)
+            # Check if firewall_enable is already set
+            try:
+                with open("/etc/rc.conf", "r", encoding="utf-8") as file_handle:
+                    rc_conf = file_handle.read()
+
+                if 'firewall_enable="YES"' not in rc_conf:
+                    subprocess.run(  # nosec B603 B607
+                        self._build_command(["sysrc", "firewall_enable=YES"]),
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    subprocess.run(  # nosec B603 B607
+                        self._build_command(["sysrc", "firewall_type=open"]),
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+            except Exception as exc:
+                self.logger.warning("Error modifying rc.conf: %s", exc)
+
+            # Start IPFW service (this will load default rules from rc.firewall)
+            result = subprocess.run(  # nosec B603 B607
+                self._build_command(["service", "ipfw", "start"]),
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"Failed to start IPFW service: {result.stderr}",
+                }
+
+            # Now add our custom rules (after service started to avoid them being flushed)
             # Always allow SSH (port 22)
             self.logger.info("Adding IPFW rule: allow 22/tcp (SSH)")
             result = subprocess.run(  # nosec B603 B607
@@ -302,49 +342,11 @@ class BSDFirewallOperations(FirewallBase):
                         "Failed to add IPFW rule for port %d: %s", port, result.stderr
                     )
 
-            # Enable IPFW (requires rc.conf modification)
-            # Check if firewall_enable is already set
-            try:
-                with open("/etc/rc.conf", "r", encoding="utf-8") as file_handle:
-                    rc_conf = file_handle.read()
-
-                if 'firewall_enable="YES"' not in rc_conf:
-                    subprocess.run(  # nosec B603 B607
-                        self._build_command(["sysrc", "firewall_enable=YES"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    subprocess.run(  # nosec B603 B607
-                        self._build_command(["sysrc", "firewall_type=open"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-            except Exception as exc:
-                self.logger.warning("Error modifying rc.conf: %s", exc)
-
-            # Start IPFW service
-            result = subprocess.run(  # nosec B603 B607
-                self._build_command(["service", "ipfw", "start"]),
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("IPFW firewall enabled successfully")
-                await self._send_firewall_status_update()
-                return {
-                    "success": True,
-                    "message": _("IPFW firewall enabled successfully"),
-                }
+            self.logger.info("IPFW firewall enabled successfully")
+            await self._send_firewall_status_update()
             return {
-                "success": False,
-                "error": f"Failed to enable IPFW: {result.stderr}",
+                "success": True,
+                "message": _("IPFW firewall enabled successfully"),
             }
 
         except Exception as exc:
