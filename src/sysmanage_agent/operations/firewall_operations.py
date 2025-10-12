@@ -178,7 +178,7 @@ class FirewallOperations:
             self.logger.info("Starting firewall deploy operation")
 
             # Get the appropriate firewall handler for the OS
-            handler = self._get_firewall_handler()
+            handler = self._get_os_handler()
 
             # Deploy the firewall
             return await handler.deploy_firewall()
