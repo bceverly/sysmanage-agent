@@ -226,6 +226,20 @@ class BSDFirewallOperations(FirewallBase):
         try:
             self.logger.info("Enabling IPFW firewall")
 
+            # Load IPFW kernel module if not already loaded
+            result = subprocess.run(  # nosec B603 B607
+                self._build_command(["kldload", "ipfw"]),
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            # kldload returns 1 if already loaded, which is fine
+            if result.returncode not in [0, 1]:
+                self.logger.warning(
+                    "Failed to load IPFW kernel module: %s", result.stderr
+                )
+
             # Always allow SSH (port 22)
             self.logger.info("Adding IPFW rule: allow 22/tcp (SSH)")
             result = subprocess.run(  # nosec B603 B607

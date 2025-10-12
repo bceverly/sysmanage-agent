@@ -862,24 +862,66 @@ class FirewallCollector:
             if "allow" not in line.lower():
                 continue
 
+            # Skip generic allow rules that don't specify protocols/ports
+            if (
+                "from any to any" in line
+                and "tcp" not in line.lower()
+                and "udp" not in line.lower()
+            ):
+                continue
+
             # Determine if IPv4 or IPv6
             # IPFW uses "ip" for IPv4 and "ip6" for IPv6
-            is_ipv6 = "ip6" in line.lower()
+            is_ipv6 = "ip6" in line.lower() or "ipv6" in line.lower()
+
+            # Parse port from IPFW rule formats:
+            # Format 1: "allow tcp from any to any 22" (port at end)
+            # Format 2: "allow tcp from any to any dst-port 22" (dst-port keyword)
+            port = None
 
             # Check for TCP
-            if "tcp" in line.lower() and "dst-port" in line.lower():
-                parts = line.split("dst-port")
-                if len(parts) > 1:
-                    port = parts[1].strip().split()[0].strip(",")
+            if "tcp" in line.lower():
+                # Try dst-port format first
+                if "dst-port" in line.lower():
+                    parts = line.split("dst-port")
+                    if len(parts) > 1:
+                        port = parts[1].strip().split()[0].strip(",")
+                # Try port-at-end format: "to any <port>"
+                elif " to any " in line:
+                    # Get everything after "to any"
+                    parts = line.split(" to any ")
+                    if len(parts) > 1:
+                        # Port is the last number on the line
+                        last_part = parts[-1].strip()
+                        port_match = last_part.split()
+                        if port_match and port_match[0].isdigit():
+                            port = port_match[0]
+
+                if port:
                     if is_ipv6:
                         ipv6_tcp_ports.append(port)
                     else:
                         ipv4_tcp_ports.append(port)
+
             # Check for UDP
-            elif "udp" in line.lower() and "dst-port" in line.lower():
-                parts = line.split("dst-port")
-                if len(parts) > 1:
-                    port = parts[1].strip().split()[0].strip(",")
+            elif "udp" in line.lower():
+                # Try dst-port format first
+                if "dst-port" in line.lower():
+                    parts = line.split("dst-port")
+                    if len(parts) > 1:
+                        port = parts[1].strip().split()[0].strip(",")
+                # Try port-at-end format: "to any <port>"
+                elif " to any " in line:
+                    # Get everything after "to any"
+                    parts = line.split(" to any ")
+                    if len(parts) > 1:
+                        # Port is the last number on the line
+                        last_part = parts[-1].strip()
+                        port_match = last_part.split()
+                        if port_match and port_match[0].isdigit():
+                            port = port_match[0]
+
+                if port:
                     if is_ipv6:
                         ipv6_udp_ports.append(port)
                     else:
