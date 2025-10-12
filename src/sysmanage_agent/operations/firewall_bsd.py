@@ -36,8 +36,8 @@ class BSDFirewallOperations(FirewallBase):
         """
         Enable firewall on BSD systems.
 
-        Tries NPF first (NetBSD default), then PF (OpenBSD default, FreeBSD option),
-        then IPFW (FreeBSD option).
+        Tries IPFW first (FreeBSD default), NPF (NetBSD default),
+        then PF (OpenBSD default, also available on FreeBSD/NetBSD).
 
         Args:
             ports: List of ports to allow
@@ -46,7 +46,23 @@ class BSDFirewallOperations(FirewallBase):
         Returns:
             Dict with success status and message
         """
-        # Try NPF first (NetBSD default)
+        # Try IPFW first (FreeBSD default)
+        if self.system == "FreeBSD":
+            try:
+                result = subprocess.run(  # nosec B603 B607
+                    ["which", "ipfw"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    return await self._enable_ipfw_firewall(ports, protocol)
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
+
+        # Try NPF (NetBSD default)
         if self.system == "NetBSD":
             try:
                 result = subprocess.run(  # nosec B603 B607
@@ -62,7 +78,7 @@ class BSDFirewallOperations(FirewallBase):
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass
 
-        # Try PF (OpenBSD default, FreeBSD option)
+        # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["which", "pfctl"],
@@ -76,22 +92,6 @@ class BSDFirewallOperations(FirewallBase):
                 return await self._enable_pf_firewall(ports, protocol)
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
-
-        # Try IPFW (FreeBSD option)
-        if self.system == "FreeBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "ipfw"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    return await self._enable_ipfw_firewall(ports, protocol)
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
 
         return {
             "success": False,
