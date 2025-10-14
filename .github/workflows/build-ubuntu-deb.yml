@@ -207,8 +207,47 @@ jobs:
 
       - name: Update APT repository in sysmanage-docs
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DEB_FILE: ${{ steps.package_info.outputs.deb_file }}
         run: |
-          echo "TODO: Implement APT repository update in sysmanage-docs"
-          echo "This will copy the .deb file to the APT repository structure"
-          echo "and update the Packages index file"
-          # This will be implemented after the APT repository structure is created
+          echo "=========================================="
+          echo "Updating APT Repository in sysmanage-docs"
+          echo "=========================================="
+
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # Clone sysmanage-docs repository
+          echo "📦 Cloning sysmanage-docs repository..."
+          git clone https://x-access-token:${DOCS_REPO_TOKEN}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          # Copy .deb file to temporary location
+          echo "📋 Copying .deb file..."
+          cp "$DEB_FILE" /tmp/
+
+          # Run update-repo.sh script
+          echo "🔄 Updating APT repository..."
+          cd /tmp/sysmanage-docs/apt
+          chmod +x update-repo.sh
+          ./update-repo.sh "/tmp/$DEB_FILE"
+
+          # Commit and push changes
+          echo "💾 Committing changes..."
+          cd /tmp/sysmanage-docs
+          git add apt/
+          git commit -m "Add sysmanage-agent version $VERSION to APT repository
+
+          Automatically updated by GitHub Actions from sysmanage-agent release ${{ github.ref_name }}.
+
+          - Package: $DEB_FILE
+          - Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+
+          echo "🚀 Pushing to sysmanage-docs..."
+          git push
+
+          echo "✅ APT repository updated successfully!"
+          echo "📍 Changes will be live on GitHub Pages in 2-5 minutes"
+          echo "🔗 Repository: https://bceverly.github.io/sysmanage-docs/apt"
