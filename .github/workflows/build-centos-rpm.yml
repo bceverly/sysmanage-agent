@@ -46,6 +46,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Debug - List files
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          echo "Checking for installer directory:"
+          ls -la installer/ || echo "installer/ not found"
+          ls -la installer/centos/ || echo "installer/centos/ not found"
+
       - name: Determine version
         id: version
         env:
@@ -67,6 +76,9 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          # Ensure we're in the right directory
+          cd "$GITHUB_WORKSPACE"
+
           mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
           # Create source tarball
