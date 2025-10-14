@@ -39,8 +39,12 @@ jobs:
       image: rockylinux:9
 
     steps:
-      - name: Install git and dependencies
+      - name: Install Node.js, git and dependencies
         run: |
+          # Install Node.js (required for actions/checkout@v5)
+          dnf install -y nodejs
+
+          # Install build dependencies
           dnf install -y git python3 python3-pip python3-devel rpm-build rpmdevtools rsync tar gzip sed findutils
 
       - name: Checkout code
