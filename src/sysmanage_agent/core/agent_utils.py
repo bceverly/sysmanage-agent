@@ -743,7 +743,9 @@ def is_running_privileged() -> bool:
             if current_user == "sysmanage-agent":
                 return _check_sudoers_privileges(current_user)
 
-        except Exception:
+        except (
+            Exception
+        ):  # nosec B110 # Intentionally ignore - fall through to return False
             pass
 
         # Not root and no sudoers privileges
