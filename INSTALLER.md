@@ -26,7 +26,7 @@ The SysManage Agent installer package provides:
 - **Sudoers configuration** for system management capabilities
 - **Database path fallback** (system → local)
 - **Privilege detection** via sudoers parsing
-- **Multi-Python version support** (3.10, 3.11, 3.12, 3.13, 3.14)
+- **Multi-Python version support** (3.10, 3.11, 3.12, 3.13)
 
 ### Installation Locations
 
@@ -504,7 +504,7 @@ git tag v1.0.0
 git push origin v1.0.0
 
 # GitHub Actions will automatically:
-# 1. Wait for CI tests to pass (Python 3.10-3.14)
+# 1. Wait for CI tests to pass (Python 3.10-3.13)
 # 2. Build the .deb package
 # 3. Run lintian quality checks
 # 4. Create a GitHub Release
@@ -706,7 +706,9 @@ For production, set up GPG signing (see `~/dev/sysmanage-docs/apt/README.md`).
 
 The package requires **Python 3.10+**. This is enforced in:
 - `installer/ubuntu/debian/control` - Dependency: `python3 (>= 3.10)`
-- `.github/workflows/ci.yml` - Tests on 3.10, 3.11, 3.12, 3.13, 3.14
+- `.github/workflows/ci.yml` - Tests on 3.10, 3.11, 3.12, 3.13
+
+**Note**: Python 3.14 is currently excluded from CI testing due to incompatibility with `ruamel.yaml.clib` (a transitive dependency of `semgrep`). This will be re-evaluated once the upstream dependency is updated to support Python 3.14.
 
 ### Future Platform Support
 
@@ -817,4 +819,4 @@ For issues or questions:
 
 ---
 
-*Last Updated: October 14, 2025*
+*Last Updated: October 14, 2025 (Python 3.14 excluded from testing)*

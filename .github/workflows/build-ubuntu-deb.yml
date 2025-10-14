@@ -94,7 +94,9 @@ jobs:
           # Copy source files
           cp -r src ../sysmanage-agent-$VERSION/
           cp main.py ../sysmanage-agent-$VERSION/
+          cp alembic.ini ../sysmanage-agent-$VERSION/
           cp requirements.txt ../sysmanage-agent-$VERSION/
+          cp requirements-prod.txt ../sysmanage-agent-$VERSION/
           cp README.md ../sysmanage-agent-$VERSION/ || touch ../sysmanage-agent-$VERSION/README.md
           cp -r installer/ubuntu/debian ../sysmanage-agent-$VERSION/
 
