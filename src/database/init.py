@@ -33,11 +33,17 @@ def get_database_path_from_config(config_manager) -> str:
         db_config = config_manager.get("database", {})
         config_path = db_config.get("path", None)
 
-        # If configured path is specified and absolute, try it first
+        # If configured path is specified and absolute, use it
+        # (database will be created if it doesn't exist)
         if config_path and os.path.isabs(config_path):
-            if os.path.exists(config_path):
-                logger.info(_("Using configured database path: %s"), config_path)
-                return config_path
+            logger.info(_("Using configured database path: %s"), config_path)
+            return config_path
+
+        # If configured path is relative, join with current directory
+        if config_path:
+            abs_path = os.path.join(os.getcwd(), config_path)
+            logger.info(_("Using configured relative database path: %s"), abs_path)
+            return abs_path
 
         # Try system path: /var/lib/sysmanage-agent/agent.db
         system_path = "/var/lib/sysmanage-agent/agent.db"

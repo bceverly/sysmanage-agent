@@ -21,15 +21,10 @@ class TestDatabaseInitAdditional:
         mock_config = Mock()
         mock_config.get.return_value = {"path": "relative_agent.db"}
 
-        with patch("os.path.isabs", return_value=False), patch(
-            "os.path.join"
-        ) as mock_join, patch("os.getcwd", return_value="/current/dir"):
-
-            mock_join.return_value = "/current/dir/relative_agent.db"
-
+        with patch("os.getcwd", return_value="/current/dir"):
             result = get_database_path_from_config(mock_config)
 
-            mock_join.assert_called_with("/current/dir", "relative_agent.db")
+            # Should join current directory with relative path
             assert result == "/current/dir/relative_agent.db"
 
     def test_get_database_path_from_config_default_value(self):
@@ -167,10 +162,22 @@ class TestDatabaseInitAdditional:
         """Test run_alembic_migration with custom operation and revision."""
         with patch("subprocess.run") as mock_run, patch(
             "src.database.init.os.path.dirname"
-        ) as mock_dirname, patch("src.database.init.os.path.abspath") as mock_abspath:
+        ) as mock_dirname, patch(
+            "src.database.init.os.path.abspath"
+        ) as mock_abspath, patch(
+            "src.database.init.os.path.exists"
+        ) as mock_exists, patch(
+            "src.database.base.get_database_manager"
+        ) as mock_db_mgr:
 
             # Setup path mocking
             mock_abspath.return_value = "/path/to/src/database/init.py"
+            mock_exists.return_value = False  # No venv python, use system python3
+
+            # Setup database manager mock
+            mock_db = Mock()
+            mock_db.database_path = "/test/db/path/agent.db"
+            mock_db_mgr.return_value = mock_db
 
             # Provide enough dirname return values for all expected calls
             mock_dirname.side_effect = [
@@ -196,14 +203,19 @@ class TestDatabaseInitAdditional:
             result = run_alembic_migration("downgrade", "base")
 
             assert result is True
-            mock_run.assert_called_once_with(
-                ["alembic", "downgrade", "base"],
-                cwd="/path/to",
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
+            # Verify the call was made with python3 -m alembic and env variable
+            assert mock_run.call_count == 1
+            call_args = mock_run.call_args
+            assert call_args[1]["cwd"] == "/path/to"
+            assert call_args[1]["capture_output"] is True
+            assert call_args[1]["text"] is True
+            assert call_args[1]["timeout"] == 60
+            assert call_args[1]["check"] is False
+            # Check that it used python3 -m alembic
+            assert call_args[0][0] == ["python3", "-m", "alembic", "downgrade", "base"]
+            # Check that env was passed
+            assert "env" in call_args[1]
+            assert "SYSMANAGE_DB_PATH" in call_args[1]["env"]
 
     @patch("src.database.init.run_alembic_migration")
     @patch("src.database.init.should_auto_migrate")

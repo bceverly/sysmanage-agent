@@ -47,12 +47,16 @@ jobs:
 
       - name: Determine version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
           else
             # Extract version from tag (remove 'v' prefix)
-            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION="${REF#refs/tags/v}"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
@@ -71,8 +75,9 @@ jobs:
             lintian
 
       - name: Update changelog with version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
           DATE=$(date -R)
 
           # Update changelog with actual version and date
@@ -80,9 +85,9 @@ jobs:
           sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$DATE/g" installer/ubuntu/debian/changelog
 
       - name: Create source tarball
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-
           # Create directory structure for Debian package
           mkdir -p ../sysmanage-agent-$VERSION
 
@@ -107,8 +112,9 @@ jobs:
           cd sysmanage-agent-$VERSION
 
       - name: Build Debian package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
           cd ../sysmanage-agent-$VERSION
 
           # Build the package
