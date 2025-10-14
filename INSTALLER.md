@@ -1,6 +1,6 @@
 # SysManage Agent Installer Documentation
 
-This document provides comprehensive instructions for building, testing, and distributing the SysManage Agent Ubuntu/Debian installer.
+This document provides comprehensive instructions for building, testing, and distributing the SysManage Agent installers for Ubuntu/Debian (.deb) and CentOS/RHEL/Fedora (.rpm) systems.
 
 ---
 
@@ -8,7 +8,11 @@ This document provides comprehensive instructions for building, testing, and dis
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
+  - [Ubuntu/Debian (.deb)](#ubuntudebian-deb)
+  - [CentOS/RHEL/Fedora (.rpm)](#centosrhelfedora-rpm)
 - [Building the Installer](#building-the-installer)
+  - [Ubuntu/Debian Package](#ubuntudebian-package)
+  - [CentOS/RHEL/Fedora Package](#centosrhelfedora-package)
 - [Testing the Installer](#testing-the-installer)
 - [Distribution Methods](#distribution-methods)
 - [APT Repository Management](#apt-repository-management)
@@ -19,7 +23,7 @@ This document provides comprehensive instructions for building, testing, and dis
 
 ## Overview
 
-The SysManage Agent installer package provides:
+The SysManage Agent installer packages provide:
 
 - **Automated installation** with proper system user creation
 - **Systemd service** that starts automatically on boot
@@ -27,6 +31,11 @@ The SysManage Agent installer package provides:
 - **Database path fallback** (system → local)
 - **Privilege detection** via sudoers parsing
 - **Multi-Python version support** (3.10, 3.11, 3.12, 3.13)
+
+### Package Types
+
+- **Ubuntu/Debian (.deb)**: For Debian-based distributions
+- **CentOS/RHEL/Fedora (.rpm)**: For Red Hat-based distributions
 
 ### Installation Locations
 
@@ -51,24 +60,53 @@ The SysManage Agent installer package provides:
 
 ## Quick Start
 
-### Build Installer Locally
+### Ubuntu/Debian (.deb)
+
+#### Build Installer Locally
 
 ```bash
 # Using Makefile
 make installer
 
-# The .deb file will be in the parent directory:
-ls -lh ../sysmanage-agent_*.deb
+# The .deb file will be in installer/dist/:
+ls -lh installer/dist/sysmanage-agent_*.deb
 ```
 
-### Install Locally
+#### Install Locally
 
 ```bash
 # Install the package
-sudo dpkg -i ../sysmanage-agent_*.deb
+sudo apt install installer/dist/sysmanage-agent_*.deb
 
-# Fix any dependency issues (if needed)
-sudo apt-get install -f
+# Or using dpkg
+sudo dpkg -i installer/dist/sysmanage-agent_*.deb
+sudo apt-get install -f  # Fix any dependency issues
+
+# Check service status
+sudo systemctl status sysmanage-agent
+```
+
+### CentOS/RHEL/Fedora (.rpm)
+
+#### Build Installer Locally
+
+```bash
+# Using Makefile
+make installer-rpm
+
+# The .rpm file will be in installer/dist/:
+ls -lh installer/dist/sysmanage-agent-*.rpm
+```
+
+#### Install Locally
+
+```bash
+# Install the package (choose one method)
+sudo dnf install installer/dist/sysmanage-agent-*.rpm
+# or
+sudo yum install installer/dist/sysmanage-agent-*.rpm
+# or
+sudo rpm -ivh installer/dist/sysmanage-agent-*.rpm
 
 # Check service status
 sudo systemctl status sysmanage-agent
@@ -91,7 +129,9 @@ sudo journalctl -u sysmanage-agent -f
 
 ## Building the Installer
 
-### Prerequisites
+### Ubuntu/Debian Package
+
+#### Prerequisites
 
 Install required build tools:
 
@@ -105,6 +145,9 @@ sudo apt-get install -y \
   build-essential \
   devscripts \
   lintian
+
+# Or use the Makefile helper
+make install-dev
 ```
 
 ### Manual Build Process
@@ -175,7 +218,7 @@ dpkg-deb --info ../sysmanage-agent_*.deb
 lintian ../sysmanage-agent_*.deb
 ```
 
-### Using the Makefile
+#### Using the Makefile
 
 The Makefile provides a `make installer` target that automates the entire process:
 
@@ -183,7 +226,7 @@ The Makefile provides a `make installer` target that automates the entire proces
 # Build installer
 make installer
 
-# The .deb file will be in ../sysmanage-agent_*.deb
+# The .deb file will be in installer/dist/sysmanage-agent_*.deb
 ```
 
 The Makefile target automatically:
@@ -192,6 +235,131 @@ The Makefile target automatically:
 - Updates the version number (uses git describe)
 - Builds the package
 - Runs lintian for quality checks
+- Reports the output file location
+
+---
+
+### CentOS/RHEL/Fedora Package
+
+#### Prerequisites
+
+Install required build tools:
+
+```bash
+# For Fedora/CentOS Stream 9+/RHEL 9+
+sudo dnf install -y \
+  rpm-build \
+  rpmdevtools \
+  python3-devel \
+  python3-setuptools \
+  rsync
+
+# For older CentOS/RHEL 7-8
+sudo yum install -y \
+  rpm-build \
+  rpmdevtools \
+  python3-devel \
+  python3-setuptools \
+  rsync
+
+# Or use the Makefile helper
+make install-dev-rpm
+```
+
+#### Manual Build Process
+
+##### 1. Set Up RPM Build Tree
+
+```bash
+cd ~/dev/sysmanage-agent
+
+# Create RPM build directories
+mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+```
+
+##### 2. Create Source Tarball
+
+```bash
+VERSION="1.0.0"
+TAR_NAME="sysmanage-agent-$VERSION"
+TAR_DIR="/tmp/$TAR_NAME"
+
+# Create temporary directory
+mkdir -p "$TAR_DIR"
+
+# Copy source files
+cp -r src "$TAR_DIR/"
+cp main.py "$TAR_DIR/"
+cp alembic.ini "$TAR_DIR/"
+cp requirements-prod.txt "$TAR_DIR/"
+cp README.md "$TAR_DIR/" || touch "$TAR_DIR/README.md"
+cp LICENSE "$TAR_DIR/" || touch "$TAR_DIR/LICENSE"
+
+# Copy installer files
+mkdir -p "$TAR_DIR/installer/centos"
+cp installer/centos/*.service "$TAR_DIR/installer/centos/"
+cp installer/centos/*.sudoers "$TAR_DIR/installer/centos/"
+cp installer/centos/*.example "$TAR_DIR/installer/centos/"
+
+# Create tarball
+cd /tmp
+tar czf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz "$TAR_NAME/"
+```
+
+##### 3. Update Spec File
+
+```bash
+# Copy spec file
+cp installer/centos/sysmanage-agent.spec ~/rpmbuild/SPECS/
+
+# Update version
+sed -i "s/^Version:.*/Version:        $VERSION/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+# Update changelog date
+DATE=$(date "+%a %b %d %Y")
+sed -i "s/^\\* Mon Oct 14 2024/\\* $DATE/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+```
+
+##### 4. Build Package
+
+```bash
+# Build RPM (binary only)
+rpmbuild -bb ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+# The .rpm will be in ~/rpmbuild/RPMS/noarch/
+ls -lh ~/rpmbuild/RPMS/noarch/sysmanage-agent-*.rpm
+```
+
+##### 5. Verify Package
+
+```bash
+# Check package contents
+rpm -qlp ~/rpmbuild/RPMS/noarch/sysmanage-agent-*.rpm
+
+# Check package info
+rpm -qip ~/rpmbuild/RPMS/noarch/sysmanage-agent-*.rpm
+
+# Check package dependencies
+rpm -qpR ~/rpmbuild/RPMS/noarch/sysmanage-agent-*.rpm
+```
+
+#### Using the Makefile
+
+The Makefile provides a `make installer-rpm` target that automates the entire process:
+
+```bash
+# Build RPM installer
+make installer-rpm
+
+# The .rpm file will be in installer/dist/sysmanage-agent-*.rpm
+```
+
+The Makefile target automatically:
+- Creates the RPM build tree
+- Creates source tarball
+- Copies all necessary files
+- Updates the version number (uses git describe)
+- Builds the RPM package
 - Reports the output file location
 
 ---
@@ -575,16 +743,16 @@ After GitHub Actions creates the release:
 
 ### Build Issues
 
-#### Missing Dependencies
+#### Ubuntu/Debian Build Issues
 
 **Error**: `dpkg-checkbuilddeps: error: Unmet build dependencies`
 
 **Solution**:
 ```bash
 sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build-essential
+# Or use the helper
+make install-dev
 ```
-
-#### Permission Denied on debian/rules
 
 **Error**: `debian/rules: Permission denied`
 
@@ -593,17 +761,49 @@ sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build
 chmod +x installer/ubuntu/debian/rules
 ```
 
-#### Lintian Errors
-
 **Error**: Various lintian warnings/errors
 
 **Solution**: Most warnings can be ignored for initial releases. Critical errors:
 - **sudoers-file-wrong-permissions**: Fixed by debian/rules (chmod 0440)
 - **invalid-debian-changelog**: Update version and date format
 
+#### CentOS/RHEL/Fedora Build Issues
+
+**Error**: `rpmbuild: command not found`
+
+**Solution**:
+```bash
+sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools
+# Or use the helper
+make install-dev-rpm
+```
+
+**Error**: `error: File /root/rpmbuild/SOURCES/sysmanage-agent-X.Y.Z.tar.gz: No such file or directory`
+
+**Solution**: Ensure the source tarball is created before building:
+```bash
+# The Makefile handles this automatically, but if building manually:
+cd /tmp
+tar czf ~/rpmbuild/SOURCES/sysmanage-agent-VERSION.tar.gz sysmanage-agent-VERSION/
+```
+
+**Error**: `error: Failed build dependencies: python3-devel is needed`
+
+**Solution**:
+```bash
+sudo dnf install -y python3-devel python3-setuptools
+```
+
+**Error**: Sudoers file validation fails during build
+
+**Solution**: The spec file validates the sudoers file syntax. Check the sudoers file:
+```bash
+visudo -c -f installer/centos/sysmanage-agent.sudoers
+```
+
 ### Installation Issues
 
-#### Service Fails to Start
+#### Service Fails to Start (Both .deb and .rpm)
 
 **Error**: `systemctl status sysmanage-agent` shows failed
 
@@ -619,8 +819,32 @@ sudo cp /etc/sysmanage-agent/sysmanage-agent.yaml.example /etc/sysmanage-agent.y
 # 2. Database permissions
 sudo chown -R sysmanage-agent:sysmanage-agent /var/lib/sysmanage-agent
 
-# 3. Python dependencies
+# 3. Python dependencies (Debian/Ubuntu)
 sudo apt-get install -f
+
+# 3. Python dependencies (CentOS/RHEL/Fedora)
+sudo dnf install -y python3 python3-pip
+```
+
+#### RPM Installation Issues
+
+**Error**: `error: Failed dependencies: python3 >= 3.10 is needed`
+
+**Solution**: Install Python 3.10+ first:
+```bash
+# On CentOS/RHEL 7-8, you may need to install from EPEL or SCL
+sudo dnf install -y python3.10  # or python3.11
+
+# On Fedora/CentOS Stream 9+/RHEL 9+, Python 3.9+ is usually available
+sudo dnf install -y python3
+```
+
+**Error**: `error: unpacking of archive failed on file /etc/sudoers.d/sysmanage-agent`
+
+**Solution**: This can happen if sudoers directory doesn't exist:
+```bash
+sudo mkdir -p /etc/sudoers.d
+sudo chmod 750 /etc/sudoers.d
 ```
 
 #### User Not Created
@@ -710,12 +934,22 @@ The package requires **Python 3.10+**. This is enforced in:
 
 **Note**: Python 3.14 is currently excluded from CI testing due to incompatibility with `ruamel.yaml.clib` (a transitive dependency of `semgrep`). This will be re-evaluated once the upstream dependency is updated to support Python 3.14.
 
+### RPM Platform Compatibility
+
+**Tested Platforms**:
+- ✅ Rocky Linux 9 - Python 3.9+
+- ✅ AlmaLinux 9 - Python 3.9+
+- ✅ CentOS Stream 9+ - Python 3.9+
+- ✅ RHEL 9+ - Python 3.9+
+- ✅ Fedora 38+ - Python 3.11+
+
+**Note**: Older versions (CentOS 7, RHEL 7-8) may require Python 3.10+ to be installed separately.
+
 ### Future Platform Support
 
 Planned platform support:
 - **Windows**: .msi installer (WiX Toolset)
 - **macOS**: .pkg installer (pkgbuild)
-- **RPM-based**: .rpm for CentOS/RHEL/Fedora
 - **Arch Linux**: PKGBUILD for AUR
 
 ---

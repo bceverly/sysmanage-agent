@@ -50,6 +50,76 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - 🔒 **FreeBSD**: Latest stable versions
 - 🛡️ **OpenBSD**: Latest stable versions
 
+## Installation
+
+### Package Repositories (Recommended)
+
+#### Ubuntu/Debian - APT Repository
+
+```bash
+# Add the repository
+echo "deb [trusted=yes] https://bceverly.github.io/sysmanage-docs/repo/deb stable main" | \
+  sudo tee /etc/apt/sources.list.d/sysmanage.list
+
+# Update and install
+sudo apt update
+sudo apt install sysmanage-agent
+
+# Configure
+sudo nano /etc/sysmanage-agent.yaml
+sudo systemctl restart sysmanage-agent
+```
+
+**Supported:** Ubuntu 22.04+, Debian 11+
+
+#### RHEL/CentOS/Fedora/Rocky/AlmaLinux - YUM/DNF Repository
+
+**EL9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9):**
+```bash
+sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
+[sysmanage]
+name=SysManage Agent Repository
+baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/el9/x86_64
+enabled=1
+gpgcheck=0
+EOF
+
+sudo dnf install sysmanage-agent
+```
+
+**EL8 (RHEL 8, Rocky 8, AlmaLinux 8):**
+```bash
+# Install Python 3.11 first
+sudo dnf module install python311
+
+sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
+[sysmanage]
+name=SysManage Agent Repository
+baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/el8/x86_64
+enabled=1
+gpgcheck=0
+EOF
+
+sudo dnf install sysmanage-agent
+```
+
+**Fedora 38+:**
+```bash
+sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
+[sysmanage]
+name=SysManage Agent Repository
+baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/fedora/39/x86_64
+enabled=1
+gpgcheck=0
+EOF
+
+sudo dnf install sysmanage-agent
+```
+
+### Direct Downloads
+
+Download packages from [GitHub Releases](https://github.com/bceverly/sysmanage-agent/releases)
+
 ## Prerequisites
 
 - **Python**: 3.9, 3.11, or 3.12 (Python 3.13 not yet supported)

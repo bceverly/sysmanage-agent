@@ -88,6 +88,7 @@ jobs:
           cp installer/centos/*.service "$TAR_DIR/installer/centos/"
           cp installer/centos/*.sudoers "$TAR_DIR/installer/centos/"
           cp installer/centos/*.example "$TAR_DIR/installer/centos/"
+          cp installer/centos/sysmanage-agent.spec "$TAR_DIR/installer/centos/"
 
           # Create tarball
           cd /tmp
@@ -99,7 +100,11 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cp installer/centos/sysmanage-agent.spec ~/rpmbuild/SPECS/
+          # Extract spec file from source tarball
+          tar -xzf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz -C /tmp \
+            sysmanage-agent-$VERSION/installer/centos/sysmanage-agent.spec
+          cp /tmp/sysmanage-agent-$VERSION/installer/centos/sysmanage-agent.spec ~/rpmbuild/SPECS/
+
           DATE=$(date "+%a %b %d %Y")
 
           # Update version and changelog date
@@ -203,3 +208,68 @@ jobs:
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update RPM repository in sysmanage-docs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          RPM_FILE: ${{ steps.package_info.outputs.rpm_file }}
+        run: |
+          echo "=========================================="
+          echo "Updating RPM Repository in sysmanage-docs"
+          echo "=========================================="
+
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # Clone sysmanage-docs repository
+          echo "📦 Cloning sysmanage-docs repository..."
+          git clone https://x-access-token:${DOCS_REPO_TOKEN}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          # Copy .rpm file to temporary location
+          echo "📋 Copying .rpm file..."
+          cp "$RPM_FILE" /tmp/
+
+          # Determine target repository based on package name
+          # Package name should be like: sysmanage-agent-1.0.0-1.el9.x86_64.rpm
+          if echo "$RPM_FILE" | grep -q '.el9.'; then
+            TARGET="el9"
+            echo "📍 Target: EL9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9)"
+          elif echo "$RPM_FILE" | grep -q '.el8.'; then
+            TARGET="el8"
+            echo "📍 Target: EL8 (RHEL 8, Rocky 8, AlmaLinux 8)"
+          elif echo "$RPM_FILE" | grep -q '.fc'; then
+            TARGET="fedora/39"
+            echo "📍 Target: Fedora 39+"
+          else
+            # Default to el9
+            TARGET="el9"
+            echo "⚠️  Could not determine target from package name, defaulting to EL9"
+          fi
+
+          # Run update-repo.sh script
+          echo "🔄 Updating RPM repository..."
+          cd /tmp/sysmanage-docs/repo/rpm
+          chmod +x update-repo.sh
+          ./update-repo.sh "/tmp/$RPM_FILE" "$TARGET"
+
+          # Commit and push changes
+          echo "💾 Committing changes..."
+          cd /tmp/sysmanage-docs
+          git add repo/
+          git commit -m "Add sysmanage-agent version $VERSION to $TARGET RPM repository
+
+          Automatically updated by GitHub Actions from sysmanage-agent release ${{ github.ref_name }}.
+
+          - Package: $RPM_FILE
+          - Target: $TARGET
+          - Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+
+          echo "🚀 Pushing to sysmanage-docs..."
+          git push
+
+          echo "✅ RPM repository updated successfully!"
+          echo "📍 Changes will be live on GitHub Pages in 2-5 minutes"
+          echo "🔗 Repository: https://bceverly.github.io/sysmanage-docs/repo/rpm/$TARGET/x86_64"

@@ -230,14 +230,14 @@ jobs:
 
           # Run update-repo.sh script
           echo "🔄 Updating APT repository..."
-          cd /tmp/sysmanage-docs/apt
+          cd /tmp/sysmanage-docs/repo/deb
           chmod +x update-repo.sh
           ./update-repo.sh "/tmp/$DEB_FILE"
 
           # Commit and push changes
           echo "💾 Committing changes..."
           cd /tmp/sysmanage-docs
-          git add apt/
+          git add repo/
           git commit -m "Add sysmanage-agent version $VERSION to APT repository
 
           Automatically updated by GitHub Actions from sysmanage-agent release ${{ github.ref_name }}.
@@ -250,4 +250,4 @@ jobs:
 
           echo "✅ APT repository updated successfully!"
           echo "📍 Changes will be live on GitHub Pages in 2-5 minutes"
-          echo "🔗 Repository: https://bceverly.github.io/sysmanage-docs/apt"
+          echo "🔗 Repository: https://bceverly.github.io/sysmanage-docs/repo/deb"

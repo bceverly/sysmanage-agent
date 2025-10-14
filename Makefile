@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm
 
 # Default target
 help:
@@ -26,10 +26,14 @@ help:
 	@echo "  make security-upgrades - Check for security package upgrades"
 	@echo ""
 	@echo "Packaging targets:"
-	@echo "  make installer     - Build Ubuntu/Debian .deb package for local testing"
+	@echo "  make installer     - Build installer package (auto-detects platform: .deb or .rpm)"
+	@echo "  make installer-deb - Build Ubuntu/Debian .deb package (explicit)"
+	@echo "  make installer-rpm - Build CentOS/RHEL/Fedora .rpm package (explicit)"
 	@echo ""
 	@echo "Platform-specific notes:"
-	@echo "  Ubuntu/Debian: install-dev installs packaging tools (debhelper, dpkg-buildpackage, etc.)"
+	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
+	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, etc."
+	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
 	@echo "    OpenBSD: gcc, py3-cffi"
 	@echo "    NetBSD: gcc13, py312-cffi"
@@ -88,13 +92,35 @@ endif
 
 setup-venv: $(VENV_ACTIVATE)
 
-# Install development dependencies
+# Install development dependencies (auto-detects platform)
 install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
 ifeq ($(OS),Windows_NT)
 	@$(PYTHON) scripts/install-dev-deps.py
 else
-	@if [ "$$(uname -s)" = "Linux" ] && [ -f /etc/lsb-release ] && grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+	@if [ -f /etc/redhat-release ]; then \
+		echo "[INFO] Red Hat-based system detected - checking for RPM build tools..."; \
+		MISSING_PKGS=""; \
+		command -v rpmbuild >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpm-build"; \
+		command -v rpmdev-setuptree >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpmdevtools"; \
+		rpm -q python3-devel >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-devel"; \
+		rpm -q python3-setuptools >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-setuptools"; \
+		if [ -n "$$MISSING_PKGS" ]; then \
+			echo "Missing packages:$$MISSING_PKGS"; \
+			echo "Installing RPM build tools..."; \
+			if command -v dnf >/dev/null 2>&1; then \
+				echo "Running: sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync"; \
+				sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync || \
+				echo "[WARNING] Could not install RPM build tools. Run manually: sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync"; \
+			else \
+				echo "Running: sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync"; \
+				sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync || \
+				echo "[WARNING] Could not install RPM build tools. Run manually: sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools rsync"; \
+			fi; \
+		else \
+			echo "✓ All RPM build tools already installed"; \
+		fi; \
+	elif [ "$$(uname -s)" = "Linux" ] && [ -f /etc/lsb-release ] && grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
 		echo "[INFO] Ubuntu/Debian detected - checking for packaging build tools..."; \
 		MISSING_PKGS=""; \
 		command -v dpkg-buildpackage >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS devscripts"; \
@@ -330,8 +356,22 @@ else
 endif
 	@echo "[OK] Basic secrets detection completed"
 
-# Build Ubuntu/Debian installer package
+# Build installer package (auto-detects platform)
 installer:
+	@if [ -f /etc/redhat-release ]; then \
+		echo "Red Hat-based system detected - building RPM package"; \
+		$(MAKE) installer-rpm; \
+	elif [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then \
+		echo "Debian-based system detected - building DEB package"; \
+		$(MAKE) installer-deb; \
+	else \
+		echo "ERROR: Unsupported platform for package building"; \
+		echo "Detected OS: $$(uname -s)"; \
+		exit 1; \
+	fi
+
+# Build Ubuntu/Debian installer package
+installer-deb:
 	@echo "=== Building Ubuntu/Debian .deb Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -429,5 +469,141 @@ installer:
 		echo ""; \
 		echo "✗ Build failed! Check build.log for details:"; \
 		echo "  cat $$BUILD_DIR/build.log"; \
+		exit 1; \
+	fi
+
+# Install RPM build dependencies (for CentOS/RHEL/Fedora)
+install-dev-rpm: setup-venv
+	@echo "Installing RPM build dependencies..."
+	@if [ -f /etc/redhat-release ]; then \
+		echo "[INFO] Red Hat-based system detected - checking for RPM build tools..."; \
+		MISSING_PKGS=""; \
+		command -v rpmbuild >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpm-build"; \
+		command -v rpmdev-setuptree >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpmdevtools"; \
+		rpm -q python3-devel >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-devel"; \
+		rpm -q python3-setuptools >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-setuptools"; \
+		if [ -n "$$MISSING_PKGS" ]; then \
+			echo "Missing packages:$$MISSING_PKGS"; \
+			echo "Installing RPM build tools..."; \
+			if command -v dnf >/dev/null 2>&1; then \
+				echo "Running: sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+				sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools || \
+				echo "[WARNING] Could not install RPM build tools. Run manually: sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+			else \
+				echo "Running: sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+				sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools || \
+				echo "[WARNING] Could not install RPM build tools. Run manually: sudo yum install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+			fi; \
+		else \
+			echo "✓ All RPM build tools already installed"; \
+		fi; \
+	else \
+		echo "[WARNING] Not a Red Hat-based system. RPM build tools may not be available."; \
+	fi
+	@echo "RPM build environment setup complete!"
+
+# Build CentOS/RHEL/Fedora installer package
+installer-rpm:
+	@echo "=== Building CentOS/RHEL/Fedora .rpm Package ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v rpmbuild >/dev/null 2>&1 || { \
+		echo "ERROR: rpmbuild not found."; \
+		echo "Install with: sudo dnf install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+		echo "Or run: make install-dev-rpm"; \
+		exit 1; \
+	}
+	@echo "✓ Build tools available"
+	@echo ""; \
+	echo "Determining version..."; \
+	set -e; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="0.1.0"; \
+		echo "No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Setting up RPM build tree..."; \
+	CURRENT_DIR=$$(pwd); \
+	BUILD_TEMP="$$CURRENT_DIR/installer/dist/rpmbuild"; \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	mkdir -p "$$OUTPUT_DIR"; \
+	rm -rf "$$BUILD_TEMP"; \
+	mkdir -p "$$BUILD_TEMP"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}; \
+	echo "✓ RPM build tree created"; \
+	echo ""; \
+	echo "Creating source tarball..."; \
+	TAR_NAME="sysmanage-agent-$$VERSION"; \
+	TAR_DIR="$$BUILD_TEMP/SOURCES/$$TAR_NAME"; \
+	mkdir -p "$$TAR_DIR"; \
+	rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' src/ "$$TAR_DIR/src/"; \
+	cp main.py "$$TAR_DIR/"; \
+	cp alembic.ini "$$TAR_DIR/"; \
+	cp requirements-prod.txt "$$TAR_DIR/"; \
+	cp README.md "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/README.md"; \
+	cp LICENSE "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/LICENSE"; \
+	mkdir -p "$$TAR_DIR/installer/centos"; \
+	cp installer/centos/*.service "$$TAR_DIR/installer/centos/"; \
+	cp installer/centos/*.sudoers "$$TAR_DIR/installer/centos/"; \
+	cp installer/centos/*.example "$$TAR_DIR/installer/centos/"; \
+	cd "$$BUILD_TEMP/SOURCES" && tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
+	rm -rf "$$TAR_DIR"; \
+	echo "✓ Source tarball created"; \
+	echo ""; \
+	echo "Updating spec file with version..."; \
+	cp "$$CURRENT_DIR/installer/centos/sysmanage-agent.spec" "$$BUILD_TEMP/SPECS/"; \
+	DATE=$$(date "+%a %b %d %Y"); \
+	sed -i "s/^Version:.*/Version:        $$VERSION/" "$$BUILD_TEMP/SPECS/sysmanage-agent.spec"; \
+	sed -i "s/^\\* Mon Oct 14 2024/\\* $$DATE/" "$$BUILD_TEMP/SPECS/sysmanage-agent.spec"; \
+	echo "✓ Spec file updated to version $$VERSION"; \
+	echo ""; \
+	echo "Building RPM package..."; \
+	cd "$$BUILD_TEMP" && rpmbuild --define "_topdir $$BUILD_TEMP" -bb SPECS/sysmanage-agent.spec 2>&1 | tee build.log; \
+	BUILD_STATUS=$$?; \
+	if [ $$BUILD_STATUS -eq 0 ]; then \
+		echo ""; \
+		echo "✓ Package built successfully!"; \
+		echo ""; \
+		echo "Moving package to output directory..."; \
+		RPM_FILE=$$(find "$$BUILD_TEMP/RPMS" -name "sysmanage-agent-$$VERSION-*.rpm" | head -1); \
+		if [ -n "$$RPM_FILE" ]; then \
+			cp "$$RPM_FILE" "$$OUTPUT_DIR/"; \
+			RPM_BASENAME=$$(basename "$$RPM_FILE"); \
+			echo "✓ Package moved to $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Cleaning up temporary build files..."; \
+			rm -rf "$$BUILD_TEMP"; \
+			echo "✓ Temporary files cleaned"; \
+			echo ""; \
+			echo "==================================="; \
+			echo "Build Complete!"; \
+			echo "==================================="; \
+			echo ""; \
+			echo "Package: $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			ls -lh "$$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Install with:"; \
+			echo "  sudo dnf install $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo "  or"; \
+			echo "  sudo yum install $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo "  or"; \
+			echo "  sudo rpm -ivh $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Check package contents:"; \
+			echo "  rpm -qlp $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "View package info:"; \
+			echo "  rpm -qip $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+		else \
+			echo "ERROR: Built RPM not found!"; \
+			exit 1; \
+		fi; \
+	else \
+		echo ""; \
+		echo "✗ Build failed! Check build.log for details:"; \
+		echo "  cat $$BUILD_TEMP/build.log"; \
 		exit 1; \
 	fi
