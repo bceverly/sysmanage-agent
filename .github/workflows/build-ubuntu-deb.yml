@@ -53,7 +53,8 @@ jobs:
           REF: ${{ github.ref }}
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            VERSION="$INPUT_VERSION"
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
           else
             # Extract version from tag (remove 'v' prefix)
             VERSION="${REF#refs/tags/v}"
