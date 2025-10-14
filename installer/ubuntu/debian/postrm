@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = "purge" ]; then
+	# Remove log files
+	rm -rf /var/log/sysmanage-agent || true
+
+	# Remove configuration directory
+	rm -rf /etc/sysmanage-agent || true
+
+	# Remove database and runtime data
+	rm -rf /var/lib/sysmanage-agent || true
+
+	# Remove user and group
+	if getent passwd sysmanage-agent >/dev/null; then
+		deluser --quiet sysmanage-agent >/dev/null 2>&1 || true
+	fi
+
+	# Reload systemd daemon
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null 2>&1 || true
+	fi
+fi
+
+if [ "$1" = "remove" ]; then
+	# Disable the service (but keep config and data) using deb-systemd-invoke
+	if [ -x "/usr/bin/deb-systemd-invoke" ]; then
+		deb-systemd-invoke disable sysmanage-agent.service >/dev/null 2>&1 || true
+	elif [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper disable sysmanage-agent.service >/dev/null 2>&1 || true
+	else
+		systemctl disable sysmanage-agent.service >/dev/null 2>&1 || true
+	fi
+
+	# Reload systemd daemon
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null 2>&1 || true
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0

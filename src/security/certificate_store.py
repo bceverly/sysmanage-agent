@@ -47,7 +47,7 @@ class CertificateStore:
             # Set directory permissions (Unix only)
             if os.name != "nt":
                 os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        except PermissionError:
+        except (PermissionError, OSError):
             # Fall back to local directory in the same location as the running script
             script_dir = Path(sys.argv[0]).parent.resolve()
             fallback_dir = script_dir / ".sysmanage-agent"

@@ -1,0 +1,32 @@
+Source: sysmanage-agent
+Section: admin
+Priority: optional
+Maintainer: Bryan Everly <bryan@theeverlys.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all (>= 3.10), python3-setuptools
+Standards-Version: 4.6.2
+Homepage: https://github.com/bceverly/sysmanage-agent
+Vcs-Git: https://github.com/bceverly/sysmanage-agent.git
+Vcs-Browser: https://github.com/bceverly/sysmanage-agent
+Rules-Requires-Root: no
+
+Package: sysmanage-agent
+Architecture: all
+Depends: ${misc:Depends},
+ python3 (>= 3.10),
+ python3-pip,
+ python3-venv,
+ adduser,
+ systemd
+Description: System management agent for SysManage
+ The SysManage agent provides comprehensive system management capabilities
+ including:
+  * Package inventory and updates
+  * System monitoring and metrics
+  * Security policy enforcement
+  * Certificate management
+  * Firewall configuration
+  * Remote command execution
+  * Integration with SysManage server
+ .
+ This agent runs as a system service and communicates securely with the
+ SysManage server to provide centralized management of Linux systems.

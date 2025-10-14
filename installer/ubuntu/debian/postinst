@@ -1,0 +1,68 @@
+#!/bin/bash
+set -e
+
+# Automatically added by dh_installinit/13.11.4
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	# Create sysmanage-agent user if it doesn't exist
+	if ! getent passwd sysmanage-agent >/dev/null; then
+		echo "Creating sysmanage-agent system user..."
+		adduser --system --group --home /nonexistent --no-create-home \
+			--disabled-password --disabled-login \
+			--gecos "SysManage Agent" sysmanage-agent
+	fi
+
+	# Set ownership of application directories
+	chown -R sysmanage-agent:sysmanage-agent /opt/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /var/lib/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /var/log/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /etc/sysmanage-agent
+
+	# Set proper permissions
+	chmod 755 /opt/sysmanage-agent
+	chmod 755 /var/lib/sysmanage-agent
+	chmod 755 /var/log/sysmanage-agent
+	chmod 750 /etc/sysmanage-agent
+
+	# Create config file if it doesn't exist
+	if [ ! -f /etc/sysmanage-agent.yaml ]; then
+		echo "Creating default configuration file..."
+		cp /etc/sysmanage-agent/sysmanage-agent.yaml.example /etc/sysmanage-agent.yaml
+		chown sysmanage-agent:sysmanage-agent /etc/sysmanage-agent.yaml
+		chmod 640 /etc/sysmanage-agent.yaml
+		echo "Please edit /etc/sysmanage-agent.yaml to configure the agent"
+	fi
+
+	# Reload systemd daemon
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null 2>&1 || true
+	fi
+
+	# Enable and start the service using deb-systemd-invoke
+	if [ -x "/usr/bin/deb-systemd-invoke" ]; then
+		deb-systemd-invoke enable sysmanage-agent.service >/dev/null 2>&1 || true
+		deb-systemd-invoke start sysmanage-agent.service >/dev/null 2>&1 || true
+	elif [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper enable sysmanage-agent.service >/dev/null 2>&1 || true
+		deb-systemd-invoke start sysmanage-agent.service >/dev/null 2>&1 || true
+	else
+		systemctl enable sysmanage-agent.service >/dev/null 2>&1 || true
+		systemctl start sysmanage-agent.service >/dev/null 2>&1 || true
+	fi
+
+	echo ""
+	echo "=========================================="
+	echo "SysManage Agent installation complete!"
+	echo "=========================================="
+	echo ""
+	echo "Next steps:"
+	echo "  1. Edit /etc/sysmanage-agent.yaml to configure server connection"
+	echo "  2. Restart the service: sudo systemctl restart sysmanage-agent"
+	echo "  3. Check status: sudo systemctl status sysmanage-agent"
+	echo ""
+	echo "Log files are located in: /var/log/sysmanage-agent/"
+	echo ""
+fi
+
+#DEBHELPER#
+
+exit 0

@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+	# Stop the service before removal using deb-systemd-invoke
+	if [ -x "/usr/bin/deb-systemd-invoke" ]; then
+		deb-systemd-invoke stop sysmanage-agent.service >/dev/null 2>&1 || true
+	elif [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper stop sysmanage-agent.service >/dev/null 2>&1 || true
+	else
+		systemctl stop sysmanage-agent.service >/dev/null 2>&1 || true
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0

@@ -1,0 +1,59 @@
+# SysManage Agent Sudoers Configuration for Ubuntu/Debian
+# This file grants the sysmanage-agent user necessary privileges for system management
+# File location: /etc/sudoers.d/sysmanage-agent
+# Permissions: 0440 (enforced by package installer)
+
+# Allow non-interactive sudo
+Defaults:sysmanage-agent !requiretty
+
+# Package Management (APT/DPKG)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get install -f
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dpkg -i *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/add-apt-repository *
+
+# Repository File Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/apt/sources.list.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/apt/sources.list.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm -f /etc/apt/sources.list.d/*
+
+# Systemd Service Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl stop *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl restart *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl enable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl disable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl is-active *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload
+
+# Firewall Management (UFW)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/ufw allow *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/ufw --force enable
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/ufw disable
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/ufw reload
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/ufw status *
+
+# Firewall Management (firewalld - if installed)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/firewall-cmd *
+
+# Ubuntu Pro Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro attach *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro detach *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro enable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro disable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro status *
+
+# System Power Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h *
+
+# Certificate Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/update-ca-trust extract

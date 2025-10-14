@@ -1,0 +1,205 @@
+name: Build Ubuntu/Debian Package
+
+on:
+  # Trigger on version tags (e.g., v1.0.0, v2.1.3)
+  push:
+    tags:
+      - 'v*.*.*'
+
+  # Manual trigger with version input
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write  # Needed for creating releases
+
+jobs:
+  # Wait for CI tests to pass before building
+  wait-for-tests:
+    name: Wait for CI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI workflow
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Backend Tests (Python 3.10)'  # Just check one of the matrix tests
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  build-deb:
+    name: Build .deb Package
+    runs-on: ubuntu-24.04
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debhelper \
+            dh-python \
+            python3-all \
+            python3-setuptools \
+            python3-pip \
+            build-essential \
+            devscripts \
+            lintian
+
+      - name: Update changelog with version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DATE=$(date -R)
+
+          # Update changelog with actual version and date
+          sed -i "s/0\.1\.0-1/$VERSION-1/g" installer/ubuntu/debian/changelog
+          sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$DATE/g" installer/ubuntu/debian/changelog
+
+      - name: Create source tarball
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Create directory structure for Debian package
+          mkdir -p ../sysmanage-agent-$VERSION
+
+          # Copy source files
+          cp -r src ../sysmanage-agent-$VERSION/
+          cp main.py ../sysmanage-agent-$VERSION/
+          cp requirements.txt ../sysmanage-agent-$VERSION/
+          cp README.md ../sysmanage-agent-$VERSION/ || touch ../sysmanage-agent-$VERSION/README.md
+          cp -r installer/ubuntu/debian ../sysmanage-agent-$VERSION/
+
+          # Copy installer files to the package
+          mkdir -p ../sysmanage-agent-$VERSION/installer/ubuntu
+          cp installer/ubuntu/*.service ../sysmanage-agent-$VERSION/installer/ubuntu/
+          cp installer/ubuntu/*.sudoers ../sysmanage-agent-$VERSION/installer/ubuntu/
+          cp installer/ubuntu/*.example ../sysmanage-agent-$VERSION/installer/ubuntu/
+
+          # Create orig tarball
+          cd ..
+          tar czf sysmanage-agent_$VERSION.orig.tar.gz sysmanage-agent-$VERSION/
+
+          # Return to package directory
+          cd sysmanage-agent-$VERSION
+
+      - name: Build Debian package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd ../sysmanage-agent-$VERSION
+
+          # Build the package
+          dpkg-buildpackage -us -uc -b
+
+          # Move built package back to workspace
+          mv ../sysmanage-agent_*.deb "$GITHUB_WORKSPACE/"
+          mv ../sysmanage-agent_*.build* "$GITHUB_WORKSPACE/" || true
+          mv ../sysmanage-agent_*.buildinfo "$GITHUB_WORKSPACE/" || true
+          mv ../sysmanage-agent_*.changes "$GITHUB_WORKSPACE/" || true
+
+      - name: Run lintian on package
+        run: |
+          lintian --no-tag-display-limit sysmanage-agent_*.deb || true
+
+      - name: Generate package information
+        id: package_info
+        run: |
+          DEB_FILE=$(ls sysmanage-agent_*.deb)
+          echo "deb_file=$DEB_FILE" >> $GITHUB_OUTPUT
+
+          # Get package info
+          dpkg-deb --info "$DEB_FILE"
+          dpkg-deb --contents "$DEB_FILE"
+
+          # Generate SHA256 checksum
+          sha256sum "$DEB_FILE" > "$DEB_FILE.sha256"
+
+          echo "Package built: $DEB_FILE"
+          echo "Size: $(du -h "$DEB_FILE" | cut -f1)"
+
+      - name: Upload .deb as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-deb
+          path: |
+            sysmanage-agent_*.deb
+            sysmanage-agent_*.deb.sha256
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            sysmanage-agent_*.deb
+            sysmanage-agent_*.deb.sha256
+          body: |
+            # SysManage Agent v${{ steps.version.outputs.version }}
+
+            ## Installation on Ubuntu/Debian
+
+            ```bash
+            # Download the .deb file
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$ {{steps.package_info.outputs.deb_file}}
+
+            # Install the package
+            sudo apt install ./${{ steps.package_info.outputs.deb_file }}
+
+            # Configure the agent
+            sudo nano /etc/sysmanage-agent.yaml
+
+            # Restart the service
+            sudo systemctl restart sysmanage-agent
+            ```
+
+            ## What's Included
+
+            - System management agent service
+            - Automatic startup with systemd
+            - Sudoers configuration for system management
+            - Example configuration file
+
+            ## Supported Platforms
+
+            - Ubuntu 22.04 LTS (Jammy)
+            - Ubuntu 24.04 LTS (Noble)
+            - Debian 11 (Bullseye)
+            - Debian 12 (Bookworm)
+
+            ## Checksum Verification
+
+            ```bash
+            sha256sum -c ${{ steps.package_info.outputs.deb_file }}.sha256
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update APT repository in sysmanage-docs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "TODO: Implement APT repository update in sysmanage-docs"
+          echo "This will copy the .deb file to the APT repository structure"
+          echo "and update the Packages index file"
+          # This will be implemented after the APT repository structure is created

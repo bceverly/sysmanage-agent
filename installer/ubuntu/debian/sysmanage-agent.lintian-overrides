@@ -1,0 +1,3 @@
+# Third-party software is intentionally installed to /opt per FHS guidelines
+# /opt is reserved for add-on application software packages
+dir-or-file-in-opt

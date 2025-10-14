@@ -11,26 +11,33 @@ permissions:
 
 jobs:
   test-backend:
-    name: Backend Tests
+    name: Backend Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Allow writing to update README badge
       pull-requests: write  # Allow creating pull requests
 
+    strategy:
+      fail-fast: false  # Continue testing other versions even if one fails
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+
     steps:
     - uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: ${{ matrix.python-version }}
+        allow-prereleases: true  # Allow testing on pre-release Python versions
 
     - name: Cache pip packages
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
           ${{ runner.os }}-pip-
 
     - name: Install Python dependencies
@@ -74,12 +81,12 @@ jobs:
         echo "Badge color: $COLOR"
 
     - name: Update README badge
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12'
       run: |
         sed -i "s/test%20coverage-[0-9]*%25-[a-z]*/test%20coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.coverage.outputs.color }}/g" README.md
 
     - name: Create Pull Request for coverage badge update
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12'
       id: coverage-pr
       uses: peter-evans/create-pull-request@v7
       with:
@@ -97,13 +104,14 @@ jobs:
         delete-branch: true
 
     - name: Enable auto-merge for coverage badge PR
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.coverage-pr.outputs.pull-request-number
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12' && steps.coverage-pr.outputs.pull-request-number
       run: |
         gh pr merge ${{ steps.coverage-pr.outputs.pull-request-number }} --auto --squash
       env:
         GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
 
     - name: Upload backend coverage to Codecov
+      if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

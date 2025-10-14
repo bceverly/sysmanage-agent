@@ -1,0 +1,37 @@
+[Unit]
+Description=SysManage Agent - System Management and Monitoring
+Documentation=https://github.com/bceverly/sysmanage-agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sysmanage-agent
+Group=sysmanage-agent
+WorkingDirectory=/opt/sysmanage-agent
+ExecStart=/opt/sysmanage-agent/.venv/bin/python /opt/sysmanage-agent/main.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sysmanage-agent
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/sysmanage-agent /var/log/sysmanage-agent /etc/sysmanage-agent
+ReadOnlyPaths=/etc/sysmanage-agent.yaml
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=512
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+Environment="SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml"
+Environment="PATH=/opt/sysmanage-agent/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target

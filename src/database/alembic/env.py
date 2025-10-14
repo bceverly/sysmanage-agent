@@ -63,9 +63,16 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    # Use our database manager instead of creating engine from config
-    # This ensures we use the same database location as the main app
-    db_manager = get_database_manager()
+    # Get database path from environment variable (set by init.py)
+    # or fall back to get_database_manager()
+    db_path = os.environ.get("SYSMANAGE_DB_PATH")
+    if db_path:
+        # Initialize database manager with the path from environment
+        db_manager = get_database_manager(db_path)
+    else:
+        # Fall back to default (for development use)
+        db_manager = get_database_manager()
+
     connectable = db_manager.engine
 
     with connectable.connect() as connection:

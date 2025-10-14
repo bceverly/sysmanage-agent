@@ -1,0 +1,53 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_clean:
+	# Skip auto clean - no setup.py to clean
+
+override_dh_auto_build:
+	# Skip auto build - no setup.py to build
+
+override_dh_auto_install:
+	# Create directory structure
+	install -d debian/sysmanage-agent/opt/sysmanage-agent
+	install -d debian/sysmanage-agent/etc/sysmanage-agent
+	install -d debian/sysmanage-agent/var/lib/sysmanage-agent
+	install -d debian/sysmanage-agent/var/log/sysmanage-agent
+
+	# Copy application files
+	cp -r src debian/sysmanage-agent/opt/sysmanage-agent/
+	cp main.py debian/sysmanage-agent/opt/sysmanage-agent/
+	cp alembic.ini debian/sysmanage-agent/opt/sysmanage-agent/
+	cp requirements-prod.txt debian/sysmanage-agent/opt/sysmanage-agent/
+
+	# Create virtualenv and install production Python dependencies only
+	python3 -m venv debian/sysmanage-agent/opt/sysmanage-agent/.venv
+	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip
+	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt
+
+	# Copy example config
+	install -m 644 installer/ubuntu/sysmanage-agent.yaml.example debian/sysmanage-agent/etc/sysmanage-agent/
+
+	# Install systemd service
+	install -d debian/sysmanage-agent/usr/lib/systemd/system
+	install -m 644 installer/ubuntu/sysmanage-agent.service debian/sysmanage-agent/usr/lib/systemd/system/
+
+	# Install sudoers file
+	install -d debian/sysmanage-agent/etc/sudoers.d
+	install -m 440 installer/ubuntu/sysmanage-agent.sudoers debian/sysmanage-agent/etc/sudoers.d/sysmanage-agent
+
+override_dh_installdeb:
+	dh_installdeb
+	# Validate sudoers file at build time
+	visudo -c -f debian/sysmanage-agent/etc/sudoers.d/sysmanage-agent || exit 1
+
+override_dh_fixperms:
+	dh_fixperms
+	# Fix sudoers file permissions (must be 0440)
+	chmod 0440 debian/sysmanage-agent/etc/sudoers.d/sysmanage-agent

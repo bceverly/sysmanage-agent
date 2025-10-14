@@ -87,6 +87,8 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
 
         # Initialize database
         if not initialize_database(self.config):
+            # Log the actual error for debugging
+            self.logger.error("Database initialization failed - check logs for details")
             raise RuntimeError(_("Failed to initialize agent database"))
 
         # Initialize registration manager (must be before cleanup as cleanup uses it)
@@ -218,11 +220,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         log_level = self.config.get_log_level()
         log_file = self.config.get_log_file()
 
-        # Default to logs/agent.log in current directory if not specified
+        # Default to /var/log for system service, or local logs/ for development
         if not log_file:
-            logs_dir = os.path.join(os.getcwd(), "logs")
-            os.makedirs(logs_dir, exist_ok=True)
-            log_file = os.path.join(logs_dir, "agent.log")
+            # Try /var/log/sysmanage-agent first (system service), fall back to local logs/
+            if os.path.exists("/var/log/sysmanage-agent"):
+                log_file = "/var/log/sysmanage-agent/agent.log"
+            else:
+                logs_dir = os.path.join(os.getcwd(), "logs")
+                os.makedirs(logs_dir, exist_ok=True)
+                log_file = os.path.join(logs_dir, "agent.log")
 
         # Parse log level - handle pipe-separated levels (use first one)
         if "|" in log_level:
@@ -1169,5 +1175,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
 
 
 if __name__ == "__main__":
-    agent = SysManageAgent()
+    # Check for config file in standard locations
+    # Priority: 1) Environment variable, 2) /etc, 3) Current directory
+    config_path = os.getenv("SYSMANAGE_CONFIG")  # pylint: disable=invalid-name
+    if not config_path:
+        # Try /etc first, then fall back to current directory
+        if os.path.exists("/etc/sysmanage-agent.yaml"):
+            config_path = "/etc/sysmanage-agent.yaml"  # pylint: disable=invalid-name
+        else:
+            config_path = "sysmanage-agent.yaml"  # pylint: disable=invalid-name
+
+    agent = SysManageAgent(config_path)
     asyncio.run(agent.run())

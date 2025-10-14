@@ -15,28 +15,55 @@ logger = logging.getLogger(__name__)
 
 def get_database_path_from_config(config_manager) -> str:
     """
-    Get database path from configuration.
+    Get database path from configuration with system-to-local fallback.
+
+    Tries paths in order:
+    1. Configured path from config file
+    2. System path: /var/lib/sysmanage-agent/agent.db
+    3. Local fallback: ./agent.db (in current directory)
 
     Args:
         config_manager: ConfigManager instance
 
     Returns:
-        Database path from config, or default "agent.db" in current directory
+        Database path, preferring system location if it exists
     """
     try:
-        # Get database path from config, defaulting to "agent.db" in current directory
+        # Get database path from config
         db_config = config_manager.get("database", {})
-        db_path = db_config.get("path", "agent.db")
+        config_path = db_config.get("path", None)
 
-        # If relative path, make it relative to current working directory
-        if not os.path.isabs(db_path):
-            db_path = os.path.join(os.getcwd(), db_path)
+        # If configured path is specified and absolute, try it first
+        if config_path and os.path.isabs(config_path):
+            if os.path.exists(config_path):
+                logger.info(_("Using configured database path: %s"), config_path)
+                return config_path
 
-        return db_path
+        # Try system path: /var/lib/sysmanage-agent/agent.db
+        system_path = "/var/lib/sysmanage-agent/agent.db"
+        if os.path.exists(system_path):
+            logger.info(_("Using system database path: %s"), system_path)
+            return system_path
+
+        # If system directory exists but database doesn't, use system path
+        # (database will be created there)
+        system_dir = "/var/lib/sysmanage-agent"
+        if os.path.exists(system_dir) and os.access(system_dir, os.W_OK):
+            logger.info(
+                _("System directory exists, using system database path: %s"),
+                system_path,
+            )
+            return system_path
+
+        # Fallback to local directory
+        local_path = os.path.join(os.getcwd(), "agent.db")
+        logger.info(_("Falling back to local database path: %s"), local_path)
+        return local_path
 
     except Exception as error:
         logger.warning(
-            _("Failed to get database path from config: %s, using default"), error
+            _("Failed to get database path from config: %s, using local fallback"),
+            error,
         )
         return os.path.join(os.getcwd(), "agent.db")
 
@@ -75,16 +102,36 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
 
-        # Run alembic command using the virtual environment's alembic
-        venv_alembic = os.path.join(agent_dir, ".venv", "bin", "alembic")
-        if os.path.exists(venv_alembic):
-            cmd = [venv_alembic, operation, revision]
+        # Get the database path from the global database manager
+        # This will be used by alembic's env.py
+        from .base import (  # pylint: disable=import-outside-toplevel
+            get_database_manager as get_db_mgr,
+        )
+
+        db_mgr = get_db_mgr()
+        db_path = db_mgr.database_path
+
+        # Run alembic command using python -m to avoid hardcoded venv paths
+        # Pass database path via environment variable for alembic's env.py
+        venv_python = os.path.join(agent_dir, ".venv", "bin", "python")
+        if os.path.exists(venv_python):
+            cmd = [venv_python, "-m", "alembic", operation, revision]
         else:
-            cmd = ["alembic", operation, revision]
+            cmd = ["python3", "-m", "alembic", operation, revision]
         logger.info(_("Running alembic command: %s"), " ".join(cmd))
 
+        # Set environment variable for alembic to find the database
+        env = os.environ.copy()
+        env["SYSMANAGE_DB_PATH"] = db_path
+
         result = subprocess.run(  # nosec B603, B607
-            cmd, cwd=agent_dir, capture_output=True, text=True, timeout=60, check=False
+            cmd,
+            cwd=agent_dir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+            env=env,
         )
 
         if result.returncode == 0:

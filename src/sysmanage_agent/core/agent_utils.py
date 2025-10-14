@@ -714,6 +714,11 @@ def is_running_privileged() -> bool:
     """
     Detect if the agent is running with elevated/privileged access.
 
+    For Unix systems, checks:
+    1. If running as root (UID 0) - always privileged
+    2. If sudoers file grants necessary permissions - privileged
+    3. Otherwise - not privileged
+
     Returns:
         bool: True if running with elevated privileges, False otherwise
     """
@@ -723,8 +728,153 @@ def is_running_privileged() -> bool:
             import ctypes  # pylint: disable=import-outside-toplevel
 
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
+
         # Unix-like systems - check if running as root (UID 0)
-        return os.geteuid() == 0
+        if os.geteuid() == 0:
+            return True
+
+        # Check if running as sysmanage-agent user with sudoers privileges
+        try:
+            import pwd  # pylint: disable=import-outside-toplevel
+
+            current_user = pwd.getpwuid(os.geteuid()).pw_name
+
+            # If running as sysmanage-agent, check sudoers file
+            if current_user == "sysmanage-agent":
+                return _check_sudoers_privileges(current_user)
+
+        except Exception:
+            pass
+
+        # Not root and no sudoers privileges
+        return False
+
     except Exception:
         # If we can't determine privilege level, assume non-privileged for security
+        return False
+
+
+def _check_sudoers_privileges(username: str) -> bool:
+    """
+    Check if user has sufficient sudo privileges by parsing sudoers file.
+
+    Args:
+        username: Username to check
+
+    Returns:
+        bool: True if user has necessary sudo privileges, False otherwise
+    """
+    sudoers_path = f"/etc/sudoers.d/{username}"
+
+    try:
+        # Check if sudoers file exists
+        if not os.path.exists(sudoers_path):
+            return False
+
+        # Try to read sudoers file
+        content = _read_sudoers_file(sudoers_path)
+        if content is None:
+            # Can't read sudoers file, try to infer from common commands
+            return _test_sudo_access()
+
+        # Parse sudoers content for NOPASSWD privileges
+        granted_commands = _parse_sudoers_content(content, username)
+
+        # Consider privileged if we have systemctl and package management
+        has_systemctl = "systemctl" in granted_commands
+        has_package_mgmt = any(
+            cmd in granted_commands for cmd in ["apt", "yum", "dnf", "zypper"]
+        )
+
+        return has_systemctl and has_package_mgmt
+
+    except Exception:
+        # If we can't parse sudoers, assume no privileges
+        return False
+
+
+def _read_sudoers_file(sudoers_path: str) -> str:
+    """
+    Read sudoers file content.
+
+    Args:
+        sudoers_path: Path to sudoers file
+
+    Returns:
+        str: File content or None if unable to read
+    """
+    try:
+        with open(sudoers_path, "r", encoding="utf-8") as sudoers_file:
+            return sudoers_file.read()
+    except PermissionError:
+        return None
+
+
+def _parse_sudoers_content(content: str, username: str) -> set:
+    """
+    Parse sudoers content to extract granted commands.
+
+    Args:
+        content: Sudoers file content
+        username: Username to check for
+
+    Returns:
+        set: Set of granted command names
+    """
+    required_commands = [
+        "systemctl",  # Service management
+        "apt",  # Package management
+    ]
+
+    lines = content.split("\n")
+    granted_commands = set()
+
+    for line in lines:
+        line = line.strip()
+
+        # Skip comments and empty lines
+        if not line or line.startswith("#"):
+            continue
+
+        # Look for NOPASSWD grants for this username
+        if "NOPASSWD:" in line and username in line:
+            # Extract command part after NOPASSWD:
+            parts = line.split("NOPASSWD:")
+            if len(parts) > 1:
+                command_part = parts[1].strip()
+
+                # Check if any required commands are granted
+                for required_cmd in required_commands:
+                    if required_cmd in command_part:
+                        granted_commands.add(required_cmd)
+
+    return granted_commands
+
+
+def _test_sudo_access() -> bool:
+    """
+    Test if current user has sudo access by trying a safe command.
+
+    Returns:
+        bool: True if user has sudo access, False otherwise
+    """
+    try:
+        # Try running a safe sudo command with -n (non-interactive)
+        result = subprocess.run(  # nosec B603 B607
+            ["sudo", "-n", "systemctl", "is-active", "sysmanage-agent"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+        # If command succeeded (regardless of exit code), we have sudo access
+        # Exit code 1 means we could run sudo, just the service check failed
+        # Exit code 1 or 3 from systemctl is fine, it means sudo worked
+        # Only if sudo itself fails (e.g., password required) we don't have access
+        return result.returncode not in [
+            255
+        ]  # 255 typically means sudo authentication failed
+
+    except Exception:
         return False

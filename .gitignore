@@ -179,3 +179,10 @@ agent.db-journal
 debug_grafana.py
 
 coverage.json
+
+# Installer build outputs
+installer/dist/
+*.deb
+*.rpm
+*.tar.gz
+*.swp

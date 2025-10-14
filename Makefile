@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades
+.PHONY: test lint clean setup install-dev help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer
 
 # Default target
 help:
@@ -17,7 +17,7 @@ help:
 	@echo "  make format-python - Format Python code"
 	@echo "  make setup         - Install development dependencies"
 	@echo "  make clean         - Clean test artifacts and cache"
-	@echo "  make install-dev   - Install development tools"
+	@echo "  make install-dev   - Install development tools (includes packaging tools on Ubuntu)"
 	@echo "  make check-test-models - Check model synchronization and database compatibility"
 	@echo "  make security      - Run comprehensive security analysis (all tools)"
 	@echo "  make security-full - Run comprehensive security analysis (all tools)"
@@ -25,9 +25,14 @@ help:
 	@echo "  make security-secrets - Run secrets detection"
 	@echo "  make security-upgrades - Check for security package upgrades"
 	@echo ""
-	@echo "BSD users: install-dev will check for C tracer dependencies"
-	@echo "          OpenBSD: gcc, py3-cffi"
-	@echo "          NetBSD: gcc13, py312-cffi"
+	@echo "Packaging targets:"
+	@echo "  make installer     - Build Ubuntu/Debian .deb package for local testing"
+	@echo ""
+	@echo "Platform-specific notes:"
+	@echo "  Ubuntu/Debian: install-dev installs packaging tools (debhelper, dpkg-buildpackage, etc.)"
+	@echo "  BSD users: install-dev checks for C tracer dependencies"
+	@echo "    OpenBSD: gcc, py3-cffi"
+	@echo "    NetBSD: gcc13, py312-cffi"
 	@echo ""
 	@echo "Privilege Levels:"
 	@echo "  unprivileged - Runs as regular user (default for security)"
@@ -89,6 +94,24 @@ install-dev: setup-venv
 ifeq ($(OS),Windows_NT)
 	@$(PYTHON) scripts/install-dev-deps.py
 else
+	@if [ "$$(uname -s)" = "Linux" ] && [ -f /etc/lsb-release ] && grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "[INFO] Ubuntu/Debian detected - checking for packaging build tools..."; \
+		MISSING_PKGS=""; \
+		command -v dpkg-buildpackage >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS devscripts"; \
+		dpkg -l dh-python 2>/dev/null | grep -q "^ii" || MISSING_PKGS="$$MISSING_PKGS dh-python"; \
+		dpkg -l python3-all 2>/dev/null | grep -q "^ii" || MISSING_PKGS="$$MISSING_PKGS python3-all"; \
+		dpkg -l debhelper 2>/dev/null | grep -q "^ii" || MISSING_PKGS="$$MISSING_PKGS debhelper"; \
+		dpkg -l lintian 2>/dev/null | grep -q "^ii" || MISSING_PKGS="$$MISSING_PKGS lintian"; \
+		if [ -n "$$MISSING_PKGS" ]; then \
+			echo "Missing packages:$$MISSING_PKGS"; \
+			echo "Installing Debian packaging build tools..."; \
+			echo "Running: sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build-essential devscripts lintian"; \
+			sudo apt-get update && sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build-essential devscripts lintian || \
+			echo "[WARNING] Could not install packaging tools. Run manually: sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build-essential devscripts lintian"; \
+		else \
+			echo "✓ All packaging build tools already installed"; \
+		fi; \
+	fi
 	@if [ "$$(uname -s)" = "NetBSD" ]; then \
 		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
 		export TMPDIR=/var/tmp && \
@@ -306,3 +329,105 @@ else
 	@grep -r -i --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__ --exclude="*.pyc" -E "(AKIA[0-9A-Z]{16}|aws_secret_access_key)" . || echo "No AWS credentials found"
 endif
 	@echo "[OK] Basic secrets detection completed"
+
+# Build Ubuntu/Debian installer package
+installer:
+	@echo "=== Building Ubuntu/Debian .deb Package ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v dpkg-buildpackage >/dev/null 2>&1 || { \
+		echo "ERROR: dpkg-buildpackage not found."; \
+		echo "Install with: sudo apt-get install -y debhelper dh-python python3-all build-essential devscripts lintian"; \
+		exit 1; \
+	}
+	@echo "✓ Build tools available"
+	@echo ""; \
+	echo "Determining version..."; \
+	set -e; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="0.1.0"; \
+		echo "No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Creating build directory..."; \
+	CURRENT_DIR=$$(pwd); \
+	BUILD_TEMP="$$CURRENT_DIR/installer/dist/build-temp"; \
+	BUILD_DIR="$$BUILD_TEMP/sysmanage-agent-$$VERSION"; \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	mkdir -p "$$OUTPUT_DIR"; \
+	rm -rf "$$BUILD_TEMP"; \
+	mkdir -p "$$BUILD_DIR"; \
+	echo "✓ Build directory created: $$BUILD_DIR"; \
+	echo ""; \
+	echo "Copying source files..."; \
+	rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' src/ "$$BUILD_DIR/src/"; \
+	cp main.py "$$BUILD_DIR/"; \
+	cp alembic.ini "$$BUILD_DIR/"; \
+	cp requirements-prod.txt "$$BUILD_DIR/"; \
+	cp README.md "$$BUILD_DIR/" 2>/dev/null || touch "$$BUILD_DIR/README.md"; \
+	echo "✓ Application source copied (excluding test artifacts)"; \
+	echo ""; \
+	echo "Copying Debian packaging files..."; \
+	cp -r installer/ubuntu/debian "$$BUILD_DIR/"; \
+	mkdir -p "$$BUILD_DIR/installer/ubuntu"; \
+	cp installer/ubuntu/*.service "$$BUILD_DIR/installer/ubuntu/"; \
+	cp installer/ubuntu/*.sudoers "$$BUILD_DIR/installer/ubuntu/"; \
+	cp installer/ubuntu/*.example "$$BUILD_DIR/installer/ubuntu/"; \
+	echo "✓ Packaging files copied"; \
+	echo ""; \
+	echo "Updating version in changelog..."; \
+	DATE=$$(date -R); \
+	sed -i "s/0\.1\.0-1/$$VERSION-1/g" "$$BUILD_DIR/debian/changelog"; \
+	sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$$DATE/g" "$$BUILD_DIR/debian/changelog"; \
+	echo "✓ Changelog updated to version $$VERSION"; \
+	echo ""; \
+	echo "Creating source tarball..."; \
+	cd "$$BUILD_TEMP" && tar czf "sysmanage-agent_$$VERSION.orig.tar.gz" "sysmanage-agent-$$VERSION/"; \
+	echo "✓ Source tarball created"; \
+	echo ""; \
+	echo "Building package..."; \
+	cd "$$BUILD_DIR" && dpkg-buildpackage -us -uc -b 2>&1 | tee build.log; \
+	BUILD_STATUS=$$?; \
+	DEB_FILE="$$OUTPUT_DIR/sysmanage-agent_$$VERSION-1_all.deb"; \
+	if [ $$BUILD_STATUS -eq 0 ]; then \
+		echo ""; \
+		echo "✓ Package built successfully!"; \
+		echo ""; \
+		echo "Moving package and metadata to output directory..."; \
+		mv "$$BUILD_TEMP/sysmanage-agent_$$VERSION-1_all.deb" "$$DEB_FILE"; \
+		mv "$$BUILD_TEMP/sysmanage-agent_$$VERSION-1_amd64.buildinfo" "$$OUTPUT_DIR/" 2>/dev/null || true; \
+		mv "$$BUILD_TEMP/sysmanage-agent_$$VERSION-1_amd64.changes" "$$OUTPUT_DIR/" 2>/dev/null || true; \
+		echo "✓ Package and metadata moved to $$OUTPUT_DIR"; \
+		echo ""; \
+		echo "Running lintian quality checks..."; \
+		cd "$$OUTPUT_DIR" && lintian "sysmanage-agent_$$VERSION-1_all.deb" 2>&1 || true; \
+		echo ""; \
+		echo "Cleaning up temporary build files..."; \
+		rm -rf "$$BUILD_TEMP"; \
+		echo "✓ Temporary files cleaned"; \
+		echo ""; \
+		echo "==================================="; \
+		echo "Build Complete!"; \
+		echo "==================================="; \
+		echo ""; \
+		echo "Package: $$DEB_FILE"; \
+		ls -lh "$$DEB_FILE"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  sudo apt install $$DEB_FILE"; \
+		echo ""; \
+		echo "Check package contents:"; \
+		echo "  dpkg-deb --contents $$DEB_FILE"; \
+		echo ""; \
+		echo "View package info:"; \
+		echo "  dpkg-deb --info $$DEB_FILE"; \
+		echo ""; \
+	else \
+		echo ""; \
+		echo "✗ Build failed! Check build.log for details:"; \
+		echo "  cat $$BUILD_DIR/build.log"; \
+		exit 1; \
+	fi
