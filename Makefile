@@ -438,12 +438,16 @@ installer-pkg:
 	@echo ""; \
 	echo "Determining version..."; \
 	set -e; \
-	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
-	if [ -z "$$VERSION" ]; then \
-		VERSION="0.1.0"; \
-		echo "No git tags found, using default version: $$VERSION"; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
 	else \
-		echo "Building version: $$VERSION"; \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Building version: $$VERSION"; \
+		fi; \
 	fi; \
 	echo ""; \
 	echo "Creating build directory..."; \
@@ -712,12 +716,16 @@ installer-rpm-suse:
 	@echo ""; \
 	echo "Determining version..."; \
 	set -e; \
-	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
-	if [ -z "$$VERSION" ]; then \
-		VERSION="0.1.0"; \
-		echo "No git tags found, using default version: $$VERSION"; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
 	else \
-		echo "Building version: $$VERSION"; \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Building version: $$VERSION"; \
+		fi; \
 	fi; \
 	echo ""; \
 	echo "Setting up RPM build tree..."; \
@@ -850,12 +858,16 @@ installer-deb:
 	@echo ""; \
 	echo "Determining version..."; \
 	set -e; \
-	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
-	if [ -z "$$VERSION" ]; then \
-		VERSION="0.1.0"; \
-		echo "No git tags found, using default version: $$VERSION"; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
 	else \
-		echo "Building version: $$VERSION"; \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Building version: $$VERSION"; \
+		fi; \
 	fi; \
 	echo ""; \
 	echo "Creating build directory..."; \
@@ -1059,12 +1071,16 @@ installer-rpm:
 	@echo ""; \
 	echo "Determining version..."; \
 	set -e; \
-	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
-	if [ -z "$$VERSION" ]; then \
-		VERSION="0.1.0"; \
-		echo "No git tags found, using default version: $$VERSION"; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
 	else \
-		echo "Building version: $$VERSION"; \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Building version: $$VERSION"; \
+		fi; \
 	fi; \
 	echo ""; \
 	echo "Setting up RPM build tree..."; \

@@ -68,14 +68,18 @@ class TestOSInfoCollectorCoverage:
         # Mock platform.freedesktop_os_release to return data with "Linux" suffix
         mock_os_release = {"NAME": "Ubuntu Linux", "VERSION_ID": "20.04"}
 
-        with patch("platform.freedesktop_os_release", return_value=mock_os_release):
-            with patch("builtins.hasattr", return_value=True):
-                result = (
-                    collector._get_linux_distribution_info()
-                )  # pylint: disable=protected-access
+        # For Python 3.9, we need to create the attribute; for 3.10+, just patch it
+        with patch(
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            return_value=mock_os_release,
+            create=True,
+        ):
+            result = (
+                collector._get_linux_distribution_info()
+            )  # pylint: disable=protected-access
 
-                # Should remove " Linux" suffix (line 75)
-                assert result == ("Ubuntu", "20.04")
+            # Should remove " Linux" suffix (line 75)
+            assert result == ("Ubuntu", "20.04")
 
     def test_get_os_version_info_simple_calls(self):
         """Test get_os_version_info with various system calls to improve coverage."""

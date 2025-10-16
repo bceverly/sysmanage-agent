@@ -61,7 +61,9 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
     def test_get_linux_distribution_info_os_error(self):
         """Test Linux distribution info with OSError."""
         with patch(
-            "platform.freedesktop_os_release", side_effect=OSError("No such file")
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            side_effect=OSError("No such file"),
+            create=True,
         ):
             with patch("platform.release", return_value="5.4.0-generic"):
                 name, version = self.collector._get_linux_distribution_info()
@@ -72,7 +74,11 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
         """Test Linux distribution info with missing NAME or VERSION_ID."""
         mock_os_release = {"PRETTY_NAME": "Ubuntu 20.04"}
 
-        with patch("platform.freedesktop_os_release", return_value=mock_os_release):
+        with patch(
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            create=True,
+            return_value=mock_os_release,
+        ):
             with patch("platform.release", return_value="5.4.0-generic"):
                 name, version = self.collector._get_linux_distribution_info()
                 assert name == "Linux"
@@ -82,7 +88,11 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
         """Test removal of 'Linux' suffix from distribution name."""
         mock_os_release = {"NAME": "Ubuntu Linux", "VERSION_ID": "20.04"}
 
-        with patch("platform.freedesktop_os_release", return_value=mock_os_release):
+        with patch(
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            create=True,
+            return_value=mock_os_release,
+        ):
             name, version = self.collector._get_linux_distribution_info()
             assert name == "Ubuntu"
             assert version == "20.04"
@@ -247,7 +257,9 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
         with patch("platform.system", return_value="Linux"):
             with patch("platform.release", return_value="5.4.0-generic"):
                 with patch(
-                    "platform.freedesktop_os_release", return_value=mock_os_release
+                    "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+                    return_value=mock_os_release,
+                    create=True,
                 ):
                     with patch.object(
                         self.collector,
@@ -265,7 +277,11 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
         mock_os_release = {"NAME": "Fedora", "VERSION_ID": "34"}
 
         with patch("platform.system", return_value="Linux"):
-            with patch("platform.freedesktop_os_release", return_value=mock_os_release):
+            with patch(
+                "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+                create=True,
+                return_value=mock_os_release,
+            ):
                 result = self.collector.get_os_version_info()
 
                 assert "ubuntu_pro" not in result["os_info"]
@@ -275,8 +291,9 @@ class TestOSInfoCollectorEdgeCases:  # pylint: disable=too-many-public-methods
         with patch("platform.system", return_value="Linux"):
             with patch("platform.release", return_value="5.4.0-generic"):
                 with patch(
-                    "platform.freedesktop_os_release",
+                    "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
                     side_effect=AttributeError("Not available"),
+                    create=True,
                 ):
                     result = self.collector.get_os_version_info()
 
