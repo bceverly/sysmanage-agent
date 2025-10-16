@@ -120,6 +120,22 @@ else
 		else \
 			echo "✓ All RPM build tools already installed"; \
 		fi; \
+	elif [ -f /etc/os-release ] && grep -qE "^ID=\"?(opensuse-leap|opensuse-tumbleweed|sles)\"?" /etc/os-release; then \
+		echo "[INFO] openSUSE/SLES detected - checking for RPM build tools..."; \
+		MISSING_PKGS=""; \
+		command -v rpmbuild >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpm-build"; \
+		command -v rpmdev-setuptree >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpmdevtools"; \
+		rpm -q python311-devel >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python311-devel"; \
+		rpm -q python3-setuptools >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-setuptools"; \
+		if [ -n "$$MISSING_PKGS" ]; then \
+			echo "Missing packages:$$MISSING_PKGS"; \
+			echo "Installing RPM build tools..."; \
+			echo "Running: sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools rsync"; \
+			sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools rsync || \
+			echo "[WARNING] Could not install RPM build tools. Run manually: sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools rsync"; \
+		else \
+			echo "✓ All RPM build tools already installed"; \
+		fi; \
 	elif [ "$$(uname -s)" = "Linux" ] && [ -f /etc/lsb-release ] && grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
 		echo "[INFO] Ubuntu/Debian detected - checking for packaging build tools..."; \
 		MISSING_PKGS=""; \
@@ -358,7 +374,23 @@ endif
 
 # Build installer package (auto-detects platform)
 installer:
-	@if [ -f /etc/redhat-release ]; then \
+	@if [ -f /etc/os-release ]; then \
+		. /etc/os-release; \
+		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
+			echo "openSUSE/SLES system detected - building RPM package"; \
+			$(MAKE) installer-rpm-suse; \
+		elif [ -f /etc/redhat-release ]; then \
+			echo "Red Hat-based system detected - building RPM package"; \
+			$(MAKE) installer-rpm; \
+		elif [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then \
+			echo "Debian-based system detected - building DEB package"; \
+			$(MAKE) installer-deb; \
+		else \
+			echo "ERROR: Unsupported platform for package building"; \
+			echo "Detected OS: $$ID"; \
+			exit 1; \
+		fi; \
+	elif [ -f /etc/redhat-release ]; then \
 		echo "Red Hat-based system detected - building RPM package"; \
 		$(MAKE) installer-rpm; \
 	elif [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then \
@@ -367,6 +399,145 @@ installer:
 	else \
 		echo "ERROR: Unsupported platform for package building"; \
 		echo "Detected OS: $$(uname -s)"; \
+		exit 1; \
+	fi
+
+# Build openSUSE/SLES installer package
+installer-rpm-suse:
+	@echo "=== Building openSUSE/SLES .rpm Package ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v rpmbuild >/dev/null 2>&1 || { \
+		echo "ERROR: rpmbuild not found."; \
+		echo "Install with: sudo zypper install -y rpm-build rpmdevtools python3-devel python3-setuptools"; \
+		echo "Or run: make install-dev-rpm-suse"; \
+		exit 1; \
+	}
+	@echo "✓ Build tools available"
+	@echo ""; \
+	echo "Determining version..."; \
+	set -e; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="0.1.0"; \
+		echo "No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Setting up RPM build tree..."; \
+	CURRENT_DIR=$$(pwd); \
+	BUILD_TEMP="$$CURRENT_DIR/installer/dist/rpmbuild"; \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	mkdir -p "$$OUTPUT_DIR"; \
+	rm -rf "$$BUILD_TEMP"; \
+	mkdir -p "$$BUILD_TEMP"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}; \
+	echo "✓ RPM build tree created"; \
+	echo ""; \
+	echo "Creating source tarball..."; \
+	TAR_NAME="sysmanage-agent-$$VERSION"; \
+	TAR_DIR="$$BUILD_TEMP/SOURCES/$$TAR_NAME"; \
+	mkdir -p "$$TAR_DIR"; \
+	rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' src/ "$$TAR_DIR/src/"; \
+	cp main.py "$$TAR_DIR/"; \
+	cp alembic.ini "$$TAR_DIR/"; \
+	cp requirements-prod.txt "$$TAR_DIR/"; \
+	cp README.md "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/README.md"; \
+	cp LICENSE "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/LICENSE"; \
+	mkdir -p "$$TAR_DIR/installer/opensuse"; \
+	cp installer/opensuse/*.service "$$TAR_DIR/installer/opensuse/"; \
+	cp installer/opensuse/*.sudoers "$$TAR_DIR/installer/opensuse/"; \
+	cp installer/opensuse/*.example "$$TAR_DIR/installer/opensuse/"; \
+	cd "$$BUILD_TEMP/SOURCES" && tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
+	rm -rf "$$TAR_DIR"; \
+	echo "✓ Source tarball created"; \
+	echo ""; \
+	echo "Updating spec file with version..."; \
+	cp "$$CURRENT_DIR/installer/opensuse/sysmanage-agent.spec" "$$BUILD_TEMP/SPECS/"; \
+	DATE=$$(date "+%a %b %d %Y"); \
+	sed -i "s/^Version:.*/Version:        $$VERSION/" "$$BUILD_TEMP/SPECS/sysmanage-agent.spec"; \
+	sed -i "s/^\\* Mon Oct 14 2024/\\* $$DATE/" "$$BUILD_TEMP/SPECS/sysmanage-agent.spec"; \
+	echo "✓ Spec file updated to version $$VERSION"; \
+	echo ""; \
+	echo "Building RPM package..."; \
+	cd "$$BUILD_TEMP" && rpmbuild --define "_topdir $$BUILD_TEMP" -bb SPECS/sysmanage-agent.spec 2>&1 | tee build.log; \
+	BUILD_STATUS=$$?; \
+	if [ $$BUILD_STATUS -eq 0 ]; then \
+		echo ""; \
+		echo "✓ Package built successfully!"; \
+		echo ""; \
+		echo "Moving package to output directory..."; \
+		RPM_FILE=$$(find "$$BUILD_TEMP/RPMS" -name "sysmanage-agent-$$VERSION-*.rpm" | head -1); \
+		if [ -n "$$RPM_FILE" ]; then \
+			cp "$$RPM_FILE" "$$OUTPUT_DIR/"; \
+			RPM_BASENAME=$$(basename "$$RPM_FILE"); \
+			echo "✓ Package moved to $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Signing RPM package with GPG..."; \
+			if gpg --list-keys E033E691377F0AE3 >/dev/null 2>&1; then \
+				if [ -n "$$GPG_PASSPHRASE" ]; then \
+					echo "Using GPG passphrase from environment variable"; \
+					echo "$$GPG_PASSPHRASE" > /tmp/.rpm-gpg-pass-$$$$; \
+					chmod 600 /tmp/.rpm-gpg-pass-$$$$; \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "✓ Package signed successfully"; } || \
+					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "ERROR: Failed to sign package"; exit 1; }; \
+				elif [ -f "$$CURRENT_DIR/.gpg-passphrase" ]; then \
+					echo "Using GPG passphrase from .gpg-passphrase file"; \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					echo "✓ Package signed successfully" || \
+					{ echo "ERROR: Failed to sign package"; exit 1; }; \
+				else \
+					echo ""; \
+					echo "ERROR: GPG passphrase not found!"; \
+					echo ""; \
+					echo "Package signing is required. Please provide your GPG passphrase using one of:"; \
+					echo ""; \
+					echo "  Option 1: Create .gpg-passphrase file (recommended for local builds):"; \
+					echo "    echo 'your-passphrase' > .gpg-passphrase"; \
+					echo "    chmod 600 .gpg-passphrase"; \
+					echo ""; \
+					echo "  Option 2: Set GPG_PASSPHRASE environment variable (for CI/CD):"; \
+					echo "    export GPG_PASSPHRASE='your-passphrase'"; \
+					echo ""; \
+					exit 1; \
+				fi; \
+			else \
+				echo "ERROR: GPG key E033E691377F0AE3 not found!"; \
+				echo "Run: gpg --list-keys to verify your key is available"; \
+				exit 1; \
+			fi; \
+			echo ""; \
+			echo "Cleaning up temporary build files..."; \
+			rm -rf "$$BUILD_TEMP"; \
+			echo "✓ Temporary files cleaned"; \
+			echo ""; \
+			echo "==================================="; \
+			echo "Build Complete!"; \
+			echo "==================================="; \
+			echo ""; \
+			echo "Package: $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			ls -lh "$$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Install with:"; \
+			echo "  sudo zypper install $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo "  or"; \
+			echo "  sudo rpm -ivh $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Check package contents:"; \
+			echo "  rpm -qlp $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "View package info:"; \
+			echo "  rpm -qip $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+		else \
+			echo "ERROR: Built RPM not found!"; \
+			exit 1; \
+		fi; \
+	else \
+		echo ""; \
+		echo "✗ Build failed! Check build.log for details:"; \
+		echo "  cat $$BUILD_TEMP/build.log"; \
 		exit 1; \
 	fi
 
@@ -445,6 +616,54 @@ installer-deb:
 		echo "Running lintian quality checks..."; \
 		cd "$$OUTPUT_DIR" && lintian "sysmanage-agent_$$VERSION-1_all.deb" 2>&1 || true; \
 		echo ""; \
+		echo "Signing DEB package with GPG..."; \
+		if gpg --list-keys E033E691377F0AE3 >/dev/null 2>&1; then \
+			if [ -n "$$GPG_PASSPHRASE" ] || [ -f "$$CURRENT_DIR/.gpg-passphrase" ]; then \
+				if command -v debsigs >/dev/null 2>&1; then \
+					if [ -n "$$GPG_PASSPHRASE" ]; then \
+						echo "Using GPG passphrase from environment variable"; \
+						echo "$$GPG_PASSPHRASE" | debsigs --sign=origin -k E033E691377F0AE3 "$$DEB_FILE" && \
+						echo "✓ Package signed successfully with debsigs" || \
+						{ echo "ERROR: Failed to sign package with debsigs"; exit 1; }; \
+					else \
+						echo "Using GPG passphrase from .gpg-passphrase file"; \
+						cat "$$CURRENT_DIR/.gpg-passphrase" | debsigs --sign=origin -k E033E691377F0AE3 "$$DEB_FILE" && \
+						echo "✓ Package signed successfully with debsigs" || \
+						{ echo "ERROR: Failed to sign package with debsigs"; exit 1; }; \
+					fi; \
+				else \
+					echo "[INFO] debsigs not installed - creating detached signature"; \
+					if [ -n "$$GPG_PASSPHRASE" ]; then \
+						echo "$$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
+						echo "✓ Package signature created: $$DEB_FILE.asc" || \
+						{ echo "ERROR: Failed to create signature"; exit 1; }; \
+					else \
+						cat "$$CURRENT_DIR/.gpg-passphrase" | gpg --batch --yes --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
+						echo "✓ Package signature created: $$DEB_FILE.asc" || \
+						{ echo "ERROR: Failed to create signature"; exit 1; }; \
+					fi; \
+				fi; \
+			else \
+				echo ""; \
+				echo "ERROR: GPG passphrase not found!"; \
+				echo ""; \
+				echo "Package signing is required. Please provide your GPG passphrase using one of:"; \
+				echo ""; \
+				echo "  Option 1: Create .gpg-passphrase file (recommended for local builds):"; \
+				echo "    echo 'your-passphrase' > .gpg-passphrase"; \
+				echo "    chmod 600 .gpg-passphrase"; \
+				echo ""; \
+				echo "  Option 2: Set GPG_PASSPHRASE environment variable (for CI/CD):"; \
+				echo "    export GPG_PASSPHRASE='your-passphrase'"; \
+				echo ""; \
+				exit 1; \
+			fi; \
+		else \
+			echo "ERROR: GPG key E033E691377F0AE3 not found!"; \
+			echo "Run: gpg --list-keys to verify your key is available"; \
+			exit 1; \
+		fi; \
+		echo ""; \
 		echo "Cleaning up temporary build files..."; \
 		rm -rf "$$BUILD_TEMP"; \
 		echo "✓ Temporary files cleaned"; \
@@ -501,6 +720,34 @@ install-dev-rpm: setup-venv
 		echo "[WARNING] Not a Red Hat-based system. RPM build tools may not be available."; \
 	fi
 	@echo "RPM build environment setup complete!"
+
+install-dev-rpm-suse: setup-venv
+	@echo "Installing openSUSE/SLES RPM build dependencies..."
+	@if [ -f /etc/os-release ]; then \
+		. /etc/os-release; \
+		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
+			echo "[INFO] openSUSE/SLES system detected - checking for RPM build tools..."; \
+			MISSING_PKGS=""; \
+			command -v rpmbuild >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpm-build"; \
+			command -v rpmdev-setuptree >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS rpmdevtools"; \
+			rpm -q python311-devel >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python311-devel"; \
+			rpm -q python3-setuptools >/dev/null 2>&1 || MISSING_PKGS="$$MISSING_PKGS python3-setuptools"; \
+			if [ -n "$$MISSING_PKGS" ]; then \
+				echo "Missing packages:$$MISSING_PKGS"; \
+				echo "Installing RPM build tools..."; \
+				echo "Running: sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools"; \
+				sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools || \
+				echo "[WARNING] Could not install RPM build tools. Run manually: sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools"; \
+			else \
+				echo "✓ All RPM build tools already installed"; \
+			fi; \
+		else \
+			echo "[WARNING] Not an openSUSE/SLES system. Use install-dev-rpm for Red Hat systems or install-dev-deb for Debian systems."; \
+		fi; \
+	else \
+		echo "[WARNING] Cannot detect OS. RPM build tools may not be available."; \
+	fi
+	@echo "openSUSE/SLES RPM build environment setup complete!"
 
 # Build CentOS/RHEL/Fedora installer package
 installer-rpm:
@@ -572,6 +819,41 @@ installer-rpm:
 			cp "$$RPM_FILE" "$$OUTPUT_DIR/"; \
 			RPM_BASENAME=$$(basename "$$RPM_FILE"); \
 			echo "✓ Package moved to $$OUTPUT_DIR/$$RPM_BASENAME"; \
+			echo ""; \
+			echo "Signing RPM package with GPG..."; \
+			if gpg --list-keys E033E691377F0AE3 >/dev/null 2>&1; then \
+				if [ -n "$$GPG_PASSPHRASE" ]; then \
+					echo "Using GPG passphrase from environment variable"; \
+					echo "$$GPG_PASSPHRASE" > /tmp/.rpm-gpg-pass-$$$$; \
+					chmod 600 /tmp/.rpm-gpg-pass-$$$$; \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "✓ Package signed successfully"; } || \
+					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "ERROR: Failed to sign package"; exit 1; }; \
+				elif [ -f "$$CURRENT_DIR/.gpg-passphrase" ]; then \
+					echo "Using GPG passphrase from .gpg-passphrase file"; \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					echo "✓ Package signed successfully" || \
+					{ echo "ERROR: Failed to sign package"; exit 1; }; \
+				else \
+					echo ""; \
+					echo "ERROR: GPG passphrase not found!"; \
+					echo ""; \
+					echo "Package signing is required. Please provide your GPG passphrase using one of:"; \
+					echo ""; \
+					echo "  Option 1: Create .gpg-passphrase file (recommended for local builds):"; \
+					echo "    echo 'your-passphrase' > .gpg-passphrase"; \
+					echo "    chmod 600 .gpg-passphrase"; \
+					echo ""; \
+					echo "  Option 2: Set GPG_PASSPHRASE environment variable (for CI/CD):"; \
+					echo "    export GPG_PASSPHRASE='your-passphrase'"; \
+					echo ""; \
+					exit 1; \
+				fi; \
+			else \
+				echo "ERROR: GPG key E033E691377F0AE3 not found!"; \
+				echo "Run: gpg --list-keys to verify your key is available"; \
+				exit 1; \
+			fi; \
 			echo ""; \
 			echo "Cleaning up temporary build files..."; \
 			rm -rf "$$BUILD_TEMP"; \

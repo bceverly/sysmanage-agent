@@ -1,0 +1,70 @@
+# SysManage Agent Sudoers Configuration for CentOS/RHEL/Fedora/Rocky/AlmaLinux
+# This file grants the sysmanage-agent user necessary privileges for system management
+# File location: /etc/sudoers.d/sysmanage-agent
+# Permissions: 0440 (enforced by package installer)
+
+# Allow non-interactive sudo
+Defaults:sysmanage-agent !requiretty
+
+# Package Management (DNF/YUM)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf check-update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum check-update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -i *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -U *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -e *
+
+# Repository Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf config-manager *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum-config-manager *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/yum.repos.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/yum.repos.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm -f /etc/yum.repos.d/*
+
+# Systemd Service Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl stop *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl restart *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl enable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl disable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl is-active *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl start *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl enable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl disable *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl is-active *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl daemon-reload
+
+# Firewall Management (firewalld)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/firewall-cmd *
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/firewall-cmd *
+
+# SELinux Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/setenforce *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/getenforce
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/semanage *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/setsebool *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/getsebool *
+
+# System Power Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/reboot
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/reboot
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/poweroff
+
+# Certificate Management
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/update-ca-trust extract
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/update-ca-trust

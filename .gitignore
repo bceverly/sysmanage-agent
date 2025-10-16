@@ -172,6 +172,9 @@ fix-commits.sh
 sysmanage-agent.yaml
 sysmanage-agent.yaml
 
+# GPG passphrase file (NEVER commit this!)
+.gpg-passphrase
+
 # Claude
 CLAUDE.md
 
