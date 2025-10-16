@@ -73,8 +73,8 @@ find %{buildroot}/opt/sysmanage-agent/.venv/bin -type f -exec sed -i 's|%{buildr
 install -m 644 installer/opensuse/sysmanage-agent.yaml.example %{buildroot}/etc/sysmanage-agent/
 
 # Install systemd service
-install -d %{buildroot}%{_unitdir}
-install -m 644 installer/opensuse/sysmanage-agent.service %{buildroot}%{_unitdir}/
+install -d %{buildroot}/usr/lib/systemd/system
+install -m 644 installer/opensuse/sysmanage-agent.service %{buildroot}/usr/lib/systemd/system/
 
 # Install sudoers file
 install -d %{buildroot}/etc/sudoers.d
@@ -172,7 +172,7 @@ fi
 /etc/sysmanage-agent/
 %dir /var/lib/sysmanage-agent
 %dir /var/log/sysmanage-agent
-%{_unitdir}/sysmanage-agent.service
+/usr/lib/systemd/system/sysmanage-agent.service
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
 
 %changelog
