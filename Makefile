@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-openbsd
 
 # Default target
 help:
@@ -26,16 +26,18 @@ help:
 	@echo "  make security-upgrades - Check for security package upgrades"
 	@echo ""
 	@echo "Packaging targets:"
-	@echo "  make installer     - Build installer package (auto-detects platform: .deb or .rpm)"
+	@echo "  make installer     - Build installer package (auto-detects platform)"
 	@echo "  make installer-deb - Build Ubuntu/Debian .deb package (explicit)"
 	@echo "  make installer-rpm - Build CentOS/RHEL/Fedora .rpm package (explicit)"
+	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
 	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, etc."
 	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
+	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
-	@echo "    OpenBSD: gcc, py3-cffi"
+	@echo "    OpenBSD: gcc, py3-cffi (plus all Python deps as pre-built packages)"
 	@echo "    NetBSD: gcc13, py312-cffi"
 	@echo ""
 	@echo "Privilege Levels:"
@@ -167,6 +169,25 @@ else
 			exit 1; \
 		}; \
 		echo "✓ All macOS packaging tools available"; \
+		$(PYTHON) scripts/install-dev-deps.py; \
+	elif [ "$$(uname -s)" = "OpenBSD" ]; then \
+		echo "[INFO] OpenBSD detected - installing Python dependencies as packages..."; \
+		MISSING_PKGS=""; \
+		pkg_info -e py3-websockets || MISSING_PKGS="$$MISSING_PKGS py3-websockets"; \
+		pkg_info -e py3-yaml || MISSING_PKGS="$$MISSING_PKGS py3-yaml"; \
+		pkg_info -e py3-aiohttp || MISSING_PKGS="$$MISSING_PKGS py3-aiohttp"; \
+		pkg_info -e py3-cryptography || MISSING_PKGS="$$MISSING_PKGS py3-cryptography"; \
+		pkg_info -e py3-sqlalchemy || MISSING_PKGS="$$MISSING_PKGS py3-sqlalchemy"; \
+		pkg_info -e py3-alembic || MISSING_PKGS="$$MISSING_PKGS py3-alembic"; \
+		if [ -n "$$MISSING_PKGS" ]; then \
+			echo "Missing packages:$$MISSING_PKGS"; \
+			echo "Installing Python dependencies..."; \
+			echo "Running: doas pkg_add$$MISSING_PKGS"; \
+			doas pkg_add$$MISSING_PKGS || \
+			echo "[WARNING] Could not install packages. Run manually: doas pkg_add$$MISSING_PKGS"; \
+		else \
+			echo "✓ All Python dependencies already installed"; \
+		fi; \
 		$(PYTHON) scripts/install-dev-deps.py; \
 	elif [ "$$(uname -s)" = "NetBSD" ]; then \
 		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
@@ -391,6 +412,9 @@ installer:
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
 		echo "macOS detected - building PKG installer"; \
 		$(MAKE) installer-pkg; \
+	elif [ "$$(uname -s)" = "OpenBSD" ]; then \
+		echo "OpenBSD detected - preparing port"; \
+		$(MAKE) installer-openbsd; \
 	elif [ -f /etc/os-release ]; then \
 		. /etc/os-release; \
 		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
@@ -1200,3 +1224,80 @@ installer-rpm:
 		echo "  cat $$BUILD_TEMP/build.log"; \
 		exit 1; \
 	fi
+
+# Prepare OpenBSD port (copy to /usr/ports/sysutils/sysmanage-agent)
+installer-openbsd:
+	@echo "=== Preparing OpenBSD Port ==="
+	@echo ""
+	@echo "OpenBSD uses a ports system rather than pre-built packages."
+	@echo "This target will copy the port infrastructure to the ports tree."
+	@echo ""
+	@CURRENT_DIR=$$(pwd); \
+	PORTS_DIR="/usr/ports/sysutils/sysmanage-agent"; \
+	SOURCE_DIR="$$CURRENT_DIR/installer/openbsd"; \
+	echo "Determining version from git..."; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="0.1.0"; \
+		echo "WARNING: No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Checking source directory..."; \
+	if [ ! -d "$$SOURCE_DIR" ]; then \
+		echo "ERROR: Source directory not found: $$SOURCE_DIR"; \
+		exit 1; \
+	fi; \
+	echo "✓ Source directory found"; \
+	echo ""; \
+	echo "Creating ports directory (requires doas)..."; \
+	doas mkdir -p "$$PORTS_DIR" || { \
+		echo "ERROR: Failed to create $$PORTS_DIR"; \
+		echo "Make sure you have doas privileges"; \
+		exit 1; \
+	}; \
+	echo "✓ Ports directory created/verified: $$PORTS_DIR"; \
+	echo ""; \
+	echo "Copying port files..."; \
+	doas cp -R "$$SOURCE_DIR"/* "$$PORTS_DIR/" || { \
+		echo "ERROR: Failed to copy port files"; \
+		exit 1; \
+	}; \
+	echo "✓ Port files copied"; \
+	echo ""; \
+	echo "Updating version in Makefile to v$$VERSION..."; \
+	doas sed -i "s/^GH_TAGNAME =.*/GH_TAGNAME =\t\tv$$VERSION/" "$$PORTS_DIR/Makefile" || { \
+		echo "ERROR: Failed to update version in Makefile"; \
+		exit 1; \
+	}; \
+	echo "✓ Version updated to v$$VERSION"; \
+	echo ""; \
+	echo "==================================="; \
+	echo "Port Preparation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Port location: $$PORTS_DIR"; \
+	echo ""; \
+	echo "Next steps:"; \
+	echo ""; \
+	echo "1. Generate checksums:"; \
+	echo "   cd $$PORTS_DIR"; \
+	echo "   doas make makesum"; \
+	echo ""; \
+	echo "2. Build the port:"; \
+	echo "   doas make"; \
+	echo ""; \
+	echo "3. Install the port:"; \
+	echo "   doas make install"; \
+	echo ""; \
+	echo "4. Enable and start the service:"; \
+	echo "   doas rcctl enable sysmanage_agent"; \
+	echo "   doas rcctl start sysmanage_agent"; \
+	echo ""; \
+	echo "5. Configure:"; \
+	echo "   doas vi /etc/sysmanage-agent/sysmanage-agent.yaml"; \
+	echo "   doas rcctl restart sysmanage_agent"; \
+	echo ""; \
+	echo "For detailed instructions, see:"; \
+	echo "  $$CURRENT_DIR/installer/openbsd/README.md"

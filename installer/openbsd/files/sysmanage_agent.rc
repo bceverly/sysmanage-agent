@@ -1,0 +1,38 @@
+#!/bin/ksh
+#
+# $OpenBSD$
+
+daemon="/usr/local/bin/python3 /usr/local/libexec/sysmanage-agent/main.py"
+#daemon_user="_sysmanage"
+daemon_flags=""
+daemon_timeout=30
+
+. /etc/rc.d/rc.subr
+
+pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
+
+rc_bg=YES
+rc_reload=NO
+
+# Set environment variables
+export SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml
+export SYSMANAGE_DB_DIR=/var/db/sysmanage-agent
+export SYSMANAGE_LOG_DIR=/var/log/sysmanage-agent
+
+rc_pre() {
+	# Ensure required directories exist with correct permissions
+	# Running as root for testing (user _sysmanage not registered)
+	install -d -m 0750 ${SYSMANAGE_DB_DIR}
+	install -d -m 0750 ${SYSMANAGE_LOG_DIR}
+
+	# Copy example config if no config exists
+	if [ ! -f ${SYSMANAGE_CONFIG} ] && [ -f /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml ]; then
+		cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml ${SYSMANAGE_CONFIG}
+		chmod 0644 ${SYSMANAGE_CONFIG}
+		echo "Created default configuration at ${SYSMANAGE_CONFIG}"
+		echo "Please edit this file before starting the service."
+		return 1
+	fi
+}
+
+rc_cmd $1

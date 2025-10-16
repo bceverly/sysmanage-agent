@@ -1,0 +1,199 @@
+@comment This file can be auto-generated using: make update-plist
+@comment After first build, run: cd /usr/ports/mystuff/sysutils/sysmanage-agent && make update-plist
+@comment For official port submission, register these in /usr/ports/infrastructure/db/user.list
+@comment @newgroup _sysmanage:827
+@comment @newuser _sysmanage:827:_sysmanage::SysManage Agent:/nonexistent:/sbin/nologin
+@comment rc.d script
+@rcscript ${RCDIR}/sysmanage_agent
+@comment Application directory
+libexec/sysmanage-agent/
+libexec/sysmanage-agent/alembic.ini
+libexec/sysmanage-agent/main.py
+libexec/sysmanage-agent/src/
+@comment Python files will be listed here after make update-plist
+@comment Documentation
+libexec/sysmanage-agent/src/__init__.py
+libexec/sysmanage-agent/src/database/
+libexec/sysmanage-agent/src/database/__init__.py
+libexec/sysmanage-agent/src/database/alembic/
+libexec/sysmanage-agent/src/database/alembic/README
+libexec/sysmanage-agent/src/database/alembic/env.py
+libexec/sysmanage-agent/src/database/alembic/script.py.mako
+libexec/sysmanage-agent/src/database/alembic/versions/
+libexec/sysmanage-agent/src/database/alembic/versions/299a813b94db_add_host_token_to_hostapproval_table.py
+libexec/sysmanage-agent/src/database/alembic/versions/36b13f6f9d87_add_script_executions_table.py
+libexec/sysmanage-agent/src/database/alembic/versions/580e06d90203_add_available_packages_table_for_.py
+libexec/sysmanage-agent/src/database/alembic/versions/5fb27492bb5b_add_host_approval_table_for_storing_.py
+libexec/sysmanage-agent/src/database/alembic/versions/9ad14cccd903_add_installation_request_tracking.py
+libexec/sysmanage-agent/src/database/alembic/versions/a149f26a0a57_add_message_queue_tables.py
+libexec/sysmanage-agent/src/database/alembic/versions/a1b2c3d4e5f6_migrate_to_uuid_primary_keys.py
+libexec/sysmanage-agent/src/database/alembic/versions/e5365e178a37_add_message_queue_tables.py
+libexec/sysmanage-agent/src/database/base.py
+libexec/sysmanage-agent/src/database/init.py
+libexec/sysmanage-agent/src/database/models.py
+libexec/sysmanage-agent/src/database/queue_manager.py
+libexec/sysmanage-agent/src/i18n/
+libexec/sysmanage-agent/src/i18n/__init__.py
+libexec/sysmanage-agent/src/i18n/locales/
+libexec/sysmanage-agent/src/i18n/locales/ar/
+libexec/sysmanage-agent/src/i18n/locales/ar/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/ar/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/de/
+libexec/sysmanage-agent/src/i18n/locales/de/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/de/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/en/
+libexec/sysmanage-agent/src/i18n/locales/en/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/en/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/es/
+libexec/sysmanage-agent/src/i18n/locales/es/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/es/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/fr/
+libexec/sysmanage-agent/src/i18n/locales/fr/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/fr/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/hi/
+libexec/sysmanage-agent/src/i18n/locales/hi/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/hi/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/it/
+libexec/sysmanage-agent/src/i18n/locales/it/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/it/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/ja/
+libexec/sysmanage-agent/src/i18n/locales/ja/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/ja/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/ko/
+libexec/sysmanage-agent/src/i18n/locales/ko/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/ko/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/nl/
+libexec/sysmanage-agent/src/i18n/locales/nl/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/nl/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/pt/
+libexec/sysmanage-agent/src/i18n/locales/pt/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/pt/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/ru/
+libexec/sysmanage-agent/src/i18n/locales/ru/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/ru/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/zh_CN/
+libexec/sysmanage-agent/src/i18n/locales/zh_CN/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/zh_CN/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/i18n/locales/zh_TW/
+libexec/sysmanage-agent/src/i18n/locales/zh_TW/LC_MESSAGES/
+libexec/sysmanage-agent/src/i18n/locales/zh_TW/LC_MESSAGES/messages.po
+libexec/sysmanage-agent/src/security/
+libexec/sysmanage-agent/src/security/__init__.py
+libexec/sysmanage-agent/src/security/certificate_store.py
+libexec/sysmanage-agent/src/sysmanage_agent/
+libexec/sysmanage-agent/src/sysmanage_agent/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/
+libexec/sysmanage-agent/src/sysmanage_agent/collection/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/antivirus_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/certificate_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/commercial_antivirus_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/linux_system_update_detectors.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/linux_update_applicators.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/linux_update_detectors.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/os_info_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collector_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collector_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collector_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collector_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/package_collector_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/role_detection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/update_detection_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/collection/user_access_collection.py
+libexec/sysmanage-agent/src/sysmanage_agent/communication/
+libexec/sysmanage-agent/src/sysmanage_agent/communication/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/communication/data_collector.py
+libexec/sysmanage-agent/src/sysmanage_agent/communication/message_handler.py
+libexec/sysmanage-agent/src/sysmanage_agent/communication/network_utils.py
+libexec/sysmanage-agent/src/sysmanage_agent/core/
+libexec/sysmanage-agent/src/sysmanage_agent/core/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/core/agent_utils.py
+libexec/sysmanage-agent/src/sysmanage_agent/core/config.py
+libexec/sysmanage-agent/src/sysmanage_agent/diagnostics/
+libexec/sysmanage-agent/src/sysmanage_agent/diagnostics/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/diagnostics/diagnostic_collector.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/
+libexec/sysmanage-agent/src/sysmanage_agent/operations/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deployment_helpers.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_removal_helpers.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_service_manager.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/antivirus_utils.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/bsd_macos_repository_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/certificate_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_collector.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/linux_repository_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/opentelemetry_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_base.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_bsd.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_linux.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_macos.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_windows.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deployment_helper.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/package_installation_helpers.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/package_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/repository_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/script_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/ssh_key_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/system_control.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/system_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/ubuntu_pro_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/update_manager.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/update_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/windows_repository_operations.py
+libexec/sysmanage-agent/src/sysmanage_agent/registration/
+libexec/sysmanage-agent/src/sysmanage_agent/registration/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/registration/client_registration.py
+libexec/sysmanage-agent/src/sysmanage_agent/registration/discovery.py
+libexec/sysmanage-agent/src/sysmanage_agent/registration/registration.py
+libexec/sysmanage-agent/src/sysmanage_agent/registration/registration_manager.py
+libexec/sysmanage-agent/src/sysmanage_agent/utils/
+libexec/sysmanage-agent/src/sysmanage_agent/utils/__init__.py
+libexec/sysmanage-agent/src/sysmanage_agent/utils/logging_formatter.py
+libexec/sysmanage-agent/src/sysmanage_agent/utils/verbosity_logger.py
+share/doc/sysmanage-agent/
+share/doc/sysmanage-agent/LICENSE
+share/doc/sysmanage-agent/README.md
+@comment Example configuration
+share/examples/sysmanage-agent/
+share/examples/sysmanage-agent/sysmanage-agent.yaml
+@sample ${SYSCONFDIR}/sysmanage-agent.yaml
+@comment Data directories (ownership disabled for testing without registered user)
+@comment @mode 0750
+@comment @owner _sysmanage
+@comment @group _sysmanage
+@sample /var/db/sysmanage-agent/
+@sample /var/log/sysmanage-agent/
+@comment @mode
+@comment @owner
+@comment @group
