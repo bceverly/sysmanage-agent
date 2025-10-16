@@ -3,6 +3,8 @@ Certificate operations module for SysManage agent.
 Handles SSL/TLS certificate deployment and management.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import platform

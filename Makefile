@@ -154,7 +154,21 @@ else
 			echo "✓ All packaging build tools already installed"; \
 		fi; \
 	fi
-	@if [ "$$(uname -s)" = "NetBSD" ]; then \
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		echo "[INFO] macOS detected - checking for packaging tools..."; \
+		command -v pkgbuild >/dev/null 2>&1 || { \
+			echo "[ERROR] pkgbuild not found. Please install Xcode Command Line Tools:"; \
+			echo "        xcode-select --install"; \
+			exit 1; \
+		}; \
+		command -v productbuild >/dev/null 2>&1 || { \
+			echo "[ERROR] productbuild not found. Please install Xcode Command Line Tools:"; \
+			echo "        xcode-select --install"; \
+			exit 1; \
+		}; \
+		echo "✓ All macOS packaging tools available"; \
+		$(PYTHON) scripts/install-dev-deps.py; \
+	elif [ "$$(uname -s)" = "NetBSD" ]; then \
 		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
 		export TMPDIR=/var/tmp && \
 		export CFLAGS="-I/usr/pkg/include" && \
@@ -374,7 +388,10 @@ endif
 
 # Build installer package (auto-detects platform)
 installer:
-	@if [ -f /etc/os-release ]; then \
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		echo "macOS detected - building PKG installer"; \
+		$(MAKE) installer-pkg; \
+	elif [ -f /etc/os-release ]; then \
 		. /etc/os-release; \
 		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
 			echo "openSUSE/SLES system detected - building RPM package"; \
@@ -401,6 +418,284 @@ installer:
 		echo "Detected OS: $$(uname -s)"; \
 		exit 1; \
 	fi
+
+# Build macOS .pkg installer package
+installer-pkg:
+	@echo "=== Building macOS .pkg Package ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v pkgbuild >/dev/null 2>&1 || { \
+		echo "ERROR: pkgbuild not found."; \
+		echo "Install with: xcode-select --install"; \
+		exit 1; \
+	}
+	@command -v productbuild >/dev/null 2>&1 || { \
+		echo "ERROR: productbuild not found."; \
+		echo "Install with: xcode-select --install"; \
+		exit 1; \
+	}
+	@echo "✓ Build tools available"
+	@echo ""; \
+	echo "Determining version..."; \
+	set -e; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="0.1.0"; \
+		echo "No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Creating build directory..."; \
+	CURRENT_DIR=$$(pwd); \
+	BUILD_TEMP="$$CURRENT_DIR/installer/dist/build-temp"; \
+	BUILD_DIR="$$BUILD_TEMP/sysmanage-agent-$$VERSION"; \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	PAYLOAD_DIR="$$BUILD_TEMP/payload"; \
+	SCRIPTS_DIR="$$BUILD_TEMP/scripts"; \
+	mkdir -p "$$OUTPUT_DIR"; \
+	rm -rf "$$BUILD_TEMP"; \
+	mkdir -p "$$BUILD_DIR"; \
+	mkdir -p "$$PAYLOAD_DIR"; \
+	mkdir -p "$$SCRIPTS_DIR"; \
+	echo "✓ Build directories created"; \
+	echo ""; \
+	echo "Copying source files..."; \
+	rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' src/ "$$BUILD_DIR/src/"; \
+	cp main.py "$$BUILD_DIR/"; \
+	cp alembic.ini "$$BUILD_DIR/"; \
+	cp requirements-prod.txt "$$BUILD_DIR/"; \
+	cp README.md "$$BUILD_DIR/" 2>/dev/null || touch "$$BUILD_DIR/README.md"; \
+	echo "✓ Application source copied (excluding test artifacts)"; \
+	echo ""; \
+	echo "Creating package payload structure..."; \
+	mkdir -p "$$PAYLOAD_DIR/opt/sysmanage-agent"; \
+	mkdir -p "$$PAYLOAD_DIR/Library/LaunchDaemons"; \
+	cp -r "$$BUILD_DIR"/* "$$PAYLOAD_DIR/opt/sysmanage-agent/"; \
+	echo "✓ Payload structure created"; \
+	echo ""; \
+	echo "Creating LaunchDaemon plist..."; \
+	{ printf '%s\n' \
+		'<?xml version="1.0" encoding="UTF-8"?>' \
+		'<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+		'<plist version="1.0">' \
+		'<dict>' \
+		'	<key>Label</key>' \
+		'	<string>com.sysmanage.agent</string>' \
+		'	<key>ProgramArguments</key>' \
+		'	<array>' \
+		'		<string>/opt/sysmanage-agent/venv/bin/python3</string>' \
+		'		<string>/opt/sysmanage-agent/main.py</string>' \
+		'	</array>' \
+		'	<key>WorkingDirectory</key>' \
+		'	<string>/opt/sysmanage-agent</string>' \
+		'	<key>RunAtLoad</key>' \
+		'	<true/>' \
+		'	<key>KeepAlive</key>' \
+		'	<true/>' \
+		'	<key>StandardOutPath</key>' \
+		'	<string>/var/log/sysmanage-agent.log</string>' \
+		'	<key>StandardErrorPath</key>' \
+		'	<string>/var/log/sysmanage-agent-error.log</string>' \
+		'	<key>EnvironmentVariables</key>' \
+		'	<dict>' \
+		'		<key>PATH</key>' \
+		'		<string>/opt/sysmanage-agent/venv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>' \
+		'	</dict>' \
+		'</dict>' \
+		'</plist>'; \
+	} > "$$PAYLOAD_DIR/Library/LaunchDaemons/com.sysmanage.agent.plist"; \
+	echo "✓ LaunchDaemon plist created"; \
+	echo ""; \
+	echo "Creating postinstall script..."; \
+	{ printf '%s\n' \
+		'#!/bin/bash' \
+		'set -e' \
+		'' \
+		'# Log file for debugging' \
+		'LOGFILE="/tmp/sysmanage-agent-install.log"' \
+		'exec > >(tee -a "$$LOGFILE") 2>&1' \
+		'' \
+		'echo "=== SysManage Agent Installation ===" ' \
+		'echo "Date: $$(date)"' \
+		'echo "Architecture: $$(uname -m)"' \
+		'echo "Python: $$(which python3)"' \
+		'echo "Python version: $$(python3 --version)"' \
+		'' \
+		'echo "Setting up sysmanage-agent..."' \
+		'' \
+		'cd /opt/sysmanage-agent' \
+		'' \
+		'# Remove old venv to ensure clean installation with correct architecture' \
+		'if [ -d "venv" ]; then' \
+		'	echo "Removing old virtual environment..."' \
+		'	rm -rf venv' \
+		'fi' \
+		'' \
+		'echo "Creating virtual environment..."' \
+		'# On Apple Silicon, force ARM64 architecture for venv and pip' \
+		'# Use sysctl to detect actual hardware, not uname which may report x86_64 under Rosetta' \
+		'ACTUAL_ARCH=$$(sysctl -n machdep.cpu.brand_string | grep -q "Apple" && echo "arm64" || uname -m)' \
+		'echo "Detected architecture: $$ACTUAL_ARCH"' \
+		'if [ "$$ACTUAL_ARCH" = "arm64" ]; then' \
+		'	echo "Apple Silicon detected - forcing ARM64 architecture"' \
+		'	echo "Creating ARM64 virtual environment with system Python..."' \
+		'	export ARCHFLAGS="-arch arm64"' \
+		'	export _PYTHON_HOST_PLATFORM="macosx-11.0-arm64"' \
+		'	arch -arm64 python3 -m venv venv' \
+		'	echo "Installing Python dependencies for ARM64..."' \
+		'	arch -arm64 ./venv/bin/pip install --upgrade pip setuptools wheel' \
+		'	echo "Installing application dependencies..."' \
+		'	arch -arm64 ./venv/bin/pip install -r requirements-prod.txt' \
+		'	echo "Dependency installation complete"' \
+		'else' \
+		'	echo "Intel architecture detected"' \
+		'	python3 -m venv venv' \
+		'	echo "Installing Python dependencies..."' \
+		'	./venv/bin/pip install --upgrade pip setuptools wheel' \
+		'	./venv/bin/pip install -r requirements-prod.txt' \
+		'fi' \
+		'' \
+		'if [ ! -f "/etc/sysmanage-agent.yaml" ]; then' \
+		'	echo "Creating example configuration..."' \
+		'	cat > /etc/sysmanage-agent.yaml.example <<'\''CONFIG_EOF'\''' \
+		'# SysManage Agent Configuration' \
+		'# Customize for your environment' \
+		'' \
+		'# Server connection settings' \
+		'server:' \
+		'  # WebSocket URL of the SysManage server' \
+		'  url: "wss://sysmanage.example.com:8443"' \
+		'' \
+		'  # Authentication token (obtain from SysManage server)' \
+		'  token: "YOUR_AGENT_TOKEN_HERE"' \
+		'' \
+		'  # Reconnect settings' \
+		'  reconnect_interval: 30  # seconds' \
+		'  max_reconnect_attempts: 0  # 0 = unlimited' \
+		'' \
+		'# Database settings' \
+		'database:' \
+		'  # Path to SQLite database file' \
+		'  path: "/var/lib/sysmanage-agent/agent.db"' \
+		'' \
+		'# Logging settings' \
+		'logging:' \
+		'  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL' \
+		'  level: "INFO"' \
+		'' \
+		'  # Log file path' \
+		'  file: "/var/log/sysmanage-agent/agent.log"' \
+		'' \
+		'  # Maximum log file size (in bytes)' \
+		'  max_size: 10485760  # 10MB' \
+		'' \
+		'  # Number of backup log files to keep' \
+		'  backup_count: 5' \
+		'' \
+		'# Collection intervals (in seconds)' \
+		'collection:' \
+		'  system_info_interval: 300  # 5 minutes' \
+		'  package_info_interval: 3600  # 1 hour' \
+		'  update_check_interval: 3600  # 1 hour' \
+		'  hardware_info_interval: 3600  # 1 hour' \
+		'' \
+		'# Security settings' \
+		'security:' \
+		'  verify_ssl: true' \
+		'' \
+		'# Feature flags' \
+		'features:' \
+		'  auto_update: false' \
+		'  firewall_management: true' \
+		'  certificate_management: true' \
+		'  script_execution: true' \
+		'CONFIG_EOF' \
+		'	echo "⚠️  Please configure /etc/sysmanage-agent.yaml before starting the service"' \
+		'fi' \
+		'' \
+		'# Create database directory' \
+		'mkdir -p /var/lib/sysmanage-agent' \
+		'chmod 755 /var/lib/sysmanage-agent' \
+		'' \
+		'# Create log directory' \
+		'mkdir -p /var/log/sysmanage-agent' \
+		'chmod 755 /var/log/sysmanage-agent' \
+		'' \
+		'echo "Loading LaunchDaemon..."' \
+		'launchctl load /Library/LaunchDaemons/com.sysmanage.agent.plist 2>/dev/null || true' \
+		'' \
+		'echo "✓ sysmanage-agent installation complete"' \
+		'echo ""' \
+		'echo "To start the service:"' \
+		'echo "  sudo launchctl start com.sysmanage.agent"' \
+		'echo ""' \
+		'echo "To stop the service:"' \
+		'echo "  sudo launchctl stop com.sysmanage.agent"' \
+		'' \
+		'exit 0'; \
+	} > "$$SCRIPTS_DIR/postinstall"; \
+	chmod +x "$$SCRIPTS_DIR/postinstall"; \
+	echo "✓ Postinstall script created"; \
+	echo ""; \
+	echo "Creating preinstall script..."; \
+	{ printf '%s\n' \
+		'#!/bin/bash' \
+		'' \
+		'if launchctl list | grep -q com.sysmanage.agent; then' \
+		'	echo "Stopping sysmanage-agent service..."' \
+		'	launchctl unload /Library/LaunchDaemons/com.sysmanage.agent.plist 2>/dev/null || true' \
+		'fi' \
+		'' \
+		'exit 0'; \
+	} > "$$SCRIPTS_DIR/preinstall"; \
+	chmod +x "$$SCRIPTS_DIR/preinstall"; \
+	echo "✓ Preinstall script created"; \
+	echo ""; \
+	echo "Building component package..."; \
+	pkgbuild --root "$$PAYLOAD_DIR" \
+		--scripts "$$SCRIPTS_DIR" \
+		--identifier com.sysmanage.agent \
+		--version "$$VERSION" \
+		--install-location / \
+		"$$BUILD_TEMP/sysmanage-agent-component.pkg"; \
+	echo "✓ Component package created"; \
+	echo ""; \
+	echo "Creating distribution XML..."; \
+	{ printf '%s\n' \
+		'<?xml version="1.0" encoding="utf-8"?>' \
+		'<installer-gui-script minSpecVersion="1">' \
+		'	<title>SysManage Agent</title>' \
+		'	<organization>com.sysmanage</organization>' \
+		'	<domains enable_localSystem="true"/>' \
+		'	<options customize="never" require-scripts="true" rootVolumeOnly="true" />' \
+		'	<choices-outline>' \
+		'		<line choice="default">' \
+		'			<line choice="com.sysmanage.agent"/>' \
+		'		</line>' \
+		'	</choices-outline>' \
+		'	<choice id="default"/>' \
+		'	<choice id="com.sysmanage.agent" visible="false">' \
+		'		<pkg-ref id="com.sysmanage.agent"/>' \
+		'	</choice>' \
+		'	<pkg-ref id="com.sysmanage.agent" onConclusion="none">sysmanage-agent-component.pkg</pkg-ref>' \
+		'</installer-gui-script>'; \
+	} > "$$BUILD_TEMP/distribution.xml"; \
+	echo "✓ Distribution XML created"; \
+	echo ""; \
+	echo "Building final installer package..."; \
+	productbuild --distribution "$$BUILD_TEMP/distribution.xml" \
+		--package-path "$$BUILD_TEMP" \
+		"$$OUTPUT_DIR/sysmanage-agent-$$VERSION-macos.pkg"; \
+	echo "✓ Final package created"; \
+	echo ""; \
+	echo "Package built successfully!"; \
+	echo "Location: $$OUTPUT_DIR/sysmanage-agent-$$VERSION-macos.pkg"; \
+	echo ""; \
+	echo "To install:"; \
+	echo "  sudo installer -pkg $$OUTPUT_DIR/sysmanage-agent-$$VERSION-macos.pkg -target /"; \
+	echo ""; \
+	ls -lh "$$OUTPUT_DIR/sysmanage-agent-$$VERSION-macos.pkg"
 
 # Build openSUSE/SLES installer package
 installer-rpm-suse:

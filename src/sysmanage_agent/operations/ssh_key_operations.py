@@ -3,6 +3,8 @@ SSH key operations module for SysManage agent.
 Handles SSH key deployment and management operations.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import Any, Dict

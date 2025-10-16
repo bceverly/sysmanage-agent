@@ -21,7 +21,7 @@ class TestDatabaseInitAdditional:
         mock_config = Mock()
         mock_config.get.return_value = {"path": "relative_agent.db"}
 
-        with patch("os.getcwd", return_value="/current/dir"):
+        with patch("src.database.init.os.getcwd", return_value="/current/dir"):
             result = get_database_path_from_config(mock_config)
 
             # Should join current directory with relative path
@@ -32,15 +32,15 @@ class TestDatabaseInitAdditional:
         mock_config = Mock()
         mock_config.get.return_value = {}  # No 'path' key
 
-        with patch("os.path.isabs", return_value=False), patch(
-            "os.path.join"
-        ) as mock_join, patch("os.getcwd", return_value="/current/dir"):
-
-            mock_join.return_value = "/current/dir/agent.db"
+        with patch("src.database.init.os.path.isabs", return_value=False), patch(
+            "src.database.init.os.path.join", side_effect=lambda *args: "/".join(args)
+        ), patch("src.database.init.os.getcwd", return_value="/current/dir"), patch(
+            "src.database.init.os.path.exists", return_value=False
+        ):
 
             result = get_database_path_from_config(mock_config)
 
-            mock_join.assert_called_with("/current/dir", "agent.db")
+            # Should use os.path.join with current directory and default "agent.db"
             assert result == "/current/dir/agent.db"
 
     def test_should_auto_migrate_exception(self):
