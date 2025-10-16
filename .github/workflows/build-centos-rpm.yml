@@ -124,7 +124,8 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          rpmbuild -bb ~/rpmbuild/SPECS/sysmanage-agent.spec
+          # Use --nodeps to skip dependency checking since we're building on Ubuntu
+          rpmbuild -bb --nodeps ~/rpmbuild/SPECS/sysmanage-agent.spec
 
           # Find the built RPM
           RPM_FILE=$(find ~/rpmbuild/RPMS -name "sysmanage-agent-$VERSION-*.rpm" | head -1)
