@@ -192,3 +192,51 @@ jobs:
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update macOS repository in sysmanage-docs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PKG_FILE: ${{ steps.package_info.outputs.pkg_file }}
+        run: |
+          echo "=========================================="
+          echo "Updating macOS Repository in sysmanage-docs"
+          echo "=========================================="
+
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # Clone sysmanage-docs repository
+          echo "📦 Cloning sysmanage-docs repository..."
+          git clone https://x-access-token:${DOCS_REPO_TOKEN}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          # Copy .pkg file to temporary location
+          echo "📋 Copying .pkg file..."
+          cp "installer/dist/$PKG_FILE" /tmp/
+          cp "installer/dist/$PKG_FILE.sha256" /tmp/
+
+          # Run update-repo.sh script
+          echo "🔄 Updating macOS repository..."
+          cd /tmp/sysmanage-docs/repo/mac
+          chmod +x update-repo.sh
+          ./update-repo.sh "/tmp/$PKG_FILE"
+
+          # Commit and push changes
+          echo "💾 Committing changes..."
+          cd /tmp/sysmanage-docs
+          git add repo/mac/
+          git commit -m "Add sysmanage-agent version $VERSION to macOS repository
+
+          Automatically updated by GitHub Actions from sysmanage-agent release ${{ github.ref_name }}.
+
+          - Package: $PKG_FILE
+          - Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+
+          echo "🚀 Pushing to sysmanage-docs..."
+          git push
+
+          echo "✅ macOS repository updated successfully!"
+          echo "📍 Changes will be live on GitHub Pages in 2-5 minutes"
+          echo "🔗 Repository: https://bceverly.github.io/sysmanage-docs/repo/mac"

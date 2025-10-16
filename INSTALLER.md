@@ -1,6 +1,6 @@
 # SysManage Agent Installer Documentation
 
-This document provides comprehensive instructions for building, testing, and distributing the SysManage Agent installers for Ubuntu/Debian (.deb) and CentOS/RHEL/Fedora (.rpm) systems.
+This document provides comprehensive instructions for building, testing, and distributing the SysManage Agent installers for Ubuntu/Debian (.deb), CentOS/RHEL/Fedora (.rpm), and macOS (.pkg) systems.
 
 ---
 
@@ -10,12 +10,17 @@ This document provides comprehensive instructions for building, testing, and dis
 - [Quick Start](#quick-start)
   - [Ubuntu/Debian (.deb)](#ubuntudebian-deb)
   - [CentOS/RHEL/Fedora (.rpm)](#centosrhelfedora-rpm)
+  - [macOS (.pkg)](#macos-pkg)
 - [Building the Installer](#building-the-installer)
   - [Ubuntu/Debian Package](#ubuntudebian-package)
   - [CentOS/RHEL/Fedora Package](#centosrhelfedora-package)
+  - [macOS Package](#macos-package)
 - [Testing the Installer](#testing-the-installer)
 - [Distribution Methods](#distribution-methods)
-- [APT Repository Management](#apt-repository-management)
+- [Repository Management](#repository-management)
+  - [APT Repository (Ubuntu/Debian)](#apt-repository-ubuntudebian)
+  - [YUM Repository (CentOS/RHEL)](#yum-repository-centosrhel)
+  - [macOS Repository](#macos-repository)
 - [GitHub Actions Automation](#github-actions-automation)
 - [Troubleshooting](#troubleshooting)
 
@@ -25,17 +30,19 @@ This document provides comprehensive instructions for building, testing, and dis
 
 The SysManage Agent installer packages provide:
 
-- **Automated installation** with proper system user creation
-- **Systemd service** that starts automatically on boot
-- **Sudoers configuration** for system management capabilities
+- **Automated installation** with proper system user creation (Linux) or service configuration (macOS)
+- **Service management** (systemd on Linux, LaunchDaemon on macOS) that starts automatically on boot
+- **Sudoers configuration** for system management capabilities (Linux)
 - **Database path fallback** (system → local)
-- **Privilege detection** via sudoers parsing
-- **Multi-Python version support** (3.10, 3.11, 3.12, 3.13)
+- **Privilege detection** via sudoers parsing (Linux)
+- **Multi-Python version support** (3.9, 3.10, 3.11, 3.12, 3.13)
+- **Architecture support**: AMD64/x86_64 and ARM64 (Apple Silicon native on macOS)
 
 ### Package Types
 
 - **Ubuntu/Debian (.deb)**: For Debian-based distributions
 - **CentOS/RHEL/Fedora (.rpm)**: For Red Hat-based distributions
+- **macOS (.pkg)**: For macOS 11.0 (Big Sur) and later
 
 ### Installation Locations
 
@@ -112,7 +119,31 @@ sudo rpm -ivh installer/dist/sysmanage-agent-*.rpm
 sudo systemctl status sysmanage-agent
 ```
 
+### macOS (.pkg)
+
+#### Build Installer Locally
+
+```bash
+# Using Makefile
+make installer
+
+# The .pkg file will be in installer/dist/:
+ls -lh installer/dist/sysmanage-agent-*-macos.pkg
+```
+
+#### Install Locally
+
+```bash
+# Install the package
+sudo installer -pkg installer/dist/sysmanage-agent-*-macos.pkg -target /
+
+# Check service status
+sudo launchctl print system/com.sysmanage.agent
+```
+
 ### Configure and Start
+
+#### Linux (Ubuntu/Debian/CentOS/RHEL)
 
 ```bash
 # Edit configuration
@@ -123,6 +154,21 @@ sudo systemctl restart sysmanage-agent
 
 # View logs
 sudo journalctl -u sysmanage-agent -f
+```
+
+#### macOS
+
+```bash
+# Edit configuration
+sudo nano /etc/sysmanage-agent.yaml
+
+# Restart service
+sudo launchctl stop com.sysmanage.agent
+sudo launchctl start com.sysmanage.agent
+
+# View logs
+tail -f /var/log/sysmanage-agent.log
+tail -f /var/log/sysmanage-agent-error.log
 ```
 
 ---
@@ -361,6 +407,104 @@ The Makefile target automatically:
 - Updates the version number (uses git describe)
 - Builds the RPM package
 - Reports the output file location
+
+### macOS Package
+
+#### Prerequisites
+
+Install Xcode Command Line Tools (includes pkgbuild and productbuild):
+
+```bash
+xcode-select --install
+```
+
+Verify installation:
+
+```bash
+which pkgbuild
+which productbuild
+```
+
+#### Build Process
+
+The macOS installer uses `pkgbuild` and `productbuild` to create a signed `.pkg` file:
+
+```bash
+# Build macOS installer
+make installer
+
+# The .pkg file will be in installer/dist/
+ls -lh installer/dist/sysmanage-agent-*-macos.pkg
+```
+
+#### Package Contents
+
+The macOS installer includes:
+
+- Application files in `/opt/sysmanage-agent/`
+- LaunchDaemon plist in `/Library/LaunchDaemons/`
+- Example configuration in `/etc/sysmanage-agent.yaml.example`
+- Pre-install and post-install scripts
+
+#### Architecture Support
+
+The macOS installer automatically detects the system architecture:
+
+- **Apple Silicon (ARM64)**: Creates ARM64 virtual environment and installs ARM64 native Python packages
+- **Intel (x86_64)**: Uses standard x86_64 packages
+
+The installer uses system Python (3.9+) and creates a virtual environment with the correct architecture.
+
+#### Using the Makefile
+
+The Makefile provides a `make installer` target (auto-detects macOS):
+
+```bash
+# Build macOS installer
+make installer
+
+# The .pkg file will be in installer/dist/sysmanage-agent-*.pkg
+```
+
+The Makefile target automatically:
+- Detects version from git tags or environment variable
+- Creates build directory structure
+- Copies application files
+- Generates LaunchDaemon plist
+- Creates pre/post-install scripts with ARM64 support
+- Builds component package
+- Creates distribution XML
+- Builds final product package
+- Reports output file location and installation instructions
+
+#### Installation Process
+
+The post-install script:
+
+1. Detects system architecture (ARM64 vs x86_64)
+2. Removes old virtual environment if present
+3. Creates new virtual environment with correct architecture
+4. Installs Python dependencies (ARM64 native on Apple Silicon)
+5. Creates example configuration if needed
+6. Creates database and log directories
+7. Loads the LaunchDaemon
+
+#### Uninstallation
+
+```bash
+# Stop and unload service
+sudo launchctl unload /Library/LaunchDaemons/com.sysmanage.agent.plist
+
+# Remove files
+sudo rm -rf /opt/sysmanage-agent
+sudo rm /Library/LaunchDaemons/com.sysmanage.agent.plist
+sudo rm /etc/sysmanage-agent.yaml
+sudo rm /etc/sysmanage-agent.yaml.example
+
+# Remove data (optional)
+sudo rm -rf /var/lib/sysmanage-agent
+sudo rm -rf /var/log/sysmanage-agent*.log
+```
 
 ---
 
