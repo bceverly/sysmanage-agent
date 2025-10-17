@@ -71,6 +71,14 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
+      - name: Wait for OpenBSD port build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build OpenBSD Port Tarball'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
   consolidated-release:
     name: Create Consolidated Release and Push to Docs
     runs-on: ubuntu-latest
@@ -104,6 +112,7 @@ jobs:
           find artifacts/ -name "*.deb" -exec cp {} release-files/ \;
           find artifacts/ -name "*.rpm" -exec cp {} release-files/ \;
           find artifacts/ -name "*.pkg" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
 
           echo "Release files:"
@@ -157,6 +166,11 @@ jobs:
           # FreeBSD packages
           cp ${{ github.workspace }}/release-files/*freebsd*.pkg "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*freebsd*.pkg.sha256 "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+
+          # OpenBSD port tarball
+          mkdir -p "repo/openbsd/ports/$VERSION"
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
 
           # Commit and push changes
           git add .
@@ -245,6 +259,32 @@ jobs:
           sudo nano /etc/sysmanage-agent.yaml
           sudo sysrc sysmanage_agent_enable=YES
           sudo service sysmanage_agent start
+          ```
+
+          ### OpenBSD
+          ```bash
+          # Download the port tarball
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+
+          # Extract to ports tree
+          cd /usr/ports/sysutils
+          doas rm -rf sysmanage-agent
+          doas tar xzf ~/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+          doas mv openbsd-port sysmanage-agent
+
+          # Install Python dependencies (avoids gcc conflicts)
+          doas pkg_add py3-websockets py3-yaml py3-aiohttp py3-cryptography py3-sqlalchemy py3-alembic
+
+          # Build and install
+          cd sysmanage-agent
+          doas make makesum
+          doas make install
+
+          # Configure and start
+          doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml /etc/sysmanage-agent.yaml
+          doas vi /etc/sysmanage-agent.yaml
+          doas rcctl enable sysmanage_agent
+          doas rcctl start sysmanage_agent
           ```
 
           ## Checksum Verification
@@ -336,6 +376,16 @@ jobs:
           sha256 -c sysmanage-agent-${{ steps.version.outputs.version }}.pkg.sha256
           ```
 
+          ### OpenBSD
+          ```bash
+          # Download files
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
+
+          # Verify checksum (OpenBSD)
+          sha256 -C sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256 sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+          ```
+
           ## Supported Platforms
 
           - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble)
@@ -345,6 +395,7 @@ jobs:
           - **SUSE Linux Enterprise Server (SLES)**: 15.x
           - **macOS**: 12+ (Monterey and later)
           - **FreeBSD**: 13.x, 14.x
+          - **OpenBSD**: 7.4+ (tested on 7.7)
 
           ## What's Included
 

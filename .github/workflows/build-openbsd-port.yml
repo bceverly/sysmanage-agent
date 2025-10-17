@@ -1,0 +1,387 @@
+name: Build OpenBSD Port
+
+on:
+  # Trigger on version tags (e.g., v1.0.0, v2.1.3)
+  push:
+    tags:
+      - 'v*.*.*'
+
+  # Manual trigger with version input
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write  # Needed for creating releases
+
+jobs:
+  # Wait for CI tests to pass before building
+  wait-for-tests:
+    name: Wait for CI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI workflow
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Backend Tests (Python 3.10)'  # Just check one of the matrix tests
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  build-openbsd-port:
+    name: Build OpenBSD Port Tarball
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building OpenBSD port for version: $VERSION"
+
+      - name: Create port directory structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating OpenBSD port structure..."
+          mkdir -p openbsd-port
+
+          # Copy port infrastructure files
+          cp -r installer/openbsd/pkg openbsd-port/
+          cp -r installer/openbsd/files openbsd-port/
+          cp installer/openbsd/Makefile openbsd-port/
+          cp installer/openbsd/distinfo openbsd-port/
+          cp installer/openbsd/README.md openbsd-port/
+          cp installer/openbsd/SUBMISSION.md openbsd-port/
+
+          # Update version in Makefile
+          sed -i "s/^GH_TAGNAME =.*/GH_TAGNAME =\t\tv$VERSION/" openbsd-port/Makefile
+
+          echo "✓ Port directory structure created"
+
+      - name: Create INSTALL.md with quick start instructions
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cat > openbsd-port/INSTALL.md << 'EOF'
+          # SysManage Agent - OpenBSD Port Installation
+
+          This package contains the OpenBSD port infrastructure for sysmanage-agent.
+
+          ## Quick Start Installation
+
+          ### Step 1: Extract to Ports Tree
+
+          ```bash
+          # Extract the port files to the OpenBSD ports tree
+          doas tar xzf sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz \
+              -C /usr/ports/sysutils/
+
+          # Rename to expected directory name
+          doas mv /usr/ports/sysutils/sysmanage-agent /usr/ports/sysutils/sysmanage-agent.old 2>/dev/null || true
+          doas mv /usr/ports/sysutils/openbsd-port /usr/ports/sysutils/sysmanage-agent
+
+          # Or if you prefer, extract directly:
+          cd /usr/ports/sysutils/
+          doas rm -rf sysmanage-agent
+          doas tar xzf ~/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+          doas mv openbsd-port sysmanage-agent
+          ```
+
+          ### Step 2: Build and Install
+
+          ```bash
+          # Navigate to the port directory
+          cd /usr/ports/sysutils/sysmanage-agent
+
+          # Install Python dependencies (avoid gcc conflicts)
+          doas pkg_add py3-websockets py3-yaml py3-aiohttp py3-cryptography \
+              py3-sqlalchemy py3-alembic
+
+          # Generate checksums for the source tarball
+          doas make makesum
+
+          # Build and install the port
+          doas make install
+
+          # Verify installation
+          ls -la /usr/local/libexec/sysmanage-agent/
+          ```
+
+          ### Step 3: Configure and Start
+
+          ```bash
+          # Copy example configuration
+          doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml \
+              /etc/sysmanage-agent.yaml
+
+          # Edit configuration with your server details
+          doas vi /etc/sysmanage-agent.yaml
+
+          # Enable and start the service
+          doas rcctl enable sysmanage_agent
+          doas rcctl start sysmanage_agent
+
+          # Check service status
+          doas rcctl check sysmanage_agent
+          doas rcctl status sysmanage_agent
+
+          # View logs
+          doas tail -f /var/log/sysmanage-agent/sysmanage-agent.log
+          ```
+
+          ## Configuration
+
+          The configuration file is located at `/etc/sysmanage-agent.yaml`.
+
+          Required settings:
+          - `server.url`: WebSocket URL of your SysManage server
+          - `server.token`: Authentication token from your SysManage server
+
+          Database path (OpenBSD convention):
+          - `/var/db/sysmanage-agent/agent.db`
+
+          ## Service Management
+
+          ```bash
+          # Start service
+          doas rcctl start sysmanage_agent
+
+          # Stop service
+          doas rcctl stop sysmanage_agent
+
+          # Restart service
+          doas rcctl restart sysmanage_agent
+
+          # Check if running
+          doas rcctl check sysmanage_agent
+
+          # Enable on boot
+          doas rcctl enable sysmanage_agent
+
+          # Disable on boot
+          doas rcctl disable sysmanage_agent
+          ```
+
+          ## Troubleshooting
+
+          ### Service won't start
+
+          Check the rc.d script and logs:
+
+          ```bash
+          # View rc.d script
+          cat /etc/rc.d/sysmanage_agent
+
+          # Test manually
+          doas /usr/local/bin/python3 /usr/local/libexec/sysmanage-agent/main.py
+
+          # Check permissions
+          ls -la /var/db/sysmanage-agent/
+          ls -la /var/log/sysmanage-agent/
+          ```
+
+          ### Check installation
+
+          ```bash
+          # Verify installed files
+          pkg_info -L sysmanage-agent
+
+          # Check Python modules
+          /usr/local/bin/python3 -c "import websockets, yaml, aiohttp"
+          ```
+
+          ## Uninstallation
+
+          ```bash
+          # Stop and disable service
+          doas rcctl stop sysmanage_agent
+          doas rcctl disable sysmanage_agent
+
+          # Uninstall the port
+          cd /usr/ports/sysutils/sysmanage-agent
+          doas make uninstall
+
+          # Remove configuration and data (optional)
+          doas rm -f /etc/sysmanage-agent.yaml
+          doas rm -rf /var/db/sysmanage-agent/
+          doas rm -rf /var/log/sysmanage-agent/
+          ```
+
+          ## Documentation
+
+          - **Full Documentation**: See README.md in this package
+          - **Submission Guide**: See SUBMISSION.md for official ports tree submission
+          - **OpenBSD Porter's Handbook**: https://www.openbsd.org/faq/ports/
+
+          ## Support
+
+          - **GitHub Issues**: https://github.com/bceverly/sysmanage-agent/issues
+          - **OpenBSD Ports**: ports@openbsd.org
+
+          ---
+
+          **Version:** ${{ steps.version.outputs.version }}
+          **Platform:** OpenBSD 7.4+
+          **Architecture:** amd64 (primary), others may work
+          EOF
+
+      - name: Create tarball
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating port tarball..."
+
+          # Create the tarball
+          tar czf "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" \
+              -C openbsd-port \
+              .
+
+          echo "✓ Tarball created: sysmanage-agent-${VERSION}-openbsd-port.tar.gz"
+
+          # Show tarball contents
+          echo ""
+          echo "Tarball contents:"
+          tar tzf "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" | head -20
+
+          # Show size
+          ls -lh "sysmanage-agent-${VERSION}-openbsd-port.tar.gz"
+
+      - name: Generate SHA256 checksum
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Generating SHA256 checksum..."
+          sha256sum "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" > \
+              "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
+
+          cat "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
+
+      - name: Upload tarball as artifact
+        uses: actions/upload-artifact@v4
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          name: sysmanage-agent-openbsd-port
+          path: |
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          files: |
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
+          body: |
+            # SysManage Agent v${{ steps.version.outputs.version }} - OpenBSD Port
+
+            ## Installation on OpenBSD
+
+            ### Prerequisites
+
+            ```bash
+            # Install Python dependencies first (avoids gcc conflicts)
+            doas pkg_add py3-websockets py3-yaml py3-aiohttp py3-cryptography \
+                py3-sqlalchemy py3-alembic
+            ```
+
+            ### Quick Installation
+
+            ```bash
+            # Download the port tarball
+            ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+
+            # Extract to ports tree
+            cd /usr/ports/sysutils
+            doas rm -rf sysmanage-agent
+            doas tar xzf ~/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            doas mv openbsd-port sysmanage-agent
+
+            # Build and install
+            cd sysmanage-agent
+            doas make makesum
+            doas make install
+
+            # Configure
+            doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml \
+                /etc/sysmanage-agent.yaml
+            doas vi /etc/sysmanage-agent.yaml
+
+            # Start service
+            doas rcctl enable sysmanage_agent
+            doas rcctl start sysmanage_agent
+            ```
+
+            ## What's Included
+
+            - Complete OpenBSD port infrastructure
+            - BSD make Makefile
+            - rc.d service script
+            - Package file list (PLIST)
+            - Installation and submission documentation
+            - Example configuration
+
+            ## Important Notes
+
+            - **This is a port**, not a pre-built package
+            - Users build from source using the OpenBSD ports system
+            - Requires OpenBSD 7.4 or later
+            - Tested on OpenBSD 7.7/amd64
+            - Service runs as root (user registration required for production)
+
+            ## Service Management
+
+            ```bash
+            doas rcctl start sysmanage_agent   # Start service
+            doas rcctl stop sysmanage_agent    # Stop service
+            doas rcctl restart sysmanage_agent # Restart service
+            doas rcctl check sysmanage_agent   # Check status
+            ```
+
+            ## Checksum Verification
+
+            ```bash
+            # Download both files
+            ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
+
+            # Verify checksum
+            sha256 -C sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256 \
+                sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            ```
+
+            ## Documentation
+
+            The tarball includes:
+            - `INSTALL.md` - Quick start installation guide
+            - `README.md` - Complete documentation
+            - `SUBMISSION.md` - Official ports tree submission guide
+
+            ## Official Ports Tree
+
+            This port is prepared for submission to the official OpenBSD ports tree.
+            See `SUBMISSION.md` for details on the submission process.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
