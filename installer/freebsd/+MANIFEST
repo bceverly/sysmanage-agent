@@ -1,0 +1,238 @@
+name: sysmanage-agent
+version: "1.0.0"
+arch: freebsd:*:x86_64
+origin: sysutils/sysmanage-agent
+comment: System management agent for SysManage
+maintainer: bryan@theeverlys.com
+www: https://github.com/bceverly/sysmanage-agent
+prefix: /usr/local
+desc: <<EOD
+The SysManage agent provides comprehensive system management capabilities
+including:
+ * Package inventory and updates
+ * System monitoring and metrics
+ * Security policy enforcement
+ * Certificate management
+ * Firewall configuration
+ * Remote command execution
+ * Integration with SysManage server
+
+This agent runs as a system service and communicates securely with the
+SysManage server to provide centralized management of FreeBSD systems.
+EOD
+deps: {
+  python311: {origin: lang/python311, version: "3.11"},
+  py311-pip: {origin: devel/py-pip},
+  py311-aiosqlite: {origin: databases/py-aiosqlite},
+  py311-cryptography: {origin: security/py-cryptography},
+  py311-pyyaml: {origin: devel/py-yaml},
+  py311-aiohttp: {origin: www/py-aiohttp},
+  py311-sqlalchemy20: {origin: databases/py-sqlalchemy20},
+  py311-alembic: {origin: databases/py-alembic},
+  py311-websockets: {origin: www/py-websockets}
+}
+categories: [sysutils, python]
+licenselogic: single
+licenses: [MIT]
+scripts: {
+  pre-install: <<EOD
+#!/bin/sh
+echo "Installing SysManage Agent..."
+echo "Note: If installation fails due to missing dependencies, install them with:"
+echo "  pkg install py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets"
+echo ""
+EOD
+  post-install: <<EOD
+#!/bin/sh
+# Check for required dependencies
+MISSING_DEPS=""
+REQUIRED_PACKAGES="py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets"
+
+for pkg in $REQUIRED_PACKAGES; do
+    if ! pkg info -q "$pkg" >/dev/null 2>&1; then
+        MISSING_DEPS="$MISSING_DEPS $pkg"
+    fi
+done
+
+if [ -n "$MISSING_DEPS" ]; then
+    echo "ERROR: Missing required dependencies:$MISSING_DEPS"
+    echo ""
+    echo "Please install them with:"
+    echo "  pkg install$MISSING_DEPS"
+    echo ""
+    echo "Then reinstall this package."
+    exit 1
+fi
+
+# Create sysmanage user and group if they don't exist
+if ! pw groupshow sysmanage >/dev/null 2>&1; then
+    pw groupadd sysmanage -g 9999
+fi
+if ! pw usershow sysmanage >/dev/null 2>&1; then
+    pw useradd sysmanage -u 9999 -g sysmanage -h - -s /usr/sbin/nologin \
+       -d /usr/local/lib/sysmanage-agent -c "SysManage Agent User"
+fi
+
+# Create directories
+mkdir -p /usr/local/lib/sysmanage-agent
+mkdir -p /usr/local/etc/sysmanage-agent
+mkdir -p /var/log/sysmanage-agent
+mkdir -p /var/run/sysmanage
+mkdir -p /etc/sysmanage-agent
+
+# Set ownership
+chown -R sysmanage:sysmanage /usr/local/lib/sysmanage-agent
+chown -R sysmanage:sysmanage /var/log/sysmanage-agent
+chown -R sysmanage:sysmanage /var/run/sysmanage
+chown -R sysmanage:sysmanage /etc/sysmanage-agent
+
+# Use existing config or create symlink to system config
+if [ -f /etc/sysmanage-agent.yaml ]; then
+    ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
+elif [ ! -f /usr/local/etc/sysmanage-agent/config.yaml ]; then
+    cp /usr/local/etc/sysmanage-agent/config.yaml.example \
+       /usr/local/etc/sysmanage-agent/config.yaml
+fi
+
+echo "SysManage Agent installed successfully!"
+echo "Edit /usr/local/etc/sysmanage-agent/config.yaml to configure"
+echo "Enable with: sysrc sysmanage_agent_enable=YES"
+echo "Start with: service sysmanage_agent start"
+EOD
+  pre-deinstall: <<EOD
+#!/bin/sh
+# Stop service if running
+service sysmanage_agent stop 2>/dev/null || true
+EOD
+  post-deinstall: <<EOD
+#!/bin/sh
+echo "SysManage Agent removed."
+echo "Configuration files preserved in /usr/local/etc/sysmanage-agent/"
+echo "Logs preserved in /var/log/sysmanage-agent/"
+echo ""
+echo "To completely remove, also run:"
+echo "  sysrc -x sysmanage_agent_enable"
+echo "  rm -rf /usr/local/etc/sysmanage-agent"
+echo "  rm -rf /var/log/sysmanage-agent"
+echo "  rm -rf /etc/sysmanage-agent"
+EOD
+}
+files: {
+  /usr/local/etc/rc.d/sysmanage_agent: {uname: root, gname: wheel, perm: 0755},
+  /usr/local/etc/sysmanage-agent/config.yaml.example: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/main.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/requirements.txt: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/alembic.ini: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh: {uname: root, gname: wheel, perm: 0755},
+  /usr/local/lib/sysmanage-agent/src/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/env.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/299a813b94db_add_host_token_to_hostapproval_table.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/36b13f6f9d87_add_script_executions_table.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/580e06d90203_add_available_packages_table_for_.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/5fb27492bb5b_add_host_approval_table_for_storing_.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/9ad14cccd903_add_installation_request_tracking.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/a149f26a0a57_add_message_queue_tables.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/a1b2c3d4e5f6_migrate_to_uuid_primary_keys.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/alembic/versions/e5365e178a37_add_message_queue_tables.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/init.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/models.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/database/queue_manager.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/i18n/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/security/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/security/certificate_store.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/antivirus_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/certificate_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/commercial_antivirus_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/hardware_collector_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/linux_system_update_detectors.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/linux_update_applicators.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/linux_update_detectors.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/os_info_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collector_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collector_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collector_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collector_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/package_collector_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/role_detection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/software_inventory_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/update_detection_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/collection/user_access_collection.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/communication/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/communication/data_collector.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/communication/message_handler.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/communication/network_utils.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/core/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/core/agent_utils.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/core/config.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/diagnostics/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/diagnostics/diagnostic_collector.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deploy_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_deployment_helpers.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_removal_helpers.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_remove_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_service_manager.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/antivirus_utils.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/bsd_macos_repository_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/certificate_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_collector.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/firewall_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/linux_repository_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/opentelemetry_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_base.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_bsd.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_linux.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_macos.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_windows.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/otel_deployment_helper.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/package_installation_helpers.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/package_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/repository_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/script_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/ssh_key_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/system_control.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/system_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/ubuntu_pro_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/update_manager.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/update_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/operations/windows_repository_operations.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/registration/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/registration/client_registration.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/registration/discovery.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/registration/registration.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/registration/registration_manager.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/utils/__init__.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/utils/logging_formatter.py: {uname: root, gname: wheel, perm: 0644},
+  /usr/local/lib/sysmanage-agent/src/sysmanage_agent/utils/verbosity_logger.py: {uname: root, gname: wheel, perm: 0644}
+}

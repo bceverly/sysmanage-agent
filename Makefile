@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-openbsd
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-openbsd installer-freebsd
 
 # Default target
 help:
@@ -30,12 +30,14 @@ help:
 	@echo "  make installer-deb - Build Ubuntu/Debian .deb package (explicit)"
 	@echo "  make installer-rpm - Build CentOS/RHEL/Fedora .rpm package (explicit)"
 	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
+	@echo "  make installer-freebsd - Build FreeBSD .pkg package"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
 	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, etc."
 	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
 	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
+	@echo "    FreeBSD: pkgconf (for package creation)"
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
 	@echo "    OpenBSD: gcc, py3-cffi (plus all Python deps as pre-built packages)"
 	@echo "    NetBSD: gcc13, py312-cffi"
@@ -198,6 +200,19 @@ else
 		export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 && \
 		export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 && \
 		export GRPC_PYTHON_BUILD_SYSTEM_CARES=1 && \
+		$(PYTHON) scripts/install-dev-deps.py; \
+	elif [ "$$(uname -s)" = "FreeBSD" ]; then \
+		echo "[INFO] FreeBSD detected - installing package creation tools..."; \
+		if ! command -v pkg >/dev/null 2>&1; then \
+			echo "[ERROR] pkg not found. Please install pkg first."; \
+			exit 1; \
+		fi; \
+		echo "[INFO] Checking for required package creation tools..."; \
+		if ! pkg info -q pkgconf; then \
+			echo "    Installing pkgconf for package creation..."; \
+			sudo pkg install -y pkgconf; \
+		fi; \
+		echo "✓ FreeBSD package creation tools ready"; \
 		$(PYTHON) scripts/install-dev-deps.py; \
 	else \
 		$(PYTHON) scripts/install-dev-deps.py; \
@@ -415,6 +430,9 @@ installer:
 	elif [ "$$(uname -s)" = "OpenBSD" ]; then \
 		echo "OpenBSD detected - preparing port"; \
 		$(MAKE) installer-openbsd; \
+	elif [ "$$(uname -s)" = "FreeBSD" ]; then \
+		echo "FreeBSD detected - building PKG package"; \
+		$(MAKE) installer-freebsd; \
 	elif [ -f /etc/os-release ]; then \
 		. /etc/os-release; \
 		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
@@ -1301,3 +1319,80 @@ installer-openbsd:
 	echo ""; \
 	echo "For detailed instructions, see:"; \
 	echo "  $$CURRENT_DIR/installer/openbsd/README.md"
+
+# Build FreeBSD .pkg package
+installer-freebsd: installer/dist/sysmanage-agent-$(VERSION).pkg
+
+installer/dist/sysmanage-agent-$(VERSION).pkg: $(shell find src -name "*.py") main.py requirements.txt alembic.ini installer/freebsd/+MANIFEST installer/freebsd/sysmanage-agent.rc installer/freebsd/config.yaml.example Makefile
+	@echo "=== Building FreeBSD Package ==="
+	@echo ""
+	@echo "Creating FreeBSD .pkg package for sysmanage-agent..."
+	@echo ""
+	@CURRENT_DIR=$$(pwd); \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	BUILD_DIR="$$CURRENT_DIR/build/freebsd"; \
+	PACKAGE_ROOT="$$BUILD_DIR/package-root"; \
+	MANIFEST_FILE="$$CURRENT_DIR/installer/freebsd/+MANIFEST"; \
+	echo "Determining version from git..."; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="1.0.0"; \
+		echo "WARNING: No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Cleaning build directory..."; \
+	rm -rf "$$BUILD_DIR"; \
+	mkdir -p "$$PACKAGE_ROOT"; \
+	echo "✓ Build directory prepared: $$BUILD_DIR"; \
+	echo ""; \
+	echo "Creating package directory structure..."; \
+	mkdir -p "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/usr/local/etc/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/usr/local/etc/rc.d"; \
+	mkdir -p "$$PACKAGE_ROOT/var/log/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/var/run/sysmanage"; \
+	echo "✓ Package directories created"; \
+	echo ""; \
+	echo "Copying agent files..."; \
+	cp -R src "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/"; \
+	cp main.py "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/"; \
+	cp requirements.txt "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/"; \
+	cp alembic.ini "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/"; \
+	echo "✓ Agent files copied"; \
+	echo ""; \
+	echo "Copying configuration files..."; \
+	cp installer/freebsd/config.yaml.example "$$PACKAGE_ROOT/usr/local/etc/sysmanage-agent/"; \
+	cp installer/freebsd/sysmanage-agent.rc "$$PACKAGE_ROOT/usr/local/etc/rc.d/sysmanage_agent"; \
+	cp installer/freebsd/sysmanage-agent-wrapper.sh "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/"; \
+	chmod +x "$$PACKAGE_ROOT/usr/local/etc/rc.d/sysmanage_agent"; \
+	chmod +x "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"; \
+	echo "✓ Configuration files copied"; \
+	echo ""; \
+	echo "Creating package manifest..."; \
+	sed "s/version: \".*\"/version: \"$$VERSION\"/" "$$MANIFEST_FILE" > "$$BUILD_DIR/+MANIFEST"; \
+	echo "✓ Manifest created with version $$VERSION"; \
+	echo ""; \
+	echo "Building package..."; \
+	cd "$$BUILD_DIR" && pkg create -M +MANIFEST -r package-root -o .; \
+	if [ $$? -eq 0 ]; then \
+		PACKAGE_FILE=$$(ls sysmanage-agent-*.pkg 2>/dev/null | head -1); \
+		if [ -n "$$PACKAGE_FILE" ]; then \
+			mkdir -p "$$OUTPUT_DIR"; \
+			mv "$$PACKAGE_FILE" "$$OUTPUT_DIR/"; \
+			echo ""; \
+			echo "✓ FreeBSD package created successfully: $$OUTPUT_DIR/$$PACKAGE_FILE"; \
+			echo ""; \
+			echo "Installation commands:"; \
+			echo "  sudo pkg add $$OUTPUT_DIR/$$PACKAGE_FILE"; \
+			echo "  sudo sysrc sysmanage_agent_enable=YES"; \
+			echo "  sudo service sysmanage-agent start"; \
+		else \
+			echo "ERROR: Package file not found after creation"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "ERROR: Package creation failed"; \
+		exit 1; \
+	fi

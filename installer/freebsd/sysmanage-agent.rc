@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# PROVIDE: sysmanage_agent
+# REQUIRE: NETWORKING SERVERS
+# BEFORE: DAEMON
+# KEYWORD: shutdown
+
+# Add the following lines to /etc/rc.conf to enable sysmanage-agent:
+# sysmanage_agent_enable="YES"
+# sysmanage_agent_config="/usr/local/etc/sysmanage-agent/config.yaml"
+# sysmanage_agent_user="sysmanage"
+# sysmanage_agent_group="sysmanage"
+
+. /etc/rc.subr
+
+name="sysmanage_agent"
+rcvar="${name}_enable"
+desc="SysManage Agent - System management agent"
+
+load_rc_config ${name}
+
+: ${sysmanage_agent_enable:="NO"}
+: ${sysmanage_agent_config:="/usr/local/etc/sysmanage-agent/config.yaml"}
+: ${sysmanage_agent_user:="sysmanage"}
+: ${sysmanage_agent_group:="sysmanage"}
+: ${sysmanage_agent_pidfile:="/var/run/sysmanage/agent.pid"}
+: ${sysmanage_agent_logfile:="/var/log/sysmanage-agent/agent.log"}
+
+# Use daemon to run in background
+command="/usr/sbin/daemon"
+command_args="-f -p ${sysmanage_agent_pidfile} /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh --config ${sysmanage_agent_config}"
+pidfile="${sysmanage_agent_pidfile}"
+
+# FreeBSD rc.subr will handle user switching
+sysmanage_agent_user="${sysmanage_agent_user}"
+
+start_precmd="${name}_prestart"
+stop_postcmd="${name}_poststop"
+
+sysmanage_agent_prestart()
+{
+    # Create directories if they don't exist
+    install -d -o ${sysmanage_agent_user} -g ${sysmanage_agent_group} \
+        /var/run/sysmanage /var/log/sysmanage-agent
+
+    # Check config file exists
+    if [ ! -f "${sysmanage_agent_config}" ]; then
+        echo "Configuration file not found: ${sysmanage_agent_config}"
+        echo "Copy the example: cp /usr/local/etc/sysmanage-agent/config.yaml.example ${sysmanage_agent_config}"
+        return 1
+    fi
+}
+
+sysmanage_agent_poststop()
+{
+    rm -f ${pidfile}
+}
+
+run_rc_command "$1"
