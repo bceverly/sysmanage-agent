@@ -962,9 +962,10 @@ jobs:
       - name: Push packages to sysmanage-docs repository
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
         run: |
           echo "Cloning sysmanage-docs repository..."
-          git clone https://${{ secrets.GITHUB_TOKEN }}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+          git clone https://x-access-token:${DOCS_REPO_TOKEN}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
 
           cd /tmp/sysmanage-docs
           git config user.name "GitHub Actions"
