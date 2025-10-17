@@ -965,11 +965,11 @@ installer-deb:
 				else \
 					echo "[INFO] debsigs not installed - creating detached signature"; \
 					if [ -n "$$GPG_PASSPHRASE" ]; then \
-						echo "$$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
+						echo "$$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
 						echo "✓ Package signature created: $$DEB_FILE.asc" || \
 						{ echo "ERROR: Failed to create signature"; exit 1; }; \
 					else \
-						cat "$$CURRENT_DIR/.gpg-passphrase" | gpg --batch --yes --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
+						cat "$$CURRENT_DIR/.gpg-passphrase" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --default-key E033E691377F0AE3 --armor --detach-sign "$$DEB_FILE" && \
 						echo "✓ Package signature created: $$DEB_FILE.asc" || \
 						{ echo "ERROR: Failed to create signature"; exit 1; }; \
 					fi; \
