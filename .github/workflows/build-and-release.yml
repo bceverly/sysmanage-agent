@@ -1,0 +1,1192 @@
+name: Build and Release
+
+on:
+  # Trigger on version tags (e.g., v1.0.0, v2.1.3)
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write  # Needed for creating releases and pushing to repos
+
+jobs:
+  # Wait for CI tests to pass before building
+  wait-for-tests:
+    name: Wait for CI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI workflow
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Backend Tests (Python 3.10)'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  # Ubuntu/Debian .deb Package Build
+  build-ubuntu:
+    name: Build .deb Package
+    runs-on: ubuntu-24.04
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debhelper \
+            dh-python \
+            python3-all \
+            python3-setuptools \
+            python3-pip \
+            build-essential \
+            devscripts \
+            lintian
+
+      - name: Update changelog with version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DATE=$(date -R)
+
+          # Update changelog with actual version and date
+          sed -i "s/0\.1\.0-1/$VERSION-1/g" installer/ubuntu/debian/changelog
+          sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$DATE/g" installer/ubuntu/debian/changelog
+
+      - name: Create source tarball
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Create directory structure for Debian package
+          mkdir -p ../sysmanage-agent-$VERSION
+
+          # Copy source files
+          cp -r src ../sysmanage-agent-$VERSION/
+          cp main.py ../sysmanage-agent-$VERSION/
+          cp alembic.ini ../sysmanage-agent-$VERSION/
+          cp requirements.txt ../sysmanage-agent-$VERSION/
+          cp requirements-prod.txt ../sysmanage-agent-$VERSION/
+          cp README.md ../sysmanage-agent-$VERSION/ || touch ../sysmanage-agent-$VERSION/README.md
+          cp -r installer/ubuntu/debian ../sysmanage-agent-$VERSION/
+
+          # Copy installer files to the package
+          mkdir -p ../sysmanage-agent-$VERSION/installer/ubuntu
+          cp installer/ubuntu/*.service ../sysmanage-agent-$VERSION/installer/ubuntu/
+          cp installer/ubuntu/*.sudoers ../sysmanage-agent-$VERSION/installer/ubuntu/
+          cp installer/ubuntu/*.example ../sysmanage-agent-$VERSION/installer/ubuntu/
+
+          # Create orig tarball
+          cd ..
+          tar czf sysmanage-agent_$VERSION.orig.tar.gz sysmanage-agent-$VERSION/
+
+          # Return to package directory
+          cd sysmanage-agent-$VERSION
+
+      - name: Build Debian package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd ../sysmanage-agent-$VERSION
+
+          # Build the package
+          dpkg-buildpackage -us -uc -b
+
+          # Move built package back to workspace
+          mv ../sysmanage-agent_*.deb "$GITHUB_WORKSPACE/"
+          mv ../sysmanage-agent_*.build* "$GITHUB_WORKSPACE/" || true
+          mv ../sysmanage-agent_*.buildinfo "$GITHUB_WORKSPACE/" || true
+          mv ../sysmanage-agent_*.changes "$GITHUB_WORKSPACE/" || true
+
+      - name: Run lintian on package
+        run: |
+          lintian --no-tag-display-limit sysmanage-agent_*.deb || true
+
+      - name: Generate package information
+        id: package_info
+        run: |
+          DEB_FILE=$(ls sysmanage-agent_*.deb)
+          echo "deb_file=$DEB_FILE" >> $GITHUB_OUTPUT
+
+          # Get package info
+          dpkg-deb --info "$DEB_FILE"
+          dpkg-deb --contents "$DEB_FILE"
+
+          # Generate SHA256 checksum
+          sha256sum "$DEB_FILE" > "$DEB_FILE.sha256"
+
+          echo "Package built: $DEB_FILE"
+          echo "Size: $(du -h "$DEB_FILE" | cut -f1)"
+
+      - name: Upload .deb as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-deb
+          path: |
+            sysmanage-agent_*.deb
+            sysmanage-agent_*.deb.sha256
+
+  # CentOS/RHEL/Fedora .rpm Package Build
+  build-centos:
+    name: Build .rpm Package
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install RPM build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm createrepo-c python3-dev python3-pip python3-setuptools systemd
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up RPM build tree
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Ensure we're in the right directory
+          cd "$GITHUB_WORKSPACE"
+
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+          # Create source tarball
+          TAR_NAME="sysmanage-agent-$VERSION"
+          TAR_DIR="/tmp/$TAR_NAME"
+          mkdir -p "$TAR_DIR"
+
+          # Copy source files
+          rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' \
+            src/ "$TAR_DIR/src/"
+          cp main.py "$TAR_DIR/"
+          cp alembic.ini "$TAR_DIR/"
+          cp requirements-prod.txt "$TAR_DIR/"
+          cp README.md "$TAR_DIR/" || touch "$TAR_DIR/README.md"
+          cp LICENSE "$TAR_DIR/" || touch "$TAR_DIR/LICENSE"
+
+          # Copy installer files
+          mkdir -p "$TAR_DIR/installer/centos"
+          cp installer/centos/*.service "$TAR_DIR/installer/centos/"
+          cp installer/centos/*.sudoers "$TAR_DIR/installer/centos/"
+          cp installer/centos/*.example "$TAR_DIR/installer/centos/"
+          cp installer/centos/sysmanage-agent.spec "$TAR_DIR/installer/centos/"
+
+          # Create tarball
+          cd /tmp
+          tar czf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz "$TAR_NAME/"
+
+          echo "Source tarball created"
+
+      - name: Update spec file with version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Extract spec file from source tarball
+          tar -xzf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz -C /tmp \
+            sysmanage-agent-$VERSION/installer/centos/sysmanage-agent.spec
+          cp /tmp/sysmanage-agent-$VERSION/installer/centos/sysmanage-agent.spec ~/rpmbuild/SPECS/
+
+          DATE=$(date "+%a %b %d %Y")
+
+          # Update version and changelog date
+          sed -i "s/^Version:.*/Version:        $VERSION/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+          sed -i "s/^\\* Mon Oct 14 2024/\\* $DATE/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+          echo "Spec file updated to version $VERSION"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Build RPM package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Use --nodeps to skip dependency checking since we're building on Ubuntu
+          rpmbuild -bb --nodeps ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+          # Find the built RPM
+          RPM_FILE=$(find ~/rpmbuild/RPMS -name "sysmanage-agent-$VERSION-*.rpm" | head -1)
+
+          if [ -z "$RPM_FILE" ]; then
+            echo "ERROR: RPM package not found!"
+            exit 1
+          fi
+
+          # Copy to workspace
+          cp "$RPM_FILE" "$GITHUB_WORKSPACE/"
+
+          echo "RPM package built: $(basename $RPM_FILE)"
+
+      - name: Generate package information
+        id: package_info
+        run: |
+          RPM_FILE=$(ls sysmanage-agent_*.rpm 2>/dev/null || ls sysmanage-agent-*.rpm)
+          echo "rpm_file=$RPM_FILE" >> $GITHUB_OUTPUT
+
+          # Get package info
+          rpm -qip "$RPM_FILE"
+          rpm -qlp "$RPM_FILE"
+
+          # Generate SHA256 checksum
+          sha256sum "$RPM_FILE" > "$RPM_FILE.sha256"
+
+          echo "Package built: $RPM_FILE"
+          echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
+
+      - name: Upload .rpm as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-rpm
+          path: |
+            sysmanage-agent*.rpm
+            sysmanage-agent*.rpm.sha256
+
+  # OpenSUSE/SLES .rpm Package Build (Matrix for 3 targets)
+  build-opensuse:
+    name: Build .rpm Package for ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+    strategy:
+      matrix:
+        target:
+          - opensuse-leap
+          - opensuse-tumbleweed
+          - sles
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install RPM build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm createrepo-c python3-dev python3-pip python3-setuptools systemd
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up RPM build tree
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Ensure we're in the right directory
+          cd "$GITHUB_WORKSPACE"
+
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+          # Create source tarball
+          TAR_NAME="sysmanage-agent-$VERSION"
+          TAR_DIR="/tmp/$TAR_NAME"
+          mkdir -p "$TAR_DIR"
+
+          # Copy source files
+          rsync -a --exclude='htmlcov' --exclude='__pycache__' --exclude='*.pyc' --exclude='.pytest_cache' \
+            src/ "$TAR_DIR/src/"
+          cp main.py "$TAR_DIR/"
+          cp alembic.ini "$TAR_DIR/"
+          cp requirements-prod.txt "$TAR_DIR/"
+          cp README.md "$TAR_DIR/" || touch "$TAR_DIR/README.md"
+          cp LICENSE "$TAR_DIR/" || touch "$TAR_DIR/LICENSE"
+
+          # Copy installer files for openSUSE/SLES
+          mkdir -p "$TAR_DIR/installer/opensuse"
+          cp installer/opensuse/*.service "$TAR_DIR/installer/opensuse/" || true
+          cp installer/opensuse/*.sudoers "$TAR_DIR/installer/opensuse/" || true
+          cp installer/opensuse/*.example "$TAR_DIR/installer/opensuse/" || true
+          cp installer/opensuse/sysmanage-agent.spec "$TAR_DIR/installer/opensuse/"
+
+          # Create tarball
+          cd /tmp
+          tar czf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz "$TAR_NAME/"
+
+          echo "Source tarball created"
+
+      - name: Update spec file with version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Extract spec file from source tarball
+          tar -xzf ~/rpmbuild/SOURCES/sysmanage-agent-$VERSION.tar.gz -C /tmp \
+            sysmanage-agent-$VERSION/installer/opensuse/sysmanage-agent.spec
+          cp /tmp/sysmanage-agent-$VERSION/installer/opensuse/sysmanage-agent.spec ~/rpmbuild/SPECS/
+
+          DATE=$(date "+%a %b %d %Y")
+
+          # Update version and changelog date
+          sed -i "s/^Version:.*/Version:        $VERSION/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+          sed -i "s/^\\* Mon Oct 14 2024/\\* $DATE/" ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+          echo "Spec file updated to version $VERSION"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build RPM package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Use --nodeps to skip dependency checking since we're building on Ubuntu
+          rpmbuild -bb --nodeps ~/rpmbuild/SPECS/sysmanage-agent.spec
+
+          # Find the built RPM
+          RPM_FILE=$(find ~/rpmbuild/RPMS -name "sysmanage-agent-$VERSION-*.rpm" | head -1)
+
+          if [ -z "$RPM_FILE" ]; then
+            echo "ERROR: RPM package not found!"
+            exit 1
+          fi
+
+          # Copy to workspace
+          cp "$RPM_FILE" "$GITHUB_WORKSPACE/"
+
+          echo "RPM package built: $(basename $RPM_FILE)"
+
+      - name: Generate package information
+        id: package_info
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          RPM_FILE=$(ls sysmanage-agent-*.rpm | head -1)
+          echo "rpm_file=$RPM_FILE" >> $GITHUB_OUTPUT
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+
+          # Get package info
+          rpm -qip "$RPM_FILE"
+          rpm -qlp "$RPM_FILE"
+
+          # Generate SHA256 checksum
+          sha256sum "$RPM_FILE" > "$RPM_FILE.sha256"
+
+          echo "Package built: $RPM_FILE"
+          echo "Target: $TARGET"
+          echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
+
+      - name: Upload .rpm as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-rpm-${{ matrix.target }}
+          path: |
+            sysmanage-agent*.rpm
+            sysmanage-agent*.rpm.sha256
+
+  # macOS .pkg Package Build
+  build-macos:
+    name: Build macOS .pkg Package
+    runs-on: macos-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install build dependencies
+        run: |
+          # Xcode Command Line Tools should already be available on GitHub runners
+          # Verify pkgbuild and productbuild are available
+          which pkgbuild
+          which productbuild
+          echo "✓ macOS packaging tools available"
+
+      - name: Update version in Makefile
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Update version in Makefile if there's a VERSION variable
+          if grep -q "^VERSION.*=" Makefile; then
+            sed -i '' "s/^VERSION.*=.*/VERSION = $VERSION/" Makefile
+          fi
+
+      - name: Build macOS .pkg installer
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Build the installer using the Makefile
+          make installer
+
+          # Verify the package was created
+          PKG_FILE="installer/dist/sysmanage-agent-${VERSION}-macos.pkg"
+          if [ ! -f "$PKG_FILE" ]; then
+            echo "Error: Package file not found at $PKG_FILE"
+            ls -la installer/dist/
+            exit 1
+          fi
+
+          echo "Package built successfully: $PKG_FILE"
+
+      - name: Verify package structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_FILE="installer/dist/sysmanage-agent-${VERSION}-macos.pkg"
+
+          echo "Package information:"
+          pkgutil --payload-files "$PKG_FILE" | head -20
+
+          echo ""
+          echo "Package size: $(du -h "$PKG_FILE" | cut -f1)"
+
+      - name: Generate package information
+        id: package_info
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_FILE="installer/dist/sysmanage-agent-${VERSION}-macos.pkg"
+          echo "pkg_file=sysmanage-agent-${VERSION}-macos.pkg" >> $GITHUB_OUTPUT
+
+          # Generate SHA256 checksum
+          shasum -a 256 "$PKG_FILE" > "$PKG_FILE.sha256"
+
+          echo "Package built: $PKG_FILE"
+          echo "Size: $(du -h "$PKG_FILE" | cut -f1)"
+          echo "SHA256: $(cat "$PKG_FILE.sha256")"
+
+      - name: Upload .pkg as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-macos-pkg
+          path: |
+            installer/dist/sysmanage-agent-*.pkg
+            installer/dist/sysmanage-agent-*.pkg.sha256
+
+  # FreeBSD .pkg Package Build
+  build-freebsd:
+    name: Build FreeBSD .pkg Package
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install FreeBSD package build tools
+        run: |
+          sudo apt-get update
+          # Try to install FreeBSD pkg tools or alternatives
+          # We may need to install libarchive-tools for tar/archive handling
+          sudo apt-get install -y \
+            libarchive-tools \
+            python3-dev \
+            python3-pip \
+            python3-setuptools \
+            build-essential \
+            pkg-config \
+            gzip \
+            tar \
+            xz-utils
+
+      - name: Set up FreeBSD package structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Setting up FreeBSD package structure..."
+
+          # Create build directories
+          mkdir -p build/freebsd/package-root/usr/local/lib/sysmanage-agent
+          mkdir -p build/freebsd/package-root/usr/local/etc/sysmanage-agent
+          mkdir -p build/freebsd/package-root/usr/local/etc/rc.d
+          mkdir -p build/freebsd/package-root/var/log/sysmanage-agent
+          mkdir -p build/freebsd/package-root/var/run/sysmanage
+
+          # Copy agent files
+          cp -R src build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+          cp main.py build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+          cp requirements.txt build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+          cp alembic.ini build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+
+          # Copy configuration files
+          cp installer/freebsd/config.yaml.example build/freebsd/package-root/usr/local/etc/sysmanage-agent/
+          cp installer/freebsd/sysmanage-agent.rc build/freebsd/package-root/usr/local/etc/rc.d/sysmanage_agent
+          cp installer/freebsd/sysmanage-agent-wrapper.sh build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+
+          # Set executable permissions
+          chmod +x build/freebsd/package-root/usr/local/etc/rc.d/sysmanage_agent
+          chmod +x build/freebsd/package-root/usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh
+
+          # Update manifest with version
+          sed "s/version: \".*\"/version: \"$VERSION\"/" installer/freebsd/+MANIFEST > build/freebsd/+MANIFEST
+
+      - name: Create FreeBSD package using libarchive
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating FreeBSD package..."
+          cd build/freebsd
+
+          # Create the package archive
+          # FreeBSD packages are typically txz (tar.xz) files with specific structure
+          # First create the manifest and metadata
+
+          # Create package metadata files
+          echo "+COMPACT_MANIFEST" > +COMPACT_MANIFEST
+
+          # Create the package contents
+          cd package-root
+          find . -type f | sort > ../+CONTENTS
+
+          # Create the final package file
+          cd ..
+          PKG_FILE="sysmanage-agent-$VERSION.pkg"
+
+          # Create package archive (FreeBSD packages are .txz files)
+          tar -cf - +COMPACT_MANIFEST +MANIFEST +CONTENTS package-root | xz -c > "../$PKG_FILE"
+
+          # Move to dist directory
+          mkdir -p ../../installer/dist
+          mv "../$PKG_FILE" ../../installer/dist/
+
+          echo "Package created: installer/dist/$PKG_FILE"
+
+      - name: Generate package information
+        id: package_info
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_FILE="sysmanage-agent-$VERSION.pkg"
+          echo "pkg_file=$PKG_FILE" >> $GITHUB_OUTPUT
+
+          # Generate SHA256 checksum
+          cd installer/dist
+          sha256sum "$PKG_FILE" > "$PKG_FILE.sha256"
+
+          echo "Package built: $PKG_FILE"
+          echo "Size: $(du -h "$PKG_FILE" | cut -f1)"
+
+          # Show package contents
+          echo "Package contents:"
+          tar -tf "$PKG_FILE" | head -20
+
+      - name: Upload .pkg as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-freebsd-pkg
+          path: |
+            installer/dist/sysmanage-agent-*.pkg
+            installer/dist/sysmanage-agent-*.pkg.sha256
+
+  # OpenBSD Port Tarball Build
+  build-openbsd:
+    name: Build OpenBSD Port Tarball
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building OpenBSD port for version: $VERSION"
+
+      - name: Create port directory structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating OpenBSD port structure..."
+          mkdir -p openbsd-port
+
+          # Copy port infrastructure files
+          cp -r installer/openbsd/pkg openbsd-port/
+          cp -r installer/openbsd/files openbsd-port/
+          cp installer/openbsd/Makefile openbsd-port/
+          cp installer/openbsd/distinfo openbsd-port/
+          cp installer/openbsd/README.md openbsd-port/
+          cp installer/openbsd/SUBMISSION.md openbsd-port/
+
+          # Update version in Makefile
+          sed -i "s/^GH_TAGNAME =.*/GH_TAGNAME =\t\tv$VERSION/" openbsd-port/Makefile
+
+          echo "✓ Port directory structure created"
+
+      - name: Create INSTALL.md with quick start instructions
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cat > openbsd-port/INSTALL.md << 'EOF'
+          # SysManage Agent - OpenBSD Port Installation
+
+          This package contains the OpenBSD port infrastructure for sysmanage-agent.
+
+          ## Quick Start Installation
+
+          ### Step 1: Extract to Ports Tree
+
+          ```bash
+          # Extract the port files to the OpenBSD ports tree
+          doas tar xzf sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz \
+              -C /usr/ports/sysutils/
+
+          # Rename to expected directory name
+          doas mv /usr/ports/sysutils/sysmanage-agent /usr/ports/sysutils/sysmanage-agent.old 2>/dev/null || true
+          doas mv /usr/ports/sysutils/openbsd-port /usr/ports/sysutils/sysmanage-agent
+
+          # Or if you prefer, extract directly:
+          cd /usr/ports/sysutils/
+          doas rm -rf sysmanage-agent
+          doas tar xzf ~/sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+          doas mv openbsd-port sysmanage-agent
+          ```
+
+          ### Step 2: Build and Install
+
+          ```bash
+          # Navigate to the port directory
+          cd /usr/ports/sysutils/sysmanage-agent
+
+          # Install Python dependencies (avoid gcc conflicts)
+          doas pkg_add py3-websockets py3-yaml py3-aiohttp py3-cryptography \
+              py3-sqlalchemy py3-alembic
+
+          # Generate checksums for the source tarball
+          doas make makesum
+
+          # Build and install the port
+          doas make install
+
+          # Verify installation
+          ls -la /usr/local/libexec/sysmanage-agent/
+          ```
+
+          ### Step 3: Configure and Start
+
+          ```bash
+          # Copy example configuration
+          doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml \
+              /etc/sysmanage-agent.yaml
+
+          # Edit configuration with your server details
+          doas vi /etc/sysmanage-agent.yaml
+
+          # Enable and start the service
+          doas rcctl enable sysmanage_agent
+          doas rcctl start sysmanage_agent
+
+          # Check service status
+          doas rcctl check sysmanage_agent
+          doas rcctl status sysmanage_agent
+
+          # View logs
+          doas tail -f /var/log/sysmanage-agent/sysmanage-agent.log
+          ```
+
+          ## Configuration
+
+          The configuration file is located at `/etc/sysmanage-agent.yaml`.
+
+          Required settings:
+          - `server.url`: WebSocket URL of your SysManage server
+          - `server.token`: Authentication token from your SysManage server
+
+          Database path (OpenBSD convention):
+          - `/var/db/sysmanage-agent/agent.db`
+
+          ## Service Management
+
+          ```bash
+          # Start service
+          doas rcctl start sysmanage_agent
+
+          # Stop service
+          doas rcctl stop sysmanage_agent
+
+          # Restart service
+          doas rcctl restart sysmanage_agent
+
+          # Check if running
+          doas rcctl check sysmanage_agent
+
+          # Enable on boot
+          doas rcctl enable sysmanage_agent
+
+          # Disable on boot
+          doas rcctl disable sysmanage_agent
+          ```
+
+          ## Troubleshooting
+
+          ### Service won't start
+
+          Check the rc.d script and logs:
+
+          ```bash
+          # View rc.d script
+          cat /etc/rc.d/sysmanage_agent
+
+          # Test manually
+          doas /usr/local/bin/python3 /usr/local/libexec/sysmanage-agent/main.py
+
+          # Check permissions
+          ls -la /var/db/sysmanage-agent/
+          ls -la /var/log/sysmanage-agent/
+          ```
+
+          ### Check installation
+
+          ```bash
+          # Verify installed files
+          pkg_info -L sysmanage-agent
+
+          # Check Python modules
+          /usr/local/bin/python3 -c "import websockets, yaml, aiohttp"
+          ```
+
+          ## Uninstallation
+
+          ```bash
+          # Stop and disable service
+          doas rcctl stop sysmanage_agent
+          doas rcctl disable sysmanage_agent
+
+          # Uninstall the port
+          cd /usr/ports/sysutils/sysmanage-agent
+          doas make uninstall
+
+          # Remove configuration and data (optional)
+          doas rm -f /etc/sysmanage-agent.yaml
+          doas rm -rf /var/db/sysmanage-agent/
+          doas rm -rf /var/log/sysmanage-agent/
+          ```
+
+          ## Documentation
+
+          - **Full Documentation**: See README.md in this package
+          - **Submission Guide**: See SUBMISSION.md for official ports tree submission
+          - **OpenBSD Porter's Handbook**: https://www.openbsd.org/faq/ports/
+
+          ## Support
+
+          - **GitHub Issues**: https://github.com/bceverly/sysmanage-agent/issues
+          - **OpenBSD Ports**: ports@openbsd.org
+
+          ---
+
+          **Version:** ${{ steps.version.outputs.version }}
+          **Platform:** OpenBSD 7.4+
+          **Architecture:** amd64 (primary), others may work
+          EOF
+
+      - name: Create tarball
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating port tarball..."
+
+          # Create the tarball
+          tar czf "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" \
+              -C openbsd-port \
+              .
+
+          echo "✓ Tarball created: sysmanage-agent-${VERSION}-openbsd-port.tar.gz"
+
+          # Show tarball contents
+          echo ""
+          echo "Tarball contents:"
+          tar tzf "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" | head -20
+
+          # Show size
+          ls -lh "sysmanage-agent-${VERSION}-openbsd-port.tar.gz"
+
+      - name: Generate SHA256 checksum
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Generating SHA256 checksum..."
+          sha256sum "sysmanage-agent-${VERSION}-openbsd-port.tar.gz" > \
+              "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
+
+          cat "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
+
+      - name: Upload tarball as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-openbsd-port
+          path: |
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
+
+  # Consolidated Release - Push to sysmanage-docs and create GitHub release
+  release:
+    name: Create Release and Push to Docs
+    runs-on: ubuntu-latest
+    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-freebsd, build-openbsd]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building consolidated release for version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Organize artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Organizing artifacts for release..."
+          mkdir -p release-files
+
+          # Copy all package files to release directory
+          find artifacts/ -name "*.deb" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.rpm" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.pkg" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
+
+          echo "Release files:"
+          ls -la release-files/
+
+      - name: Push packages to sysmanage-docs repository
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Cloning sysmanage-docs repository..."
+          git clone https://${{ secrets.GITHUB_TOKEN }}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          cd /tmp/sysmanage-docs
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Create version directories for each platform
+          mkdir -p "repo/deb/pool/main/$VERSION-1"
+          mkdir -p "repo/rpm/el9/x86_64"
+          mkdir -p "repo/rpm/opensuse-tumbleweed/x86_64"
+          mkdir -p "repo/rpm/opensuse-leap/15/x86_64"
+          mkdir -p "repo/rpm/sles/15/x86_64"
+          mkdir -p "repo/mac/packages/$VERSION"
+          mkdir -p "repo/freebsd/packages/$VERSION"
+          mkdir -p "repo/openbsd/ports/$VERSION"
+
+          # Copy package files to appropriate locations
+          # DEB packages
+          cp ${{ github.workspace }}/release-files/*ubuntu*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*ubuntu*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+
+          # RPM packages - CentOS
+          cp ${{ github.workspace }}/release-files/*centos*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*el9*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*centos*.rpm.sha256 "repo/rpm/el9/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*el9*.rpm.sha256 "repo/rpm/el9/x86_64/" 2>/dev/null || true
+
+          # RPM packages - OpenSUSE Tumbleweed
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+
+          # RPM packages - OpenSUSE Leap
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+
+          # RPM packages - SLES
+          cp ${{ github.workspace }}/release-files/*sles*.rpm "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*sles*.rpm.sha256 "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
+
+          # macOS packages
+          cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/mac/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*macos*.pkg.sha256 "repo/mac/packages/$VERSION/" 2>/dev/null || true
+
+          # FreeBSD packages
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+
+          # OpenBSD port tarball
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
+
+          # Commit and push changes
+          git add .
+          git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
+          git push origin main
+
+      - name: Generate consolidated release notes
+        id: release_notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Get tag annotation message if it exists
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ github.ref_name }} | sed '/^$/d')
+
+          cat > release_notes.md << EOF
+          # SysManage Agent v$VERSION
+
+          ${TAG_MESSAGE:+$TAG_MESSAGE}
+          ${TAG_MESSAGE:+}
+          Multi-platform system management agent with support for Linux, BSD, and macOS.
+
+          ## Installation Instructions
+
+          ### Ubuntu/Debian
+          \`\`\`bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent_${VERSION}-1_amd64.deb
+          sudo apt install ./sysmanage-agent_${VERSION}-1_amd64.deb
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### CentOS/RHEL 9
+          \`\`\`bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
+          sudo dnf install ./sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### OpenSUSE Tumbleweed
+          \`\`\`bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
+          sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### OpenSUSE Leap 15
+          \`\`\`bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
+          sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### SUSE Linux Enterprise Server (SLES) 15
+          \`\`\`bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
+          sudo zypper install ./sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### macOS
+          \`\`\`bash
+          # Download and install
+          curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-macos.pkg
+          sudo installer -pkg sysmanage-agent-${VERSION}-macos.pkg -target /
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo launchctl load /Library/LaunchDaemons/com.sysmanage.agent.plist
+          \`\`\`
+
+          ### FreeBSD
+          \`\`\`bash
+          # Download and install
+          fetch https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.pkg
+          sudo pkg add sysmanage-agent-${VERSION}.pkg
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo sysrc sysmanage_agent_enable=YES
+          sudo service sysmanage_agent start
+          \`\`\`
+
+          ### OpenBSD
+          \`\`\`bash
+          # Download the port tarball
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd-port.tar.gz
+
+          # Extract to ports tree
+          cd /usr/ports/sysutils
+          doas rm -rf sysmanage-agent
+          doas tar xzf ~/sysmanage-agent-${VERSION}-openbsd-port.tar.gz
+          doas mv openbsd-port sysmanage-agent
+
+          # Install Python dependencies (avoids gcc conflicts)
+          doas pkg_add py3-websockets py3-yaml py3-aiohttp py3-cryptography py3-sqlalchemy py3-alembic
+
+          # Build and install
+          cd sysmanage-agent
+          doas make makesum
+          doas make install
+
+          # Configure and start
+          doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml /etc/sysmanage-agent.yaml
+          doas vi /etc/sysmanage-agent.yaml
+          doas rcctl enable sysmanage_agent
+          doas rcctl start sysmanage_agent
+          \`\`\`
+
+          ## Checksum Verification
+
+          All packages include SHA256 checksums. Download both files and verify:
+
+          **Linux (Ubuntu/CentOS/OpenSUSE/SLES):**
+          \`\`\`bash
+          sha256sum -c <package>.sha256
+          \`\`\`
+
+          **macOS:**
+          \`\`\`bash
+          shasum -a 256 -c <package>.sha256
+          \`\`\`
+
+          **FreeBSD/OpenBSD:**
+          \`\`\`bash
+          sha256 -C <package>.sha256 <package>
+          \`\`\`
+
+          ## Supported Platforms
+
+          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble)
+          - **Debian**: 11 (Bullseye), 12 (Bookworm)
+          - **CentOS/RHEL**: 9.x
+          - **OpenSUSE**: Tumbleweed, Leap 15.x
+          - **SUSE Linux Enterprise Server (SLES)**: 15.x
+          - **macOS**: 12+ (Monterey and later)
+          - **FreeBSD**: 13.x, 14.x
+          - **OpenBSD**: 7.4+ (tested on 7.7)
+
+          ## What's Included
+
+          - System management agent service
+          - Platform-native service management (systemd/launchd/rc.d)
+          - Automatic user/group creation
+          - Example configuration files
+          - Certificate storage directory
+          - Sudoers configuration for system management (Linux only)
+
+          EOF
+
+      - name: Create consolidated GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          body_path: release_notes.md
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
