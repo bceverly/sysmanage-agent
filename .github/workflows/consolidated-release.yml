@@ -6,6 +6,14 @@ on:
     tags:
       - 'v*.*.*'
 
+  # Manual trigger with version input
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
 permissions:
   contents: write  # Needed for creating releases and pushing to repos
 
@@ -66,9 +74,18 @@ jobs:
 
       - name: Determine version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
         run: |
-          # Extract version from tag (remove 'v' prefix)
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building consolidated release for version: $VERSION"
 
