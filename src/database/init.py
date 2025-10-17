@@ -141,7 +141,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             else:
                 for exec_name in python_executables:
                     try:
-                        result = subprocess.run(
+                        result = subprocess.run(  # nosec B603
                             [exec_name, "--version"],
                             capture_output=True,
                             check=True,
