@@ -1,0 +1,315 @@
+name: Consolidated Release
+
+on:
+  # Trigger on version tags (e.g., v1.0.0, v2.1.3)
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write  # Needed for creating releases and pushing to repos
+
+jobs:
+  # Wait for all platform builds to complete
+  wait-for-builds:
+    name: Wait for Platform Builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Ubuntu build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .deb Package'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for CentOS build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .rpm Package'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for OpenSUSE build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .rpm Package'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for macOS build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .pkg Package'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for FreeBSD build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .pkg Package'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  consolidated-release:
+    name: Create Consolidated Release and Push to Docs
+    runs-on: ubuntu-latest
+    needs: wait-for-builds
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building consolidated release for version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Organize artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Organizing artifacts for release..."
+          mkdir -p release-files
+
+          # Copy all package files to release directory
+          find artifacts/ -name "*.deb" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.rpm" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.pkg" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
+
+          echo "Release files:"
+          ls -la release-files/
+
+      - name: Push packages to sysmanage-docs repository
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Cloning sysmanage-docs repository..."
+          git clone https://${{ secrets.GITHUB_TOKEN }}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          cd /tmp/sysmanage-docs
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Create version directories for each platform
+          mkdir -p "repo/deb/pool/main/$VERSION-1"
+          mkdir -p "repo/rpm/el9/x86_64"
+          mkdir -p "repo/rpm/opensuse-tumbleweed/x86_64"
+          mkdir -p "repo/rpm/opensuse-leap/15/x86_64"
+          mkdir -p "repo/mac/packages/$VERSION"
+          mkdir -p "repo/freebsd/packages/$VERSION"
+
+          # Copy package files to appropriate locations
+          # DEB packages
+          cp ${{ github.workspace }}/release-files/*ubuntu*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*ubuntu*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+
+          # RPM packages - CentOS
+          cp ${{ github.workspace }}/release-files/*centos*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*centos*.rpm.sha256 "repo/rpm/el9/x86_64/" 2>/dev/null || true
+
+          # RPM packages - OpenSUSE Tumbleweed
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+
+          # RPM packages - OpenSUSE Leap
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+
+          # macOS packages
+          cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/mac/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*macos*.pkg.sha256 "repo/mac/packages/$VERSION/" 2>/dev/null || true
+
+          # FreeBSD packages
+          cp ${{ github.workspace }}/release-files/*freebsd*.pkg "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*freebsd*.pkg.sha256 "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+
+          # Commit and push changes
+          git add .
+          git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
+          git push origin main
+
+      - name: Generate consolidated release notes
+        id: release_notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cat > release_notes.md << 'EOF'
+          # SysManage Agent v${{ steps.version.outputs.version }}
+
+          Multi-platform system management agent with support for Linux, macOS, and FreeBSD.
+
+          ## Installation Instructions
+
+          ### Ubuntu/Debian
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent_${{ steps.version.outputs.version }}-1_amd64.deb
+          sudo apt install ./sysmanage-agent_${{ steps.version.outputs.version }}-1_amd64.deb
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          ```
+
+          ### CentOS/RHEL 9
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.el9.x86_64.rpm
+          sudo dnf install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.el9.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          ```
+
+          ### OpenSUSE Tumbleweed
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm
+          sudo zypper install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          ```
+
+          ### OpenSUSE Leap 15
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm
+          sudo zypper install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+          ```
+
+          ### macOS
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.macos.pkg
+          sudo installer -pkg sysmanage-agent-${{ steps.version.outputs.version }}.macos.pkg -target /
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo launchctl load /Library/LaunchDaemons/com.sysmanage.agent.plist
+          ```
+
+          ### FreeBSD
+          ```bash
+          # Download and install
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.pkg
+          sudo pkg add sysmanage-agent-${{ steps.version.outputs.version }}.pkg
+
+          # Configure and start
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo sysrc sysmanage_agent_enable=YES
+          sudo service sysmanage_agent start
+          ```
+
+          ## Checksum Verification
+
+          Verify package integrity using SHA256 checksums. Download both the package and its .sha256 file, then run:
+
+          ### Ubuntu/Debian (Linux)
+          ```bash
+          # Download files
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent_${{ steps.version.outputs.version }}-1_amd64.deb
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent_${{ steps.version.outputs.version }}-1_amd64.deb.sha256
+
+          # Verify checksum (Linux)
+          sha256sum -c sysmanage-agent_${{ steps.version.outputs.version }}-1_amd64.deb.sha256
+          ```
+
+          ### CentOS/RHEL 9 (Linux)
+          ```bash
+          # Download files
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.el9.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.el9.x86_64.rpm.sha256
+
+          # Verify checksum (Linux)
+          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.el9.x86_64.rpm.sha256
+          ```
+
+          ### OpenSUSE Tumbleweed (Linux)
+          ```bash
+          # Download files
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm.sha256
+
+          # Verify checksum (Linux)
+          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm.sha256
+          ```
+
+          ### OpenSUSE Leap 15 (Linux)
+          ```bash
+          # Download files
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm.sha256
+
+          # Verify checksum (Linux)
+          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm.sha256
+          ```
+
+          ### macOS
+          ```bash
+          # Download files (use curl on macOS if wget not available)
+          curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.macos.pkg
+          curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.macos.pkg.sha256
+
+          # Verify checksum (macOS)
+          shasum -a 256 -c sysmanage-agent-${{ steps.version.outputs.version }}.macos.pkg.sha256
+          ```
+
+          ### FreeBSD
+          ```bash
+          # Download files
+          fetch https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.pkg
+          fetch https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}.pkg.sha256
+
+          # Verify checksum (FreeBSD)
+          sha256 -c sysmanage-agent-${{ steps.version.outputs.version }}.pkg.sha256
+          ```
+
+          ## Supported Platforms
+
+          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble)
+          - **Debian**: 11 (Bullseye), 12 (Bookworm)
+          - **CentOS/RHEL**: 9.x
+          - **OpenSUSE**: Tumbleweed, Leap 15.x
+          - **macOS**: 12+ (Monterey and later)
+          - **FreeBSD**: 13.x, 14.x
+
+          ## What's Included
+
+          - System management agent service
+          - Platform-native service management (systemd/launchd/rc.d)
+          - Automatic user/group creation
+          - Example configuration files
+          - Certificate storage directory
+          - Sudoers configuration for system management (Linux only)
+
+          EOF
+
+      - name: Create consolidated GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          body_path: release_notes.md
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
