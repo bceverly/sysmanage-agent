@@ -18,10 +18,11 @@ permissions:
   contents: write  # Needed for creating releases and pushing to repos
 
 jobs:
-  # Wait for all platform builds to complete
+  # Wait for all platform builds to complete (only for tag pushes)
   wait-for-builds:
     name: Wait for Platform Builds
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Wait for Ubuntu build workflow
         uses: lewagon/wait-on-check-action@v1.3.4
@@ -39,11 +40,27 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
-      - name: Wait for OpenSUSE build workflow
+      - name: Wait for OpenSUSE Leap build
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.sha }}
-          check-name: 'Build openSUSE/SLES Package'
+          check-name: 'Build .rpm Package for opensuse-leap'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for OpenSUSE Tumbleweed build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .rpm Package for opensuse-tumbleweed'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Wait for SLES build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'Build .rpm Package for sles'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
@@ -67,6 +84,7 @@ jobs:
     name: Create Consolidated Release and Push to Docs
     runs-on: ubuntu-latest
     needs: wait-for-builds
+    if: always() && (needs.wait-for-builds.result == 'success' || needs.wait-for-builds.result == 'skipped')
 
     steps:
       - name: Checkout code
@@ -145,6 +163,11 @@ jobs:
           # RPM packages - OpenSUSE Leap
           cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+
+          # RPM packages - SLES
+          mkdir -p "repo/rpm/sles/15/x86_64"
+          cp ${{ github.workspace }}/release-files/*sles*.rpm "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*sles*.rpm.sha256 "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
 
           # macOS packages
           cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/mac/packages/$VERSION/" 2>/dev/null || true
@@ -273,6 +296,11 @@ jobs:
           wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm
           wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm.sha256
 
+          # Install and configure
+          sudo zypper install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+
           # Verify checksum (Linux)
           sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.tumbleweed.x86_64.rpm.sha256
           ```
@@ -280,11 +308,31 @@ jobs:
           ### OpenSUSE Leap 15 (Linux)
           ```bash
           # Download files
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm.sha256
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.x86_64.rpm.sha256
+
+          # Install and configure
+          sudo zypper install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.x86_64.rpm
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
 
           # Verify checksum (Linux)
-          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.15.x86_64.rpm.sha256
+          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.opensuse.leap.x86_64.rpm.sha256
+          ```
+
+          ### SUSE Linux Enterprise Server (SLES) 15 (Linux)
+          ```bash
+          # Download files
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.sles.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${{ steps.version.outputs.version }}-1.sles.x86_64.rpm.sha256
+
+          # Install and configure
+          sudo zypper install ./sysmanage-agent-${{ steps.version.outputs.version }}-1.sles.x86_64.rpm
+          sudo nano /etc/sysmanage-agent.yaml
+          sudo systemctl enable --now sysmanage-agent
+
+          # Verify checksum (Linux)
+          sha256sum -c sysmanage-agent-${{ steps.version.outputs.version }}-1.sles.x86_64.rpm.sha256
           ```
 
           ### macOS
@@ -313,6 +361,7 @@ jobs:
           - **Debian**: 11 (Bullseye), 12 (Bookworm)
           - **CentOS/RHEL**: 9.x
           - **OpenSUSE**: Tumbleweed, Leap 15.x
+          - **SUSE Linux Enterprise Server (SLES)**: 15.x
           - **macOS**: 12+ (Monterey and later)
           - **FreeBSD**: 13.x, 14.x
 
