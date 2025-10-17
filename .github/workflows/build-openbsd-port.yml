@@ -288,8 +288,6 @@ jobs:
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
         with:
           files: |
             sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
@@ -384,4 +382,5 @@ jobs:
             This port is prepared for submission to the official OpenBSD ports tree.
             See `SUBMISSION.md` for details on the submission process.
         env:
+          VERSION: ${{ steps.version.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
