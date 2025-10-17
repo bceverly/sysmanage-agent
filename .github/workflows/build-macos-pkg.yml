@@ -32,7 +32,7 @@ jobs:
           wait-interval: 30
 
   build-pkg:
-    name: Build .pkg Package
+    name: Build macOS .pkg Package
     runs-on: macos-latest
     needs: wait-for-tests
 

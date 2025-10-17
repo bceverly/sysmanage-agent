@@ -15,19 +15,19 @@ jobs:
     name: Wait for Platform Builds
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Ubuntu build workflow
+      - name: Wait for Ubuntu build
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.sha }}
-          check-name: 'Build Ubuntu/Debian Package'
+          check-name: 'Build .deb Package'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
-      - name: Wait for CentOS build workflow
+      - name: Wait for CentOS build
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.sha }}
-          check-name: 'Build CentOS/RHEL/Fedora Package'
+          check-name: 'Build .rpm Package'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
@@ -55,19 +55,19 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
-      - name: Wait for macOS build workflow
+      - name: Wait for macOS build
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.sha }}
-          check-name: 'Build macOS Package'
+          check-name: 'Build macOS .pkg Package'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
-      - name: Wait for FreeBSD build workflow
+      - name: Wait for FreeBSD build
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.sha }}
-          check-name: 'Build FreeBSD Package'
+          check-name: 'Build FreeBSD .pkg Package'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
