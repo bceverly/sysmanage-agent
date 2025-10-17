@@ -735,7 +735,7 @@ def is_running_privileged() -> bool:
 
         # Check if running as sysmanage-agent user with sudoers privileges
         try:
-            import pwd  # pylint: disable=import-outside-toplevel
+            import pwd  # pylint: disable=import-outside-toplevel,import-error
 
             current_user = pwd.getpwuid(os.geteuid()).pw_name
 

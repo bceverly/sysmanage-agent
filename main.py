@@ -1176,12 +1176,18 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
 
 if __name__ == "__main__":
     # Check for config file in standard locations
-    # Priority: 1) Environment variable, 2) /etc, 3) Current directory
+    # Priority: 1) Environment variable, 2) Platform-specific system location, 3) Current directory
     config_path = os.getenv("SYSMANAGE_CONFIG")  # pylint: disable=invalid-name
     if not config_path:
-        # Try /etc first, then fall back to current directory
-        if os.path.exists("/etc/sysmanage-agent.yaml"):
-            config_path = "/etc/sysmanage-agent.yaml"  # pylint: disable=invalid-name
+        # Platform-specific system config paths
+        if os.name == "nt":  # Windows
+            system_config = r"C:\ProgramData\SysManage\sysmanage-agent.yaml"  # pylint: disable=invalid-name
+        else:  # Unix-like (Linux, macOS, BSD)
+            system_config = "/etc/sysmanage-agent.yaml"  # pylint: disable=invalid-name
+
+        # Try system location first, then fall back to current directory
+        if os.path.exists(system_config):
+            config_path = system_config  # pylint: disable=invalid-name
         else:
             config_path = "sysmanage-agent.yaml"  # pylint: disable=invalid-name
 

@@ -3,6 +3,8 @@ Additional comprehensive tests for database.init module.
 Tests missing coverage areas to improve overall coverage.
 """
 
+import os
+import sys
 from unittest.mock import Mock, patch
 
 from src.database.init import (
@@ -25,7 +27,9 @@ class TestDatabaseInitAdditional:
             result = get_database_path_from_config(mock_config)
 
             # Should join current directory with relative path
-            assert result == "/current/dir/relative_agent.db"
+            # Use os.path.join for platform compatibility
+            expected = os.path.join("/current/dir", "relative_agent.db")
+            assert result == expected
 
     def test_get_database_path_from_config_default_value(self):
         """Test getting database path with default value."""
@@ -203,7 +207,7 @@ class TestDatabaseInitAdditional:
             result = run_alembic_migration("downgrade", "base")
 
             assert result is True
-            # Verify the call was made with python3 -m alembic and env variable
+            # Verify the call was made with sys.executable -m alembic and env variable
             assert mock_run.call_count == 1
             call_args = mock_run.call_args
             assert call_args[1]["cwd"] == "/path/to"
@@ -211,8 +215,14 @@ class TestDatabaseInitAdditional:
             assert call_args[1]["text"] is True
             assert call_args[1]["timeout"] == 60
             assert call_args[1]["check"] is False
-            # Check that it used python3 -m alembic
-            assert call_args[0][0] == ["python3", "-m", "alembic", "downgrade", "base"]
+            # Check that it used sys.executable -m alembic (not hardcoded python3)
+            assert call_args[0][0] == [
+                sys.executable,
+                "-m",
+                "alembic",
+                "downgrade",
+                "base",
+            ]
             # Check that env was passed
             assert "env" in call_args[1]
             assert "SYSMANAGE_DB_PATH" in call_args[1]["env"]

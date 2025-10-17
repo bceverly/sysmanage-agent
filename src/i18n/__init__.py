@@ -11,7 +11,7 @@ from typing import Optional
 DEFAULT_LANGUAGE = "en"
 
 # Current language (can be changed at runtime)
-CURRENT_LANGUAGE = DEFAULT_LANGUAGE
+CURRENT_LANGUAGE = DEFAULT_LANGUAGE  # pylint: disable=invalid-name
 
 # Cache for loaded translation objects
 TRANSLATIONS = {}
