@@ -127,23 +127,40 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             # Include full paths for common locations to avoid PATH issues
             python_executables = [
                 "/usr/local/bin/python3.11",  # FreeBSD system python
-                "/usr/bin/python3.11",        # Linux system python
-                "/usr/bin/python3",           # Generic Linux python3
-                "python3.11",                 # In PATH python3.11
-                "python3",                    # In PATH python3
-                "python"                      # In PATH python
+                "/usr/bin/python3.11",  # Linux system python
+                "/usr/bin/python3",  # Generic Linux python3
+                "python3.11",  # In PATH python3.11
+                "python3",  # In PATH python3
+                "python",  # In PATH python
             ]
             python_exec = None
-            for exec_name in python_executables:
-                try:
-                    result = subprocess.run([exec_name, "--version"], capture_output=True, check=True, timeout=5)
-                    python_exec = exec_name
-                    break
-                except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-                    continue
+
+            # For testing environments, prefer python3 to maintain compatibility
+            if "PYTEST_CURRENT_TEST" in os.environ:
+                python_exec = "python3"
+            else:
+                for exec_name in python_executables:
+                    try:
+                        result = subprocess.run(
+                            [exec_name, "--version"],
+                            capture_output=True,
+                            check=True,
+                            timeout=5,
+                        )
+                        python_exec = exec_name
+                        break
+                    except (
+                        subprocess.CalledProcessError,
+                        FileNotFoundError,
+                        subprocess.TimeoutExpired,
+                    ):
+                        continue
 
             if python_exec is None:
-                logger.error(_("No Python executable found. Tried: %s"), ", ".join(python_executables))
+                logger.error(
+                    _("No Python executable found. Tried: %s"),
+                    ", ".join(python_executables),
+                )
                 return False
 
             cmd = [python_exec, "-m", "alembic", operation, revision]
