@@ -147,9 +147,14 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cat > release_notes.md << 'EOF'
+          # Get tag annotation message if it exists
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ github.ref_name }} | sed '/^$/d')
+
+          cat > release_notes.md << EOF
           # SysManage Agent v${{ steps.version.outputs.version }}
 
+          ${TAG_MESSAGE:+$TAG_MESSAGE}
+          ${TAG_MESSAGE:+}
           Multi-platform system management agent with support for Linux, macOS, and FreeBSD.
 
           ## Installation Instructions
