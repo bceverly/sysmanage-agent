@@ -167,6 +167,31 @@ jobs:
             installer/dist/sysmanage-agent-*.pkg
             installer/dist/sysmanage-agent-*.pkg.sha256
 
+      - name: Push package to sysmanage-docs repository
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PKG_FILE: ${{ steps.package_info.outputs.pkg_file }}
+        run: |
+          echo "Cloning sysmanage-docs repository..."
+          git clone https://${{ secrets.GITHUB_TOKEN }}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+
+          cd /tmp/sysmanage-docs
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Create version directory if it doesn't exist
+          mkdir -p "repo/freebsd/packages/$VERSION"
+
+          # Copy package files to docs repo
+          cp "${{ github.workspace }}/installer/dist/$PKG_FILE" "repo/freebsd/packages/$VERSION/"
+          cp "${{ github.workspace }}/installer/dist/$PKG_FILE.sha256" "repo/freebsd/packages/$VERSION/"
+
+          # Commit and push changes
+          git add .
+          git commit -m "Add FreeBSD package v$VERSION" || echo "No changes to commit"
+          git push origin main
+
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
