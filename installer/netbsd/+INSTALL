@@ -1,0 +1,71 @@
+#!/bin/sh
+
+PKG_PREFIX=${PKG_PREFIX:-/usr/pkg}
+
+case ${STAGE} in
+PRE-INSTALL)
+	echo "Installing SysManage Agent..."
+	;;
+
+POST-INSTALL)
+	# Create sysmanage user and group if they don't exist
+	if ! /usr/sbin/groupinfo sysmanage >/dev/null 2>&1; then
+		/usr/sbin/groupadd -g 9999 sysmanage
+	fi
+	if ! /usr/sbin/userinfo sysmanage >/dev/null 2>&1; then
+		/usr/sbin/useradd -u 9999 -g sysmanage -s /sbin/nologin \
+			-d /usr/pkg/lib/sysmanage-agent -c "SysManage Agent User" sysmanage
+	fi
+
+	# Create directories
+	mkdir -p /usr/pkg/lib/sysmanage-agent
+	mkdir -p /usr/pkg/etc/sysmanage-agent
+	mkdir -p /var/log/sysmanage-agent
+	mkdir -p /var/run/sysmanage
+	mkdir -p /etc/sysmanage-agent
+
+	# Set ownership
+	chown -R sysmanage:sysmanage /usr/pkg/lib/sysmanage-agent
+	chown -R sysmanage:sysmanage /var/log/sysmanage-agent
+	chown -R sysmanage:sysmanage /var/run/sysmanage
+	chown -R sysmanage:sysmanage /etc/sysmanage-agent
+
+	# Use existing config or create from example
+	if [ -f /etc/sysmanage-agent.yaml ]; then
+		ln -sf /etc/sysmanage-agent.yaml /usr/pkg/etc/sysmanage-agent/config.yaml
+	elif [ ! -f /usr/pkg/etc/sysmanage-agent/config.yaml ]; then
+		cp /usr/pkg/etc/sysmanage-agent/config.yaml.example \
+			/usr/pkg/etc/sysmanage-agent/config.yaml
+	fi
+
+	echo ""
+	echo "SysManage Agent installed successfully!"
+	echo ""
+	echo "Next steps:"
+	echo "  1. Edit /usr/pkg/etc/sysmanage-agent/config.yaml to configure"
+	echo "  2. Copy the rc.d script: cp /usr/pkg/share/examples/rc.d/sysmanage_agent /etc/rc.d/"
+	echo "  3. Enable with: echo 'sysmanage_agent=YES' >> /etc/rc.conf"
+	echo "  4. Start with: /etc/rc.d/sysmanage_agent start"
+	echo ""
+	;;
+
+PRE-DEINSTALL)
+	# Stop service if running
+	if [ -f /etc/rc.d/sysmanage_agent ]; then
+		/etc/rc.d/sysmanage_agent stop 2>/dev/null || true
+	fi
+	;;
+
+POST-DEINSTALL)
+	echo "SysManage Agent removed."
+	echo "Configuration files preserved in /usr/pkg/etc/sysmanage-agent/"
+	echo "Logs preserved in /var/log/sysmanage-agent/"
+	echo ""
+	echo "To completely remove, also run:"
+	echo "  rm -rf /usr/pkg/etc/sysmanage-agent"
+	echo "  rm -rf /var/log/sysmanage-agent"
+	echo "  rm -rf /etc/sysmanage-agent"
+	echo "  rm -f /etc/rc.d/sysmanage_agent"
+	echo "  sed -i '/sysmanage_agent/d' /etc/rc.conf"
+	;;
+esac

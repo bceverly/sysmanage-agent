@@ -1,0 +1,100 @@
+# SysManage Agent Configuration for NetBSD
+# Copy this file to /usr/pkg/etc/sysmanage-agent/config.yaml and modify as needed
+
+# Server connection settings
+server:
+  url: https://sysmanage.example.com
+  api_key: YOUR_API_KEY_HERE
+  verify_ssl: true
+  timeout: 30
+
+# Agent settings
+agent:
+  # Agent identifier (leave blank to auto-generate from hostname)
+  agent_id: ""
+
+  # How often to send heartbeat/status updates (in seconds)
+  heartbeat_interval: 60
+
+  # How often to collect system metrics (in seconds)
+  metrics_interval: 300
+
+  # How often to check for package updates (in seconds)
+  package_check_interval: 3600
+
+  # Maximum number of retry attempts for failed connections
+  max_retries: 3
+
+  # Delay between retry attempts (in seconds)
+  retry_delay: 5
+
+# Logging configuration
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  level: INFO
+
+  # Log file location
+  file: /var/log/sysmanage-agent/agent.log
+
+  # Maximum log file size in MB
+  max_size: 10
+
+  # Number of rotated log files to keep
+  backup_count: 5
+
+  # Also log to console (useful for debugging)
+  console: false
+
+# Feature toggles
+features:
+  # Enable package management operations
+  package_management: true
+
+  # Enable system monitoring and metrics collection
+  monitoring: true
+
+  # Enable certificate management
+  certificate_management: true
+
+  # Enable firewall management (pf/npf on NetBSD)
+  firewall_management: true
+
+  # Enable remote command execution
+  remote_execution: true
+
+  # Enable automatic security updates
+  auto_security_updates: false
+
+# Security settings
+security:
+  # Allowed commands for remote execution (regex patterns)
+  allowed_commands:
+    - "^pkg_info"
+    - "^pkgin (search|list|avail)"
+    - "^uname"
+    - "^df"
+    - "^netstat"
+    - "^fstat"
+    - "^ps"
+    - "^top"
+    - "^sysctl"
+
+  # Denied commands (takes precedence over allowed)
+  denied_commands:
+    - ".*rm .*-rf.*"
+    - ".*dd .*"
+    - ".*newfs.*"
+    - ".*shutdown.*"
+    - ".*reboot.*"
+    - ".*halt.*"
+
+# NetBSD-specific settings
+netbsd:
+  # Use pkgin for package management (preferred over pkg_add)
+  use_pkgin: true
+
+  # Use npf for firewall management (or pf)
+  use_npf: true
+
+  # Package repository priority
+  prefer_binary_packages: true

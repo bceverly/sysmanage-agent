@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd
 
 # Default target
 help:
@@ -35,6 +35,7 @@ help:
 	@echo "  make installer-msi-all - Build Windows .msi for both x64 and ARM64"
 	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
 	@echo "  make installer-freebsd - Build FreeBSD .pkg package"
+	@echo "  make installer-netbsd - Build NetBSD .tgz package"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
@@ -43,9 +44,10 @@ help:
 	@echo "    Windows: WiX Toolset v4 (for MSI creation)"
 	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
 	@echo "    FreeBSD: pkgconf (for package creation)"
+	@echo "    NetBSD: No additional tools needed (uses pkg_create)"
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
 	@echo "    OpenBSD: gcc, py3-cffi (plus all Python deps as pre-built packages)"
-	@echo "    NetBSD: gcc13, py312-cffi"
+	@echo "    NetBSD: gcc14, py312-cffi"
 	@echo ""
 	@echo "Privilege Levels:"
 	@echo "  unprivileged - Runs as regular user (default for security)"
@@ -199,6 +201,12 @@ else
 		$(PYTHON) scripts/install-dev-deps.py; \
 	elif [ "$$(uname -s)" = "NetBSD" ]; then \
 		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
+		echo "[INFO] Checking for package creation tools..."; \
+		command -v pkg_create >/dev/null 2>&1 || { \
+			echo "[ERROR] pkg_create not found. Please install pkgtools from pkgsrc."; \
+			exit 1; \
+		}; \
+		echo "✓ NetBSD package creation tools ready"; \
 		export TMPDIR=/var/tmp && \
 		export CFLAGS="-I/usr/pkg/include" && \
 		export CXXFLAGS="-std=c++17 -I/usr/pkg/include -fpermissive" && \
@@ -443,6 +451,9 @@ else
 	elif [ "$$(uname -s)" = "FreeBSD" ]; then \
 		echo "FreeBSD detected - building PKG package"; \
 		$(MAKE) installer-freebsd; \
+	elif [ "$$(uname -s)" = "NetBSD" ]; then \
+		echo "NetBSD detected - building TGZ package"; \
+		$(MAKE) installer-netbsd; \
 	elif [ -f /etc/os-release ]; then \
 		. /etc/os-release; \
 		if [ "$$ID" = "opensuse-leap" ] || [ "$$ID" = "opensuse-tumbleweed" ] || [ "$$ID" = "sles" ]; then \
@@ -1423,3 +1434,108 @@ installer-msi-all: installer-msi-x64 installer-msi-arm64
 	@echo "=================================="
 	@echo "All Windows installers built!"
 	@echo "=================================="
+
+# Build NetBSD .tgz package
+installer-netbsd:
+	@echo "=== Building NetBSD Package ==="
+	@echo ""
+	@echo "Creating NetBSD .tgz package for sysmanage-agent..."
+	@echo ""
+	@CURRENT_DIR=$$(pwd); \
+	OUTPUT_DIR="$$CURRENT_DIR/installer/dist"; \
+	BUILD_DIR="$$CURRENT_DIR/build/netbsd"; \
+	PACKAGE_ROOT="$$BUILD_DIR/package-root"; \
+	echo "Determining version from git..."; \
+	VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+	if [ -z "$$VERSION" ]; then \
+		VERSION="1.0.0"; \
+		echo "WARNING: No git tags found, using default version: $$VERSION"; \
+	else \
+		echo "Building version: $$VERSION"; \
+	fi; \
+	echo ""; \
+	echo "Cleaning build directory..."; \
+	rm -rf "$$BUILD_DIR"; \
+	mkdir -p "$$PACKAGE_ROOT"; \
+	echo "✓ Build directory prepared: $$BUILD_DIR"; \
+	echo ""; \
+	echo "Creating package directory structure..."; \
+	mkdir -p "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/usr/pkg/share/examples/rc.d"; \
+	mkdir -p "$$PACKAGE_ROOT/var/log/sysmanage-agent"; \
+	mkdir -p "$$PACKAGE_ROOT/var/run/sysmanage"; \
+	echo "✓ Package directories created"; \
+	echo ""; \
+	echo "Copying agent files..."; \
+	cp -R src "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"; \
+	cp main.py "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"; \
+	cp requirements.txt "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"; \
+	cp alembic.ini "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"; \
+	echo "✓ Agent files copied"; \
+	echo ""; \
+	echo "Copying configuration files..."; \
+	cp installer/netbsd/config.yaml.example "$$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent/"; \
+	cp installer/netbsd/sysmanage_agent.rc "$$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"; \
+	cp installer/netbsd/sysmanage-agent-wrapper.sh "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"; \
+	chmod +x "$$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"; \
+	chmod +x "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"; \
+	echo "✓ Configuration files copied"; \
+	echo ""; \
+	echo "Copying package metadata files..."; \
+	cp installer/netbsd/+INSTALL "$$BUILD_DIR/"; \
+	cp installer/netbsd/+DESC "$$BUILD_DIR/"; \
+	cp installer/netbsd/+COMMENT "$$BUILD_DIR/"; \
+	cp installer/netbsd/+BUILD_INFO "$$BUILD_DIR/"; \
+	chmod +x "$$BUILD_DIR/+INSTALL"; \
+	echo "✓ Metadata files copied"; \
+	echo ""; \
+	echo "Creating packing list with dependencies..."; \
+	{ \
+		echo "@name sysmanage-agent-$$VERSION"; \
+		echo "@comment SysManage Agent - System management agent for NetBSD"; \
+		echo "@pkgdep python312>=3.12"; \
+		echo "@pkgdep py312-websockets>=15.0"; \
+		echo "@pkgdep py312-yaml>=6.0"; \
+		echo "@pkgdep py312-aiohttp>=3.12"; \
+		echo "@pkgdep py312-cryptography>=45.0"; \
+		echo "@pkgdep py312-sqlalchemy>=2.0"; \
+		echo "@pkgdep py312-alembic>=1.16"; \
+		cd "$$PACKAGE_ROOT" && find . -type f -o -type l | sed 's,^\./,,'; \
+		cd "$$PACKAGE_ROOT" && find . -type d | sed 's,^\./,,' | grep -v '^\.' | sed 's,^,@dirrm ,'; \
+	} | sort -u > "$$BUILD_DIR/+CONTENTS"; \
+	echo "✓ Packing list created with dependencies"; \
+	echo ""; \
+	echo "Building package with pkg_create..."; \
+	pkg_create \
+		-B "$$BUILD_DIR/+BUILD_INFO" \
+		-c "$$BUILD_DIR/+COMMENT" \
+		-d "$$BUILD_DIR/+DESC" \
+		-I "$$BUILD_DIR/+INSTALL" \
+		-f "$$BUILD_DIR/+CONTENTS" \
+		-p "$$PACKAGE_ROOT" \
+		"$$BUILD_DIR/sysmanage-agent-$$VERSION.tgz"; \
+	if [ $$? -eq 0 ]; then \
+		PACKAGE_FILE="sysmanage-agent-$$VERSION.tgz"; \
+		if [ -f "$$BUILD_DIR/$$PACKAGE_FILE" ]; then \
+			mkdir -p "$$OUTPUT_DIR"; \
+			mv "$$BUILD_DIR/$$PACKAGE_FILE" "$$OUTPUT_DIR/"; \
+			echo ""; \
+			echo "✓ NetBSD package created successfully: $$OUTPUT_DIR/$$PACKAGE_FILE"; \
+			echo ""; \
+			echo "Installation commands:"; \
+			echo "  sudo pkg_add $$OUTPUT_DIR/$$PACKAGE_FILE"; \
+			echo "  sudo cp /usr/pkg/share/examples/rc.d/sysmanage_agent /etc/rc.d/"; \
+			echo "  sudo sh -c 'echo sysmanage_agent=YES >> /etc/rc.conf'"; \
+			echo "  sudo /etc/rc.d/sysmanage_agent start"; \
+			echo ""; \
+			echo "Package details:"; \
+			ls -lh "$$OUTPUT_DIR/$$PACKAGE_FILE"; \
+		else \
+			echo "ERROR: Package file not found after creation"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "ERROR: Package creation failed"; \
+		exit 1; \
+	fi

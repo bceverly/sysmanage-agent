@@ -1,0 +1,14 @@
+The SysManage agent provides comprehensive system management capabilities
+including:
+ * Package inventory and updates
+ * System monitoring and metrics
+ * Security policy enforcement
+ * Certificate management
+ * Firewall configuration
+ * Remote command execution
+ * Integration with SysManage server
+
+This agent runs as a system service and communicates securely with the
+SysManage server to provide centralized management of NetBSD systems.
+
+Homepage: https://github.com/bceverly/sysmanage-agent

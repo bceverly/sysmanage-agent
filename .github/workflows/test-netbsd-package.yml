@@ -1,0 +1,257 @@
+name: Test NetBSD Package Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 0.9.7 or v0.9.7)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-netbsd:
+    name: Build NetBSD .tgz Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          # Strip 'v' prefix if present in manual input
+          VERSION="${INPUT_VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install NetBSD package build tools
+        run: |
+          # We'll build the package structure on Ubuntu and create the archive
+          # The pkg_create tool itself runs on NetBSD, but we can create the structure
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-dev \
+            python3-pip \
+            python3-setuptools \
+            build-essential \
+            gzip \
+            tar
+
+      - name: Set up NetBSD package structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Setting up NetBSD package structure..."
+
+          # Create build directories
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d"
+          mkdir -p "$PACKAGE_ROOT/var/log/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/var/run/sysmanage"
+
+          echo "✓ Package directories created"
+
+          # Copy agent files
+          echo "Copying agent files..."
+          cp -R src "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp main.py "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp requirements.txt "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp alembic.ini "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          echo "✓ Agent files copied"
+
+          # Copy configuration files
+          echo "Copying configuration files..."
+          cp installer/netbsd/config.yaml.example "$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent/"
+          cp installer/netbsd/sysmanage_agent.rc "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"
+          cp installer/netbsd/sysmanage-agent-wrapper.sh "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          chmod +x "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"
+          chmod +x "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
+          echo "✓ Configuration files copied"
+
+          # Copy package metadata files
+          echo "Copying package metadata files..."
+          cp installer/netbsd/+INSTALL "$BUILD_DIR/"
+          cp installer/netbsd/+DESC "$BUILD_DIR/"
+          cp installer/netbsd/+COMMENT "$BUILD_DIR/"
+          cp installer/netbsd/+BUILD_INFO "$BUILD_DIR/"
+          chmod +x "$BUILD_DIR/+INSTALL"
+          echo "✓ Metadata files copied"
+
+      - name: Create packing list with dependencies
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating packing list with dependencies..."
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          {
+            echo "@name sysmanage-agent-$VERSION"
+            echo "@comment SysManage Agent - System management agent for NetBSD"
+            echo "@pkgdep python312>=3.12"
+            echo "@pkgdep py312-websockets>=15.0"
+            echo "@pkgdep py312-yaml>=6.0"
+            echo "@pkgdep py312-aiohttp>=3.12"
+            echo "@pkgdep py312-cryptography>=45.0"
+            echo "@pkgdep py312-sqlalchemy>=2.0"
+            echo "@pkgdep py312-alembic>=1.16"
+            cd "$PACKAGE_ROOT" && find . -type f -o -type l | sed 's,^\./,,'
+            cd "$PACKAGE_ROOT" && find . -type d | sed 's,^\./,,' | grep -v '^\.' | sed 's,^,@dirrm ,'
+          } | sort -u > "$BUILD_DIR/+CONTENTS"
+
+          echo "✓ Packing list created with dependencies"
+
+          echo ""
+          echo "Packing list preview (first 20 lines):"
+          head -20 "$BUILD_DIR/+CONTENTS"
+
+      - name: Create NetBSD package archive
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating NetBSD package archive..."
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          # NetBSD packages are .tgz files with specific metadata files
+          # We'll create a structure compatible with pkg_add
+
+          cd "$BUILD_DIR"
+
+          # Create the package archive with all metadata and files
+          tar czf "sysmanage-agent-$VERSION.tgz" \
+            +BUILD_INFO \
+            +COMMENT \
+            +DESC \
+            +INSTALL \
+            +CONTENTS \
+            -C package-root .
+
+          if [ $? -eq 0 ]; then
+            echo "✓ Package created successfully"
+            ls -lh "sysmanage-agent-$VERSION.tgz"
+          else
+            echo "ERROR: Package creation failed"
+            exit 1
+          fi
+
+      - name: Verify package contents
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Verifying package contents..."
+          BUILD_DIR="build/netbsd"
+
+          echo ""
+          echo "Package contents (first 30 files):"
+          tar tzf "$BUILD_DIR/sysmanage-agent-$VERSION.tgz" | head -30
+
+          echo ""
+          echo "Package size:"
+          du -h "$BUILD_DIR/sysmanage-agent-$VERSION.tgz"
+
+      - name: Move package to dist directory
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Moving package to dist directory..."
+          mkdir -p installer/dist
+          mv "build/netbsd/sysmanage-agent-$VERSION.tgz" "installer/dist/"
+          echo "✓ Package moved to installer/dist/"
+
+      - name: Generate package information
+        id: package_info
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_FILE="sysmanage-agent-$VERSION.tgz"
+          echo "pkg_file=$PKG_FILE" >> $GITHUB_OUTPUT
+
+          # Generate SHA256 checksum
+          cd installer/dist
+          sha256sum "$PKG_FILE" > "$PKG_FILE.sha256"
+
+          echo ""
+          echo "✓ NetBSD package created successfully: installer/dist/$PKG_FILE"
+          echo ""
+          echo "Package details:"
+          ls -lh "$PKG_FILE"
+          echo ""
+          echo "SHA256:"
+          cat "$PKG_FILE.sha256"
+          echo ""
+          echo "Installation commands:"
+          echo "  sudo pkg_add $PKG_FILE"
+          echo "  sudo cp /usr/pkg/share/examples/rc.d/sysmanage_agent /etc/rc.d/"
+          echo "  sudo sh -c 'echo sysmanage_agent=YES >> /etc/rc.conf'"
+          echo "  sudo /etc/rc.d/sysmanage_agent start"
+
+      - name: Upload .tgz as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-netbsd-tgz
+          path: |
+            installer/dist/sysmanage-agent-*.tgz
+            installer/dist/sysmanage-agent-*.tgz.sha256
+
+      - name: Create test release (optional)
+        if: github.event.inputs.create_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-netbsd-v${{ steps.version.outputs.version }}
+          name: Test NetBSD Package v${{ steps.version.outputs.version }}
+          draft: true
+          prerelease: true
+          files: |
+            installer/dist/sysmanage-agent-*.tgz
+            installer/dist/sysmanage-agent-*.tgz.sha256
+          body: |
+            # Test NetBSD Package Build
+
+            This is a test build of the NetBSD package for version ${{ steps.version.outputs.version }}.
+
+            ## Installation
+
+            ```bash
+            # Download the package
+            wget https://github.com/${{ github.repository }}/releases/download/test-netbsd-v${{ steps.version.outputs.version }}/sysmanage-agent-${{ steps.version.outputs.version }}.tgz
+
+            # Install
+            sudo pkg_add sysmanage-agent-${{ steps.version.outputs.version }}.tgz
+
+            # Configure
+            sudo cp /usr/pkg/share/examples/rc.d/sysmanage_agent /etc/rc.d/
+            sudo vi /usr/pkg/etc/sysmanage-agent/config.yaml
+
+            # Enable and start
+            sudo sh -c 'echo sysmanage_agent=YES >> /etc/rc.conf'
+            sudo /etc/rc.d/sysmanage_agent start
+            ```
+
+            ## Dependencies
+
+            The package will automatically install:
+            - python312
+            - py312-websockets
+            - py312-yaml
+            - py312-aiohttp
+            - py312-cryptography
+            - py312-sqlalchemy
+            - py312-alembic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
