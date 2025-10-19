@@ -30,16 +30,28 @@ if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
 Write-Host "[OK] Build tools available" -ForegroundColor Green
 Write-Host ""
 
-# Determine version from git or auto-generate
+# Determine version from environment variable, git tag, or auto-generate
 Write-Host "Determining version..."
 $VERSION = ""
-try {
-    $VERSION = (git describe --tags --abbrev=0 2>&1 | Out-String).Trim()
-    if ($VERSION -match "^v(.+)$") {
-        $VERSION = $Matches[1]
+
+# First, check if VERSION environment variable is set (e.g., from CI/CD)
+if ($env:VERSION) {
+    $VERSION = $env:VERSION
+    # Strip 'v' prefix if present
+    $VERSION = $VERSION -replace '^v', ''
+    Write-Host "Using version from environment: $VERSION" -ForegroundColor Green
+} else {
+    # Try to get from git tags
+    try {
+        $gitVersion = (git describe --tags --abbrev=0 2>&1 | Out-String).Trim()
+        # Check if git command succeeded (no error message)
+        if ($gitVersion -notmatch "^fatal:" -and $gitVersion -match "^v?(\d+\.\d+\.\d+)") {
+            $VERSION = $Matches[1]
+            Write-Host "Building version: $VERSION (from git tag)" -ForegroundColor Green
+        }
+    } catch {
+        # Git command failed, will auto-generate below
     }
-} catch {
-    $VERSION = ""
 }
 
 if ([string]::IsNullOrEmpty($VERSION)) {
@@ -53,8 +65,6 @@ if ([string]::IsNullOrEmpty($VERSION)) {
     $buildNum = $daysSinceEpoch * 100 + $hour
     $VERSION = "0.1.$buildNum"
     Write-Host "No git tags found, auto-generated version: $VERSION" -ForegroundColor Yellow
-} else {
-    Write-Host "Building version: $VERSION (from git tag)" -ForegroundColor Green
 }
 Write-Host ""
 

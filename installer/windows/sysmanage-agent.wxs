@@ -83,11 +83,6 @@
         <File Id="RemoveServicePs1" Source="remove-service.ps1" />
       </Component>
 
-      <!-- Windows service wrapper (pywin32) -->
-      <Component Id="WindowsServiceWrapper" Guid="C3C3C3C3-D4D4-4E4E-8F8F-A7A7A7A7A7A7">
-        <File Id="WindowsServicePy" Source="..\..\windows_service.py" />
-      </Component>
-
       <!-- NSSM (Non-Sucking Service Manager) -->
       <Component Id="NssmExecutable" Guid="A8A8A8A8-B9B9-4C4C-8D8D-E6E6E6E6E6E6">
         <File Id="NssmExe" Source="nssm.exe" />
