@@ -72,18 +72,22 @@ jobs:
 
       - name: Build Windows MSI installer
         shell: pwsh
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          ARCH: ${{ matrix.arch }}
         run: |
-          Write-Host "Building Windows MSI installer for $env:ARCH..."
+          $version = "${{ steps.version.outputs.version }}"
+          $arch = "${{ matrix.arch }}"
+
+          Write-Host "Building Windows MSI installer for $arch..."
+          Write-Host "Version: $version"
 
           # Ensure dotnet tools are in PATH
           $dotnetToolsPath = Join-Path $env:USERPROFILE ".dotnet\tools"
           $env:PATH = "$dotnetToolsPath;$env:PATH"
 
+          # Set VERSION as environment variable
+          $env:VERSION = $version
+
           # Run the build script
-          .\installer\windows\build-msi.ps1 -Architecture $env:ARCH
+          .\installer\windows\build-msi.ps1 -Architecture $arch
 
           Write-Host "Build completed successfully"
 
