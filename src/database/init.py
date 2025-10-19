@@ -121,7 +121,21 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         # Run alembic command using the currently running Python interpreter
         # This ensures we use the same Python that's running this code
         # (which will be the venv Python if run from a venv)
-        cmd = [sys.executable, "-m", "alembic", operation, revision]
+        # Special case: if running as Windows service (pythonservice.exe),
+        # use the venv's python.exe instead
+        python_exe = sys.executable
+        if python_exe.endswith("pythonservice.exe"):
+            # Running as Windows service - find the venv's python.exe
+            venv_python = os.path.join(agent_dir, ".venv", "Scripts", "python.exe")
+            if os.path.exists(venv_python):
+                python_exe = venv_python
+                logger.debug("Using venv Python for alembic: %s", python_exe)
+            else:
+                logger.warning("Venv Python not found, using system Python")
+                # Fall back to system Python
+                python_exe = sys.exec_prefix + "\\python.exe"
+
+        cmd = [python_exe, "-m", "alembic", operation, revision]
         logger.info(_("Running alembic command: %s"), " ".join(cmd))
 
         # Set environment variable for alembic to find the database

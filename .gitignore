@@ -187,6 +187,8 @@ coverage.json
 
 # Installer build outputs
 installer/dist/
+installer/windows/src.zip
+installer/windows/nssm.exe
 *.deb
 *.rpm
 *.tar.gz

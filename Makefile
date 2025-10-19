@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-openbsd installer-freebsd
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd
 
 # Default target
 help:
@@ -29,6 +29,10 @@ help:
 	@echo "  make installer     - Build installer package (auto-detects platform)"
 	@echo "  make installer-deb - Build Ubuntu/Debian .deb package (explicit)"
 	@echo "  make installer-rpm - Build CentOS/RHEL/Fedora .rpm package (explicit)"
+	@echo "  make installer-msi - Build Windows .msi package for x64 (default)"
+	@echo "  make installer-msi-x64 - Build Windows .msi package for x64"
+	@echo "  make installer-msi-arm64 - Build Windows .msi package for ARM64"
+	@echo "  make installer-msi-all - Build Windows .msi for both x64 and ARM64"
 	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
 	@echo "  make installer-freebsd - Build FreeBSD .pkg package"
 	@echo ""
@@ -36,6 +40,7 @@ help:
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
 	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, etc."
 	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
+	@echo "    Windows: WiX Toolset v4 (for MSI creation)"
 	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
 	@echo "    FreeBSD: pkgconf (for package creation)"
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
@@ -101,6 +106,7 @@ install-dev: setup-venv
 	@echo "Installing Python development dependencies..."
 ifeq ($(OS),Windows_NT)
 	@$(PYTHON) scripts/install-dev-deps.py
+	@powershell -ExecutionPolicy Bypass -File scripts\install-wix.ps1 || echo.
 else
 	@if [ -f /etc/redhat-release ]; then \
 		echo "[INFO] Red Hat-based system detected - checking for RPM build tools..."; \
@@ -424,6 +430,10 @@ endif
 
 # Build installer package (auto-detects platform)
 installer:
+ifeq ($(OS),Windows_NT)
+	@echo "Windows detected - building MSI installer"
+	@$(MAKE) installer-msi
+else
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
 		echo "macOS detected - building PKG installer"; \
 		$(MAKE) installer-pkg; \
@@ -460,6 +470,7 @@ installer:
 		echo "Detected OS: $$(uname -s)"; \
 		exit 1; \
 	fi
+endif
 
 # Build macOS .pkg installer package
 installer-pkg:
@@ -1321,9 +1332,7 @@ installer-openbsd:
 	echo "  $$CURRENT_DIR/installer/openbsd/README.md"
 
 # Build FreeBSD .pkg package
-installer-freebsd: installer/dist/sysmanage-agent-$(VERSION).pkg
-
-installer/dist/sysmanage-agent-$(VERSION).pkg: $(shell find src -name "*.py") main.py requirements.txt alembic.ini installer/freebsd/+MANIFEST installer/freebsd/sysmanage-agent.rc installer/freebsd/config.yaml.example Makefile
+installer-freebsd:
 	@echo "=== Building FreeBSD Package ==="
 	@echo ""
 	@echo "Creating FreeBSD .pkg package for sysmanage-agent..."
@@ -1396,3 +1405,21 @@ installer/dist/sysmanage-agent-$(VERSION).pkg: $(shell find src -name "*.py") ma
 		echo "ERROR: Package creation failed"; \
 		exit 1; \
 	fi
+
+# Build Windows .msi installer packages (both x64 and ARM64)
+installer-msi: installer-msi-all
+
+# Build Windows .msi installer for x64
+installer-msi-x64:
+	@powershell -ExecutionPolicy Bypass -File installer\windows\build-msi.ps1 -Architecture x64
+
+# Build Windows .msi installer for ARM64
+installer-msi-arm64:
+	@powershell -ExecutionPolicy Bypass -File installer\windows\build-msi.ps1 -Architecture arm64
+
+# Build Windows .msi installers for both x64 and ARM64
+installer-msi-all: installer-msi-x64 installer-msi-arm64
+	@echo ""
+	@echo "=================================="
+	@echo "All Windows installers built!"
+	@echo "=================================="

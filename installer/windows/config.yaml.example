@@ -1,0 +1,108 @@
+# SysManage Agent Configuration - Windows
+# This file contains the configuration for the sysmanage-agent client
+
+# Server connection settings
+server:
+  # Hostname or IP address of the SysManage server
+  hostname: "sysmanage.example.com"
+
+  # Port number for the SysManage server
+  port: 8080
+
+  # Use HTTPS for secure communication
+  use_https: true
+
+  # SSL certificate verification
+  verify_ssl: true
+
+# Client identification settings
+client:
+  # Optional: Override the system hostname detection
+  # If not specified, the agent will auto-detect the system hostname
+  # hostname_override: "my-custom-hostname"
+
+  # Registration retry settings
+  registration_retry_interval: 30  # seconds between registration attempts
+  max_registration_retries: 10     # maximum number of retry attempts (-1 for infinite)
+
+  # Update check settings
+  update_check_interval: 3600      # seconds between update checks (default: 1 hour)
+
+# Internationalization settings
+i18n:
+  # Language/locale for agent messages and logging
+  # Supported languages: en, es, fr, de, it, pt, nl, ja, zh_CN, ko, ru
+  language: "en"
+
+# Logging configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+
+  # Log to file (Windows default location)
+  # Note: Forward slashes work fine on Windows and don't need escaping
+  file: "C:/ProgramData/SysManage/logs/agent.log"
+
+  # Log format
+  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
+
+# WebSocket connection settings (for real-time communication)
+websocket:
+  # Auto-reconnect on connection loss
+  auto_reconnect: true
+
+  # Reconnection interval in seconds
+  reconnect_interval: 5
+
+  # Ping interval to keep connection alive
+  ping_interval: 60
+
+# Database configuration
+database:
+  # Path to the agent's SQLite database file
+  # Windows default location - forward slashes work fine on Windows
+  path: "C:/ProgramData/SysManage/db/agent.db"
+
+  # Whether to automatically run database migrations on startup
+  auto_migrate: true
+
+# Script execution configuration
+# SECURITY NOTICE: Script execution is disabled by default for security reasons
+# Only enable this feature if you trust the server administrators and understand the risks
+script_execution:
+  # Enable or disable script execution functionality
+  # Setting this to false (default) completely disables script execution
+  enabled: false
+
+  # Maximum script execution timeout in seconds (default: 300 = 5 minutes)
+  # Scripts that run longer than this will be terminated
+  timeout: 300
+
+  # Maximum number of concurrent script executions allowed
+  # This prevents resource exhaustion from multiple simultaneous scripts
+  max_concurrent: 3
+
+  # Allowed shells for script execution
+  # Only these shells will be permitted for script execution
+  allowed_shells:
+    - "powershell"  # Windows PowerShell
+    - "pwsh"        # PowerShell Core (cross-platform)
+    - "cmd"         # Windows Command Prompt
+
+  # Security restrictions
+  security:
+    # Prevent scripts from accessing sensitive files/directories
+    # This is advisory - actual enforcement depends on user permissions
+    restricted_paths:
+      - "C:/Windows/System32/config/"
+      - "C:/Users/*/AppData/Local/Microsoft/Windows/Credentials/"
+      - "*.key"
+      - "*.pem"
+      - "*.pfx"
+
+    # Log all script executions for audit purposes
+    audit_logging: true
+
+    # Require explicit approval for each script execution
+    # If true, scripts will be queued for manual approval
+    require_approval: false

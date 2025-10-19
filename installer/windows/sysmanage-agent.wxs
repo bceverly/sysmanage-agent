@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!--
+    SysManage Agent Windows Installer
+    Creates MSI package for Windows installation with service support
+  -->
+
+  <Package Name="SysManage Agent"
+           Manufacturer="SysManage"
+           Version="$(var.VERSION)"
+           UpgradeCode="A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D"
+           Language="1033"
+           Codepage="1252"
+           Scope="perMachine">
+
+    <SummaryInformation Keywords="Installer"
+                        Description="SysManage Agent - System Management Client"
+                        Manufacturer="SysManage" />
+
+    <!-- Ensure only one version is installed at a time -->
+    <!-- Use afterInstallValidate to fully uninstall old version before installing new one -->
+    <!-- This prevents file locking issues with running service -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  Schedule="afterInstallValidate" />
+
+    <!-- Embed CAB file in MSI -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Python 3.9+ will be checked and installed automatically by check-python.ps1 custom action -->
+    <!-- No launch condition needed as we auto-install Python if missing -->
+
+    <!-- Directory structure -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="SysManage Agent" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="APPDATAFOLDER" Name="SysManage">
+        <Directory Id="LOGFOLDER" Name="logs" />
+        <Directory Id="DBFOLDER" Name="db" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Main component group -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main Python script -->
+      <Component Id="MainScript" Guid="B2C3D4E5-F6A7-4B5C-8D9E-0F1A2B3C4D5E">
+        <File Id="MainPy" Source="..\..\main.py" KeyPath="yes" />
+      </Component>
+
+      <!-- Alembic configuration -->
+      <Component Id="AlembicConfig" Guid="C3D4E5F6-A7B8-4C5D-8E9F-0A1B2C3D4E5F">
+        <File Id="AlembicIni" Source="..\..\alembic.ini" />
+      </Component>
+
+      <!-- Requirements file -->
+      <Component Id="Requirements" Guid="D4E5F6A7-B8C9-4D5E-8F9A-0B1C2D3E4F5A">
+        <File Id="RequirementsProd" Source="..\..\requirements-prod.txt" />
+      </Component>
+
+      <!-- Service wrapper script -->
+      <Component Id="ServiceScript" Guid="E5F6A7B8-C9D0-4E5F-8A9B-0C1D2E3F4A5B">
+        <File Id="ServicePs1" Source="sysmanage-agent-service.ps1" />
+      </Component>
+
+      <!-- Post-install script -->
+      <Component Id="InstallScript" Guid="F6A7B8C9-D0E1-4F5A-8B9C-0D1E2F3A4B5C">
+        <File Id="InstallPs1" Source="install.ps1" />
+      </Component>
+
+      <!-- Python check script -->
+      <Component Id="PythonCheckScript" Guid="A1A1A1A1-B2B2-4C4C-8D8D-E5E5E5E5E5E5">
+        <File Id="CheckPythonPs1" Source="check-python.ps1" />
+      </Component>
+
+      <!-- Service creation script -->
+      <Component Id="CreateServiceScript" Guid="B2B2B2B2-C3C3-4D4D-8E8E-F6F6F6F6F6F6">
+        <File Id="CreateServicePs1" Source="create-service.ps1" />
+      </Component>
+
+      <!-- Service removal script -->
+      <Component Id="RemoveServiceScript" Guid="D3D3D3D3-E4E4-4F4F-8A8A-B7B7B7B7B7B7">
+        <File Id="RemoveServicePs1" Source="remove-service.ps1" />
+      </Component>
+
+      <!-- Windows service wrapper (pywin32) -->
+      <Component Id="WindowsServiceWrapper" Guid="C3C3C3C3-D4D4-4E4E-8F8F-A7A7A7A7A7A7">
+        <File Id="WindowsServicePy" Source="..\..\windows_service.py" />
+      </Component>
+
+      <!-- NSSM (Non-Sucking Service Manager) -->
+      <Component Id="NssmExecutable" Guid="A8A8A8A8-B9B9-4C4C-8D8D-E6E6E6E6E6E6">
+        <File Id="NssmExe" Source="nssm.exe" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Source files packaged as ZIP - will be extracted by install.ps1 -->
+    <ComponentGroup Id="SourceFilesComponent" Directory="INSTALLFOLDER">
+      <Component Id="SourceZip" Guid="A7B8C9D0-E1F2-4A5B-8C9D-0E1F2A3B4C5D">
+        <File Id="SrcZipFile" Source="src.zip" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Configuration directory -->
+    <ComponentGroup Id="ConfigFiles" Directory="APPDATAFOLDER">
+      <Component Id="ConfigExample" Guid="B8C9D0E1-F2A3-4B5C-8D9E-0F1A2B3C4D5E">
+        <File Id="ConfigYamlExample" Source="config.yaml.example" Name="sysmanage-agent.yaml.example" />
+      </Component>
+
+      <!-- Create log directory -->
+      <Component Id="LogDirectory" Guid="C9D0E1F2-A3B4-4C5D-8E9F-0A1B2C3D4E5F">
+        <CreateFolder Directory="LOGFOLDER" />
+      </Component>
+
+      <!-- Create database directory -->
+      <Component Id="DbDirectory" Guid="D0E1F2A3-B4C5-4D5E-8F9A-0B1C2D3E4F5A">
+        <CreateFolder Directory="DBFOLDER" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Windows Service - will be created by custom action -->
+    <ComponentGroup Id="WindowsService" Directory="INSTALLFOLDER">
+      <Component Id="ServiceMarker" Guid="E1F2A3B4-C5D6-4E5F-8A9B-0C1D2E3F4A5B">
+        <CreateFolder />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Feature: Main application -->
+    <Feature Id="ProductFeature" Title="SysManage Agent" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="SourceFilesComponent" />
+      <ComponentGroupRef Id="ConfigFiles" />
+      <ComponentGroupRef Id="WindowsService" />
+    </Feature>
+
+    <!-- Custom actions -->
+    <!-- Check/Install Python before copying files -->
+    <CustomAction Id="CheckPython"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]check-python.ps1"'
+                  Return="check" />
+
+    <!-- Install dependencies after files are copied -->
+    <CustomAction Id="InstallDependencies"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]install.ps1"'
+                  Return="check" />
+
+    <!-- Create Windows Service -->
+    <CustomAction Id="CreateService"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]create-service.ps1"'
+                  Return="check" />
+
+    <!-- Set property for RemoveService deferred action -->
+    <SetProperty Id="RemoveService"
+                 Value="[INSTALLFOLDER]"
+                 Before="RemoveService"
+                 Sequence="execute" />
+
+    <!-- Remove Windows Service on uninstall -->
+    <CustomAction Id="RemoveService"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]remove-service.ps1"'
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- Run on fresh install only (upgrades do full uninstall first, then fresh install) -->
+      <Custom Action="CheckPython" After="InstallFiles" Condition="NOT Installed" />
+      <Custom Action="InstallDependencies" After="CheckPython" Condition="NOT Installed" />
+      <Custom Action="CreateService" After="InstallDependencies" Condition="NOT Installed" />
+      <!-- Remove service on uninstall -->
+      <Custom Action="RemoveService" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot;" />
+    </InstallExecuteSequence>
+
+  </Package>
+</Wix>

@@ -11,3 +11,6 @@ cryptography>=45.0.7
 # Database dependencies
 SQLAlchemy>=2.0.43
 alembic>=1.16.5
+
+# Windows service support (Windows only, gracefully ignored on other platforms)
+pywin32>=306; sys_platform == 'win32'
