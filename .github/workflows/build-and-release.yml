@@ -783,6 +783,171 @@ jobs:
             installer/dist/sysmanage-agent-*.pkg
             installer/dist/sysmanage-agent-*.pkg.sha256
 
+  # NetBSD .tgz Package Build
+  build-netbsd:
+    name: Build NetBSD .tgz Package
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if present in manual input
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up NetBSD package structure
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Setting up NetBSD package structure..."
+
+          # Create build directories
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d"
+          mkdir -p "$PACKAGE_ROOT/var/log/sysmanage-agent"
+          mkdir -p "$PACKAGE_ROOT/var/run/sysmanage"
+
+          echo "✓ Package directories created"
+
+          # Copy agent files
+          echo "Copying agent files..."
+          cp -R src "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp main.py "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp requirements.txt "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          cp alembic.ini "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          echo "✓ Agent files copied"
+
+          # Copy configuration files
+          echo "Copying configuration files..."
+          cp installer/netbsd/config.yaml.example "$PACKAGE_ROOT/usr/pkg/etc/sysmanage-agent/"
+          cp installer/netbsd/sysmanage_agent.rc "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"
+          cp installer/netbsd/sysmanage-agent-wrapper.sh "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/"
+          chmod +x "$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"
+          chmod +x "$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
+          echo "✓ Configuration files copied"
+
+          # Copy package metadata files
+          echo "Copying package metadata files..."
+          cp installer/netbsd/+INSTALL "$BUILD_DIR/"
+          cp installer/netbsd/+DESC "$BUILD_DIR/"
+          cp installer/netbsd/+COMMENT "$BUILD_DIR/"
+          cp installer/netbsd/+BUILD_INFO "$BUILD_DIR/"
+          chmod +x "$BUILD_DIR/+INSTALL"
+          echo "✓ Metadata files copied"
+
+      - name: Create packing list with dependencies
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating packing list with dependencies..."
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          {
+            echo "@name sysmanage-agent-$VERSION"
+            echo "@comment SysManage Agent - System management agent for NetBSD"
+            echo "@pkgdep python312>=3.12"
+            echo "@pkgdep py312-websockets>=15.0"
+            echo "@pkgdep py312-yaml>=6.0"
+            echo "@pkgdep py312-aiohttp>=3.12"
+            echo "@pkgdep py312-cryptography>=45.0"
+            echo "@pkgdep py312-sqlalchemy>=2.0"
+            echo "@pkgdep py312-alembic>=1.16"
+            cd "$PACKAGE_ROOT" && find . -type f -o -type l | sed 's,^\./,,'
+            cd "$PACKAGE_ROOT" && find . -type d | sed 's,^\./,,' | grep -v '^\.' | sed 's,^,@dirrm ,'
+          } | sort -u > "$BUILD_DIR/+CONTENTS"
+
+          echo "✓ Packing list created with dependencies"
+
+      - name: Create NetBSD package archive
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating NetBSD package archive..."
+          BUILD_DIR="build/netbsd"
+          PACKAGE_ROOT="$BUILD_DIR/package-root"
+
+          cd "$BUILD_DIR"
+
+          # Create the package archive with all metadata and files
+          tar czf "sysmanage-agent-$VERSION.tgz" \
+            +BUILD_INFO \
+            +COMMENT \
+            +DESC \
+            +INSTALL \
+            +CONTENTS \
+            -C package-root .
+
+          if [ $? -eq 0 ]; then
+            echo "✓ Package created successfully"
+            ls -lh "sysmanage-agent-$VERSION.tgz"
+          else
+            echo "ERROR: Package creation failed"
+            exit 1
+          fi
+
+      - name: Move package to dist directory
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Moving package to dist directory..."
+          mkdir -p installer/dist
+          mv "build/netbsd/sysmanage-agent-$VERSION.tgz" "installer/dist/"
+          echo "✓ Package moved to installer/dist/"
+
+      - name: Generate package information
+        id: package_info
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_FILE="sysmanage-agent-$VERSION.tgz"
+          echo "pkg_file=$PKG_FILE" >> $GITHUB_OUTPUT
+
+          # Generate SHA256 checksum
+          cd installer/dist
+          sha256sum "$PKG_FILE" > "$PKG_FILE.sha256"
+
+          echo ""
+          echo "✓ NetBSD package created successfully: installer/dist/$PKG_FILE"
+          echo ""
+          echo "Package details:"
+          ls -lh "$PKG_FILE"
+          echo ""
+          echo "SHA256:"
+          cat "$PKG_FILE.sha256"
+
+      - name: Upload .tgz as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-netbsd-tgz
+          path: |
+            installer/dist/sysmanage-agent-*.tgz
+            installer/dist/sysmanage-agent-*.tgz.sha256
+
   # OpenBSD Port Tarball Build
   build-openbsd:
     name: Build OpenBSD Port Tarball
@@ -1040,7 +1205,7 @@ jobs:
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-openbsd]
+    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd]
 
     steps:
       - name: Checkout code
@@ -1071,6 +1236,7 @@ jobs:
           find artifacts/ -name "*.rpm" -exec cp {} release-files/ \;
           find artifacts/ -name "*.pkg" -exec cp {} release-files/ \;
           find artifacts/ -name "*.msi" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.tgz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
 
@@ -1098,6 +1264,7 @@ jobs:
           mkdir -p "repo/mac/packages/$VERSION"
           mkdir -p "repo/windows/packages/$VERSION"
           mkdir -p "repo/freebsd/packages/$VERSION"
+          mkdir -p "repo/netbsd/packages/$VERSION"
           mkdir -p "repo/openbsd/ports/$VERSION"
 
           # Copy package files to appropriate locations
@@ -1134,6 +1301,10 @@ jobs:
           # FreeBSD packages
           cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+
+          # NetBSD packages
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz "repo/netbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz.sha256 "repo/netbsd/packages/$VERSION/" 2>/dev/null || true
 
           # OpenBSD port tarball
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
@@ -1261,6 +1432,21 @@ jobs:
           sudo service sysmanage_agent start
           \`\`\`
 
+          ### NetBSD
+          \`\`\`bash
+          # Download and install
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.tgz
+          sudo pkg_add sysmanage-agent-${VERSION}.tgz
+
+          # Copy rc.d script and configure
+          sudo cp /usr/pkg/share/examples/rc.d/sysmanage_agent /etc/rc.d/
+          sudo vi /usr/pkg/etc/sysmanage-agent/config.yaml
+
+          # Enable and start
+          sudo sh -c 'echo sysmanage_agent=YES >> /etc/rc.conf'
+          sudo /etc/rc.d/sysmanage_agent start
+          \`\`\`
+
           ### OpenBSD
           \`\`\`bash
           # Download the port tarball
@@ -1308,7 +1494,7 @@ jobs:
           if (\$expectedHash -eq \$actualHash) { Write-Host "Checksum verified!" } else { Write-Host "Checksum mismatch!" }
           \`\`\`
 
-          **FreeBSD/OpenBSD:**
+          **FreeBSD/NetBSD/OpenBSD:**
           \`\`\`bash
           sha256 -C <package>.sha256 <package>
           \`\`\`
@@ -1323,6 +1509,7 @@ jobs:
           - **macOS**: 12+ (Monterey and later)
           - **Windows**: 10 (1809+), 11, Server 2019+ (x64 and ARM64)
           - **FreeBSD**: 13.x, 14.x
+          - **NetBSD**: 10.x (tested on 10.1)
           - **OpenBSD**: 7.4+ (tested on 7.7)
 
           ## What's Included
