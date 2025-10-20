@@ -9,7 +9,7 @@ Type=simple
 User=sysmanage-agent
 Group=sysmanage-agent
 WorkingDirectory=/opt/sysmanage-agent
-ExecStart=/opt/sysmanage-agent/.venv/bin/python /opt/sysmanage-agent/main.py
+ExecStart=/opt/sysmanage-agent/.venv/bin/python3 /opt/sysmanage-agent/main.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -19,10 +19,7 @@ SyslogIdentifier=sysmanage-agent
 # Security hardening
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/sysmanage-agent /var/log/sysmanage-agent /etc/sysmanage-agent
-ReadOnlyPaths=/etc/sysmanage-agent.yaml
 
 # Resource limits
 LimitNOFILE=65536

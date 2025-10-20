@@ -60,7 +60,8 @@ install -m 644 alembic.ini %{buildroot}/opt/sysmanage-agent/
 install -m 644 requirements-prod.txt %{buildroot}/opt/sysmanage-agent/
 
 # Create virtualenv and install Python dependencies
-python3 -m venv %{buildroot}/opt/sysmanage-agent/.venv
+# Use --copies to bundle Python binary (built on Ubuntu 22.04 for GLIBC 2.35 compatibility)
+python3 -m venv --copies %{buildroot}/opt/sysmanage-agent/.venv
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt
 
