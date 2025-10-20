@@ -27,8 +27,7 @@ override_dh_auto_install:
 	cp requirements-prod.txt debian/sysmanage-agent/opt/sysmanage-agent/
 
 	# Create virtualenv and install production Python dependencies only
-	# Use --copies to bundle Python 3.12 binary (built on Ubuntu 22.04 for GLIBC 2.35 compatibility)
-	python3 -m venv --copies debian/sysmanage-agent/opt/sysmanage-agent/.venv
+	python3 -m venv debian/sysmanage-agent/opt/sysmanage-agent/.venv
 	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip
 	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt
 

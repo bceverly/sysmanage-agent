@@ -1567,3 +1567,104 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Deploy to Launchpad PPA
+  deploy-launchpad:
+    name: Deploy to Launchpad PPA
+    runs-on: ubuntu-22.04
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Need full history for changelog
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version $VERSION to Launchpad PPA"
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y devscripts debhelper dh-python python3-all python3-setuptools dput-ng gnupg
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.LAUNCHPAD_GPG_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye
+
+          # Get the key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          echo "GPG_KEY_ID=$GPG_KEY_ID" >> $GITHUB_ENV
+          echo "Using GPG key: $GPG_KEY_ID"
+
+      - name: Configure dput for Launchpad
+        run: |
+          mkdir -p ~/.dput.d
+          cat > ~/.dput.d/profiles/launchpad.json << 'EOF'
+          {
+            "launchpad": {
+              "fqdn": "ppa.launchpad.net",
+              "incoming": "~bceverly/ubuntu/sysmanage-agent/",
+              "method": "ftp",
+              "allow_unsigned_uploads": false
+            }
+          }
+          EOF
+
+      - name: Build and upload source packages for all Ubuntu releases
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DEBFULLNAME: "Bryan Everly"
+          DEBEMAIL: "bryan@theeverlys.com"
+        run: |
+          # Ubuntu releases to target
+          RELEASES=("jammy" "noble" "oracular" "plucky")
+          RELEASE_VERSIONS=("22.04" "24.04" "24.10" "25.04")
+
+          for i in "${!RELEASES[@]}"; do
+            RELEASE="${RELEASES[$i]}"
+            RELEASE_VERSION="${RELEASE_VERSIONS[$i]}"
+
+            echo "=========================================="
+            echo "Building source package for Ubuntu $RELEASE ($RELEASE_VERSION)"
+            echo "=========================================="
+
+            # Create working directory for this release
+            WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
+            rm -rf "$WORK_DIR"
+            mkdir -p "$WORK_DIR"
+
+            # Copy source to working directory
+            cp -r . "$WORK_DIR/"
+            cd "$WORK_DIR"
+
+            # Update changelog for this Ubuntu release
+            # Use ppa1~${RELEASE}1 versioning scheme
+            dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+            dch -r "" --distribution "$RELEASE"
+
+            # Build source package (no binary build)
+            debuild -S -sa -k"$GPG_KEY_ID" --no-lintian
+
+            # Upload to Launchpad PPA
+            cd ..
+            echo "Uploading to Launchpad PPA for $RELEASE..."
+            dput launchpad "sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
+
+            echo "Successfully uploaded for $RELEASE"
+            echo ""
+          done
+
+          echo "=========================================="
+          echo "All Ubuntu releases uploaded to Launchpad PPA"
+          echo "=========================================="
