@@ -1269,8 +1269,8 @@ jobs:
 
           # Copy package files to appropriate locations
           # DEB packages
-          cp ${{ github.workspace }}/release-files/*ubuntu*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*ubuntu*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
 
           # RPM packages - CentOS
           cp ${{ github.workspace }}/release-files/*centos*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true

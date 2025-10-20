@@ -93,6 +93,13 @@ class RoleDetector:
                     "prometheus2": {"service_names": ["prometheus"]},
                 },
             },
+            "log_aggregation_server": {
+                "role": "Log Aggregation Server",
+                "packages": {
+                    "graylog-server": {"service_names": ["graylog-server", "graylog"]},
+                    "graylog": {"service_names": ["graylog-server", "graylog"]},
+                },
+            },
         }
 
     def detect_roles(self) -> List[Dict[str, Any]]:
