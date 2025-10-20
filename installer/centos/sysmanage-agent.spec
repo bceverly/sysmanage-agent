@@ -102,15 +102,14 @@ chmod 755 /var/lib/sysmanage-agent
 chmod 755 /var/log/sysmanage-agent
 chmod 750 /etc/sysmanage-agent
 
-# Fix virtualenv Python symlinks to point to system Python
-if [ -L /opt/sysmanage-agent/.venv/bin/python3 ]; then
-    rm -f /opt/sysmanage-agent/.venv/bin/python3
-    ln -s /usr/bin/python3 /opt/sysmanage-agent/.venv/bin/python3
-fi
-if [ -L /opt/sysmanage-agent/.venv/bin/python ]; then
-    rm -f /opt/sysmanage-agent/.venv/bin/python
-    ln -s /usr/bin/python3 /opt/sysmanage-agent/.venv/bin/python
-fi
+# Fix virtualenv to work with system Python
+# Recreate the venv using the system's Python to fix all symlinks and paths
+cd /opt/sysmanage-agent
+rm -rf .venv
+python3 -m venv .venv
+.venv/bin/pip install --quiet --upgrade pip
+.venv/bin/pip install --quiet -r requirements-prod.txt
+cd -
 
 # Create config file if it doesn't exist
 if [ ! -f /etc/sysmanage-agent.yaml ]; then
