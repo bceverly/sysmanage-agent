@@ -1312,10 +1312,39 @@ jobs:
 
           # Regenerate apt repository metadata
           echo "Regenerating apt repository metadata..."
+          sudo apt-get update && sudo apt-get install -y dpkg-dev
           cd repo/deb
+
+          # Generate Packages files
           dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
           gzip -9c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
-          cd ../..
+
+          # Generate Release file with checksums
+          cd dists/stable
+          {
+            echo "Date: $(date -R -u)"
+            echo "MD5Sum:"
+            md5sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            md5sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            echo "SHA1:"
+            sha1sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            sha1sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            echo "SHA256:"
+            sha256sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            sha256sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            echo "SHA512:"
+            sha512sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+            sha512sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
+          } > Release.tmp
+
+          # Add file sizes to Release file
+          SIZE_PACKAGES=$(stat -c%s main/binary-amd64/Packages)
+          SIZE_PACKAGES_GZ=$(stat -c%s main/binary-amd64/Packages.gz)
+          sed -i "s/ 0 main\/binary-amd64\/Packages$/ $SIZE_PACKAGES main\/binary-amd64\/Packages/" Release.tmp
+          sed -i "s/ 0 main\/binary-amd64\/Packages.gz$/ $SIZE_PACKAGES_GZ main\/binary-amd64\/Packages.gz/" Release.tmp
+          mv Release.tmp Release
+
+          cd ../../..
 
           # Commit and push changes
           git add .
