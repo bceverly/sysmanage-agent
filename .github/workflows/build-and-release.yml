@@ -1310,6 +1310,13 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
 
+          # Regenerate apt repository metadata
+          echo "Regenerating apt repository metadata..."
+          cd repo/deb
+          dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
+          gzip -9c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
+          cd ../..
+
           # Commit and push changes
           git add .
           git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
