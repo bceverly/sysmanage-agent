@@ -874,6 +874,16 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Restart firewall service on the system."""
         return await self.firewall_ops.restart_firewall(parameters)
 
+    async def attach_to_graylog(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Attach host to Graylog log aggregation server."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.operations.graylog_attachment import (
+            GraylogAttachmentOperations,
+        )
+
+        graylog_ops = GraylogAttachmentOperations(self, self.logger)
+        return await graylog_ops.attach_to_graylog(parameters)
+
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""
         await self.registration_manager.handle_host_approval(message)

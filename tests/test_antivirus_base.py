@@ -44,6 +44,10 @@ class TestAntivirusOperationsBase:
         self.mock_agent = Mock()
         self.mock_agent.websocket_client = Mock()
         self.mock_agent.websocket_client.send_message = AsyncMock()
+        self.mock_agent.send_message = AsyncMock(return_value=True)
+        self.mock_agent.create_message = Mock(
+            return_value=Mock(to_dict=Mock(return_value={}))
+        )
         self.base_ops = AntivirusOperationsBase(self.mock_agent)
 
     @pytest.mark.asyncio
@@ -51,28 +55,19 @@ class TestAntivirusOperationsBase:
         """Test successful antivirus status update."""
         status = {"software_name": "ClamAV", "version": "1.0.0"}
 
-        # Mock the dynamic import of websocket.messages
-        mock_module = Mock()
-        mock_message_class = Mock()
-        mock_message_instance = Mock()
-        mock_message_instance.to_dict.return_value = {
-            "data": {"antivirus_status": status}
-        }
-        mock_message_class.return_value = mock_message_instance
-        mock_module.Message = mock_message_class
-        mock_module.MessageType = Mock()
+        await self.base_ops.send_antivirus_status_update(status)
 
-        with patch.dict("sys.modules", {"websocket.messages": mock_module}):
-            await self.base_ops.send_antivirus_status_update(status)
-
-            self.mock_agent.websocket_client.send_message.assert_called_once()
+        # Verify agent.send_message was called (queue-based sending)
+        self.mock_agent.send_message.assert_called_once()
+        # Verify create_message was called with correct type
+        self.mock_agent.create_message.assert_called_once_with(
+            "antivirus_status_update", {"antivirus_status": status}
+        )
 
     @pytest.mark.asyncio
     async def test_send_antivirus_status_update_failure(self):
         """Test antivirus status update with exception."""
-        self.mock_agent.websocket_client.send_message.side_effect = Exception(
-            "Connection error"
-        )
+        self.mock_agent.send_message.side_effect = Exception("Connection error")
         status = {"software_name": "ClamAV"}
 
         # Should not raise exception

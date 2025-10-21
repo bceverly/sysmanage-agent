@@ -1609,7 +1609,7 @@ jobs:
 
       - name: Configure dput for Launchpad
         run: |
-          mkdir -p ~/.dput.d
+          mkdir -p ~/.dput.d/profiles
           cat > ~/.dput.d/profiles/launchpad.json << 'EOF'
           {
             "launchpad": {

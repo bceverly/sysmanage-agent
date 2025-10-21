@@ -16,6 +16,7 @@ from typing import Any, Dict
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
+from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 
 
 class DataCollector:
@@ -31,6 +32,7 @@ class DataCollector:
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
         self.firewall_collector = FirewallCollector(self.logger)
+        self.graylog_collector = GraylogCollector(self.logger)
 
     async def send_initial_data_updates(
         self,
@@ -276,6 +278,15 @@ class DataCollector:
             except Exception as error:
                 self.logger.error(
                     "Failed to send initial firewall status data: %s", error
+                )
+
+            # Send Graylog status data
+            try:
+                self.logger.info(_("Collecting initial Graylog status data..."))
+                await self._send_graylog_status_update()
+            except Exception as error:
+                self.logger.error(
+                    "Failed to send initial Graylog status data: %s", error
                 )
 
             self.logger.info(_("Initial data updates sent successfully"))
@@ -608,6 +619,40 @@ class DataCollector:
         else:
             self.logger.warning("Cannot send firewall status data: no host approval")
 
+    async def _send_graylog_status_update(self):
+        """Send Graylog attachment status update."""
+        self.logger.debug("AGENT_DEBUG: Collecting Graylog attachment status data")
+
+        graylog_info = self.graylog_collector.collect_graylog_status()
+
+        # Add host_id and hostname if available
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if host_approval:
+            graylog_message_data = {
+                "hostname": self.agent.registration.get_system_info()["hostname"],
+                "host_id": str(host_approval.host_id),
+                "is_attached": graylog_info["is_attached"],
+                "target_hostname": graylog_info["target_hostname"],
+                "target_ip": graylog_info["target_ip"],
+                "mechanism": graylog_info["mechanism"],
+                "port": graylog_info["port"],
+            }
+
+            graylog_message = self.agent.create_message(
+                "graylog_status_update", graylog_message_data
+            )
+            self.logger.debug(
+                "AGENT_DEBUG: Sending Graylog status message: %s",
+                graylog_message["message_id"],
+            )
+            success = await self.agent.send_message(graylog_message)
+            if success:
+                self.logger.debug("AGENT_DEBUG: Graylog status data sent successfully")
+            else:
+                self.logger.warning("Failed to send Graylog status data")
+        else:
+            self.logger.warning("Cannot send Graylog status data: no host approval")
+
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
         if not (self.agent.running and self.agent.connected):
@@ -676,6 +721,12 @@ class DataCollector:
             await self._send_firewall_status_update()
         except Exception as error:
             self.logger.error("Error collecting/sending firewall status: %s", error)
+
+        # Send Graylog status update
+        try:
+            await self._send_graylog_status_update()
+        except Exception as error:
+            self.logger.error("Error collecting/sending Graylog status: %s", error)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""

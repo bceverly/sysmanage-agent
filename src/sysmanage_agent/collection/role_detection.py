@@ -2,6 +2,8 @@
 Role detection collection module for detecting server roles based on installed packages and services.
 """
 
+# pylint: disable=too-many-lines
+
 import fnmatch
 import os
 import platform

@@ -54,16 +54,15 @@ class AntivirusOperationsBase:
             antivirus_status: Dictionary containing antivirus status information
         """
         try:
-            # Import here to avoid circular dependencies
-            # pylint: disable=import-outside-toplevel
-            from websocket.messages import Message, MessageType
-
-            message = Message(
-                message_type=MessageType.ANTIVIRUS_STATUS_UPDATE,
-                data={"antivirus_status": antivirus_status},
+            # Create message using agent's create_message method which uses the queue
+            message = self.agent_instance.create_message(
+                "antivirus_status_update", {"antivirus_status": antivirus_status}
             )
-            await self.agent_instance.websocket_client.send_message(message.to_dict())
-            self.logger.info("Sent antivirus status update to server")
+            success = await self.agent_instance.send_message(message)
+            if success:
+                self.logger.info("Sent antivirus status update to server")
+            else:
+                self.logger.warning("Failed to send antivirus status update")
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.logger.error("Failed to send antivirus status update: %s", error)
 
