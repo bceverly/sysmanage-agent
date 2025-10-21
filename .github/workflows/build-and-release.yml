@@ -1614,7 +1614,7 @@ jobs:
           {
             "launchpad": {
               "fqdn": "ppa.launchpad.net",
-              "incoming": "~bceverly/ubuntu/sysmanage-agent/",
+              "incoming": "~bceverly/sysmanage-agent/",
               "method": "ftp",
               "allow_unsigned_uploads": false
             }
