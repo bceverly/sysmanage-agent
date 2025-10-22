@@ -59,11 +59,11 @@ jobs:
       - name: Configure OBS credentials
         env:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
-          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+          OBS_TOKEN: ${{ secrets.OBS_TOKEN }}
         run: |
-          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_PASSWORD" ]; then
+          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_TOKEN" ]; then
             echo "ERROR: OBS credentials not set!"
-            echo "Please set OBS_USERNAME and OBS_PASSWORD secrets"
+            echo "Please set OBS_USERNAME and OBS_TOKEN secrets"
             exit 1
           fi
 
@@ -74,11 +74,11 @@ jobs:
 
           [https://api.opensuse.org]
           user = $OBS_USERNAME
-          pass = $OBS_PASSWORD
+          pass = $OBS_TOKEN
           EOF
           chmod 600 ~/.config/osc/oscrc
 
-          echo "OBS credentials configured for user: $OBS_USERNAME"
+          echo "OBS credentials configured for user: $OBS_USERNAME (using token)"
 
       - name: Test OBS credentials
         run: |
@@ -174,8 +174,21 @@ jobs:
           tar czf sysmanage-agent-$VERSION.tar.gz $TAR_NAME/
           echo "Created tarball: sysmanage-agent-$VERSION.tar.gz ($(du -h sysmanage-agent-$VERSION.tar.gz | cut -f1))"
 
-          # Copy to OBS directory
+          # Create vendor tarball for offline installation
+          echo "Creating vendor tarball with pip dependencies..."
+          mkdir -p /tmp/vendor
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311
+          # Also download for any platform (for pure Python packages)
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --no-deps 2>/dev/null || true
+
+          cd /tmp
+          tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
+          echo "Created vendor tarball: sysmanage-agent-vendor-$VERSION.tar.gz ($(du -h sysmanage-agent-vendor-$VERSION.tar.gz | cut -f1))"
+          echo "Vendor tarball contains $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels"
+
+          # Copy both tarballs to OBS directory
           cp sysmanage-agent-$VERSION.tar.gz $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent/
+          cp sysmanage-agent-vendor-$VERSION.tar.gz $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent/
 
           cd $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent
 
@@ -187,6 +200,7 @@ jobs:
 
           # Add new files
           osc add sysmanage-agent-$VERSION.tar.gz
+          osc add sysmanage-agent-vendor-$VERSION.tar.gz
           osc add sysmanage-agent.spec
 
           echo "Files staged for OBS:"

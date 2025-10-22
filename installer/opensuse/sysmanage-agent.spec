@@ -5,6 +5,7 @@ Summary:        System management agent for SysManage
 License:        Dual (Open Source / Commercial)
 URL:            https://github.com/bceverly/sysmanage-agent
 Source0:        %{name}-%{version}.tar.gz
+Source1:        %{name}-vendor-%{version}.tar.gz
 
 # Not noarch because virtualenv contains compiled extensions
 # Disable debug package generation (no debug symbols in Python bytecode)
@@ -47,6 +48,8 @@ SysManage server to provide centralized management of Linux systems.
 
 %prep
 %setup -q
+# Extract vendor dependencies
+%setup -q -T -D -a 1
 
 %build
 # No build step needed - Python application
@@ -64,10 +67,13 @@ install -m 644 main.py %{buildroot}/opt/sysmanage-agent/
 install -m 644 alembic.ini %{buildroot}/opt/sysmanage-agent/
 install -m 644 requirements-prod.txt %{buildroot}/opt/sysmanage-agent/
 
-# Create virtualenv and install Python dependencies
+# Copy vendor directory for offline installation
+cp -r vendor %{buildroot}/opt/sysmanage-agent/
+
+# Create virtualenv and install Python dependencies from vendor directory
 python3 -m venv %{buildroot}/opt/sysmanage-agent/.venv
-%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip
-%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt
+%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip --no-index --find-links=vendor
+%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt --no-index --find-links=vendor
 
 # Fix virtualenv paths to use final installation directory instead of buildroot
 sed -i 's|%{buildroot}||g' %{buildroot}/opt/sysmanage-agent/.venv/pyvenv.cfg
@@ -114,8 +120,16 @@ chmod 750 /etc/sysmanage-agent
 cd /opt/sysmanage-agent
 rm -rf .venv
 python3 -m venv .venv
-.venv/bin/pip install --quiet --upgrade pip
-.venv/bin/pip install --quiet -r requirements-prod.txt
+
+# Check if we have a vendor directory from the RPM (for OBS builds)
+if [ -d vendor ]; then
+  .venv/bin/pip install --quiet --upgrade pip --no-index --find-links=vendor
+  .venv/bin/pip install --quiet -r requirements-prod.txt --no-index --find-links=vendor
+else
+  # Fallback to network install (for direct RPM installs outside OBS)
+  .venv/bin/pip install --quiet --upgrade pip
+  .venv/bin/pip install --quiet -r requirements-prod.txt
+fi
 cd -
 
 # Create config file if it doesn't exist

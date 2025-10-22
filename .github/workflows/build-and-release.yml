@@ -358,6 +358,24 @@ jobs:
 
           echo "Source tarball created"
 
+      - name: Create vendor tarball for offline installation
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Create vendor directory and download all pip dependencies as wheels
+          mkdir -p /tmp/vendor
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311
+
+          # Also download for any platform (for pure Python packages)
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --no-deps 2>/dev/null || true
+
+          # Create vendor tarball
+          cd /tmp
+          tar czf ~/rpmbuild/SOURCES/sysmanage-agent-vendor-$VERSION.tar.gz vendor/
+
+          echo "Vendor tarball created with $(ls -1 /tmp/vendor/*.whl | wc -l) wheels"
+          ls -lh ~/rpmbuild/SOURCES/sysmanage-agent-vendor-$VERSION.tar.gz
+
       - name: Update spec file with version
         env:
           VERSION: ${{ steps.version.outputs.version }}
