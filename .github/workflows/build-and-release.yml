@@ -1350,12 +1350,22 @@ jobs:
 
           # Regenerate RPM repository metadata
           echo "Regenerating RPM repository metadata..."
+          echo "Current directory: $(pwd)"
+          echo "Checking for RPM repositories..."
 
           # Regenerate metadata for each RPM repository
           for rpm_repo in repo/rpm/el9/x86_64 repo/rpm/opensuse-tumbleweed/x86_64 repo/rpm/opensuse-leap/15/x86_64 repo/rpm/sles/15/x86_64; do
-            if [ -d "$rpm_repo" ] && [ -n "$(ls -A $rpm_repo/*.rpm 2>/dev/null)" ]; then
-              echo "Regenerating metadata for $rpm_repo"
-              createrepo_c --update "$rpm_repo"
+            echo "Checking $rpm_repo..."
+            if [ -d "$rpm_repo" ]; then
+              echo "  Directory exists"
+              if [ -n "$(ls -A $rpm_repo/*.rpm 2>/dev/null)" ]; then
+                echo "  RPM files found, regenerating metadata for $rpm_repo"
+                createrepo_c --update "$rpm_repo"
+              else
+                echo "  No RPM files found in $rpm_repo"
+              fi
+            else
+              echo "  Directory $rpm_repo does not exist"
             fi
           done
 
