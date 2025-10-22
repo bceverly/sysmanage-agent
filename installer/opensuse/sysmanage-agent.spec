@@ -48,8 +48,9 @@ SysManage server to provide centralized management of Linux systems.
 
 %prep
 %setup -q
-# Extract vendor dependencies to the build directory
-tar xzf %{SOURCE1} -C .
+# Extract vendor dependencies
+cd %{_builddir}/%{name}-%{version}
+tar xzf %{_sourcedir}/%{name}-vendor-%{version}.tar.gz
 
 %build
 # No build step needed - Python application
