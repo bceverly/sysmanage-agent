@@ -7,6 +7,7 @@ import os
 import platform
 import subprocess  # nosec B404 - subprocess needed for system service management
 import tempfile
+import urllib.parse
 import urllib.request
 from typing import Any, Dict
 
@@ -388,9 +389,8 @@ log {{
 
             # Update configuration
             config["server_url"] = f"http://{graylog_server}:{port}/api/"
-            config["server_api_token"] = (
-                ""  # nosec B105 - placeholder, must be set manually or via API
-            )
+            # Placeholder token - must be set manually or via API
+            config["server_api_token"] = ""  # nosec B105  # Placeholder value
             config["update_interval"] = 10
             config["tls_skip_verify"] = False
             config["send_status"] = True
@@ -443,6 +443,35 @@ log {{
             self.logger.error("Error configuring Windows Sidecar: %s", error)
             return {"status": "error", "message": str(error)}
 
+    def _validate_download_url(self, url: str) -> bool:
+        """
+        Validate that the download URL is safe (HTTPS and from github.com).
+
+        Args:
+            url: The URL to validate
+
+        Returns:
+            True if URL is safe, False otherwise
+        """
+        try:
+            parsed = urllib.parse.urlparse(url)
+            # Only allow HTTPS scheme (prevents file:// and other schemes)
+            if parsed.scheme != "https":
+                self.logger.error(
+                    "Invalid URL scheme: %s (only HTTPS allowed)", parsed.scheme
+                )
+                return False
+            # Only allow github.com domain
+            if parsed.netloc.lower() != "github.com":
+                self.logger.error(
+                    "Invalid URL domain: %s (only github.com allowed)", parsed.netloc
+                )
+                return False
+            return True
+        except Exception as error:
+            self.logger.error("Error validating URL: %s", error)
+            return False
+
     async def _install_windows_sidecar(self) -> Dict[str, Any]:
         """Download and install Graylog Sidecar on Windows."""
         try:
@@ -457,13 +486,20 @@ log {{
             # Note: You may want to pin a specific version
             download_url = f"https://github.com/Graylog2/collector-sidecar/releases/latest/download/graylog-sidecar-installer-{arch_suffix}.exe"
 
+            # Validate URL before downloading (prevents file:// and other schemes)
+            if not self._validate_download_url(download_url):
+                return {
+                    "status": "error",
+                    "message": "Invalid download URL - security check failed",
+                }
+
             self.logger.info("Downloading Graylog Sidecar from %s", download_url)
 
             # Download to temp directory
             temp_dir = tempfile.gettempdir()
             installer_path = os.path.join(temp_dir, "graylog-sidecar-installer.exe")
 
-            # URL is from known GitHub releases, HTTPS enforced
+            # URL validated above - HTTPS only from github.com
             urllib.request.urlretrieve(download_url, installer_path)  # nosec B310
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
