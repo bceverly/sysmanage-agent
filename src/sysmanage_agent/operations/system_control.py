@@ -90,6 +90,14 @@ class SystemControl:
                     "Failed to collect/send commercial antivirus status: %s", str(error)
                 )
 
+            # Collect and send Graylog attachment status
+            try:
+                await self.agent_instance.data_collector._send_graylog_status_update()  # pylint: disable=protected-access
+            except Exception as error:
+                self.logger.warning(
+                    "Failed to collect/send Graylog status: %s", str(error)
+                )
+
             return {"success": True, "result": "System info refresh initiated"}
         except Exception as error:
             return {"success": False, "error": str(error)}
