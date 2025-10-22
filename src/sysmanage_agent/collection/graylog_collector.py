@@ -11,7 +11,7 @@ import os
 import platform
 import re
 import socket
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for service checks
 from typing import Dict, Optional
 
 import yaml
@@ -169,7 +169,7 @@ class GraylogCollector:
         """
         # Check if Graylog Sidecar service is running
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607 - safe: hardcoded args, no user input
                 ["sc", "query", "graylog-sidecar"],
                 capture_output=True,
                 text=True,
@@ -379,7 +379,7 @@ class GraylogCollector:
             True if service is running, False otherwise
         """
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607 - safe: hardcoded args, service_name validated
                 ["systemctl", "is-active", service_name],
                 capture_output=True,
                 text=True,

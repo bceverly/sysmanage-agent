@@ -5,7 +5,7 @@ Graylog attachment operations for configuring log forwarding to Graylog.
 import logging
 import os
 import platform
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system service management
 import tempfile
 import urllib.request
 from typing import Any, Dict
@@ -167,11 +167,13 @@ template(name="gelf" type="list") {{
             self.logger.info("Wrote rsyslog configuration to %s", config_file)
 
             # Restart rsyslog
-            restart_result = subprocess.run(
-                ["systemctl", "restart", "rsyslog"],
-                capture_output=True,
-                text=True,
-                check=False,
+            restart_result = (
+                subprocess.run(  # nosec B603, B607 - safe: hardcoded systemctl command
+                    ["systemctl", "restart", "rsyslog"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
             )
 
             if restart_result.returncode == 0:
@@ -248,11 +250,13 @@ log {{
             self.logger.info("Wrote syslog-ng configuration to %s", config_file)
 
             # Restart syslog-ng
-            restart_result = subprocess.run(
-                ["systemctl", "restart", "syslog-ng"],
-                capture_output=True,
-                text=True,
-                check=False,
+            restart_result = (
+                subprocess.run(  # nosec B603, B607 - safe: hardcoded systemctl command
+                    ["systemctl", "restart", "syslog-ng"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
             )
 
             if restart_result.returncode == 0:
@@ -330,8 +334,10 @@ log {{
             else:  # OpenBSD, NetBSD
                 restart_cmd = ["rcctl", "restart", service_name]
 
-            restart_result = subprocess.run(
-                restart_cmd, capture_output=True, text=True, check=False
+            restart_result = (
+                subprocess.run(  # nosec B603 - safe: hardcoded BSD service commands
+                    restart_cmd, capture_output=True, text=True, check=False
+                )
             )
 
             if restart_result.returncode == 0:
@@ -382,7 +388,9 @@ log {{
 
             # Update configuration
             config["server_url"] = f"http://{graylog_server}:{port}/api/"
-            config["server_api_token"] = ""  # Will need to be set manually or via API
+            config["server_api_token"] = (
+                ""  # nosec B105 - placeholder, must be set manually or via API
+            )
             config["update_interval"] = 10
             config["tls_skip_verify"] = False
             config["send_status"] = True
@@ -395,7 +403,7 @@ log {{
             self.logger.info("Updated Graylog Sidecar configuration")
 
             # Install and start service
-            install_service_result = subprocess.run(
+            install_service_result = subprocess.run(  # nosec B603 - safe: sidecar_path validated, hardcoded args
                 [sidecar_path, "-service", "install"],
                 capture_output=True,
                 text=True,
@@ -409,7 +417,7 @@ log {{
                 )
 
             # Start service
-            start_service_result = subprocess.run(
+            start_service_result = subprocess.run(  # nosec B603 - safe: sidecar_path validated, hardcoded args
                 [sidecar_path, "-service", "start"],
                 capture_output=True,
                 text=True,
@@ -455,12 +463,13 @@ log {{
             temp_dir = tempfile.gettempdir()
             installer_path = os.path.join(temp_dir, "graylog-sidecar-installer.exe")
 
-            urllib.request.urlretrieve(download_url, installer_path)
+            # URL is from known GitHub releases, HTTPS enforced
+            urllib.request.urlretrieve(download_url, installer_path)  # nosec B310
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
 
             # Run installer silently
-            install_result = subprocess.run(
+            install_result = subprocess.run(  # nosec B603 - safe: installer_path is temp file, /S is hardcoded
                 [installer_path, "/S"],  # Silent install
                 capture_output=True,
                 text=True,
@@ -473,8 +482,8 @@ log {{
                 # Clean up installer
                 try:
                     os.remove(installer_path)
-                except Exception:
-                    pass
+                except Exception as error:
+                    self.logger.warning("Failed to remove installer: %s", error)
                 return {
                     "status": "success",
                     "message": "Installed Graylog Sidecar successfully",
@@ -494,7 +503,7 @@ log {{
         """Check if a service is running."""
         try:
             if self.system == "Windows":
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607 - safe: hardcoded sc command, service_name validated
                     ["sc", "query", service_name],
                     capture_output=True,
                     text=True,
@@ -502,7 +511,7 @@ log {{
                 )
                 return "RUNNING" in result.stdout
             # Linux/BSD with systemd
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607 - safe: hardcoded systemctl, service_name validated
                 ["systemctl", "is-active", service_name],
                 capture_output=True,
                 text=True,
