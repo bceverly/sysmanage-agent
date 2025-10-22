@@ -65,7 +65,14 @@ jobs:
           VERSION: ${{ steps.get_tag.outputs.version }}
           DEBFULLNAME: "Bryan Everly"
           DEBEMAIL: "bryan@theeverlys.com"
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
         run: |
+          # Get GPG key ID if not already set
+          if [ -z "$GPG_KEY_ID" ]; then
+            GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
+            echo "Detected GPG_KEY_ID: $GPG_KEY_ID"
+          fi
+
           RELEASE="noble"
 
           echo "=========================================="
