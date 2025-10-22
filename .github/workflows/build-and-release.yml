@@ -1666,7 +1666,8 @@ jobs:
 
             # Sign the source package
             cd ..
-            debsign -k"$GPG_KEY_ID" "sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
+            CHANGES_FILE="/tmp/sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
+            debsign -k"$GPG_KEY_ID" "$CHANGES_FILE"
 
             # Upload to Launchpad PPA
             echo "Uploading to Launchpad PPA for $RELEASE..."
