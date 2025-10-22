@@ -11,26 +11,8 @@ on:
 jobs:
   # Test deploy to openSUSE Build Service
   test-obs-deploy:
-    name: Test OBS Deploy (${{ matrix.target_name }})
+    name: Test OBS Deploy
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - target: openSUSE_Tumbleweed
-            target_name: "openSUSE Tumbleweed"
-            artifact: sysmanage-agent-rpm-opensuse-tumbleweed
-          - target: openSUSE_Leap_15.6
-            target_name: "openSUSE Leap 15.6"
-            artifact: sysmanage-agent-rpm-opensuse-leap
-          - target: openSUSE_Leap_15.5
-            target_name: "openSUSE Leap 15.5"
-            artifact: sysmanage-agent-rpm-opensuse-leap
-          - target: SLE_15_SP6
-            target_name: "SLE 15 SP6"
-            artifact: sysmanage-agent-rpm-sles
-          - target: SLE_15_SP5
-            target_name: "SLE 15 SP5"
-            artifact: sysmanage-agent-rpm-sles
 
     steps:
       - name: Checkout code
@@ -38,18 +20,13 @@ jobs:
         with:
           ref: v${{ github.event.inputs.version }}
 
-      - name: Download artifact from release
+      - name: Download artifact from release (optional - for reference)
         env:
           VERSION: ${{ github.event.inputs.version }}
-          ARTIFACT: ${{ matrix.artifact }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Downloading artifacts for version $VERSION"
-
-          # Download the RPM files from the GitHub release
-          gh release download "v$VERSION" --pattern "*.rpm" --dir artifacts/ || echo "Some RPM files may not exist"
-
-          ls -la artifacts/
+          echo "Note: This step is optional and just for reference"
+          echo "OBS will build from source, not from pre-built RPMs"
 
       - name: Install OBS tools
         run: |
@@ -102,45 +79,9 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
-          TARGET: ${{ matrix.target }}
           WORKSPACE: ${{ github.workspace }}
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
-
-          echo "Looking for RPM files in artifacts directory..."
-          ls -la ../../artifacts/
-
-          # Find the appropriate RPM file based on target
-          case "$TARGET" in
-            "openSUSE_Tumbleweed")
-              RPM_FILE=$(find ../../artifacts -name "*opensuse*tumbleweed*.rpm" -type f | grep -v ".sha256" | head -1)
-              ;;
-            "openSUSE_Leap_15.6")
-              RPM_FILE=$(find ../../artifacts -name "*opensuse*leap*.rpm" -type f | grep -v ".sha256" | head -1)
-              ;;
-            "openSUSE_Leap_15.5")
-              RPM_FILE=$(find ../../artifacts -name "*opensuse*leap*.rpm" -type f | grep -v ".sha256" | head -1)
-              ;;
-            "SLE_15_SP6")
-              RPM_FILE=$(find ../../artifacts -name "*sles*.rpm" -type f | grep -v ".sha256" | head -1)
-              ;;
-            "SLE_15_SP5")
-              RPM_FILE=$(find ../../artifacts -name "*sles*.rpm" -type f | grep -v ".sha256" | head -1)
-              ;;
-          esac
-
-          if [ -z "$RPM_FILE" ]; then
-            echo "WARNING: No specific RPM file found for $TARGET"
-            echo "Looking for any RPM file..."
-            RPM_FILE=$(find ../../artifacts -name "sysmanage-agent-*.rpm" -type f | grep -v ".sha256" | head -1)
-          fi
-
-          if [ -z "$RPM_FILE" ]; then
-            echo "ERROR: No RPM file found in artifacts"
-            exit 1
-          fi
-
-          echo "Found RPM: $RPM_FILE"
 
           # Copy spec file
           echo "Copying spec file from installer/opensuse/"
@@ -210,14 +151,20 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
-          TARGET: ${{ matrix.target_name }}
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
 
           echo "Committing to OBS..."
-          osc commit -m "Test deployment: Update to version $VERSION for $TARGET"
+          osc commit -m "Test deployment: Update to version $VERSION"
 
-          echo "SUCCESS! Uploaded version $VERSION to OBS for $TARGET"
+          echo "SUCCESS! Uploaded version $VERSION to OBS"
           echo ""
           echo "View build status at:"
           echo "https://build.opensuse.org/package/show/home:${OBS_USERNAME}/sysmanage-agent"
+          echo ""
+          echo "OBS will now build for all configured targets:"
+          echo "  - openSUSE Tumbleweed"
+          echo "  - openSUSE Leap 15.6"
+          echo "  - openSUSE Leap 15.5"
+          echo "  - SLE 15 SP6"
+          echo "  - SLE 15 SP5"

@@ -48,8 +48,8 @@ SysManage server to provide centralized management of Linux systems.
 
 %prep
 %setup -q
-# Extract vendor dependencies
-%setup -q -T -D -a 1
+# Extract vendor dependencies to the build directory
+tar xzf %{SOURCE1} -C .
 
 %build
 # No build step needed - Python application
