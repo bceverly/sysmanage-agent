@@ -1662,7 +1662,7 @@ jobs:
             dch -r "" --distribution "$RELEASE"
 
             # Build source package (no binary build)
-            debuild -S -sa -k"$GPG_KEY_ID" --no-lintian
+            debuild -S -sa -k"$GPG_KEY_ID"
 
             # Upload to Launchpad PPA
             cd ..
