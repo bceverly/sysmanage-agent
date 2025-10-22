@@ -59,11 +59,11 @@ jobs:
       - name: Configure OBS credentials
         env:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
-          OBS_TOKEN: ${{ secrets.OBS_TOKEN }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
         run: |
-          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_TOKEN" ]; then
+          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_PASSWORD" ]; then
             echo "ERROR: OBS credentials not set!"
-            echo "Please set OBS_USERNAME and OBS_TOKEN secrets"
+            echo "Please set OBS_USERNAME and OBS_PASSWORD secrets"
             exit 1
           fi
 
@@ -74,11 +74,11 @@ jobs:
 
           [https://api.opensuse.org]
           user = $OBS_USERNAME
-          pass = $OBS_TOKEN
+          pass = $OBS_PASSWORD
           EOF
           chmod 600 ~/.config/osc/oscrc
 
-          echo "OBS credentials configured for user: $OBS_USERNAME (using token)"
+          echo "OBS credentials configured for user: $OBS_USERNAME"
 
       - name: Test OBS credentials
         run: |
