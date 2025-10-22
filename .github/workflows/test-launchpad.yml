@@ -80,12 +80,10 @@ jobs:
           mkdir -p ~/.dput.d/profiles
           cat > ~/.dput.d/profiles/launchpad.json << 'EOF'
           {
-            "launchpad": {
-              "fqdn": "ppa.launchpad.net",
-              "incoming": "~bceverly/sysmanage-agent/",
-              "method": "ftp",
-              "allow_unsigned_uploads": false
-            }
+            "fqdn": "ppa.launchpad.net",
+            "incoming": "~bceverly/ubuntu/sysmanage-agent",
+            "method": "ftp",
+            "allow_unsigned_uploads": false
           }
           EOF
 
