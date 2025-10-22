@@ -1661,13 +1661,11 @@ jobs:
             dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
             dch -r "" --distribution "$RELEASE"
 
-            # Build source package (no binary build, unsigned)
-            debuild -S -sa -us -uc
+            # Build and sign source package in one step
+            # This signs during build, avoiding the debsign directory issue
+            debuild -S -sa -k"$GPG_KEY_ID"
 
-            # Sign the source package
             cd ..
-            ls -la sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes || echo "Changes file not found!"
-            debsign -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes
 
             # Upload to Launchpad PPA
             echo "Uploading to Launchpad PPA for $RELEASE..."
