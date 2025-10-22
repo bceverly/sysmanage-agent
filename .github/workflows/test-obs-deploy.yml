@@ -118,9 +118,10 @@ jobs:
           # Create vendor tarball for offline installation
           echo "Creating vendor tarball with pip dependencies..."
           mkdir -p /tmp/vendor
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311
-          # Also download for any platform (for pure Python packages)
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --no-deps 2>/dev/null || true
+          # Download all dependencies (including transitive ones) for Python 3.11
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Also download source distributions for pure Python packages that may not have wheels
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --no-binary :all: 2>/dev/null || true
 
           cd /tmp
           tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/

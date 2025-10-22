@@ -71,7 +71,8 @@ install -m 644 requirements-prod.txt %{buildroot}/opt/sysmanage-agent/
 cp -r vendor %{buildroot}/opt/sysmanage-agent/
 
 # Create virtualenv and install Python dependencies from vendor directory
-python3 -m venv %{buildroot}/opt/sysmanage-agent/.venv
+# Use python311 explicitly (not python3 which may be 3.6 on older systems)
+python3.11 -m venv %{buildroot}/opt/sysmanage-agent/.venv
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
 
@@ -119,7 +120,7 @@ chmod 750 /etc/sysmanage-agent
 # Recreate the venv using the system's Python to fix all symlinks and paths
 cd /opt/sysmanage-agent
 rm -rf .venv
-python3 -m venv .venv
+python3.11 -m venv .venv
 
 # Check if we have a vendor directory from the RPM (for OBS builds)
 if [ -d vendor ]; then
