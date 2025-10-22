@@ -1,4 +1,4 @@
-sysmanage-agent (0.1.0-1) unstable; urgency=medium
+sysmanage-agent (0.1.0) unstable; urgency=medium
 
   * Initial release of SysManage Agent
   * System management and monitoring capabilities

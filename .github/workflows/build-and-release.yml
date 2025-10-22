@@ -1659,10 +1659,13 @@ jobs:
             # Update changelog for this Ubuntu release
             # Use ppa1~${RELEASE}1 versioning scheme
             dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
-            dch -r "" --distribution "$RELEASE"
 
             # Build source package (unsigned first)
             debuild -S -sa -us -uc
+
+            # Check what files were created
+            echo "Files in parent directory:"
+            ls -la ../*.changes ../*.dsc 2>/dev/null || echo "No changes/dsc files found in parent"
 
             # Now sign from within the source directory where debian/changelog exists
             debsign -k"$GPG_KEY_ID" ../sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes
