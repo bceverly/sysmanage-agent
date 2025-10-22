@@ -87,29 +87,185 @@ jobs:
           }
           EOF
 
-      - name: Build and upload for Noble (24.04) only
+      - name: Build and upload for Questing (25.10)
         env:
           VERSION: ${{ steps.get_tag.outputs.version }}
           DEBFULLNAME: "Bryan Everly"
           DEBEMAIL: "bryan@theeverlys.com"
         run: |
-          # Debug: Show all GPG keys
-          echo "Listing all GPG secret keys:"
-          gpg --list-secret-keys --keyid-format LONG
-
-          echo ""
-          echo "Raw grep output:"
-          gpg --list-secret-keys --keyid-format LONG | grep sec || echo "No lines with 'sec' found"
-
           # Get GPG key ID
           GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-          echo ""
-          echo "Detected GPG_KEY_ID: '$GPG_KEY_ID'"
 
-          if [ -z "$GPG_KEY_ID" ]; then
-            echo "ERROR: Could not detect GPG key!"
+          RELEASE="questing"
+
+          echo "=========================================="
+          echo "Building source package for Ubuntu $RELEASE (25.10)"
+          echo "Version: $VERSION"
+          echo "=========================================="
+
+          # Create working directory
+          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+
+          # Copy source to working directory
+          cp -r . "$WORK_DIR/"
+          cd "$WORK_DIR"
+
+          # Copy debian directory
+          if [ -d "installer/ubuntu/debian" ]; then
+            cp -r installer/ubuntu/debian .
+          else
+            echo "Error: debian directory not found"
             exit 1
           fi
+
+          # Update changelog
+          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+
+          # Build source package (unsigned)
+          debuild -S -sa -us -uc
+
+          # Move to /tmp where files are
+          cd ..
+
+          # Create a temporary passphrase file for GPG
+          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
+
+          # Sign with passphrase from file
+          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
+            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+
+          # Clean up passphrase file
+          rm -f /tmp/gpg-passphrase-${RELEASE}
+
+          # Upload to Launchpad PPA
+          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+
+          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
+
+      - name: Build and upload for Plucky (25.04)
+        env:
+          VERSION: ${{ steps.get_tag.outputs.version }}
+          DEBFULLNAME: "Bryan Everly"
+          DEBEMAIL: "bryan@theeverlys.com"
+        run: |
+          # Get GPG key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
+
+          RELEASE="plucky"
+
+          echo "=========================================="
+          echo "Building source package for Ubuntu $RELEASE (25.04)"
+          echo "Version: $VERSION"
+          echo "=========================================="
+
+          # Create working directory
+          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+
+          # Copy source to working directory
+          cp -r . "$WORK_DIR/"
+          cd "$WORK_DIR"
+
+          # Copy debian directory
+          if [ -d "installer/ubuntu/debian" ]; then
+            cp -r installer/ubuntu/debian .
+          else
+            echo "Error: debian directory not found"
+            exit 1
+          fi
+
+          # Update changelog
+          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+
+          # Build source package (unsigned)
+          debuild -S -sa -us -uc
+
+          # Move to /tmp where files are
+          cd ..
+
+          # Create a temporary passphrase file for GPG
+          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
+
+          # Sign with passphrase from file
+          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
+            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+
+          # Clean up passphrase file
+          rm -f /tmp/gpg-passphrase-${RELEASE}
+
+          # Upload to Launchpad PPA
+          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+
+          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
+
+      - name: Build and upload for Oracular (24.10)
+        env:
+          VERSION: ${{ steps.get_tag.outputs.version }}
+          DEBFULLNAME: "Bryan Everly"
+          DEBEMAIL: "bryan@theeverlys.com"
+        run: |
+          # Get GPG key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
+
+          RELEASE="oracular"
+
+          echo "=========================================="
+          echo "Building source package for Ubuntu $RELEASE (24.10)"
+          echo "Version: $VERSION"
+          echo "=========================================="
+
+          # Create working directory
+          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+
+          # Copy source to working directory
+          cp -r . "$WORK_DIR/"
+          cd "$WORK_DIR"
+
+          # Copy debian directory
+          if [ -d "installer/ubuntu/debian" ]; then
+            cp -r installer/ubuntu/debian .
+          else
+            echo "Error: debian directory not found"
+            exit 1
+          fi
+
+          # Update changelog
+          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+
+          # Build source package (unsigned)
+          debuild -S -sa -us -uc
+
+          # Move to /tmp where files are
+          cd ..
+
+          # Create a temporary passphrase file for GPG
+          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
+
+          # Sign with passphrase from file
+          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
+            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+
+          # Clean up passphrase file
+          rm -f /tmp/gpg-passphrase-${RELEASE}
+
+          # Upload to Launchpad PPA
+          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+
+          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
+
+      - name: Build and upload for Noble (24.04)
+        env:
+          VERSION: ${{ steps.get_tag.outputs.version }}
+          DEBFULLNAME: "Bryan Everly"
+          DEBEMAIL: "bryan@theeverlys.com"
+        run: |
+          # Get GPG key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
 
           RELEASE="noble"
 
@@ -144,40 +300,74 @@ jobs:
           # Move to /tmp where files are
           cd ..
 
-          echo ""
-          echo "Files created in /tmp:"
-          ls -lah sysmanage-agent_${VERSION}* 2>/dev/null || ls -lah sysmanage-agent_*
-
-          echo ""
-          echo "Current directory: $(pwd)"
-
-          echo ""
-          echo "GPG_KEY_ID: $GPG_KEY_ID"
-          if [ -z "$GPG_KEY_ID" ]; then
-            echo "ERROR: GPG_KEY_ID is empty!"
-            exit 1
-          fi
-
-          echo ""
-          echo "Contents of .changes file:"
-          cat sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
-          echo ""
-          echo "Attempting to sign..."
-
           # Create a temporary passphrase file for GPG
-          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase
+          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
 
           # Sign with passphrase from file
-          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase" \
+          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
             -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
 
           # Clean up passphrase file
-          rm -f /tmp/gpg-passphrase
+          rm -f /tmp/gpg-passphrase-${RELEASE}
 
-          echo ""
-          echo "Upload to Launchpad PPA..."
+          # Upload to Launchpad PPA
           dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
 
-          echo ""
+          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
+
+      - name: Build and upload for Jammy (22.04)
+        env:
+          VERSION: ${{ steps.get_tag.outputs.version }}
+          DEBFULLNAME: "Bryan Everly"
+          DEBEMAIL: "bryan@theeverlys.com"
+        run: |
+          # Get GPG key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
+
+          RELEASE="jammy"
+
+          echo "=========================================="
+          echo "Building source package for Ubuntu $RELEASE (22.04)"
+          echo "Version: $VERSION"
+          echo "=========================================="
+
+          # Create working directory
+          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+
+          # Copy source to working directory
+          cp -r . "$WORK_DIR/"
+          cd "$WORK_DIR"
+
+          # Copy debian directory
+          if [ -d "installer/ubuntu/debian" ]; then
+            cp -r installer/ubuntu/debian .
+          else
+            echo "Error: debian directory not found"
+            exit 1
+          fi
+
+          # Update changelog
+          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+
+          # Build source package (unsigned)
+          debuild -S -sa -us -uc
+
+          # Move to /tmp where files are
+          cd ..
+
+          # Create a temporary passphrase file for GPG
+          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
+
+          # Sign with passphrase from file
+          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
+            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+
+          # Clean up passphrase file
+          rm -f /tmp/gpg-passphrase-${RELEASE}
+
+          # Upload to Launchpad PPA
+          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+
           echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
