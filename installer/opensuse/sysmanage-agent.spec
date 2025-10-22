@@ -48,8 +48,7 @@ SysManage server to provide centralized management of Linux systems.
 
 %prep
 %setup -q
-# Extract vendor dependencies
-cd %{_builddir}/%{name}-%{version}
+# Extract vendor dependencies to current directory
 tar xzf %{_sourcedir}/%{name}-vendor-%{version}.tar.gz
 
 %build
@@ -73,8 +72,8 @@ cp -r vendor %{buildroot}/opt/sysmanage-agent/
 
 # Create virtualenv and install Python dependencies from vendor directory
 python3 -m venv %{buildroot}/opt/sysmanage-agent/.venv
-%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip --no-index --find-links=vendor
-%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt --no-index --find-links=vendor
+%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
+%{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
 
 # Fix virtualenv paths to use final installation directory instead of buildroot
 sed -i 's|%{buildroot}||g' %{buildroot}/opt/sysmanage-agent/.venv/pyvenv.cfg
