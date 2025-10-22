@@ -1663,14 +1663,15 @@ jobs:
             # Build source package (unsigned first)
             debuild -S -sa -us -uc
 
-            # Check what files were created
-            echo "Files in parent directory:"
-            ls -la ../*.changes ../*.dsc 2>/dev/null || echo "No changes/dsc files found in parent"
-
-            # Now sign from within the source directory where debian/changelog exists
-            debsign -k"$GPG_KEY_ID" ../sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
+            # Move to parent directory where .changes and .dsc files are
             cd ..
+
+            # Check what files were created
+            echo "Files in current directory:"
+            ls -la sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.* 2>/dev/null || ls -la sysmanage-agent_*
+
+            # Sign the changes file
+            debsign -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
 
             # Upload to Launchpad PPA
             echo "Uploading to Launchpad PPA for $RELEASE..."
