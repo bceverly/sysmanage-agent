@@ -80,6 +80,14 @@ jobs:
 
           echo "OBS credentials configured for user: $OBS_USERNAME"
 
+      - name: Test OBS credentials
+        run: |
+          echo "Testing OBS API connection..."
+          osc api /about
+          echo ""
+          echo "Listing user projects..."
+          osc api /search/project?match=@name=%27home:bryaneverly%27
+
       - name: Checkout OBS package
         env:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
