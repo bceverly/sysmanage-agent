@@ -1272,11 +1272,10 @@ jobs:
           cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
 
-          # RPM packages - CentOS
-          cp ${{ github.workspace }}/release-files/*centos*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*el9*.rpm "repo/rpm/el9/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*centos*.rpm.sha256 "repo/rpm/el9/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*el9*.rpm.sha256 "repo/rpm/el9/x86_64/" 2>/dev/null || true
+          # RPM packages - CentOS/RHEL (from build-centos job)
+          # The artifact is named "sysmanage-agent-rpm" and contains files like sysmanage-agent-VERSION-1.x86_64.rpm
+          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm" -exec cp {} "repo/rpm/el9/x86_64/" \; 2>/dev/null || true
+          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm.sha256" -exec cp {} "repo/rpm/el9/x86_64/" \; 2>/dev/null || true
 
           # RPM packages - OpenSUSE Tumbleweed
           cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
