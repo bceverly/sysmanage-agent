@@ -1537,8 +1537,8 @@ jobs:
 
           ## Supported Platforms
 
-          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble)
-          - **Debian**: 11 (Bullseye), 12 (Bookworm)
+          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble), 24.10 (Oracular), 25.04 (Plucky), 25.10 (Questing)
+          - **Debian**: 11 (Bullseye), 12 (Bookworm), 13 (Trixie)
           - **CentOS/RHEL**: 9.x
           - **OpenSUSE**: Tumbleweed, Leap 15.x
           - **SUSE Linux Enterprise Server (SLES)**: 15.x
@@ -1628,8 +1628,8 @@ jobs:
           DEBEMAIL: "bryan@theeverlys.com"
         run: |
           # Ubuntu releases to target
-          RELEASES=("jammy" "noble" "oracular" "plucky")
-          RELEASE_VERSIONS=("22.04" "24.04" "24.10" "25.04")
+          RELEASES=("jammy" "noble" "oracular" "plucky" "questing")
+          RELEASE_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10")
 
           for i in "${!RELEASES[@]}"; do
             RELEASE="${RELEASES[$i]}"
@@ -1661,11 +1661,14 @@ jobs:
             dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
             dch -r "" --distribution "$RELEASE"
 
-            # Build source package (no binary build)
-            debuild -S -sa -k"$GPG_KEY_ID"
+            # Build source package (no binary build, unsigned)
+            debuild -S -sa -us -uc
+
+            # Sign the source package
+            cd ..
+            debsign -k"$GPG_KEY_ID" "sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
 
             # Upload to Launchpad PPA
-            cd ..
             echo "Uploading to Launchpad PPA for $RELEASE..."
             dput launchpad "sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
 
