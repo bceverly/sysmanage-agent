@@ -1648,6 +1648,14 @@ jobs:
             cp -r . "$WORK_DIR/"
             cd "$WORK_DIR"
 
+            # Copy debian directory from installer/ubuntu
+            if [ -d "installer/ubuntu/debian" ]; then
+              cp -r installer/ubuntu/debian .
+            else
+              echo "Error: debian directory not found at installer/ubuntu/debian"
+              exit 1
+            fi
+
             # Update changelog for this Ubuntu release
             # Use ppa1~${RELEASE}1 versioning scheme
             dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
