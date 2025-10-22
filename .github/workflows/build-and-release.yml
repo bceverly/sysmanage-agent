@@ -1627,9 +1627,11 @@ jobs:
           DEBFULLNAME: "Bryan Everly"
           DEBEMAIL: "bryan@theeverlys.com"
         run: |
-          # Ubuntu releases to target
-          RELEASES=("jammy" "noble" "oracular" "plucky" "questing")
-          RELEASE_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10")
+          # Ubuntu releases to target (testing with noble first)
+          RELEASES=("noble")
+          RELEASE_VERSIONS=("24.04")
+          # Full list: RELEASES=("jammy" "noble" "oracular" "plucky" "questing")
+          # Full list: RELEASE_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10")
 
           for i in "${!RELEASES[@]}"; do
             RELEASE="${RELEASES[$i]}"
@@ -1663,19 +1665,30 @@ jobs:
             # Build source package (unsigned first)
             debuild -S -sa -us -uc
 
-            # Check what files were created in parent directory
-            echo "Files in parent directory:"
-            ls -la ../*.changes ../*.dsc 2>/dev/null || ls -la ../*
+            # Move to parent directory where .changes and .dsc files are
+            cd ..
+
+            # Check what files were created
+            echo "Files in /tmp:"
+            ls -la sysmanage-agent_${VERSION}+ppa1~${RELEASE}1* 2>/dev/null || ls -la sysmanage-agent_*
 
             echo "Current directory: $(pwd)"
-            echo "Parent directory: $(cd .. && pwd)"
+            echo "Contents of current directory:"
+            ls -la
 
-            # Sign the changes file using absolute path
-            CHANGES_FILE="/tmp/sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-            debsign -k"$GPG_KEY_ID" "$CHANGES_FILE"
+            # Debug GPG key
+            echo "GPG_KEY_ID: $GPG_KEY_ID"
+            if [ -z "$GPG_KEY_ID" ]; then
+              echo "ERROR: GPG_KEY_ID is empty!"
+              exit 1
+            fi
 
-            # Move to parent directory for upload
-            cd ..
+            # Show contents of .changes file
+            echo "Contents of .changes file:"
+            cat sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+
+            # Sign the changes file from the directory containing both .changes and .dsc
+            debsign -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
 
             # Upload to Launchpad PPA
             echo "Uploading to Launchpad PPA for $RELEASE..."
