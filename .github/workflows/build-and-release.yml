@@ -1346,7 +1346,7 @@ jobs:
           sed -i "s/ 0 main\/binary-amd64\/Packages.gz$/ $SIZE_PACKAGES_GZ main\/binary-amd64\/Packages.gz/" Release.tmp
           mv Release.tmp Release
 
-          cd ../../..
+          cd /tmp/sysmanage-docs
 
           # Regenerate RPM repository metadata
           echo "Regenerating RPM repository metadata..."
