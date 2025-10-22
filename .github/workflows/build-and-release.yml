@@ -1657,8 +1657,8 @@ jobs:
             fi
 
             # Update changelog for this Ubuntu release
-            # Use ppa1~${RELEASE}1 versioning scheme
-            dch -v "${VERSION}-1ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
+            # Use native package versioning with + instead of - (no Debian revision for native packages)
+            dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
 
             # Build source package (unsigned first)
             debuild -S -sa -us -uc
@@ -1668,13 +1668,13 @@ jobs:
             ls -la ../*.changes ../*.dsc 2>/dev/null || echo "No changes/dsc files found in parent"
 
             # Now sign from within the source directory where debian/changelog exists
-            debsign -k"$GPG_KEY_ID" ../sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes
+            debsign -k"$GPG_KEY_ID" ../sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
 
             cd ..
 
             # Upload to Launchpad PPA
             echo "Uploading to Launchpad PPA for $RELEASE..."
-            dput launchpad "sysmanage-agent_${VERSION}-1ppa1~${RELEASE}1_source.changes"
+            dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
 
             echo "Successfully uploaded for $RELEASE"
             echo ""
