@@ -1,0 +1,202 @@
+name: Test OBS Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 0.9.8.6)'
+        required: true
+        default: '0.9.8.6'
+
+jobs:
+  # Test deploy to openSUSE Build Service
+  test-obs-deploy:
+    name: Test OBS Deploy (${{ matrix.target_name }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: openSUSE_Tumbleweed
+            target_name: "openSUSE Tumbleweed"
+            artifact: sysmanage-agent-rpm-opensuse-tumbleweed
+          - target: openSUSE_Leap_15.6
+            target_name: "openSUSE Leap 15.6"
+            artifact: sysmanage-agent-rpm-opensuse-leap
+          - target: openSUSE_Leap_15.5
+            target_name: "openSUSE Leap 15.5"
+            artifact: sysmanage-agent-rpm-opensuse-leap
+          - target: SLE_15_SP6
+            target_name: "SLE 15 SP6"
+            artifact: sysmanage-agent-rpm-sles
+          - target: SLE_15_SP5
+            target_name: "SLE 15 SP5"
+            artifact: sysmanage-agent-rpm-sles
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: v${{ github.event.inputs.version }}
+
+      - name: Download artifact from release
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          ARTIFACT: ${{ matrix.artifact }}
+        run: |
+          echo "Downloading artifacts for version $VERSION"
+
+          # Download the RPM files from the GitHub release
+          gh release download "v$VERSION" --pattern "*.rpm" --dir artifacts/ || echo "Some RPM files may not exist"
+
+          ls -la artifacts/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install OBS tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc
+
+      - name: Configure OBS credentials
+        env:
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+        run: |
+          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_PASSWORD" ]; then
+            echo "ERROR: OBS credentials not set!"
+            echo "Please set OBS_USERNAME and OBS_PASSWORD secrets"
+            exit 1
+          fi
+
+          mkdir -p ~/.config/osc
+          cat > ~/.config/osc/oscrc << EOF
+          [general]
+          apiurl = https://api.opensuse.org
+
+          [https://api.opensuse.org]
+          user = $OBS_USERNAME
+          pass = $OBS_PASSWORD
+          EOF
+          chmod 600 ~/.config/osc/oscrc
+
+          echo "OBS credentials configured for user: $OBS_USERNAME"
+
+      - name: Checkout OBS package
+        env:
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+        run: |
+          echo "Checking out OBS package home:${OBS_USERNAME}/sysmanage-agent"
+          osc checkout home:${OBS_USERNAME}/sysmanage-agent
+          cd home:${OBS_USERNAME}/sysmanage-agent
+          echo "Current OBS package contents:"
+          ls -la
+
+      - name: Update package files
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          cd home:${OBS_USERNAME}/sysmanage-agent
+
+          echo "Looking for RPM files in artifacts directory..."
+          ls -la ../../artifacts/
+
+          # Find the appropriate RPM file based on target
+          case "$TARGET" in
+            "openSUSE_Tumbleweed")
+              RPM_FILE=$(find ../../artifacts -name "*opensuse*tumbleweed*.rpm" -type f | grep -v ".sha256" | head -1)
+              ;;
+            "openSUSE_Leap_15.6")
+              RPM_FILE=$(find ../../artifacts -name "*opensuse*leap*.rpm" -type f | grep -v ".sha256" | head -1)
+              ;;
+            "openSUSE_Leap_15.5")
+              RPM_FILE=$(find ../../artifacts -name "*opensuse*leap*.rpm" -type f | grep -v ".sha256" | head -1)
+              ;;
+            "SLE_15_SP6")
+              RPM_FILE=$(find ../../artifacts -name "*sles*.rpm" -type f | grep -v ".sha256" | head -1)
+              ;;
+            "SLE_15_SP5")
+              RPM_FILE=$(find ../../artifacts -name "*sles*.rpm" -type f | grep -v ".sha256" | head -1)
+              ;;
+          esac
+
+          if [ -z "$RPM_FILE" ]; then
+            echo "WARNING: No specific RPM file found for $TARGET"
+            echo "Looking for any RPM file..."
+            RPM_FILE=$(find ../../artifacts -name "sysmanage-agent-*.rpm" -type f | grep -v ".sha256" | head -1)
+          fi
+
+          if [ -z "$RPM_FILE" ]; then
+            echo "ERROR: No RPM file found in artifacts"
+            exit 1
+          fi
+
+          echo "Found RPM: $RPM_FILE"
+
+          # Copy spec file
+          echo "Copying spec file from installer/opensuse/"
+          cp ../../../installer/opensuse/sysmanage-agent.spec .
+
+          # Update version in spec file
+          echo "Updating version to $VERSION in spec file"
+          sed -i "s/^Version:.*/Version:        $VERSION/" sysmanage-agent.spec
+
+          # Create source tarball (OBS needs the source)
+          echo "Creating source tarball..."
+          cd ../../..
+          TAR_NAME="sysmanage-agent-$VERSION"
+          mkdir -p /tmp/$TAR_NAME
+
+          # Copy source files
+          cp -r src /tmp/$TAR_NAME/
+          cp main.py /tmp/$TAR_NAME/
+          cp alembic.ini /tmp/$TAR_NAME/
+          cp requirements-prod.txt /tmp/$TAR_NAME/
+          cp README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
+          cp LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
+
+          # Copy installer files
+          mkdir -p /tmp/$TAR_NAME/installer/opensuse
+          cp installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
+
+          # Create tarball
+          cd /tmp
+          tar czf sysmanage-agent-$VERSION.tar.gz $TAR_NAME/
+          echo "Created tarball: sysmanage-agent-$VERSION.tar.gz ($(du -h sysmanage-agent-$VERSION.tar.gz | cut -f1))"
+
+          # Copy to OBS directory
+          cp sysmanage-agent-$VERSION.tar.gz $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent/
+
+          cd $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent
+
+          echo "OBS package directory contents:"
+          ls -la
+
+          # Remove old files
+          osc remove *.tar.gz 2>/dev/null || true
+
+          # Add new files
+          osc add sysmanage-agent-$VERSION.tar.gz
+          osc add sysmanage-agent.spec
+
+          echo "Files staged for OBS:"
+          osc status
+
+      - name: Commit and push to OBS
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+          TARGET: ${{ matrix.target_name }}
+        run: |
+          cd home:${OBS_USERNAME}/sysmanage-agent
+
+          echo "Committing to OBS..."
+          osc commit -m "Test deployment: Update to version $VERSION for $TARGET"
+
+          echo "SUCCESS! Uploaded version $VERSION to OBS for $TARGET"
+          echo ""
+          echo "View build status at:"
+          echo "https://build.opensuse.org/package/show/home:${OBS_USERNAME}/sysmanage-agent"
