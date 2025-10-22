@@ -1346,6 +1346,18 @@ jobs:
 
           cd ../../..
 
+          # Regenerate RPM repository metadata
+          echo "Regenerating RPM repository metadata..."
+          sudo apt-get install -y createrepo-c
+
+          # Regenerate metadata for each RPM repository
+          for rpm_repo in repo/rpm/el9/x86_64 repo/rpm/opensuse-tumbleweed/x86_64 repo/rpm/opensuse-leap/15/x86_64 repo/rpm/sles/15/x86_64; do
+            if [ -d "$rpm_repo" ] && [ -n "$(ls -A $rpm_repo/*.rpm 2>/dev/null)" ]; then
+              echo "Regenerating metadata for $rpm_repo"
+              createrepo_c --update "$rpm_repo"
+            fi
+          done
+
           # Commit and push changes
           git add .
           git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
@@ -1568,12 +1580,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Deploy to Launchpad PPA
+  # Deploy to Launchpad PPA - Matrix strategy for parallel uploads
   deploy-launchpad:
-    name: Deploy to Launchpad PPA
+    name: Deploy to Launchpad PPA (${{ matrix.release_name }})
     runs-on: ubuntu-22.04
-    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd]
+    needs: [release]
     if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        include:
+          - release: questing
+            release_name: "25.10 Questing"
+          - release: plucky
+            release_name: "25.04 Plucky"
+          - release: oracular
+            release_name: "24.10 Oracular"
+          - release: noble
+            release_name: "24.04 Noble"
+          - release: jammy
+            release_name: "22.04 Jammy"
 
     steps:
       - name: Checkout code
@@ -1648,247 +1673,18 @@ jobs:
           }
           EOF
 
-      - name: Build and upload for Questing (25.10)
+      - name: Build and upload source package
         env:
           VERSION: ${{ steps.version.outputs.version }}
           DEBFULLNAME: "Bryan Everly"
           DEBEMAIL: "bryan@theeverlys.com"
+          RELEASE: ${{ matrix.release }}
         run: |
           # Get GPG key ID
           GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
 
-          RELEASE="questing"
-
           echo "=========================================="
-          echo "Building source package for Ubuntu $RELEASE (25.10)"
-          echo "Version: $VERSION"
-          echo "=========================================="
-
-          # Create working directory
-          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
-          rm -rf "$WORK_DIR"
-          mkdir -p "$WORK_DIR"
-
-          # Copy source to working directory
-          cp -r . "$WORK_DIR/"
-          cd "$WORK_DIR"
-
-          # Copy debian directory
-          if [ -d "installer/ubuntu/debian" ]; then
-            cp -r installer/ubuntu/debian .
-          else
-            echo "Error: debian directory not found"
-            exit 1
-          fi
-
-          # Update changelog
-          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
-
-          # Build source package (unsigned)
-          debuild -S -sa -us -uc
-
-          # Move to /tmp where files are
-          cd ..
-
-          # Create a temporary passphrase file for GPG
-          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
-
-          # Sign with passphrase from file
-          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
-            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
-          # Clean up passphrase file
-          rm -f /tmp/gpg-passphrase-${RELEASE}
-
-          # Upload to Launchpad PPA
-          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-
-          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
-
-      - name: Build and upload for Plucky (25.04)
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          DEBFULLNAME: "Bryan Everly"
-          DEBEMAIL: "bryan@theeverlys.com"
-        run: |
-          # Get GPG key ID
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-
-          RELEASE="plucky"
-
-          echo "=========================================="
-          echo "Building source package for Ubuntu $RELEASE (25.04)"
-          echo "Version: $VERSION"
-          echo "=========================================="
-
-          # Create working directory
-          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
-          rm -rf "$WORK_DIR"
-          mkdir -p "$WORK_DIR"
-
-          # Copy source to working directory
-          cp -r . "$WORK_DIR/"
-          cd "$WORK_DIR"
-
-          # Copy debian directory
-          if [ -d "installer/ubuntu/debian" ]; then
-            cp -r installer/ubuntu/debian .
-          else
-            echo "Error: debian directory not found"
-            exit 1
-          fi
-
-          # Update changelog
-          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
-
-          # Build source package (unsigned)
-          debuild -S -sa -us -uc
-
-          # Move to /tmp where files are
-          cd ..
-
-          # Create a temporary passphrase file for GPG
-          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
-
-          # Sign with passphrase from file
-          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
-            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
-          # Clean up passphrase file
-          rm -f /tmp/gpg-passphrase-${RELEASE}
-
-          # Upload to Launchpad PPA
-          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-
-          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
-
-      - name: Build and upload for Oracular (24.10)
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          DEBFULLNAME: "Bryan Everly"
-          DEBEMAIL: "bryan@theeverlys.com"
-        run: |
-          # Get GPG key ID
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-
-          RELEASE="oracular"
-
-          echo "=========================================="
-          echo "Building source package for Ubuntu $RELEASE (24.10)"
-          echo "Version: $VERSION"
-          echo "=========================================="
-
-          # Create working directory
-          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
-          rm -rf "$WORK_DIR"
-          mkdir -p "$WORK_DIR"
-
-          # Copy source to working directory
-          cp -r . "$WORK_DIR/"
-          cd "$WORK_DIR"
-
-          # Copy debian directory
-          if [ -d "installer/ubuntu/debian" ]; then
-            cp -r installer/ubuntu/debian .
-          else
-            echo "Error: debian directory not found"
-            exit 1
-          fi
-
-          # Update changelog
-          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
-
-          # Build source package (unsigned)
-          debuild -S -sa -us -uc
-
-          # Move to /tmp where files are
-          cd ..
-
-          # Create a temporary passphrase file for GPG
-          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
-
-          # Sign with passphrase from file
-          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
-            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
-          # Clean up passphrase file
-          rm -f /tmp/gpg-passphrase-${RELEASE}
-
-          # Upload to Launchpad PPA
-          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-
-          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
-
-      - name: Build and upload for Noble (24.04)
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          DEBFULLNAME: "Bryan Everly"
-          DEBEMAIL: "bryan@theeverlys.com"
-        run: |
-          # Get GPG key ID
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-
-          RELEASE="noble"
-
-          echo "=========================================="
-          echo "Building source package for Ubuntu $RELEASE (24.04)"
-          echo "Version: $VERSION"
-          echo "=========================================="
-
-          # Create working directory
-          WORK_DIR="/tmp/sysmanage-agent-$RELEASE"
-          rm -rf "$WORK_DIR"
-          mkdir -p "$WORK_DIR"
-
-          # Copy source to working directory
-          cp -r . "$WORK_DIR/"
-          cd "$WORK_DIR"
-
-          # Copy debian directory
-          if [ -d "installer/ubuntu/debian" ]; then
-            cp -r installer/ubuntu/debian .
-          else
-            echo "Error: debian directory not found"
-            exit 1
-          fi
-
-          # Update changelog
-          dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
-
-          # Build source package (unsigned)
-          debuild -S -sa -us -uc
-
-          # Move to /tmp where files are
-          cd ..
-
-          # Create a temporary passphrase file for GPG
-          echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
-
-          # Sign with passphrase from file
-          debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
-            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
-
-          # Clean up passphrase file
-          rm -f /tmp/gpg-passphrase-${RELEASE}
-
-          # Upload to Launchpad PPA
-          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-
-          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
-
-      - name: Build and upload for Jammy (22.04)
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          DEBFULLNAME: "Bryan Everly"
-          DEBEMAIL: "bryan@theeverlys.com"
-        run: |
-          # Get GPG key ID
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-
-          RELEASE="jammy"
-
-          echo "=========================================="
-          echo "Building source package for Ubuntu $RELEASE (22.04)"
+          echo "Building source package for Ubuntu $RELEASE (${{ matrix.release_name }})"
           echo "Version: $VERSION"
           echo "=========================================="
 

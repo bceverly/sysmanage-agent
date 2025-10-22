@@ -13,12 +13,12 @@ Source0:        %{name}-%{version}.tar.gz
 %global _enable_debug_package 0
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
-BuildRequires:  python3-devel >= 3.10
+BuildRequires:  python3-devel >= 3.9
 BuildRequires:  python3-pip
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
 
-Requires:       python3 >= 3.10
+Requires:       python3 >= 3.9
 Requires:       python3-pip
 Requires:       systemd
 Requires:       sudo
