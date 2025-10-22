@@ -202,6 +202,7 @@ fi
 %dir /var/lib/sysmanage-agent
 %dir /var/log/sysmanage-agent
 /usr/lib/systemd/system/sysmanage-agent.service
+%dir /etc/sudoers.d
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
 
 %changelog
