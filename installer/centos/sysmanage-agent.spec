@@ -13,6 +13,11 @@ Source0:        %{name}-%{version}.tar.gz
 %global _enable_debug_package 0
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
+# Disable automatic Python dependency generation
+# We manually specify python3 >= 3.9 in Requires
+%global __requires_exclude ^python\\(abi\\)
+%global __provides_exclude_from ^%{_libdir}/sysmanage-agent/venv/.*$
+
 BuildRequires:  python3-devel >= 3.9
 BuildRequires:  python3-pip
 BuildRequires:  python3-setuptools

@@ -42,6 +42,7 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
           ARTIFACT: ${{ matrix.artifact }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Downloading artifacts for version $VERSION"
 
@@ -49,8 +50,6 @@ jobs:
           gh release download "v$VERSION" --pattern "*.rpm" --dir artifacts/ || echo "Some RPM files may not exist"
 
           ls -la artifacts/
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install OBS tools
         run: |
