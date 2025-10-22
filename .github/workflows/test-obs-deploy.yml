@@ -103,6 +103,7 @@ jobs:
           VERSION: ${{ github.event.inputs.version }}
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
           TARGET: ${{ matrix.target }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
 
@@ -143,7 +144,7 @@ jobs:
 
           # Copy spec file
           echo "Copying spec file from installer/opensuse/"
-          cp ../../../installer/opensuse/sysmanage-agent.spec .
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent.spec .
 
           # Update version in spec file
           echo "Updating version to $VERSION in spec file"
@@ -151,23 +152,22 @@ jobs:
 
           # Create source tarball (OBS needs the source)
           echo "Creating source tarball..."
-          cd ../../..
           TAR_NAME="sysmanage-agent-$VERSION"
           mkdir -p /tmp/$TAR_NAME
 
-          # Copy source files
-          cp -r src /tmp/$TAR_NAME/
-          cp main.py /tmp/$TAR_NAME/
-          cp alembic.ini /tmp/$TAR_NAME/
-          cp requirements-prod.txt /tmp/$TAR_NAME/
-          cp README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
-          cp LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
+          # Copy source files from workspace
+          cp -r $WORKSPACE/src /tmp/$TAR_NAME/
+          cp $WORKSPACE/main.py /tmp/$TAR_NAME/
+          cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
+          cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
+          cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
 
           # Copy installer files
           mkdir -p /tmp/$TAR_NAME/installer/opensuse
-          cp installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
-          cp installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
-          cp installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
 
           # Create tarball
           cd /tmp
