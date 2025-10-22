@@ -66,13 +66,21 @@ jobs:
           DEBFULLNAME: "Bryan Everly"
           DEBEMAIL: "bryan@theeverlys.com"
         run: |
+          # Debug: Show all GPG keys
+          echo "Listing all GPG secret keys:"
+          gpg --list-secret-keys --keyid-format LONG
+
+          echo ""
+          echo "Raw grep output:"
+          gpg --list-secret-keys --keyid-format LONG | grep sec || echo "No lines with 'sec' found"
+
           # Get GPG key ID
           GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
-          echo "Detected GPG_KEY_ID: $GPG_KEY_ID"
+          echo ""
+          echo "Detected GPG_KEY_ID: '$GPG_KEY_ID'"
 
           if [ -z "$GPG_KEY_ID" ]; then
             echo "ERROR: Could not detect GPG key!"
-            gpg --list-secret-keys --keyid-format LONG
             exit 1
           fi
 
