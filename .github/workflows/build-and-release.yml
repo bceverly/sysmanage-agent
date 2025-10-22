@@ -1309,9 +1309,12 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
 
+          # Install repository tools
+          echo "Installing repository metadata tools..."
+          sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
+
           # Regenerate apt repository metadata
           echo "Regenerating apt repository metadata..."
-          sudo apt-get update && sudo apt-get install -y dpkg-dev
           cd repo/deb
 
           # Generate Packages files
@@ -1347,7 +1350,6 @@ jobs:
 
           # Regenerate RPM repository metadata
           echo "Regenerating RPM repository metadata..."
-          sudo apt-get install -y createrepo-c || true
 
           # Regenerate metadata for each RPM repository
           for rpm_repo in repo/rpm/el9/x86_64 repo/rpm/opensuse-tumbleweed/x86_64 repo/rpm/opensuse-leap/15/x86_64 repo/rpm/sles/15/x86_64; do
