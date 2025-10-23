@@ -32,22 +32,24 @@ jobs:
 
       - name: Configure Copr credentials
         env:
+          COPR_LOGIN: ${{ secrets.COPR_LOGIN }}
           COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
           COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
         run: |
-          if [ -z "$COPR_API_TOKEN" ] || [ -z "$COPR_USERNAME" ]; then
+          if [ -z "$COPR_LOGIN" ] || [ -z "$COPR_API_TOKEN" ] || [ -z "$COPR_USERNAME" ]; then
             echo "ERROR: Copr credentials not set!"
-            echo "Please set COPR_API_TOKEN and COPR_USERNAME secrets"
+            echo "Please set COPR_LOGIN, COPR_API_TOKEN, and COPR_USERNAME secrets"
             exit 1
           fi
 
           mkdir -p ~/.config
           cat > ~/.config/copr << EOF
-          [copr-cli]
-          username = $COPR_USERNAME
-          token = $COPR_API_TOKEN
-          copr_url = https://copr.fedorainfracloud.org
-          EOF
+[copr-cli]
+login = $COPR_LOGIN
+username = $COPR_USERNAME
+token = $COPR_API_TOKEN
+copr_url = https://copr.fedorainfracloud.org
+EOF
           chmod 600 ~/.config/copr
 
           echo "Copr credentials configured for user: $COPR_USERNAME"
