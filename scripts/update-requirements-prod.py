@@ -21,7 +21,7 @@ def parse_requirements(requirements_file: Path) -> tuple[list[str], list[str]]:
     dev_deps = []
     in_dev_section = False
 
-    with open(requirements_file, 'r') as f:
+    with open(requirements_file, "r") as f:
         for line in f:
             line = line.rstrip()
 
@@ -30,24 +30,24 @@ def parse_requirements(requirements_file: Path) -> tuple[list[str], list[str]]:
                 continue
 
             # Check if we've hit the development dependencies section
-            if 'Development dependencies' in line or 'development' in line.lower():
+            if "Development dependencies" in line or "development" in line.lower():
                 in_dev_section = True
                 continue
 
             # Skip comments that aren't section markers
-            if line.startswith('#') and not in_dev_section:
+            if line.startswith("#") and not in_dev_section:
                 # Keep section comments for production
                 production_deps.append(line)
                 continue
 
             # Skip pure comment lines in dev section
-            if line.startswith('#') and in_dev_section:
+            if line.startswith("#") and in_dev_section:
                 continue
 
             # Add dependencies to appropriate list
-            if not in_dev_section and not line.startswith('#'):
+            if not in_dev_section and not line.startswith("#"):
                 production_deps.append(line)
-            elif in_dev_section and not line.startswith('#'):
+            elif in_dev_section and not line.startswith("#"):
                 dev_deps.append(line)
 
     return production_deps, dev_deps
@@ -62,28 +62,28 @@ def generate_requirements_prod(production_deps: list[str], output_file: Path):
         "# DO NOT EDIT MANUALLY - run scripts/update-requirements-prod.py instead",
         "#",
         "# For development dependencies, see requirements.txt",
-        ""
+        "",
     ]
 
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         # Write header
         for line in header:
-            f.write(line + '\n')
+            f.write(line + "\n")
 
         # Write production dependencies
         current_section = None
         for line in production_deps:
             # Track sections to add blank lines between them
-            if line.startswith('#'):
+            if line.startswith("#"):
                 if current_section is not None:
-                    f.write('\n')
+                    f.write("\n")
                 current_section = line
 
-            f.write(line + '\n')
+            f.write(line + "\n")
 
         # Ensure file ends with newline
-        if not production_deps[-1].endswith('\n'):
-            f.write('\n')
+        if not production_deps[-1].endswith("\n"):
+            f.write("\n")
 
 
 def main():
@@ -91,8 +91,8 @@ def main():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
 
-    requirements_file = project_root / 'requirements.txt'
-    requirements_prod_file = project_root / 'requirements-prod.txt'
+    requirements_file = project_root / "requirements.txt"
+    requirements_prod_file = project_root / "requirements-prod.txt"
 
     # Check if requirements.txt exists
     if not requirements_file.exists():
@@ -108,7 +108,7 @@ def main():
     # Show what will be in production
     print("\nProduction dependencies:")
     for dep in production_deps:
-        if not dep.startswith('#'):
+        if not dep.startswith("#"):
             print(f"  - {dep}")
 
     print(f"\nGenerating {requirements_prod_file}...")
@@ -122,5 +122,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())
