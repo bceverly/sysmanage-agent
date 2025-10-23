@@ -5,8 +5,27 @@
 # These scripts are meant to use the venv Python, not system Python
 addFilter("wrong-script-interpreter .*/opt/sysmanage-agent/.venv/bin/.* /opt/sysmanage-agent/.venv/bin/python.*")
 
-# /opt is explicitly for third-party packages
+# /opt is explicitly for third-party packages (both error and warning versions)
 addFilter("suse-filelist-forbidden-opt")
+addFilter("filelist-forbidden-opt")
+
+# Hidden files in virtualenv are normal (.venv directory, .hash files, etc.)
+addFilter("hidden-file-or-dir /opt/sysmanage-agent/.venv")
+
+# Virtualenv python symlink points to system Python (by design)
+addFilter("dangling-symlink /opt/sysmanage-agent/.venv/bin/python.* /usr/bin/python.*")
 
 # Files in virtualenv may have duplicate content (standard for Python packages)
 addFilter("files-duplicate .*/opt/sysmanage-agent/.venv/.*")
+
+# Cryptography library uses gethostbyname internally (upstream issue, not ours)
+addFilter("binary-or-shlib-calls-gethostbyname .*/cryptography/.*")
+
+# Python bytecode files in virtualenv wheels have epoch timestamps (cosmetic issue)
+addFilter("python-bytecode-inconsistent-mtime /opt/sysmanage-agent/.venv/")
+
+# Zero-length marker files are intentional in Python packages (py.typed, REQUESTED, etc.)
+addFilter("zero-length /opt/sysmanage-agent/.venv/")
+
+# We use systemd, not SysV init, so rclink is not needed
+addFilter("suse-missing-rclink")
