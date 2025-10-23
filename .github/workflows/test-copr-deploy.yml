@@ -77,6 +77,10 @@ jobs:
         run: |
           echo "Preparing source files for version $VERSION"
 
+          # Generate requirements-prod.txt from requirements.txt
+          echo "Generating requirements-prod.txt..."
+          python3 $WORKSPACE/scripts/update-requirements-prod.py
+
           # Create source tarball
           echo "Creating source tarball..."
           TAR_NAME="sysmanage-agent-$VERSION"
@@ -86,6 +90,7 @@ jobs:
           cp -r $WORKSPACE/src /tmp/$TAR_NAME/
           cp $WORKSPACE/main.py /tmp/$TAR_NAME/
           cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements.txt /tmp/$TAR_NAME/
           cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
           cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
           cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE

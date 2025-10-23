@@ -193,3 +193,6 @@ installer/windows/nssm.exe
 *.rpm
 *.tar.gz
 *.swp
+
+# Auto-generated requirements file
+requirements-prod.txt

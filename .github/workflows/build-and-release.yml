@@ -1709,6 +1709,10 @@ jobs:
           DEBEMAIL: "bryan@theeverlys.com"
           RELEASE: ${{ matrix.release }}
         run: |
+          # Generate requirements-prod.txt from requirements.txt
+          echo "Generating requirements-prod.txt..."
+          python3 scripts/update-requirements-prod.py
+
           # Get GPG key ID
           GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
 
@@ -1834,6 +1838,10 @@ jobs:
           echo "Updating version to $VERSION in spec file"
           sed -i "s/^Version:.*/Version:        $VERSION/" sysmanage-agent.spec
 
+          # Generate requirements-prod.txt from requirements.txt
+          echo "Generating requirements-prod.txt..."
+          python3 $WORKSPACE/scripts/update-requirements-prod.py
+
           # Create source tarball (OBS needs the source)
           echo "Creating source tarball..."
           TAR_NAME="sysmanage-agent-$VERSION"
@@ -1843,6 +1851,7 @@ jobs:
           cp -r $WORKSPACE/src /tmp/$TAR_NAME/
           cp $WORKSPACE/main.py /tmp/$TAR_NAME/
           cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements.txt /tmp/$TAR_NAME/
           cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
           cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
           cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE

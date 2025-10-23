@@ -438,6 +438,8 @@ endif
 
 # Build installer package (auto-detects platform)
 installer:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
 ifeq ($(OS),Windows_NT)
 	@echo "Windows detected - building MSI installer"
 	@$(MAKE) installer-msi
@@ -962,7 +964,7 @@ installer-deb:
 	echo ""; \
 	echo "Updating version in changelog..."; \
 	DATE=$$(date -R); \
-	sed -i "s/0\.1\.0-1/$$VERSION-1/g" "$$BUILD_DIR/debian/changelog"; \
+	sed -i "s/^sysmanage-agent (0\.1\.0)/sysmanage-agent ($$VERSION-1)/" "$$BUILD_DIR/debian/changelog"; \
 	sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$$DATE/g" "$$BUILD_DIR/debian/changelog"; \
 	echo "✓ Changelog updated to version $$VERSION"; \
 	echo ""; \
