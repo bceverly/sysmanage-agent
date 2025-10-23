@@ -127,19 +127,16 @@ jobs:
 
           mkdir -p /tmp/vendor
 
-          # Download wheels for Python 3.9 (EPEL 8, Amazon Linux 2023)
-          # Note: Use 3.9.19 to avoid cryptography's exclusion of 3.9.0 and 3.9.1
-          echo "Downloading wheels for Python 3.9 (EPEL 8, Amazon Linux 2023)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.19 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          # Download async-timeout for Python <3.11 (conditional dependency of aiohttp)
-          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.19 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Download wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)
+          # Note: Use 3.9.21 to avoid cryptography's exclusion of 3.9.0 and 3.9.1
+          echo "Downloading wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Download conditional dependencies for Python <3.11
+          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
           echo "Downloaded $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels for Python 3.9"
 
-          # Download wheels for Python 3.11 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)
-          echo ""
-          echo "Downloading wheels for Python 3.11 (EPEL 9, CentOS Stream 9, Amazon Linux)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.11.10 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          echo "Total wheels after Python 3.11: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
+          # Note: Skipping Python 3.11 - no distributions currently use it
 
           # Download wheels for Python 3.12 (EPEL 10, CentOS Stream 10)
           echo ""
@@ -243,10 +240,11 @@ jobs:
           echo "  - Fedora 41 (Python 3.13)"
           echo "  - Fedora 42 (Python 3.13)"
           echo "  - Fedora 43 (Python 3.14)"
-          echo "  - EPEL 8 (RHEL 8, Rocky 8, AlmaLinux 8 - Python 3.9)"
-          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9 - Python 3.11)"
+          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9 - Python 3.9)"
           echo "  - EPEL 10 (RHEL 10, CentOS Stream 10 - Python 3.12)"
           echo "  - Amazon Linux 2023 (Python 3.9)"
+          echo ""
+          echo "Note: EPEL 8 (Python 3.6) is not supported - dependencies require Python >=3.9"
           echo ""
           echo "Installation instructions:"
           echo "  sudo dnf copr enable $COPR_USERNAME/sysmanage-agent"
