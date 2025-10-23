@@ -140,8 +140,12 @@ install -d %{buildroot}/etc/sudoers.d
 install -m 440 installer/opensuse/sysmanage-agent.sudoers %{buildroot}/etc/sudoers.d/sysmanage-agent
 
 %pre
-# Create sysmanage-agent user if it doesn't exist (openSUSE uses groupadd/useradd)
+# Create sysmanage-agent user if it doesn't exist
+%if 0%{?suse_version}
 %service_add_pre sysmanage-agent.service
+%else
+%systemd_pre sysmanage-agent.service
+%endif
 if ! getent group sysmanage-agent >/dev/null; then
     groupadd --system sysmanage-agent
 fi
@@ -192,19 +196,12 @@ if [ ! -f /etc/sysmanage-agent.yaml ]; then
     echo "Please edit /etc/sysmanage-agent.yaml to configure the agent"
 fi
 
-# Enable and start the service using openSUSE macros
+# Enable and start the service
+%if 0%{?suse_version}
 %service_add_post sysmanage-agent.service
-
-# For third-party packages, explicitly enable the service
-if [ -x /usr/bin/systemctl ]; then
-    systemctl daemon-reload
-    systemctl enable sysmanage-agent.service
-
-    # Start on fresh install only
-    if [ $1 -eq 1 ]; then
-        systemctl start sysmanage-agent.service
-    fi
-fi
+%else
+%systemd_post sysmanage-agent.service
+%endif
 
 echo ""
 echo "=========================================="
@@ -220,10 +217,18 @@ echo "Log files are located in: /var/log/sysmanage-agent/"
 echo ""
 
 %preun
+%if 0%{?suse_version}
 %service_del_preun sysmanage-agent.service
+%else
+%systemd_preun sysmanage-agent.service
+%endif
 
 %postun
+%if 0%{?suse_version}
 %service_del_postun sysmanage-agent.service
+%else
+%systemd_postun_with_restart sysmanage-agent.service
+%endif
 
 # Clean up on purge (erase)
 if [ $1 -eq 0 ]; then
@@ -253,7 +258,6 @@ fi
 %dir /var/lib/sysmanage-agent
 %dir /var/log/sysmanage-agent
 /usr/lib/systemd/system/sysmanage-agent.service
-%dir /etc/sudoers.d
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
 
 %changelog
