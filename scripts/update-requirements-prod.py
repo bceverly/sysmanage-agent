@@ -114,7 +114,7 @@ def main():
     print(f"\nGenerating {requirements_prod_file}...")
     generate_requirements_prod(production_deps, requirements_prod_file)
 
-    print(f"✓ Successfully generated {requirements_prod_file}")
+    print(f"[OK] Successfully generated {requirements_prod_file}")
     print("\nDevelopment dependencies excluded:")
     for dep in dev_deps:
         print(f"  - {dep}")
