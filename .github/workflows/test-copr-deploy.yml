@@ -134,9 +134,9 @@ jobs:
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --no-binary :all: 2>/dev/null || true
 
           # Also download build dependencies
-          # setuptools and wheel are universal wheels that work across Python versions
-          echo "Downloading build dependencies (setuptools, wheel)..."
-          pip3 download setuptools wheel -d /tmp/vendor
+          # setuptools, wheel, and Cython are needed for building from source
+          echo "Downloading build dependencies (setuptools, wheel, Cython)..."
+          pip3 download setuptools wheel Cython -d /tmp/vendor
 
           # Show what we downloaded
           echo ""
