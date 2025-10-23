@@ -22,6 +22,7 @@ BuildRequires:  python311-devel
 BuildRequires:  python311-pip
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
+BuildRequires:  fdupes
 
 Requires:       python311
 Requires:       python311-pip
@@ -80,6 +81,12 @@ python3.11 -m venv %{buildroot}/opt/sysmanage-agent/.venv
 sed -i 's|%{buildroot}||g' %{buildroot}/opt/sysmanage-agent/.venv/pyvenv.cfg
 # Also fix any hardcoded paths in activation scripts
 find %{buildroot}/opt/sysmanage-agent/.venv/bin -type f -exec sed -i 's|%{buildroot}||g' {} \;
+
+# Remove development files (headers, source files) to reduce package size and avoid rpmlint errors
+find %{buildroot}/opt/sysmanage-agent/.venv -type f \( -name "*.h" -o -name "*.c" -o -name "*.cpp" -o -name "*.hpp" \) -delete
+
+# Deduplicate files to save space
+%fdupes %{buildroot}/opt/sysmanage-agent/.venv
 
 # Install example config
 install -m 644 installer/opensuse/sysmanage-agent.yaml.example %{buildroot}/etc/sysmanage-agent/
