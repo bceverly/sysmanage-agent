@@ -1758,47 +1758,25 @@ jobs:
 
           echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
 
-  # Deploy to openSUSE Build Service - Matrix strategy for parallel uploads
+  # Deploy to openSUSE Build Service
   deploy-obs:
-    name: Deploy to OBS (${{ matrix.target_name }})
+    name: Deploy to OBS
     runs-on: ubuntu-latest
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/')
-    strategy:
-      matrix:
-        include:
-          - target: openSUSE_Tumbleweed
-            target_name: "openSUSE Tumbleweed"
-            artifact: sysmanage-agent-rpm-opensuse-tumbleweed
-          - target: openSUSE_Leap_15.6
-            target_name: "openSUSE Leap 15.6"
-            artifact: sysmanage-agent-rpm-opensuse-leap
-          - target: openSUSE_Leap_15.5
-            target_name: "openSUSE Leap 15.5"
-            artifact: sysmanage-agent-rpm-opensuse-leap
-          - target: SLE_15_SP6
-            target_name: "SLE 15 SP6"
-            artifact: sysmanage-agent-rpm-sles
-          - target: SLE_15_SP5
-            target_name: "SLE 15 SP5"
-            artifact: sysmanage-agent-rpm-sles
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
 
       - name: Determine version
         id: version
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Deploying version $VERSION to OBS for ${{ matrix.target_name }}"
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: artifacts/
+          echo "Deploying version $VERSION to OBS"
 
       - name: Install OBS tools
         run: |
@@ -1810,6 +1788,12 @@ jobs:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
           OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
         run: |
+          if [ -z "$OBS_USERNAME" ] || [ -z "$OBS_PASSWORD" ]; then
+            echo "ERROR: OBS credentials not set!"
+            echo "Please set OBS_USERNAME and OBS_PASSWORD secrets"
+            exit 1
+          fi
+
           mkdir -p ~/.config/osc
           cat > ~/.config/osc/oscrc << EOF
           [general]
@@ -1821,76 +1805,111 @@ jobs:
           EOF
           chmod 600 ~/.config/osc/oscrc
 
+          echo "OBS credentials configured for user: $OBS_USERNAME"
+
       - name: Checkout OBS package
         env:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
         run: |
+          echo "Checking out OBS package home:${OBS_USERNAME}/sysmanage-agent"
           osc checkout home:${OBS_USERNAME}/sysmanage-agent
           cd home:${OBS_USERNAME}/sysmanage-agent
+          echo "Current OBS package contents:"
+          ls -la
 
       - name: Update package files
         env:
           VERSION: ${{ steps.version.outputs.version }}
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
 
-          # Find the RPM file
-          RPM_FILE=$(find ../../artifacts -name "sysmanage-agent-*.rpm" -type f | head -1)
-
-          if [ -z "$RPM_FILE" ]; then
-            echo "ERROR: No RPM file found in artifacts"
-            exit 1
-          fi
-
-          echo "Found RPM: $RPM_FILE"
-
-          # Copy spec file and RPM
-          cp ../../../installer/opensuse/sysmanage-agent.spec .
+          # Copy spec file and rpmlintrc
+          echo "Copying spec file and rpmlintrc from installer/opensuse/"
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent.spec .
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent-rpmlintrc .
 
           # Update version in spec file
+          echo "Updating version to $VERSION in spec file"
           sed -i "s/^Version:.*/Version:        $VERSION/" sysmanage-agent.spec
 
           # Create source tarball (OBS needs the source)
-          cd ../../..
+          echo "Creating source tarball..."
           TAR_NAME="sysmanage-agent-$VERSION"
           mkdir -p /tmp/$TAR_NAME
 
-          # Copy source files
-          cp -r src /tmp/$TAR_NAME/
-          cp main.py /tmp/$TAR_NAME/
-          cp alembic.ini /tmp/$TAR_NAME/
-          cp requirements-prod.txt /tmp/$TAR_NAME/
-          cp README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
-          cp LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
+          # Copy source files from workspace
+          cp -r $WORKSPACE/src /tmp/$TAR_NAME/
+          cp $WORKSPACE/main.py /tmp/$TAR_NAME/
+          cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
+          cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
+          cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
 
           # Copy installer files
           mkdir -p /tmp/$TAR_NAME/installer/opensuse
-          cp installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
-          cp installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
-          cp installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
+          cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
 
           # Create tarball
           cd /tmp
           tar czf sysmanage-agent-$VERSION.tar.gz $TAR_NAME/
+          echo "Created tarball: sysmanage-agent-$VERSION.tar.gz ($(du -h sysmanage-agent-$VERSION.tar.gz | cut -f1))"
 
-          # Copy to OBS directory
+          # Create vendor tarball for offline installation
+          echo "Creating vendor tarball with pip dependencies..."
+          mkdir -p /tmp/vendor
+          # Download all dependencies (including transitive ones) for Python 3.11
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Also download source distributions for pure Python packages that may not have wheels
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --no-binary :all: 2>/dev/null || true
+
+          cd /tmp
+          tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
+          echo "Created vendor tarball: sysmanage-agent-vendor-$VERSION.tar.gz ($(du -h sysmanage-agent-vendor-$VERSION.tar.gz | cut -f1))"
+          echo "Vendor tarball contains $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels"
+
+          # Copy both tarballs to OBS directory
           cp sysmanage-agent-$VERSION.tar.gz $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent/
+          cp sysmanage-agent-vendor-$VERSION.tar.gz $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent/
 
           cd $GITHUB_WORKSPACE/home:${OBS_USERNAME}/sysmanage-agent
 
+          echo "OBS package directory contents:"
+          ls -la
+
+          # Remove old files
+          osc remove *.tar.gz 2>/dev/null || true
+
           # Add new files
-          osc add sysmanage-agent-$VERSION.tar.gz 2>/dev/null || true
-          osc add sysmanage-agent.spec 2>/dev/null || true
+          osc add sysmanage-agent-$VERSION.tar.gz
+          osc add sysmanage-agent-vendor-$VERSION.tar.gz
+          osc add sysmanage-agent.spec
+          osc add sysmanage-agent-rpmlintrc
+
+          echo "Files staged for OBS:"
+          osc status
 
       - name: Commit and push to OBS
         env:
           VERSION: ${{ steps.version.outputs.version }}
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
-          TARGET: ${{ matrix.target_name }}
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
 
-          osc commit -m "Update to version $VERSION for $TARGET"
+          echo "Committing to OBS..."
+          osc commit -m "Release version $VERSION"
 
-          echo "SUCCESS! Uploaded version $VERSION to OBS for $TARGET"
+          echo "SUCCESS! Uploaded version $VERSION to OBS"
+          echo ""
+          echo "View build status at:"
+          echo "https://build.opensuse.org/package/show/home:${OBS_USERNAME}/sysmanage-agent"
+          echo ""
+          echo "OBS will now build for all configured targets:"
+          echo "  - openSUSE Tumbleweed"
+          echo "  - openSUSE Leap 15.6"
+          echo "  - openSUSE Leap 15.5"
+          echo "  - SLE 15 SP6"
+          echo "  - SLE 15 SP5"
