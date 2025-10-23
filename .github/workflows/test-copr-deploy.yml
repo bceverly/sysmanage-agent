@@ -43,13 +43,19 @@ jobs:
           fi
 
           mkdir -p ~/.config
-          cat > ~/.config/copr << EOF
-[copr-cli]
-login = $COPR_LOGIN
-username = $COPR_USERNAME
-token = $COPR_API_TOKEN
-copr_url = https://copr.fedorainfracloud.org
-EOF
+          cat > ~/.config/copr << 'EOF'
+          [copr-cli]
+          login = $COPR_LOGIN
+          username = $COPR_USERNAME
+          token = $COPR_API_TOKEN
+          copr_url = https://copr.fedorainfracloud.org
+          EOF
+
+          # Substitute variables in the config file
+          sed -i "s/\$COPR_LOGIN/$COPR_LOGIN/" ~/.config/copr
+          sed -i "s/\$COPR_USERNAME/$COPR_USERNAME/" ~/.config/copr
+          sed -i "s/\$COPR_API_TOKEN/$COPR_API_TOKEN/" ~/.config/copr
+
           chmod 600 ~/.config/copr
 
           echo "Copr credentials configured for user: $COPR_USERNAME"
