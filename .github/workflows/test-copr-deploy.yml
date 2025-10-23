@@ -82,11 +82,11 @@ jobs:
           cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
           cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
 
-          # Copy installer files for RHEL/Fedora
-          mkdir -p /tmp/$TAR_NAME/installer/rhel
-          cp $WORKSPACE/installer/rhel/*.service /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
-          cp $WORKSPACE/installer/rhel/*.sudoers /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
-          cp $WORKSPACE/installer/rhel/*.example /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
+          # Copy installer files (using opensuse files which work for RHEL/Fedora too)
+          mkdir -p /tmp/$TAR_NAME/installer/opensuse
+          cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+          cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+          cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
 
           # Create tarball
           cd /tmp
@@ -119,7 +119,7 @@ jobs:
           echo "Creating SRPM for version $VERSION"
 
           # Copy and update spec file
-          cp $WORKSPACE/installer/rhel/sysmanage-agent.spec ~/rpmbuild/SOURCES/
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent.spec ~/rpmbuild/SOURCES/
           cd ~/rpmbuild/SOURCES
 
           # Update version in spec file
