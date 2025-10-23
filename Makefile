@@ -165,6 +165,22 @@ else
 		else \
 			echo "✓ All packaging build tools already installed"; \
 		fi; \
+		echo "[INFO] Checking for Snap build tools..."; \
+		MISSING_SNAP_PKGS=""; \
+		command -v snapcraft >/dev/null 2>&1 || MISSING_SNAP_PKGS="$$MISSING_SNAP_PKGS snapcraft"; \
+		command -v snap >/dev/null 2>&1 || MISSING_SNAP_PKGS="$$MISSING_SNAP_PKGS snapd"; \
+		if [ -n "$$MISSING_SNAP_PKGS" ]; then \
+			echo "Missing snap packages:$$MISSING_SNAP_PKGS"; \
+			echo "Installing Snap build tools..."; \
+			echo "Running: sudo apt-get install -y snapd snapcraft"; \
+			sudo apt-get install -y snapd snapcraft || \
+			echo "[WARNING] Could not install Snap tools. Run manually: sudo apt-get install -y snapd snapcraft"; \
+			echo "Ensuring snapd service is enabled and started..."; \
+			sudo systemctl enable --now snapd.socket || true; \
+			sudo systemctl start snapd || true; \
+		else \
+			echo "✓ All Snap build tools already installed"; \
+		fi; \
 	fi
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
 		echo "[INFO] macOS detected - checking for packaging tools..."; \
