@@ -83,9 +83,10 @@ jobs:
         run: |
           cd home:${OBS_USERNAME}/sysmanage-agent
 
-          # Copy spec file
-          echo "Copying spec file from installer/opensuse/"
+          # Copy spec file and rpmlintrc
+          echo "Copying spec file and rpmlintrc from installer/opensuse/"
           cp $WORKSPACE/installer/opensuse/sysmanage-agent.spec .
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent-rpmlintrc .
 
           # Update version in spec file
           echo "Updating version to $VERSION in spec file"
@@ -144,6 +145,7 @@ jobs:
           osc add sysmanage-agent-$VERSION.tar.gz
           osc add sysmanage-agent-vendor-$VERSION.tar.gz
           osc add sysmanage-agent.spec
+          osc add sysmanage-agent-rpmlintrc
 
           echo "Files staged for OBS:"
           osc status

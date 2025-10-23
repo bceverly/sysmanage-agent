@@ -1,0 +1,12 @@
+# rpmlint configuration for sysmanage-agent
+# This is a third-party package installed in /opt with its own virtualenv
+
+# Allow virtualenv scripts to use their own Python interpreter
+# These scripts are meant to use the venv Python, not system Python
+addFilter("wrong-script-interpreter .*/opt/sysmanage-agent/.venv/bin/.* /opt/sysmanage-agent/.venv/bin/python.*")
+
+# /opt is explicitly for third-party packages
+addFilter("suse-filelist-forbidden-opt")
+
+# Files in virtualenv may have duplicate content (standard for Python packages)
+addFilter("files-duplicate .*/opt/sysmanage-agent/.venv/.*")
