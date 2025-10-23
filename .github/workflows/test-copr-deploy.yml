@@ -115,28 +115,15 @@ jobs:
 
           # Download wheels for Python 3.9 (EPEL 8)
           echo "Downloading wheels for Python 3.9..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 39 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 39 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.9 wheels unavailable"
 
-          # Download wheels for Python 3.11 (EPEL 9, EPEL 10, some Fedora)
+          # Download wheels for Python 3.11 (EPEL 9, EPEL 10, CentOS Stream, Amazon Linux)
           echo "Downloading wheels for Python 3.11..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.11 wheels unavailable"
 
           # Download wheels for Python 3.13 (Fedora 41, 42)
           echo "Downloading wheels for Python 3.13..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 313 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
-
-          # Download wheels for Python 3.14 (Fedora 43+)
-          echo "Downloading wheels for Python 3.14..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 314 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
-
-          # Download source distributions as fallback for pure Python packages
-          echo "Downloading source distributions as fallback..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --no-binary :all: 2>/dev/null || true
-
-          # Also download build dependencies
-          # setuptools, wheel, and Cython are needed for building from source
-          echo "Downloading build dependencies (setuptools, wheel, Cython)..."
-          pip3 download setuptools wheel Cython -d /tmp/vendor
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 313 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.13 wheels unavailable"
 
           # Show what we downloaded
           echo ""
@@ -197,12 +184,12 @@ jobs:
           echo "https://copr.fedorainfracloud.org/coprs/$COPR_USERNAME/sysmanage-agent/builds/"
           echo ""
           echo "Copr will now build for all configured chroots:"
-          echo "  - Fedora 41"
-          echo "  - Fedora 42"
-          echo "  - Fedora 43"
-          echo "  - EPEL 8 (RHEL 8, Rocky 8, AlmaLinux 8)"
-          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9)"
-          echo "  - EPEL 10 (RHEL 10, CentOS Stream 10)"
+          echo "  - Fedora 41 (Python 3.13)"
+          echo "  - Fedora 42 (Python 3.13)"
+          echo "  - EPEL 8 (RHEL 8, Rocky 8, AlmaLinux 8 - Python 3.9)"
+          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9 - Python 3.11)"
+          echo "  - EPEL 10 (RHEL 10, CentOS Stream 10 - Python 3.11)"
+          echo "  - Amazon Linux 2023 (Python 3.11)"
           echo ""
           echo "Installation instructions:"
           echo "  sudo dnf copr enable $COPR_USERNAME/sysmanage-agent"
