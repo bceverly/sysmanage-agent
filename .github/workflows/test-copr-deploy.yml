@@ -1,0 +1,161 @@
+name: Test Copr Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 0.9.8.8)'
+        required: true
+        default: '0.9.8.8'
+
+jobs:
+  test-copr-deploy:
+    name: Test Copr Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Install Copr CLI and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y copr-cli rpm rpmbuild python3-pip
+
+      - name: Configure Copr credentials
+        env:
+          COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          if [ -z "$COPR_API_TOKEN" ] || [ -z "$COPR_USERNAME" ]; then
+            echo "ERROR: Copr credentials not set!"
+            echo "Please set COPR_API_TOKEN and COPR_USERNAME secrets"
+            exit 1
+          fi
+
+          mkdir -p ~/.config
+          cat > ~/.config/copr << EOF
+          [copr-cli]
+          username = $COPR_USERNAME
+          token = $COPR_API_TOKEN
+          copr_url = https://copr.fedorainfracloud.org
+          EOF
+          chmod 600 ~/.config/copr
+
+          echo "Copr credentials configured for user: $COPR_USERNAME"
+
+      - name: Test Copr credentials
+        env:
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          echo "Testing Copr API connection..."
+          copr-cli whoami
+          echo ""
+          echo "Listing user projects..."
+          copr-cli list $COPR_USERNAME || echo "No projects yet or connection issue"
+
+      - name: Prepare source files
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "Preparing source files for version $VERSION"
+
+          # Create source tarball
+          echo "Creating source tarball..."
+          TAR_NAME="sysmanage-agent-$VERSION"
+          mkdir -p /tmp/$TAR_NAME
+
+          # Copy source files
+          cp -r $WORKSPACE/src /tmp/$TAR_NAME/
+          cp $WORKSPACE/main.py /tmp/$TAR_NAME/
+          cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
+          cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
+          cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
+
+          # Copy installer files for RHEL/Fedora
+          mkdir -p /tmp/$TAR_NAME/installer/rhel
+          cp $WORKSPACE/installer/rhel/*.service /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
+          cp $WORKSPACE/installer/rhel/*.sudoers /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
+          cp $WORKSPACE/installer/rhel/*.example /tmp/$TAR_NAME/installer/rhel/ 2>/dev/null || true
+
+          # Create tarball
+          cd /tmp
+          tar czf sysmanage-agent-$VERSION.tar.gz $TAR_NAME/
+          echo "Created tarball: sysmanage-agent-$VERSION.tar.gz ($(du -h sysmanage-agent-$VERSION.tar.gz | cut -f1))"
+
+          # Create vendor tarball for offline installation
+          echo "Creating vendor tarball with pip dependencies..."
+          mkdir -p /tmp/vendor
+          # Download all dependencies for Python 3.11
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Also download source distributions for pure Python packages
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --no-binary :all: 2>/dev/null || true
+
+          cd /tmp
+          tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
+          echo "Created vendor tarball: sysmanage-agent-vendor-$VERSION.tar.gz ($(du -h sysmanage-agent-vendor-$VERSION.tar.gz | cut -f1))"
+          echo "Vendor tarball contains $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels"
+
+          # Copy to rpmbuild directory
+          mkdir -p ~/rpmbuild/SOURCES
+          cp sysmanage-agent-$VERSION.tar.gz ~/rpmbuild/SOURCES/
+          cp sysmanage-agent-vendor-$VERSION.tar.gz ~/rpmbuild/SOURCES/
+
+      - name: Create SRPM
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "Creating SRPM for version $VERSION"
+
+          # Copy and update spec file
+          cp $WORKSPACE/installer/rhel/sysmanage-agent.spec ~/rpmbuild/SOURCES/
+          cd ~/rpmbuild/SOURCES
+
+          # Update version in spec file
+          sed -i "s/^Version:.*/Version:        $VERSION/" sysmanage-agent.spec
+
+          # Build SRPM
+          rpmbuild -bs sysmanage-agent.spec --define "_topdir $HOME/rpmbuild"
+
+          # Find the SRPM
+          SRPM=$(find ~/rpmbuild/SRPMS -name "sysmanage-agent-*.src.rpm" | head -1)
+          echo "Created SRPM: $SRPM"
+          ls -lh $SRPM
+
+          # Save SRPM path for next step
+          echo "SRPM_PATH=$SRPM" >> $GITHUB_ENV
+
+      - name: Upload to Copr
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          echo "Uploading SRPM to Copr..."
+          echo "Project: $COPR_USERNAME/sysmanage-agent"
+          echo "SRPM: $SRPM_PATH"
+
+          # Upload and build
+          copr-cli build $COPR_USERNAME/sysmanage-agent $SRPM_PATH
+
+          echo ""
+          echo "SUCCESS! Uploaded version $VERSION to Copr"
+          echo ""
+          echo "View build status at:"
+          echo "https://copr.fedorainfracloud.org/coprs/$COPR_USERNAME/sysmanage-agent/builds/"
+          echo ""
+          echo "Copr will now build for all configured chroots:"
+          echo "  - Fedora 41"
+          echo "  - Fedora 42"
+          echo "  - Fedora 43"
+          echo "  - EPEL 8 (RHEL 8, Rocky 8, AlmaLinux 8)"
+          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9)"
+          echo "  - EPEL 10 (RHEL 10, CentOS Stream 10)"
+          echo ""
+          echo "Installation instructions:"
+          echo "  sudo dnf copr enable $COPR_USERNAME/sysmanage-agent"
+          echo "  sudo dnf install sysmanage-agent"
