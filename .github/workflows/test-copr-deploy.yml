@@ -111,24 +111,65 @@ jobs:
 
           # Create vendor tarball with wheels for multiple Python versions
           echo "Creating vendor tarball with pip dependencies for multiple Python versions..."
+          echo ""
+          echo "Current pip version:"
+          pip3 --version
+          echo ""
+          echo "Upgrading pip to latest version..."
+          pip3 install --upgrade pip
+          echo ""
+          echo "Updated pip version:"
+          pip3 --version
+          echo ""
+          echo "Contents of requirements-prod.txt:"
+          cat $WORKSPACE/requirements-prod.txt
+          echo ""
+
           mkdir -p /tmp/vendor
 
           # Download wheels for Python 3.9 (EPEL 8)
-          echo "Downloading wheels for Python 3.9..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 39 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.9 wheels unavailable"
+          echo "Downloading wheels for Python 3.9 (EPEL 8)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 39 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Downloaded $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels for Python 3.9"
 
           # Download wheels for Python 3.11 (EPEL 9, EPEL 10, CentOS Stream, Amazon Linux)
-          echo "Downloading wheels for Python 3.11..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.11 wheels unavailable"
+          echo ""
+          echo "Downloading wheels for Python 3.11 (EPEL 9/10, CentOS Stream, Amazon Linux)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Total wheels after Python 3.11: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
 
           # Download wheels for Python 3.13 (Fedora 41, 42)
-          echo "Downloading wheels for Python 3.13..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 313 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: || echo "Warning: Some Python 3.13 wheels unavailable"
+          echo ""
+          echo "Downloading wheels for Python 3.13 (Fedora 41, 42)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 313 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Total wheels after Python 3.13: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
+
+          # Verify all required packages are present
+          echo ""
+          echo "Verifying all required packages in vendor directory..."
+          WHEEL_COUNT=$(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)
+          if [ "$WHEEL_COUNT" -eq 0 ]; then
+            echo "ERROR: No wheels downloaded to vendor directory!"
+            exit 1
+          fi
+          echo "Total wheels in vendor directory: $WHEEL_COUNT"
+
+          # Verify each top-level package from requirements-prod.txt is present
+          for pkg in websockets PyYAML aiohttp cryptography SQLAlchemy alembic; do
+            pkg_lower=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+            if ls /tmp/vendor/${pkg_lower}* 1> /dev/null 2>&1 || ls /tmp/vendor/${pkg}* 1> /dev/null 2>&1; then
+              echo "  ✓ $pkg"
+            else
+              echo "  ✗ $pkg MISSING!"
+              echo "ERROR: Required package $pkg not found in vendor directory"
+              exit 1
+            fi
+          done
 
           # Show what we downloaded
           echo ""
-          echo "Vendor directory contents:"
-          ls -lh /tmp/vendor/ | head -20
+          echo "Vendor directory contents (first 30 files):"
+          ls -lh /tmp/vendor/ | head -30
 
           cd /tmp
           tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
