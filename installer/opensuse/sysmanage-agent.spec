@@ -31,7 +31,10 @@ BuildRequires:  python3-pip
 
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
+
+%if 0%{?suse_version}
 BuildRequires:  fdupes
+%endif
 
 %if 0%{?suse_version}
 Requires:       python311
