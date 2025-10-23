@@ -86,7 +86,25 @@ find %{buildroot}/opt/sysmanage-agent/.venv/bin -type f -exec sed -i 's|%{buildr
 find %{buildroot}/opt/sysmanage-agent/.venv -type f \( -name "*.h" -o -name "*.c" -o -name "*.cpp" -o -name "*.hpp" \) -delete
 
 # Deduplicate files to save space
+# Use %fdupes macro on OBS (openSUSE), use fdupes command elsewhere
+%if 0%{?suse_version}
 %fdupes %{buildroot}/opt/sysmanage-agent/.venv
+%else
+# For non-openSUSE builds, use fdupes if available, otherwise skip
+if command -v fdupes >/dev/null 2>&1; then
+    fdupes -r -1 -N %{buildroot}/opt/sysmanage-agent/.venv | while read line; do
+        first=true
+        for file in $line; do
+            if $first; then
+                first=false
+            else
+                rm -f "$file"
+                ln "$line" "$file"
+            fi
+        done
+    done
+fi
+%endif
 
 # Install example config
 install -m 644 installer/opensuse/sysmanage-agent.yaml.example %{buildroot}/etc/sysmanage-agent/
