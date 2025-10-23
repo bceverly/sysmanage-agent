@@ -487,6 +487,8 @@ endif
 
 # Build macOS .pkg installer package
 installer-pkg:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
 	@echo "=== Building macOS .pkg Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -769,6 +771,8 @@ installer-pkg:
 
 # Build openSUSE/SLES installer package
 installer-rpm-suse:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
 	@echo "=== Building openSUSE/SLES .rpm Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -912,6 +916,8 @@ installer-rpm-suse:
 
 # Build Ubuntu/Debian installer package
 installer-deb:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
 	@echo "=== Building Ubuntu/Debian .deb Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1124,6 +1130,8 @@ install-dev-rpm-suse: setup-venv
 
 # Build CentOS/RHEL/Fedora installer package
 installer-rpm:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
 	@echo "=== Building CentOS/RHEL/Fedora .rpm Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1424,10 +1432,14 @@ installer-msi: installer-msi-all
 
 # Build Windows .msi installer for x64
 installer-msi-x64:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python scripts/update-requirements-prod.py
 	@powershell -ExecutionPolicy Bypass -File installer\windows\build-msi.ps1 -Architecture x64
 
 # Build Windows .msi installer for ARM64
 installer-msi-arm64:
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python scripts/update-requirements-prod.py
 	@powershell -ExecutionPolicy Bypass -File installer\windows\build-msi.ps1 -Architecture arm64
 
 # Build Windows .msi installers for both x64 and ARM64

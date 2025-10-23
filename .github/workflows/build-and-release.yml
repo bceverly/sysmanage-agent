@@ -78,6 +78,11 @@ jobs:
           sed -i "s/0\.1\.0-1/$VERSION-1/g" installer/ubuntu/debian/changelog
           sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$DATE/g" installer/ubuntu/debian/changelog
 
+      - name: Generate requirements-prod.txt
+        run: |
+          echo "Generating requirements-prod.txt from requirements.txt..."
+          python3 scripts/update-requirements-prod.py
+
       - name: Create source tarball
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -181,6 +186,11 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      - name: Generate requirements-prod.txt
+        run: |
+          echo "Generating requirements-prod.txt from requirements.txt..."
+          python3 scripts/update-requirements-prod.py
 
       - name: Set up RPM build tree
         env:
@@ -321,6 +331,11 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      - name: Generate requirements-prod.txt
+        run: |
+          echo "Generating requirements-prod.txt from requirements.txt..."
+          python3 scripts/update-requirements-prod.py
 
       - name: Set up RPM build tree
         env:
@@ -583,6 +598,12 @@ jobs:
 
           Write-Host "Building version: $VERSION"
           "version=$VERSION" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Generate requirements-prod.txt
+        shell: pwsh
+        run: |
+          Write-Host "Generating requirements-prod.txt from requirements.txt..."
+          python scripts/update-requirements-prod.py
 
       - name: Install WiX Toolset
         shell: pwsh
