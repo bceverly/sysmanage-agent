@@ -18,14 +18,29 @@ Source1:        %{name}-vendor-%{version}.tar.gz
 %global __requires_exclude ^python\\(abi\\)
 %global __provides_exclude_from ^%{_libdir}/sysmanage-agent/venv/.*$
 
+# Handle different Python package names across distributions
+# openSUSE uses python311-* packages
+# Fedora, RHEL, CentOS, Amazon Linux use python3-* packages
+%if 0%{?suse_version}
 BuildRequires:  python311-devel
 BuildRequires:  python311-pip
+%else
+BuildRequires:  python3-devel
+BuildRequires:  python3-pip
+%endif
+
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  fdupes
 
+%if 0%{?suse_version}
 Requires:       python311
 Requires:       python311-pip
+%else
+Requires:       python3
+Requires:       python3-pip
+%endif
+
 Requires:       systemd
 Requires:       sudo
 Requires(pre):  shadow
@@ -72,8 +87,12 @@ install -m 644 requirements-prod.txt %{buildroot}/opt/sysmanage-agent/
 cp -r vendor %{buildroot}/opt/sysmanage-agent/
 
 # Create virtualenv and install Python dependencies from vendor directory
-# Use python311 explicitly (not python3 which may be 3.6 on older systems)
+# Use python3.11 for openSUSE, python3 for Fedora/RHEL/Amazon Linux
+%if 0%{?suse_version}
 python3.11 -m venv %{buildroot}/opt/sysmanage-agent/.venv
+%else
+python3 -m venv %{buildroot}/opt/sysmanage-agent/.venv
+%endif
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
 %{buildroot}/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt --no-index --find-links=%{_builddir}/%{name}-%{version}/vendor
 
@@ -145,7 +164,11 @@ chmod 750 /etc/sysmanage-agent
 # Recreate the venv using the system's Python to fix all symlinks and paths
 cd /opt/sysmanage-agent
 rm -rf .venv
+%if 0%{?suse_version}
 python3.11 -m venv .venv
+%else
+python3 -m venv .venv
+%endif
 
 # Check if we have a vendor directory from the RPM (for OBS builds)
 if [ -d vendor ]; then
