@@ -121,13 +121,27 @@ jobs:
           echo "Downloading wheels for Python 3.11..."
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 311 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
 
-          # Download wheels for Python 3.13 (Fedora 41+)
+          # Download wheels for Python 3.13 (Fedora 41, 42)
           echo "Downloading wheels for Python 3.13..."
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 313 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
+
+          # Download wheels for Python 3.14 (Fedora 43+)
+          echo "Downloading wheels for Python 3.14..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 314 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: 2>/dev/null || true
 
           # Download source distributions as fallback for pure Python packages
           echo "Downloading source distributions as fallback..."
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --no-binary :all: 2>/dev/null || true
+
+          # Also download build dependencies
+          # setuptools and wheel are universal wheels that work across Python versions
+          echo "Downloading build dependencies (setuptools, wheel)..."
+          pip3 download setuptools wheel -d /tmp/vendor
+
+          # Show what we downloaded
+          echo ""
+          echo "Vendor directory contents:"
+          ls -lh /tmp/vendor/ | head -20
 
           cd /tmp
           tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
