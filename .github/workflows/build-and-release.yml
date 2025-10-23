@@ -1922,3 +1922,251 @@ jobs:
           echo "  - openSUSE Leap 15.5"
           echo "  - SLE 15 SP6"
           echo "  - SLE 15 SP5"
+
+  # Deploy to Fedora Copr (runs in parallel with OBS)
+  deploy-copr:
+    name: Deploy to Fedora Copr
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version $VERSION to Copr"
+
+      - name: Install Copr CLI and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip rpm
+
+          # Install copr-cli via pip (not available in Ubuntu repos)
+          pip3 install copr-cli
+
+          # Add pip binaries to PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Copr credentials
+        env:
+          COPR_LOGIN: ${{ secrets.COPR_LOGIN }}
+          COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          if [ -z "$COPR_LOGIN" ] || [ -z "$COPR_API_TOKEN" ] || [ -z "$COPR_USERNAME" ]; then
+            echo "ERROR: Copr credentials not set!"
+            echo "Please set COPR_LOGIN, COPR_API_TOKEN, and COPR_USERNAME secrets"
+            exit 1
+          fi
+
+          mkdir -p ~/.config
+          cat > ~/.config/copr << 'EOF'
+          [copr-cli]
+          login = $COPR_LOGIN
+          username = $COPR_USERNAME
+          token = $COPR_API_TOKEN
+          copr_url = https://copr.fedorainfracloud.org
+          EOF
+
+          # Substitute variables in the config file
+          sed -i "s/\$COPR_LOGIN/$COPR_LOGIN/" ~/.config/copr
+          sed -i "s/\$COPR_USERNAME/$COPR_USERNAME/" ~/.config/copr
+          sed -i "s/\$COPR_API_TOKEN/$COPR_API_TOKEN/" ~/.config/copr
+
+          chmod 600 ~/.config/copr
+
+          echo "Copr credentials configured for user: $COPR_USERNAME"
+
+      - name: Test Copr credentials
+        env:
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          echo "Testing Copr API connection..."
+          copr-cli whoami
+          echo ""
+          echo "Listing user projects..."
+          copr-cli list $COPR_USERNAME || echo "No projects yet or connection issue"
+
+      - name: Prepare source files
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "Preparing source files for version $VERSION"
+
+          # Generate requirements-prod.txt from requirements.txt
+          echo "Generating requirements-prod.txt..."
+          python3 $WORKSPACE/scripts/update-requirements-prod.py
+
+          # Create source tarball
+          echo "Creating source tarball..."
+          TAR_NAME="sysmanage-agent-$VERSION"
+          mkdir -p /tmp/$TAR_NAME
+
+          # Copy source files
+          cp -r $WORKSPACE/src /tmp/$TAR_NAME/
+          cp $WORKSPACE/main.py /tmp/$TAR_NAME/
+          cp $WORKSPACE/alembic.ini /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements.txt /tmp/$TAR_NAME/
+          cp $WORKSPACE/requirements-prod.txt /tmp/$TAR_NAME/
+          cp $WORKSPACE/README.md /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/README.md
+          cp $WORKSPACE/LICENSE /tmp/$TAR_NAME/ || touch /tmp/$TAR_NAME/LICENSE
+
+          # Copy installer files (using opensuse files which work for RHEL/Fedora too)
+          mkdir -p /tmp/$TAR_NAME/installer/opensuse
+          cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+          cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+          cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+
+          # Create tarball
+          cd /tmp
+          tar czf sysmanage-agent-$VERSION.tar.gz $TAR_NAME/
+          echo "Created tarball: sysmanage-agent-$VERSION.tar.gz ($(du -h sysmanage-agent-$VERSION.tar.gz | cut -f1))"
+
+          # Create vendor tarball with wheels for multiple Python versions
+          echo "Creating vendor tarball with pip dependencies for multiple Python versions..."
+          echo ""
+          echo "Current pip version:"
+          pip3 --version
+          echo ""
+          echo "Upgrading pip to latest version..."
+          pip3 install --upgrade pip
+          echo ""
+          echo "Updated pip version:"
+          pip3 --version
+          echo ""
+          echo "Contents of requirements-prod.txt:"
+          cat $WORKSPACE/requirements-prod.txt
+          echo ""
+
+          mkdir -p /tmp/vendor
+
+          # Download wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)
+          # Note: Use 3.9.21 to avoid cryptography's exclusion of 3.9.0 and 3.9.1
+          echo "Downloading wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          # Download conditional dependencies for Python <3.11
+          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Downloaded $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels for Python 3.9"
+
+          # Note: Skipping Python 3.11 - no distributions currently use it
+
+          # Download wheels for Python 3.12 (EPEL 10, CentOS Stream 10)
+          echo ""
+          echo "Downloading wheels for Python 3.12 (EPEL 10, CentOS Stream 10)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.12.11 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Total wheels after Python 3.12: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
+
+          # Download wheels for Python 3.13 (Fedora 41, 42)
+          echo ""
+          echo "Downloading wheels for Python 3.13 (Fedora 41, 42)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.13.1 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Total wheels after Python 3.13: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
+
+          # Download wheels for Python 3.14 (Fedora 43)
+          echo ""
+          echo "Downloading wheels for Python 3.14 (Fedora 43)..."
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.14.0 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          echo "Total wheels after Python 3.14: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
+
+          # Verify all required packages are present
+          echo ""
+          echo "Verifying all required packages in vendor directory..."
+          WHEEL_COUNT=$(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)
+          if [ "$WHEEL_COUNT" -eq 0 ]; then
+            echo "ERROR: No wheels downloaded to vendor directory!"
+            exit 1
+          fi
+          echo "Total wheels in vendor directory: $WHEEL_COUNT"
+
+          # Verify each top-level package from requirements-prod.txt is present
+          for pkg in websockets PyYAML aiohttp cryptography SQLAlchemy alembic; do
+            pkg_lower=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+            if ls /tmp/vendor/${pkg_lower}* 1> /dev/null 2>&1 || ls /tmp/vendor/${pkg}* 1> /dev/null 2>&1; then
+              echo "  ✓ $pkg"
+            else
+              echo "  ✗ $pkg MISSING!"
+              echo "ERROR: Required package $pkg not found in vendor directory"
+              exit 1
+            fi
+          done
+
+          # Show what we downloaded
+          echo ""
+          echo "Vendor directory contents (first 30 files):"
+          ls -lh /tmp/vendor/ | head -30
+
+          cd /tmp
+          tar czf sysmanage-agent-vendor-$VERSION.tar.gz vendor/
+          echo "Created vendor tarball: sysmanage-agent-vendor-$VERSION.tar.gz ($(du -h sysmanage-agent-vendor-$VERSION.tar.gz | cut -f1))"
+          echo "Vendor tarball contains $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels and $(ls -1 /tmp/vendor/*.tar.gz 2>/dev/null | wc -l) source packages"
+
+          # Copy to rpmbuild directory
+          mkdir -p ~/rpmbuild/SOURCES
+          cp sysmanage-agent-$VERSION.tar.gz ~/rpmbuild/SOURCES/
+          cp sysmanage-agent-vendor-$VERSION.tar.gz ~/rpmbuild/SOURCES/
+
+      - name: Create SRPM
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "Creating SRPM for version $VERSION"
+
+          # Copy and update spec file
+          cp $WORKSPACE/installer/opensuse/sysmanage-agent.spec ~/rpmbuild/SOURCES/
+          cd ~/rpmbuild/SOURCES
+
+          # Update version in spec file
+          sed -i "s/^Version:.*/Version:        $VERSION/" sysmanage-agent.spec
+
+          # Build SRPM
+          rpmbuild -bs sysmanage-agent.spec --define "_topdir $HOME/rpmbuild"
+
+          # Find the SRPM
+          SRPM=$(find ~/rpmbuild/SRPMS -name "sysmanage-agent-*.src.rpm" | head -1)
+          echo "Created SRPM: $SRPM"
+          ls -lh $SRPM
+
+          # Save SRPM path for next step
+          echo "SRPM_PATH=$SRPM" >> $GITHUB_ENV
+
+      - name: Upload to Copr
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+        run: |
+          echo "Uploading SRPM to Copr..."
+          echo "Project: $COPR_USERNAME/sysmanage-agent"
+          echo "SRPM: $SRPM_PATH"
+
+          # Upload and build
+          copr-cli build $COPR_USERNAME/sysmanage-agent $SRPM_PATH
+
+          echo ""
+          echo "SUCCESS! Uploaded version $VERSION to Copr"
+          echo ""
+          echo "View build status at:"
+          echo "https://copr.fedorainfracloud.org/coprs/$COPR_USERNAME/sysmanage-agent/builds/"
+          echo ""
+          echo "Copr will now build for all configured chroots:"
+          echo "  - Fedora 41 (Python 3.13)"
+          echo "  - Fedora 42 (Python 3.13)"
+          echo "  - Fedora 43 (Python 3.14)"
+          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9 - Python 3.9)"
+          echo "  - EPEL 10 (RHEL 10, CentOS Stream 10 - Python 3.12)"
+          echo "  - Amazon Linux 2023 (Python 3.9)"
+          echo ""
+          echo "Note: EPEL 8 (Python 3.6) is not supported - dependencies require Python >=3.9"
+          echo ""
+          echo "Installation instructions:"
+          echo "  sudo dnf copr enable $COPR_USERNAME/sysmanage-agent"
+          echo "  sudo dnf install sysmanage-agent"

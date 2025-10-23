@@ -201,6 +201,8 @@ fi
 %service_add_post sysmanage-agent.service
 %else
 %systemd_post sysmanage-agent.service
+# Explicitly enable the service on RHEL/Fedora/CentOS
+systemctl enable sysmanage-agent.service >/dev/null 2>&1 || :
 %endif
 
 echo ""
