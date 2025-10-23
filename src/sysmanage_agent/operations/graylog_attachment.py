@@ -501,7 +501,7 @@ log {{
 
             # URL validated above - HTTPS only from github.com
             # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            urllib.request.urlretrieve(download_url, installer_path)  # nosec B310
+            urllib.request.urlretrieve(download_url, installer_path)  # nosec B310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
 

@@ -8,6 +8,9 @@ on:
         required: true
         default: '0.9.8.8'
 
+permissions:
+  contents: read
+
 jobs:
   test-copr-deploy:
     name: Test Copr Deploy
