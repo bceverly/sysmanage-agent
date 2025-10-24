@@ -1,6 +1,6 @@
 name: sysmanage-agent
 version: git
-summary: System management agent for SysManage
+summary: System management agent for SysManage (full management, classic confinement)
 description: |
   The SysManage agent provides comprehensive system management capabilities
   including:
@@ -12,14 +12,20 @@ description: |
    * Remote command execution
    * Integration with SysManage server
 
-  This agent runs as a system service and communicates securely with the
-  SysManage server to provide centralized management of Linux systems.
+  This agent runs as a system service with classic confinement and provides
+  full system management capabilities including package updates, firewall
+  management, and script execution.
+
+  For read-only monitoring without system modification, use the strict
+  confinement version: sysmanage-agent-strict
+
+icon: snap/gui/icon.svg
 
 grade: stable
 confinement: classic
 base: core22
 license: Proprietary
-title: SysManage Agent
+title: SysManage Agent (Classic Confinement)
 contact: mailto:bryan@theeverlys.com
 website: https://sysmanage.org
 issues: https://github.com/bceverly/sysmanage-agent/issues

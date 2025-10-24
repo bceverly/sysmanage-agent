@@ -67,17 +67,15 @@ jobs:
           echo "snap_file=$SNAP_FILE" >> $GITHUB_OUTPUT
           echo "Built snap: $SNAP_FILE"
 
-      - name: Upload snap to edge channel
-        uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
-        with:
-          snap: ${{ steps.snap_file.outputs.snap_file }}
-          release: edge
-
-      - name: Install snapcraft for status check
+      - name: Install snapcraft
         run: |
           sudo snap install snapcraft --classic
+
+      - name: Upload snap to edge channel
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          snapcraft upload --release=edge ${{ steps.snap_file.outputs.snap_file }}
 
       - name: Get snap status
         env:
