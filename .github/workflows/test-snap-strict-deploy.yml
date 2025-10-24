@@ -50,24 +50,15 @@ jobs:
           echo "Tarball created successfully"
           ls -lh installer/ubuntu-snap-strict/sysmanage-agent-src.tar.gz
 
-      - name: Install snapcraft
-        run: |
-          sudo snap install snapcraft --classic
-          sudo snap install lxd
-          sudo lxd init --auto
+      - name: Build snap with snapcraft
+        uses: snapcore/action-build@v1
+        id: build_snap
+        with:
+          path: installer/ubuntu-snap-strict
 
-      - name: Add user to lxd group
+      - name: List built snap
         run: |
-          sudo usermod -a -G lxd $USER
-          # Refresh group membership
-          sg lxd -c "echo 'User added to lxd group'"
-
-      - name: Build snap with LXD
-        run: |
-          cd installer/ubuntu-snap-strict
-          # Build in LXD container (not --destructive-mode)
-          sg lxd -c "snapcraft --use-lxd"
-          ls -lh *.snap
+          ls -lh installer/ubuntu-snap-strict/*.snap
 
       - name: Get snap filename
         id: snap_file
