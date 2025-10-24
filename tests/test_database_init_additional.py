@@ -36,10 +36,14 @@ class TestDatabaseInitAdditional:
         mock_config = Mock()
         mock_config.get.return_value = {}  # No 'path' key
 
-        with patch("src.database.init.os.path.isabs", return_value=False), patch(
-            "src.database.init.os.path.join", side_effect=lambda *args: "/".join(args)
-        ), patch("src.database.init.os.getcwd", return_value="/current/dir"), patch(
-            "src.database.init.os.path.exists", return_value=False
+        with (
+            patch("src.database.init.os.path.isabs", return_value=False),
+            patch(
+                "src.database.init.os.path.join",
+                side_effect=lambda *args: "/".join(args),
+            ),
+            patch("src.database.init.os.getcwd", return_value="/current/dir"),
+            patch("src.database.init.os.path.exists", return_value=False),
         ):
 
             result = get_database_path_from_config(mock_config)
@@ -164,15 +168,13 @@ class TestDatabaseInitAdditional:
 
     def test_run_alembic_migration_custom_operation(self):
         """Test run_alembic_migration with custom operation and revision."""
-        with patch("subprocess.run") as mock_run, patch(
-            "src.database.init.os.path.dirname"
-        ) as mock_dirname, patch(
-            "src.database.init.os.path.abspath"
-        ) as mock_abspath, patch(
-            "src.database.init.os.path.exists"
-        ) as mock_exists, patch(
-            "src.database.base.get_database_manager"
-        ) as mock_db_mgr:
+        with (
+            patch("subprocess.run") as mock_run,
+            patch("src.database.init.os.path.dirname") as mock_dirname,
+            patch("src.database.init.os.path.abspath") as mock_abspath,
+            patch("src.database.init.os.path.exists") as mock_exists,
+            patch("src.database.base.get_database_manager") as mock_db_mgr,
+        ):
 
             # Setup path mocking
             mock_abspath.return_value = "/path/to/src/database/init.py"

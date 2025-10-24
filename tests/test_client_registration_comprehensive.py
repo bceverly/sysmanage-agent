@@ -29,19 +29,24 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         }
 
         # Mock all the collection modules and database session
-        with patch(
-            "src.sysmanage_agent.registration.client_registration.HardwareCollector"
-        ), patch(
-            "src.sysmanage_agent.registration.client_registration.OSInfoCollector"
-        ), patch(
-            "src.sysmanage_agent.registration.client_registration.NetworkUtils"
-        ), patch(
-            "src.sysmanage_agent.registration.client_registration.UserAccessCollector"
-        ), patch(
-            "src.sysmanage_agent.registration.client_registration.SoftwareInventoryCollector"
-        ), patch(
-            "src.sysmanage_agent.registration.client_registration.get_db_session"
-        ) as mock_db_session:
+        with (
+            patch(
+                "src.sysmanage_agent.registration.client_registration.HardwareCollector"
+            ),
+            patch(
+                "src.sysmanage_agent.registration.client_registration.OSInfoCollector"
+            ),
+            patch("src.sysmanage_agent.registration.client_registration.NetworkUtils"),
+            patch(
+                "src.sysmanage_agent.registration.client_registration.UserAccessCollector"
+            ),
+            patch(
+                "src.sysmanage_agent.registration.client_registration.SoftwareInventoryCollector"
+            ),
+            patch(
+                "src.sysmanage_agent.registration.client_registration.get_db_session"
+            ) as mock_db_session,
+        ):
             # Mock the database session to return no existing auth data
             mock_session = Mock()
             mock_session.query.return_value.filter.return_value.first.return_value = (

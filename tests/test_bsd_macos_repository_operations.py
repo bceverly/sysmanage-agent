@@ -132,9 +132,11 @@ class TestFreeBSDOperations:
         """Test listing FreeBSD repositories."""
         repo_url = "http://pkg.freebsd.org/FreeBSD:13:amd64/latest"
         repo_content = f'myrepo: {{\n  url: "{repo_url}",\n  enabled: yes\n}}\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["myrepo.conf"]
-        ), patch("builtins.open", mock_open(read_data=repo_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["myrepo.conf"]),
+            patch("builtins.open", mock_open(read_data=repo_content)),
+        ):
             repos = await bsd_macos_ops.list_freebsd_repositories()
             assert len(repos) == 1
             assert repos[0]["name"] == "myrepo"
@@ -148,9 +150,11 @@ class TestFreeBSDOperations:
     async def test_list_freebsd_repositories_disabled(self, bsd_macos_ops):
         """Test listing disabled FreeBSD repositories."""
         repo_content = 'myrepo: {\n  url: "http://example.com/",\n  enabled: no\n}\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["myrepo.conf"]
-        ), patch("builtins.open", mock_open(read_data=repo_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["myrepo.conf"]),
+            patch("builtins.open", mock_open(read_data=repo_content)),
+        ):
             repos = await bsd_macos_ops.list_freebsd_repositories()
             assert len(repos) == 1
             assert repos[0]["enabled"] is False
@@ -207,9 +211,10 @@ class TestNetBSDOperations:
     @pytest.mark.asyncio
     async def test_list_netbsd_repositories_wip(self, bsd_macos_ops):
         """Test listing NetBSD repositories with pkgsrc-wip."""
-        with patch(
-            "os.path.exists", side_effect=lambda p: p == "/usr/pkgsrc/wip"
-        ), patch("os.listdir", return_value=[]):
+        with (
+            patch("os.path.exists", side_effect=lambda p: p == "/usr/pkgsrc/wip"),
+            patch("os.listdir", return_value=[]),
+        ):
             repos = await bsd_macos_ops.list_netbsd_repositories()
             assert len(repos) == 1
             assert repos[0]["name"] == "pkgsrc-wip"
@@ -218,9 +223,11 @@ class TestNetBSDOperations:
     @pytest.mark.asyncio
     async def test_list_netbsd_repositories_custom(self, bsd_macos_ops):
         """Test listing NetBSD custom repositories."""
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["wip", "custom"]
-        ), patch("os.path.isdir", side_effect=lambda p: "custom" in p):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["wip", "custom"]),
+            patch("os.path.isdir", side_effect=lambda p: "custom" in p),
+        ):
             repos = await bsd_macos_ops.list_netbsd_repositories()
             assert len(repos) >= 1
             assert repos[0]["name"] == "pkgsrc-wip"

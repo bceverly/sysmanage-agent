@@ -456,11 +456,14 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
         # Create a new detector with the mocked platform
         detector = UpdateDetector()
 
-        with patch.object(
-            detector.detector, "_detect_linux_system_updates"
-        ) as mock_os_updates, patch.object(
-            detector.detector, "_detect_package_managers"
-        ) as mock_pkg_mgrs:
+        with (
+            patch.object(
+                detector.detector, "_detect_linux_system_updates"
+            ) as mock_os_updates,
+            patch.object(
+                detector.detector, "_detect_package_managers"
+            ) as mock_pkg_mgrs,
+        ):
 
             mock_pkg_mgrs.return_value = []
 
@@ -530,35 +533,41 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
             detector = UpdateDetector()
 
             # Mock all the methods that detect_updates might call
-            with patch.object(
-                detector.detector, expected_method
-            ) as mock_method, patch.object(
-                detector.detector, "_detect_package_managers", return_value=[]
-            ), patch.object(
-                detector.detector,
-                "_detect_windows_version_upgrades",
-                return_value=None,
-                create=True,
-            ), patch.object(
-                detector.detector,
-                "_detect_macos_version_upgrades",
-                return_value=None,
-                create=True,
-            ), patch.object(
-                detector.detector,
-                "_detect_linux_version_upgrades",
-                return_value=None,
-                create=True,
-            ), patch.object(
-                detector.detector,
-                "_detect_freebsd_system_updates",
-                return_value=None,
-                create=True,
-            ), patch.object(
-                detector.detector,
-                "_detect_freebsd_version_upgrades",
-                return_value=None,
-                create=True,
+            with (
+                patch.object(detector.detector, expected_method) as mock_method,
+                patch.object(
+                    detector.detector, "_detect_package_managers", return_value=[]
+                ),
+                patch.object(
+                    detector.detector,
+                    "_detect_windows_version_upgrades",
+                    return_value=None,
+                    create=True,
+                ),
+                patch.object(
+                    detector.detector,
+                    "_detect_macos_version_upgrades",
+                    return_value=None,
+                    create=True,
+                ),
+                patch.object(
+                    detector.detector,
+                    "_detect_linux_version_upgrades",
+                    return_value=None,
+                    create=True,
+                ),
+                patch.object(
+                    detector.detector,
+                    "_detect_freebsd_system_updates",
+                    return_value=None,
+                    create=True,
+                ),
+                patch.object(
+                    detector.detector,
+                    "_detect_freebsd_version_upgrades",
+                    return_value=None,
+                    create=True,
+                ),
             ):
 
                 # Call the platform-specific detect_updates method which should call the system update method

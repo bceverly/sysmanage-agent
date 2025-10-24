@@ -487,15 +487,14 @@ class TestSoftwareInventoryCollector(
         # Test Linux-specific method directly
         linux_collector = LinuxSoftwareInventoryCollector()
 
-        with patch.object(
-            linux_collector, "detect_package_managers", return_value=["apt", "snap"]
-        ), patch.object(
-            linux_collector, "_collect_apt_packages"
-        ) as mock_apt, patch.object(
-            linux_collector, "_collect_snap_packages"
-        ) as mock_snap, patch.object(
-            linux_collector, "_collect_flatpak_packages"
-        ) as mock_flatpak:
+        with (
+            patch.object(
+                linux_collector, "detect_package_managers", return_value=["apt", "snap"]
+            ),
+            patch.object(linux_collector, "_collect_apt_packages") as mock_apt,
+            patch.object(linux_collector, "_collect_snap_packages") as mock_snap,
+            patch.object(linux_collector, "_collect_flatpak_packages") as mock_flatpak,
+        ):
 
             linux_collector.collect_packages()  # pylint: disable=protected-access
 
@@ -508,17 +507,15 @@ class TestSoftwareInventoryCollector(
         # Test macOS-specific method directly
         macos_collector = MacOSSoftwareInventoryCollector()
 
-        with patch.object(
-            macos_collector, "detect_package_managers", return_value=["homebrew"]
-        ), patch.object(
-            macos_collector, "_collect_homebrew_packages"
-        ) as mock_brew, patch.object(
-            macos_collector, "_collect_macos_applications"
-        ) as mock_apps, patch.object(
-            macos_collector, "_collect_macos_app_store"
-        ) as mock_store, patch.object(
-            macos_collector, "_collect_macports_packages"
-        ) as mock_ports:
+        with (
+            patch.object(
+                macos_collector, "detect_package_managers", return_value=["homebrew"]
+            ),
+            patch.object(macos_collector, "_collect_homebrew_packages") as mock_brew,
+            patch.object(macos_collector, "_collect_macos_applications") as mock_apps,
+            patch.object(macos_collector, "_collect_macos_app_store") as mock_store,
+            patch.object(macos_collector, "_collect_macports_packages") as mock_ports,
+        ):
 
             macos_collector.collect_packages()  # pylint: disable=protected-access
 

@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall
 
 # Default target
 help:
@@ -36,10 +36,14 @@ help:
 	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
 	@echo "  make installer-freebsd - Build FreeBSD .pkg package"
 	@echo "  make installer-netbsd - Build NetBSD .tgz package"
+	@echo "  make snap          - Build Ubuntu Snap package (core22 base)"
+	@echo "  make snap-clean    - Clean snap build artifacts"
+	@echo "  make snap-install  - Install locally built snap package (Ubuntu only)"
+	@echo "  make snap-uninstall - Uninstall snap package (Ubuntu only)"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
-	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, etc."
+	@echo "    Ubuntu/Debian: debhelper, dpkg-buildpackage, lintian, snapcraft, etc."
 	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
 	@echo "    Windows: WiX Toolset v4 (for MSI creation)"
 	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
@@ -166,20 +170,66 @@ else
 			echo "✓ All packaging build tools already installed"; \
 		fi; \
 		echo "[INFO] Checking for Snap build tools..."; \
-		MISSING_SNAP_PKGS=""; \
-		command -v snapcraft >/dev/null 2>&1 || MISSING_SNAP_PKGS="$$MISSING_SNAP_PKGS snapcraft"; \
-		command -v snap >/dev/null 2>&1 || MISSING_SNAP_PKGS="$$MISSING_SNAP_PKGS snapd"; \
-		if [ -n "$$MISSING_SNAP_PKGS" ]; then \
-			echo "Missing snap packages:$$MISSING_SNAP_PKGS"; \
-			echo "Installing Snap build tools..."; \
-			echo "Running: sudo apt-get install -y snapd snapcraft"; \
-			sudo apt-get install -y snapd snapcraft || \
-			echo "[WARNING] Could not install Snap tools. Run manually: sudo apt-get install -y snapd snapcraft"; \
+		LXD_GROUP_ADDED=0; \
+		if ! command -v snap >/dev/null 2>&1; then \
+			echo "snapd not found - installing..."; \
+			echo "Running: sudo apt-get install -y snapd"; \
+			sudo apt-get install -y snapd || { \
+				echo "[WARNING] Could not install snapd. Run manually: sudo apt-get install -y snapd"; \
+			}; \
 			echo "Ensuring snapd service is enabled and started..."; \
 			sudo systemctl enable --now snapd.socket || true; \
 			sudo systemctl start snapd || true; \
+			echo "Waiting for snapd to initialize..."; \
+			sleep 5; \
+		fi; \
+		if ! command -v snapcraft >/dev/null 2>&1; then \
+			echo "snapcraft not found - installing via snap..."; \
+			echo "Running: sudo snap install snapcraft --classic"; \
+			sudo snap install snapcraft --classic || { \
+				echo "[WARNING] Could not install snapcraft. Run manually: sudo snap install snapcraft --classic"; \
+			}; \
 		else \
-			echo "✓ All Snap build tools already installed"; \
+			echo "✓ snapcraft already installed"; \
+		fi; \
+		LXD_NEEDS_REINSTALL=0; \
+		if ! snap list lxd >/dev/null 2>&1; then \
+			echo "LXD not found - installing via snap..."; \
+			echo "Running: sudo snap install lxd"; \
+			sudo snap install lxd || { \
+				echo "[WARNING] Could not install lxd. Run manually: sudo snap install lxd"; \
+			}; \
+			LXD_NEEDS_REINSTALL=1; \
+		else \
+			echo "✓ LXD already installed"; \
+		fi; \
+		CURRENT_USER=$$(whoami); \
+		if ! groups $$CURRENT_USER | grep -q '\blxd\b'; then \
+			echo "Adding $$CURRENT_USER to lxd group..."; \
+			echo "Running: sudo usermod -aG lxd $$CURRENT_USER"; \
+			sudo usermod -aG lxd $$CURRENT_USER || { \
+				echo "[WARNING] Could not add user to lxd group. Run manually: sudo usermod -aG lxd $$CURRENT_USER"; \
+			}; \
+			echo "✓ User $$CURRENT_USER added to lxd group"; \
+			LXD_GROUP_ADDED=1; \
+		else \
+			echo "✓ User $$CURRENT_USER already in lxd group"; \
+		fi; \
+		if [ "$$LXD_NEEDS_REINSTALL" -eq 1 ] || ! sudo lxd init --dump >/dev/null 2>&1; then \
+			echo "Initializing LXD with automatic configuration..."; \
+			echo "Running: sudo lxd init --auto"; \
+			sudo lxd init --auto || { \
+				echo "[WARNING] Could not initialize LXD. Run manually: sudo lxd init --auto"; \
+			}; \
+			echo "✓ LXD initialized"; \
+		else \
+			echo "✓ LXD already initialized"; \
+		fi; \
+		if command -v snap >/dev/null 2>&1 && command -v snapcraft >/dev/null 2>&1; then \
+			echo "✓ All Snap build tools installed"; \
+		fi; \
+		if [ "$$LXD_GROUP_ADDED" -eq 1 ]; then \
+			echo "$$LXD_GROUP_ADDED" > /tmp/.sysmanage-lxd-group-added-$$$$.tmp; \
 		fi; \
 	fi
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -251,6 +301,24 @@ endif
 	@echo "Checking for BSD C tracer requirements..."
 	@$(PYTHON) scripts/check-openbsd-deps.py
 	@echo "Development environment setup complete!"
+	@if [ -f /tmp/.sysmanage-lxd-group-added-*.tmp ]; then \
+		echo ""; \
+		echo "============================================================"; \
+		echo "[IMPORTANT] LXD group membership change detected!"; \
+		echo "============================================================"; \
+		echo "You were added to the 'lxd' group during this installation."; \
+		echo ""; \
+		echo "For the group membership to take effect, you MUST log out"; \
+		echo "and log back in before running 'make snap'."; \
+		echo ""; \
+		echo "The group change will NOT work in the current session,"; \
+		echo "even if you run 'newgrp lxd'."; \
+		echo ""; \
+		echo "Please log out and log back in now, then run 'make snap'."; \
+		echo "============================================================"; \
+		echo ""; \
+		rm -f /tmp/.sysmanage-lxd-group-added-*.tmp; \
+	fi
 
 # Clean trailing whitespace from Python files (silent operation)
 clean-whitespace: setup-venv
@@ -1569,3 +1637,165 @@ installer-netbsd:
 		echo "ERROR: Package creation failed"; \
 		exit 1; \
 	fi
+
+# Build Ubuntu Snap package
+snap:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Building Ubuntu Snap Package ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v snapcraft >/dev/null 2>&1 || { \
+		echo "ERROR: snapcraft not found."; \
+		echo "Install with: sudo apt-get install -y snapd snapcraft"; \
+		echo "Or run: make install-dev"; \
+		exit 1; \
+	}
+	@echo "✓ Snapcraft available"
+	@echo ""
+	@echo "Generating requirements-prod.txt from requirements.txt..."
+	@python3 scripts/update-requirements-prod.py
+	@echo "✓ requirements-prod.txt generated"
+	@echo ""
+	@echo "Building snap package..."
+	@cd installer/ubuntu-snap && snapcraft pack --destructive-mode --verbose
+	@echo ""
+	@echo "==================================="; \
+	echo "Build Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	SNAP_FILE=$$(ls installer/ubuntu-snap/*.snap 2>/dev/null | head -1); \
+	if [ -n "$$SNAP_FILE" ]; then \
+		echo "Package: $$SNAP_FILE"; \
+		ls -lh "$$SNAP_FILE"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  make snap-install"; \
+		echo "  OR"; \
+		echo "  sudo snap install $$SNAP_FILE --dangerous --classic"; \
+		echo ""; \
+		echo "After installation:"; \
+		echo "  1. Edit /var/snap/sysmanage-agent/common/sysmanage-agent.yaml"; \
+		echo "  2. Start: sudo snap start sysmanage-agent"; \
+		echo "  3. Check status: sudo snap services sysmanage-agent"; \
+		echo "  4. View logs: sudo snap logs sysmanage-agent"; \
+		echo ""; \
+	else \
+		echo "ERROR: Built snap not found!"; \
+		exit 1; \
+	fi
+
+# Clean snap build artifacts
+snap-clean:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Cleaning Snap Build Artifacts ==="
+	@echo ""
+	@echo "Removing snap build artifacts..."
+	@cd installer/ubuntu-snap && snapcraft clean || true
+	@rm -rf installer/ubuntu-snap/*.snap
+	@rm -rf installer/ubuntu-snap/prime
+	@rm -rf installer/ubuntu-snap/stage
+	@rm -rf installer/ubuntu-snap/parts
+	@echo "✓ Snap build artifacts cleaned"
+	@echo ""
+
+# Install locally built snap package
+snap-install:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Installing Snap Package ==="
+	@echo ""
+	@SNAP_FILE=$$(ls installer/ubuntu-snap/*.snap 2>/dev/null | head -1); \
+	if [ -z "$$SNAP_FILE" ]; then \
+		echo "ERROR: No snap package found in installer/ubuntu-snap/"; \
+		echo "Build one first with: make snap"; \
+		exit 1; \
+	fi; \
+	echo "Found snap package: $$SNAP_FILE"; \
+	echo ""; \
+	if snap list sysmanage-agent >/dev/null 2>&1; then \
+		echo "Existing sysmanage-agent snap detected - upgrading in place..."; \
+		echo "(Configuration will be preserved)"; \
+		echo ""; \
+	else \
+		echo "Installing new snap..."; \
+		echo ""; \
+	fi; \
+	sudo snap install "$$SNAP_FILE" --dangerous --classic || { \
+		echo "ERROR: Failed to install snap"; \
+		exit 1; \
+	}; \
+	echo ""; \
+	echo "==================================="; \
+	echo "Installation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Configuration:"; \
+	echo "  Config file: /var/snap/sysmanage-agent/common/sysmanage-agent.yaml"; \
+	echo ""; \
+	echo "Service management:"; \
+	echo "  Start:   sudo snap start sysmanage-agent"; \
+	echo "  Stop:    sudo snap stop sysmanage-agent"; \
+	echo "  Restart: sudo snap restart sysmanage-agent"; \
+	echo "  Status:  sudo snap services sysmanage-agent"; \
+	echo "  Logs:    sudo snap logs sysmanage-agent -f"; \
+	echo ""
+
+# Uninstall snap package
+snap-uninstall:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Uninstalling Snap Package ==="
+	@echo ""
+	@if ! snap list sysmanage-agent >/dev/null 2>&1; then \
+		echo "sysmanage-agent snap is not installed"; \
+		exit 0; \
+	fi
+	@echo "Stopping sysmanage-agent service..."
+	@sudo snap stop sysmanage-agent 2>/dev/null || true
+	@echo "✓ Service stopped"
+	@echo ""
+	@echo "Backing up configuration..."
+	@if [ -f /var/snap/sysmanage-agent/common/sysmanage-agent.yaml ]; then \
+		sudo cp /var/snap/sysmanage-agent/common/sysmanage-agent.yaml /tmp/sysmanage-agent.yaml.preserved || true; \
+		echo "✓ Configuration backed up"; \
+	fi
+	@echo ""
+	@echo "Removing sysmanage-agent snap..."
+	@sudo snap remove sysmanage-agent || { \
+		echo "ERROR: Failed to remove snap"; \
+		exit 1; \
+	}
+	@echo "✓ Snap removed"
+	@echo ""
+	@if [ -f /tmp/sysmanage-agent.yaml.preserved ]; then \
+		echo "Restoring configuration..."; \
+		sudo mkdir -p /var/snap/sysmanage-agent/common; \
+		sudo cp /tmp/sysmanage-agent.yaml.preserved /var/snap/sysmanage-agent/common/sysmanage-agent.yaml || true; \
+		sudo rm -f /tmp/sysmanage-agent.yaml.preserved; \
+		echo "✓ Configuration restored to /var/snap/sysmanage-agent/common/sysmanage-agent.yaml"; \
+		echo ""; \
+	fi
+	@echo "==================================="; \
+	echo "Uninstallation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Configuration preserved at:"; \
+	echo "  /var/snap/sysmanage-agent/common/sysmanage-agent.yaml"; \
+	echo ""; \
+	echo "To completely remove all data including config:"; \
+	echo "  sudo rm -rf /var/snap/sysmanage-agent"; \
+	echo ""

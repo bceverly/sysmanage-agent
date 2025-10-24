@@ -72,15 +72,14 @@ class TestOSInfoCollector:
         mock_system.return_value = "Darwin"
         mock_mac_ver.return_value = ("14.0", ("", "", ""), "arm64")
 
-        with patch("platform.release") as mock_release, patch(
-            "platform.version"
-        ) as mock_version, patch("platform.machine") as mock_machine, patch(
-            "platform.processor"
-        ) as mock_processor, patch(
-            "platform.architecture"
-        ) as mock_architecture, patch(
-            "platform.python_version"
-        ) as mock_python_version:
+        with (
+            patch("platform.release") as mock_release,
+            patch("platform.version") as mock_version,
+            patch("platform.machine") as mock_machine,
+            patch("platform.processor") as mock_processor,
+            patch("platform.architecture") as mock_architecture,
+            patch("platform.python_version") as mock_python_version,
+        ):
 
             mock_release.return_value = "23.0.0"
             mock_version.return_value = "Darwin Kernel Version 23.0.0"
@@ -100,15 +99,14 @@ class TestOSInfoCollector:
         """Test Linux-specific details collection."""
         mock_system.return_value = "Linux"
 
-        with patch("platform.release") as mock_release, patch(
-            "platform.version"
-        ) as mock_version, patch("platform.machine") as mock_machine, patch(
-            "platform.processor"
-        ) as mock_processor, patch(
-            "platform.architecture"
-        ) as mock_architecture, patch(
-            "platform.python_version"
-        ) as mock_python_version:
+        with (
+            patch("platform.release") as mock_release,
+            patch("platform.version") as mock_version,
+            patch("platform.machine") as mock_machine,
+            patch("platform.processor") as mock_processor,
+            patch("platform.architecture") as mock_architecture,
+            patch("platform.python_version") as mock_python_version,
+        ):
 
             mock_release.return_value = "5.15.0"
             mock_version.return_value = "#72-Ubuntu"
@@ -145,15 +143,14 @@ class TestOSInfoCollector:
         """Test Linux details when os-release file is not found."""
         mock_system.return_value = "Linux"
 
-        with patch("platform.release") as mock_release, patch(
-            "platform.version"
-        ) as mock_version, patch("platform.machine") as mock_machine, patch(
-            "platform.processor"
-        ) as mock_processor, patch(
-            "platform.architecture"
-        ) as mock_architecture, patch(
-            "platform.python_version"
-        ) as mock_python_version:
+        with (
+            patch("platform.release") as mock_release,
+            patch("platform.version") as mock_version,
+            patch("platform.machine") as mock_machine,
+            patch("platform.processor") as mock_processor,
+            patch("platform.architecture") as mock_architecture,
+            patch("platform.python_version") as mock_python_version,
+        ):
 
             mock_release.return_value = "5.15.0"
             mock_version.return_value = "#72-Ubuntu"
@@ -190,15 +187,14 @@ class TestOSInfoCollector:
         mock_system.return_value = "Windows"
         mock_win32_ver.return_value = ("10", "SP0", "10.0.19045", "Multiprocessor Free")
 
-        with patch("platform.release") as mock_release, patch(
-            "platform.version"
-        ) as mock_version, patch("platform.machine") as mock_machine, patch(
-            "platform.processor"
-        ) as mock_processor, patch(
-            "platform.architecture"
-        ) as mock_architecture, patch(
-            "platform.python_version"
-        ) as mock_python_version:
+        with (
+            patch("platform.release") as mock_release,
+            patch("platform.version") as mock_version,
+            patch("platform.machine") as mock_machine,
+            patch("platform.processor") as mock_processor,
+            patch("platform.architecture") as mock_architecture,
+            patch("platform.python_version") as mock_python_version,
+        ):
 
             mock_release.return_value = "10"
             mock_version.return_value = "10.0.19045"

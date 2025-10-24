@@ -50,20 +50,21 @@ logging:
 
     def test_get_system_info_comprehensive(self, mock_registration):
         """Test that get_system_info() collects comprehensive OS data."""
-        with patch("platform.machine", return_value="x86_64"), patch(
-            "platform.system", return_value="Linux"
-        ), patch("platform.release", return_value="5.15.0-88-generic"), patch(
-            "platform.version",
-            return_value="#98-Ubuntu SMP Mon Oct 2 15:29:04 UTC 2023",
-        ), patch(
-            "platform.architecture", return_value=("64bit", "ELF")
-        ), patch(
-            "platform.processor", return_value="x86_64"
-        ), patch(
-            "platform.python_version", return_value="3.11.5"
-        ), patch(
-            "src.sysmanage_agent.collection.os_info_collection.OSInfoCollector._get_linux_distribution_info",
-            return_value=("Linux", "5.15.0-88-generic"),
+        with (
+            patch("platform.machine", return_value="x86_64"),
+            patch("platform.system", return_value="Linux"),
+            patch("platform.release", return_value="5.15.0-88-generic"),
+            patch(
+                "platform.version",
+                return_value="#98-Ubuntu SMP Mon Oct 2 15:29:04 UTC 2023",
+            ),
+            patch("platform.architecture", return_value=("64bit", "ELF")),
+            patch("platform.processor", return_value="x86_64"),
+            patch("platform.python_version", return_value="3.11.5"),
+            patch(
+                "src.sysmanage_agent.collection.os_info_collection.OSInfoCollector._get_linux_distribution_info",
+                return_value=("Linux", "5.15.0-88-generic"),
+            ),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -82,20 +83,15 @@ logging:
 
     def test_get_system_info_macos(self, mock_registration):
         """Test OS data collection on macOS."""
-        with patch("platform.machine", return_value="arm64"), patch(
-            "platform.system", return_value="Darwin"
-        ), patch(
-            "platform.mac_ver", return_value=("14.1.1", ("", "", ""), "arm64")
-        ), patch(
-            "platform.release", return_value="23.1.0"
-        ), patch(
-            "platform.version", return_value="Darwin Kernel Version 23.1.0"
-        ), patch(
-            "platform.architecture", return_value=("64bit", "")
-        ), patch(
-            "platform.processor", return_value="arm"
-        ), patch(
-            "platform.python_version", return_value="3.11.5"
+        with (
+            patch("platform.machine", return_value="arm64"),
+            patch("platform.system", return_value="Darwin"),
+            patch("platform.mac_ver", return_value=("14.1.1", ("", "", ""), "arm64")),
+            patch("platform.release", return_value="23.1.0"),
+            patch("platform.version", return_value="Darwin Kernel Version 23.1.0"),
+            patch("platform.architecture", return_value=("64bit", "")),
+            patch("platform.processor", return_value="arm"),
+            patch("platform.python_version", return_value="3.11.5"),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -106,22 +102,21 @@ logging:
 
     def test_get_system_info_windows(self, mock_registration):
         """Test OS data collection on Windows."""
-        with patch("platform.machine", return_value="AMD64"), patch(
-            "platform.system", return_value="Windows"
-        ), patch(
-            "platform.win32_ver",
-            return_value=("10", "10.0.19045", "SP0", "Multiprocessor Free"),
-        ), patch(
-            "platform.release", return_value="10"
-        ), patch(
-            "platform.version", return_value="10.0.19045"
-        ), patch(
-            "platform.architecture", return_value=("64bit", "WindowsPE")
-        ), patch(
-            "platform.processor",
-            return_value="Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
-        ), patch(
-            "platform.python_version", return_value="3.11.5"
+        with (
+            patch("platform.machine", return_value="AMD64"),
+            patch("platform.system", return_value="Windows"),
+            patch(
+                "platform.win32_ver",
+                return_value=("10", "10.0.19045", "SP0", "Multiprocessor Free"),
+            ),
+            patch("platform.release", return_value="10"),
+            patch("platform.version", return_value="10.0.19045"),
+            patch("platform.architecture", return_value=("64bit", "WindowsPE")),
+            patch(
+                "platform.processor",
+                return_value="Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
+            ),
+            patch("platform.python_version", return_value="3.11.5"),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -139,22 +134,23 @@ logging:
             "VERSION_CODENAME": "jammy",
         }
 
-        with patch("platform.machine", return_value="aarch64"), patch(
-            "platform.system", return_value="Linux"
-        ), patch("platform.release", return_value="5.15.0-1044-raspi"), patch(
-            "platform.version",
-            return_value="#47-Ubuntu SMP PREEMPT Mon Jul 24 09:11:25 UTC 2023",
-        ), patch(
-            "platform.architecture", return_value=("64bit", "ELF")
-        ), patch(
-            "platform.processor", return_value="aarch64"
-        ), patch(
-            "platform.python_version", return_value="3.10.12"
-        ), patch.object(
-            platform,
-            "freedesktop_os_release",
-            return_value=mock_os_release,
-            create=True,
+        with (
+            patch("platform.machine", return_value="aarch64"),
+            patch("platform.system", return_value="Linux"),
+            patch("platform.release", return_value="5.15.0-1044-raspi"),
+            patch(
+                "platform.version",
+                return_value="#47-Ubuntu SMP PREEMPT Mon Jul 24 09:11:25 UTC 2023",
+            ),
+            patch("platform.architecture", return_value=("64bit", "ELF")),
+            patch("platform.processor", return_value="aarch64"),
+            patch("platform.python_version", return_value="3.10.12"),
+            patch.object(
+                platform,
+                "freedesktop_os_release",
+                return_value=mock_os_release,
+                create=True,
+            ),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -167,16 +163,16 @@ logging:
 
     def test_get_system_info_riscv(self, mock_registration):
         """Test OS data collection on RISC-V architecture."""
-        with patch("platform.machine", return_value="riscv64"), patch(
-            "platform.system", return_value="Linux"
-        ), patch("platform.release", return_value="6.1.0-starfive"), patch(
-            "platform.version", return_value="#1 SMP Mon Dec 19 17:25:01 EST 2022"
-        ), patch(
-            "platform.architecture", return_value=("64bit", "ELF")
-        ), patch(
-            "platform.processor", return_value="rv64imafdcv"
-        ), patch(
-            "platform.python_version", return_value="3.11.2"
+        with (
+            patch("platform.machine", return_value="riscv64"),
+            patch("platform.system", return_value="Linux"),
+            patch("platform.release", return_value="6.1.0-starfive"),
+            patch(
+                "platform.version", return_value="#1 SMP Mon Dec 19 17:25:01 EST 2022"
+            ),
+            patch("platform.architecture", return_value=("64bit", "ELF")),
+            patch("platform.processor", return_value="rv64imafdcv"),
+            patch("platform.python_version", return_value="3.11.2"),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -204,10 +200,11 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration") as mock_reg_class, patch(
-            "main.set_language"
-        ), patch("main.MessageHandler") as mock_handler_class, patch(
-            "main.initialize_database", return_value=True
+        with (
+            patch("main.ClientRegistration") as mock_reg_class,
+            patch("main.set_language"),
+            patch("main.MessageHandler") as mock_handler_class,
+            patch("main.initialize_database", return_value=True),
         ):
 
             # Mock the message handler
@@ -270,12 +267,12 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration") as mock_reg_class, patch(
-            "main.set_language"
-        ), patch("main.MessageHandler") as mock_handler_class, patch(
-            "main.initialize_database", return_value=True
-        ), patch(
-            "main.get_database_manager"
+        with (
+            patch("main.ClientRegistration") as mock_reg_class,
+            patch("main.set_language"),
+            patch("main.MessageHandler") as mock_handler_class,
+            patch("main.initialize_database", return_value=True),
+            patch("main.get_database_manager"),
         ):
 
             # Mock the message handler

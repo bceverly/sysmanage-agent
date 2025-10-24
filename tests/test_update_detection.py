@@ -224,8 +224,9 @@ class TestUpdateDetector:
 
     def test_check_reboot_required_no_file(self):
         """Test reboot required check when no reboot file exists."""
-        with patch("platform.system", return_value="Linux"), patch(
-            "os.path.exists", return_value=False
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch("os.path.exists", return_value=False),
         ):
             detector = UpdateDetector()
             # Add a kernel update to trigger reboot requirement
@@ -237,8 +238,9 @@ class TestUpdateDetector:
 
     def test_check_reboot_required_no_updates(self):
         """Test reboot required check with no updates."""
-        with patch("platform.system", return_value="Linux"), patch(
-            "os.path.exists", return_value=False
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch("os.path.exists", return_value=False),
         ):
             detector = UpdateDetector()
             assert detector.check_reboot_required() is False
@@ -318,8 +320,13 @@ class TestUpdateDetector:
 
     def test_error_handling(self):
         """Test error handling in update detection."""
-        with patch("platform.system", return_value="Linux"), patch.object(
-            LinuxUpdateDetector, "detect_updates", side_effect=Exception("Test error")
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                LinuxUpdateDetector,
+                "detect_updates",
+                side_effect=Exception("Test error"),
+            ),
         ):
             detector = UpdateDetector()
             result = detector.get_available_updates()

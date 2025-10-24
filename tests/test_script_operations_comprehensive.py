@@ -37,8 +37,9 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     def test_detect_shell_specific_shell_allowed(self):
         """Test shell detection with specific allowed shell."""
-        with patch("os.path.exists", return_value=True), patch(
-            "os.access", return_value=True
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
         ):
 
             result = self.script_ops._detect_shell("bash")
@@ -52,8 +53,9 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
     @patch("platform.system", return_value="Linux")
     def test_detect_shell_default_linux(self, _mock_system):
         """Test shell detection with default for Linux."""
-        with patch("os.path.exists", return_value=True), patch(
-            "os.access", return_value=True
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
         ):
 
             result = self.script_ops._detect_shell()
@@ -77,9 +79,11 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
     def test_detect_shell_no_suitable_shell_found(self):
         """Test shell detection when no suitable shell is found."""
-        with patch("os.path.exists", return_value=False), patch(
-            "os.access", return_value=False
-        ), patch("shutil.which", return_value=None):
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.access", return_value=False),
+            patch("shutil.which", return_value=None),
+        ):
 
             with pytest.raises(ValueError, match="No suitable shell found"):
                 self.script_ops._detect_shell("bash")
@@ -90,9 +94,10 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         script_content = "echo 'Hello World'"
         shell_path = "/bin/bash"
 
-        with patch("tempfile.NamedTemporaryFile") as mock_temp, patch(
-            "os.chmod"
-        ) as mock_chmod:
+        with (
+            patch("tempfile.NamedTemporaryFile") as mock_temp,
+            patch("os.chmod") as mock_chmod,
+        ):
 
             mock_file = Mock()
             mock_file.name = "/tmp/script12345.sh"
@@ -165,14 +170,13 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             "timeout": 7200,  # Exceeds max_timeout of 3600
         }
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
         ):
 
             # Mock successful execution
@@ -208,8 +212,9 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         parameters = {"script_content": "pwd", "working_directory": "/etc/passwd"}
 
         with patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"):
-            with patch("os.path.exists", return_value=True), patch(
-                "os.path.isdir", return_value=False
+            with (
+                patch("os.path.exists", return_value=True),
+                patch("os.path.isdir", return_value=False),
             ):
 
                 result = await self.script_ops.execute_script(parameters)
@@ -227,16 +232,14 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             "timeout": 30,
         }
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
-        ) as mock_unlink, patch(
-            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink") as mock_unlink,
+            patch("time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]),
         ):  # Mock execution time
 
             # Mock successful execution
@@ -272,16 +275,18 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
             "timeout": 30,
         }
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="powershell.exe"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="C:\\temp\\script.ps1"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
-        ), patch(
-            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
+        with (
+            patch.object(
+                self.script_ops, "_detect_shell", return_value="powershell.exe"
+            ),
+            patch.object(
+                self.script_ops,
+                "_create_script_file",
+                return_value="C:\\temp\\script.ps1",
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
+            patch("time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]),
         ):
 
             # Mock successful execution
@@ -314,16 +319,16 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
 
         self.mock_config.get_allowed_shells.return_value = ["cmd"]
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="cmd.exe"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="C:\\temp\\script.bat"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
-        ), patch(
-            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="cmd.exe"),
+            patch.object(
+                self.script_ops,
+                "_create_script_file",
+                return_value="C:\\temp\\script.bat",
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
+            patch("time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]),
         ):
 
             # Mock successful execution
@@ -346,14 +351,13 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         """Test script execution timeout."""
         parameters = {"script_content": "sleep 100", "timeout": 1}
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
         ):
 
             # Mock process that times out
@@ -377,14 +381,13 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         """Test script execution timeout with ProcessLookupError during cleanup."""
         parameters = {"script_content": "sleep 100", "timeout": 1}
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
         ):
 
             # Mock process that times out and cleanup fails
@@ -404,15 +407,14 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         """Test script execution with cleanup failure."""
         parameters = {"script_content": "echo 'hello'", "timeout": 30}
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink", side_effect=OSError("Permission denied")
-        ) as mock_unlink:
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink", side_effect=OSError("Permission denied")) as mock_unlink,
+        ):
 
             # Mock successful execution
             mock_process = AsyncMock()
@@ -446,20 +448,16 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
         """Test script execution with working directory."""
         parameters = {"script_content": "pwd", "working_directory": "/tmp"}
 
-        with patch.object(
-            self.script_ops, "_detect_shell", return_value="/bin/bash"
-        ), patch.object(
-            self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
-        ), patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch(
-            "os.unlink"
-        ), patch(
-            "os.path.exists", return_value=True
-        ), patch(
-            "os.path.isdir", return_value=True
-        ), patch(
-            "time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]
+        with (
+            patch.object(self.script_ops, "_detect_shell", return_value="/bin/bash"),
+            patch.object(
+                self.script_ops, "_create_script_file", return_value="/tmp/script.sh"
+            ),
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.unlink"),
+            patch("os.path.exists", return_value=True),
+            patch("os.path.isdir", return_value=True),
+            patch("time.time", side_effect=[1000.0, 1001.0, 1002.0, 1003.0]),
         ):
 
             # Mock successful execution
@@ -479,27 +477,33 @@ class TestScriptOperations:  # pylint: disable=too-many-public-methods
     def test_detect_shell_coverage_paths(self):
         """Test different code paths in shell detection for coverage."""
         # Test OpenBSD system
-        with patch("platform.system", return_value="OpenBSD"), patch(
-            "os.path.exists", return_value=True
-        ), patch("os.access", return_value=True):
+        with (
+            patch("platform.system", return_value="OpenBSD"),
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
+        ):
 
             self.mock_config.get_allowed_shells.return_value = ["ksh"]
             result = self.script_ops._detect_shell()
             assert "/bin/ksh" in result or "/usr/bin/ksh" in result
 
         # Test FreeBSD system
-        with patch("platform.system", return_value="FreeBSD"), patch(
-            "os.path.exists", return_value=True
-        ), patch("os.access", return_value=True):
+        with (
+            patch("platform.system", return_value="FreeBSD"),
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
+        ):
 
             self.mock_config.get_allowed_shells.return_value = ["bash"]
             result = self.script_ops._detect_shell()
             assert "/bin/bash" in result or "/usr/bin/bash" in result
 
         # Test NetBSD system
-        with patch("platform.system", return_value="NetBSD"), patch(
-            "os.path.exists", return_value=True
-        ), patch("os.access", return_value=True):
+        with (
+            patch("platform.system", return_value="NetBSD"),
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
+        ):
 
             self.mock_config.get_allowed_shells.return_value = ["sh"]
             result = self.script_ops._detect_shell()

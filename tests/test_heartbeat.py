@@ -62,10 +62,11 @@ i18n:
             "architecture": "x86_64",
             "processor": "Intel Core i7",
         }
-        with patch("main.ClientRegistration", return_value=mock_registration), patch(
-            "main.set_language"
-        ), patch("main.MessageHandler") as mock_handler_class, patch(
-            "main.initialize_database", return_value=True
+        with (
+            patch("main.ClientRegistration", return_value=mock_registration),
+            patch("main.set_language"),
+            patch("main.MessageHandler") as mock_handler_class,
+            patch("main.initialize_database", return_value=True),
         ):
             # Mock the message handler
             mock_handler = Mock()
@@ -303,9 +304,11 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration", return_value=mock_registration), patch(
-            "main.set_language"
-        ), patch("main.initialize_database", return_value=True):
+        with (
+            patch("main.ClientRegistration", return_value=mock_registration),
+            patch("main.set_language"),
+            patch("main.initialize_database", return_value=True),
+        ):
             agent = SysManageAgent(str(config_file))
             return agent
 
@@ -350,9 +353,12 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration"), patch("main.set_language"), patch(
-            "main.MessageHandler"
-        ), patch("main.initialize_database", return_value=True):
+        with (
+            patch("main.ClientRegistration"),
+            patch("main.set_language"),
+            patch("main.MessageHandler"),
+            patch("main.initialize_database", return_value=True),
+        ):
             agent = SysManageAgent(str(config_file))
             agent.logger = Mock()
             return agent

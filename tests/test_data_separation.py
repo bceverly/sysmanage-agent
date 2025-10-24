@@ -49,14 +49,17 @@ logging:
 
     def test_get_basic_registration_info_minimal(self, mock_registration):
         """Test that get_basic_registration_info() returns only minimal data."""
-        with patch.object(
-            mock_registration.network_utils,
-            "get_hostname",
-            return_value="test-host.example.com",
-        ), patch.object(
-            mock_registration.network_utils,
-            "get_ip_addresses",
-            return_value=("192.168.1.100", "::1"),
+        with (
+            patch.object(
+                mock_registration.network_utils,
+                "get_hostname",
+                return_value="test-host.example.com",
+            ),
+            patch.object(
+                mock_registration.network_utils,
+                "get_ip_addresses",
+                return_value=("192.168.1.100", "::1"),
+            ),
         ):
 
             basic_info = mock_registration.get_basic_registration_info()
@@ -131,16 +134,22 @@ logging:
             "os_info": {"mac_version": "14.1.1"},
         }
 
-        with patch.object(
-            mock_registration.network_utils, "get_hostname", return_value="test-host"
-        ), patch.object(
-            mock_registration.network_utils,
-            "get_ip_addresses",
-            return_value=("10.0.0.1", None),
-        ), patch.object(
-            mock_registration.os_info_collector,
-            "get_os_version_info",
-            return_value=mock_os_info,
+        with (
+            patch.object(
+                mock_registration.network_utils,
+                "get_hostname",
+                return_value="test-host",
+            ),
+            patch.object(
+                mock_registration.network_utils,
+                "get_ip_addresses",
+                return_value=("10.0.0.1", None),
+            ),
+            patch.object(
+                mock_registration.os_info_collector,
+                "get_os_version_info",
+                return_value=mock_os_info,
+            ),
         ):
 
             basic_info = mock_registration.get_basic_registration_info()
@@ -167,18 +176,22 @@ logging:
             "os_info": {"windows_version": "10", "windows_service_pack": "10.0.19045"},
         }
 
-        with patch.object(
-            mock_registration.network_utils,
-            "get_hostname",
-            return_value="combined-host",
-        ), patch.object(
-            mock_registration.network_utils,
-            "get_ip_addresses",
-            return_value=("172.16.0.1", "2001:db8::1"),
-        ), patch.object(
-            mock_registration.os_info_collector,
-            "get_os_version_info",
-            return_value=mock_os_info,
+        with (
+            patch.object(
+                mock_registration.network_utils,
+                "get_hostname",
+                return_value="combined-host",
+            ),
+            patch.object(
+                mock_registration.network_utils,
+                "get_ip_addresses",
+                return_value=("172.16.0.1", "2001:db8::1"),
+            ),
+            patch.object(
+                mock_registration.os_info_collector,
+                "get_os_version_info",
+                return_value=mock_os_info,
+            ),
         ):
 
             system_info = mock_registration.get_system_info()
@@ -214,9 +227,11 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration") as mock_reg_class, patch(
-            "main.set_language"
-        ), patch("main.initialize_database", return_value=True):
+        with (
+            patch("main.ClientRegistration") as mock_reg_class,
+            patch("main.set_language"),
+            patch("main.initialize_database", return_value=True),
+        ):
 
             # Mock OS version and hardware data
             mock_registration = Mock()
@@ -302,18 +317,20 @@ logging:
         mock_session_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_context.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "aiohttp.ClientSession", return_value=mock_session_context
-        ), patch.object(
-            mock_registration.network_utils, "get_hostname", return_value="minimal-host"
-        ), patch.object(
-            mock_registration.network_utils,
-            "get_ip_addresses",
-            return_value=("1.2.3.4", None),
-        ), patch(
-            "ssl.create_default_context"
-        ), patch(
-            "aiohttp.TCPConnector"
+        with (
+            patch("aiohttp.ClientSession", return_value=mock_session_context),
+            patch.object(
+                mock_registration.network_utils,
+                "get_hostname",
+                return_value="minimal-host",
+            ),
+            patch.object(
+                mock_registration.network_utils,
+                "get_ip_addresses",
+                return_value=("1.2.3.4", None),
+            ),
+            patch("ssl.create_default_context"),
+            patch("aiohttp.TCPConnector"),
         ):
 
             result = await mock_registration.register_with_server()
@@ -361,8 +378,10 @@ logging:
 """
         config_file.write_text(config_content)
 
-        with patch("main.ClientRegistration"), patch("main.set_language"), patch(
-            "main.initialize_database", return_value=True
+        with (
+            patch("main.ClientRegistration"),
+            patch("main.set_language"),
+            patch("main.initialize_database", return_value=True),
         ):
 
             agent = SysManageAgent(str(config_file))
@@ -405,18 +424,22 @@ logging:
                 "os_info": {"arch_notes": f"Testing {arch}"},
             }
 
-            with patch.object(
-                mock_registration.network_utils,
-                "get_hostname",
-                return_value=f"{arch}-host",
-            ), patch.object(
-                mock_registration.network_utils,
-                "get_ip_addresses",
-                return_value=("10.0.0.1", None),
-            ), patch.object(
-                mock_registration.os_info_collector,
-                "get_os_version_info",
-                return_value=mock_os_info,
+            with (
+                patch.object(
+                    mock_registration.network_utils,
+                    "get_hostname",
+                    return_value=f"{arch}-host",
+                ),
+                patch.object(
+                    mock_registration.network_utils,
+                    "get_ip_addresses",
+                    return_value=("10.0.0.1", None),
+                ),
+                patch.object(
+                    mock_registration.os_info_collector,
+                    "get_os_version_info",
+                    return_value=mock_os_info,
+                ),
             ):
 
                 basic_info = mock_registration.get_basic_registration_info()

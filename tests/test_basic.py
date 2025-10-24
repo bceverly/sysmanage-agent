@@ -107,8 +107,9 @@ def test_agent_basic_creation():
 
     try:
         # Mock logging and database initialization to avoid setup issues
-        with unittest.mock.patch("main.logging"), unittest.mock.patch(
-            "main.initialize_database", return_value=True
+        with (
+            unittest.mock.patch("main.logging"),
+            unittest.mock.patch("main.initialize_database", return_value=True),
         ):
             agent = SysManageAgent(temp_file_name)
             assert agent.config is not None  # nosec B101

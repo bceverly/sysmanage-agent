@@ -159,13 +159,11 @@ class TestClientRegistration:
 
     def test_get_complete_registration_data(self, registration):
         """Test complete registration data collection."""
-        with patch.object(
-            registration, "get_basic_registration_info"
-        ) as mock_basic, patch.object(
-            registration, "get_os_version_info"
-        ) as mock_os, patch.object(
-            registration, "get_hardware_info"
-        ) as mock_hardware:
+        with (
+            patch.object(registration, "get_basic_registration_info") as mock_basic,
+            patch.object(registration, "get_os_version_info") as mock_os,
+            patch.object(registration, "get_hardware_info") as mock_hardware,
+        ):
 
             mock_basic.return_value = {
                 "hostname": "test-host",

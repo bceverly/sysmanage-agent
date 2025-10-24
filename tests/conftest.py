@@ -238,10 +238,11 @@ def mock_package_manager():
 @pytest.fixture
 def mock_os_operations():
     """Mock OS operations for testing system operations."""
-    with patch("platform.system", return_value="Linux"), patch(
-        "platform.release", return_value="5.15.0"
-    ), patch("platform.machine", return_value="x86_64"), patch(
-        "platform.node", return_value="test-host"
+    with (
+        patch("platform.system", return_value="Linux"),
+        patch("platform.release", return_value="5.15.0"),
+        patch("platform.machine", return_value="x86_64"),
+        patch("platform.node", return_value="test-host"),
     ):
         yield
 

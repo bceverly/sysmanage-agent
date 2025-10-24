@@ -20,6 +20,10 @@ def clean_whitespace():
         "node_modules",
         ".pytest_cache",
         "htmlcov",
+        "parts",
+        "stage",
+        "prime",
+        "installer",
     }
 
     for root, dirs, files in os.walk("."):

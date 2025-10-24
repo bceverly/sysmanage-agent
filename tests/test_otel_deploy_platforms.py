@@ -29,9 +29,11 @@ class TestFreeBSDOtelDeployer:
         agent_instance = MagicMock()
         deployer = FreeBSDOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ) as mock_makedirs, patch("builtins.open", mock_open()) as mock_file:
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs") as mock_makedirs,
+            patch("builtins.open", mock_open()) as mock_file,
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -66,9 +68,11 @@ class TestFreeBSDOtelDeployer:
         agent_instance = MagicMock()
         deployer = FreeBSDOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ) as mock_makedirs, patch("builtins.open", mock_open()) as mock_file:
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs") as mock_makedirs,
+            patch("builtins.open", mock_open()) as mock_file,
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -135,9 +139,11 @@ class TestOpenBSDOtelDeployer:
         agent_instance = MagicMock()
         deployer = OpenBSDOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -191,9 +197,11 @@ class TestNetBSDOtelDeployer:
         agent_instance = MagicMock()
         deployer = NetBSDOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -277,16 +285,14 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("os.makedirs"), patch(
-            "builtins.open", mock_open()
-        ), patch(
-            "tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "os.unlink"
-        ), patch(
-            "os.chmod"
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("tempfile.NamedTemporaryFile") as mock_tempfile,
+            patch("os.unlink"),
+            patch("os.chmod"),
         ):
             # Configure mocks
             mock_exists.side_effect = lambda path: path == "/usr/bin/apt"
@@ -314,12 +320,12 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("os.makedirs"), patch(
-            "builtins.open", mock_open()
-        ), patch(
-            "os.chmod"
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/yum"
 
@@ -338,12 +344,12 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("os.makedirs"), patch(
-            "builtins.open", mock_open()
-        ), patch(
-            "os.chmod"
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/dnf"
 
@@ -374,9 +380,10 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess:
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+        ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/apt"
 
             # First call succeeds (prerequisites), second fails (download)
@@ -405,9 +412,11 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("shutil.rmtree"):
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/apt",
                 "/etc/otelcol-contrib",
@@ -428,9 +437,11 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("shutil.rmtree"):
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/yum",
                 "/etc/otelcol-contrib",
@@ -451,9 +462,11 @@ class TestLinuxOtelDeployer:
         agent_instance = MagicMock()
         deployer = LinuxOtelDeployer(agent_instance)
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("shutil.rmtree"):
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/dnf",
                 "/etc/otelcol-contrib",
@@ -478,9 +491,11 @@ class TestMacOSOtelDeployer:
         agent_instance = MagicMock()
         deployer = MacOSOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -561,9 +576,11 @@ class TestWindowsOtelDeployer:
         agent_instance = MagicMock()
         deployer = WindowsOtelDeployer(agent_instance)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0

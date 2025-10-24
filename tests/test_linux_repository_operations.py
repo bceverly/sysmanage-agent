@@ -46,9 +46,11 @@ class TestAPTOperations:
     async def test_list_apt_repositories_with_ppa(self, linux_ops):
         """Test listing APT repositories including PPAs."""
         sources_content = "deb http://ppa.launchpad.net/user/ppa/ubuntu focal main\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["user-ppa.list"]
-        ), patch("builtins.open", mock_open(read_data=sources_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["user-ppa.list"]),
+            patch("builtins.open", mock_open(read_data=sources_content)),
+        ):
             repos = await linux_ops.list_apt_repositories()
             assert len(repos) == 1
             assert repos[0]["type"] == "PPA"
@@ -60,9 +62,11 @@ class TestAPTOperations:
         """Test listing disabled APT repositories."""
         # Commented line with deb keyword is still considered a repository entry
         sources_content = "# deb http://example.com/ubuntu focal main\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["test.list"]
-        ), patch("builtins.open", mock_open(read_data=sources_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["test.list"]),
+            patch("builtins.open", mock_open(read_data=sources_content)),
+        ):
             repos = await linux_ops.list_apt_repositories()
             # The code skips lines that don't have "deb " in them after checking for PPA
             # So commented lines are not returned
@@ -79,9 +83,11 @@ class TestAPTOperations:
     async def test_list_apt_repositories_with_sources_file(self, linux_ops):
         """Test listing APT repositories from .sources files."""
         sources_content = "deb http://example.com/ubuntu focal main\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["test.sources"]
-        ), patch("builtins.open", mock_open(read_data=sources_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["test.sources"]),
+            patch("builtins.open", mock_open(read_data=sources_content)),
+        ):
             repos = await linux_ops.list_apt_repositories()
             assert len(repos) == 1
             assert repos[0]["type"] == "APT"
@@ -90,8 +96,9 @@ class TestAPTOperations:
     async def test_list_apt_repositories_error(self, linux_ops):
         """Test error handling when listing APT repositories."""
         # Mock os.listdir to raise exception
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", side_effect=Exception("Test error")
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", side_effect=Exception("Test error")),
         ):
             repos = await linux_ops.list_apt_repositories()
             assert len(repos) == 0
@@ -248,9 +255,11 @@ class TestYUMOperations:
     async def test_list_yum_repositories(self, linux_ops):
         """Test listing YUM repositories."""
         repo_content = "[test-repo]\nname=Test Repository\nbaseurl=http://example.com/\nenabled=1\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["test.repo"]
-        ), patch("builtins.open", mock_open(read_data=repo_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["test.repo"]),
+            patch("builtins.open", mock_open(read_data=repo_content)),
+        ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1
             assert repos[0]["name"] == "test-repo"
@@ -260,9 +269,11 @@ class TestYUMOperations:
     async def test_list_yum_repositories_copr(self, linux_ops):
         """Test listing YUM COPR repositories."""
         repo_content = "[copr:user:project]\nname=COPR Repository\nbaseurl=http://copr.fedorainfracloud.org/\nenabled=1\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["_copr:user:project.repo"]
-        ), patch("builtins.open", mock_open(read_data=repo_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["_copr:user:project.repo"]),
+            patch("builtins.open", mock_open(read_data=repo_content)),
+        ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1
             assert repos[0]["type"] == "COPR"
@@ -271,9 +282,11 @@ class TestYUMOperations:
     async def test_list_yum_repositories_disabled(self, linux_ops):
         """Test listing disabled YUM repositories."""
         repo_content = "[test-repo]\nname=Test Repository\nbaseurl=http://example.com/\nenabled=0\n"
-        with patch("os.path.exists", return_value=True), patch(
-            "os.listdir", return_value=["test.repo"]
-        ), patch("builtins.open", mock_open(read_data=repo_content)):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.listdir", return_value=["test.repo"]),
+            patch("builtins.open", mock_open(read_data=repo_content)),
+        ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1
             assert repos[0]["enabled"] is False

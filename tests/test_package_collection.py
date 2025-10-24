@@ -79,9 +79,12 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
 
     def test_collect_all_available_packages_unsupported_os(self):
         """Test package collection on unsupported OS."""
-        with patch(
-            "src.sysmanage_agent.collection.package_collection.get_database_manager"
-        ), patch("platform.system", return_value="UnsupportedOS"):
+        with (
+            patch(
+                "src.sysmanage_agent.collection.package_collection.get_database_manager"
+            ),
+            patch("platform.system", return_value="UnsupportedOS"),
+        ):
             # pylint: disable=import-outside-toplevel,reimported
             from src.sysmanage_agent.collection.package_collection import (
                 PackageCollector as UnsupportedCollector,

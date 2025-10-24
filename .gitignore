@@ -194,5 +194,12 @@ installer/windows/nssm.exe
 *.tar.gz
 *.swp
 
+# Snap build artifacts
+*.snap
+installer/ubuntu-snap/prime/
+installer/ubuntu-snap/stage/
+installer/ubuntu-snap/parts/
+installer/ubuntu-snap/.snapcraft/
+
 # Auto-generated requirements file
 requirements-prod.txt

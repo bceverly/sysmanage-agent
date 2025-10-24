@@ -52,8 +52,9 @@ class TestDetectLinuxDistro:
     async def test_detect_ubuntu(self, repo_ops):
         """Test detecting Ubuntu distribution."""
         os_release_content = 'ID=ubuntu\nVERSION_ID="22.04"\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "builtins.open", mock_open(read_data=os_release_content)
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("builtins.open", mock_open(read_data=os_release_content)),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "ubuntu"
@@ -62,8 +63,9 @@ class TestDetectLinuxDistro:
     async def test_detect_debian(self, repo_ops):
         """Test detecting Debian distribution."""
         os_release_content = 'ID=debian\nVERSION_ID="11"\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "builtins.open", mock_open(read_data=os_release_content)
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("builtins.open", mock_open(read_data=os_release_content)),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "debian"
@@ -72,8 +74,9 @@ class TestDetectLinuxDistro:
     async def test_detect_fedora(self, repo_ops):
         """Test detecting Fedora distribution."""
         os_release_content = 'ID=fedora\nVERSION_ID="38"\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "builtins.open", mock_open(read_data=os_release_content)
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("builtins.open", mock_open(read_data=os_release_content)),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "fedora"
@@ -82,8 +85,9 @@ class TestDetectLinuxDistro:
     async def test_detect_opensuse(self, repo_ops):
         """Test detecting openSUSE distribution."""
         os_release_content = 'ID="opensuse-leap"\nVERSION_ID="15.4"\n'
-        with patch("os.path.exists", return_value=True), patch(
-            "builtins.open", mock_open(read_data=os_release_content)
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("builtins.open", mock_open(read_data=os_release_content)),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "opensuse-leap"
@@ -91,8 +95,9 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_no_os_release(self, repo_ops):
         """Test detection when /etc/os-release doesn't exist."""
-        with patch("os.path.exists", return_value=False), patch(
-            "platform.system", return_value="Linux"
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("platform.system", return_value="Linux"),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "Linux"
@@ -108,8 +113,9 @@ class TestDetectLinuxDistro:
                 raise Exception("Test error")
             return original_open(path, *args, **kwargs)
 
-        with patch("builtins.open", side_effect=mock_open_func), patch(
-            "os.path.exists", return_value=True
+        with (
+            patch("builtins.open", side_effect=mock_open_func),
+            patch("os.path.exists", return_value=True),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "unknown"
@@ -132,8 +138,11 @@ class TestListRepositories:
                 }
             ]
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
         ):
             result = await repo_ops.list_third_party_repositories({})
             assert result["success"] is True
@@ -154,8 +163,11 @@ class TestListRepositories:
                 }
             ]
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
+            ),
         ):
             result = await repo_ops.list_third_party_repositories({})
             assert result["success"] is True
@@ -176,8 +188,11 @@ class TestListRepositories:
                 }
             ]
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
+            ),
         ):
             result = await repo_ops.list_third_party_repositories({})
             assert result["success"] is True
@@ -289,16 +304,18 @@ class TestAddRepository:
         repo_ops.linux_ops.add_apt_repository = AsyncMock(
             return_value={"success": True, "result": "Repository added successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "ppa:test/ppa"}
@@ -311,16 +328,18 @@ class TestAddRepository:
         repo_ops.linux_ops.add_yum_repository = AsyncMock(
             return_value={"success": True, "result": "Repository added successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "user/repo"}
@@ -333,16 +352,18 @@ class TestAddRepository:
         repo_ops.linux_ops.add_zypper_repository = AsyncMock(
             return_value={"success": True, "result": "Repository added successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "obs-repo", "url": "http://download.opensuse.org/"}
@@ -355,14 +376,15 @@ class TestAddRepository:
         repo_ops.bsd_macos_ops.add_homebrew_tap = AsyncMock(
             return_value={"success": True, "result": "Tap added successfully"}
         )
-        with patch("platform.system", return_value="Darwin"), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Darwin"),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "user/tap"}
@@ -375,14 +397,15 @@ class TestAddRepository:
         repo_ops.bsd_macos_ops.add_freebsd_repository = AsyncMock(
             return_value={"success": True, "result": "Repository added successfully"}
         )
-        with patch("platform.system", return_value="FreeBSD"), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="FreeBSD"),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "custom-repo", "url": "http://pkg.freebsd.org/"}
@@ -395,14 +418,15 @@ class TestAddRepository:
         repo_ops.bsd_macos_ops.add_netbsd_repository = AsyncMock(
             return_value={"success": True, "result": "Repository cloned successfully"}
         )
-        with patch("platform.system", return_value="NetBSD"), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="NetBSD"),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {
@@ -418,14 +442,15 @@ class TestAddRepository:
         repo_ops.windows_ops.add_windows_repository = AsyncMock(
             return_value={"success": True, "result": "Repository added successfully"}
         )
-        with patch("platform.system", return_value="Windows"), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Windows"),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {
@@ -439,8 +464,11 @@ class TestAddRepository:
     @pytest.mark.asyncio
     async def test_add_repository_unsupported_distro(self, repo_ops):
         """Test adding repository on unsupported Linux distribution."""
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "slackware"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "slackware"}
+            ),
         ):
             result = await repo_ops.add_third_party_repository(
                 {"repository": "test-repo"}
@@ -485,16 +513,18 @@ class TestDeleteRepositories:
         repo_ops.linux_ops.delete_apt_repository = AsyncMock(
             return_value={"success": True, "result": "Repository removed successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.delete_third_party_repositories(
                 {
@@ -512,16 +542,18 @@ class TestDeleteRepositories:
         repo_ops.linux_ops.delete_apt_repository = AsyncMock(
             return_value={"success": True, "result": "Repository removed successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.delete_third_party_repositories(
                 {
@@ -543,16 +575,18 @@ class TestDeleteRepositories:
                 {"success": False, "error": "Repository not found"},
             ]
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.delete_third_party_repositories(
                 {
@@ -602,16 +636,18 @@ class TestEnableRepositories:
         repo_ops.linux_ops.enable_apt_repository = AsyncMock(
             return_value={"success": True, "result": "Repository enabled successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.enable_third_party_repositories(
                 {
@@ -659,16 +695,18 @@ class TestDisableRepositories:
         repo_ops.linux_ops.disable_apt_repository = AsyncMock(
             return_value={"success": True, "result": "Repository disabled successfully"}
         )
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
-        ), patch.object(
-            repo_ops, "_run_package_update", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops, "_trigger_update_detection", new_callable=AsyncMock
-        ), patch.object(
-            repo_ops,
-            "_trigger_third_party_repository_rescan",
-            new_callable=AsyncMock,
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
+            patch.object(repo_ops, "_run_package_update", new_callable=AsyncMock),
+            patch.object(repo_ops, "_trigger_update_detection", new_callable=AsyncMock),
+            patch.object(
+                repo_ops,
+                "_trigger_third_party_repository_rescan",
+                new_callable=AsyncMock,
+            ),
         ):
             result = await repo_ops.disable_third_party_repositories(
                 {
@@ -710,8 +748,11 @@ class TestHelperMethods:
             "success": True,
             "result": {"stdout": "Updated", "stderr": ""},
         }
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "ubuntu"}
+            ),
         ):
             await repo_ops._run_package_update()
             mock_agent.system_ops.execute_shell_command.assert_called_once()
@@ -725,8 +766,11 @@ class TestHelperMethods:
             "success": True,
             "result": {"stdout": "Updated", "stderr": ""},
         }
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "fedora"}
+            ),
         ):
             await repo_ops._run_package_update()
             mock_agent.system_ops.execute_shell_command.assert_called_once()
@@ -740,8 +784,11 @@ class TestHelperMethods:
             "success": True,
             "result": {"stdout": "Updated", "stderr": ""},
         }
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "opensuse"}
+            ),
         ):
             await repo_ops._run_package_update()
             mock_agent.system_ops.execute_shell_command.assert_called_once()
@@ -751,8 +798,11 @@ class TestHelperMethods:
     @pytest.mark.asyncio
     async def test_run_package_update_unsupported(self, repo_ops, mock_agent):
         """Test running package update on unsupported distro."""
-        with patch("platform.system", return_value="Linux"), patch.object(
-            repo_ops, "_detect_linux_distro", return_value={"distro": "slackware"}
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch.object(
+                repo_ops, "_detect_linux_distro", return_value={"distro": "slackware"}
+            ),
         ):
             await repo_ops._run_package_update()
             mock_agent.system_ops.execute_shell_command.assert_not_called()

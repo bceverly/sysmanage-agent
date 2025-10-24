@@ -71,9 +71,10 @@ class TestNetworkUtils:
 
     def test_get_hostname_fallback(self, network_utils_no_config):
         """Test hostname collection fallback behavior."""
-        with patch("subprocess.run") as mock_subprocess, patch(
-            "socket.getfqdn"
-        ) as mock_getfqdn:
+        with (
+            patch("subprocess.run") as mock_subprocess,
+            patch("socket.getfqdn") as mock_getfqdn,
+        ):
             # Mock hostname -f to return test hostname
             mock_result = Mock()
             mock_result.returncode = 0

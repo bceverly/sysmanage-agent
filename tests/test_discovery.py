@@ -23,9 +23,10 @@ class TestServerDiscoveryClient:
     @pytest.mark.asyncio
     async def test_discover_servers_no_servers(self):
         """Test discovery when no servers are available."""
-        with patch.object(
-            self.client, "broadcast_discovery", return_value=[]
-        ), patch.object(self.client, "listen_for_announcements", return_value=[]):
+        with (
+            patch.object(self.client, "broadcast_discovery", return_value=[]),
+            patch.object(self.client, "listen_for_announcements", return_value=[]),
+        ):
 
             servers = await self.client.discover_servers(timeout=1)
             assert servers == []
@@ -44,9 +45,12 @@ class TestServerDiscoveryClient:
             "server_ip": "192.168.1.100",
         }
 
-        with patch.object(
-            self.client, "broadcast_discovery", return_value=[mock_server]
-        ), patch.object(self.client, "listen_for_announcements", return_value=[]):
+        with (
+            patch.object(
+                self.client, "broadcast_discovery", return_value=[mock_server]
+            ),
+            patch.object(self.client, "listen_for_announcements", return_value=[]),
+        ):
 
             servers = await self.client.discover_servers(timeout=1)
             assert len(servers) == 1
@@ -66,10 +70,11 @@ class TestServerDiscoveryClient:
             "server_ip": "192.168.1.101",
         }
 
-        with patch.object(
-            self.client, "broadcast_discovery", return_value=[]
-        ), patch.object(
-            self.client, "listen_for_announcements", return_value=[mock_server]
+        with (
+            patch.object(self.client, "broadcast_discovery", return_value=[]),
+            patch.object(
+                self.client, "listen_for_announcements", return_value=[mock_server]
+            ),
         ):
 
             servers = await self.client.discover_servers(timeout=1)
@@ -99,9 +104,14 @@ class TestServerDiscoveryClient:
             Exception("timeout"),
         ]
 
-        with patch.object(
-            self.client, "_get_broadcast_addresses", return_value=["255.255.255.255"]
-        ), patch("asyncio.get_event_loop") as mock_loop:
+        with (
+            patch.object(
+                self.client,
+                "_get_broadcast_addresses",
+                return_value=["255.255.255.255"],
+            ),
+            patch("asyncio.get_event_loop") as mock_loop,
+        ):
 
             mock_loop.return_value.time.side_effect = [0, 0.1, 10]  # Simulate timeout
 

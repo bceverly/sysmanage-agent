@@ -19,9 +19,10 @@ def get_database_path_from_config(config_manager) -> str:
     Get database path from configuration with system-to-local fallback.
 
     Tries paths in order:
-    1. Configured path from config file
-    2. System path: /var/lib/sysmanage-agent/agent.db
-    3. Local fallback: ./agent.db (in current directory)
+    1. Environment variable SYSMANAGE_DB_PATH (highest priority)
+    2. Configured path from config file
+    3. System path: /var/lib/sysmanage-agent/agent.db
+    4. Local fallback: ./agent.db (in current directory)
 
     Args:
         config_manager: ConfigManager instance
@@ -30,6 +31,12 @@ def get_database_path_from_config(config_manager) -> str:
         Database path, preferring system location if it exists
     """
     try:
+        # Check environment variable first (highest priority)
+        env_path = os.environ.get("SYSMANAGE_DB_PATH")
+        if env_path:
+            logger.info(_("Using database path from SYSMANAGE_DB_PATH: %s"), env_path)
+            return env_path
+
         # Get database path from config
         db_config = config_manager.get("database", {})
         config_path = db_config.get("path", None)

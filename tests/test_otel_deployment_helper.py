@@ -32,9 +32,11 @@ class TestOtelDeploymentHelper:
         logger = MagicMock()
         helper = OtelDeploymentHelper(agent_instance, logger)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.path.exists", return_value=True
-        ), patch("shutil.rmtree"):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.path.exists", return_value=True),
+            patch("shutil.rmtree"),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -52,9 +54,11 @@ class TestOtelDeploymentHelper:
         logger = MagicMock()
         helper = OtelDeploymentHelper(agent_instance, logger)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.path.exists"
-        ) as mock_exists, patch("shutil.rmtree"):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.path.exists") as mock_exists,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/apt",
                 "/etc/otelcol-contrib",
@@ -76,9 +80,11 @@ class TestOtelDeploymentHelper:
         logger = MagicMock()
         helper = OtelDeploymentHelper(agent_instance, logger)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.path.exists"
-        ) as mock_exists, patch("shutil.rmtree"):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.path.exists") as mock_exists,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/dnf",
                 "/etc/otelcol-contrib",
@@ -100,9 +106,11 @@ class TestOtelDeploymentHelper:
         logger = MagicMock()
         helper = OtelDeploymentHelper(agent_instance, logger)
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.path.exists"
-        ) as mock_exists, patch("shutil.rmtree"):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.path.exists") as mock_exists,
+            patch("shutil.rmtree"),
+        ):
             mock_exists.side_effect = lambda path: path in [
                 "/usr/bin/yum",
                 "/etc/otelcol-contrib",
@@ -236,16 +244,14 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config")
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("os.makedirs"), patch(
-            "builtins.open", mock_open()
-        ), patch(
-            "tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "os.unlink"
-        ), patch(
-            "os.chmod"
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("tempfile.NamedTemporaryFile") as mock_tempfile,
+            patch("os.unlink"),
+            patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/apt"
 
@@ -276,12 +282,12 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config")
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess, patch("os.makedirs"), patch(
-            "builtins.open", mock_open()
-        ), patch(
-            "os.chmod"
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/yum"
 
@@ -335,9 +341,10 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config")
 
-        with patch("os.path.exists") as mock_exists, patch(
-            "asyncio.create_subprocess_exec"
-        ) as mock_subprocess:
+        with (
+            patch("os.path.exists") as mock_exists,
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+        ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/apt"
 
             call_count = [0]
@@ -371,9 +378,11 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config")
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -431,9 +440,11 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         alloy_config_generator = MagicMock(return_value="test alloy config")
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -491,9 +502,11 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config")
 
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, patch(
-            "os.makedirs"
-        ), patch("builtins.open", mock_open()):
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+        ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
             mock_process.returncode = 0
@@ -550,8 +563,10 @@ class TestOtelDeploymentHelper:
         helper = OtelDeploymentHelper(agent_instance, logger)
         config_generator = MagicMock(return_value="test config content")
 
-        with patch("os.makedirs"), patch("builtins.open", mock_open()), patch(
-            "os.chmod"
+        with (
+            patch("os.makedirs"),
+            patch("builtins.open", mock_open()),
+            patch("os.chmod"),
         ):
             result = await helper._create_linux_config(
                 "http://grafana.example.com", config_generator

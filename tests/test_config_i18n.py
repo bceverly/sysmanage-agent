@@ -135,9 +135,11 @@ i18n:
 
     def test_config_integration_with_main_agent(self, config_with_i18n):
         """Test config integration with main agent initialization."""
-        with patch("main.ClientRegistration"), patch(
-            "main.set_language"
-        ) as mock_set_language, patch("main.initialize_database", return_value=True):
+        with (
+            patch("main.ClientRegistration"),
+            patch("main.set_language") as mock_set_language,
+            patch("main.initialize_database", return_value=True),
+        ):
             SysManageAgent(config_with_i18n)
 
             # Verify that set_language was called with the configured language
