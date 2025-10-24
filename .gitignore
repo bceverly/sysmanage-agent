@@ -208,3 +208,6 @@ installer/ubuntu-snap-strict/.snapcraft/
 
 # Auto-generated requirements file
 requirements-prod.txt
+
+# Auto-generated version file
+VERSION
