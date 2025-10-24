@@ -6,8 +6,8 @@ server:
   # WebSocket URL of the SysManage server
   url: "wss://sysmanage.example.com:8443"
 
-  # Authentication token (obtain from SysManage server)
-  token: "YOUR_AGENT_TOKEN_HERE"
+  # Authentication token (optional - obtain from SysManage server if required)
+  # token: "YOUR_AGENT_TOKEN_HERE"
 
   # Reconnect settings
   reconnect_interval: 30  # seconds
@@ -22,8 +22,9 @@ database:
 
 # Logging settings
 logging:
-  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  level: "INFO"
+  # Log level: Specify which levels to log, separated by pipes
+  # Example: "INFO|WARNING|ERROR|CRITICAL" or "DEBUG|INFO|WARNING|ERROR"
+  level: "INFO|WARNING|ERROR|CRITICAL"
 
   # Log file path
   file: "/var/log/sysmanage-agent/agent.log"

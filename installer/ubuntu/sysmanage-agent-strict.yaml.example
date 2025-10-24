@@ -1,0 +1,79 @@
+# SysManage Agent Configuration (Strict Confinement - Monitoring Only)
+# This configuration is for the strict confinement snap which provides
+# read-only monitoring capabilities without system modification features.
+
+# Server connection settings
+server:
+  # WebSocket URL of the SysManage server
+  url: "wss://sysmanage.example.com:8443"
+
+  # Authentication token (optional - obtain from SysManage server if required)
+  # token: "YOUR_AGENT_TOKEN_HERE"
+
+  # Reconnect settings
+  reconnect_interval: 30  # seconds
+  max_reconnect_attempts: 0  # 0 = unlimited
+
+# Database settings
+database:
+  # Path to SQLite database file
+  # In strict confinement, this will be in $SNAP_COMMON
+  # Default is handled by SYSMANAGE_DB_PATH environment variable
+  # path: "/var/snap/sysmanage-agent-strict/common/agent.db"
+
+# Logging settings
+logging:
+  # Log level: Specify which levels to log, separated by pipes
+  # Example: "INFO|WARNING|ERROR|CRITICAL" or "DEBUG|INFO|WARNING|ERROR"
+  level: "INFO|WARNING|ERROR|CRITICAL"
+
+  # Log file path
+  # In strict confinement, this will be in $SNAP_COMMON/logs
+  # Default is handled by SYSMANAGE_LOG_DIR environment variable
+  # file: "/var/snap/sysmanage-agent-strict/common/logs/agent.log"
+
+  # Maximum log file size (in bytes)
+  max_size: 10485760  # 10MB
+
+  # Number of backup log files to keep
+  backup_count: 5
+
+# Collection intervals (in seconds)
+collection:
+  # How often to collect system information
+  system_info_interval: 300  # 5 minutes
+
+  # How often to collect package information
+  package_info_interval: 3600  # 1 hour
+
+  # How often to check for updates
+  update_check_interval: 3600  # 1 hour
+
+  # How often to collect hardware information
+  hardware_info_interval: 3600  # 1 hour
+
+# Security settings
+security:
+  # Verify SSL certificates
+  verify_ssl: true
+
+  # Path to custom CA certificate (optional)
+  # In strict confinement, place custom certs in $SNAP_COMMON
+  # ca_cert: "/var/snap/sysmanage-agent-strict/common/ca-cert.pem"
+
+# Feature flags (Strict Confinement - Read-Only Mode)
+# NOTE: The following features are DISABLED in strict confinement mode
+# as they require system modification permissions that are not available.
+# For full management features, use the classic confinement version.
+features:
+  # Automatic package updates - DISABLED (requires root access)
+  auto_update: false
+
+  # Firewall management - DISABLED (requires firewall-control plug)
+  firewall_management: false
+
+  # Certificate management - DISABLED (requires file system write access)
+  certificate_management: false
+
+  # Script execution - DISABLED (requires process-control plug)
+  script_execution: false

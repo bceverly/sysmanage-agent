@@ -45,8 +45,13 @@ class CertificateStore:
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
             # Set directory permissions (Unix only)
+            # Skip chmod if we don't have permission (e.g., snap common directory owned by root)
             if os.name != "nt":
-                os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+                try:
+                    os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+                except (PermissionError, OSError):
+                    # Directory exists but we can't chmod it - that's okay if we can write to it
+                    pass
         except (PermissionError, OSError):
             # Fall back to local directory in the same location as the running script
             script_dir = Path(sys.argv[0]).parent.resolve()

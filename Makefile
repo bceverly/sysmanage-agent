@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall
 
 # Default target
 help:
@@ -36,10 +36,14 @@ help:
 	@echo "  make installer-openbsd - Prepare OpenBSD port (copy to /usr/ports)"
 	@echo "  make installer-freebsd - Build FreeBSD .pkg package"
 	@echo "  make installer-netbsd - Build NetBSD .tgz package"
-	@echo "  make snap          - Build Ubuntu Snap package (core22 base)"
+	@echo "  make snap          - Build Ubuntu Snap package (classic confinement)"
 	@echo "  make snap-clean    - Clean snap build artifacts"
 	@echo "  make snap-install  - Install locally built snap package (Ubuntu only)"
 	@echo "  make snap-uninstall - Uninstall snap package (Ubuntu only)"
+	@echo "  make snap-strict   - Build Ubuntu Snap package (strict confinement)"
+	@echo "  make snap-strict-clean - Clean strict snap build artifacts"
+	@echo "  make snap-strict-install - Install locally built strict snap (Ubuntu only)"
+	@echo "  make snap-strict-uninstall - Uninstall strict snap (Ubuntu only)"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
@@ -168,6 +172,23 @@ else
 			echo "[WARNING] Could not install packaging tools. Run manually: sudo apt-get install -y debhelper dh-python python3-all python3-setuptools build-essential devscripts lintian"; \
 		else \
 			echo "✓ All packaging build tools already installed"; \
+		fi; \
+		echo "[INFO] Checking for Python build dependencies (for strict snap)..."; \
+		MISSING_PYTHON_DEPS=""; \
+		dpkg -l libssl-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS libssl-dev"; \
+		dpkg -l zlib1g-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS zlib1g-dev"; \
+		dpkg -l libncurses5-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS libncurses5-dev"; \
+		dpkg -l libreadline-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS libreadline-dev"; \
+		dpkg -l libsqlite3-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS libsqlite3-dev"; \
+		dpkg -l libffi-dev 2>/dev/null | grep -q "^ii" || MISSING_PYTHON_DEPS="$$MISSING_PYTHON_DEPS libffi-dev"; \
+		if [ -n "$$MISSING_PYTHON_DEPS" ]; then \
+			echo "Missing Python build dependencies:$$MISSING_PYTHON_DEPS"; \
+			echo "Installing Python build dependencies for strict snap..."; \
+			echo "Running: sudo apt-get install -y libssl-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libdb-dev libbz2-dev libexpat1-dev liblzma-dev libffi-dev uuid-dev wget"; \
+			sudo apt-get install -y libssl-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libdb-dev libbz2-dev libexpat1-dev liblzma-dev libffi-dev uuid-dev wget || \
+			echo "[WARNING] Could not install Python build dependencies. Run manually: sudo apt-get install -y libssl-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libdb-dev libbz2-dev libexpat1-dev liblzma-dev libffi-dev uuid-dev wget"; \
+		else \
+			echo "✓ All Python build dependencies already installed"; \
 		fi; \
 		echo "[INFO] Checking for Snap build tools..."; \
 		LXD_GROUP_ADDED=0; \
@@ -1798,4 +1819,258 @@ snap-uninstall:
 	echo ""; \
 	echo "To completely remove all data including config:"; \
 	echo "  sudo rm -rf /var/snap/sysmanage-agent"; \
+	echo ""
+
+# Build strict confinement snap package
+snap-strict:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Building Ubuntu Snap Package (Strict Confinement) ==="
+	@echo ""
+	@echo "Checking build dependencies..."
+	@command -v snapcraft >/dev/null 2>&1 || { \
+		echo "ERROR: snapcraft not found."; \
+		echo "Install with: sudo apt-get install -y snapd snapcraft"; \
+		echo "Or run: make install-dev"; \
+		exit 1; \
+	}
+	@echo "✓ Snapcraft available"
+	@echo ""
+	@echo "Building strict confinement snap package in LXD container (compiling Python 3.10 from source)..."
+	@echo "This will take several minutes due to Python compilation and LXD container setup..."
+	@echo ""
+	@cd installer/ubuntu-snap-strict && snapcraft pack --verbose
+	@echo ""
+	@echo "==================================="; \
+	echo "Build Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	SNAP_FILE=$$(ls installer/ubuntu-snap-strict/*.snap 2>/dev/null | head -1); \
+	if [ -n "$$SNAP_FILE" ]; then \
+		echo "Package: $$SNAP_FILE"; \
+		ls -lh "$$SNAP_FILE"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  make snap-strict-install"; \
+		echo "  OR"; \
+		echo "  sudo snap install $$SNAP_FILE --dangerous"; \
+		echo ""; \
+		echo "After installation:"; \
+		echo "  1. Edit /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml"; \
+		echo "  2. Start: sudo snap start sysmanage-agent-strict"; \
+		echo "  3. Check status: sudo snap services sysmanage-agent-strict"; \
+		echo "  4. View logs: sudo snap logs sysmanage-agent-strict -f"; \
+		echo ""; \
+		echo "Note: Strict confinement provides read-only monitoring capabilities."; \
+		echo "      For full management features, use 'make snap' (classic confinement)."; \
+		echo ""; \
+	else \
+		echo "ERROR: Built snap not found!"; \
+		exit 1; \
+	fi
+
+# Clean strict snap build artifacts
+snap-strict-clean:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Cleaning Strict Snap Build Artifacts ==="
+	@echo ""
+	@echo "Removing snap build artifacts..."
+	@cd installer/ubuntu-snap-strict && snapcraft clean || true
+	@rm -rf installer/ubuntu-snap-strict/*.snap
+	@rm -rf installer/ubuntu-snap-strict/prime
+	@rm -rf installer/ubuntu-snap-strict/stage
+	@rm -rf installer/ubuntu-snap-strict/parts
+	@echo "✓ Strict snap build artifacts cleaned"
+	@echo ""
+
+# Install locally built strict snap package
+snap-strict-install:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Installing Strict Snap Package ==="
+	@echo ""
+	@SNAP_FILE=$$(ls installer/ubuntu-snap-strict/*.snap 2>/dev/null | head -1); \
+	if [ -z "$$SNAP_FILE" ]; then \
+		echo "ERROR: No snap package found in installer/ubuntu-snap-strict/"; \
+		echo "Build one first with: make snap-strict"; \
+		exit 1; \
+	fi; \
+	echo "Found snap package: $$SNAP_FILE"; \
+	echo ""; \
+	if snap list sysmanage-agent-strict >/dev/null 2>&1; then \
+		echo "Existing sysmanage-agent-strict snap detected - upgrading in place..."; \
+		echo "(Configuration will be preserved)"; \
+		echo ""; \
+	else \
+		echo "Installing new snap..."; \
+		echo ""; \
+	fi; \
+	sudo snap install "$$SNAP_FILE" --dangerous || { \
+		echo "ERROR: Failed to install snap"; \
+		exit 1; \
+	}; \
+	echo ""; \
+	echo "==================================="; \
+	echo "Installation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Configuration (using snap commands):"; \
+	echo "  Required:"; \
+	echo "    sudo snap set sysmanage-agent-strict server-url=\"wss://your-server:8443\""; \
+	echo ""; \
+	echo "  Optional:"; \
+	echo "    sudo snap set sysmanage-agent-strict server-token=\"YOUR_TOKEN\""; \
+	echo "    sudo snap set sysmanage-agent-strict log-level=\"INFO|WARNING|ERROR|CRITICAL\""; \
+	echo "    sudo snap set sysmanage-agent-strict verify-ssl=true"; \
+	echo "    sudo snap set sysmanage-agent-strict reconnect-interval=30"; \
+	echo ""; \
+	echo "  View settings:"; \
+	echo "    sudo snap get sysmanage-agent-strict"; \
+	echo ""; \
+	echo "  Config file (auto-generated):"; \
+	echo "    /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml"; \
+	echo ""; \
+	echo "Service management:"; \
+	echo "  Start:   sudo snap start sysmanage-agent-strict"; \
+	echo "  Stop:    sudo snap stop sysmanage-agent-strict"; \
+	echo "  Restart: sudo snap restart sysmanage-agent-strict"; \
+	echo "  Status:  sudo snap services sysmanage-agent-strict"; \
+	echo "  Logs:    sudo snap logs sysmanage-agent-strict -f"; \
+	echo ""; \
+	echo "Note: Configuration changes auto-restart the service."; \
+	echo ""
+
+# Uninstall strict snap package
+snap-strict-uninstall:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Uninstalling Strict Snap Package ==="
+	@echo ""
+	@if ! snap list sysmanage-agent-strict >/dev/null 2>&1; then \
+		echo "sysmanage-agent-strict snap is not installed"; \
+		exit 0; \
+	fi
+	@echo "Stopping sysmanage-agent-strict service..."
+	@sudo snap stop sysmanage-agent-strict 2>/dev/null || true
+	@echo "✓ Service stopped"
+	@echo ""
+	@echo "Backing up configuration..."
+	@if [ -f /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml ]; then \
+		sudo cp /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml /tmp/sysmanage-agent-strict.yaml.preserved || true; \
+		echo "✓ Configuration backed up"; \
+	fi
+	@echo ""
+	@echo "Removing sysmanage-agent-strict snap..."
+	@sudo snap remove sysmanage-agent-strict || { \
+		echo "ERROR: Failed to remove snap"; \
+		exit 1; \
+	}
+	@echo "✓ Snap removed"
+	@echo ""
+	@if [ -f /tmp/sysmanage-agent-strict.yaml.preserved ]; then \
+		echo "Restoring configuration..."; \
+		sudo mkdir -p /var/snap/sysmanage-agent-strict/common; \
+		sudo cp /tmp/sysmanage-agent-strict.yaml.preserved /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml || true; \
+		sudo rm -f /tmp/sysmanage-agent-strict.yaml.preserved; \
+		echo "✓ Configuration restored to /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml"; \
+		echo ""; \
+	fi
+	@echo "==================================="; \
+	echo "Uninstallation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Configuration preserved at:"; \
+	echo "  /var/snap/sysmanage-agent-strict/common/sysmanage-agent.yaml"; \
+	echo ""; \
+	echo "To completely remove all data including config:"; \
+	echo "  sudo rm -rf /var/snap/sysmanage-agent-strict"; \
+	echo ""
+
+# Publish strict snap to store (edge channel)
+snap-strict-publish:
+	@if [ "$$(uname -s)" != "Linux" ] || ! [ -f /etc/lsb-release ] || ! grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
+		echo "ERROR: Snap packaging is only supported on Ubuntu systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "=== Publishing Strict Snap to Store (Edge Channel) ==="
+	@echo ""
+	@SNAP_FILE=$$(ls -t installer/ubuntu-snap-strict/sysmanage-agent-strict_*.snap 2>/dev/null | head -1); \
+	if [ -z "$$SNAP_FILE" ]; then \
+		echo "ERROR: No snap file found in installer/ubuntu-snap-strict/"; \
+		echo "Run 'make snap-strict' first to build the snap."; \
+		exit 1; \
+	fi; \
+	echo "Found snap: $$SNAP_FILE"; \
+	echo ""; \
+	echo "This will:"; \
+	echo "  1. Login to Snapcraft (if not already logged in)"; \
+	echo "  2. Register 'sysmanage-agent-strict' name (if not registered)"; \
+	echo "  3. Upload and release to edge channel"; \
+	echo ""; \
+	read -p "Continue? [y/N] " -n 1 -r; \
+	echo ""; \
+	if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Step 1: Logging in to Snapcraft..."; \
+	if ! snapcraft whoami >/dev/null 2>&1; then \
+		snapcraft login || { \
+			echo "ERROR: Failed to login to Snapcraft"; \
+			exit 1; \
+		}; \
+	else \
+		echo "✓ Already logged in as $$(snapcraft whoami | grep email | awk '{print $$2}')"; \
+	fi; \
+	echo ""; \
+	echo "Step 2: Registering snap name..."; \
+	if snapcraft register sysmanage-agent-strict 2>&1 | grep -q "already registered"; then \
+		echo "✓ Name already registered"; \
+	elif snapcraft register sysmanage-agent-strict; then \
+		echo "✓ Name registered successfully"; \
+	else \
+		echo "ERROR: Failed to register snap name"; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Step 3: Uploading to edge channel..."; \
+	snapcraft upload --release=edge "$$SNAP_FILE" || { \
+		echo "ERROR: Failed to upload snap"; \
+		exit 1; \
+	}; \
+	echo ""; \
+	echo "==================================="; \
+	echo "Publication Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "Your snap has been published to the edge channel."; \
+	echo ""; \
+	echo "View your snap:"; \
+	echo "  https://snapcraft.io/sysmanage-agent-strict"; \
+	echo ""; \
+	echo "Check status:"; \
+	echo "  snapcraft status sysmanage-agent-strict"; \
+	echo ""; \
+	echo "Install from edge:"; \
+	echo "  sudo snap install sysmanage-agent-strict --edge"; \
+	echo ""; \
+	echo "Promote to other channels when ready:"; \
+	echo "  snapcraft release sysmanage-agent-strict <revision> beta"; \
+	echo "  snapcraft release sysmanage-agent-strict <revision> candidate"; \
+	echo "  snapcraft release sysmanage-agent-strict <revision> stable"; \
 	echo ""

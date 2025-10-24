@@ -115,6 +115,8 @@ parts:
       export PYTHONPATH=$SNAP/lib/python3.13/site-packages:$PYTHONPATH
       export SYSMANAGE_CONFIG=$SNAP_COMMON/sysmanage-agent.yaml
       export SYSMANAGE_DB_PATH=$SNAP_COMMON/agent.db
+      export SYSMANAGE_LOG_DIR=/var/log/sysmanage-agent
+      export SYSMANAGE_LOG_CONSOLE=1
 
       # Create directories if they don't exist (classic confinement allows access)
       mkdir -p /var/log/sysmanage-agent

@@ -196,10 +196,15 @@ installer/windows/nssm.exe
 
 # Snap build artifacts
 *.snap
+snapcraft-*.txt
 installer/ubuntu-snap/prime/
 installer/ubuntu-snap/stage/
 installer/ubuntu-snap/parts/
 installer/ubuntu-snap/.snapcraft/
+installer/ubuntu-snap-strict/prime/
+installer/ubuntu-snap-strict/stage/
+installer/ubuntu-snap-strict/parts/
+installer/ubuntu-snap-strict/.snapcraft/
 
 # Auto-generated requirements file
 requirements-prod.txt

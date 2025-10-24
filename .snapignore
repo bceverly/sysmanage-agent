@@ -1,0 +1,19 @@
+# Snapcraft ignore patterns
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+htmlcov
+.coverage
+logs
+temp_tests
+installer
+scripts
+snap
+parts
+stage
+prime
+*.snap

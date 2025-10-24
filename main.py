@@ -116,7 +116,9 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         self.registration = ClientRegistration(self.config)
 
         # Initialize certificate store
-        self.cert_store = CertificateStore()
+        # Use SYSMANAGE_CONFIG_DIR if set (for snap confinement), otherwise use default
+        config_dir = os.environ.get("SYSMANAGE_CONFIG_DIR")
+        self.cert_store = CertificateStore(config_dir=config_dir)
 
         # Initialize utility classes
         self.update_checker_util = UpdateChecker(self, self.logger)
@@ -222,9 +224,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
 
         # Default to /var/log for system service, or local logs/ for development
         if not log_file:
-            # Try /var/log/sysmanage-agent first (system service), fall back to local logs/
-            if os.path.exists("/var/log/sysmanage-agent"):
+            # Check environment variable first (highest priority)
+            env_log_dir = os.environ.get("SYSMANAGE_LOG_DIR")
+            if env_log_dir:
+                os.makedirs(env_log_dir, exist_ok=True)
+                log_file = os.path.join(env_log_dir, "agent.log")
+            # Try /var/log/sysmanage-agent (system service)
+            elif os.path.exists("/var/log/sysmanage-agent"):
                 log_file = "/var/log/sysmanage-agent/agent.log"
+            # Fallback to local logs/ directory
             else:
                 logs_dir = os.path.join(os.getcwd(), "logs")
                 os.makedirs(logs_dir, exist_ok=True)
@@ -247,6 +255,16 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         )
         root_logger.addHandler(file_handler)
         root_logger.setLevel(getattr(logging, log_level.upper()))
+
+        # Also log to console if running as a daemon (for snap logs, systemd journal, etc.)
+        # Check if SYSMANAGE_LOG_CONSOLE environment variable is set
+        if os.environ.get("SYSMANAGE_LOG_CONSOLE", "").lower() in ("1", "true", "yes"):
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(getattr(logging, log_level.upper()))
+            console_handler.setFormatter(
+                UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
+            )
+            root_logger.addHandler(console_handler)
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None

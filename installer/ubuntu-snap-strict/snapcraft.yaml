@@ -1,0 +1,289 @@
+name: sysmanage-agent-strict
+adopt-info: sysmanage-agent
+summary: System monitoring agent for SysManage (read-only, strict confinement)
+description: |
+  The SysManage agent in strict confinement provides read-only system monitoring
+  capabilities including:
+   * Package inventory collection
+   * System monitoring and metrics
+   * Hardware and software inventory
+   * Log observation
+   * Integration with SysManage server
+
+  This agent runs as a system service with strict sandboxing and provides
+  monitoring and observability without system modification capabilities.
+  For full system management features, use the classic confinement version.
+
+  NOTE: Requires GLIBC 2.38+ (Ubuntu 24.04+, Debian 13+, or equivalent).
+
+icon: snap/gui/icon.svg
+
+grade: stable
+confinement: strict
+base: core22
+license: Proprietary
+title: SysManage Agent (Strict Confinement)
+contact: mailto:bryan@theeverlys.com
+website: https://sysmanage.org
+issues: https://github.com/bceverly/sysmanage-agent/issues
+source-code: https://github.com/bceverly/sysmanage-agent
+
+architectures:
+  - build-on: amd64
+
+apps:
+  sysmanage-agent-strict:
+    command: bin/sysmanage-agent-wrapper
+    daemon: simple
+    restart-condition: always
+    restart-delay: 10s
+    plugs:
+      - network
+      - network-bind
+      - system-observe
+      - hardware-observe
+      - mount-observe
+      - log-observe
+
+hooks:
+  install:
+    plugs:
+      - network
+      - network-bind
+  configure:
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  python310:
+    plugin: nil
+    source: https://www.python.org/ftp/python/3.10.15/Python-3.10.15.tgz
+    source-checksum: sha256/a27864e5ba2a4474f8f6c58ab92ff52767ac8b66f1646923355a53fe3ef15074
+    build-packages:
+      - build-essential
+      - libssl-dev
+      - zlib1g-dev
+      - libncurses5-dev
+      - libncursesw5-dev
+      - libreadline-dev
+      - libsqlite3-dev
+      - libgdbm-dev
+      - libdb-dev
+      - libbz2-dev
+      - libexpat1-dev
+      - liblzma-dev
+      - libffi-dev
+      - uuid-dev
+      - wget
+    override-build: |
+      ./configure --prefix=/usr --enable-optimizations --enable-shared
+      make -j$(nproc)
+      make DESTDIR=$CRAFT_PART_INSTALL install
+      # Ensure shared libraries can be found
+      ldconfig -n $CRAFT_PART_INSTALL/usr/lib
+
+  sysmanage-agent:
+    after: [python310]
+    plugin: dump
+    source: sysmanage-agent-src.tar.gz
+    source-type: tar
+    build-packages:
+      - git
+    override-build: |
+      # First, let the dump plugin do its default work (extract and copy files)
+      craftctl default
+
+      # Set version from VERSION file
+      if [ -f "$CRAFT_PART_INSTALL/VERSION" ]; then
+        VERSION=$(cat $CRAFT_PART_INSTALL/VERSION)
+        craftctl set version="$VERSION"
+        echo "Version set to: $VERSION"
+      else
+        echo "WARNING: VERSION file not found, using default"
+        craftctl set version="0.9.8"
+      fi
+
+      # Save the extracted source location
+      REPO_ROOT=$CRAFT_PART_INSTALL
+      # Install Python packages using our compiled Python 3.10
+      export LD_LIBRARY_PATH=$CRAFT_STAGE/usr/lib:${LD_LIBRARY_PATH:-}
+      $CRAFT_STAGE/usr/bin/python3.10 -m pip install --target=$CRAFT_PART_INSTALL/lib/python3.10/site-packages \
+        websockets>=13.0 \
+        pyyaml>=6.0 \
+        aiohttp>=3.10.0 \
+        cryptography>=43.0.0 \
+        sqlalchemy>=2.0.0 \
+        alembic>=1.13.0 \
+        prometheus-client>=0.20.0 \
+        psutil>=6.0.0
+
+      # Copy application files from repo root
+      mkdir -p $CRAFT_PART_INSTALL/opt/sysmanage-agent
+      cp -r $REPO_ROOT/src $CRAFT_PART_INSTALL/opt/sysmanage-agent/
+      cp $REPO_ROOT/main.py $CRAFT_PART_INSTALL/opt/sysmanage-agent/
+      cp $REPO_ROOT/alembic.ini $CRAFT_PART_INSTALL/opt/sysmanage-agent/
+
+      # Create directories for runtime data
+      mkdir -p $CRAFT_PART_INSTALL/etc/sysmanage-agent
+      mkdir -p $CRAFT_PART_INSTALL/var/lib/sysmanage-agent
+      mkdir -p $CRAFT_PART_INSTALL/var/log/sysmanage-agent
+
+      # Create hooks directory
+      mkdir -p $CRAFT_PART_INSTALL/meta/hooks
+
+      # Create install hook to show configuration instructions
+      cat > $CRAFT_PART_INSTALL/meta/hooks/install << 'HOOKEOF'
+      #!/bin/bash
+      echo "╔══════════════════════════════════════════════════════════════════════╗"
+      echo "║  SysManage Agent (Strict Confinement) - Configuration Required      ║"
+      echo "╚══════════════════════════════════════════════════════════════════════╝"
+      echo ""
+      echo "This is the strict confinement version with read-only monitoring."
+      echo "System modification features (updates, firewall, scripts) are disabled."
+      echo "For full management features, use the classic confinement version."
+      echo ""
+      echo "Configure the agent using snap commands:"
+      echo ""
+      echo "  Required settings:"
+      echo "    sudo snap set sysmanage-agent-strict server-url=\"wss://your-server:8443\""
+      echo ""
+      echo "  Optional settings:"
+      echo "    sudo snap set sysmanage-agent-strict server-token=\"YOUR_TOKEN\""
+      echo "    sudo snap set sysmanage-agent-strict log-level=\"INFO|WARNING|ERROR|CRITICAL\""
+      echo "    sudo snap set sysmanage-agent-strict verify-ssl=true"
+      echo "    sudo snap set sysmanage-agent-strict reconnect-interval=30"
+      echo ""
+      echo "  View current settings:"
+      echo "    sudo snap get sysmanage-agent-strict"
+      echo ""
+      echo "After configuration, the service will start automatically."
+      echo ""
+      HOOKEOF
+      chmod +x $CRAFT_PART_INSTALL/meta/hooks/install
+
+      # Create configure hook to generate config file from snap settings
+      cat > $CRAFT_PART_INSTALL/meta/hooks/configure << 'HOOKEOF'
+      #!/bin/bash
+
+      # Get snap configuration values
+      SERVER_URL=$(snapctl get server-url)
+      SERVER_TOKEN=$(snapctl get server-token)
+      LOG_LEVEL=$(snapctl get log-level)
+      VERIFY_SSL=$(snapctl get verify-ssl)
+      RECONNECT_INTERVAL=$(snapctl get reconnect-interval)
+
+      # Set defaults if not configured
+      LOG_LEVEL=${LOG_LEVEL:-"INFO|WARNING|ERROR|CRITICAL"}
+      VERIFY_SSL=${VERIFY_SSL:-"true"}
+      RECONNECT_INTERVAL=${RECONNECT_INTERVAL:-"30"}
+
+      # If server-url is not set, this is initial install - skip validation
+      # User will configure later with snap set commands
+      if [ -z "$SERVER_URL" ]; then
+          echo "Configuration not yet set. Use 'snap set' to configure the agent."
+          exit 0
+      fi
+
+      # Parse the server URL to extract hostname, port, and protocol
+      # Supports: wss://host:port, ws://host:port, host:port, or just host
+      if [[ "$SERVER_URL" =~ ^(wss?://)?([^:]+)(:([0-9]+))?$ ]]; then
+          PROTOCOL="${BASH_REMATCH[1]}"
+          HOSTNAME="${BASH_REMATCH[2]}"
+          PORT="${BASH_REMATCH[4]}"
+
+          # Set defaults
+          if [ -z "$PORT" ]; then
+              if [ "$PROTOCOL" = "wss://" ]; then
+                  PORT="8443"
+              else
+                  PORT="8000"
+              fi
+          fi
+
+          if [ "$PROTOCOL" = "wss://" ]; then
+              USE_HTTPS="true"
+          else
+              USE_HTTPS="false"
+          fi
+      else
+          echo "ERROR: Invalid server URL format: $SERVER_URL"
+          echo "Expected format: wss://hostname:port or ws://hostname:port or hostname:port"
+          exit 1
+      fi
+
+      # Generate configuration file
+      cat > $SNAP_COMMON/sysmanage-agent.yaml << EOF
+      # SysManage Agent Configuration (Auto-generated from snap settings)
+      # DO NOT EDIT - Use 'snap set' commands to modify configuration
+
+      server:
+        hostname: "$HOSTNAME"
+        port: $PORT
+        use_https: $USE_HTTPS
+      EOF
+
+      # Add token only if set
+      if [ -n "$SERVER_TOKEN" ]; then
+          cat >> $SNAP_COMMON/sysmanage-agent.yaml << EOF
+        token: "$SERVER_TOKEN"
+      EOF
+      fi
+
+      cat >> $SNAP_COMMON/sysmanage-agent.yaml << EOF
+        reconnect_interval: $RECONNECT_INTERVAL
+        max_reconnect_attempts: 0
+
+      database:
+        path: "$SNAP_COMMON/agent.db"
+
+      logging:
+        level: "$LOG_LEVEL"
+        file: "$SNAP_COMMON/logs/agent.log"
+        max_size: 10485760
+        backup_count: 5
+
+      collection:
+        system_info_interval: 300
+        package_info_interval: 3600
+        update_check_interval: 3600
+        hardware_info_interval: 3600
+
+      security:
+        verify_ssl: $VERIFY_SSL
+
+      features:
+        auto_update: false
+        firewall_management: false
+        certificate_management: false
+        script_execution: false
+      EOF
+
+      echo "Configuration updated successfully!"
+
+      # Restart the service to apply changes
+      snapctl restart sysmanage-agent-strict.sysmanage-agent-strict
+      HOOKEOF
+      chmod +x $CRAFT_PART_INSTALL/meta/hooks/configure
+
+      # Create wrapper script
+      mkdir -p $CRAFT_PART_INSTALL/bin
+      cat > $CRAFT_PART_INSTALL/bin/sysmanage-agent-wrapper << 'EOF'
+      #!/bin/bash
+      export PYTHONUNBUFFERED=1
+      export PYTHONPATH=$SNAP/lib/python3.10/site-packages:$PYTHONPATH
+      export LD_LIBRARY_PATH=$SNAP/usr/lib:$LD_LIBRARY_PATH
+      export SYSMANAGE_CONFIG=$SNAP_COMMON/sysmanage-agent.yaml
+      export SYSMANAGE_DB_PATH=$SNAP_COMMON/agent.db
+      export SYSMANAGE_LOG_DIR=$SNAP_COMMON/logs
+      export SYSMANAGE_LOG_CONSOLE=1
+      export SYSMANAGE_CONFIG_DIR=$SNAP_COMMON
+
+      # Create necessary directories in snap data (strict confinement - no system access)
+      mkdir -p $SNAP_COMMON/logs
+      mkdir -p $SNAP_COMMON/certs
+
+      cd $SNAP/opt/sysmanage-agent
+      exec $SNAP/usr/bin/python3.10 $SNAP/opt/sysmanage-agent/main.py
+      EOF
+      chmod +x $CRAFT_PART_INSTALL/bin/sysmanage-agent-wrapper
