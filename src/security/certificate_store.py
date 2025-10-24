@@ -48,7 +48,9 @@ class CertificateStore:
             # Skip chmod if we don't have permission (e.g., snap common directory owned by root)
             if os.name != "nt":
                 try:
-                    os.chmod(self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+                    os.chmod(
+                        self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                    )
                 except (PermissionError, OSError):
                     # Directory exists but we can't chmod it - that's okay if we can write to it
                     pass
