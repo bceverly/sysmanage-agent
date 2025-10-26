@@ -23,12 +23,31 @@ jobs:
         with:
           path: sysmanage-agent
 
-      - name: Checkout Flathub repository
-        uses: actions/checkout@v4
-        with:
-          repository: bceverly/flathub-org.sysmanage.Agent
-          token: ${{ secrets.FLATHUB_TOKEN }}
-          path: flathub-repo
+      - name: Setup Flathub repository
+        run: |
+          # Clone or create the Flathub repository
+          git clone https://x-access-token:${{ secrets.FLATHUB_TOKEN }}@github.com/bceverly/flathub-org.sysmanage.Agent.git flathub-repo 2>/dev/null || {
+            echo "Repository doesn't exist or is empty, creating new one..."
+            mkdir -p flathub-repo
+            cd flathub-repo
+            git init
+            git remote add origin https://x-access-token:${{ secrets.FLATHUB_TOKEN }}@github.com/bceverly/flathub-org.sysmanage.Agent.git
+          }
+
+          cd flathub-repo
+
+          # Configure git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Create initial commit if empty
+          if [ -z "$(git branch --list)" ]; then
+            echo "# Flathub Repository for SysManage Agent" > README.md
+            git add README.md
+            git commit -m "Initial commit"
+            git branch -M main
+            git push -u origin main
+          fi
 
       - name: Set version
         run: |
@@ -260,12 +279,9 @@ jobs:
         run: |
           cd flathub-repo
 
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
           git add .
           git commit -m "Update to version ${{ inputs.version }}" || echo "No changes to commit"
-          git push origin master
+          git push origin main
 
           echo "✅ Pushed to Flathub repository"
           echo "Flathub will now build and publish the app automatically"
