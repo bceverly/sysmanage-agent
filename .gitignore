@@ -206,6 +206,16 @@ installer/ubuntu-snap-strict/stage/
 installer/ubuntu-snap-strict/parts/
 installer/ubuntu-snap-strict/.snapcraft/
 
+# Flatpak build artifacts
+*.flatpak
+installer/flatpak/builddir/
+installer/flatpak/repo/
+installer/flatpak/.flatpak-builder/
+installer/flatpak/pypi-dependencies/
+installer/flatpak/sysmanage-agent-src.tar.gz
+installer/flatpak/pypi-dependencies.tar.gz
+installer/flatpak/requirements-runtime.txt
+
 # Auto-generated requirements file
 requirements-prod.txt
 

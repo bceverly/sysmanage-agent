@@ -140,6 +140,41 @@ else
 		else \
 			echo "✓ All RPM build tools already installed"; \
 		fi; \
+		echo "[INFO] Checking for Flatpak build tools..."; \
+		MISSING_FLATPAK=""; \
+		if ! command -v flatpak >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak"; \
+		fi; \
+		if ! command -v flatpak-builder >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak-builder"; \
+		fi; \
+		if [ -n "$$MISSING_FLATPAK" ]; then \
+			echo "Missing Flatpak tools:$$MISSING_FLATPAK"; \
+			echo "Installing Flatpak build tools..."; \
+			if command -v dnf >/dev/null 2>&1; then \
+				echo "Running: sudo dnf install -y flatpak flatpak-builder"; \
+				sudo dnf install -y flatpak flatpak-builder || { \
+					echo "[WARNING] Could not install Flatpak tools. Run manually: sudo dnf install -y flatpak flatpak-builder"; \
+				}; \
+			else \
+				echo "Running: sudo yum install -y flatpak flatpak-builder"; \
+				sudo yum install -y flatpak flatpak-builder || { \
+					echo "[WARNING] Could not install Flatpak tools. Run manually: sudo yum install -y flatpak flatpak-builder"; \
+				}; \
+			fi; \
+		else \
+			echo "✓ Flatpak build tools already installed"; \
+		fi; \
+		if command -v flatpak >/dev/null 2>&1; then \
+			if ! flatpak remote-list --user | grep -q flathub; then \
+				echo "Adding Flathub repository (user)..."; \
+				flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { \
+					echo "[WARNING] Could not add Flathub repository"; \
+				}; \
+			else \
+				echo "✓ Flathub repository already configured (user)"; \
+			fi; \
+		fi; \
 	elif [ -f /etc/os-release ] && grep -qE "^ID=\"?(opensuse-leap|opensuse-tumbleweed|sles)\"?" /etc/os-release; then \
 		echo "[INFO] openSUSE/SLES detected - checking for RPM build tools..."; \
 		MISSING_PKGS=""; \
@@ -155,6 +190,34 @@ else
 			echo "[WARNING] Could not install RPM build tools. Run manually: sudo zypper install -y rpm-build rpmdevtools python311-devel python3-setuptools rsync"; \
 		else \
 			echo "✓ All RPM build tools already installed"; \
+		fi; \
+		echo "[INFO] Checking for Flatpak build tools..."; \
+		MISSING_FLATPAK=""; \
+		if ! command -v flatpak >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak"; \
+		fi; \
+		if ! command -v flatpak-builder >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak-builder"; \
+		fi; \
+		if [ -n "$$MISSING_FLATPAK" ]; then \
+			echo "Missing Flatpak tools:$$MISSING_FLATPAK"; \
+			echo "Installing Flatpak build tools..."; \
+			echo "Running: sudo zypper install -y flatpak flatpak-builder"; \
+			sudo zypper install -y flatpak flatpak-builder || { \
+				echo "[WARNING] Could not install Flatpak tools. Run manually: sudo zypper install -y flatpak flatpak-builder"; \
+			}; \
+		else \
+			echo "✓ Flatpak build tools already installed"; \
+		fi; \
+		if command -v flatpak >/dev/null 2>&1; then \
+			if ! flatpak remote-list --user | grep -q flathub; then \
+				echo "Adding Flathub repository (user)..."; \
+				flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { \
+					echo "[WARNING] Could not add Flathub repository"; \
+				}; \
+			else \
+				echo "✓ Flathub repository already configured (user)"; \
+			fi; \
 		fi; \
 	elif [ "$$(uname -s)" = "Linux" ] && [ -f /etc/lsb-release ] && grep -q Ubuntu /etc/lsb-release 2>/dev/null; then \
 		echo "[INFO] Ubuntu/Debian detected - checking for packaging build tools..."; \
@@ -251,6 +314,34 @@ else
 		fi; \
 		if [ "$$LXD_GROUP_ADDED" -eq 1 ]; then \
 			echo "$$LXD_GROUP_ADDED" > /tmp/.sysmanage-lxd-group-added-$$$$.tmp; \
+		fi; \
+		echo "[INFO] Checking for Flatpak build tools..."; \
+		MISSING_FLATPAK=""; \
+		if ! command -v flatpak >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak"; \
+		fi; \
+		if ! command -v flatpak-builder >/dev/null 2>&1; then \
+			MISSING_FLATPAK="$$MISSING_FLATPAK flatpak-builder"; \
+		fi; \
+		if [ -n "$$MISSING_FLATPAK" ]; then \
+			echo "Missing Flatpak tools:$$MISSING_FLATPAK"; \
+			echo "Installing Flatpak build tools..."; \
+			echo "Running: sudo apt-get install -y flatpak flatpak-builder"; \
+			sudo apt-get install -y flatpak flatpak-builder || { \
+				echo "[WARNING] Could not install Flatpak tools. Run manually: sudo apt-get install -y flatpak flatpak-builder"; \
+			}; \
+		else \
+			echo "✓ Flatpak build tools already installed"; \
+		fi; \
+		if command -v flatpak >/dev/null 2>&1; then \
+			if ! flatpak remote-list --user | grep -q flathub; then \
+				echo "Adding Flathub repository (user)..."; \
+				flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { \
+					echo "[WARNING] Could not add Flathub repository"; \
+				}; \
+			else \
+				echo "✓ Flathub repository already configured (user)"; \
+			fi; \
 		fi; \
 	fi
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
@@ -2073,4 +2164,243 @@ snap-strict-publish:
 	echo "  snapcraft release sysmanage-agent-strict <revision> beta"; \
 	echo "  snapcraft release sysmanage-agent-strict <revision> candidate"; \
 	echo "  snapcraft release sysmanage-agent-strict <revision> stable"; \
+	echo ""
+
+# Build Flatpak package
+flatpak:
+	@echo "=== Building Flatpak Package ==="
+	@echo ""
+	@# Check for supported Linux distributions
+	@if [ "$$(uname -s)" != "Linux" ]; then \
+		echo "ERROR: Flatpak packaging is only supported on Linux systems."; \
+		echo "Current system: $$(uname -s)"; \
+		exit 1; \
+	fi
+	@echo "Checking build dependencies..."
+	@command -v flatpak >/dev/null 2>&1 || { \
+		echo "ERROR: flatpak not found."; \
+		echo "Install with your package manager:"; \
+		echo "  Ubuntu/Debian: sudo apt-get install -y flatpak flatpak-builder"; \
+		echo "  Fedora/RHEL:   sudo dnf install -y flatpak flatpak-builder"; \
+		echo "  openSUSE:      sudo zypper install -y flatpak flatpak-builder"; \
+		echo "Or run: make install-dev"; \
+		exit 1; \
+	}
+	@command -v flatpak-builder >/dev/null 2>&1 || { \
+		echo "ERROR: flatpak-builder not found."; \
+		echo "Install with your package manager:"; \
+		echo "  Ubuntu/Debian: sudo apt-get install -y flatpak-builder"; \
+		echo "  Fedora/RHEL:   sudo dnf install -y flatpak-builder"; \
+		echo "  openSUSE:      sudo zypper install -y flatpak-builder"; \
+		echo "Or run: make install-dev"; \
+		exit 1; \
+	}
+	@echo "✓ Flatpak tools available"
+	@echo ""
+	@# Check for Flathub runtime (user installation)
+	@if ! flatpak remote-list --user | grep -q flathub; then \
+		echo "Flathub repository not configured. Adding for user..."; \
+		flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { \
+			echo "ERROR: Failed to add Flathub repository"; \
+			exit 1; \
+		}; \
+	fi
+	@echo "✓ Flathub repository configured (user)"
+	@echo ""
+	@# Install Freedesktop runtime and SDK if not present (user installation)
+	@if ! flatpak list --user --runtime | grep -q "org.freedesktop.Platform.*24.08"; then \
+		echo "Installing Freedesktop Platform 24.08 (user)..."; \
+		flatpak install -y --user flathub org.freedesktop.Platform/x86_64/24.08 || { \
+			echo "ERROR: Failed to install Freedesktop Platform"; \
+			exit 1; \
+		}; \
+	else \
+		echo "✓ Freedesktop Platform 24.08 already installed"; \
+	fi
+	@if ! flatpak list --user --runtime | grep -q "org.freedesktop.Sdk.*24.08"; then \
+		echo "Installing Freedesktop SDK 24.08 (user)..."; \
+		flatpak install -y --user flathub org.freedesktop.Sdk/x86_64/24.08 || { \
+			echo "ERROR: Failed to install Freedesktop SDK"; \
+			exit 1; \
+		}; \
+	else \
+		echo "✓ Freedesktop SDK 24.08 already installed"; \
+	fi
+	@echo "✓ Required runtimes installed"
+	@echo ""
+	@# Get version
+	@if [ -f VERSION ]; then \
+		VERSION=$$(cat VERSION); \
+	else \
+		VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
+	fi; \
+	echo "Building Flatpak for version: $$VERSION"; \
+	echo ""
+	@# Copy service scripts to flatpak directory
+	@echo "Copying service scripts..."
+	@cp installer/flatpak/sysmanage-service-install.sh installer/flatpak/sysmanage-service-install.sh.tmp 2>/dev/null || true
+	@cp installer/flatpak/sysmanage-service-uninstall.sh installer/flatpak/sysmanage-service-uninstall.sh.tmp 2>/dev/null || true
+	@echo "✓ Service scripts ready"
+	@echo ""
+	@# Create source tarball
+	@echo "Creating source tarball..."
+	@tar czf installer/flatpak/sysmanage-agent-src.tar.gz \
+		--exclude='.venv' \
+		--exclude='.git' \
+		--exclude='__pycache__' \
+		--exclude='*.pyc' \
+		--exclude='.pytest_cache' \
+		--exclude='agent.db' \
+		src main.py alembic.ini requirements.txt
+	@echo "✓ Source tarball created"
+	@echo ""
+	@# Create runtime-only requirements (exclude dev/test dependencies)
+	@echo "Creating runtime requirements..."
+	@grep -v "^semgrep\|^bandit\|^black\|^pylint\|^pytest\|^coverage\|^safety\|^playwright\|^selenium\|^webdriver-manager" requirements.txt > installer/flatpak/requirements-runtime.txt
+	@echo "✓ Runtime requirements created"
+	@echo ""
+	@# Download Python dependencies as wheels
+	@echo "Downloading Python dependencies..."
+	@mkdir -p installer/flatpak/pypi-dependencies
+	@pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--python-version 3.12 \
+		--only-binary=:all: 2>&1 | grep -v "Ignoring" || true
+	@# Also get pure Python packages and any that don't have platform-specific builds
+	@pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies \
+		--python-version 3.12 \
+		--no-deps 2>&1 | grep -v "Requirement already satisfied" || true
+	@echo "✓ Python dependencies downloaded ($(ls -1 installer/flatpak/pypi-dependencies 2>/dev/null | wc -l) files)"
+	@echo ""
+	@# Create tarball of dependencies (with the directory structure preserved)
+	@echo "Creating dependencies tarball..."
+	@cd installer/flatpak/pypi-dependencies && tar czf ../pypi-dependencies.tar.gz .
+	@echo "✓ Dependencies tarball created"
+	@echo ""
+	@# Update version in metainfo
+	@if [ -f VERSION ]; then \
+		VERSION=$$(cat VERSION); \
+		sed -i "s/VERSION_PLACEHOLDER/$$VERSION/" installer/flatpak/org.sysmanage.Agent.metainfo.xml; \
+	fi
+	@echo "Building Flatpak package..."
+	@echo "This may take several minutes (downloading runtime, building Python dependencies)..."
+	@echo ""
+	@cd installer/flatpak && flatpak-builder --force-clean --repo=repo builddir org.sysmanage.Agent.yaml
+	@echo ""
+	@echo "Creating Flatpak bundle..."
+	@if [ -f VERSION ]; then \
+		VERSION=$$(cat VERSION); \
+	else \
+		VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
+	fi; \
+	cd installer/flatpak && flatpak build-bundle repo sysmanage-agent-$$VERSION.flatpak org.sysmanage.Agent
+	@echo ""
+	@echo "==================================="; \
+	echo "Build Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	if [ -f VERSION ]; then \
+		VERSION=$$(cat VERSION); \
+	else \
+		VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
+	fi; \
+	FLATPAK_FILE="installer/flatpak/sysmanage-agent-$$VERSION.flatpak"; \
+	if [ -f "$$FLATPAK_FILE" ]; then \
+		echo "Package: $$FLATPAK_FILE"; \
+		ls -lh "$$FLATPAK_FILE"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  make flatpak-install"; \
+		echo "  OR"; \
+		echo "  flatpak install --user $$FLATPAK_FILE"; \
+		echo ""; \
+		echo "After installation:"; \
+		echo "  1. Configure at ~/.var/app/org.sysmanage.Agent/config/sysmanage/sysmanage-agent.yaml"; \
+		echo "  2. Run: flatpak run org.sysmanage.Agent"; \
+		echo "  3. View logs: journalctl --user -f GLIB_DOMAIN=flatpak"; \
+		echo ""; \
+		echo "Note: This Flatpak provides read-only monitoring capabilities."; \
+		echo "      For full management features, use native packages (DEB/RPM)."; \
+		echo ""; \
+	else \
+		echo "ERROR: Built flatpak not found!"; \
+		exit 1; \
+	fi
+
+# Clean flatpak build artifacts
+flatpak-clean:
+	@echo "=== Cleaning Flatpak Build Artifacts ==="
+	@echo ""
+	@echo "Removing flatpak build artifacts..."
+	@rm -rf installer/flatpak/builddir
+	@rm -rf installer/flatpak/repo
+	@rm -rf installer/flatpak/.flatpak-builder
+	@rm -rf installer/flatpak/pypi-dependencies
+	@rm -f installer/flatpak/*.flatpak
+	@rm -f installer/flatpak/sysmanage-agent-src.tar.gz
+	@rm -f installer/flatpak/pypi-dependencies.tar.gz
+	@rm -f installer/flatpak/requirements-runtime.txt
+	@echo "✓ Flatpak build artifacts cleaned"
+	@echo ""
+
+# Install locally built flatpak package
+flatpak-install:
+	@echo "=== Installing Flatpak Package ==="
+	@echo ""
+	@if [ -f VERSION ]; then \
+		VERSION=$$(cat VERSION); \
+	else \
+		VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
+	fi; \
+	FLATPAK_FILE="installer/flatpak/sysmanage-agent-$$VERSION.flatpak"; \
+	if [ ! -f "$$FLATPAK_FILE" ]; then \
+		echo "ERROR: No flatpak package found at $$FLATPAK_FILE"; \
+		echo "Build one first with: make flatpak"; \
+		exit 1; \
+	fi; \
+	echo "Found flatpak package: $$FLATPAK_FILE"; \
+	echo ""; \
+	if flatpak list --app | grep -q "org.sysmanage.Agent"; then \
+		echo "Existing org.sysmanage.Agent flatpak detected - updating..."; \
+		flatpak update -y --user org.sysmanage.Agent || { \
+			echo "Update failed, trying reinstall..."; \
+			flatpak uninstall -y --user org.sysmanage.Agent || true; \
+			flatpak install -y --user "$$FLATPAK_FILE" || { \
+				echo "ERROR: Failed to install flatpak"; \
+				exit 1; \
+			}; \
+		}; \
+	else \
+		echo "Installing new flatpak..."; \
+		echo ""; \
+		flatpak install -y --user "$$FLATPAK_FILE" || { \
+			echo "ERROR: Failed to install flatpak"; \
+			exit 1; \
+		}; \
+	fi; \
+	echo ""; \
+	bash installer/flatpak/post-install.sh
+
+# Uninstall flatpak package
+flatpak-uninstall:
+	@echo "=== Uninstalling Flatpak Package ==="
+	@echo ""
+	@if ! flatpak list --app | grep -q "org.sysmanage.Agent"; then \
+		echo "org.sysmanage.Agent is not installed"; \
+		exit 0; \
+	fi
+	@echo "Uninstalling org.sysmanage.Agent..."
+	@flatpak uninstall -y --user org.sysmanage.Agent || { \
+		echo "ERROR: Failed to uninstall flatpak"; \
+		exit 1; \
+	}
+	@echo "✓ Flatpak removed"
+	@echo ""
+	@echo "==================================="; \
+	echo "Uninstallation Complete!"; \
+	echo "==================================="; \
+	echo ""; \
+	echo "To remove configuration data:"; \
+	echo "  rm -rf ~/.var/app/org.sysmanage.Agent"; \
 	echo ""

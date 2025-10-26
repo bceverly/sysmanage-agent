@@ -1,0 +1,21 @@
+# Semgrep ignore file
+# Files and directories to exclude from semgrep scanning
+
+# Snap packaging files (YAML configuration, not Python code)
+installer/ubuntu-snap/snapcraft.yaml
+installer/ubuntu-snap-strict/snapcraft.yaml
+
+# Flatpak packaging files (YAML configuration, not Python code)
+installer/flatpak/org.sysmanage.Agent.yaml
+
+# Build artifacts
+*.pyc
+__pycache__/
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Third-party vendored code
+installer/*/parts/
+installer/*/stage/
+installer/*/prime/

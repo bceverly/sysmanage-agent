@@ -1,0 +1,171 @@
+app-id: org.sysmanage.Agent
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: sysmanage-agent
+
+finish-args:
+  # Network access for communication with sysmanage server
+  - --share=network
+
+  # System monitoring capabilities (read-only)
+  # Note: /proc and /etc are reserved by Flatpak and cannot be overridden
+  # The agent will have limited access to these through the sandbox
+  - --filesystem=/sys:ro
+  - --filesystem=/var/log:ro
+
+  # D-Bus access for system monitoring
+  - --system-talk-name=org.freedesktop.systemd1
+  - --system-talk-name=org.freedesktop.NetworkManager
+
+  # Device access for hardware monitoring
+  - --device=all
+
+  # Configuration directory
+  - --filesystem=xdg-config/sysmanage:create
+
+  # Database directory
+  - --filesystem=xdg-data/sysmanage:create
+
+modules:
+  - name: python3
+    buildsystem: simple
+    build-commands:
+      - ./configure --prefix=/app --enable-shared --with-ensurepip=yes
+      - make -j$(nproc)
+      - make install
+    sources:
+      - type: archive
+        url: https://www.python.org/ftp/python/3.12.7/Python-3.12.7.tar.xz
+        sha256: 24887b92e2afd4a2ac602419ad4b596372f67ac9b077190f459aba390faf5550
+    cleanup:
+      - /bin/2to3*
+      - /bin/idle*
+      - /bin/pydoc*
+      - /share/man
+
+  - name: python-dependencies
+    buildsystem: simple
+    build-commands:
+      - pip3 install --no-build-isolation --prefix=/app --no-index --find-links=. -r requirements-runtime.txt
+    sources:
+      - type: archive
+        path: pypi-dependencies.tar.gz
+      - type: file
+        path: requirements-runtime.txt
+
+  - name: sysmanage-agent
+    buildsystem: simple
+    build-commands:
+      # Install the application
+      - mkdir -p /app/share/sysmanage-agent
+      - cp -r src /app/share/sysmanage-agent/
+      - cp main.py /app/share/sysmanage-agent/
+      - cp alembic.ini /app/share/sysmanage-agent/
+      - cp requirements.txt /app/share/sysmanage-agent/
+
+      # Install service scripts
+      - mkdir -p /app/share/sysmanage-agent/scripts
+      - cp sysmanage-service-install.sh /app/share/sysmanage-agent/scripts/
+      - cp sysmanage-service-uninstall.sh /app/share/sysmanage-agent/scripts/
+      - chmod +x /app/share/sysmanage-agent/scripts/*.sh
+
+      # Create launcher script with config directory setup
+      - |
+        cat > /app/bin/sysmanage-agent <<'EOF'
+        #!/bin/sh
+
+        # Create config directory if it doesn't exist
+        CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.var/app/org.sysmanage.Agent/config}/sysmanage"
+        mkdir -p "$CONFIG_DIR"
+
+        # Create default config if it doesn't exist
+        CONFIG_FILE="$CONFIG_DIR/sysmanage-agent.yaml"
+        if [ ! -f "$CONFIG_FILE" ]; then
+            cat > "$CONFIG_FILE" <<'CONFIGEOF'
+        # SysManage Agent Configuration
+
+        server:
+          hostname: "localhost"
+          port: 8080
+          use_https: false
+          verify_ssl: false
+
+        client:
+          registration_retry_interval: 30
+          max_registration_retries: 10
+          update_check_interval: 3600
+
+        i18n:
+          language: "en"
+
+        logging:
+          level: "INFO"
+
+        websocket:
+          auto_reconnect: true
+          reconnect_interval: 5
+          ping_interval: 60
+
+        database:
+          path: "agent.db"
+          auto_migrate: true
+
+        script_execution:
+          enabled: false
+          timeout: 300
+          max_concurrent: 3
+          allowed_shells:
+            - "bash"
+            - "sh"
+        CONFIGEOF
+            echo "Created default configuration at: $CONFIG_FILE"
+            echo "Please edit this file to configure your SysManage server connection"
+        fi
+
+        # Set environment variables
+        export SYSMANAGE_CONFIG="$CONFIG_FILE"
+
+        # Debug: Log environment setup
+        echo "[FLATPAK LAUNCHER] SYSMANAGE_CONFIG=$SYSMANAGE_CONFIG" >&2
+        echo "[FLATPAK LAUNCHER] Config file exists: $(test -f "$CONFIG_FILE" && echo "YES" || echo "NO")" >&2
+
+        # Set log directory to XDG data home (writable in Flatpak)
+        LOG_DIR="${XDG_DATA_HOME:-$HOME/.var/app/org.sysmanage.Agent/data}/sysmanage/logs"
+        mkdir -p "$LOG_DIR"
+        export SYSMANAGE_LOG_DIR="$LOG_DIR"
+
+        # Set database path to XDG data home (writable in Flatpak)
+        DATA_DIR="${XDG_DATA_HOME:-$HOME/.var/app/org.sysmanage.Agent/data}/sysmanage"
+        mkdir -p "$DATA_DIR"
+        export SYSMANAGE_DB_PATH="$DATA_DIR/agent.db"
+
+        # Set Python path to include the agent directory
+        export PYTHONPATH="/app/share/sysmanage-agent:$PYTHONPATH"
+
+        cd /app/share/sysmanage-agent
+        exec python3 main.py "$@"
+        EOF
+      - chmod +x /app/bin/sysmanage-agent
+
+      # Install icon
+      - install -Dm644 icon.svg /app/share/icons/hicolor/scalable/apps/org.sysmanage.Agent.svg
+
+      # Install metadata
+      - install -Dm644 org.sysmanage.Agent.metainfo.xml /app/share/metainfo/org.sysmanage.Agent.metainfo.xml
+      - install -Dm644 org.sysmanage.Agent.desktop /app/share/applications/org.sysmanage.Agent.desktop
+
+    sources:
+      - type: archive
+        path: sysmanage-agent-src.tar.gz
+        strip-components: 0
+      - type: file
+        path: icon.svg
+      - type: file
+        path: org.sysmanage.Agent.metainfo.xml
+      - type: file
+        path: org.sysmanage.Agent.desktop
+      - type: file
+        path: sysmanage-service-install.sh
+      - type: file
+        path: sysmanage-service-uninstall.sh

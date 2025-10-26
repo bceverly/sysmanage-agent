@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>org.sysmanage.Agent</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>SysManage Agent</name>
+  <summary>System management and monitoring agent</summary>
+
+  <description>
+    <p>
+      SysManage Agent is a lightweight system monitoring and management agent
+      that collects system information and sends it to a SysManage server for
+      centralized monitoring and management.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Real-time system monitoring (CPU, memory, disk, network)</li>
+      <li>Hardware inventory collection</li>
+      <li>Software package tracking</li>
+      <li>User and access management monitoring</li>
+      <li>Secure WebSocket communication with SysManage server</li>
+      <li>Cross-platform support (Linux, BSD, Windows, macOS)</li>
+    </ul>
+    <p>
+      Note: This Flatpak provides read-only monitoring capabilities due to
+      sandbox restrictions. For full management features (package installation,
+      firewall management, etc.), use the native packages (DEB/RPM).
+    </p>
+  </description>
+
+  <launchable type="desktop-id">org.sysmanage.Agent.desktop</launchable>
+
+  <url type="homepage">https://sysmanage.org</url>
+  <url type="bugtracker">https://github.com/bceverly/sysmanage-agent/issues</url>
+  <url type="vcs-browser">https://github.com/bceverly/sysmanage-agent</url>
+
+  <developer id="org.sysmanage">
+    <name>Bryan Everly</name>
+  </developer>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="VERSION_PLACEHOLDER" date="2025-10-24">
+      <description>
+        <p>Latest release of SysManage Agent</p>
+      </description>
+    </release>
+  </releases>
+
+  <categories>
+    <category>System</category>
+    <category>Monitor</category>
+  </categories>
+
+  <keywords>
+    <keyword>system</keyword>
+    <keyword>management</keyword>
+    <keyword>monitoring</keyword>
+    <keyword>agent</keyword>
+  </keywords>
+</component>

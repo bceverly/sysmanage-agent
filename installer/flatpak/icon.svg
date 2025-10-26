@@ -1,0 +1,18 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Central management hub (doubled in size) -->
+  <circle cx="60" cy="60" r="16" fill="#2196f3" stroke="#1976d2" stroke-width="4"/>
+
+  <!-- Managed nodes/systems (doubled in size and repositioned) -->
+  <circle cx="20" cy="30" r="8" fill="#4caf50" stroke="#388e3c" stroke-width="2"/>
+  <circle cx="20" cy="90" r="8" fill="#4caf50" stroke="#388e3c" stroke-width="2"/>
+  <circle cx="100" cy="20" r="8" fill="#4caf50" stroke="#388e3c" stroke-width="2"/>
+  <circle cx="100" cy="100" r="8" fill="#4caf50" stroke="#388e3c" stroke-width="2"/>
+  <circle cx="110" cy="60" r="8" fill="#4caf50" stroke="#388e3c" stroke-width="2"/>
+
+  <!-- Connection lines (doubled thickness and repositioned) -->
+  <line x1="44" y1="52" x2="28" y2="38" stroke="#666" stroke-width="3" opacity="0.7"/>
+  <line x1="44" y1="68" x2="28" y2="82" stroke="#666" stroke-width="3" opacity="0.7"/>
+  <line x1="70" y1="46" x2="94" y2="28" stroke="#666" stroke-width="3" opacity="0.7"/>
+  <line x1="70" y1="74" x2="94" y2="92" stroke="#666" stroke-width="3" opacity="0.7"/>
+  <line x1="76" y1="60" x2="102" y2="60" stroke="#666" stroke-width="3" opacity="0.7"/>
+</svg>

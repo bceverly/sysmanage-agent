@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=SysManage Agent
+Comment=System management agent for SysManage
+Icon=org.sysmanage.Agent
+Exec=sysmanage-agent
+Terminal=false
+Categories=System;Monitor;
+Keywords=system;management;monitoring;agent;
+X-Flatpak-RenamedFrom=sysmanage-agent.desktop
