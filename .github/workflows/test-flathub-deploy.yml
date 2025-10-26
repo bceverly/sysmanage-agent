@@ -264,6 +264,9 @@ jobs:
         run: |
           cd flathub-repo
 
+          # Install required Python packages for flatpak-pip-generator
+          pip3 install --user requirements-parser
+
           # Install flatpak-builder-tools
           git clone https://github.com/flatpak/flatpak-builder-tools.git /tmp/flatpak-builder-tools
 
