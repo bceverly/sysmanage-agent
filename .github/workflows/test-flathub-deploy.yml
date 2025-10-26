@@ -26,7 +26,7 @@ jobs:
       - name: Checkout Flathub repository
         uses: actions/checkout@v4
         with:
-          repository: flathub/org.sysmanage.Agent
+          repository: bceverly/flathub-org.sysmanage.Agent
           token: ${{ secrets.FLATHUB_TOKEN }}
           path: flathub-repo
 
