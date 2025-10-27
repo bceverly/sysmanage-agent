@@ -68,6 +68,19 @@ jobs:
             devscripts \
             lintian
 
+      - name: Install SBOM generation tools
+        run: |
+          # Install cyclonedx-bom for Python
+          python3 -m pip install cyclonedx-bom
+
+          # Verify installation
+          python3 -c "import cyclonedx_py; print('✓ cyclonedx-bom installed')"
+
+      - name: Generate SBOM
+        run: |
+          echo "Generating Software Bill of Materials..."
+          make sbom
+
       - name: Update changelog with version
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -154,6 +167,13 @@ jobs:
           path: |
             sysmanage-agent_*.deb
             sysmanage-agent_*.deb.sha256
+
+      - name: Upload SBOM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-sbom
+          path: |
+            sbom/*.json
 
   # CentOS/RHEL/Fedora .rpm Package Build
   build-centos:
@@ -1379,6 +1399,7 @@ jobs:
           find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.flatpak" -exec cp {} release-files/ \;
           find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.json" -exec cp {} release-files/ \;
 
           echo "Release files:"
           ls -la release-files/
@@ -1735,6 +1756,24 @@ jobs:
           - **FreeBSD**: 13.x, 14.x
           - **NetBSD**: 10.x (tested on 10.1)
           - **OpenBSD**: 7.4+ (tested on 7.7)
+
+          ## Software Bill of Materials (SBOM)
+
+          This release includes a comprehensive Software Bill of Materials (SBOM) file in CycloneDX JSON format for supply chain security and vulnerability analysis:
+
+          **Standalone Download:**
+          - **sysmanage-agent-sbom.json** - Complete inventory of Python dependencies
+
+          **Download and inspect:**
+          \`\`\`bash
+          # Download SBOM file
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-sbom.json
+
+          # View with jq (if installed)
+          cat sysmanage-agent-sbom.json | jq .
+          \`\`\`
+
+          The SBOM file is compatible with vulnerability scanning tools (Grype, Trivy, Dependency-Track, Snyk, etc.) and provides complete transparency of all software dependencies.
 
           ## What's Included
 
