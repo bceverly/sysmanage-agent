@@ -1,0 +1,112 @@
+name: Test Flatpak Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to use for testing'
+        required: true
+        type: string
+
+jobs:
+  test-flatpak:
+    name: Test Flatpak Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set version from input
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Testing Flatpak build for version: $VERSION"
+
+      - name: Install Flatpak build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//24.08
+          flatpak install --user -y flathub org.freedesktop.Sdk//24.08
+
+      - name: Set version in VERSION file
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "$VERSION" > VERSION
+
+      - name: Generate requirements-prod.txt
+        run: |
+          echo "Generating requirements-prod.txt from requirements.txt..."
+          python3 scripts/update-requirements-prod.py
+
+      - name: Prepare Flatpak build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Create source tarball
+          tar czf installer/flatpak/sysmanage-agent-src.tar.gz \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.venv' \
+            --exclude='htmlcov' \
+            --exclude='.coverage' \
+            --exclude='installer/dist' \
+            main.py src/ alembic.ini requirements.txt README.md VERSION
+
+          # Filter runtime requirements
+          grep -v "^semgrep\|^bandit\|^black\|^pylint\|^pytest\|^coverage\|^safety\|^playwright\|^selenium\|^webdriver-manager" requirements.txt > installer/flatpak/requirements-runtime.txt
+
+          # Download Python dependencies
+          mkdir -p installer/flatpak/pypi-dependencies
+          pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies --platform manylinux2014_x86_64 --only-binary=:all: --python-version=312 2>/dev/null || \
+          pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version=312
+
+          cd installer/flatpak/pypi-dependencies && tar czf ../pypi-dependencies.tar.gz .
+
+          # Update metainfo with version (if file exists)
+          if [ -f installer/flatpak/org.sysmanage.Agent.metainfo.xml ]; then
+            sed -i "s/VERSION_PLACEHOLDER/$VERSION/" installer/flatpak/org.sysmanage.Agent.metainfo.xml
+          else
+            echo "Metainfo file not found, skipping version update"
+          fi
+
+      - name: Build Flatpak
+        run: |
+          cd installer/flatpak
+          # Remove metainfo install line to avoid appstream-compose requirement
+          sed -i '/install.*org.sysmanage.Agent.metainfo.xml.*\/app\/share\/metainfo/d' org.sysmanage.Agent.yaml
+
+          echo "Building Flatpak..."
+          flatpak-builder --force-clean --repo=repo builddir org.sysmanage.Agent.yaml
+
+      - name: Create Flatpak bundle
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd installer/flatpak
+          flatpak build-bundle repo sysmanage-agent-$VERSION.flatpak org.sysmanage.Agent
+
+          # Generate SHA256 checksum
+          sha256sum sysmanage-agent-$VERSION.flatpak > sysmanage-agent-$VERSION.flatpak.sha256
+
+          echo "Flatpak bundle created successfully!"
+          ls -lh sysmanage-agent-$VERSION.flatpak
+
+      - name: Upload Flatpak as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-flatpak
+          path: |
+            installer/flatpak/sysmanage-agent-*.flatpak
+            installer/flatpak/sysmanage-agent-*.flatpak.sha256

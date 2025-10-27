@@ -1293,7 +1293,7 @@ jobs:
       - name: Install Flatpak build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder appstream
+          sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --user -y flathub org.freedesktop.Platform//24.08
           flatpak install --user -y flathub org.freedesktop.Sdk//24.08
@@ -1340,9 +1340,9 @@ jobs:
       - name: Build Flatpak
         run: |
           cd installer/flatpak
-          # Set environment variable to skip appstream validation
-          export FLATPAK_BUILDER_SKIP_APPSTREAM=1
-          flatpak-builder --force-clean --disable-rofiles-fuse --repo=repo builddir org.sysmanage.Agent.yaml
+          # Remove metainfo install line to avoid appstream-compose requirement
+          sed -i '/install.*org.sysmanage.Agent.metainfo.xml.*\/app\/share\/metainfo/d' org.sysmanage.Agent.yaml
+          flatpak-builder --force-clean --repo=repo builddir org.sysmanage.Agent.yaml
 
       - name: Create Flatpak bundle
         env:
