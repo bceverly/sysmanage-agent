@@ -1330,8 +1330,12 @@ jobs:
 
           cd installer/flatpak/pypi-dependencies && tar czf ../pypi-dependencies.tar.gz .
 
-          # Update metainfo with version
-          sed -i "s/VERSION_PLACEHOLDER/$VERSION/" installer/flatpak/org.sysmanage.Agent.metainfo.xml
+          # Update metainfo with version (if file exists)
+          if [ -f installer/flatpak/org.sysmanage.Agent.metainfo.xml ]; then
+            sed -i "s/VERSION_PLACEHOLDER/$VERSION/" installer/flatpak/org.sysmanage.Agent.metainfo.xml
+          else
+            echo "Metainfo file not found, skipping version update"
+          fi
 
       - name: Build Flatpak
         run: |
