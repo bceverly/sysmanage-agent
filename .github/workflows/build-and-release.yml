@@ -633,7 +633,7 @@ jobs:
         run: |
           Write-Host "Installing cyclonedx-bom for Python..."
           python -m pip install cyclonedx-bom
-          python -c "import cyclonedx_py; print('✓ cyclonedx-bom installed')"
+          python -c "import cyclonedx_py; print('[OK] cyclonedx-bom installed')"
 
       - name: Generate SBOM
         shell: pwsh
@@ -643,7 +643,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path sbom | Out-Null
           # Generate SBOM
           cyclonedx-py requirements -r -i requirements-prod.txt -o sbom/sysmanage-agent-sbom.json --format json
-          Write-Host "✓ SBOM generated"
+          Write-Host "[OK] SBOM generated"
 
       - name: Install WiX Toolset
         shell: pwsh
