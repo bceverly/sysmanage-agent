@@ -129,6 +129,12 @@ parts:
       mkdir -p $CRAFT_PART_INSTALL/var/lib/sysmanage-agent
       mkdir -p $CRAFT_PART_INSTALL/var/log/sysmanage-agent
 
+      # Install SBOM (Software Bill of Materials)
+      mkdir -p $CRAFT_PART_INSTALL/usr/share/doc/sysmanage-agent/sbom
+      if [ -f $REPO_ROOT/sbom/sysmanage-agent-sbom.json ]; then
+          cp $REPO_ROOT/sbom/sysmanage-agent-sbom.json $CRAFT_PART_INSTALL/usr/share/doc/sysmanage-agent/sbom/
+      fi
+
       # Create hooks directory
       mkdir -p $CRAFT_PART_INSTALL/meta/hooks
 

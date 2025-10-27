@@ -86,6 +86,12 @@ install -m 644 installer/centos/sysmanage-agent.service %{buildroot}/usr/lib/sys
 install -d %{buildroot}/etc/sudoers.d
 install -m 440 installer/centos/sysmanage-agent.sudoers %{buildroot}/etc/sudoers.d/sysmanage-agent
 
+# Install SBOM (Software Bill of Materials)
+install -d %{buildroot}/usr/share/doc/sysmanage-agent/sbom
+if [ -f sbom/sysmanage-agent-sbom.json ]; then
+    install -m 644 sbom/sysmanage-agent-sbom.json %{buildroot}/usr/share/doc/sysmanage-agent/sbom/
+fi
+
 %pre
 # Create sysmanage-agent user if it doesn't exist
 if ! getent passwd sysmanage-agent >/dev/null; then
@@ -178,6 +184,7 @@ fi
 %dir /var/log/sysmanage-agent
 /usr/lib/systemd/system/sysmanage-agent.service
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
+%doc /usr/share/doc/sysmanage-agent/sbom/
 
 %changelog
 * Mon Oct 14 2024 Bryan Everly <bryan@theeverlys.com> - 0.1.0-1

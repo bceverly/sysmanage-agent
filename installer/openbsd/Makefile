@@ -60,6 +60,10 @@ do-install:
 	${INSTALL_DATA} ${WRKSRC}/README.md ${PREFIX}/share/doc/sysmanage-agent/
 	test -f ${WRKSRC}/LICENSE && \
 		${INSTALL_DATA} ${WRKSRC}/LICENSE ${PREFIX}/share/doc/sysmanage-agent/ || true
+	${INSTALL_DATA_DIR} ${PREFIX}/share/doc/sysmanage-agent/sbom
+	test -f ${WRKSRC}/sbom/sysmanage-agent-sbom.json && \
+		${INSTALL_DATA} ${WRKSRC}/sbom/sysmanage-agent-sbom.json \
+			${PREFIX}/share/doc/sysmanage-agent/sbom/ || true
 	${INSTALL_DATA_DIR} ${DESTDIR}/etc/rc.d
 	${INSTALL_SCRIPT} ${FILESDIR}/sysmanage_agent.rc \
 		${DESTDIR}/etc/rc.d/sysmanage_agent

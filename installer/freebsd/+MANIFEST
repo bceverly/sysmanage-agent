@@ -124,6 +124,7 @@ files: {
   /usr/local/lib/sysmanage-agent/requirements.txt: {uname: root, gname: wheel, perm: 0644},
   /usr/local/lib/sysmanage-agent/alembic.ini: {uname: root, gname: wheel, perm: 0644},
   /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh: {uname: root, gname: wheel, perm: 0755},
+  /usr/local/share/doc/sysmanage-agent/sbom/sysmanage-agent-sbom.json: {uname: root, gname: wheel, perm: 0644},
   /usr/local/lib/sysmanage-agent/src/__init__.py: {uname: root, gname: wheel, perm: 0644},
   /usr/local/lib/sysmanage-agent/src/database/__init__.py: {uname: root, gname: wheel, perm: 0644},
   /usr/local/lib/sysmanage-agent/src/database/alembic/env.py: {uname: root, gname: wheel, perm: 0644},

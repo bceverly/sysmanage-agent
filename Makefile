@@ -1597,6 +1597,15 @@ installer-freebsd:
 	chmod +x "$$PACKAGE_ROOT/usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"; \
 	echo "✓ Configuration files copied"; \
 	echo ""; \
+	echo "Copying SBOM..."; \
+	mkdir -p "$$PACKAGE_ROOT/usr/local/share/doc/sysmanage-agent/sbom"; \
+	if [ -f sbom/sysmanage-agent-sbom.json ]; then \
+		cp sbom/sysmanage-agent-sbom.json "$$PACKAGE_ROOT/usr/local/share/doc/sysmanage-agent/sbom/"; \
+		echo "✓ SBOM copied"; \
+	else \
+		echo "⚠ SBOM not found (sbom/sysmanage-agent-sbom.json)"; \
+	fi; \
+	echo ""; \
 	echo "Creating package manifest..."; \
 	sed "s/version: \".*\"/version: \"$$VERSION\"/" "$$MANIFEST_FILE" > "$$BUILD_DIR/+MANIFEST"; \
 	echo "✓ Manifest created with version $$VERSION"; \
@@ -1692,6 +1701,15 @@ installer-netbsd:
 	chmod +x "$$PACKAGE_ROOT/usr/pkg/share/examples/rc.d/sysmanage_agent"; \
 	chmod +x "$$PACKAGE_ROOT/usr/pkg/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"; \
 	echo "✓ Configuration files copied"; \
+	echo ""; \
+	echo "Copying SBOM..."; \
+	mkdir -p "$$PACKAGE_ROOT/usr/pkg/share/doc/sysmanage-agent/sbom"; \
+	if [ -f sbom/sysmanage-agent-sbom.json ]; then \
+		cp sbom/sysmanage-agent-sbom.json "$$PACKAGE_ROOT/usr/pkg/share/doc/sysmanage-agent/sbom/"; \
+		echo "✓ SBOM copied"; \
+	else \
+		echo "⚠ SBOM not found (sbom/sysmanage-agent-sbom.json)"; \
+	fi; \
 	echo ""; \
 	echo "Copying package metadata files..."; \
 	cp installer/netbsd/+INSTALL "$$BUILD_DIR/"; \

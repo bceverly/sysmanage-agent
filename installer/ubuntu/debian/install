@@ -1,2 +1,5 @@
 # Application files are installed by rules file override
 # This file can be used for additional static files if needed
+
+# SBOM (Software Bill of Materials)
+sbom/sysmanage-agent-sbom.json usr/share/doc/sysmanage-agent/sbom/

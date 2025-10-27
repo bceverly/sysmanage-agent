@@ -70,6 +70,10 @@ modules:
       - cp sysmanage-service-uninstall.sh /app/share/sysmanage-agent/scripts/
       - chmod +x /app/share/sysmanage-agent/scripts/*.sh
 
+      # Install SBOM (Software Bill of Materials)
+      - mkdir -p /app/share/doc/sysmanage-agent/sbom
+      - if [ -f sbom/sysmanage-agent-sbom.json ]; then cp sbom/sysmanage-agent-sbom.json /app/share/doc/sysmanage-agent/sbom/; fi
+
       # Create launcher script with config directory setup
       - |
         cat > /app/bin/sysmanage-agent <<'EOF'

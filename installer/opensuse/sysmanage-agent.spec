@@ -139,6 +139,12 @@ install -m 644 installer/opensuse/sysmanage-agent.service %{buildroot}/usr/lib/s
 install -d %{buildroot}/etc/sudoers.d
 install -m 440 installer/opensuse/sysmanage-agent.sudoers %{buildroot}/etc/sudoers.d/sysmanage-agent
 
+# Install SBOM (Software Bill of Materials)
+install -d %{buildroot}/usr/share/doc/sysmanage-agent/sbom
+if [ -f sbom/sysmanage-agent-sbom.json ]; then
+    install -m 644 sbom/sysmanage-agent-sbom.json %{buildroot}/usr/share/doc/sysmanage-agent/sbom/
+fi
+
 %pre
 # Create sysmanage-agent user if it doesn't exist
 %if 0%{?suse_version}
@@ -262,6 +268,7 @@ fi
 /usr/lib/systemd/system/sysmanage-agent.service
 # Note: /etc/sudoers.d is owned by sudo package, we only own our file within it
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
+%doc /usr/share/doc/sysmanage-agent/sbom/
 
 %changelog
 * Mon Oct 14 2024 Bryan Everly <bryan@theeverlys.com> - 0.1.0-0

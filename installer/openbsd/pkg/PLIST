@@ -184,6 +184,8 @@ libexec/sysmanage-agent/src/sysmanage_agent/utils/verbosity_logger.py
 share/doc/sysmanage-agent/
 share/doc/sysmanage-agent/LICENSE
 share/doc/sysmanage-agent/README.md
+share/doc/sysmanage-agent/sbom/
+share/doc/sysmanage-agent/sbom/sysmanage-agent-sbom.json
 @comment Example configuration
 share/examples/sysmanage-agent/
 share/examples/sysmanage-agent/sysmanage-agent.yaml
