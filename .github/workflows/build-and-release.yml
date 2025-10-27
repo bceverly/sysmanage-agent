@@ -1396,58 +1396,58 @@ jobs:
           git config user.email "actions@github.com"
 
           # Create version directories for each platform
-          mkdir -p "repo/deb/pool/main/$VERSION-1"
-          mkdir -p "repo/rpm/el9/x86_64"
-          mkdir -p "repo/rpm/opensuse-tumbleweed/x86_64"
-          mkdir -p "repo/rpm/opensuse-leap/15/x86_64"
-          mkdir -p "repo/rpm/sles/15/x86_64"
-          mkdir -p "repo/mac/packages/$VERSION"
-          mkdir -p "repo/windows/packages/$VERSION"
-          mkdir -p "repo/freebsd/packages/$VERSION"
-          mkdir -p "repo/netbsd/packages/$VERSION"
-          mkdir -p "repo/openbsd/ports/$VERSION"
+          mkdir -p "repo/agent/deb/pool/main/$VERSION-1"
+          mkdir -p "repo/agent/rpm/el9/x86_64"
+          mkdir -p "repo/agent/rpm/opensuse-tumbleweed/x86_64"
+          mkdir -p "repo/agent/rpm/opensuse-leap/15/x86_64"
+          mkdir -p "repo/agent/rpm/sles/15/x86_64"
+          mkdir -p "repo/agent/mac/packages/$VERSION"
+          mkdir -p "repo/agent/windows/packages/$VERSION"
+          mkdir -p "repo/agent/freebsd/packages/$VERSION"
+          mkdir -p "repo/agent/netbsd/packages/$VERSION"
+          mkdir -p "repo/agent/openbsd/ports/$VERSION"
 
           # Copy package files to appropriate locations
           # DEB packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
 
           # RPM packages - CentOS/RHEL (from build-centos job)
           # The artifact is named "sysmanage-agent-rpm" and contains files like sysmanage-agent-VERSION-1.x86_64.rpm
-          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm" -exec cp {} "repo/rpm/el9/x86_64/" \; 2>/dev/null || true
-          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm.sha256" -exec cp {} "repo/rpm/el9/x86_64/" \; 2>/dev/null || true
+          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm" -exec cp {} "repo/agent/rpm/el9/x86_64/" \; 2>/dev/null || true
+          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm.sha256" -exec cp {} "repo/agent/rpm/el9/x86_64/" \; 2>/dev/null || true
 
           # RPM packages - OpenSUSE Tumbleweed
-          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
 
           # RPM packages - OpenSUSE Leap
-          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
 
           # RPM packages - SLES
-          cp ${{ github.workspace }}/release-files/*sles*.rpm "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*sles*.rpm.sha256 "repo/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*sles*.rpm "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*sles*.rpm.sha256 "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
 
           # macOS packages
-          cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/mac/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*macos*.pkg.sha256 "repo/mac/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*macos*.pkg.sha256 "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
 
           # Windows packages
-          cp ${{ github.workspace }}/release-files/*windows*.msi "repo/windows/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*windows*.msi.sha256 "repo/windows/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*windows*.msi "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*windows*.msi.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
 
           # FreeBSD packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
 
           # NetBSD packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz "repo/netbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz.sha256 "repo/netbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz.sha256 "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
 
           # OpenBSD port tarball
-          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
           # Flatpak package and repository
           echo "Copying Flatpak files..."
@@ -1464,7 +1464,7 @@ jobs:
 
           # Regenerate apt repository metadata
           echo "Regenerating apt repository metadata..."
-          cd repo/deb
+          cd repo/agent/deb
 
           # Generate Packages files
           dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
@@ -1503,7 +1503,7 @@ jobs:
           echo "Checking for RPM repositories..."
 
           # Regenerate metadata for each RPM repository
-          for rpm_repo in repo/rpm/el9/x86_64 repo/rpm/opensuse-tumbleweed/x86_64 repo/rpm/opensuse-leap/15/x86_64 repo/rpm/sles/15/x86_64; do
+          for rpm_repo in repo/agent/rpm/el9/x86_64 repo/agent/rpm/opensuse-tumbleweed/x86_64 repo/agent/rpm/opensuse-leap/15/x86_64 repo/agent/rpm/sles/15/x86_64; do
             echo "Checking $rpm_repo..."
             if [ -d "$rpm_repo" ]; then
               echo "  Directory exists"
