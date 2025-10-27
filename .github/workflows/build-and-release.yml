@@ -1340,17 +1340,9 @@ jobs:
       - name: Build Flatpak
         run: |
           cd installer/flatpak
-          # Temporarily comment out metainfo references to avoid appstream-compose requirement
-          # Save original file
-          cp org.sysmanage.Agent.yaml org.sysmanage.Agent.yaml.orig
-
-          # Comment out metainfo lines
-          sed -i '/org.sysmanage.Agent.metainfo.xml/s/^/#/' org.sysmanage.Agent.yaml
-
-          flatpak-builder --force-clean --repo=repo builddir org.sysmanage.Agent.yaml
-
-          # Restore original YAML
-          mv org.sysmanage.Agent.yaml.orig org.sysmanage.Agent.yaml
+          # Set environment variable to skip appstream validation
+          export FLATPAK_BUILDER_SKIP_APPSTREAM=1
+          flatpak-builder --force-clean --disable-rofiles-fuse --repo=repo builddir org.sysmanage.Agent.yaml
 
       - name: Create Flatpak bundle
         env:
