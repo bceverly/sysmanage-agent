@@ -642,7 +642,7 @@ jobs:
           # Create sbom directory
           New-Item -ItemType Directory -Force -Path sbom | Out-Null
           # Generate SBOM
-          cyclonedx-py requirements -r -i requirements-prod.txt -o sbom/sysmanage-agent-sbom.json --format json
+          cyclonedx-py requirements requirements-prod.txt -o sbom/sysmanage-agent-sbom.json -f json
           Write-Host "[OK] SBOM generated"
 
       - name: Install WiX Toolset
