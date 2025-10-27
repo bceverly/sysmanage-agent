@@ -118,6 +118,9 @@ jobs:
           cp installer/ubuntu/*.sudoers ../sysmanage-agent-$VERSION/installer/ubuntu/
           cp installer/ubuntu/*.example ../sysmanage-agent-$VERSION/installer/ubuntu/
 
+          # Copy SBOM to the package
+          cp -r sbom ../sysmanage-agent-$VERSION/
+
           # Create orig tarball
           cd ..
           tar czf sysmanage-agent_$VERSION.orig.tar.gz sysmanage-agent-$VERSION/
@@ -624,6 +627,23 @@ jobs:
         run: |
           Write-Host "Generating requirements-prod.txt from requirements.txt..."
           python scripts/update-requirements-prod.py
+
+      - name: Install SBOM generation tools
+        shell: pwsh
+        run: |
+          Write-Host "Installing cyclonedx-bom for Python..."
+          python -m pip install cyclonedx-bom
+          python -c "import cyclonedx_py; print('✓ cyclonedx-bom installed')"
+
+      - name: Generate SBOM
+        shell: pwsh
+        run: |
+          Write-Host "Generating Software Bill of Materials..."
+          # Create sbom directory
+          New-Item -ItemType Directory -Force -Path sbom | Out-Null
+          # Generate SBOM
+          cyclonedx-py requirements -r -i requirements-prod.txt -o sbom/sysmanage-agent-sbom.json --format json
+          Write-Host "✓ SBOM generated"
 
       - name: Install WiX Toolset
         shell: pwsh
