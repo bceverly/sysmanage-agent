@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom
 
 # Default target
 help:
@@ -44,6 +44,7 @@ help:
 	@echo "  make snap-strict-clean - Clean strict snap build artifacts"
 	@echo "  make snap-strict-install - Install locally built strict snap (Ubuntu only)"
 	@echo "  make snap-strict-uninstall - Uninstall strict snap (Ubuntu only)"
+	@echo "  make sbom          - Generate Software Bill of Materials (CycloneDX format)"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
@@ -2404,3 +2405,43 @@ flatpak-uninstall:
 	echo "To remove configuration data:"; \
 	echo "  rm -rf ~/.var/app/org.sysmanage.Agent"; \
 	echo ""
+
+# SBOM (Software Bill of Materials) generation target
+sbom:
+	@echo "=================================================="
+	@echo "Generating Software Bill of Materials (CycloneDX)"
+	@echo "=================================================="
+	@echo ""
+	@echo "Creating SBOM output directory..."
+	@mkdir -p sbom
+	@echo "✓ Directory created: ./sbom/"
+	@echo ""
+	@echo "Checking for CycloneDX tools..."
+	@set -e; \
+	if ! python3 -c "import cyclonedx_py" 2>/dev/null; then \
+		echo "Installing cyclonedx-bom for Python..."; \
+		python3 -m pip install cyclonedx-bom --quiet; \
+		echo "✓ cyclonedx-bom installed"; \
+	else \
+		echo "✓ cyclonedx-bom already installed"; \
+	fi
+	@echo ""
+	@echo "Generating Python SBOM from requirements.txt..."
+	@set -e; \
+	python3 -m cyclonedx_py requirements \
+		requirements.txt \
+		--of JSON \
+		-o sbom/sysmanage-agent-sbom.json
+	@echo "✓ Python SBOM generated: sbom/sysmanage-agent-sbom.json"
+	@echo ""
+	@echo "=================================================="
+	@echo "SBOM Generation Complete!"
+	@echo "=================================================="
+	@echo ""
+	@echo "Generated files:"
+	@ls -lh sbom/*.json
+	@echo ""
+	@echo "You can view the SBOM with:"
+	@echo "  cat sbom/sysmanage-agent-sbom.json | jq ."
+	@echo ""
+	@echo "Or upload it to vulnerability scanning tools that support CycloneDX format."

@@ -221,3 +221,6 @@ requirements-prod.txt
 
 # Auto-generated version file
 VERSION
+
+# SBOM (Software Bill of Materials) generated files
+sbom/
