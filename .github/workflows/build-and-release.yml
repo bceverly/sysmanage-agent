@@ -1240,11 +1240,111 @@ jobs:
             sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz
             sysmanage-agent-${{ steps.version.outputs.version }}-openbsd-port.tar.gz.sha256
 
+  # Flatpak Package Build
+  build-flatpak:
+    name: Build Flatpak Package
+    runs-on: ubuntu-22.04
+    needs: wait-for-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building Flatpak for version: $VERSION"
+
+      - name: Install Flatpak build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//24.08
+          flatpak install --user -y flathub org.freedesktop.Sdk//24.08
+
+      - name: Set version in VERSION file
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "$VERSION" > VERSION
+
+      - name: Prepare Flatpak build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Create source tarball
+          tar czf installer/flatpak/sysmanage-agent-src.tar.gz \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.venv' \
+            --exclude='htmlcov' \
+            --exclude='.coverage' \
+            --exclude='installer/dist' \
+            main.py src/ alembic.ini requirements.txt README.md VERSION
+
+          # Filter runtime requirements
+          grep -v "^semgrep\|^bandit\|^black\|^pylint\|^pytest\|^coverage\|^safety\|^playwright\|^selenium\|^webdriver-manager" requirements.txt > installer/flatpak/requirements-runtime.txt
+
+          # Download Python dependencies
+          mkdir -p installer/flatpak/pypi-dependencies
+          pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies --platform manylinux2014_x86_64 --only-binary=:all: --python-version=312 2>/dev/null || \
+          pip3 download -r installer/flatpak/requirements-runtime.txt -d installer/flatpak/pypi-dependencies --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version=312
+
+          cd installer/flatpak/pypi-dependencies && tar czf ../pypi-dependencies.tar.gz .
+
+          # Update metainfo with version
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/" installer/flatpak/org.sysmanage.Agent.metainfo.xml
+
+      - name: Build Flatpak
+        run: |
+          cd installer/flatpak
+          flatpak-builder --force-clean --repo=repo builddir org.sysmanage.Agent.yaml
+
+      - name: Create Flatpak bundle
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd installer/flatpak
+          flatpak build-bundle repo sysmanage-agent-$VERSION.flatpak org.sysmanage.Agent
+
+          # Generate SHA256 checksum
+          sha256sum sysmanage-agent-$VERSION.flatpak > sysmanage-agent-$VERSION.flatpak.sha256
+
+          echo "✓ Flatpak bundle created:"
+          ls -lh sysmanage-agent-$VERSION.flatpak
+
+      - name: Upload Flatpak as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-flatpak
+          path: |
+            installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak
+            installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak.sha256
+            installer/flatpak/repo/**
+
   # Consolidated Release - Push to sysmanage-docs and create GitHub release
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd]
+    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak]
 
     steps:
       - name: Checkout code
@@ -1277,6 +1377,7 @@ jobs:
           find artifacts/ -name "*.msi" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tgz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.flatpak" -exec cp {} release-files/ \;
           find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
 
           echo "Release files:"
@@ -1347,6 +1448,15 @@ jobs:
           # OpenBSD port tarball
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/openbsd/ports/$VERSION/" 2>/dev/null || true
+
+          # Flatpak package and repository
+          echo "Copying Flatpak files..."
+          cp ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
+          cp ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
+
+          # Copy Flatpak repository data
+          echo "Syncing Flatpak repository..."
+          rsync -av ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo/ repo/ 2>/dev/null || true
 
           # Install repository tools
           echo "Installing repository metadata tools..."
@@ -1439,6 +1549,22 @@ jobs:
           # Configure and start
           sudo nano /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
+          \`\`\`
+
+          ### Flatpak (Universal Linux)
+          \`\`\`bash
+          # Add SysManage repository
+          flatpak remote-add --if-not-exists sysmanage https://sysmanage.org/sysmanage.flatpakrepo
+
+          # Install the agent
+          flatpak install sysmanage org.sysmanage.Agent
+
+          # Run service installation script
+          flatpak run --command=sysmanage-service-install org.sysmanage.Agent
+
+          # Or download and install the bundle directly:
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.flatpak
+          flatpak install --user sysmanage-agent-${VERSION}.flatpak
           \`\`\`
 
           ### CentOS/RHEL 9
