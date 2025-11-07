@@ -273,3 +273,4 @@ This project is licensed under the GNU Affero General Public License v3.0. See [
 - **🐛 Issues**: [GitHub Issues](https://github.com/bceverly/sysmanage-agent/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/bceverly/sysmanage-agent/discussions)
 - **🖥️ Server Project**: [SysManage Server](https://github.com/bceverly/sysmanage)
+
