@@ -92,7 +92,7 @@ kill_by_pattern() {
     # First try to find processes using pgrep (more reliable for full command matching)
     agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
-        agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$)
+        agent_pids=$(pgrep -f "sysmanage-agent.*main\.py" 2>/dev/null | grep -v $$)
     fi
 
     # If pgrep found processes, get their details
@@ -112,7 +112,7 @@ kill_by_pattern() {
 
     # Fallback: use pattern matching if pgrep didn't work
     if [ -z "$process_info" ]; then
-        pattern="python.*main\.py"
+        pattern="sysmanage-agent.*python.*main\.py"
         # Use ps aux format which works reliably on NetBSD and other BSDs
         process_info=$(ps aux 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$)
 
@@ -180,9 +180,9 @@ kill_by_pattern() {
         remaining_info=""
         remaining_info=$(ps aux 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$)
 
-        # If no results with simplified pattern, try with the original pattern we know works
+        # If no results with simplified pattern, try with sysmanage-agent specific pattern
         if [ -z "$remaining_info" ]; then
-            remaining_info=$(ps aux 2>/dev/null | grep "python.*main\.py" | grep -v grep | grep -v $$)
+            remaining_info=$(ps aux 2>/dev/null | grep "sysmanage-agent.*python.*main\.py" | grep -v grep | grep -v $$)
         fi
 
         if [ -n "$remaining_info" ]; then
@@ -261,7 +261,7 @@ sleep 1
 # Cross-platform process count check
 remaining_processes=0
 if command -v pgrep >/dev/null 2>&1; then
-    remaining_processes=$(pgrep -f "main.py" 2>/dev/null | grep -v $$ | wc -l)
+    remaining_processes=$(pgrep -f "sysmanage-agent.*main\.py" 2>/dev/null | grep -v $$ | wc -l)
 else
     remaining_processes=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | wc -l)
 fi
@@ -274,13 +274,13 @@ else
     echo "⚠️  Warning: $remaining_processes agent process(es) may still be running"
     echo ""
     echo "To manually check for agent processes:"
-    echo "  ps aux | grep 'python.*main.py'"
+    echo "  ps aux | grep 'sysmanage-agent.*main.py'"
     echo ""
     echo "To manually kill all agent processes (as last resort):"
     if command -v pkill >/dev/null 2>&1; then
-        echo "  pkill -f 'python.*main.py'"
+        echo "  pkill -f 'sysmanage-agent.*main.py'"
     else
-        echo "  kill \$(ps aux | grep 'python.*main.py' | grep -v grep | awk '{print \$2}')"
+        echo "  kill \$(ps aux | grep 'sysmanage-agent.*main.py' | grep -v grep | awk '{print \$2}')"
     fi
 fi
 

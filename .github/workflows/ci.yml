@@ -200,3 +200,68 @@ jobs:
     - name: Verify imports and basic functionality
       run: |
         python -c "import main; print('Imports successful')"
+
+  # Job 4: SonarCloud Analysis (runs after all other jobs succeed)
+  sonarcloud:
+    name: SonarCloud Code Analysis
+    runs-on: ubuntu-latest
+    needs: [test-backend, lint-backend, build]  # Only runs when all jobs succeed
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better analysis
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-3.12-
+          ${{ runner.os }}-pip-
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest tests/ -v --cov=src --cov=main --cov-report=xml --cov-report=term-missing
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: SonarCloud summary
+      if: success()
+      run: |
+        echo "================================================"
+        echo "✅ SONARCLOUD ANALYSIS COMPLETE!"
+        echo "================================================"
+        echo ""
+        echo "✓ Code analysis: SUCCESS"
+        echo "✓ Coverage uploaded: SUCCESS"
+        echo ""
+        echo "View full analysis results at:"
+        echo "https://sonarcloud.io/project/overview?id=bceverly_sysmanage-agent"
+        echo ""

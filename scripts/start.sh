@@ -36,8 +36,8 @@ check_existing_processes() {
     # Check for agent processes by pattern (cross-platform approach)
     agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
-        # Use pgrep if available - more reliable for finding main.py processes
-        agent_pids=$(pgrep -f "main.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
+        # Use pgrep if available - more reliable for finding sysmanage-agent main.py processes
+        agent_pids=$(pgrep -f "sysmanage-agent.*main\.py" 2>/dev/null | grep -v $$) # Exclude this script's PID
     else
         # Fallback: use ps and grep for older systems, look for .venv pattern (NetBSD truncation issue)
         agent_pids=$(ps aux 2>/dev/null | grep "\.venv.*python" | grep -v grep | grep -v $$ | awk '{print $2}')
