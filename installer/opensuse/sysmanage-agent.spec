@@ -6,6 +6,7 @@ License:        Dual (Open Source / Commercial)
 URL:            https://github.com/bceverly/sysmanage-agent
 Source0:        %{name}-%{version}.tar.gz
 Source1:        %{name}-vendor-%{version}.tar.gz
+Source100:      %{name}-rpmlintrc
 
 # Not noarch because virtualenv contains compiled extensions
 # Disable debug package generation (no debug symbols in Python bytecode)
