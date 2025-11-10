@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for CI workflow
-        uses: lewagon/wait-on-check-action@v1.3.4
+        uses: lewagon/wait-on-check-action@v1.4.1
         with:
           ref: ${{ github.sha }}
           check-name: 'Backend Tests (Python 3.10)'
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -164,7 +164,7 @@ jobs:
           echo "Size: $(du -h "$DEB_FILE" | cut -f1)"
 
       - name: Upload .deb as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-deb
           path: |
@@ -172,7 +172,7 @@ jobs:
             sysmanage-agent_*.deb.sha256
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-sbom
           path: |
@@ -269,7 +269,7 @@ jobs:
           echo "Spec file updated to version $VERSION"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -310,7 +310,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-rpm
           path: |
@@ -432,7 +432,7 @@ jobs:
           echo "Spec file updated to version $VERSION"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -477,7 +477,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-rpm-${{ matrix.target }}
           path: |
@@ -495,7 +495,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -578,7 +578,7 @@ jobs:
           echo "SHA256: $(cat "$PKG_FILE.sha256")"
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-macos-pkg
           path: |
@@ -599,7 +599,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -718,7 +718,7 @@ jobs:
           Get-Content $checksumFile
 
       - name: Upload MSI as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-windows-${{ matrix.arch }}-msi
           path: |
@@ -736,7 +736,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -855,7 +855,7 @@ jobs:
           tar -tf "$PKG_FILE" | head -20
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-freebsd-pkg
           path: |
@@ -873,7 +873,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -1020,7 +1020,7 @@ jobs:
           cat "$PKG_FILE.sha256"
 
       - name: Upload .tgz as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-netbsd-tgz
           path: |
@@ -1273,7 +1273,7 @@ jobs:
           cat "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
 
       - name: Upload tarball as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-openbsd-port
           path: |
@@ -1291,7 +1291,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -1378,7 +1378,7 @@ jobs:
           ls -lh sysmanage-agent-$VERSION.flatpak
 
       - name: Upload Flatpak as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sysmanage-agent-flatpak
           path: |
@@ -1405,7 +1405,7 @@ jobs:
           echo "Building consolidated release for version: $VERSION"
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts/
 

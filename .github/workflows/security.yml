@@ -55,7 +55,7 @@ jobs:
         fi
 
     - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: semgrep.sarif
       if: steps.check_semgrep_sarif.outputs.exists == 'true'
@@ -71,7 +71,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -90,7 +90,7 @@ jobs:
         safety scan --output screen || true
 
     - name: Upload Safety results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: hashFiles('safety-report.json') != ''
       with:
         name: safety-report
@@ -107,7 +107,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -120,7 +120,7 @@ jobs:
         bandit -r *.py src/ -f json --skip B101,B404,B603,B607 -o bandit-report.json || true
 
     - name: Upload Bandit results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: hashFiles('bandit-report.json') != ''
       with:
         name: bandit-security-report
@@ -137,7 +137,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -165,7 +165,7 @@ jobs:
         fi
 
     - name: Upload Snyk results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: steps.check_sarif.outputs.exists == 'true'
       with:
         sarif_file: snyk.sarif
