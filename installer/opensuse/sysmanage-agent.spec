@@ -6,7 +6,6 @@ License:        Dual (Open Source / Commercial)
 URL:            https://github.com/bceverly/sysmanage-agent
 Source0:        %{name}-%{version}.tar.gz
 Source1:        %{name}-vendor-%{version}.tar.gz
-Source100:      %{name}-rpmlintrc
 
 # Not noarch because virtualenv contains compiled extensions
 # Disable debug package generation (no debug symbols in Python bytecode)
@@ -75,27 +74,6 @@ tar xzf %{_sourcedir}/%{name}-vendor-%{version}.tar.gz
 # No build step needed - Python application
 
 %install
-# DEBUG: Check if rpmlintrc is present in OBS build
-echo "=========================================="
-echo "DEBUG: Checking for rpmlintrc file"
-echo "=========================================="
-echo "Current directory: $(pwd)"
-echo "Files in current directory:"
-ls -la
-echo ""
-echo "Looking for rpmlintrc files:"
-find .. -name "*rpmlintrc*" -type f 2>/dev/null || echo "No rpmlintrc files found"
-echo ""
-if [ -f "../%{name}-rpmlintrc" ]; then
-  echo "Found rpmlintrc at ../%{name}-rpmlintrc"
-  echo "Contents:"
-  cat "../%{name}-rpmlintrc"
-else
-  echo "rpmlintrc NOT FOUND at expected location ../%{name}-rpmlintrc"
-fi
-echo "=========================================="
-echo ""
-
 # Create directory structure
 install -d %{buildroot}/opt/sysmanage-agent
 install -d %{buildroot}/etc/sysmanage-agent
@@ -288,7 +266,8 @@ fi
 %dir /var/lib/sysmanage-agent
 %dir /var/log/sysmanage-agent
 /usr/lib/systemd/system/sysmanage-agent.service
-# Note: /etc/sudoers.d is owned by sudo package, we only own our file within it
+# Note: Multiple packages can own the same directory
+%dir /etc/sudoers.d
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
 %dir /usr/share/doc/sysmanage-agent
 %doc /usr/share/doc/sysmanage-agent/sbom/
