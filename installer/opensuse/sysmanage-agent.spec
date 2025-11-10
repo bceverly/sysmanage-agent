@@ -268,6 +268,7 @@ fi
 /usr/lib/systemd/system/sysmanage-agent.service
 # Note: /etc/sudoers.d is owned by sudo package, we only own our file within it
 %config(noreplace) /etc/sudoers.d/sysmanage-agent
+%dir /usr/share/doc/sysmanage-agent
 %doc /usr/share/doc/sysmanage-agent/sbom/
 
 %changelog
