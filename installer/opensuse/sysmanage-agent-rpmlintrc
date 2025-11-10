@@ -33,3 +33,4 @@ addFilter("suse-missing-rclink")
 # /etc/sudoers.d is owned by sudo package, we only install our file within it
 addFilter("dir-or-file-in-etc-sudoers")
 addFilter("unowned-directory .*/etc/sudoers.d")
+addFilter("directories-not-owned-by-package .*/etc/sudoers.d")
