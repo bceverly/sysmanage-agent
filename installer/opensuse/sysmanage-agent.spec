@@ -75,6 +75,27 @@ tar xzf %{_sourcedir}/%{name}-vendor-%{version}.tar.gz
 # No build step needed - Python application
 
 %install
+# DEBUG: Check if rpmlintrc is present in OBS build
+echo "=========================================="
+echo "DEBUG: Checking for rpmlintrc file"
+echo "=========================================="
+echo "Current directory: $(pwd)"
+echo "Files in current directory:"
+ls -la
+echo ""
+echo "Looking for rpmlintrc files:"
+find .. -name "*rpmlintrc*" -type f 2>/dev/null || echo "No rpmlintrc files found"
+echo ""
+if [ -f "../%{name}-rpmlintrc" ]; then
+  echo "Found rpmlintrc at ../%{name}-rpmlintrc"
+  echo "Contents:"
+  cat "../%{name}-rpmlintrc"
+else
+  echo "rpmlintrc NOT FOUND at expected location ../%{name}-rpmlintrc"
+fi
+echo "=========================================="
+echo ""
+
 # Create directory structure
 install -d %{buildroot}/opt/sysmanage-agent
 install -d %{buildroot}/etc/sysmanage-agent
