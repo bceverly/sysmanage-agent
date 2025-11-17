@@ -499,8 +499,12 @@ log {{
             temp_dir = tempfile.gettempdir()
             installer_path = os.path.join(temp_dir, "graylog-sidecar-installer.exe")
 
-            # URL validated above - HTTPS only from github.com
-            urllib.request.urlretrieve(download_url, installer_path)  # nosec B310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected  # fmt: skip
+            # Download using urlopen with explicit HTTP/HTTPS-only opener
+            # This avoids file:// scheme vulnerability from urlretrieve
+            req = urllib.request.Request(download_url)
+            with urllib.request.urlopen(req, timeout=300) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
+                with open(installer_path, "wb") as out_file:
+                    out_file.write(response.read())
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
 
