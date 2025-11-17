@@ -502,7 +502,9 @@ log {{
             # Download using urlopen with explicit HTTP/HTTPS-only opener
             # This avoids file:// scheme vulnerability from urlretrieve
             req = urllib.request.Request(download_url)
-            with urllib.request.urlopen(req, timeout=300) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
+            with urllib.request.urlopen(
+                req, timeout=300
+            ) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
                 with open(installer_path, "wb") as out_file:
                     out_file.write(response.read())
 
