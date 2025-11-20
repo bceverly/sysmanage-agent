@@ -58,8 +58,19 @@ class UpdateOperations:
     async def apply_updates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply updates for specified packages."""
         try:
-            package_names = parameters.get("package_names", [])
-            package_managers = parameters.get("package_managers")
+            # Support both old and new parameter formats
+            # Old format: {"package_names": [...], "package_managers": [...]}
+            # New format: {"packages": [{"package_name": "...", "bundle_id": "...", "package_manager": "..."}]}
+
+            packages_list = parameters.get("packages", [])
+            if packages_list:
+                # New format with packages array
+                package_names = [pkg.get("package_name") for pkg in packages_list]
+                package_managers = [pkg.get("package_manager") for pkg in packages_list]
+            else:
+                # Old format with separate lists
+                package_names = parameters.get("package_names", [])
+                package_managers = parameters.get("package_managers")
 
             if not package_names:
                 return {
@@ -69,7 +80,9 @@ class UpdateOperations:
 
             # Start the update process in a background task to avoid blocking WebSocket
             asyncio.create_task(
-                self._apply_updates_background(package_names, package_managers)
+                self._apply_updates_background(
+                    package_names, package_managers, packages_list
+                )
             )
 
             return {
@@ -81,7 +94,9 @@ class UpdateOperations:
             self.logger.error(_("Failed to start updates: %s"), error)
             return {"success": False, "error": str(error)}
 
-    async def _apply_updates_background(self, package_names: list, package_managers):
+    async def _apply_updates_background(
+        self, package_names: list, package_managers, packages_list=None
+    ):
         """Apply updates in background to avoid blocking WebSocket connection."""
         try:
             self.logger.info(_("Starting background update process"))
@@ -92,8 +107,33 @@ class UpdateOperations:
             # Validate packages exist and get their package managers
             valid_packages = []
 
-            # Handle package_managers as either a list or dict
-            if isinstance(package_managers, list):
+            # If packages_list is provided (new format), use it with bundle_id
+            if packages_list:
+                for pkg in packages_list:
+                    package_name = pkg.get("package_name")
+                    package_manager = pkg.get("package_manager")
+                    bundle_id = pkg.get("bundle_id")
+
+                    # Log what we received from server for debugging
+                    self.logger.info(
+                        _(
+                            "Received update request: package='%s', manager='%s', bundle_id='%s'"
+                        ),
+                        package_name,
+                        package_manager,
+                        bundle_id if bundle_id else "NULL",
+                    )
+
+                    if package_name and package_manager:
+                        valid_packages.append(
+                            {
+                                "name": package_name,
+                                "package_manager": package_manager,
+                                "bundle_id": bundle_id,  # Include bundle_id for winget and update_id for Windows Update
+                            }
+                        )
+            # Handle package_managers as either a list or dict (old format)
+            elif isinstance(package_managers, list):
                 # If it's a list, assume the same order as package_names
                 for i, package_name in enumerate(package_names):
                     if i < len(package_managers):
@@ -144,17 +184,10 @@ class UpdateOperations:
             loop = asyncio.get_event_loop()
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                # Extract package names for apply_updates
-                package_names_list = [pkg["name"] for pkg in valid_packages]
-                package_managers_list = [
-                    pkg["package_manager"] for pkg in valid_packages
-                ]
-
+                # Pass full package objects including bundle_id
                 update_results = await loop.run_in_executor(
                     executor,
-                    update_detector.apply_updates,
-                    package_names_list,
-                    package_managers_list,
+                    lambda: update_detector.apply_updates(packages=valid_packages),
                 )
 
             # Add hostname to result data
@@ -170,6 +203,7 @@ class UpdateOperations:
 
             # Try to send update results, retrying if not connected
             max_retries = 30  # Try for up to 5 minutes (30 * 10 seconds)
+            results_sent = False
             for retry in range(max_retries):
                 if self.agent.connected and self.agent.websocket:
                     success = await self.agent.send_message(update_message)
@@ -177,6 +211,7 @@ class UpdateOperations:
                         self.logger.info(
                             _("Successfully sent update results to server")
                         )
+                        results_sent = True
                         break
                     self.logger.warning(
                         _("Failed to send update results, will retry...")
@@ -197,6 +232,52 @@ class UpdateOperations:
                 self.logger.error(
                     _("Failed to send update results after %d attempts"), max_retries
                 )
+
+            # After updates complete, automatically rescan for remaining updates
+            if results_sent:
+                try:
+                    self.logger.info(
+                        _("Rescanning for available updates after batch completion")
+                    )
+
+                    # Re-initialize update detector to get fresh data
+                    fresh_update_detector = UpdateDetector()
+
+                    # Get fresh list of available updates in executor to avoid blocking
+                    fresh_update_info = await loop.run_in_executor(
+                        None,
+                        fresh_update_detector.get_available_updates,
+                    )
+
+                    # Add hostname to update data
+                    fresh_update_info["hostname"] = system_info["hostname"]
+
+                    self.logger.info(
+                        _("Post-update scan completed: %d updates remaining"),
+                        fresh_update_info.get("total_updates", 0),
+                    )
+
+                    # Create and send fresh update list message
+                    fresh_update_message = self.agent.create_message(
+                        "package_updates_update", fresh_update_info
+                    )
+
+                    # Send fresh update list to server
+                    if self.agent.connected and self.agent.websocket:
+                        await self.agent.send_message(fresh_update_message)
+                        self.logger.info(
+                            _("Successfully sent fresh update list to server")
+                        )
+                    else:
+                        self.logger.warning(
+                            _("Could not send fresh update list - not connected")
+                        )
+
+                except Exception as scan_error:
+                    self.logger.error(
+                        _("Failed to rescan for updates after batch: %s"),
+                        scan_error,
+                    )
 
         except Exception as error:
             self.logger.error(_("Background update process failed: %s"), error)
