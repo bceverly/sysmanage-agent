@@ -113,25 +113,30 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         package_managers = ["apt", "yum"]
 
         mock_update_results = {"success": True, "results": ["updated1", "updated2"]}
+        mock_fresh_updates = {"total_updates": 0, "available_updates": []}
 
         with patch(
             "src.sysmanage_agent.operations.update_operations.UpdateDetector"
         ) as mock_detector:
             mock_detector_instance = Mock()
             mock_detector_instance.apply_updates.return_value = mock_update_results
+            mock_detector_instance.get_available_updates.return_value = (
+                mock_fresh_updates
+            )
             mock_detector.return_value = mock_detector_instance
 
             with patch("asyncio.get_event_loop") as mock_loop:
+                # First call returns update results, second call returns fresh updates
                 mock_loop.return_value.run_in_executor = AsyncMock(
-                    return_value=mock_update_results
+                    side_effect=[mock_update_results, mock_fresh_updates]
                 )
 
                 await self.update_ops._apply_updates_background(
                     package_names, package_managers
                 )
 
-                # Verify the executor was called
-                mock_loop.return_value.run_in_executor.assert_called_once()
+                # Verify the executor was called twice (once for updates, once for rescan)
+                assert mock_loop.return_value.run_in_executor.call_count == 2
 
     @pytest.mark.asyncio
     async def test_apply_updates_background_with_dict_managers(self):
@@ -140,25 +145,30 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         package_managers = {"package1": "apt", "package2": "yum"}
 
         mock_update_results = {"success": True, "results": ["updated1", "updated2"]}
+        mock_fresh_updates = {"total_updates": 0, "available_updates": []}
 
         with patch(
             "src.sysmanage_agent.operations.update_operations.UpdateDetector"
         ) as mock_detector:
             mock_detector_instance = Mock()
             mock_detector_instance.apply_updates.return_value = mock_update_results
+            mock_detector_instance.get_available_updates.return_value = (
+                mock_fresh_updates
+            )
             mock_detector.return_value = mock_detector_instance
 
             with patch("asyncio.get_event_loop") as mock_loop:
+                # First call returns update results, second call returns fresh updates
                 mock_loop.return_value.run_in_executor = AsyncMock(
-                    return_value=mock_update_results
+                    side_effect=[mock_update_results, mock_fresh_updates]
                 )
 
                 await self.update_ops._apply_updates_background(
                     package_names, package_managers
                 )
 
-                # Verify the executor was called
-                mock_loop.return_value.run_in_executor.assert_called_once()
+                # Verify the executor was called twice (once for updates, once for rescan)
+                assert mock_loop.return_value.run_in_executor.call_count == 2
 
     @pytest.mark.asyncio
     async def test_apply_updates_background_with_detection_fallback(self):
@@ -236,21 +246,26 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         package_names = ["package1"]
         package_managers = ["apt"]
         mock_update_results = {"success": True}
+        mock_fresh_updates = {"total_updates": 0, "available_updates": []}
 
-        # First attempt fails, second succeeds
-        self.mock_agent.send_message = AsyncMock(side_effect=[False, True])
+        # First attempt fails, second succeeds, third (fresh scan) succeeds
+        self.mock_agent.send_message = AsyncMock(side_effect=[False, True, True])
 
         with patch(
             "src.sysmanage_agent.operations.update_operations.UpdateDetector"
         ) as mock_detector:
             mock_detector_instance = Mock()
             mock_detector_instance.apply_updates.return_value = mock_update_results
+            mock_detector_instance.get_available_updates.return_value = (
+                mock_fresh_updates
+            )
             mock_detector.return_value = mock_detector_instance
 
             with patch("concurrent.futures.ThreadPoolExecutor"):
                 with patch("asyncio.get_event_loop") as mock_loop:
+                    # First call returns update results, second call returns fresh updates
                     mock_loop.return_value.run_in_executor = AsyncMock(
-                        return_value=mock_update_results
+                        side_effect=[mock_update_results, mock_fresh_updates]
                     )
 
                     with patch("asyncio.sleep") as mock_sleep:
@@ -258,8 +273,11 @@ class TestUpdateOperations:  # pylint: disable=protected-access
                             package_names, package_managers
                         )
 
-                        # Should have called send_message twice (failed first, succeeded second)
-                        assert self.mock_agent.send_message.call_count == 2
+                        # Should have called send_message three times:
+                        # 1. Update results (failed)
+                        # 2. Update results retry (succeeded)
+                        # 3. Fresh update scan (after successful send)
+                        assert self.mock_agent.send_message.call_count == 3
                         mock_sleep.assert_called_once_with(10)
 
     @pytest.mark.asyncio
@@ -268,6 +286,7 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         package_names = ["package1"]
         package_managers = ["apt"]
         mock_update_results = {"success": True}
+        mock_fresh_updates = {"total_updates": 0, "available_updates": []}
 
         # Agent is initially disconnected, then connects
         self.mock_agent.connected = False
@@ -283,11 +302,15 @@ class TestUpdateOperations:  # pylint: disable=protected-access
         ) as mock_detector:
             mock_detector_instance = Mock()
             mock_detector_instance.apply_updates.return_value = mock_update_results
+            mock_detector_instance.get_available_updates.return_value = (
+                mock_fresh_updates
+            )
             mock_detector.return_value = mock_detector_instance
 
             with patch("asyncio.get_event_loop") as mock_loop:
+                # First call returns update results, second call returns fresh updates
                 mock_loop.return_value.run_in_executor = AsyncMock(
-                    return_value=mock_update_results
+                    side_effect=[mock_update_results, mock_fresh_updates]
                 )
 
                 with patch(
@@ -299,8 +322,10 @@ class TestUpdateOperations:  # pylint: disable=protected-access
 
                     # Should have called sleep for retry
                     mock_sleep.assert_called_with(10)
-                    # Should eventually send message after reconnection
-                    self.mock_agent.send_message.assert_called_once()
+                    # Should send message twice after reconnection:
+                    # 1. Update results
+                    # 2. Fresh update scan
+                    assert self.mock_agent.send_message.call_count == 2
 
     @pytest.mark.asyncio
     async def test_apply_updates_background_max_retries_exceeded(self):
