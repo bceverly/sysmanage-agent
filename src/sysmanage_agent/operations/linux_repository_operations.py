@@ -23,87 +23,191 @@ class LinuxRepositoryOperations:
 
     # ========== APT Operations ==========
 
+    def _is_ppa_hostname(self, hostname: str) -> bool:
+        """Check if a hostname belongs to a PPA service."""
+        if not hostname:
+            return False
+        ppa_hosts = [
+            "ppa.launchpad.net",
+            "ppa.launchpadcontent.net",
+        ]
+        for ppa_host in ppa_hosts:
+            if hostname == ppa_host or hostname.endswith(f".{ppa_host}"):
+                return True
+        return False
+
+    def _extract_ppa_name_from_url(self, url: str) -> str:
+        """Extract PPA name (ppa:user/repo) from a URL."""
+        parsed = urlparse(url)
+        if not self._is_ppa_hostname(parsed.hostname):
+            return ""
+        # URL format: https://ppa.launchpadcontent.net/user/repo/ubuntu/
+        path_parts = [p for p in parsed.path.split("/") if p]
+        if len(path_parts) >= 2:
+            return f"ppa:{path_parts[0]}/{path_parts[1]}"
+        return ""
+
+    def _parse_deb822_sources_file(self, content: str, filepath: str) -> list:
+        """Parse a DEB822 format .sources file."""
+        repositories = []
+        current_entry = {}
+
+        for line in content.splitlines():
+            line = line.rstrip()
+
+            # Empty line marks end of an entry
+            if not line:
+                if current_entry.get("uris"):
+                    repositories.append(
+                        self._create_repo_from_deb822(current_entry, filepath)
+                    )
+                current_entry = {}
+                continue
+
+            # Skip comments
+            if line.startswith("#"):
+                continue
+
+            # Handle continuation lines (start with space)
+            if line.startswith(" ") or line.startswith("\t"):
+                continue
+
+            # Parse key: value
+            if ":" in line:
+                key, _, value = line.partition(":")
+                key = key.strip().lower()
+                value = value.strip()
+
+                if key == "types":
+                    current_entry["types"] = value
+                elif key == "uris":
+                    current_entry["uris"] = value
+                elif key == "suites":
+                    current_entry["suites"] = value
+                elif key == "components":
+                    current_entry["components"] = value
+                elif key == "enabled":
+                    current_entry["enabled"] = value.lower() != "no"
+
+        # Don't forget the last entry if file doesn't end with blank line
+        if current_entry.get("uris"):
+            repositories.append(self._create_repo_from_deb822(current_entry, filepath))
+
+        return repositories
+
+    def _create_repo_from_deb822(self, entry: dict, filepath: str) -> dict:
+        """Create a repository dict from a parsed DEB822 entry."""
+        uri = entry.get("uris", "")
+        types = entry.get("types", "deb")
+        suites = entry.get("suites", "")
+        components = entry.get("components", "")
+        enabled = entry.get("enabled", True)
+
+        # Construct a deb-line style URL for display
+        url = f"{types} {uri} {suites} {components}".strip()
+
+        # Check if it's a PPA
+        is_ppa = self._is_ppa_hostname(urlparse(uri).hostname)
+        repo_type = "PPA" if is_ppa else "APT"
+
+        # Extract name
+        name = os.path.basename(filepath).replace(".sources", "").replace(".list", "")
+        if is_ppa:
+            ppa_name = self._extract_ppa_name_from_url(uri)
+            if ppa_name:
+                name = ppa_name
+
+        return {
+            "name": name,
+            "type": repo_type,
+            "url": url,
+            "enabled": enabled,
+            "file_path": filepath,
+        }
+
+    def _parse_list_sources_file(self, content: str, filepath: str) -> list:
+        """Parse a traditional .list format sources file."""
+        repositories = []
+
+        for line in content.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if line is commented out
+            enabled = not line.startswith("#")
+            if not enabled:
+                line = line.lstrip("#").strip()
+
+            # Must start with deb or deb-src
+            if not (line.startswith("deb ") or line.startswith("deb-src ")):
+                continue
+
+            # Check if it's a PPA
+            is_ppa = False
+            for part in line.split():
+                if part.startswith("http"):
+                    parsed = urlparse(part)
+                    if self._is_ppa_hostname(parsed.hostname):
+                        is_ppa = True
+                        break
+
+            repo_type = "PPA" if is_ppa else "APT"
+
+            # Extract name
+            name = (
+                os.path.basename(filepath).replace(".list", "").replace(".sources", "")
+            )
+            if is_ppa:
+                for part in line.split():
+                    if part.startswith("http"):
+                        ppa_name = self._extract_ppa_name_from_url(part)
+                        if ppa_name:
+                            name = ppa_name
+                            break
+
+            repositories.append(
+                {
+                    "name": name,
+                    "type": repo_type,
+                    "url": line,
+                    "enabled": enabled,
+                    "file_path": filepath,
+                }
+            )
+
+        return repositories
+
     async def list_apt_repositories(self) -> list:
-        """List APT repositories including PPAs."""
+        """List APT repositories including PPAs.
+
+        Supports both traditional .list format and modern DEB822 .sources format.
+        """
         repositories = []
         sources_dir = "/etc/apt/sources.list.d"
 
         try:
             if os.path.exists(sources_dir):
                 for filename in os.listdir(sources_dir):
-                    if filename.endswith((".list", ".sources")):
-                        filepath = os.path.join(sources_dir, filename)
-                        try:
-                            with open(filepath, "r", encoding="utf-8") as file_handle:
-                                content = file_handle.read()
-                                # Parse repository info
-                                for line in content.splitlines():
-                                    line = line.strip()
-                                    if not line or line.startswith("#"):
-                                        continue
+                    if not filename.endswith((".list", ".sources")):
+                        continue
 
-                                    # Check if it's a PPA or other third-party repo
-                                    is_ppa = False
-                                    parts = line.split()
-                                    for part in parts:
-                                        if part.startswith("http"):
-                                            parsed = urlparse(part)
-                                            if parsed.hostname and (
-                                                parsed.hostname == "ppa.launchpad.net"
-                                                or parsed.hostname.endswith(
-                                                    ".ppa.launchpad.net"
-                                                )
-                                            ):
-                                                is_ppa = True
-                                                break
+                    filepath = os.path.join(sources_dir, filename)
+                    try:
+                        with open(filepath, "r", encoding="utf-8") as file_handle:
+                            content = file_handle.read()
 
-                                    if not (is_ppa or "deb " in line):
-                                        continue
+                        if filename.endswith(".sources"):
+                            # Parse DEB822 format
+                            repos = self._parse_deb822_sources_file(content, filepath)
+                        else:
+                            # Parse traditional .list format
+                            repos = self._parse_list_sources_file(content, filepath)
 
-                                    enabled = not line.startswith("#")
-                                    repo_type = "PPA" if is_ppa else "APT"
+                        repositories.extend(repos)
 
-                                    # Extract PPA name if it's a PPA
-                                    name = filename.replace(".list", "").replace(
-                                        ".sources", ""
-                                    )
-                                    if is_ppa:
-                                        parts = line.split()
-                                        for part in parts:
-                                            if not part.startswith("http"):
-                                                continue
-                                            parsed = urlparse(part)
-                                            if not (
-                                                parsed.hostname
-                                                and (
-                                                    parsed.hostname
-                                                    == "ppa.launchpad.net"
-                                                    or parsed.hostname.endswith(
-                                                        ".ppa.launchpad.net"
-                                                    )
-                                                )
-                                            ):
-                                                continue
-                                            url_parts = part.split("/")
-                                            if len(url_parts) >= 4:
-                                                user = url_parts[-3]
-                                                ppa = url_parts[-2]
-                                                name = f"ppa:{user}/{ppa}"
-                                            break
-
-                                    repositories.append(
-                                        {
-                                            "name": name,
-                                            "type": repo_type,
-                                            "url": line,
-                                            "enabled": enabled,
-                                            "file_path": filepath,
-                                        }
-                                    )
-                        except Exception as error:
-                            self.logger.warning(
-                                _("Error reading %s: %s"), filepath, error
-                            )
+                    except Exception as error:
+                        self.logger.warning(_("Error reading %s: %s"), filepath, error)
         except Exception as error:
             self.logger.error(_("Error listing APT repositories: %s"), error)
 
@@ -112,10 +216,13 @@ class LinuxRepositoryOperations:
     async def add_apt_repository(self, repo_identifier: str) -> Dict[str, Any]:
         """Add APT repository (PPA or manual)."""
         try:
+            # Use sudo only if not running as root
+            sudo_prefix = "" if os.geteuid() == 0 else "sudo -n "
+
             if repo_identifier.startswith("ppa:"):
-                command = f"sudo -n add-apt-repository -y {repo_identifier}"
+                command = f"{sudo_prefix}add-apt-repository -y '{repo_identifier}'"
             else:
-                command = f"sudo -n add-apt-repository -y '{repo_identifier}'"
+                command = f"{sudo_prefix}add-apt-repository -y '{repo_identifier}'"
 
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
@@ -157,13 +264,19 @@ class LinuxRepositoryOperations:
             repo_name = repo.get("name", "")
             file_path = repo.get("file_path", "")
 
-            if repo_name.startswith("ppa:"):
-                command = f"sudo add-apt-repository --remove -y {repo_name}"
+            # Use sudo only if not running as root
+            sudo_prefix = "" if os.geteuid() == 0 else "sudo -n "
+
+            # Prefer direct file removal for .sources files (DEB822 format)
+            # as add-apt-repository --remove may not work properly with them
+            if file_path and os.path.exists(file_path):
+                command = f"{sudo_prefix}rm -f '{file_path}'"
                 result = await self.agent_instance.system_ops.execute_shell_command(
                     {"command": command}
                 )
-            elif file_path and os.path.exists(file_path):
-                command = f"sudo rm -f {file_path}"
+            elif repo_name.startswith("ppa:"):
+                # For .list files or when no file_path, use add-apt-repository
+                command = f"{sudo_prefix}add-apt-repository --remove -y '{repo_name}'"
                 result = await self.agent_instance.system_ops.execute_shell_command(
                     {"command": command}
                 )

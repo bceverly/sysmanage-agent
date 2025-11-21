@@ -68,9 +68,9 @@ class TestAPTOperations:
             patch("builtins.open", mock_open(read_data=sources_content)),
         ):
             repos = await linux_ops.list_apt_repositories()
-            # The code skips lines that don't have "deb " in them after checking for PPA
-            # So commented lines are not returned
-            assert len(repos) == 0
+            # The code now includes commented lines as disabled repositories
+            assert len(repos) == 1
+            assert repos[0]["enabled"] is False
 
     @pytest.mark.asyncio
     async def test_list_apt_repositories_no_dir(self, linux_ops):
@@ -82,7 +82,12 @@ class TestAPTOperations:
     @pytest.mark.asyncio
     async def test_list_apt_repositories_with_sources_file(self, linux_ops):
         """Test listing APT repositories from .sources files."""
-        sources_content = "deb http://example.com/ubuntu focal main\n"
+        # DEB822 format for .sources files
+        sources_content = """Types: deb
+URIs: http://example.com/ubuntu
+Suites: focal
+Components: main
+"""
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["test.sources"]),
