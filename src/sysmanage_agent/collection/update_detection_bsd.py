@@ -26,6 +26,7 @@ import os
 import platform
 import re
 import subprocess  # nosec B404
+import urllib.request
 from typing import Any, Dict, List
 
 # Platform-specific imports
@@ -447,19 +448,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
             logger.error(_("Failed to detect OpenBSD system updates: %s"), str(error))
 
     def _detect_openbsd_version_upgrades(self):
-        """Detect OpenBSD version upgrades using sysupgrade."""
+        """Detect OpenBSD version upgrades by checking openbsd.org."""
         try:
-            # Check if sysupgrade is available
-            result = subprocess.run(  # nosec B603, B607
-                ["which", "sysupgrade"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-            if result.returncode != 0:
-                return
-
             # Get current version
             version_result = subprocess.run(  # nosec B603, B607
                 ["uname", "-r"],
@@ -468,52 +458,54 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 timeout=10,
                 check=False,
             )
-            current_version = (
-                version_result.stdout.strip()
-                if version_result.returncode == 0
-                else "Unknown"
-            )
+            if version_result.returncode != 0:
+                logger.warning(_("Failed to get current OpenBSD version"))
+                return
 
-            # Check for available upgrades
-            result = subprocess.run(  # nosec B603, B607
-                ["sysupgrade", "-n"],  # -n for dry run
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            current_version = version_result.stdout.strip()
 
-            # sysupgrade -n shows what version it will upgrade to
-            # For OpenBSD, if on 7.7, the next release is 7.8
-            if (
-                result.returncode == 0
-                or "upgrade" in result.stdout.lower()
-                or "Fetching" in result.stdout
-            ):
-                # Calculate next version (increment minor version)
-                available_version = current_version
-                try:
-                    parts = current_version.split(".")
-                    if len(parts) == 2:
-                        major = int(parts[0])
-                        minor = int(parts[1])
-                        # OpenBSD releases twice a year with minor version increments
-                        available_version = f"{major}.{minor + 1}"
-                except (ValueError, IndexError):
-                    available_version = "Next Release"
+            # Fetch the OpenBSD homepage to find the current release
+            try:
+                with urllib.request.urlopen(
+                    "https://www.openbsd.org/", timeout=10
+                ) as response:  # nosec B310
+                    html_content = response.read().decode("utf-8")
 
-                self.available_updates.append(
-                    {
-                        "package_name": "OpenBSD Release Upgrade",
-                        "current_version": current_version,
-                        "available_version": available_version,
-                        "package_manager": "openbsd-upgrade",
-                        "is_security_update": True,  # Always security for OS upgrades
-                        "is_system_update": True,
-                        "update_size": 500000000,  # ~500MB estimate
-                        "repository": "openbsd-release",
-                        "requires_reboot": True,
-                    }
+                # Look for the current release version on the page
+                # The page typically contains text like "OpenBSD 7.8" or similar
+                match = re.search(r"OpenBSD\s+(\d+\.\d+)", html_content)
+                if match:
+                    latest_version = match.group(1)
+
+                    # Compare versions
+                    if latest_version != current_version:
+                        logger.info(
+                            _("OpenBSD upgrade available: %s -> %s"),
+                            current_version,
+                            latest_version,
+                        )
+                        self.available_updates.append(
+                            {
+                                "package_name": "OpenBSD Release Upgrade",
+                                "current_version": current_version,
+                                "available_version": latest_version,
+                                "package_manager": "openbsd-upgrade",
+                                "is_security_update": True,  # Always security for OS upgrades
+                                "is_system_update": True,
+                                "update_size": 500000000,  # ~500MB estimate
+                                "repository": "openbsd-release",
+                                "requires_reboot": True,
+                            }
+                        )
+                    else:
+                        logger.debug(_("OpenBSD is up to date: %s"), current_version)
+                else:
+                    logger.warning(_("Could not parse OpenBSD version from website"))
+
+            except Exception as fetch_error:
+                logger.warning(
+                    _("Failed to check OpenBSD website for updates: %s"),
+                    str(fetch_error),
                 )
 
         except Exception as error:
@@ -571,6 +563,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
         # BSD system updates
         self._detect_openbsd_system_updates()
         self._detect_freebsd_system_updates()
+
+        # BSD version upgrades
+        self._detect_openbsd_version_upgrades()
         self._detect_freebsd_version_upgrades()
 
         # Package managers
