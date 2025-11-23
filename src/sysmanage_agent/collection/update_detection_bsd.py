@@ -460,6 +460,20 @@ class BSDUpdateDetector(UpdateDetectorBase):
             if result.returncode != 0:
                 return
 
+            # Get current version
+            version_result = subprocess.run(  # nosec B603, B607
+                ["uname", "-r"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            current_version = (
+                version_result.stdout.strip()
+                if version_result.returncode == 0
+                else "Unknown"
+            )
+
             # Check for available upgrades
             result = subprocess.run(  # nosec B603, B607
                 ["sysupgrade", "-n"],  # -n for dry run
@@ -469,26 +483,30 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 check=False,
             )
 
-            if result.returncode == 0 and "upgrade" in result.stdout.lower():
-                # Get current version
-                version_result = subprocess.run(  # nosec B603, B607
-                    ["uname", "-r"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                current_version = (
-                    version_result.stdout.strip()
-                    if version_result.returncode == 0
-                    else "Unknown"
-                )
+            # sysupgrade -n shows what version it will upgrade to
+            # For OpenBSD, if on 7.7, the next release is 7.8
+            if (
+                result.returncode == 0
+                or "upgrade" in result.stdout.lower()
+                or "Fetching" in result.stdout
+            ):
+                # Calculate next version (increment minor version)
+                available_version = current_version
+                try:
+                    parts = current_version.split(".")
+                    if len(parts) == 2:
+                        major = int(parts[0])
+                        minor = int(parts[1])
+                        # OpenBSD releases twice a year with minor version increments
+                        available_version = f"{major}.{minor + 1}"
+                except (ValueError, IndexError):
+                    available_version = "Next Release"
 
                 self.available_updates.append(
                     {
-                        "package_name": "openbsd-release",
+                        "package_name": "OpenBSD Release Upgrade",
                         "current_version": current_version,
-                        "available_version": "Next Release",
+                        "available_version": available_version,
                         "package_manager": "openbsd-upgrade",
                         "is_security_update": True,  # Always security for OS upgrades
                         "is_system_update": True,

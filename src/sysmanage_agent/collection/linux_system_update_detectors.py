@@ -211,16 +211,36 @@ class LinuxSystemUpdateDetector:
             )
 
             if "New release" in result.stdout:
-                version_match = re.search(r"(\d+\.\d+)", result.stdout)
+                # Extract new version from output like "New release '25.10' available"
+                version_match = re.search(r"['\"](\d+\.\d+)['\"]", result.stdout)
                 if version_match:
                     new_version = version_match.group(1)
+
+                    # Get current version
+                    try:
+                        current_result = subprocess.run(  # nosec B603, B607
+                            ["lsb_release", "-rs"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
+                        )
+                        current_version = (
+                            current_result.stdout.strip()
+                            if current_result.returncode == 0
+                            else "Unknown"
+                        )
+                    except Exception:
+                        current_version = "Unknown"
+
                     update = {
                         "package_name": "Ubuntu Release Upgrade",
-                        "current_version": "Current",
-                        "available_version": f"Ubuntu {new_version}",
-                        "package_manager": "apt",
+                        "current_version": current_version,
+                        "available_version": new_version,
+                        "package_manager": "ubuntu-release",
                         "is_system_update": True,
                         "is_release_upgrade": True,
+                        "requires_reboot": True,
                     }
                     updates.append(update)
 
@@ -252,7 +272,7 @@ class LinuxSystemUpdateDetector:
                         "package_name": "Fedora Release Upgrade",
                         "current_version": "Current",
                         "available_version": f"Fedora {new_version}",
-                        "package_manager": "dnf",
+                        "package_manager": "fedora-release",
                         "is_system_update": True,
                         "is_release_upgrade": True,
                     }
@@ -287,7 +307,7 @@ class LinuxSystemUpdateDetector:
                         "package_name": "openSUSE Release Upgrade",
                         "current_version": "Current",
                         "available_version": f"openSUSE {new_version}",
-                        "package_manager": "zypper",
+                        "package_manager": "opensuse-release",
                         "is_system_update": True,
                         "is_release_upgrade": True,
                     }
