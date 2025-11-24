@@ -575,20 +575,32 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
     def detect_updates(self):
         """Detect all updates from BSD sources."""
+        logger.info(_("=== BSD detect_updates called ==="))
+
         # BSD system updates
+        logger.info(_("Calling _detect_openbsd_system_updates"))
         self._detect_openbsd_system_updates()
+        logger.info(_("Calling _detect_freebsd_system_updates"))
         self._detect_freebsd_system_updates()
 
         # BSD version upgrades
+        logger.info(_("Calling _detect_openbsd_version_upgrades"))
         self._detect_openbsd_version_upgrades()
+        logger.info(_("Calling _detect_freebsd_version_upgrades"))
         self._detect_freebsd_version_upgrades()
 
         # Package managers
+        logger.info(_("Detecting package managers"))
         managers = self._detect_package_managers()
         if "pkg" in managers:
             self._detect_pkg_updates()
         if "pkgin" in managers:
             self._detect_pkgin_updates()
+
+        logger.info(
+            _("=== BSD detect_updates finished, total updates: %d ==="),
+            len(self.available_updates),
+        )
 
     def _install_with_pkg(self, package_name: str) -> Dict[str, Any]:
         """Install package using pkg package manager (BSD systems)."""
