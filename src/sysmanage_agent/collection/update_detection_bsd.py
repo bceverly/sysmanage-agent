@@ -449,8 +449,10 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
     def _detect_openbsd_version_upgrades(self):
         """Detect OpenBSD version upgrades by checking openbsd.org."""
+        logger.info(_("=== Starting OpenBSD version upgrade detection ==="))
         try:
             # Get current version
+            logger.debug(_("Getting current OpenBSD version with uname -r"))
             version_result = subprocess.run(  # nosec B603, B607
                 ["uname", "-r"],
                 capture_output=True,
@@ -463,19 +465,27 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 return
 
             current_version = version_result.stdout.strip()
+            logger.info(_("Current OpenBSD version: %s"), current_version)
 
             # Fetch the OpenBSD homepage to find the current release
             try:
+                logger.debug(
+                    _("Fetching https://www.openbsd.org/ to check for updates")
+                )
                 with urllib.request.urlopen(
                     "https://www.openbsd.org/", timeout=10
                 ) as response:  # nosec B310
                     html_content = response.read().decode("utf-8")
 
+                logger.debug(_("Successfully fetched OpenBSD website, parsing version"))
                 # Look for the current release version on the page
                 # The page typically contains text like "OpenBSD 7.8" or similar
                 match = re.search(r"OpenBSD\s+(\d+\.\d+)", html_content)
                 if match:
                     latest_version = match.group(1)
+                    logger.info(
+                        _("Latest OpenBSD version from website: %s"), latest_version
+                    )
 
                     # Compare versions
                     if latest_version != current_version:
@@ -497,8 +507,11 @@ class BSDUpdateDetector(UpdateDetectorBase):
                                 "requires_reboot": True,
                             }
                         )
+                        logger.info(
+                            _("Added OpenBSD upgrade to available_updates list")
+                        )
                     else:
-                        logger.debug(_("OpenBSD is up to date: %s"), current_version)
+                        logger.info(_("OpenBSD is up to date: %s"), current_version)
                 else:
                     logger.warning(_("Could not parse OpenBSD version from website"))
 
@@ -510,6 +523,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
         except Exception as error:
             logger.error(_("Failed to detect OpenBSD version upgrades: %s"), str(error))
+
+        logger.info(_("=== Finished OpenBSD version upgrade detection ==="))
 
     def _detect_freebsd_version_upgrades(self):
         """Detect FreeBSD version upgrades using freebsd-update."""
