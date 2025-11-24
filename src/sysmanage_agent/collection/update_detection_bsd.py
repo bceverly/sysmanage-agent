@@ -580,14 +580,15 @@ class BSDUpdateDetector(UpdateDetectorBase):
         # BSD system updates
         logger.info(_("Calling _detect_openbsd_system_updates"))
         self._detect_openbsd_system_updates()
-        logger.info(_("Calling _detect_freebsd_system_updates"))
-        self._detect_freebsd_system_updates()
 
         # BSD version upgrades
         logger.info(_("Calling _detect_openbsd_version_upgrades"))
         self._detect_openbsd_version_upgrades()
-        logger.info(_("Calling _detect_freebsd_version_upgrades"))
-        self._detect_freebsd_version_upgrades()
+
+        # FreeBSD-specific detection
+        if platform.system() == "FreeBSD":
+            logger.info(_("Calling _detect_freebsd_version_upgrades"))
+            self._detect_freebsd_version_upgrades()
 
         # Package managers
         logger.info(_("Detecting package managers"))
