@@ -665,3 +665,205 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 "success": False,
                 "error": f"Installation of {package_name} timed out after 300 seconds",
             }
+
+    def _apply_syspatch_updates(self, packages: List[Dict], results: Dict):
+        """Apply OpenBSD syspatch updates."""
+        logger.info(_("Applying OpenBSD syspatch updates"))
+
+        try:
+            # syspatch applies all available patches when run without arguments
+            # We can't selectively apply individual patches
+            result = subprocess.run(  # nosec B603, B607
+                ["syspatch"],
+                capture_output=True,
+                text=True,
+                timeout=600,  # 10 minutes timeout
+                check=False,
+            )
+
+            if result.returncode == 0:
+                logger.info(_("Successfully applied syspatch updates"))
+                # Mark all requested patches as updated
+                for package in packages:
+                    results["updated_packages"].append(
+                        {
+                            "package_name": package["package_name"],
+                            "old_version": package.get("current_version"),
+                            "new_version": package.get("available_version"),
+                            "package_manager": "syspatch",
+                        }
+                    )
+                results["requires_reboot"] = True
+            else:
+                error_msg = (
+                    result.stderr.strip()
+                    if result.stderr
+                    else _("syspatch command failed")
+                )
+                logger.error(_("Failed to apply syspatch updates: %s"), error_msg)
+                for package in packages:
+                    results["failed_packages"].append(
+                        {
+                            "package_name": package["package_name"],
+                            "package_manager": "syspatch",
+                            "error": error_msg,
+                        }
+                    )
+
+        except subprocess.TimeoutExpired:
+            logger.error(_("syspatch command timed out"))
+            for package in packages:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package["package_name"],
+                        "package_manager": "syspatch",
+                        "error": _("syspatch timed out after 10 minutes"),
+                    }
+                )
+        except Exception as error:
+            logger.error(_("Failed to apply syspatch updates: %s"), str(error))
+            for package in packages:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package["package_name"],
+                        "package_manager": "syspatch",
+                        "error": str(error),
+                    }
+                )
+
+    def apply_updates(  # pylint: disable=too-many-nested-blocks
+        self,
+        package_names: List[str] = None,
+        package_managers: List[str] = None,
+        packages: List[Dict] = None,
+    ) -> Dict[str, Any]:
+        """
+        Apply updates for specified packages.
+
+        Args:
+            package_names: (deprecated) List of package names to update
+            package_managers: (deprecated) List of package managers corresponding to each package
+            packages: List of package dicts with 'name', 'package_manager', and optional 'bundle_id'
+
+        Returns:
+            Dict containing update results with updated and failed packages
+        """
+        # Initialize results dictionary
+        results = {
+            "updated_packages": [],
+            "failed_packages": [],
+            "requires_reboot": False,
+            "timestamp": "",
+        }
+
+        try:
+            # Support both old and new calling conventions
+            if packages:
+                # New format: direct package objects
+                logger.info(
+                    _("Applying updates for %d packages: %s"),
+                    len(packages),
+                    ", ".join([pkg.get("name", "unknown") for pkg in packages]),
+                )
+                packages_to_update = packages
+            elif package_names:
+                # Old format: separate lists
+                logger.info(
+                    _("Applying updates for %d packages: %s"),
+                    len(package_names),
+                    ", ".join(package_names),
+                )
+                # Convert to package objects
+                packages_to_update = []
+                for i, package_name in enumerate(package_names):
+                    pkg_manager = (
+                        package_managers[i]
+                        if package_managers and i < len(package_managers)
+                        else "unknown"
+                    )
+                    packages_to_update.append(
+                        {
+                            "name": package_name,
+                            "package_manager": pkg_manager,
+                        }
+                    )
+            else:
+                return {
+                    "updated_packages": [],
+                    "failed_packages": [],
+                    "requires_reboot": False,
+                    "timestamp": "",
+                }
+
+            # Group packages by package manager
+            packages_by_manager = {}
+            for pkg in packages_to_update:
+                pkg_manager = pkg.get("package_manager", "unknown")
+                if pkg_manager not in packages_by_manager:
+                    packages_by_manager[pkg_manager] = []
+
+                # Find package info from available updates and merge with provided info
+                package_info = pkg.copy()
+                package_name = pkg.get("name")
+
+                for update in self.available_updates:
+                    if (
+                        update.get("package_name") == package_name
+                        and update.get("package_manager") == pkg_manager
+                    ):
+                        # Merge with available update info
+                        for key, value in update.items():
+                            if key not in package_info:
+                                package_info[key] = value
+                        break
+
+                # Ensure package_name field exists for compatibility
+                if "package_name" not in package_info and "name" in package_info:
+                    package_info["package_name"] = package_info["name"]
+
+                packages_by_manager[pkg_manager].append(package_info)
+
+            # Apply updates for each package manager
+            for pkg_manager, pkg_list in packages_by_manager.items():
+                logger.info(
+                    _("Applying %d updates using %s"), len(pkg_list), pkg_manager
+                )
+
+                if pkg_manager == "pkg":
+                    self._apply_pkg_updates(pkg_list, results)
+                elif pkg_manager == "syspatch":
+                    self._apply_syspatch_updates(pkg_list, results)
+                elif pkg_manager == "openbsd-upgrade":
+                    self._apply_openbsd_upgrade_updates(pkg_list, results)
+                elif pkg_manager == "freebsd-upgrade":
+                    self._apply_freebsd_upgrade_updates(pkg_list, results)
+                else:
+                    logger.warning(_("Unsupported package manager: %s"), pkg_manager)
+                    for package in pkg_list:
+                        results["failed_packages"].append(
+                            {
+                                "package_name": package["package_name"],
+                                "package_manager": pkg_manager,
+                                "error": f"Unsupported package manager: {pkg_manager}",
+                            }
+                        )
+
+            # Log summary
+            logger.info(
+                _("Update process completed: %d updated, %d failed"),
+                len(results["updated_packages"]),
+                len(results["failed_packages"]),
+            )
+
+            return results
+
+        except Exception as error:
+            logger.error(_("Failed to apply updates: %s"), str(error))
+            results["failed_packages"].append(
+                {
+                    "package_name": "all",
+                    "package_manager": "unknown",
+                    "error": str(error),
+                }
+            )
+            return results
