@@ -305,6 +305,7 @@ class MessageProcessor:
             "disable_firewall": self.agent.disable_firewall,
             "restart_firewall": self.agent.restart_firewall,
             "attach_to_graylog": self.agent.attach_to_graylog,
+            "enable_package_manager": self.agent.enable_package_manager,
         }
 
     async def _handle_execute_script(

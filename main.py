@@ -902,6 +902,18 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         graylog_ops = GraylogAttachmentOperations(self, self.logger)
         return await graylog_ops.attach_to_graylog(parameters)
 
+    async def enable_package_manager(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Enable an additional package manager on this host."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.operations.package_manager_operations import (
+            PackageManagerOperations,
+        )
+
+        pm_ops = PackageManagerOperations(self, self.logger)
+        return await pm_ops.enable_package_manager(parameters)
+
     async def handle_host_approval(self, message: Dict[str, Any]) -> None:
         """Handle host approval notification from server."""
         await self.registration_manager.handle_host_approval(message)

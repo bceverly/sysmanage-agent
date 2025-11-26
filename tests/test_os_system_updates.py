@@ -249,18 +249,19 @@ No new software available.
 
         self.detector._detect_openbsd_system_updates()
 
-        assert len(self.detector.available_updates) == 3
+        # syspatch combines all patches into a single update since syspatch
+        # applies all patches at once (cumulative, all-or-nothing)
+        assert len(self.detector.available_updates) == 1
 
-        # Check patches
-        patch_names = [u["package_name"] for u in self.detector.available_updates]
-        assert "syspatch-001_rsa" in patch_names
-        assert "syspatch-002_ssh" in patch_names
-        assert "syspatch-003_kernel" in patch_names
-
-        for update in self.detector.available_updates:
-            assert update["package_manager"] == "syspatch"
-            assert update["is_security_update"] is True
-            assert update["is_system_update"] is True
+        update = self.detector.available_updates[0]
+        assert update["package_name"] == "OpenBSD System Patches (3 patches)"
+        assert "001_rsa" in update["available_version"]
+        assert "002_ssh" in update["available_version"]
+        assert "003_kernel" in update["available_version"]
+        assert update["package_manager"] == "syspatch"
+        assert update["is_security_update"] is True
+        assert update["is_system_update"] is True
+        assert update["requires_reboot"] is True
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")
