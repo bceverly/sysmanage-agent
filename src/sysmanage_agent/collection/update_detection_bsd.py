@@ -395,20 +395,21 @@ class BSDUpdateDetector(UpdateDetectorBase):
             )
 
             if result.returncode == 0:
-                patches = result.stdout.strip().split("\n")
+                patches = [
+                    p.strip() for p in result.stdout.strip().split("\n") if p.strip()
+                ]
 
-                for patch in patches:
-                    patch = patch.strip()
-                    if not patch:
-                        continue
+                if patches:
+                    # Combine all patches into a single update since syspatch
+                    # applies all patches at once (cumulative, all-or-nothing)
+                    patch_count = len(patches)
+                    patch_list = ", ".join(patches)
 
-                    # syspatch -c lists available patches, one per line
-                    # All syspatch updates are security/system updates by nature
                     self.available_updates.append(
                         {
-                            "package_name": f"syspatch-{patch}",
+                            "package_name": f"OpenBSD System Patches ({patch_count} patches)",
                             "current_version": "not installed",
-                            "available_version": patch,
+                            "available_version": patch_list,
                             "package_manager": "syspatch",
                             "is_security_update": True,  # All syspatches are security updates
                             "is_system_update": True,  # All syspatches are also system updates
@@ -419,16 +420,12 @@ class BSDUpdateDetector(UpdateDetectorBase):
                         }
                     )
 
-                logger.debug(
-                    _("Found %d OpenBSD system patches"),
-                    len(
-                        [
-                            u
-                            for u in self.available_updates
-                            if u.get("package_manager") == "syspatch"
-                        ]
-                    ),
-                )
+                    logger.debug(
+                        _(
+                            "Found %d OpenBSD system patches (combined into single update)"
+                        ),
+                        patch_count,
+                    )
 
             elif result.returncode == 1:
                 # syspatch returns 1 when no patches are available
@@ -472,9 +469,10 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 logger.debug(
                     _("Fetching https://www.openbsd.org/ to check for updates")
                 )
+                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 with urllib.request.urlopen(
                     "https://www.openbsd.org/", timeout=10
-                ) as response:  # nosec B310
+                ) as response:  # nosec B310 - hardcoded HTTPS URL to openbsd.org
                     html_content = response.read().decode("utf-8")
 
                 logger.debug(_("Successfully fetched OpenBSD website, parsing version"))

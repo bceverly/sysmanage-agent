@@ -502,6 +502,7 @@ log {{
             # Download using urlopen with explicit HTTP/HTTPS-only opener
             # This avoids file:// scheme vulnerability from urlretrieve
             req = urllib.request.Request(download_url)
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(
                 req, timeout=300
             ) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
