@@ -536,6 +536,7 @@ class FirewallCollector:
                     is_ipv6 = "(v6)" in line
 
                     if "/" in port_info:
+                        # Port with explicit protocol: 22/tcp or 53/udp
                         port, proto = port_info.split("/", 1)
                         if proto.upper() == "TCP":
                             if is_ipv6:
@@ -547,6 +548,16 @@ class FirewallCollector:
                                 ipv6_udp_ports.append(port)
                             else:
                                 ipv4_udp_ports.append(port)
+                    elif port_info.isdigit():
+                        # Port without protocol (e.g., "3000 ALLOW Anywhere")
+                        # means both TCP and UDP are allowed
+                        port = port_info
+                        if is_ipv6:
+                            ipv6_tcp_ports.append(port)
+                            ipv6_udp_ports.append(port)
+                        else:
+                            ipv4_tcp_ports.append(port)
+                            ipv4_udp_ports.append(port)
 
         return ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports
 

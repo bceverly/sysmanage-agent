@@ -892,6 +892,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Restart firewall service on the system."""
         return await self.firewall_ops.restart_firewall(parameters)
 
+    async def apply_firewall_roles(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply firewall roles by setting open ports based on assigned roles."""
+        return await self.firewall_ops.apply_firewall_roles(parameters)
+
+    async def remove_firewall_ports(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove specific firewall ports (used when a firewall role is removed)."""
+        return await self.firewall_ops.remove_firewall_ports(parameters)
+
     async def attach_to_graylog(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Attach host to Graylog log aggregation server."""
         # pylint: disable=import-outside-toplevel

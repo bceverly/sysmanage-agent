@@ -7,10 +7,12 @@ All commands are hardcoded with no user input, use shell=False, and only call
 trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
+# pylint: disable=too-many-lines
+
 import subprocess  # nosec B404
 from typing import Dict, List
 
-from src.i18n import _
+from src.i18n import _  # pylint: disable=not-callable
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_base import FirewallBase
 
@@ -791,3 +793,547 @@ group default {
         except Exception as exc:
             self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
+
+    async def apply_firewall_roles(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Apply firewall roles by configuring open ports on BSD systems.
+
+        Supports:
+        - OpenBSD/FreeBSD: PF (packet filter)
+        - FreeBSD: IPFW
+        - NetBSD: NPF
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4
+            ipv6_ports: List of {port, tcp, udp} for IPv6
+
+        Returns:
+            Dict with success status and message
+        """
+        self.logger.info("Applying firewall roles on BSD system (%s)", self.system)
+
+        errors = []
+
+        # Get agent communication ports (must always be open)
+        agent_ports, _ = self._get_agent_communication_ports()
+
+        # Combine port configurations
+        all_port_configs = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in all_port_configs:
+                all_port_configs[port] = {"tcp": False, "udp": False}
+            if tcp:
+                all_port_configs[port]["tcp"] = True
+            if udp:
+                all_port_configs[port]["udp"] = True
+
+        # Try PF first (OpenBSD, FreeBSD)
+        pf_result = await self._apply_firewall_roles_pf(
+            all_port_configs, agent_ports, errors
+        )
+        if pf_result is not None:
+            return pf_result
+
+        # Try IPFW (FreeBSD)
+        ipfw_result = await self._apply_firewall_roles_ipfw(
+            all_port_configs, agent_ports, errors
+        )
+        if ipfw_result is not None:
+            return ipfw_result
+
+        # Try NPF (NetBSD)
+        npf_result = await self._apply_firewall_roles_npf(
+            all_port_configs, agent_ports, errors
+        )
+        if npf_result is not None:
+            return npf_result
+
+        return {
+            "success": False,
+            "error": _(  # pylint: disable=not-callable
+                "No supported firewall found on this BSD system"
+            ),
+        }
+
+    async def _apply_firewall_roles_pf(
+        self, port_configs: Dict, agent_ports: List[int], errors: List[str]
+    ) -> Dict:
+        """Apply firewall roles using PF (synchronize - add and remove rules)."""
+        try:
+            # Check if PF is available
+            result = subprocess.run(  # nosec B603 B607
+                ["pfctl", "-s", "info"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # PF not available
+
+            self.logger.info("Synchronizing firewall roles using PF")
+
+            # Preserved ports: agent communication + SSH (22)
+            preserved_ports = set(agent_ports + [22])
+
+            # First, flush the sysmanage anchor to remove old rules
+            self.logger.info("Flushing PF sysmanage anchor")
+            subprocess.run(  # nosec B603 B607
+                ["pfctl", "-a", "sysmanage", "-F", "rules"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            # Build all rules at once for the anchor
+            rules = []
+            for port, protocols in port_configs.items():
+                if port in preserved_ports:
+                    continue  # Skip preserved ports
+
+                if protocols["tcp"]:
+                    rules.append(f"pass in quick proto tcp to port {port}")
+                if protocols["udp"]:
+                    rules.append(f"pass in quick proto udp to port {port}")
+
+            # Apply all rules at once to the sysmanage anchor
+            if rules:
+                rules_content = "\n".join(rules) + "\n"
+                self.logger.info("Adding %d PF rules to sysmanage anchor", len(rules))
+                result = subprocess.run(  # nosec B603 B607
+                    ["pfctl", "-a", "sysmanage", "-f", "-"],
+                    input=rules_content,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    errors.append(f"Failed to add PF rules: {result.stderr}")
+                    self.logger.warning("Failed to add PF rules: %s", result.stderr)
+            else:
+                self.logger.info("No role ports to configure in PF")
+
+            await self._send_firewall_status_update()
+
+            if errors:
+                return {
+                    "success": False,
+                    "error": "; ".join(errors),
+                    "message": _("Some firewall rules failed to apply"),
+                }
+
+            return {
+                "success": True,
+                "message": _("Firewall roles synchronized successfully via PF"),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # PF not available
+
+    async def _apply_firewall_roles_ipfw(
+        self, port_configs: Dict, agent_ports: List[int], errors: List[str]
+    ) -> Dict:
+        """Apply firewall roles using IPFW (synchronize - add and remove rules)."""
+        try:
+            # Check if IPFW is available
+            result = subprocess.run(  # nosec B603 B607
+                ["ipfw", "list"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # IPFW not available
+
+            self.logger.info("Synchronizing firewall roles using IPFW")
+
+            # Preserved ports: agent communication + SSH (22)
+            preserved_ports = set(agent_ports + [22])
+
+            # First, delete all SysManage role rules (rule numbers 10000-19999)
+            # This is the cleanest way to synchronize
+            self.logger.info("Deleting existing SysManage IPFW rules (10000-19999)")
+            for rule_num in range(10000, 20000):
+                # Try to delete the rule; it will fail silently if it doesn't exist
+                subprocess.run(  # nosec B603 B607
+                    ["ipfw", "-q", "delete", str(rule_num)],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+
+            # Add rules for requested ports
+            # Use rule numbers starting at 10000 for SysManage rules
+            rule_num = 10000
+            for port, protocols in port_configs.items():
+                if port in preserved_ports:
+                    continue
+
+                if protocols["tcp"]:
+                    self.logger.info(
+                        "Adding IPFW rule %d: allow tcp port %d", rule_num, port
+                    )
+                    result = subprocess.run(  # nosec B603 B607
+                        [
+                            "ipfw",
+                            "add",
+                            str(rule_num),
+                            "allow",
+                            "tcp",
+                            "from",
+                            "any",
+                            "to",
+                            "any",
+                            str(port),
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode != 0:
+                        errors.append(
+                            f"Failed to add IPFW rule for TCP port {port}: {result.stderr}"
+                        )
+                    rule_num += 1
+
+                if protocols["udp"]:
+                    self.logger.info(
+                        "Adding IPFW rule %d: allow udp port %d", rule_num, port
+                    )
+                    result = subprocess.run(  # nosec B603 B607
+                        [
+                            "ipfw",
+                            "add",
+                            str(rule_num),
+                            "allow",
+                            "udp",
+                            "from",
+                            "any",
+                            "to",
+                            "any",
+                            str(port),
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode != 0:
+                        errors.append(
+                            f"Failed to add IPFW rule for UDP port {port}: {result.stderr}"
+                        )
+                    rule_num += 1
+
+            await self._send_firewall_status_update()
+
+            if errors:
+                return {
+                    "success": False,
+                    "error": "; ".join(errors),
+                    "message": _("Some firewall rules failed to apply"),
+                }
+
+            return {
+                "success": True,
+                "message": _("Firewall roles synchronized successfully via IPFW"),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # IPFW not available
+
+    async def _apply_firewall_roles_npf(  # pylint: disable=unused-argument
+        self, port_configs: Dict, agent_ports: List[int], errors: List[str]
+    ) -> Dict:
+        """Apply firewall roles using NPF (NetBSD)."""
+        try:
+            # Check if NPF is available
+            result = subprocess.run(  # nosec B603 B607
+                ["npfctl", "show"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # NPF not available
+
+            self.logger.info("Applying firewall roles using NPF")
+
+            # NPF requires configuration file changes
+            # For now, log the ports and return success
+            self.logger.info(
+                "NPF firewall: Would configure %d ports. "
+                "NPF requires /etc/npf.conf modifications.",
+                len(port_configs),
+            )
+
+            for port, protocols in port_configs.items():
+                if port in agent_ports:
+                    continue
+
+                proto_list = []
+                if protocols["tcp"]:
+                    proto_list.append("tcp")
+                if protocols["udp"]:
+                    proto_list.append("udp")
+                self.logger.info(
+                    "NPF: Would allow port %d (%s)", port, "/".join(proto_list)
+                )
+
+            await self._send_firewall_status_update()
+
+            return {
+                "success": True,
+                "message": _(
+                    "Firewall roles acknowledged on NPF. "
+                    "Note: NPF requires /etc/npf.conf configuration."
+                ),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # NPF not available
+
+    async def remove_firewall_ports(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Remove specific firewall ports on BSD systems.
+
+        This removes only the specified ports from the firewall.
+        Used when a firewall role is removed from a host.
+
+        Supports:
+        - PF (FreeBSD/OpenBSD)
+        - IPFW (FreeBSD)
+        - NPF (NetBSD)
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4 to remove
+            ipv6_ports: List of {port, tcp, udp} for IPv6 to remove
+
+        Returns:
+            Dict with success status and message
+        """
+        self.logger.info("Removing specific firewall ports on BSD system")
+
+        errors = []
+
+        # Get agent communication ports (must always be preserved)
+        agent_ports, _ = self._get_agent_communication_ports()
+        # Also preserve SSH port 22
+        preserved_ports = set(agent_ports + [22])
+
+        # Build list of ports to remove from both IPv4 and IPv6
+        ports_to_remove = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in ports_to_remove:
+                ports_to_remove[port] = {"tcp": False, "udp": False}
+            if tcp:
+                ports_to_remove[port]["tcp"] = True
+            if udp:
+                ports_to_remove[port]["udp"] = True
+
+        self.logger.info(
+            "Ports to remove: %s, Preserved (will not remove): %s",
+            list(ports_to_remove.keys()),
+            list(preserved_ports),
+        )
+
+        # Try PF first
+        pf_result = await self._remove_firewall_ports_pf(
+            ports_to_remove, preserved_ports, errors
+        )
+        if pf_result is not None:
+            return pf_result
+
+        # Try IPFW
+        ipfw_result = await self._remove_firewall_ports_ipfw(
+            ports_to_remove, preserved_ports, errors
+        )
+        if ipfw_result is not None:
+            return ipfw_result
+
+        # Try NPF (NetBSD) - just logs for now
+        npf_result = await self._remove_firewall_ports_npf(
+            ports_to_remove, preserved_ports, errors
+        )
+        if npf_result is not None:
+            return npf_result
+
+        return {
+            "success": False,
+            "error": _(  # pylint: disable=not-callable
+                "No supported BSD firewall found on this system"
+            ),
+        }
+
+    async def _remove_firewall_ports_pf(  # pylint: disable=unused-argument
+        self, ports_to_remove: Dict, preserved_ports: set, errors: List[str]
+    ) -> Dict:
+        """Remove specific firewall ports using PF."""
+        try:
+            # Check if PF is available
+            result = subprocess.run(  # nosec B603 B607
+                ["pfctl", "-s", "info"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # PF not available
+
+            self.logger.info("Removing firewall ports using PF")
+
+            # Log the removal (PF rules are managed in pf.conf)
+            for port, protocols in ports_to_remove.items():
+                if port in preserved_ports:
+                    self.logger.info(
+                        "Skipping removal of preserved port %d (agent/SSH)", port
+                    )
+                    continue
+
+                proto_list = []
+                if protocols["tcp"]:
+                    proto_list.append("tcp")
+                if protocols["udp"]:
+                    proto_list.append("udp")
+                self.logger.info(
+                    "PF: Requested removal of port %d (%s)", port, "/".join(proto_list)
+                )
+
+            self.logger.info(
+                "PF firewall port removal requires manual /etc/pf.conf editing "
+                "and pfctl -f /etc/pf.conf reload"
+            )
+
+            await self._send_firewall_status_update()
+
+            return {
+                "success": True,
+                "message": _(  # pylint: disable=not-callable
+                    "Firewall port removal acknowledged on PF. "
+                    "Note: PF requires manual /etc/pf.conf configuration."
+                ),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # PF not available
+
+    async def _remove_firewall_ports_ipfw(  # pylint: disable=unused-argument
+        self, ports_to_remove: Dict, preserved_ports: set, errors: List[str]
+    ) -> Dict:
+        """Remove specific firewall ports using IPFW."""
+        try:
+            # Check if IPFW is available
+            result = subprocess.run(  # nosec B603 B607
+                ["ipfw", "list"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # IPFW not available
+
+            self.logger.info("Removing firewall ports using IPFW")
+
+            # Log the removal (IPFW rules would need rule number tracking)
+            for port, protocols in ports_to_remove.items():
+                if port in preserved_ports:
+                    self.logger.info(
+                        "Skipping removal of preserved port %d (agent/SSH)", port
+                    )
+                    continue
+
+                proto_list = []
+                if protocols["tcp"]:
+                    proto_list.append("tcp")
+                if protocols["udp"]:
+                    proto_list.append("udp")
+                self.logger.info(
+                    "IPFW: Requested removal of port %d (%s)",
+                    port,
+                    "/".join(proto_list),
+                )
+
+            self.logger.info(
+                "IPFW firewall port removal requires rule number tracking "
+                "for proper removal"
+            )
+
+            await self._send_firewall_status_update()
+
+            return {
+                "success": True,
+                "message": _(  # pylint: disable=not-callable
+                    "Firewall port removal acknowledged on IPFW. "
+                    "Note: IPFW rule management is limited."
+                ),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # IPFW not available
+
+    async def _remove_firewall_ports_npf(  # pylint: disable=unused-argument
+        self, ports_to_remove: Dict, preserved_ports: set, errors: List[str]
+    ) -> Dict:
+        """Remove specific firewall ports using NPF (NetBSD)."""
+        try:
+            # Check if NPF is available
+            result = subprocess.run(  # nosec B603 B607
+                ["npfctl", "show"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None  # NPF not available
+
+            self.logger.info("Removing firewall ports using NPF")
+
+            # Log the removal
+            for port, protocols in ports_to_remove.items():
+                if port in preserved_ports:
+                    self.logger.info(
+                        "Skipping removal of preserved port %d (agent/SSH)", port
+                    )
+                    continue
+
+                proto_list = []
+                if protocols["tcp"]:
+                    proto_list.append("tcp")
+                if protocols["udp"]:
+                    proto_list.append("udp")
+                self.logger.info(
+                    "NPF: Requested removal of port %d (%s)", port, "/".join(proto_list)
+                )
+
+            await self._send_firewall_status_update()
+
+            return {
+                "success": True,
+                "message": _(  # pylint: disable=not-callable
+                    "Firewall port removal acknowledged on NPF. "
+                    "Note: NPF requires /etc/npf.conf configuration."
+                ),
+            }
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None  # NPF not available

@@ -188,3 +188,85 @@ class FirewallOperations:
         except Exception as exc:
             self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
+
+    async def apply_firewall_roles(self, parameters: Dict) -> Dict:
+        """
+        Apply firewall roles by configuring open ports based on assigned roles.
+
+        This will:
+        1. Parse the list of IPv4 and IPv6 ports to open
+        2. Clear existing role-based ports
+        3. Add the new ports to the firewall
+        4. Send updated firewall status back to server
+
+        Args:
+            parameters: Command parameters containing:
+                - ipv4_ports: List of {port, tcp, udp} for IPv4
+                - ipv6_ports: List of {port, tcp, udp} for IPv6
+
+        Returns:
+            Dict with success status and message
+        """
+        try:
+            self.logger.info("Starting apply firewall roles operation")
+
+            ipv4_ports = parameters.get("ipv4_ports", [])
+            ipv6_ports = parameters.get("ipv6_ports", [])
+
+            self.logger.info(
+                "Applying firewall roles: %d IPv4 ports, %d IPv6 ports",
+                len(ipv4_ports),
+                len(ipv6_ports),
+            )
+
+            # Get the OS-specific handler
+            handler = self._get_os_handler()
+
+            # Delegate to OS-specific handler
+            return await handler.apply_firewall_roles(ipv4_ports, ipv6_ports)
+
+        except ValueError as exc:
+            return {"success": False, "error": str(exc)}
+        except Exception as exc:
+            self.logger.error("Error applying firewall roles: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}
+
+    async def remove_firewall_ports(self, parameters: Dict) -> Dict:
+        """
+        Remove specific firewall ports.
+
+        This removes only the specified ports from the firewall, used when
+        a firewall role is removed from a host. Unlike apply_firewall_roles,
+        this does NOT sync to a desired state - it only removes the specified ports.
+
+        Args:
+            parameters: Command parameters containing:
+                - ipv4_ports: List of {port, tcp, udp} for IPv4 to remove
+                - ipv6_ports: List of {port, tcp, udp} for IPv6 to remove
+
+        Returns:
+            Dict with success status and message
+        """
+        try:
+            self.logger.info("Starting remove firewall ports operation")
+
+            ipv4_ports = parameters.get("ipv4_ports", [])
+            ipv6_ports = parameters.get("ipv6_ports", [])
+
+            self.logger.info(
+                "Removing firewall ports: %d IPv4 ports, %d IPv6 ports",
+                len(ipv4_ports),
+                len(ipv6_ports),
+            )
+
+            # Get the OS-specific handler
+            handler = self._get_os_handler()
+
+            # Delegate to OS-specific handler
+            return await handler.remove_firewall_ports(ipv4_ports, ipv6_ports)
+
+        except ValueError as exc:
+            return {"success": False, "error": str(exc)}
+        except Exception as exc:
+            self.logger.error("Error removing firewall ports: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc)}

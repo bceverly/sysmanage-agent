@@ -2,20 +2,51 @@
 Linux-specific firewall operations for SysManage Agent.
 Supports ufw (Ubuntu/Debian) and firewalld (RHEL/CentOS/Fedora).
 
+This module delegates to specialized helper modules:
+- firewall_linux_ufw.py for UFW operations
+- firewall_linux_firewalld.py for firewalld operations
+
 Security Note: This module uses subprocess to execute system firewall commands.
 All commands are hardcoded with no user input, use shell=False, and only call
 trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
-import subprocess  # nosec B404
 from typing import Dict, List
 
-from src.i18n import _
+from src.i18n import _  # pylint: disable=not-callable
 from src.sysmanage_agent.operations.firewall_base import FirewallBase
+from src.sysmanage_agent.operations.firewall_linux_firewalld import FirewalldOperations
+from src.sysmanage_agent.operations.firewall_linux_ufw import UfwOperations
 
 
 class LinuxFirewallOperations(FirewallBase):
     """Manages firewall operations on Linux systems."""
+
+    def __init__(self, agent, logger=None):
+        """Initialize Linux firewall operations with helper modules."""
+        super().__init__(agent, logger)
+        self._ufw = None
+        self._firewalld = None
+
+    def _get_ufw(self) -> UfwOperations:
+        """Lazy initialization of UFW operations."""
+        if self._ufw is None:
+            self._ufw = UfwOperations(
+                logger=self.logger,
+                get_agent_ports_func=self._get_agent_communication_ports,
+                send_status_func=self._send_firewall_status_update,
+            )
+        return self._ufw
+
+    def _get_firewalld(self) -> FirewalldOperations:
+        """Lazy initialization of firewalld operations."""
+        if self._firewalld is None:
+            self._firewalld = FirewalldOperations(
+                logger=self.logger,
+                get_agent_ports_func=self._get_agent_communication_ports,
+                send_status_func=self._send_firewall_status_update,
+            )
+        return self._firewalld
 
     async def enable_firewall(self, ports: List[int], protocol: str) -> Dict:
         """
@@ -31,169 +62,12 @@ class LinuxFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try ufw first (Ubuntu/Debian)
-        try:
-            # Check if ufw is installed
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "ufw"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected ufw firewall")
-
-                # Always ensure SSH (port 22) is allowed to prevent lockout
-                self.logger.info("Adding ufw rule: allow 22/tcp (SSH)")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "ufw", "allow", "22/tcp"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode != 0:
-                    self.logger.warning(
-                        "Failed to add ufw rule for SSH port 22: %s",
-                        result.stderr,
-                    )
-
-                # Add rules for agent communication ports
-                for port in ports:
-                    self.logger.info("Adding ufw rule: allow %d/%s", port, protocol)
-                    result = subprocess.run(  # nosec B603 B607
-                        ["sudo", "ufw", "allow", f"{port}/{protocol}"],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to add ufw rule for port %d: %s",
-                            port,
-                            result.stderr,
-                        )
-
-                # Enable ufw
-                self.logger.info("Enabling ufw firewall")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "ufw", "--force", "enable"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("UFW firewall enabled successfully")
-                    # Send updated firewall status
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("UFW firewall enabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to enable ufw: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if UfwOperations.is_available():
+            return await self._get_ufw().enable_firewall(ports, protocol)
 
         # Try firewalld (RHEL/CentOS/Fedora)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "firewall-cmd"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected firewalld")
-
-                # Always ensure SSH (port 22) is allowed to prevent lockout
-                self.logger.info("Adding firewalld rule: allow 22/tcp (SSH)")
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "sudo",
-                        "firewall-cmd",
-                        "--permanent",
-                        "--add-port=22/tcp",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode != 0:
-                    self.logger.warning(
-                        "Failed to add firewalld rule for SSH port 22: %s",
-                        result.stderr,
-                    )
-
-                # Add rules for agent communication ports
-                for port in ports:
-                    self.logger.info(
-                        "Adding firewalld rule: allow %d/%s", port, protocol
-                    )
-                    result = subprocess.run(  # nosec B603 B607
-                        [
-                            "sudo",
-                            "firewall-cmd",
-                            "--permanent",
-                            f"--add-port={port}/{protocol}",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to add firewalld rule for port %d: %s",
-                            port,
-                            result.stderr,
-                        )
-
-                # Reload firewalld to apply changes
-                subprocess.run(  # nosec B603 B607
-                    ["sudo", "firewall-cmd", "--reload"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                # Start/enable firewalld service
-                self.logger.info("Enabling firewalld service")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "systemctl", "enable", "--now", "firewalld"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Firewalld enabled successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("Firewalld enabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to enable firewalld: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if FirewalldOperations.is_available():
+            return await self._get_firewalld().enable_firewall(ports, protocol)
 
         return {
             "success": False,
@@ -210,72 +84,12 @@ class LinuxFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try ufw first (Ubuntu/Debian)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "ufw"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected ufw firewall, disabling")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "ufw", "disable"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("UFW firewall disabled successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("UFW firewall disabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to disable ufw: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if UfwOperations.is_available():
+            return await self._get_ufw().disable_firewall()
 
         # Try firewalld (RHEL/CentOS/Fedora)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "firewall-cmd"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected firewalld, disabling")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "systemctl", "stop", "firewalld"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Firewalld disabled successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("Firewalld disabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to disable firewalld: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if FirewalldOperations.is_available():
+            return await self._get_firewalld().disable_firewall()
 
         return {
             "success": False,
@@ -292,73 +106,12 @@ class LinuxFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try ufw first (Ubuntu/Debian)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "ufw"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected ufw firewall, restarting")
-                # UFW doesn't have a restart command, but we can reload it
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "ufw", "reload"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("UFW firewall restarted successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("UFW firewall restarted successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to restart ufw: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if UfwOperations.is_available():
+            return await self._get_ufw().restart_firewall()
 
         # Try firewalld (RHEL/CentOS/Fedora)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "firewall-cmd"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Detected firewalld, restarting")
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "systemctl", "restart", "firewalld"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Firewalld restarted successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("Firewalld restarted successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to restart firewalld: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if FirewalldOperations.is_available():
+            return await self._get_firewalld().restart_firewall()
 
         return {
             "success": False,
@@ -376,3 +129,67 @@ class LinuxFirewallOperations(FirewallBase):
         except Exception as exc:
             self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
+
+    async def apply_firewall_roles(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Apply firewall roles by configuring open ports.
+
+        This applies a default-deny policy where only the specified ports are allowed.
+        Agent communication ports and SSH are always preserved to prevent lockout.
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4
+            ipv6_ports: List of {port, tcp, udp} for IPv6
+
+        Returns:
+            Dict with success status and message
+        """
+        # Try ufw first (Ubuntu/Debian)
+        if UfwOperations.is_available():
+            return await self._get_ufw().apply_firewall_roles(ipv4_ports, ipv6_ports)
+
+        # Try firewalld (RHEL/CentOS/Fedora)
+        if FirewalldOperations.is_available():
+            return await self._get_firewalld().apply_firewall_roles(
+                ipv4_ports, ipv6_ports
+            )
+
+        return {
+            "success": False,
+            "error": _("No supported firewall found on this system"),
+        }
+
+    async def remove_firewall_ports(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Remove specific firewall ports (explicit removal, not sync).
+
+        This removes only the specified ports from the firewall.
+        Used when a firewall role is removed from a host.
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4 to remove
+            ipv6_ports: List of {port, tcp, udp} for IPv6 to remove
+
+        Returns:
+            Dict with success status and message
+        """
+        # Try ufw first (Ubuntu/Debian)
+        if UfwOperations.is_available():
+            return await self._get_ufw().remove_firewall_ports(ipv4_ports, ipv6_ports)
+
+        # Try firewalld (RHEL/CentOS/Fedora)
+        if FirewalldOperations.is_available():
+            return await self._get_firewalld().remove_firewall_ports(
+                ipv4_ports, ipv6_ports
+            )
+
+        return {
+            "success": False,
+            "error": _(  # pylint: disable=not-callable
+                "No supported firewall found on this system"
+            ),
+        }

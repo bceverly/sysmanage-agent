@@ -173,3 +173,140 @@ class MacOSFirewallOperations(FirewallBase):
         except Exception as exc:
             self.logger.error("Error deploying firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
+
+    async def apply_firewall_roles(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Synchronize firewall roles on macOS.
+
+        Note: macOS Application Firewall (socketfilterfw) is application-based,
+        not port-based. Port-based filtering would require configuring pf (packet
+        filter), which requires more complex configuration file management.
+
+        Since the Application Firewall is application-based, "synchronization" here
+        means acknowledging the complete desired port list. The firewall will allow
+        traffic for any application that is permitted, regardless of port.
+
+        When roles are removed, this method is called with the updated (reduced)
+        port list, which is logged for reference.
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4
+            ipv6_ports: List of {port, tcp, udp} for IPv6
+
+        Returns:
+            Dict with success status and message
+        """
+        self.logger.info("Synchronizing firewall roles on macOS")
+
+        # Combine and deduplicate ports
+        all_ports = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in all_ports:
+                all_ports[port] = {"tcp": False, "udp": False}
+            if tcp:
+                all_ports[port]["tcp"] = True
+            if udp:
+                all_ports[port]["udp"] = True
+
+        self.logger.info(
+            "macOS Application Firewall is application-based, not port-based. "
+            "Desired port list has %d unique ports.",
+            len(all_ports),
+        )
+
+        # Log the ports that are now desired (full synchronization)
+        for port, protocols in all_ports.items():
+            proto_list = []
+            if protocols["tcp"]:
+                proto_list.append("tcp")
+            if protocols["udp"]:
+                proto_list.append("udp")
+            self.logger.debug(
+                "Desired firewall role port: %d (%s)", port, "/".join(proto_list)
+            )
+
+        if not all_ports:
+            self.logger.info(
+                "No firewall role ports configured - all role ports cleared"
+            )
+
+        # Send updated firewall status
+        await self._send_firewall_status_update()
+
+        return {
+            "success": True,
+            "message": _(
+                "Firewall roles synchronized on macOS. "
+                "Note: macOS uses application-based firewall, not port-based. "
+                "Ports are tracked for associated applications."
+            ),
+        }
+
+    async def remove_firewall_ports(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict:
+        """
+        Remove specific firewall ports on macOS.
+
+        Note: macOS Application Firewall (socketfilterfw) is application-based,
+        not port-based. This method logs the ports but cannot remove specific
+        port rules.
+
+        Args:
+            ipv4_ports: List of {port, tcp, udp} for IPv4 to remove
+            ipv6_ports: List of {port, tcp, udp} for IPv6 to remove
+
+        Returns:
+            Dict with success status and message
+        """
+        self.logger.info("Remove firewall ports requested on macOS")
+
+        # Combine and deduplicate ports
+        all_ports = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in all_ports:
+                all_ports[port] = {"tcp": False, "udp": False}
+            if tcp:
+                all_ports[port]["tcp"] = True
+            if udp:
+                all_ports[port]["udp"] = True
+
+        self.logger.info(
+            "macOS Application Firewall is application-based, not port-based. "
+            "Requested removal of %d unique ports (ports are tracked only).",
+            len(all_ports),
+        )
+
+        # Log the ports that were requested for removal
+        for port, protocols in all_ports.items():
+            proto_list = []
+            if protocols["tcp"]:
+                proto_list.append("tcp")
+            if protocols["udp"]:
+                proto_list.append("udp")
+            self.logger.debug(
+                "Requested removal of firewall port: %d (%s)",
+                port,
+                "/".join(proto_list),
+            )
+
+        # Send updated firewall status
+        await self._send_firewall_status_update()
+
+        return {
+            "success": True,
+            "message": _(
+                "Firewall port removal acknowledged on macOS. "
+                "Note: macOS uses application-based firewall, not port-based."
+            ),
+        }

@@ -304,6 +304,8 @@ class MessageProcessor:
             "enable_firewall": self.agent.enable_firewall,
             "disable_firewall": self.agent.disable_firewall,
             "restart_firewall": self.agent.restart_firewall,
+            "apply_firewall_roles": self.agent.apply_firewall_roles,
+            "remove_firewall_ports": self.agent.remove_firewall_ports,
             "attach_to_graylog": self.agent.attach_to_graylog,
             "enable_package_manager": self.agent.enable_package_manager,
         }
