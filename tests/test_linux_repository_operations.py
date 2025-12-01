@@ -115,10 +115,11 @@ Components: main
             "success": True,
             "result": {"stdout": "PPA added", "stderr": ""},
         }
-        result = await linux_ops.add_apt_repository("ppa:test/ppa")
-        assert result["success"] is True
-        assert "successfully" in result["result"]
-        mock_agent.system_ops.execute_shell_command.assert_called_once()
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = await linux_ops.add_apt_repository("ppa:test/ppa")
+            assert result["success"] is True
+            assert "successfully" in result["result"]
+            mock_agent.system_ops.execute_shell_command.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_add_apt_repository_manual(self, linux_ops, mock_agent):
@@ -127,11 +128,12 @@ Components: main
             "success": True,
             "result": {"stdout": "Repository added", "stderr": ""},
         }
-        result = await linux_ops.add_apt_repository(
-            "deb http://example.com/ubuntu focal main"
-        )
-        assert result["success"] is True
-        mock_agent.system_ops.execute_shell_command.assert_called_once()
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = await linux_ops.add_apt_repository(
+                "deb http://example.com/ubuntu focal main"
+            )
+            assert result["success"] is True
+            mock_agent.system_ops.execute_shell_command.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_add_apt_repository_failure(self, linux_ops, mock_agent):
@@ -140,9 +142,10 @@ Components: main
             "success": False,
             "result": {"stdout": "", "stderr": "Error adding repository"},
         }
-        result = await linux_ops.add_apt_repository("ppa:test/ppa")
-        assert result["success"] is False
-        assert "Failed to add repository" in result["error"]
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = await linux_ops.add_apt_repository("ppa:test/ppa")
+            assert result["success"] is False
+            assert "Failed to add repository" in result["error"]
 
     @pytest.mark.asyncio
     async def test_add_apt_repository_error(self, linux_ops, mock_agent):
@@ -150,9 +153,10 @@ Components: main
         mock_agent.system_ops.execute_shell_command.side_effect = Exception(
             "Test error"
         )
-        result = await linux_ops.add_apt_repository("ppa:test/ppa")
-        assert result["success"] is False
-        assert "Test error" in result["error"]
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = await linux_ops.add_apt_repository("ppa:test/ppa")
+            assert result["success"] is False
+            assert "Test error" in result["error"]
 
     @pytest.mark.asyncio
     async def test_delete_apt_repository_ppa(self, linux_ops, mock_agent):
@@ -161,9 +165,10 @@ Components: main
             "success": True,
             "result": {"stdout": "PPA removed", "stderr": ""},
         }
-        result = await linux_ops.delete_apt_repository({"name": "ppa:test/ppa"})
-        assert result["success"] is True
-        assert "successfully" in result["result"]
+        with patch("os.geteuid", return_value=1000, create=True):
+            result = await linux_ops.delete_apt_repository({"name": "ppa:test/ppa"})
+            assert result["success"] is True
+            assert "successfully" in result["result"]
 
     @pytest.mark.asyncio
     async def test_delete_apt_repository_file(self, linux_ops, mock_agent):
@@ -172,7 +177,9 @@ Components: main
             "success": True,
             "result": {"stdout": "File removed", "stderr": ""},
         }
-        with patch("os.path.exists", return_value=True):
+        with patch("os.path.exists", return_value=True), patch(
+            "os.geteuid", return_value=1000, create=True
+        ):
             result = await linux_ops.delete_apt_repository(
                 {"name": "test-repo", "file_path": "/etc/apt/sources.list.d/test.list"}
             )
@@ -181,7 +188,9 @@ Components: main
     @pytest.mark.asyncio
     async def test_delete_apt_repository_no_file(self, linux_ops):
         """Test deleting APT repository when file doesn't exist."""
-        with patch("os.path.exists", return_value=False):
+        with patch("os.path.exists", return_value=False), patch(
+            "os.geteuid", return_value=1000, create=True
+        ):
             result = await linux_ops.delete_apt_repository(
                 {"name": "test-repo", "file_path": "/etc/apt/sources.list.d/test.list"}
             )
@@ -191,7 +200,9 @@ Components: main
     @pytest.mark.asyncio
     async def test_delete_apt_repository_error(self, linux_ops):
         """Test error handling when deleting APT repository."""
-        with patch("os.path.exists", side_effect=Exception("Test error")):
+        with patch("os.path.exists", side_effect=Exception("Test error")), patch(
+            "os.geteuid", return_value=1000, create=True
+        ):
             result = await linux_ops.delete_apt_repository(
                 {"name": "test-repo", "file_path": "/tmp/test.list"}
             )
