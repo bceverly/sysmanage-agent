@@ -39,8 +39,10 @@ class UserAccountOperations:
                 result = await self._create_macos_user(parameters)
             elif self.system_platform == "Windows":
                 result = await self._create_windows_user(parameters)
-            elif self.system_platform in ["FreeBSD", "OpenBSD", "NetBSD"]:
-                result = await self._create_bsd_user(parameters)
+            elif self.system_platform == "FreeBSD":
+                result = await self._create_freebsd_user(parameters)
+            elif self.system_platform in ["OpenBSD", "NetBSD"]:
+                result = await self._create_openbsd_netbsd_user(parameters)
             else:
                 return {
                     "success": False,
@@ -79,8 +81,10 @@ class UserAccountOperations:
                 result = await self._create_macos_group(parameters)
             elif self.system_platform == "Windows":
                 result = await self._create_windows_group(parameters)
-            elif self.system_platform in ["FreeBSD", "OpenBSD", "NetBSD"]:
-                result = await self._create_bsd_group(parameters)
+            elif self.system_platform == "FreeBSD":
+                result = await self._create_freebsd_group(parameters)
+            elif self.system_platform in ["OpenBSD", "NetBSD"]:
+                result = await self._create_openbsd_netbsd_group(parameters)
             else:
                 return {
                     "success": False,
@@ -360,10 +364,10 @@ class UserAccountOperations:
 
         return await self._run_command(cmd, f"create group {group_name}")
 
-    # ========== BSD User/Group Creation ==========
+    # ========== FreeBSD User/Group Creation ==========
 
-    async def _create_bsd_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a user on BSD systems using pw useradd."""
+    async def _create_freebsd_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a user on FreeBSD using pw useradd."""
         username = parameters["username"]
         cmd = ["pw", "useradd", username]
 
@@ -387,13 +391,58 @@ class UserAccountOperations:
 
         return await self._run_command(cmd, f"create user {username}")
 
-    async def _create_bsd_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a group on BSD systems using pw groupadd."""
+    async def _create_freebsd_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a group on FreeBSD using pw groupadd."""
         group_name = parameters["group_name"]
         cmd = ["pw", "groupadd", group_name]
 
         if parameters.get("gid"):
             cmd.extend(["-g", str(parameters["gid"])])
+
+        return await self._run_command(cmd, f"create group {group_name}")
+
+    # ========== OpenBSD/NetBSD User/Group Creation ==========
+
+    async def _create_openbsd_netbsd_user(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Create a user on OpenBSD/NetBSD using useradd."""
+        username = parameters["username"]
+        cmd = ["useradd"]
+
+        if parameters.get("uid"):
+            cmd.extend(["-u", str(parameters["uid"])])
+
+        if parameters.get("primary_group"):
+            cmd.extend(["-g", parameters["primary_group"]])
+
+        if parameters.get("home_directory"):
+            cmd.extend(["-d", parameters["home_directory"]])
+
+        if parameters.get("shell"):
+            cmd.extend(["-s", parameters["shell"]])
+
+        if parameters.get("full_name"):
+            cmd.extend(["-c", parameters["full_name"]])
+
+        if parameters.get("create_home_dir", True):
+            cmd.append("-m")
+
+        cmd.append(username)
+
+        return await self._run_command(cmd, f"create user {username}")
+
+    async def _create_openbsd_netbsd_group(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Create a group on OpenBSD/NetBSD using groupadd."""
+        group_name = parameters["group_name"]
+        cmd = ["groupadd"]
+
+        if parameters.get("gid"):
+            cmd.extend(["-g", str(parameters["gid"])])
+
+        cmd.append(group_name)
 
         return await self._run_command(cmd, f"create group {group_name}")
 
