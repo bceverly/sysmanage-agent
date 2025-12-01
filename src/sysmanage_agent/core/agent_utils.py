@@ -310,6 +310,8 @@ class MessageProcessor:
             "enable_package_manager": self.agent.enable_package_manager,
             "create_host_user": self.agent.create_host_user,
             "create_host_group": self.agent.create_host_group,
+            "delete_host_user": self.agent.delete_host_user,
+            "delete_host_group": self.agent.delete_host_group,
         }
 
     async def _handle_execute_script(

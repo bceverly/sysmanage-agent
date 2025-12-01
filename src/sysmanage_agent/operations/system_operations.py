@@ -330,3 +330,11 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     async def create_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new group on the host."""
         return await self.user_account_ops.create_host_group(parameters)
+
+    async def delete_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user account from the host."""
+        return await self.user_account_ops.delete_host_user(parameters)
+
+    async def delete_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group from the host."""
+        return await self.user_account_ops.delete_host_group(parameters)

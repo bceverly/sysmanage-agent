@@ -105,6 +105,91 @@ class UserAccountOperations:
             self.logger.error("Failed to create group %s: %s", group_name, error)
             return {"success": False, "error": str(error)}
 
+    async def delete_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Delete a user account from the host.
+        After deletion, sends an updated user access list to the server.
+        """
+        username = parameters.get("username")
+        if not username:
+            return {"success": False, "error": _("Username is required")}
+
+        self.logger.info("Deleting user account: %s", username)
+
+        try:
+            # Dispatch to platform-specific handler
+            if self.system_platform == "Linux":
+                result = await self._delete_linux_user(parameters)
+            elif self.system_platform == "Darwin":
+                result = await self._delete_macos_user(parameters)
+            elif self.system_platform == "Windows":
+                result = await self._delete_windows_user(parameters)
+            elif self.system_platform == "FreeBSD":
+                result = await self._delete_freebsd_user(parameters)
+            elif self.system_platform in ["OpenBSD", "NetBSD"]:
+                result = await self._delete_openbsd_netbsd_user(parameters)
+            else:
+                return {
+                    "success": False,
+                    "error": _("Unsupported platform: %s") % self.system_platform,
+                }
+
+            # If user was deleted successfully, send updated user list to server
+            if result.get("success"):
+                self.logger.info(
+                    "User %s deleted successfully, sending updated user list", username
+                )
+                await self.agent.update_user_access()
+
+            return result
+
+        except Exception as error:
+            self.logger.error("Failed to delete user %s: %s", username, error)
+            return {"success": False, "error": str(error)}
+
+    async def delete_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Delete a group from the host.
+        After deletion, sends an updated user access list to the server.
+        """
+        group_name = parameters.get("group_name")
+        if not group_name:
+            return {"success": False, "error": _("Group name is required")}
+
+        self.logger.info("Deleting group: %s", group_name)
+
+        try:
+            # Dispatch to platform-specific handler
+            if self.system_platform == "Linux":
+                result = await self._delete_linux_group(parameters)
+            elif self.system_platform == "Darwin":
+                result = await self._delete_macos_group(parameters)
+            elif self.system_platform == "Windows":
+                result = await self._delete_windows_group(parameters)
+            elif self.system_platform == "FreeBSD":
+                result = await self._delete_freebsd_group(parameters)
+            elif self.system_platform in ["OpenBSD", "NetBSD"]:
+                result = await self._delete_openbsd_netbsd_group(parameters)
+            else:
+                return {
+                    "success": False,
+                    "error": _("Unsupported platform: %s") % self.system_platform,
+                }
+
+            # If group was deleted successfully, send updated user list to server
+            if result.get("success"):
+                self.logger.info(
+                    "Group %s deleted successfully, sending updated user list",
+                    group_name,
+                )
+                await self.agent.update_user_access()
+
+            return result
+
+        except Exception as error:
+            self.logger.error("Failed to delete group %s: %s", group_name, error)
+            return {"success": False, "error": str(error)}
+
     # ========== Linux User/Group Creation ==========
 
     async def _create_linux_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -445,6 +530,229 @@ class UserAccountOperations:
         cmd.append(group_name)
 
         return await self._run_command(cmd, f"create group {group_name}")
+
+    # ========== Linux User/Group Deletion ==========
+
+    async def _delete_linux_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user on Linux using userdel."""
+        username = parameters["username"]
+        delete_default_group = parameters.get("delete_default_group", True)
+
+        # First delete the user
+        cmd = ["userdel", username]
+        result = await self._run_command(cmd, f"delete user {username}")
+
+        if not result.get("success"):
+            return result
+
+        # If requested, also delete the user's default group (same name as user)
+        if delete_default_group:
+            # Check if the group exists before trying to delete it
+            group_check = await self._run_command_capture(["getent", "group", username])
+            if group_check.get("success"):
+                group_result = await self._run_command(
+                    ["groupdel", username], f"delete default group {username}"
+                )
+                if group_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": _(
+                            "User %s and default group deleted successfully"
+                        ) % username,
+                    }
+                # Group deletion failed but user was deleted - still return success
+                self.logger.warning(
+                    "User %s deleted but default group deletion failed: %s",
+                    username,
+                    group_result.get("error"),
+                )
+
+        return result
+
+    async def _delete_linux_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group on Linux using groupdel."""
+        group_name = parameters["group_name"]
+        cmd = ["groupdel", group_name]
+
+        return await self._run_command(cmd, f"delete group {group_name}")
+
+    # ========== macOS User/Group Deletion ==========
+
+    async def _delete_macos_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user on macOS using dscl."""
+        username = parameters["username"]
+        delete_default_group = parameters.get("delete_default_group", True)
+        user_path = f"/Users/{username}"
+
+        try:
+            # Delete the user record
+            result = await self._run_dscl_command(["delete", user_path])
+            if not result.get("success"):
+                return result
+
+            # If requested, also delete the user's default group (same name as user)
+            if delete_default_group:
+                group_path = f"/Groups/{username}"
+                # Check if the group exists
+                group_check = await self._run_command_capture(
+                    ["dscl", ".", "read", group_path]
+                )
+                if group_check.get("success"):
+                    group_result = await self._run_dscl_command(["delete", group_path])
+                    if group_result.get("success"):
+                        return {
+                            "success": True,
+                            "message": _(
+                                "User %s and default group deleted successfully"
+                            ) % username,
+                        }
+                    # Group deletion failed but user was deleted - still return success
+                    self.logger.warning(
+                        "User %s deleted but default group deletion failed: %s",
+                        username,
+                        group_result.get("error"),
+                    )
+
+            return {
+                "success": True,
+                "message": _("User %s deleted successfully") % username,
+            }
+
+        except Exception as error:
+            self.logger.error("Failed to delete macOS user %s: %s", username, error)
+            return {"success": False, "error": str(error)}
+
+    async def _delete_macos_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group on macOS using dscl."""
+        group_name = parameters["group_name"]
+        group_path = f"/Groups/{group_name}"
+
+        try:
+            # Delete the group
+            result = await self._run_dscl_command(["delete", group_path])
+            if not result.get("success"):
+                return result
+
+            return {
+                "success": True,
+                "message": _("Group %s deleted successfully") % group_name,
+            }
+
+        except Exception as error:
+            self.logger.error("Failed to delete macOS group %s: %s", group_name, error)
+            return {"success": False, "error": str(error)}
+
+    # ========== Windows User/Group Deletion ==========
+
+    async def _delete_windows_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user on Windows using net user command."""
+        username = parameters["username"]
+        cmd = ["net", "user", username, "/delete"]
+
+        return await self._run_command(cmd, f"delete user {username}")
+
+    async def _delete_windows_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group on Windows using net localgroup command."""
+        group_name = parameters["group_name"]
+        cmd = ["net", "localgroup", group_name, "/delete"]
+
+        return await self._run_command(cmd, f"delete group {group_name}")
+
+    # ========== FreeBSD User/Group Deletion ==========
+
+    async def _delete_freebsd_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user on FreeBSD using pw userdel."""
+        username = parameters["username"]
+        delete_default_group = parameters.get("delete_default_group", True)
+
+        # First delete the user
+        cmd = ["pw", "userdel", username]
+        result = await self._run_command(cmd, f"delete user {username}")
+
+        if not result.get("success"):
+            return result
+
+        # If requested, also delete the user's default group (same name as user)
+        if delete_default_group:
+            # Check if the group exists
+            group_check = await self._run_command_capture(
+                ["pw", "groupshow", username]
+            )
+            if group_check.get("success"):
+                group_result = await self._run_command(
+                    ["pw", "groupdel", username], f"delete default group {username}"
+                )
+                if group_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": _(
+                            "User %s and default group deleted successfully"
+                        ) % username,
+                    }
+                # Group deletion failed but user was deleted - still return success
+                self.logger.warning(
+                    "User %s deleted but default group deletion failed: %s",
+                    username,
+                    group_result.get("error"),
+                )
+
+        return result
+
+    async def _delete_freebsd_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group on FreeBSD using pw groupdel."""
+        group_name = parameters["group_name"]
+        cmd = ["pw", "groupdel", group_name]
+
+        return await self._run_command(cmd, f"delete group {group_name}")
+
+    # ========== OpenBSD/NetBSD User/Group Deletion ==========
+
+    async def _delete_openbsd_netbsd_user(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Delete a user on OpenBSD/NetBSD using userdel."""
+        username = parameters["username"]
+        delete_default_group = parameters.get("delete_default_group", True)
+
+        # First delete the user
+        cmd = ["userdel", username]
+        result = await self._run_command(cmd, f"delete user {username}")
+
+        if not result.get("success"):
+            return result
+
+        # If requested, also delete the user's default group (same name as user)
+        if delete_default_group:
+            # Check if the group exists
+            group_check = await self._run_command_capture(["getent", "group", username])
+            if group_check.get("success"):
+                group_result = await self._run_command(
+                    ["groupdel", username], f"delete default group {username}"
+                )
+                if group_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": _(
+                            "User %s and default group deleted successfully"
+                        ) % username,
+                    }
+                # Group deletion failed but user was deleted - still return success
+                self.logger.warning(
+                    "User %s deleted but default group deletion failed: %s",
+                    username,
+                    group_result.get("error"),
+                )
+
+        return result
+
+    async def _delete_openbsd_netbsd_group(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Delete a group on OpenBSD/NetBSD using groupdel."""
+        group_name = parameters["group_name"]
+        cmd = ["groupdel", group_name]
+
+        return await self._run_command(cmd, f"delete group {group_name}")
 
     # ========== Helper Methods ==========
 

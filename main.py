@@ -884,6 +884,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Create a new group on the host."""
         return await self.system_ops.create_host_group(parameters)
 
+    async def delete_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a user account from the host."""
+        return await self.system_ops.delete_host_user(parameters)
+
+    async def delete_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a group from the host."""
+        return await self.system_ops.delete_host_group(parameters)
+
     async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Deploy (install and enable) firewall on the system."""
         return await self.firewall_ops.deploy_firewall(parameters)
