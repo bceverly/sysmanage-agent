@@ -308,6 +308,8 @@ class MessageProcessor:
             "remove_firewall_ports": self.agent.remove_firewall_ports,
             "attach_to_graylog": self.agent.attach_to_graylog,
             "enable_package_manager": self.agent.enable_package_manager,
+            "create_host_user": self.agent.create_host_user,
+            "create_host_group": self.agent.create_host_group,
         }
 
     async def _handle_execute_script(

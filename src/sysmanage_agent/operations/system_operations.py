@@ -21,6 +21,7 @@ from src.sysmanage_agent.operations.repository_operations import (
 from src.sysmanage_agent.operations.ssh_key_operations import SSHKeyOperations
 from src.sysmanage_agent.operations.system_control import SystemControl
 from src.sysmanage_agent.operations.ubuntu_pro_operations import UbuntuProOperations
+from src.sysmanage_agent.operations.user_account_operations import UserAccountOperations
 
 
 class SystemOperations:  # pylint: disable=too-many-instance-attributes
@@ -41,6 +42,7 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)
         self.ssh_ops = SSHKeyOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
+        self.user_account_ops = UserAccountOperations(agent_instance)
 
     # ========== System Control Delegation ==========
 
@@ -318,3 +320,13 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     async def restart_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restart firewall."""
         return await self.firewall_ops.restart_firewall(parameters)
+
+    # ========== User Account Operations Delegation ==========
+
+    async def create_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new user account on the host."""
+        return await self.user_account_ops.create_host_user(parameters)
+
+    async def create_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new group on the host."""
+        return await self.user_account_ops.create_host_group(parameters)

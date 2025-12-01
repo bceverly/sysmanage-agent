@@ -876,6 +876,14 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Remove antivirus software from the system."""
         return await self.system_ops.remove_antivirus(parameters)
 
+    async def create_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new user account on the host."""
+        return await self.system_ops.create_host_user(parameters)
+
+    async def create_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new group on the host."""
+        return await self.system_ops.create_host_group(parameters)
+
     async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Deploy (install and enable) firewall on the system."""
         return await self.firewall_ops.deploy_firewall(parameters)
