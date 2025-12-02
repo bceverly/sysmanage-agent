@@ -16,6 +16,46 @@ class VirtualizationChecks:
         """Initialize with logger."""
         self.logger = logger
 
+    def _decode_wsl_output(self, stdout: bytes, stderr: bytes) -> str:
+        """
+        Decode WSL command output which may be UTF-16LE encoded.
+
+        wsl.exe outputs UTF-16LE on Windows, but subprocess with text=True
+        expects UTF-8, resulting in garbled or empty output.
+
+        Args:
+            stdout: Raw stdout bytes
+            stderr: Raw stderr bytes
+
+        Returns:
+            Combined decoded output as a string
+        """
+        combined = stdout + stderr
+        if not combined:
+            return ""
+
+        # Try UTF-16LE first (what wsl.exe actually outputs)
+        try:
+            # Remove BOM if present
+            if combined.startswith(b"\xff\xfe"):
+                combined = combined[2:]
+            decoded = combined.decode("utf-16-le")
+            # Filter out null characters that may appear
+            decoded = decoded.replace("\x00", "")
+            if decoded.strip():
+                return decoded
+        except (UnicodeDecodeError, LookupError):
+            pass
+
+        # Fall back to UTF-8
+        try:
+            return combined.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+
+        # Last resort: latin-1 (never fails)
+        return combined.decode("latin-1")
+
     def check_wsl_support(self) -> Dict[str, Any]:
         """
         Check WSL (Windows Subsystem for Linux) support.
@@ -50,11 +90,11 @@ class VirtualizationChecks:
             result["available"] = True
 
             # Check WSL status using wsl --status
+            # Note: wsl.exe outputs UTF-16LE, so we read as bytes and decode manually
             try:
                 status_result = subprocess.run(  # nosec B603 B607
                     ["wsl", "--status"],
                     capture_output=True,
-                    text=True,
                     timeout=30,
                     check=False,
                     creationflags=(
@@ -64,7 +104,10 @@ class VirtualizationChecks:
                     ),
                 )
 
-                output = status_result.stdout + status_result.stderr
+                # Decode the UTF-16LE output from wsl.exe
+                output = self._decode_wsl_output(
+                    status_result.stdout, status_result.stderr
+                )
                 output_lower = output.lower()
 
                 # Check for BIOS virtualization issues (actual hardware virtualization)
