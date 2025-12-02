@@ -57,6 +57,11 @@ class ChildHostListing:
             # Remove null characters that Windows sometimes adds
             output = output.replace("\x00", "")
 
+            # Check for "no distributions" message
+            if "no installed distributions" in output.lower():
+                self.logger.info("No WSL distributions installed")
+                return instances
+
             # Parse output lines (skip header)
             lines = output.strip().split("\n")
             if len(lines) < 2:
