@@ -8,6 +8,7 @@ certificates, roles, and other monitoring data.
 
 import asyncio
 import logging
+import platform
 import socket
 import uuid
 from datetime import datetime, timezone
@@ -42,20 +43,12 @@ class DataCollector:
             self.logger.info(_("Sending initial OS version data..."))
 
             # Send OS version data
-            self.logger.debug("AGENT_DEBUG: About to collect OS version info")
             os_info = self.agent.registration.get_os_version_info()
-            self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
-            # Add hostname to OS data for server processing
             system_info = self.agent.registration.get_system_info()
             os_info["hostname"] = system_info["hostname"]
-            self.logger.debug("AGENT_DEBUG: OS info with hostname: %s", os_info)
             os_message = self.agent.create_message("os_version_update", os_info)
-            self.logger.debug(
-                "AGENT_DEBUG: About to send OS version message: %s",
-                os_message["message_id"],
-            )
             await self.agent.send_message(os_message)
-            self.logger.debug("AGENT_DEBUG: OS version message sent successfully")
+            self.logger.debug("AGENT_DEBUG: OS version message sent")
 
             # Allow queue processing tasks to run
             await asyncio.sleep(0)
@@ -63,47 +56,14 @@ class DataCollector:
             self.logger.info(_("Sending initial hardware data..."))
 
             # Send hardware data
-            self.logger.debug("AGENT_DEBUG: About to collect hardware info")
             hardware_info = self.agent.registration.get_hardware_info()
-            self.logger.debug(
-                "AGENT_DEBUG: Hardware info collected with keys: %s",
-                list(hardware_info.keys()),
-            )
-            # Add hostname to hardware data for server processing
             system_info = self.agent.registration.get_system_info()
             hardware_info["hostname"] = system_info["hostname"]
-            self.logger.info("Hardware info keys: %s", list(hardware_info.keys()))
-            self.logger.info(
-                "Storage devices count: %s",
-                len(hardware_info.get("storage_devices", [])),
-            )
-            self.logger.info(
-                "Network interfaces count: %s",
-                len(hardware_info.get("network_interfaces", [])),
-            )
-            # Log detailed CPU information
-            self.logger.debug(
-                "AGENT_DEBUG: CPU vendor: %s", hardware_info.get("cpu_vendor", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: CPU model: %s", hardware_info.get("cpu_model", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: CPU cores: %s", hardware_info.get("cpu_cores", "N/A")
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: Memory total: %s MB",
-                hardware_info.get("memory_total_mb", "N/A"),
-            )
             hardware_message = self.agent.create_message(
                 "hardware_update", hardware_info
             )
-            self.logger.debug(
-                "AGENT_DEBUG: About to send hardware message: %s",
-                hardware_message["message_id"],
-            )
             await self.agent.send_message(hardware_message)
-            self.logger.debug("AGENT_DEBUG: Hardware message sent successfully")
+            self.logger.debug("AGENT_DEBUG: Hardware message sent")
 
             # Allow time for the large hardware message to be sent before sending more data
             await asyncio.sleep(2)
@@ -111,50 +71,14 @@ class DataCollector:
             self.logger.info(_("Sending initial user access data..."))
 
             # Send user access data
-            self.logger.debug("AGENT_DEBUG: About to collect user access info")
             user_access_info = self.agent.registration.get_user_access_info()
-            self.logger.debug(
-                "AGENT_DEBUG: User access info collected with keys: %s",
-                list(user_access_info.keys()),
-            )
-            # Add hostname to user access data for server processing
             system_info = self.agent.registration.get_system_info()
             user_access_info["hostname"] = system_info["hostname"]
-            self.logger.info("User access info keys: %s", list(user_access_info.keys()))
-            self.logger.info(
-                "Users count: %s",
-                user_access_info.get("total_users", 0),
-            )
-            self.logger.info(
-                "Groups count: %s",
-                user_access_info.get("total_groups", 0),
-            )
-            # Log detailed user/group counts
-            self.logger.debug(
-                "AGENT_DEBUG: Regular users: %s",
-                user_access_info.get("regular_users", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: System users: %s",
-                user_access_info.get("system_users", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: Regular groups: %s",
-                user_access_info.get("regular_groups", "N/A"),
-            )
-            self.logger.debug(
-                "AGENT_DEBUG: System groups: %s",
-                user_access_info.get("system_groups", "N/A"),
-            )
             user_access_message = self.agent.create_message(
                 "user_access_update", user_access_info
             )
-            self.logger.debug(
-                "AGENT_DEBUG: About to send user access message: %s",
-                user_access_message["message_id"],
-            )
             await self.agent.send_message(user_access_message)
-            self.logger.debug("AGENT_DEBUG: User access message sent successfully")
+            self.logger.debug("AGENT_DEBUG: User access message sent")
 
             # Allow time for the large user access message to be sent before sending more data
             await asyncio.sleep(2)
@@ -162,41 +86,14 @@ class DataCollector:
             self.logger.info(_("Sending initial software inventory data..."))
 
             # Send software inventory data
-            self.logger.debug("AGENT_DEBUG: About to collect software inventory info")
             software_info = self.agent.registration.get_software_inventory_info()
-            self.logger.debug(
-                "AGENT_DEBUG: Software info collected with keys: %s",
-                list(software_info.keys()),
-            )
-            # Add hostname to software inventory data for server processing
             system_info = self.agent.registration.get_system_info()
             software_info["hostname"] = system_info["hostname"]
-            self.logger.info(
-                "Software inventory info keys: %s", list(software_info.keys())
-            )
-            self.logger.info(
-                "Software packages count: %s",
-                software_info.get("total_packages", 0),
-            )
-            # Log sample software packages
-            software_packages = software_info.get("software_packages", [])
-            if software_packages:
-                self.logger.debug(
-                    "AGENT_DEBUG: First 3 software packages: %s", software_packages[:3]
-                )
-            else:
-                self.logger.debug("AGENT_DEBUG: No software packages found!")
             software_message = self.agent.create_message(
                 "software_inventory_update", software_info
             )
-            self.logger.debug(
-                "AGENT_DEBUG: About to send software inventory message: %s",
-                software_message["message_id"],
-            )
             await self.agent.send_message(software_message)
-            self.logger.debug(
-                "AGENT_DEBUG: Software inventory message sent successfully"
-            )
+            self.logger.debug("AGENT_DEBUG: Software inventory message sent")
 
             self.logger.info(_("Sending initial update check..."))
 
@@ -288,6 +185,13 @@ class DataCollector:
                 self.logger.error(
                     "Failed to send initial Graylog status data: %s", error
                 )
+
+            # Send child hosts (WSL/VM/container) data
+            try:
+                self.logger.info(_("Collecting initial child hosts data..."))
+                await self._send_child_hosts_update()
+            except Exception as error:
+                self.logger.error("Failed to send initial child hosts data: %s", error)
 
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as error:
@@ -619,6 +523,63 @@ class DataCollector:
         else:
             self.logger.warning("Cannot send firewall status data: no host approval")
 
+    async def _send_child_hosts_update(self):
+        """Send child hosts (WSL/VM/container) status update."""
+        # Only collect child hosts on Windows (WSL) for now
+        if platform.system().lower() != "windows":
+            return
+
+        self.logger.debug("AGENT_DEBUG: Collecting child hosts data")
+
+        try:
+            # Use the child_host_ops to list child hosts
+            if hasattr(self.agent, "child_host_ops"):
+                result = await self.agent.child_host_ops.list_child_hosts({})
+
+                if result.get("success", False):
+                    child_hosts = result.get("child_hosts", [])
+
+                    # Create message data
+                    child_hosts_info = {
+                        "child_hosts": child_hosts,
+                        "count": len(child_hosts),
+                        "hostname": self.agent.registration.get_system_info()[
+                            "hostname"
+                        ],
+                    }
+
+                    # Add host_id if available
+                    host_approval = (
+                        self.agent.registration_manager.get_host_approval_from_db()
+                    )
+                    if host_approval:
+                        child_hosts_info["host_id"] = str(host_approval.host_id)
+
+                    # Create and send message
+                    child_hosts_message = self.agent.create_message(
+                        "child_hosts_list_update", child_hosts_info
+                    )
+                    self.logger.debug(
+                        "AGENT_DEBUG: Sending child hosts message: %s",
+                        child_hosts_message["message_id"],
+                    )
+                    success = await self.agent.send_message(child_hosts_message)
+
+                    if success:
+                        self.logger.debug(
+                            "AGENT_DEBUG: Child hosts data sent successfully (%d hosts)",
+                            len(child_hosts),
+                        )
+                    else:
+                        self.logger.warning("Failed to send child hosts data")
+                else:
+                    self.logger.debug(
+                        "AGENT_DEBUG: Child hosts collection returned no success: %s",
+                        result.get("error", "Unknown error"),
+                    )
+        except Exception as error:
+            self.logger.error("Error collecting/sending child hosts data: %s", error)
+
     async def _send_graylog_status_update(self):
         """Send Graylog attachment status update."""
         self.logger.debug("AGENT_DEBUG: Collecting Graylog attachment status data")
@@ -727,6 +688,12 @@ class DataCollector:
             await self._send_graylog_status_update()
         except Exception as error:
             self.logger.error("Error collecting/sending Graylog status: %s", error)
+
+        # Send child hosts (WSL/VM/container) status update
+        try:
+            await self._send_child_hosts_update()
+        except Exception as error:
+            self.logger.error("Error collecting/sending child hosts data: %s", error)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
