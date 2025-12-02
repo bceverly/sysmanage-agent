@@ -28,6 +28,7 @@ class VirtualizationChecks:
             "enabled": False,
             "version": None,
             "needs_enable": False,
+            "needs_bios_virtualization": False,
             "default_version": None,
         }
 
@@ -63,9 +64,30 @@ class VirtualizationChecks:
                     ),
                 )
 
+                output = status_result.stdout + status_result.stderr
+                output_lower = output.lower()
+
+                # Check for BIOS/virtualization issues
+                if "bios" in output_lower or (
+                    "virtualization" in output_lower and "enable" in output_lower
+                ):
+                    result["enabled"] = False
+                    result["needs_enable"] = False
+                    result["needs_bios_virtualization"] = True
+                    self.logger.warning(
+                        "WSL requires BIOS virtualization to be enabled"
+                    )
+                    return result
+
+                # Check for "please enable" or "not supported" messages
+                if "please enable" in output_lower or "not supported" in output_lower:
+                    result["enabled"] = False
+                    result["needs_enable"] = True
+                    self.logger.info("WSL is available but requires setup")
+                    return result
+
                 if status_result.returncode == 0:
                     result["enabled"] = True
-                    output = status_result.stdout
 
                     # Parse default version from output
                     if (

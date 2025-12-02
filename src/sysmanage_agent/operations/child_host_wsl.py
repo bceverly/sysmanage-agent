@@ -225,6 +225,12 @@ class WslOperations:
         try:
             self.logger.info("Attempting to enable WSL")
 
+            creationflags = (
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            )
+
             # Use wsl --install which enables all required features
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--install", "--no-distribution"],
@@ -232,30 +238,66 @@ class WslOperations:
                 text=True,
                 timeout=300,  # 5 minutes timeout
                 check=False,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW
-                    if hasattr(subprocess, "CREATE_NO_WINDOW")
-                    else 0
-                ),
+                creationflags=creationflags,
             )
-
-            if result.returncode == 0:
-                self.logger.info("WSL enabled successfully")
-                # Check if reboot is required
-                output = result.stdout.lower()
-                reboot_required = (
-                    "reboot" in output
-                    or "restart" in output
-                    or result.returncode == 3010  # Windows reboot required code
-                )
-                return {"success": True, "reboot_required": reboot_required}
 
             # Check for reboot required error code
             if result.returncode == 3010:
+                self.logger.info("WSL install requires reboot (exit code 3010)")
                 return {"success": True, "reboot_required": True}
 
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            return {"success": False, "error": error_msg}
+            # Check output for reboot indicators
+            output = (result.stdout + result.stderr).lower()
+            if "reboot" in output or "restart" in output:
+                self.logger.info("WSL install requires reboot (found in output)")
+                return {"success": True, "reboot_required": True}
+
+            if result.returncode != 0:
+                error_msg = result.stderr or result.stdout or "Unknown error"
+                self.logger.error("WSL install failed: %s", error_msg)
+                return {"success": False, "error": error_msg}
+
+            # The install command returned 0, but we need to verify WSL actually works
+            # wsl --install can return 0 even when Virtual Machine Platform isn't enabled
+            self.logger.info("WSL install command completed, verifying status...")
+
+            status_result = subprocess.run(  # nosec B603 B607
+                ["wsl", "--status"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                creationflags=creationflags,
+            )
+
+            status_output = (status_result.stdout + status_result.stderr).lower()
+
+            # Check for indicators that WSL isn't fully enabled
+            if "please enable" in status_output or "not supported" in status_output:
+                # WSL requires additional setup (BIOS virtualization or reboot)
+                self.logger.warning(
+                    "WSL install completed but additional setup required: %s",
+                    status_result.stdout or status_result.stderr,
+                )
+
+                # Check if it's a virtualization/BIOS issue vs just needing reboot
+                if "bios" in status_output or "virtualization" in status_output:
+                    return {
+                        "success": False,
+                        "error": _(
+                            "WSL requires virtualization to be enabled in BIOS/UEFI. "
+                            "Please enable virtualization in your system's BIOS settings "
+                            "and restart the computer."
+                        ),
+                        "requires_bios_change": True,
+                    }
+
+                # Likely just needs a reboot
+                return {"success": True, "reboot_required": True}
+
+            # WSL status check passed - it's actually working
+            self.logger.info("WSL enabled and verified successfully")
+            return {"success": True, "reboot_required": False}
 
         except subprocess.TimeoutExpired:
             return {"success": False, "error": _("WSL installation timed out")}
