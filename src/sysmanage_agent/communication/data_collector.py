@@ -541,6 +541,7 @@ class DataCollector:
 
                     # Create message data
                     child_hosts_info = {
+                        "success": True,
                         "child_hosts": child_hosts,
                         "count": len(child_hosts),
                         "hostname": self.agent.registration.get_system_info()[
@@ -557,7 +558,7 @@ class DataCollector:
 
                     # Create and send message
                     child_hosts_message = self.agent.create_message(
-                        "child_hosts_list_update", child_hosts_info
+                        "child_host_list_update", child_hosts_info
                     )
                     self.logger.debug(
                         "AGENT_DEBUG: Sending child hosts message: %s",
