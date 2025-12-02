@@ -89,6 +89,11 @@ class ChildHostListing:
                     else:
                         mapped_status = status
 
+                    # Get hostname from inside the WSL instance if it's running
+                    hostname = None
+                    if mapped_status == "running":
+                        hostname = self._get_wsl_hostname(name)
+
                     instance = {
                         "child_type": "wsl",
                         "child_name": name,
@@ -96,6 +101,7 @@ class ChildHostListing:
                         "is_default": is_default,
                         "wsl_version": version,
                         "distribution": self._parse_wsl_distribution(name),
+                        "hostname": hostname,
                     }
                     instances.append(instance)
 
@@ -109,6 +115,39 @@ class ChildHostListing:
             self.logger.error("Error listing WSL instances: %s", error)
 
         return instances
+
+    def _get_wsl_hostname(self, distribution: str) -> Optional[str]:
+        """
+        Get the hostname from inside a running WSL instance.
+
+        Args:
+            distribution: WSL distribution name
+
+        Returns:
+            Hostname string or None if unable to retrieve
+        """
+        try:
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "hostname"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                    if hasattr(subprocess, "CREATE_NO_WINDOW")
+                    else 0
+                ),
+            )
+
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname:
+                    return hostname
+        except Exception as error:
+            self.logger.debug("Error getting hostname for %s: %s", distribution, error)
+
+        return None
 
     def _parse_wsl_distribution(self, name: str) -> Dict[str, Optional[str]]:
         """
