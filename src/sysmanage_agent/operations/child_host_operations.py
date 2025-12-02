@@ -14,6 +14,7 @@ Supported child host types:
 - KVM/QEMU (Linux, future)
 """
 
+import json
 import logging
 import platform
 from typing import Any, Dict
@@ -231,7 +232,15 @@ class ChildHostOperations:
         username = parameters.get("username")
         password = parameters.get("password")
         server_url = parameters.get("server_url")
+        server_port = parameters.get("server_port", 8443)
         agent_install_commands = parameters.get("agent_install_commands", [])
+
+        # Handle agent_install_commands as JSON string (backward compatibility)
+        if isinstance(agent_install_commands, str):
+            try:
+                agent_install_commands = json.loads(agent_install_commands)
+            except json.JSONDecodeError:
+                agent_install_commands = []
 
         self.logger.info(
             _("Creating child host: type=%s, distribution=%s, hostname=%s"),
@@ -249,6 +258,7 @@ class ChildHostOperations:
                 server_url=server_url,
                 agent_install_commands=agent_install_commands,
                 listing_helper=self.listing_helper,
+                server_port=server_port,
             )
 
         # Future: Add support for other child types

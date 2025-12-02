@@ -323,7 +323,7 @@ class WslSetupOperations:
             return {"success": False, "error": str(error)}
 
     async def configure_agent(
-        self, distribution: str, server_url: str, hostname: str
+        self, distribution: str, server_url: str, hostname: str, server_port: int = 8443
     ) -> Dict[str, Any]:
         """
         Configure sysmanage-agent in a WSL distribution.
@@ -332,6 +332,7 @@ class WslSetupOperations:
             distribution: Distribution name
             server_url: URL of the sysmanage server
             hostname: Hostname for this agent
+            server_port: Port of the sysmanage server (default 8443)
 
         Returns:
             Dict with success status
@@ -345,7 +346,7 @@ class WslSetupOperations:
 
 server:
   hostname: "{server_url}"
-  port: 8000
+  port: {server_port}
   use_https: true
   verify_ssl: true
 

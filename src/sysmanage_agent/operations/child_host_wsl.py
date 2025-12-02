@@ -31,7 +31,7 @@ class WslOperations:
         self._control_ops = WslControlOperations(logger, self._decode_wsl_output)
         self._setup_ops = WslSetupOperations(logger, self._decode_wsl_output)
 
-    async def create_wsl_instance(
+    async def create_wsl_instance(  # pylint: disable=too-many-arguments
         self,
         distribution: str,
         hostname: str,
@@ -40,6 +40,7 @@ class WslOperations:
         server_url: str,
         agent_install_commands: List[str],
         listing_helper,
+        server_port: int = 8443,
     ) -> Dict[str, Any]:
         """
         Create a new WSL instance with the full installation flow.
@@ -52,6 +53,7 @@ class WslOperations:
             server_url: URL for the sysmanage server
             agent_install_commands: Commands to install the agent
             listing_helper: ChildHostListing instance for checking existing instances
+            server_port: Port for the sysmanage server (default 8443)
 
         Returns:
             Dict with success status and details
@@ -177,7 +179,7 @@ class WslOperations:
                     "configuring_agent", _("Configuring sysmanage-agent...")
                 )
                 config_agent_result = await self._setup_ops.configure_agent(
-                    distribution, server_url, hostname
+                    distribution, server_url, hostname, server_port
                 )
                 if not config_agent_result.get("success"):
                     self.logger.warning(
