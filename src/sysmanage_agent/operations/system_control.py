@@ -5,6 +5,7 @@ Handles system control commands like shell execution, reboot, shutdown, and syst
 
 import asyncio
 import logging
+import platform
 import socket
 from typing import Any, Dict
 
@@ -133,8 +134,15 @@ class SystemControl:
     async def reboot_system(self) -> Dict[str, Any]:
         """Reboot the system."""
         try:
-            # Schedule reboot in 1 minute to allow response to be sent
-            command = "sudo shutdown -r +1"
+            # Schedule reboot to allow response to be sent
+            if platform.system().lower() == "windows":
+                # Windows: shutdown /r /t 60 (reboot in 60 seconds)
+                # The agent runs as SYSTEM so no elevation needed
+                command = 'shutdown /r /t 60 /c "Reboot initiated by SysManage"'
+            else:
+                # Linux/Unix: shutdown -r +1 (reboot in 1 minute)
+                command = "sudo shutdown -r +1"
+
             result = await self.execute_shell_command({"command": command})
 
             if result["success"]:
@@ -150,8 +158,15 @@ class SystemControl:
     async def shutdown_system(self) -> Dict[str, Any]:
         """Shutdown the system."""
         try:
-            # Schedule shutdown in 1 minute to allow response to be sent
-            command = "sudo shutdown -h +1"
+            # Schedule shutdown to allow response to be sent
+            if platform.system().lower() == "windows":
+                # Windows: shutdown /s /t 60 (shutdown in 60 seconds)
+                # The agent runs as SYSTEM so no elevation needed
+                command = 'shutdown /s /t 60 /c "Shutdown initiated by SysManage"'
+            else:
+                # Linux/Unix: shutdown -h +1 (halt in 1 minute)
+                command = "sudo shutdown -h +1"
+
             result = await self.execute_shell_command({"command": command})
 
             if result["success"]:
