@@ -317,6 +317,10 @@ class MessageProcessor:
             "list_child_hosts": self.agent.child_host_ops.list_child_hosts,
             "create_child_host": self.agent.child_host_ops.create_child_host,
             "enable_wsl": self.agent.child_host_ops.enable_wsl,
+            "start_child_host": self.agent.child_host_ops.start_child_host,
+            "stop_child_host": self.agent.child_host_ops.stop_child_host,
+            "restart_child_host": self.agent.child_host_ops.restart_child_host,
+            "delete_child_host": self.agent.child_host_ops.delete_child_host,
         }
 
     async def _handle_execute_script(

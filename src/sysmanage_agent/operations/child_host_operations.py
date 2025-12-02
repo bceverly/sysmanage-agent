@@ -270,3 +270,115 @@ class ChildHostOperations:
             Dict with success status and whether reboot is required
         """
         return await self.wsl_ops.enable_wsl(parameters)
+
+    async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Start a stopped child host.
+
+        Args:
+            parameters: Dict containing:
+                - child_type: Type of child host ('wsl', 'lxd', etc.)
+                - child_name: Name of the child host to start
+
+        Returns:
+            Dict with success status
+        """
+        child_type = parameters.get("child_type", "wsl")
+
+        self.logger.info(
+            _("Starting child host: type=%s, name=%s"),
+            child_type,
+            parameters.get("child_name"),
+        )
+
+        if child_type == "wsl":
+            return await self.wsl_ops.start_child_host(parameters)
+
+        return {
+            "success": False,
+            "error": _("Unsupported child host type: %s") % child_type,
+        }
+
+    async def stop_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Stop a running child host.
+
+        Args:
+            parameters: Dict containing:
+                - child_type: Type of child host ('wsl', 'lxd', etc.)
+                - child_name: Name of the child host to stop
+
+        Returns:
+            Dict with success status
+        """
+        child_type = parameters.get("child_type", "wsl")
+
+        self.logger.info(
+            _("Stopping child host: type=%s, name=%s"),
+            child_type,
+            parameters.get("child_name"),
+        )
+
+        if child_type == "wsl":
+            return await self.wsl_ops.stop_child_host(parameters)
+
+        return {
+            "success": False,
+            "error": _("Unsupported child host type: %s") % child_type,
+        }
+
+    async def restart_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Restart a child host.
+
+        Args:
+            parameters: Dict containing:
+                - child_type: Type of child host ('wsl', 'lxd', etc.)
+                - child_name: Name of the child host to restart
+
+        Returns:
+            Dict with success status
+        """
+        child_type = parameters.get("child_type", "wsl")
+
+        self.logger.info(
+            _("Restarting child host: type=%s, name=%s"),
+            child_type,
+            parameters.get("child_name"),
+        )
+
+        if child_type == "wsl":
+            return await self.wsl_ops.restart_child_host(parameters)
+
+        return {
+            "success": False,
+            "error": _("Unsupported child host type: %s") % child_type,
+        }
+
+    async def delete_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Delete a child host. This permanently removes the child host and all its data.
+
+        Args:
+            parameters: Dict containing:
+                - child_type: Type of child host ('wsl', 'lxd', etc.)
+                - child_name: Name of the child host to delete
+
+        Returns:
+            Dict with success status
+        """
+        child_type = parameters.get("child_type", "wsl")
+
+        self.logger.info(
+            _("Deleting child host: type=%s, name=%s"),
+            child_type,
+            parameters.get("child_name"),
+        )
+
+        if child_type == "wsl":
+            return await self.wsl_ops.delete_child_host(parameters)
+
+        return {
+            "success": False,
+            "error": _("Unsupported child host type: %s") % child_type,
+        }
