@@ -274,14 +274,15 @@ class WslOperations:
 
             # Check for indicators that WSL isn't fully enabled
             if "please enable" in status_output or "not supported" in status_output:
-                # WSL requires additional setup (BIOS virtualization or reboot)
+                # WSL requires additional setup
                 self.logger.warning(
                     "WSL install completed but additional setup required: %s",
                     status_result.stdout or status_result.stderr,
                 )
 
-                # Check if it's a virtualization/BIOS issue vs just needing reboot
-                if "bios" in status_output or "virtualization" in status_output:
+                # Check if it's an actual BIOS virtualization issue
+                # (both "bios" AND "virtualization" must be present)
+                if "bios" in status_output and "virtualization" in status_output:
                     return {
                         "success": False,
                         "error": _(
@@ -292,7 +293,8 @@ class WslOperations:
                         "requires_bios_change": True,
                     }
 
-                # Likely just needs a reboot
+                # "Virtual Machine Platform" or other Windows features need a reboot
+                # after wsl --install enables them
                 return {"success": True, "reboot_required": True}
 
             # WSL status check passed - it's actually working

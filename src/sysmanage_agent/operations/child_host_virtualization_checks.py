@@ -67,10 +67,9 @@ class VirtualizationChecks:
                 output = status_result.stdout + status_result.stderr
                 output_lower = output.lower()
 
-                # Check for BIOS/virtualization issues
-                if "bios" in output_lower or (
-                    "virtualization" in output_lower and "enable" in output_lower
-                ):
+                # Check for BIOS virtualization issues (actual hardware virtualization)
+                # This is different from "Virtual Machine Platform" Windows feature
+                if "bios" in output_lower and "virtualization" in output_lower:
                     result["enabled"] = False
                     result["needs_enable"] = False
                     result["needs_bios_virtualization"] = True
@@ -79,7 +78,17 @@ class VirtualizationChecks:
                     )
                     return result
 
-                # Check for "please enable" or "not supported" messages
+                # Check for "Virtual Machine Platform" or other Windows features
+                # that need to be enabled - these can be enabled via wsl --install
+                if "virtual machine platform" in output_lower:
+                    result["enabled"] = False
+                    result["needs_enable"] = True
+                    self.logger.info(
+                        "WSL requires Virtual Machine Platform to be enabled"
+                    )
+                    return result
+
+                # Check for other "please enable" or "not supported" messages
                 if "please enable" in output_lower or "not supported" in output_lower:
                     result["enabled"] = False
                     result["needs_enable"] = True
