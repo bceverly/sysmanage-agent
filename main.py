@@ -39,6 +39,7 @@ from src.sysmanage_agent.core.agent_utils import (
 )
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
+from src.sysmanage_agent.operations.child_host_operations import ChildHostOperations
 from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.operations.system_operations import SystemOperations
@@ -142,6 +143,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         self.system_ops = SystemOperations(self)
         self.script_ops = ScriptOperations(self)
         self.firewall_ops = FirewallOperations(self)
+        self.child_host_ops = ChildHostOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)

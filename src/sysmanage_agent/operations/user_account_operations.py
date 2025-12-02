@@ -556,9 +556,8 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _(
-                            "User %s and default group deleted successfully"
-                        ) % username,
+                        "message": _("User %s and default group deleted successfully")
+                        % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
@@ -604,7 +603,8 @@ class UserAccountOperations:
                             "success": True,
                             "message": _(
                                 "User %s and default group deleted successfully"
-                            ) % username,
+                            )
+                            % username,
                         }
                     # Group deletion failed but user was deleted - still return success
                     self.logger.warning(
@@ -675,9 +675,7 @@ class UserAccountOperations:
         # If requested, also delete the user's default group (same name as user)
         if delete_default_group:
             # Check if the group exists
-            group_check = await self._run_command_capture(
-                ["pw", "groupshow", username]
-            )
+            group_check = await self._run_command_capture(["pw", "groupshow", username])
             if group_check.get("success"):
                 group_result = await self._run_command(
                     ["pw", "groupdel", username], f"delete default group {username}"
@@ -685,9 +683,8 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _(
-                            "User %s and default group deleted successfully"
-                        ) % username,
+                        "message": _("User %s and default group deleted successfully")
+                        % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
@@ -732,9 +729,8 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _(
-                            "User %s and default group deleted successfully"
-                        ) % username,
+                        "message": _("User %s and default group deleted successfully")
+                        % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
