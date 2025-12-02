@@ -315,6 +315,8 @@ class MessageProcessor:
             # Child host management commands
             "check_virtualization_support": self.agent.child_host_ops.check_virtualization_support,
             "list_child_hosts": self.agent.child_host_ops.list_child_hosts,
+            "create_child_host": self.agent.child_host_ops.create_child_host,
+            "enable_wsl": self.agent.child_host_ops.enable_wsl,
         }
 
     async def _handle_execute_script(
