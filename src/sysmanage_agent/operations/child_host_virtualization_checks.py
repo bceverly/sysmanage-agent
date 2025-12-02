@@ -131,14 +131,10 @@ class VirtualizationChecks:
                     )
                     return result
 
-                # Check for other "please enable" or "not supported" messages
-                if "please enable" in output_lower or "not supported" in output_lower:
-                    result["enabled"] = False
-                    result["needs_enable"] = True
-                    self.logger.info("WSL is available but requires setup")
-                    return result
-
-                if status_result.returncode == 0:
+                # Check if WSL2 is working by looking for "Default Version:"
+                # This should come before checking for "please enable" messages
+                # because WSL1-related messages can appear even when WSL2 is working
+                if status_result.returncode == 0 and "default version:" in output_lower:
                     result["enabled"] = True
 
                     # Parse default version from output
