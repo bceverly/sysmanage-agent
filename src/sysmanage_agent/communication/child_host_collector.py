@@ -53,7 +53,7 @@ class ChildHostCollector:
                 # Poke running WSL instances to keep them awake
                 await self._poke_wsl_instances()
 
-                await self._send_child_hosts_update()
+                await self.send_child_hosts_update()
                 self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
             except asyncio.CancelledError:
                 self.logger.debug("Child host heartbeat cancelled")
@@ -117,7 +117,7 @@ class ChildHostCollector:
                         creationflags=creationflags,
                     )
                     self.logger.debug("Poked WSL instance: %s", distro)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except  # nosec B110
                     pass  # Ignore errors for individual instances
 
         except Exception as error:  # pylint: disable=broad-except
