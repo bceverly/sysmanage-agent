@@ -421,3 +421,46 @@ class MessageQueueManager:
                 _("Failed to deserialize message %s: %s"), message.message_id, error
             )
             return {}
+
+    def is_duplicate_message(self, message_id: str) -> bool:
+        """
+        Check if a message with this ID has already been received/processed.
+
+        This is used for deduplication when the server retries sending a command
+        that the agent already received. This prevents the same command from
+        being executed multiple times.
+
+        Args:
+            message_id: The message ID to check (this is the server's message ID,
+                       not the local queue message ID)
+
+        Returns:
+            bool: True if this message has already been processed, False otherwise
+        """
+        with self.get_session() as session:
+            # Look for any message with this message_id in the message data
+            # We need to search the JSON message_data field for the message_id
+            messages = (
+                session.query(MessageQueue)
+                .filter(MessageQueue.direction == QueueDirection.INBOUND.value)
+                .all()
+            )
+
+            for message in messages:
+                try:
+                    data = json.loads(message.message_data)
+                    # Check both the top-level message_id and nested data.message_id
+                    stored_msg_id = data.get("message_id") or data.get("data", {}).get(
+                        "message_id"
+                    )
+                    if stored_msg_id == message_id:
+                        logger.info(
+                            _("Duplicate message detected: %s (status: %s)"),
+                            message_id,
+                            message.status,
+                        )
+                        return True
+                except (json.JSONDecodeError, TypeError):
+                    continue
+
+            return False

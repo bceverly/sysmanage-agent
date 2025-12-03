@@ -159,6 +159,45 @@ class MessageHandler:
         """Handle command from server."""
         await self.agent.message_processor.handle_command(message)
 
+    async def _send_command_acknowledgment(self, message_id: str) -> bool:
+        """
+        Send acknowledgment to server confirming receipt of a command.
+
+        This allows the server to know the command was received and stop retrying.
+
+        Args:
+            message_id: The server's message_id that we're acknowledging
+
+        Returns:
+            bool: True if acknowledgment was sent successfully
+        """
+        try:
+            ack_message = {
+                "message_type": "command_acknowledgment",
+                "message_id": message_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+            # Send directly to avoid queuing overhead for simple acks
+            success = await self.send_message_direct(ack_message)
+
+            if success:
+                self.logger.debug(
+                    "Sent command acknowledgment for message: %s", message_id
+                )
+            else:
+                self.logger.warning(
+                    "Failed to send command acknowledgment for message: %s", message_id
+                )
+
+            return success
+
+        except Exception as error:
+            self.logger.error(
+                "Error sending command acknowledgment for %s: %s", message_id, error
+            )
+            return False
+
     async def _check_server_health(self) -> bool:
         """Check if server is available by testing the root endpoint."""
         try:
@@ -311,8 +350,31 @@ class MessageHandler:
                     message_type = data.get("message_type")
 
                     if message_type == "command":
+                        # Get the server's message_id for deduplication and acknowledgment
+                        server_message_id = data.get("message_id")
+
+                        # Check for duplicate messages (server retry)
+                        if (
+                            server_message_id
+                            and self.queue_manager.is_duplicate_message(
+                                server_message_id
+                            )
+                        ):
+                            self.logger.info(
+                                "Skipping duplicate command message: %s",
+                                server_message_id,
+                            )
+                            # Still send acknowledgment for duplicate to confirm receipt
+                            await self._send_command_acknowledgment(server_message_id)
+                            continue
+
                         # Queue command for reliable processing instead of handling directly
                         await self.queue_inbound_message(data)
+
+                        # Send acknowledgment to server to confirm receipt
+                        if server_message_id:
+                            await self._send_command_acknowledgment(server_message_id)
+
                         # Trigger inbound queue processing if not already running
                         if not self.inbound_queue_processor_running:
                             asyncio.create_task(self.process_inbound_queue())
