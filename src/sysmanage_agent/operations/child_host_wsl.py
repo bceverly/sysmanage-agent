@@ -104,6 +104,24 @@ class WslOperations:
                         "reboot_required": True,
                     }
 
+            # Step 1b: Configure .wslconfig to prevent WSL auto-shutdown
+            # This sets vmIdleTimeout=-1 so WSL instances don't go to sleep
+            await self._send_progress(
+                "configuring_wsl", _("Configuring WSL settings...")
+            )
+            wslconfig_result = self._setup_ops.configure_wslconfig()
+            if wslconfig_result.get("success"):
+                self.logger.info(
+                    "Configured .wslconfig for %d user profile(s)",
+                    wslconfig_result.get("profiles_configured", 0),
+                )
+            else:
+                # Log warning but don't fail - WSL will still work, just may auto-shutdown
+                self.logger.warning(
+                    "Could not configure .wslconfig: %s",
+                    wslconfig_result.get("error", "Unknown error"),
+                )
+
             # Step 2: Check if distribution already exists
             await self._send_progress(
                 "checking_existing", _("Checking for existing installation...")

@@ -891,3 +891,16 @@ msgstr "Ubuntu Pro परिवर्तन के बाद सर्वर क
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro परिवर्तन के बाद OS अपडेट भेजने में विफल: %s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "WSL सेटिंग्स कॉन्फ़िगर कर रहा है..."
+
+msgid "No user profiles found"
+msgstr "कोई उपयोगकर्ता प्रोफ़ाइल नहीं मिला"
+
+msgid "Failed to configure any user profiles"
+msgstr "किसी भी उपयोगकर्ता प्रोफ़ाइल को कॉन्फ़िगर करने में विफल"
+
+msgid "Permission denied writing to %s"
+msgstr "%s पर लिखने की अनुमति नहीं है"

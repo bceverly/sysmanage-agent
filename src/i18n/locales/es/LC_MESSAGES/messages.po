@@ -896,3 +896,16 @@ msgstr "Información del SO actualizada enviada al servidor después del cambio 
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Error al enviar actualización del SO después del cambio de Ubuntu Pro: %s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "Configurando ajustes de WSL..."
+
+msgid "No user profiles found"
+msgstr "No se encontraron perfiles de usuario"
+
+msgid "Failed to configure any user profiles"
+msgstr "Error al configurar perfiles de usuario"
+
+msgid "Permission denied writing to %s"
+msgstr "Permiso denegado para escribir en %s"

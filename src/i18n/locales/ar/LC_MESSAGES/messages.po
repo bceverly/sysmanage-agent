@@ -896,3 +896,16 @@ msgstr "تم إرسال معلومات نظام التشغيل المحدثة إ
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "فشل في إرسال تحديث نظام التشغيل بعد تغيير Ubuntu Pro: %s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "جارٍ تكوين إعدادات WSL..."
+
+msgid "No user profiles found"
+msgstr "لم يتم العثور على ملفات تعريف المستخدمين"
+
+msgid "Failed to configure any user profiles"
+msgstr "فشل في تكوين أي ملفات تعريف للمستخدمين"
+
+msgid "Permission denied writing to %s"
+msgstr "تم رفض الإذن للكتابة إلى %s"

@@ -2,8 +2,10 @@
 WSL child host setup operations (user creation, systemd, agent installation).
 """
 
+import configparser
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src.i18n import _
@@ -619,5 +621,173 @@ features:
 
             return {"success": True}
 
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
+    def _get_windows_user_profiles(self) -> List[Path]:
+        """
+        Get list of Windows user profile directories.
+
+        When running as SYSTEM, we need to find actual user profiles
+        (not the SYSTEM profile) to configure .wslconfig.
+
+        Returns:
+            List of Path objects for user profile directories
+        """
+        user_profiles = []
+
+        # Standard Windows user profile locations
+        users_dir = Path("C:/Users")
+
+        if not users_dir.exists():
+            return user_profiles
+
+        # System/service accounts to skip
+        skip_dirs = {
+            "default",
+            "default user",
+            "public",
+            "all users",
+            "defaultapppool",
+        }
+
+        try:
+            for profile_dir in users_dir.iterdir():
+                if not profile_dir.is_dir():
+                    continue
+
+                dir_name_lower = profile_dir.name.lower()
+
+                # Skip system profiles
+                if dir_name_lower in skip_dirs:
+                    continue
+
+                # Skip profiles that look like service accounts
+                if dir_name_lower.startswith("defaultapp"):
+                    continue
+
+                # Check if this looks like a real user profile
+                # (has a Desktop or Documents folder)
+                if (profile_dir / "Desktop").exists() or (
+                    profile_dir / "Documents"
+                ).exists():
+                    user_profiles.append(profile_dir)
+
+        except PermissionError:
+            self.logger.warning("Permission denied accessing user profiles")
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.warning("Error listing user profiles: %s", error)
+
+        return user_profiles
+
+    def configure_wslconfig(self) -> Dict[str, Any]:
+        """
+        Configure .wslconfig in user profiles to prevent WSL auto-shutdown.
+
+        This sets vmIdleTimeout=-1 in the [wsl2] section to prevent
+        WSL instances from being automatically terminated when idle.
+        This is necessary for sysmanage-agent to keep running in WSL.
+
+        Returns:
+            Dict with success status and details
+        """
+        try:
+            user_profiles = self._get_windows_user_profiles()
+
+            if not user_profiles:
+                self.logger.warning("No user profiles found to configure .wslconfig")
+                return {
+                    "success": False,
+                    "error": _("No user profiles found"),
+                }
+
+            configured_count = 0
+            errors = []
+
+            for profile_dir in user_profiles:
+                wslconfig_path = profile_dir / ".wslconfig"
+
+                try:
+                    result = self._update_wslconfig(wslconfig_path)
+                    if result.get("success"):
+                        configured_count += 1
+                        self.logger.info("Configured .wslconfig in %s", profile_dir)
+                    elif result.get("already_configured"):
+                        self.logger.debug(
+                            ".wslconfig already configured in %s", profile_dir
+                        )
+                        configured_count += 1
+                    else:
+                        errors.append(f"{profile_dir}: {result.get('error')}")
+                except Exception as error:  # pylint: disable=broad-except
+                    errors.append(f"{profile_dir}: {error}")
+
+            if configured_count > 0:
+                return {
+                    "success": True,
+                    "profiles_configured": configured_count,
+                    "errors": errors if errors else None,
+                }
+
+            return {
+                "success": False,
+                "error": _("Failed to configure any user profiles"),
+                "errors": errors,
+            }
+
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
+    def _update_wslconfig(self, wslconfig_path: Path) -> Dict[str, Any]:
+        """
+        Update a specific .wslconfig file with vmIdleTimeout=-1.
+
+        Args:
+            wslconfig_path: Path to the .wslconfig file
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            config = configparser.ConfigParser()
+
+            # Read existing config if it exists
+            if wslconfig_path.exists():
+                try:
+                    config.read(str(wslconfig_path))
+                except configparser.Error as parse_error:
+                    self.logger.warning(
+                        "Could not parse existing .wslconfig: %s", parse_error
+                    )
+                    # Continue anyway, we'll overwrite the section
+
+            # Check if already configured
+            if config.has_section("wsl2"):
+                current_timeout = config.get("wsl2", "vmIdleTimeout", fallback=None)
+                if current_timeout == "-1":
+                    return {"success": True, "already_configured": True}
+
+            # Ensure [wsl2] section exists
+            if not config.has_section("wsl2"):
+                config.add_section("wsl2")
+
+            # Set vmIdleTimeout=-1 to disable auto-shutdown
+            config.set("wsl2", "vmIdleTimeout", "-1")
+
+            # Write the config file
+            with open(wslconfig_path, "w", encoding="utf-8") as config_file:
+                config.write(config_file)
+
+            self.logger.info(
+                "Set vmIdleTimeout=-1 in %s to prevent WSL auto-shutdown",
+                wslconfig_path,
+            )
+            return {"success": True}
+
+        except PermissionError:
+            return {
+                "success": False,
+                "error": _("Permission denied writing to %s") % wslconfig_path,
+            }
         except Exception as error:
             return {"success": False, "error": str(error)}

@@ -893,3 +893,16 @@ msgstr "Ubuntu Pro 변경 후 업데이트된 OS 정보가 서버로 전송되�
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "WSL 설정 구성 중..."
+
+msgid "No user profiles found"
+msgstr "사용자 프로필을 찾을 수 없습니다"
+
+msgid "Failed to configure any user profiles"
+msgstr "사용자 프로필 구성 실패"
+
+msgid "Permission denied writing to %s"
+msgstr "%s에 대한 쓰기 권한이 거부되었습니다"

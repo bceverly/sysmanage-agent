@@ -893,3 +893,16 @@ msgstr "Ubuntu Pro 更改后已将更新的操作系统信息发送到服务器"
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 更改后发送操作系统更新失败：%s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "正在配置 WSL 设置..."
+
+msgid "No user profiles found"
+msgstr "未找到用户配置文件"
+
+msgid "Failed to configure any user profiles"
+msgstr "配置用户配置文件失败"
+
+msgid "Permission denied writing to %s"
+msgstr "没有写入 %s 的权限"

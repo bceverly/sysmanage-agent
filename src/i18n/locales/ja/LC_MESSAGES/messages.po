@@ -895,3 +895,16 @@ msgstr "Ubuntu Pro変更後、更新されたOS情報をサーバーに送信し
 
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro変更後のOSアップデート送信に失敗しました：%s"
+
+# WSL Configuration
+msgid "Configuring WSL settings..."
+msgstr "WSL設定を構成しています..."
+
+msgid "No user profiles found"
+msgstr "ユーザープロファイルが見つかりません"
+
+msgid "Failed to configure any user profiles"
+msgstr "ユーザープロファイルの構成に失敗しました"
+
+msgid "Permission denied writing to %s"
+msgstr "%sへの書き込み権限がありません"
