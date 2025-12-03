@@ -72,7 +72,7 @@ class ChildHostCollector:
         so their sysmanage-agents can send heartbeats.
         """
         try:
-            import subprocess  # pylint: disable=import-outside-toplevel
+            import subprocess  # nosec B404 # pylint: disable=import-outside-toplevel
 
             # Get list of running WSL instances
             creationflags = (

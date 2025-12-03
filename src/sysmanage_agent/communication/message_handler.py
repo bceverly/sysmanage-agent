@@ -182,7 +182,7 @@ class MessageHandler:
             success = await self.send_message_direct(ack_message)
 
             if success:
-                self.logger.debug(
+                self.logger.info(
                     "Sent command acknowledgment for message: %s", message_id
                 )
             else:

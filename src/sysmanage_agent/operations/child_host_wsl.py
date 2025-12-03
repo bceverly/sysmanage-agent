@@ -115,6 +115,30 @@ class WslOperations:
                     "Configured .wslconfig for %d user profile(s)",
                     wslconfig_result.get("profiles_configured", 0),
                 )
+                # If .wslconfig was modified (not already_configured), we need to
+                # restart WSL for the new settings to take effect
+                if not wslconfig_result.get("already_configured"):
+                    self.logger.info(
+                        "Restarting WSL to apply new .wslconfig settings..."
+                    )
+                    creationflags = (
+                        subprocess.CREATE_NO_WINDOW
+                        if hasattr(subprocess, "CREATE_NO_WINDOW")
+                        else 0
+                    )
+                    try:
+                        subprocess.run(  # nosec B603 B607
+                            ["wsl", "--shutdown"],
+                            capture_output=True,
+                            timeout=30,
+                            check=False,
+                            creationflags=creationflags,
+                        )
+                        self.logger.info("WSL restarted successfully")
+                    except subprocess.TimeoutExpired:
+                        self.logger.warning("WSL shutdown timed out, continuing anyway")
+                    except Exception as shutdown_error:
+                        self.logger.warning("Could not restart WSL: %s", shutdown_error)
             else:
                 # Log warning but don't fail - WSL will still work, just may auto-shutdown
                 self.logger.warning(
