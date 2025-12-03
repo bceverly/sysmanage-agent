@@ -36,11 +36,13 @@ class WslSetupOperations:
         Get the executable name for a WSL distribution.
 
         Args:
-            distribution: Distribution name
+            distribution: Distribution name (may be actual WSL name like 'FedoraLinux-43')
 
         Returns:
             Executable name or None if unknown
         """
+        dist_lower = distribution.lower()
+
         # Map distribution names to their executables
         exe_map = {
             "ubuntu-24.04": "ubuntu2404.exe",
@@ -57,7 +59,20 @@ class WslSetupOperations:
             "almalinux-9": "almalinux-9.exe",
             "rockylinux-9": "rockylinux-9.exe",
         }
-        return exe_map.get(distribution.lower())
+
+        # Check for exact match first
+        if dist_lower in exe_map:
+            return exe_map[dist_lower]
+
+        # Handle dynamic names like 'FedoraLinux-43' -> 'fedora.exe'
+        # or 'AlmaLinux-9.3' -> 'almalinux-9.exe'
+        for key, exe in exe_map.items():
+            # Check if the distribution starts with the base name
+            base_name = key.split("-", maxsplit=1)[0].replace("linux", "")
+            if dist_lower.startswith(base_name) or base_name in dist_lower:
+                return exe
+
+        return None
 
     async def configure_default_user(
         self, distribution: str, exe_name: Optional[str], username: str
@@ -225,6 +240,94 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    async def set_hostname(self, distribution: str, hostname: str) -> Dict[str, Any]:
+        """
+        Set the hostname in a WSL distribution.
+
+        This sets the hostname in /etc/hostname and adds it to /etc/hosts.
+        The hostname will be fully applied after a restart.
+
+        Args:
+            distribution: Distribution name
+            hostname: Hostname to set
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            creationflags = self._get_creationflags()
+
+            # Write hostname to /etc/hostname
+            hostname_cmd = f"echo '{hostname}' > /etc/hostname"
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "sh", "-c", hostname_cmd],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                creationflags=creationflags,
+            )
+
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to set hostname: %s")
+                    % (result.stderr or result.stdout),
+                }
+
+            # Add hostname to /etc/hosts if not already present
+            # This ensures localhost resolution works properly
+            hosts_cmd = (
+                f"grep -q '{hostname}' /etc/hosts || "
+                f"echo '127.0.0.1 {hostname}' >> /etc/hosts"
+            )
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "sh", "-c", hosts_cmd],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                creationflags=creationflags,
+            )
+
+            if result.returncode != 0:
+                self.logger.warning(
+                    "Failed to update /etc/hosts: %s",
+                    result.stderr or result.stdout,
+                )
+                # Continue anyway - this is not critical
+
+            # Also set hostname in wsl.conf so it persists across restarts
+            # WSL reads [network] hostname= from wsl.conf
+            wsl_conf_cmd = (
+                "(grep -q '\\[network\\]' /etc/wsl.conf 2>/dev/null && "
+                f"sed -i '/\\[network\\]/a hostname={hostname}' /etc/wsl.conf || "
+                f"echo -e '\\n[network]\\nhostname={hostname}' >> /etc/wsl.conf)"
+            )
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "sh", "-c", wsl_conf_cmd],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                creationflags=creationflags,
+            )
+
+            if result.returncode != 0:
+                self.logger.warning(
+                    "Failed to set hostname in wsl.conf: %s",
+                    result.stderr or result.stdout,
+                )
+                # Continue anyway - /etc/hostname should still work
+
+            self.logger.info(
+                "Hostname set to %s for distribution %s", hostname, distribution
+            )
+            return {"success": True}
+
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
     async def restart_instance(self, distribution: str) -> Dict[str, Any]:
         """
         Restart a WSL instance to apply changes.
@@ -323,7 +426,12 @@ class WslSetupOperations:
             return {"success": False, "error": str(error)}
 
     async def configure_agent(
-        self, distribution: str, server_url: str, hostname: str, server_port: int = 8443
+        self,
+        distribution: str,
+        server_url: str,
+        hostname: str,
+        server_port: int = 8443,
+        use_https: bool = True,
     ) -> Dict[str, Any]:
         """
         Configure sysmanage-agent in a WSL distribution.
@@ -333,6 +441,7 @@ class WslSetupOperations:
             server_url: URL of the sysmanage server
             hostname: Hostname for this agent
             server_port: Port of the sysmanage server (default 8443)
+            use_https: Whether to use HTTPS for server connection (default True)
 
         Returns:
             Dict with success status
@@ -341,14 +450,15 @@ class WslSetupOperations:
             creationflags = self._get_creationflags()
 
             # Create the configuration file
+            use_https_str = "true" if use_https else "false"
             config_content = f"""# Sysmanage Agent Configuration
 # Auto-generated during WSL child host creation
 
 server:
   hostname: "{server_url}"
   port: {server_port}
-  use_https: true
-  verify_ssl: true
+  use_https: {use_https_str}
+  verify_ssl: {use_https_str}
 
 agent:
   hostname_override: "{hostname}"

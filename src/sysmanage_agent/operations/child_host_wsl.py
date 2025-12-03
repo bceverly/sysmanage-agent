@@ -31,7 +31,7 @@ class WslOperations:
         self._control_ops = WslControlOperations(logger, self._decode_wsl_output)
         self._setup_ops = WslSetupOperations(logger, self._decode_wsl_output)
 
-    async def create_wsl_instance(  # pylint: disable=too-many-arguments
+    async def create_wsl_instance(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         distribution: str,
         hostname: str,
@@ -41,6 +41,7 @@ class WslOperations:
         agent_install_commands: List[str],
         listing_helper,
         server_port: int = 8443,
+        use_https: bool = True,
     ) -> Dict[str, Any]:
         """
         Create a new WSL instance with the full installation flow.
@@ -54,6 +55,7 @@ class WslOperations:
             agent_install_commands: Commands to install the agent
             listing_helper: ChildHostListing instance for checking existing instances
             server_port: Port for the sysmanage server (default 8443)
+            use_https: Whether to use HTTPS for server connection (default True)
 
         Returns:
             Dict with success status and details
@@ -112,15 +114,25 @@ class WslOperations:
             if not install_result.get("success"):
                 return install_result
 
+            # Get the actual WSL name (may differ from the install identifier)
+            # e.g., "Fedora" becomes "FedoraLinux-43"
+            actual_wsl_name = install_result.get("actual_name", distribution)
+            if actual_wsl_name != distribution:
+                self.logger.info(
+                    "Using actual WSL name '%s' (requested '%s')",
+                    actual_wsl_name,
+                    distribution,
+                )
+
             # Get the executable name for this distribution
-            exe_name = self._setup_ops.get_executable_name(distribution)
+            exe_name = self._setup_ops.get_executable_name(actual_wsl_name)
 
             # Step 4: Configure default user as root temporarily
             await self._send_progress(
                 "configuring_root", _("Configuring temporary root access...")
             )
             config_result = await self._setup_ops.configure_default_user(
-                distribution, exe_name, "root"
+                actual_wsl_name, exe_name, "root"
             )
             if not config_result.get("success"):
                 return config_result
@@ -130,23 +142,36 @@ class WslOperations:
                 "creating_user", _("Creating user %s...") % username
             )
             user_result = await self._setup_ops.create_user(
-                distribution, username, password
+                actual_wsl_name, username, password
             )
             if not user_result.get("success"):
                 return user_result
 
             # Step 6: Enable systemd
             await self._send_progress("enabling_systemd", _("Enabling systemd..."))
-            systemd_result = await self._setup_ops.enable_systemd(distribution)
+            systemd_result = await self._setup_ops.enable_systemd(actual_wsl_name)
             if not systemd_result.get("success"):
                 return systemd_result
+
+            # Step 6b: Set hostname
+            await self._send_progress(
+                "setting_hostname", _("Setting hostname to %s...") % hostname
+            )
+            hostname_result = await self._setup_ops.set_hostname(
+                actual_wsl_name, hostname
+            )
+            if not hostname_result.get("success"):
+                self.logger.warning(
+                    "Hostname configuration failed: %s", hostname_result.get("error")
+                )
+                # Continue anyway - agent config has hostname_override as fallback
 
             # Step 7: Set default user to created user
             await self._send_progress(
                 "setting_default_user", _("Setting default user...")
             )
             default_user_result = await self._setup_ops.configure_default_user(
-                distribution, exe_name, username
+                actual_wsl_name, exe_name, username
             )
             if not default_user_result.get("success"):
                 return default_user_result
@@ -155,7 +180,7 @@ class WslOperations:
             await self._send_progress(
                 "restarting_wsl", _("Restarting WSL to apply changes...")
             )
-            restart_result = await self._setup_ops.restart_instance(distribution)
+            restart_result = await self._setup_ops.restart_instance(actual_wsl_name)
             if not restart_result.get("success"):
                 return restart_result
 
@@ -165,7 +190,7 @@ class WslOperations:
                     "installing_agent", _("Installing sysmanage-agent...")
                 )
                 agent_result = await self._setup_ops.install_agent(
-                    distribution, agent_install_commands
+                    actual_wsl_name, agent_install_commands
                 )
                 if not agent_result.get("success"):
                     self.logger.warning(
@@ -179,7 +204,7 @@ class WslOperations:
                     "configuring_agent", _("Configuring sysmanage-agent...")
                 )
                 config_agent_result = await self._setup_ops.configure_agent(
-                    distribution, server_url, hostname, server_port
+                    actual_wsl_name, server_url, hostname, server_port, use_https
                 )
                 if not config_agent_result.get("success"):
                     self.logger.warning(
@@ -189,7 +214,7 @@ class WslOperations:
 
             # Step 11: Start agent service
             await self._send_progress("starting_agent", _("Starting agent service..."))
-            start_result = await self._setup_ops.start_agent_service(distribution)
+            start_result = await self._setup_ops.start_agent_service(actual_wsl_name)
             if not start_result.get("success"):
                 self.logger.warning(
                     "Agent service start failed: %s", start_result.get("error")
@@ -199,11 +224,12 @@ class WslOperations:
 
             return {
                 "success": True,
-                "child_name": distribution,
+                "child_name": actual_wsl_name,
                 "child_type": "wsl",
                 "hostname": hostname,
                 "username": username,
-                "message": _("WSL instance '%s' created successfully") % distribution,
+                "message": _("WSL instance '%s' created successfully")
+                % actual_wsl_name,
             }
 
         except Exception as error:
@@ -389,7 +415,7 @@ class WslOperations:
             distribution: Distribution identifier (e.g., 'Ubuntu-24.04')
 
         Returns:
-            Dict with success status
+            Dict with success status and actual_name (the WSL internal name)
         """
         try:
             self.logger.info("Installing WSL distribution: %s", distribution)
@@ -413,7 +439,9 @@ class WslOperations:
 
             if result.returncode == 0:
                 self.logger.info("Distribution %s installed successfully", distribution)
-                return {"success": True}
+                # Detect the actual WSL name (may differ from install name)
+                actual_name = self._detect_actual_wsl_name(distribution)
+                return {"success": True, "actual_name": actual_name}
 
             error_msg = output or "Installation failed"
             self.logger.error("Distribution installation failed: %s", error_msg)
@@ -426,6 +454,94 @@ class WslOperations:
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
+
+    def _detect_actual_wsl_name(self, requested_distribution: str) -> str:
+        """
+        Detect the actual WSL distribution name after installation.
+
+        WSL may use different internal names than the install identifier.
+        For example, 'Fedora' becomes 'FedoraLinux-43'.
+
+        Args:
+            requested_distribution: The distribution name we requested to install
+
+        Returns:
+            The actual WSL distribution name, or the requested name if detection fails
+        """
+        try:
+            # Get the list of installed distributions
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-l", "-v"],
+                capture_output=True,
+                timeout=30,
+                check=False,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                    if hasattr(subprocess, "CREATE_NO_WINDOW")
+                    else 0
+                ),
+            )
+
+            output = self._decode_wsl_output(result.stdout, result.stderr)
+            if not output:
+                return requested_distribution
+
+            # Parse the output to find distributions
+            # Output format: "  NAME                   STATE           VERSION"
+            #                "* Ubuntu-24.04           Running         2"
+            lines = output.strip().split("\n")
+            if len(lines) < 2:
+                return requested_distribution
+
+            # Skip header, look for distribution names
+            requested_lower = requested_distribution.lower()
+            for line in lines[1:]:
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Remove asterisk for default
+                if line.startswith("*"):
+                    line = line[1:].strip()
+
+                # Parse the name (first column)
+                parts = line.split()
+                if not parts:
+                    continue
+
+                distro_name = parts[0]
+                distro_lower = distro_name.lower()
+
+                # Check for exact match first
+                if distro_lower == requested_lower:
+                    return distro_name
+
+                # Check for partial match (e.g., "Fedora" in "FedoraLinux-43")
+                # or base name match (e.g., "fedora" in "fedoralinux-43")
+                if requested_lower in distro_lower or distro_lower.startswith(
+                    requested_lower.replace("-", "")
+                ):
+                    self.logger.info(
+                        "WSL distribution name mapping: %s -> %s",
+                        requested_distribution,
+                        distro_name,
+                    )
+                    return distro_name
+
+            # No match found, return the requested name
+            self.logger.warning(
+                "Could not detect actual WSL name for %s, using requested name",
+                requested_distribution,
+            )
+            return requested_distribution
+
+        except Exception as error:
+            self.logger.warning(
+                "Error detecting actual WSL name: %s, using requested name: %s",
+                error,
+                requested_distribution,
+            )
+            return requested_distribution
 
     async def enable_wsl(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """

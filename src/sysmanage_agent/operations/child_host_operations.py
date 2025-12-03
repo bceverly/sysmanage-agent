@@ -218,6 +218,8 @@ class ChildHostOperations:
                 - password: Password for the user
                 - install_path: Optional custom install location
                 - server_url: URL for the sysmanage server
+                - server_port: Port for the sysmanage server
+                - use_https: Whether to use HTTPS for server connection
                 - agent_install_commands: JSON array of commands to install agent
 
         Returns:
@@ -233,6 +235,7 @@ class ChildHostOperations:
         password = parameters.get("password")
         server_url = parameters.get("server_url")
         server_port = parameters.get("server_port", 8443)
+        use_https = parameters.get("use_https", True)
         agent_install_commands = parameters.get("agent_install_commands", [])
 
         # Handle agent_install_commands as JSON string (backward compatibility)
@@ -259,6 +262,7 @@ class ChildHostOperations:
                 agent_install_commands=agent_install_commands,
                 listing_helper=self.listing_helper,
                 server_port=server_port,
+                use_https=use_https,
             )
 
         # Future: Add support for other child types
