@@ -1982,6 +1982,19 @@ jobs:
           echo "Downloaded $(ls -1 vendor/*.whl 2>/dev/null | wc -l) wheels and $(ls -1 vendor/*.tar.gz 2>/dev/null | wc -l) source packages"
           ls -lh vendor/
 
+      - name: Install SBOM generation tools
+        run: |
+          # Install cyclonedx-bom for Python
+          python3 -m pip install cyclonedx-bom
+
+          # Verify installation
+          python3 -c "import cyclonedx_py; print('cyclonedx-bom installed')"
+
+      - name: Generate SBOM
+        run: |
+          echo "Generating Software Bill of Materials..."
+          make sbom
+
       - name: Build and upload source package
         env:
           VERSION: ${{ steps.version.outputs.version }}
