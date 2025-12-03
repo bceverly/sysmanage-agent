@@ -261,7 +261,8 @@ class WslSetupOperations:
             creationflags = self._get_creationflags()
 
             # Write hostname to /etc/hostname
-            hostname_cmd = f"echo '{hostname}' > /etc/hostname"
+            # Use double quotes to prevent any shell interpretation of special chars
+            hostname_cmd = f'printf "%s\\n" "{hostname}" > /etc/hostname'
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", hostname_cmd],
                 capture_output=True,
@@ -280,9 +281,10 @@ class WslSetupOperations:
 
             # Add hostname to /etc/hosts if not already present
             # This ensures localhost resolution works properly
+            # Use escaped hostname in grep pattern (dots escaped), literal hostname in echo
             hosts_cmd = (
-                f"grep -q '{hostname}' /etc/hosts || "
-                f"echo '127.0.0.1 {hostname}' >> /etc/hosts"
+                f'grep -qF "{hostname}" /etc/hosts || '
+                f'printf "127.0.0.1 %s\\n" "{hostname}" >> /etc/hosts'
             )
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", hosts_cmd],
@@ -302,11 +304,16 @@ class WslSetupOperations:
 
             # Also set hostname in wsl.conf so it persists across restarts
             # WSL reads [network] hostname= from wsl.conf
-            # Use printf instead of echo -e for portability (dash doesn't support echo -e)
+            # Check if [network] section exists and if hostname is already set
+            # If so, update it; otherwise add new [network] section with hostname
             wsl_conf_cmd = (
-                "(grep -q '\\[network\\]' /etc/wsl.conf 2>/dev/null && "
-                f"sed -i '/\\[network\\]/a hostname={hostname}' /etc/wsl.conf || "
-                f"printf '\\n[network]\\nhostname={hostname}\\n' >> /etc/wsl.conf)"
+                f'if grep -q "^hostname=" /etc/wsl.conf 2>/dev/null; then '
+                f'sed -i "s/^hostname=.*/hostname={hostname}/" /etc/wsl.conf; '
+                f'elif grep -q "\\[network\\]" /etc/wsl.conf 2>/dev/null; then '
+                f'sed -i "/\\[network\\]/a hostname={hostname}" /etc/wsl.conf; '
+                f"else "
+                f'printf "\\n[network]\\nhostname=%s\\n" "{hostname}" >> /etc/wsl.conf; '
+                f"fi"
             )
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", wsl_conf_cmd],
