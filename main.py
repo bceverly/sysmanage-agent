@@ -776,6 +776,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
         """Delegate to data_collector."""
         return await self.data_collector.package_collector()
 
+    async def child_host_heartbeat(self):
+        """Delegate to data_collector for frequent child host status updates."""
+        return await self.data_collector.child_host_heartbeat()
+
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
         return await self.registration_manager.get_auth_token()
@@ -1132,7 +1136,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
                         )
                     )
 
-                    # Run sender, receiver, update checker, data collector, and package collector concurrently with proper error handling
+                    # Run sender, receiver, update checker, data collector, package collector, and child host heartbeat concurrently with proper error handling
                     try:
                         sender_task = asyncio.create_task(self.message_sender())
                         receiver_task = asyncio.create_task(self.message_receiver())
@@ -1143,9 +1147,12 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
                         package_collector_task = asyncio.create_task(
                             self.package_collector()
                         )
+                        child_host_heartbeat_task = asyncio.create_task(
+                            self.child_host_heartbeat()
+                        )
 
                         # Wait for either sender or receiver to complete (connection tasks only)
-                        # Update checker, data collector, and package collector run independently and don't trigger disconnection
+                        # Update checker, data collector, package collector, and child host heartbeat run independently and don't trigger disconnection
                         done, pending = await asyncio.wait(
                             [sender_task, receiver_task],
                             return_when=asyncio.FIRST_COMPLETED,
@@ -1155,6 +1162,7 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
                         update_checker_task.cancel()
                         data_collector_task.cancel()
                         package_collector_task.cancel()
+                        child_host_heartbeat_task.cancel()
                         try:
                             await update_checker_task
                         except asyncio.CancelledError:
@@ -1165,6 +1173,10 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
                             pass
                         try:
                             await package_collector_task
+                        except asyncio.CancelledError:
+                            pass
+                        try:
+                            await child_host_heartbeat_task
                         except asyncio.CancelledError:
                             pass
 

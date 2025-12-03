@@ -717,6 +717,36 @@ class DataCollector:
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
+    async def child_host_heartbeat(self):
+        """
+        Handle frequent child host status updates (Windows only).
+
+        This runs more frequently than the main data collector to ensure
+        child host status (WSL instances) is kept up to date in the UI.
+        """
+        # Only run on Windows where we have WSL
+        if platform.system().lower() != "windows":
+            self.logger.debug("Child host heartbeat skipped (not Windows)")
+            return
+
+        self.logger.debug("Child host heartbeat started")
+
+        # Send child host status every 60 seconds
+        heartbeat_interval = 60  # 1 minute
+
+        while self.agent.running:
+            try:
+                await asyncio.sleep(heartbeat_interval)
+                await self._send_child_hosts_update()
+                self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
+            except asyncio.CancelledError:
+                self.logger.debug("Child host heartbeat cancelled")
+                raise
+            except Exception as error:
+                self.logger.error("Child host heartbeat error: %s", error)
+                # Continue the loop on non-critical errors
+                continue
+
     async def package_collector(self):
         """Handle periodic package collection."""
         await self.agent.package_collection_scheduler.run_package_collection_loop()
