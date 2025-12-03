@@ -71,6 +71,16 @@ class WslOperations:
             if not password:
                 return {"success": False, "error": _("Password is required")}
 
+            # Derive FQDN hostname early if user didn't provide a domain
+            # This uses the server_url domain (e.g., t14.theeverlys.com -> theeverlys.com)
+            fqdn_hostname = self._setup_ops.get_fqdn_hostname(hostname, server_url)
+            if fqdn_hostname != hostname:
+                self.logger.info(
+                    "Using FQDN hostname '%s' (user provided '%s')",
+                    fqdn_hostname,
+                    hostname,
+                )
+
             # Send progress update
             await self._send_progress("checking_wsl", _("Checking WSL status..."))
 
@@ -153,12 +163,12 @@ class WslOperations:
             if not systemd_result.get("success"):
                 return systemd_result
 
-            # Step 6b: Set hostname
+            # Step 6b: Set hostname (use FQDN)
             await self._send_progress(
-                "setting_hostname", _("Setting hostname to %s...") % hostname
+                "setting_hostname", _("Setting hostname to %s...") % fqdn_hostname
             )
             hostname_result = await self._setup_ops.set_hostname(
-                actual_wsl_name, hostname
+                actual_wsl_name, fqdn_hostname
             )
             if not hostname_result.get("success"):
                 self.logger.warning(
@@ -226,7 +236,7 @@ class WslOperations:
                 "success": True,
                 "child_name": actual_wsl_name,
                 "child_type": "wsl",
-                "hostname": hostname,
+                "hostname": fqdn_hostname,
                 "username": username,
                 "message": _("WSL instance '%s' created successfully")
                 % actual_wsl_name,

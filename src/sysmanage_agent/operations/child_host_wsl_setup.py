@@ -211,11 +211,12 @@ class WslSetupOperations:
             creationflags = self._get_creationflags()
 
             # Write systemd=true to /etc/wsl.conf
+            # Use printf instead of echo -e for portability (dash doesn't support echo -e)
             wsl_conf_cmd = (
                 "mkdir -p /etc && "
                 "(grep -q '\\[boot\\]' /etc/wsl.conf 2>/dev/null && "
                 "sed -i 's/systemd=.*/systemd=true/' /etc/wsl.conf || "
-                "echo -e '[boot]\\nsystemd=true' >> /etc/wsl.conf)"
+                "printf '[boot]\\nsystemd=true\\n' >> /etc/wsl.conf)"
             )
 
             result = subprocess.run(  # nosec B603 B607
@@ -299,10 +300,11 @@ class WslSetupOperations:
 
             # Also set hostname in wsl.conf so it persists across restarts
             # WSL reads [network] hostname= from wsl.conf
+            # Use printf instead of echo -e for portability (dash doesn't support echo -e)
             wsl_conf_cmd = (
                 "(grep -q '\\[network\\]' /etc/wsl.conf 2>/dev/null && "
                 f"sed -i '/\\[network\\]/a hostname={hostname}' /etc/wsl.conf || "
-                f"echo -e '\\n[network]\\nhostname={hostname}' >> /etc/wsl.conf)"
+                f"printf '\\n[network]\\nhostname={hostname}\\n' >> /etc/wsl.conf)"
             )
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", wsl_conf_cmd],
@@ -425,6 +427,69 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    def get_fqdn_hostname(self, hostname: str, server_url: str) -> str:
+        """
+        Get a fully qualified hostname by appending server domain if needed.
+
+        If the hostname doesn't contain a dot (not FQDN), extract the domain
+        from the server_url and append it.
+
+        Args:
+            hostname: The hostname provided by the user
+            server_url: The server URL (FQDN like 't14.theeverlys.com')
+
+        Returns:
+            FQDN hostname
+        """
+        # If hostname already has a domain, return as-is
+        if "." in hostname:
+            return hostname
+
+        # Extract domain from server_url
+        # server_url is like 't14.theeverlys.com', we want 'theeverlys.com'
+        if "." in server_url:
+            parts = server_url.split(".", 1)
+            if len(parts) > 1:
+                domain = parts[1]
+                fqdn = f"{hostname}.{domain}"
+                self.logger.info(
+                    "Derived FQDN '%s' from hostname '%s' and server domain '%s'",
+                    fqdn,
+                    hostname,
+                    domain,
+                )
+                return fqdn
+
+        # Couldn't extract domain, return original hostname
+        return hostname
+
+    def _get_allowed_shells_for_distribution(self, distribution: str) -> list:
+        """
+        Get appropriate allowed shells for a WSL distribution.
+
+        Args:
+            distribution: Distribution name (e.g., 'Ubuntu-24.04', 'FedoraLinux-43')
+
+        Returns:
+            List of allowed shell names
+        """
+        dist_lower = distribution.lower()
+
+        # All Linux distributions support bash and sh
+        shells = ["bash", "sh"]
+
+        # Add distribution-specific shells
+        if "ubuntu" in dist_lower or "debian" in dist_lower:
+            shells.append("dash")
+        elif "fedora" in dist_lower or "centos" in dist_lower or "rhel" in dist_lower:
+            shells.append("zsh")
+        elif "opensuse" in dist_lower or "suse" in dist_lower:
+            shells.append("zsh")
+        elif "alpine" in dist_lower:
+            shells.append("ash")
+
+        return shells
+
     async def configure_agent(
         self,
         distribution: str,
@@ -449,7 +514,14 @@ class WslSetupOperations:
         try:
             creationflags = self._get_creationflags()
 
-            # Create the configuration file
+            # Derive FQDN if hostname doesn't have a domain
+            fqdn_hostname = self.get_fqdn_hostname(hostname, server_url)
+
+            # Get appropriate shells for this distribution
+            allowed_shells = self._get_allowed_shells_for_distribution(distribution)
+            shells_yaml = "\n".join(f"    - {shell}" for shell in allowed_shells)
+
+            # Create the configuration file with enhanced settings for WSL
             use_https_str = "true" if use_https else "false"
             config_content = f"""# Sysmanage Agent Configuration
 # Auto-generated during WSL child host creation
@@ -461,7 +533,26 @@ server:
   verify_ssl: {use_https_str}
 
 agent:
-  hostname_override: "{hostname}"
+  hostname_override: "{fqdn_hostname}"
+
+# WebSocket settings - longer ping interval for WSL to reduce overhead
+# while staying within the server's "down" detection window
+websocket:
+  ping_interval: 45
+  reconnect_interval: 10
+
+# Script execution settings - run privileged for system management
+script_execution:
+  enabled: true
+  allowed_shells:
+{shells_yaml}
+
+# Feature flags - enable all management features
+features:
+  auto_update: false
+  firewall_management: true
+  certificate_management: true
+  script_execution: true
 """
 
             # Write configuration file
@@ -485,7 +576,11 @@ agent:
                     % (result.stderr or result.stdout),
                 }
 
-            self.logger.info("Agent configured with server %s", server_url)
+            self.logger.info(
+                "Agent configured with server %s, hostname %s",
+                server_url,
+                fqdn_hostname,
+            )
             return {"success": True}
 
         except Exception as error:

@@ -8,7 +8,6 @@ certificates, roles, and other monitoring data.
 
 import asyncio
 import logging
-import platform
 import socket
 import uuid
 from datetime import datetime, timezone
@@ -18,6 +17,7 @@ from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
+from src.sysmanage_agent.communication.child_host_collector import ChildHostCollector
 
 
 class DataCollector:
@@ -34,6 +34,7 @@ class DataCollector:
         self.logger = logging.getLogger(__name__)
         self.firewall_collector = FirewallCollector(self.logger)
         self.graylog_collector = GraylogCollector(self.logger)
+        self.child_host_collector = ChildHostCollector(agent_instance)
 
     async def send_initial_data_updates(
         self,
@@ -189,7 +190,7 @@ class DataCollector:
             # Send child hosts (WSL/VM/container) data
             try:
                 self.logger.info(_("Collecting initial child hosts data..."))
-                await self._send_child_hosts_update()
+                await self.child_host_collector.send_child_hosts_update()
             except Exception as error:
                 self.logger.error("Failed to send initial child hosts data: %s", error)
 
@@ -523,64 +524,6 @@ class DataCollector:
         else:
             self.logger.warning("Cannot send firewall status data: no host approval")
 
-    async def _send_child_hosts_update(self):
-        """Send child hosts (WSL/VM/container) status update."""
-        # Only collect child hosts on Windows (WSL) for now
-        if platform.system().lower() != "windows":
-            return
-
-        self.logger.debug("AGENT_DEBUG: Collecting child hosts data")
-
-        try:
-            # Use the child_host_ops to list child hosts
-            if hasattr(self.agent, "child_host_ops"):
-                result = await self.agent.child_host_ops.list_child_hosts({})
-
-                if result.get("success", False):
-                    child_hosts = result.get("child_hosts", [])
-
-                    # Create message data
-                    child_hosts_info = {
-                        "success": True,
-                        "child_hosts": child_hosts,
-                        "count": len(child_hosts),
-                        "hostname": self.agent.registration.get_system_info()[
-                            "hostname"
-                        ],
-                    }
-
-                    # Add host_id if available
-                    host_approval = (
-                        self.agent.registration_manager.get_host_approval_from_db()
-                    )
-                    if host_approval:
-                        child_hosts_info["host_id"] = str(host_approval.host_id)
-
-                    # Create and send message
-                    child_hosts_message = self.agent.create_message(
-                        "child_host_list_update", child_hosts_info
-                    )
-                    self.logger.debug(
-                        "AGENT_DEBUG: Sending child hosts message: %s",
-                        child_hosts_message["message_id"],
-                    )
-                    success = await self.agent.send_message(child_hosts_message)
-
-                    if success:
-                        self.logger.debug(
-                            "AGENT_DEBUG: Child hosts data sent successfully (%d hosts)",
-                            len(child_hosts),
-                        )
-                    else:
-                        self.logger.warning("Failed to send child hosts data")
-                else:
-                    self.logger.debug(
-                        "AGENT_DEBUG: Child hosts collection returned no success: %s",
-                        result.get("error", "Unknown error"),
-                    )
-        except Exception as error:
-            self.logger.error("Error collecting/sending child hosts data: %s", error)
-
     async def _send_graylog_status_update(self):
         """Send Graylog attachment status update."""
         self.logger.debug("AGENT_DEBUG: Collecting Graylog attachment status data")
@@ -692,7 +635,7 @@ class DataCollector:
 
         # Send child hosts (WSL/VM/container) status update
         try:
-            await self._send_child_hosts_update()
+            await self.child_host_collector.send_child_hosts_update()
         except Exception as error:
             self.logger.error("Error collecting/sending child hosts data: %s", error)
 
@@ -718,34 +661,8 @@ class DataCollector:
                 return
 
     async def child_host_heartbeat(self):
-        """
-        Handle frequent child host status updates (Windows only).
-
-        This runs more frequently than the main data collector to ensure
-        child host status (WSL instances) is kept up to date in the UI.
-        """
-        # Only run on Windows where we have WSL
-        if platform.system().lower() != "windows":
-            self.logger.debug("Child host heartbeat skipped (not Windows)")
-            return
-
-        self.logger.debug("Child host heartbeat started")
-
-        # Send child host status every 60 seconds
-        heartbeat_interval = 60  # 1 minute
-
-        while self.agent.running:
-            try:
-                await asyncio.sleep(heartbeat_interval)
-                await self._send_child_hosts_update()
-                self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
-            except asyncio.CancelledError:
-                self.logger.debug("Child host heartbeat cancelled")
-                raise
-            except Exception as error:
-                self.logger.error("Child host heartbeat error: %s", error)
-                # Continue the loop on non-critical errors
-                continue
+        """Delegate to child_host_collector for frequent child host status updates."""
+        return await self.child_host_collector.child_host_heartbeat()
 
     async def package_collector(self):
         """Handle periodic package collection."""
