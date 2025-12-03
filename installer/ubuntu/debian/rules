@@ -29,10 +29,10 @@ override_dh_auto_install:
 	cp alembic.ini debian/sysmanage-agent/opt/sysmanage-agent/
 	cp requirements-prod.txt debian/sysmanage-agent/opt/sysmanage-agent/
 
-	# Create virtualenv and install production Python dependencies only
+	# Create virtualenv and install production Python dependencies from vendor directory
+	# (Launchpad builds have no network access, so we use pre-downloaded wheels)
 	python3 -m venv debian/sysmanage-agent/opt/sysmanage-agent/.venv
-	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --upgrade pip
-	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install -r requirements-prod.txt
+	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --find-links=vendor -r requirements-prod.txt
 
 	# Copy example config
 	install -m 644 installer/ubuntu/sysmanage-agent.yaml.example debian/sysmanage-agent/etc/sysmanage-agent/

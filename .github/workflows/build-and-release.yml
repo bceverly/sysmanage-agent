@@ -1914,6 +1914,51 @@ jobs:
           }
           EOF
 
+      - name: Generate requirements-prod.txt
+        run: |
+          echo "Generating requirements-prod.txt..."
+          python3 scripts/update-requirements-prod.py
+
+      - name: Create vendor directory with pip dependencies
+        env:
+          RELEASE: ${{ matrix.release }}
+        run: |
+          echo "Creating vendor directory with pip dependencies for offline installation..."
+          mkdir -p vendor
+
+          # Map Ubuntu release to Python version
+          case "$RELEASE" in
+            jammy)
+              PYTHON_VERSION="3.10"
+              ;;
+            noble|oracular)
+              PYTHON_VERSION="3.12"
+              ;;
+            plucky|questing)
+              PYTHON_VERSION="3.13"
+              ;;
+            *)
+              PYTHON_VERSION="3.12"
+              ;;
+          esac
+
+          echo "Downloading wheels for Python $PYTHON_VERSION (Ubuntu $RELEASE)..."
+
+          # Download wheels for the target Python version
+          pip3 download -r requirements-prod.txt -d vendor \
+            --python-version $PYTHON_VERSION \
+            --platform manylinux2014_x86_64 \
+            --platform manylinux_2_17_x86_64 \
+            --only-binary=:all:
+
+          # Also download source distributions for pure Python packages
+          pip3 download -r requirements-prod.txt -d vendor \
+            --python-version $PYTHON_VERSION \
+            --no-binary :all: 2>/dev/null || true
+
+          echo "Downloaded $(ls -1 vendor/*.whl 2>/dev/null | wc -l) wheels and $(ls -1 vendor/*.tar.gz 2>/dev/null | wc -l) source packages"
+          ls -lh vendor/
+
       - name: Build and upload source package
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -1921,10 +1966,6 @@ jobs:
           DEBEMAIL: "bryan@theeverlys.com"
           RELEASE: ${{ matrix.release }}
         run: |
-          # Generate requirements-prod.txt from requirements.txt
-          echo "Generating requirements-prod.txt..."
-          python3 scripts/update-requirements-prod.py
-
           # Get GPG key ID
           GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 | head -1)
 
@@ -1938,7 +1979,7 @@ jobs:
           rm -rf "$WORK_DIR"
           mkdir -p "$WORK_DIR"
 
-          # Copy source to working directory
+          # Copy source to working directory (including vendor directory)
           cp -r . "$WORK_DIR/"
           cd "$WORK_DIR"
 
@@ -1949,6 +1990,11 @@ jobs:
             echo "Error: debian directory not found"
             exit 1
           fi
+
+          # Verify vendor directory was copied
+          echo "Vendor directory contents:"
+          ls -lh vendor/ | head -10
+          echo "Total: $(ls -1 vendor/ | wc -l) files"
 
           # Update changelog
           dch -v "${VERSION}+ppa1~${RELEASE}1" -D "$RELEASE" "New upstream release ${VERSION}"
