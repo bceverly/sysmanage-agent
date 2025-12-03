@@ -96,6 +96,26 @@ jobs:
           echo "Generating requirements-prod.txt from requirements.txt..."
           python3 scripts/update-requirements-prod.py
 
+      - name: Create vendor directory with pip dependencies
+        run: |
+          echo "Creating vendor directory with pip dependencies for offline installation..."
+          mkdir -p vendor
+
+          # Download wheels for Python 3.12 (Ubuntu 24.04 Noble)
+          pip3 download -r requirements-prod.txt -d vendor \
+            --python-version 3.12 \
+            --platform manylinux2014_x86_64 \
+            --platform manylinux_2_17_x86_64 \
+            --only-binary=:all:
+
+          # Also download source distributions for pure Python packages
+          pip3 download -r requirements-prod.txt -d vendor \
+            --python-version 3.12 \
+            --no-binary :all: 2>/dev/null || true
+
+          echo "Downloaded $(ls -1 vendor/*.whl 2>/dev/null | wc -l) wheels"
+          ls -lh vendor/
+
       - name: Create source tarball
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -120,6 +140,9 @@ jobs:
 
           # Copy SBOM to the package
           cp -r sbom ../sysmanage-agent-$VERSION/
+
+          # Copy vendor directory for offline pip install
+          cp -r vendor ../sysmanage-agent-$VERSION/
 
           # Create orig tarball
           cd ..
