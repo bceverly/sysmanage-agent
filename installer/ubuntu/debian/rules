@@ -13,6 +13,9 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	# Skip auto build - no setup.py to build
 
+override_dh_auto_test:
+	# Skip tests during package build - tests run in CI
+
 override_dh_auto_install:
 	# Create directory structure
 	install -d debian/sysmanage-agent/opt/sysmanage-agent
