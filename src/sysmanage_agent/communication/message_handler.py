@@ -350,30 +350,33 @@ class MessageHandler:
                     message_type = data.get("message_type")
 
                     if message_type == "command":
-                        # Get the server's message_id for deduplication and acknowledgment
-                        server_message_id = data.get("message_id")
+                        # Get the queue_message_id for acknowledgment (this is what the server tracks)
+                        # Fall back to message_id for backwards compatibility
+                        queue_message_id = data.get("queue_message_id") or data.get(
+                            "message_id"
+                        )
 
                         # Check for duplicate messages (server retry)
                         if (
-                            server_message_id
+                            queue_message_id
                             and self.queue_manager.is_duplicate_message(
-                                server_message_id
+                                queue_message_id
                             )
                         ):
                             self.logger.info(
                                 "Skipping duplicate command message: %s",
-                                server_message_id,
+                                queue_message_id,
                             )
                             # Still send acknowledgment for duplicate to confirm receipt
-                            await self._send_command_acknowledgment(server_message_id)
+                            await self._send_command_acknowledgment(queue_message_id)
                             continue
 
                         # Queue command for reliable processing instead of handling directly
                         await self.queue_inbound_message(data)
 
                         # Send acknowledgment to server to confirm receipt
-                        if server_message_id:
-                            await self._send_command_acknowledgment(server_message_id)
+                        if queue_message_id:
+                            await self._send_command_acknowledgment(queue_message_id)
 
                         # Trigger inbound queue processing if not already running
                         if not self.inbound_queue_processor_running:
