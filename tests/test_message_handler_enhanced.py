@@ -546,21 +546,24 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     async def test_message_receiver_command(self):
-        """Test message_receiver processing command message."""
+        """Test message_receiver queuing command message for processing."""
         command_message = json.dumps(
             {"message_type": "command", "command": "test_command"}
         )
         self.mock_agent.websocket.recv = AsyncMock(side_effect=[command_message])
 
-        # Stop after one message
-        def stop_running(*args):
+        # Mock queue_inbound_message to stop after queueing
+        async def queue_and_stop(*args):
             self.mock_agent.running = False
+            return "test-queue-id"
 
-        self.mock_agent.message_processor.handle_command.side_effect = stop_running
+        self.handler.queue_inbound_message = AsyncMock(side_effect=queue_and_stop)
+        self.handler.inbound_queue_processor_running = True  # Prevent task creation
 
         await self.handler.message_receiver()
 
-        self.mock_agent.message_processor.handle_command.assert_called_once()
+        # Commands should be queued, not processed directly
+        self.handler.queue_inbound_message.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_message_receiver_ping(self):

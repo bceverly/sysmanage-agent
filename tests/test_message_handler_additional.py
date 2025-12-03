@@ -309,19 +309,23 @@ class TestMessageHandlerAdditional(
     async def test_on_connection_established_success(self, mock_create_task):
         """Test on_connection_established successful task creation (lines 239-259)."""
         self.handler.queue_processor_running = False
+        self.handler.inbound_queue_processor_running = False
         mock_task = Mock()
         mock_create_task.return_value = mock_task
 
         await self.handler.on_connection_established()
 
-        mock_create_task.assert_called_once()
+        # Should create both outbound and inbound queue processing tasks
+        assert mock_create_task.call_count == 2
         assert self.handler.processing_task == mock_task
+        assert self.handler.inbound_processing_task == mock_task
 
     @patch("asyncio.create_task")
     @pytest.mark.asyncio
     async def test_on_connection_established_already_running(self, mock_create_task):
-        """Test on_connection_established when processor already running."""
+        """Test on_connection_established when both processors already running."""
         self.handler.queue_processor_running = True
+        self.handler.inbound_queue_processor_running = True
 
         await self.handler.on_connection_established()
 
@@ -334,11 +338,13 @@ class TestMessageHandlerAdditional(
     ):
         """Test on_connection_established when task creation fails (lines 254-257)."""
         self.handler.queue_processor_running = False
+        self.handler.inbound_queue_processor_running = False
         mock_create_task.side_effect = Exception("Task creation failed")
 
         await self.handler.on_connection_established()
 
-        mock_create_task.assert_called_once()
+        # Should attempt to create both tasks even if first fails
+        assert mock_create_task.call_count == 2
 
     @pytest.mark.asyncio
     async def test_on_connection_lost_with_completed_task(self):

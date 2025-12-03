@@ -43,6 +43,10 @@ class MessageHandler:
         self.queue_processor_running = False
         self.processing_task = None
 
+        # Inbound queue processing state
+        self.inbound_queue_processor_running = False
+        self.inbound_processing_task = None
+
         self.logger.info(_("Message handler initialized"))
 
     def create_message(
@@ -307,7 +311,11 @@ class MessageHandler:
                     message_type = data.get("message_type")
 
                     if message_type == "command":
-                        await self.handle_command(data)
+                        # Queue command for reliable processing instead of handling directly
+                        await self.queue_inbound_message(data)
+                        # Trigger inbound queue processing if not already running
+                        if not self.inbound_queue_processor_running:
+                            asyncio.create_task(self.process_inbound_queue())
                     elif message_type == "ping":
                         # Respond to ping
                         pong = self.create_message(
@@ -501,6 +509,87 @@ class MessageHandler:
         )
         return message_id
 
+    async def process_inbound_queue(self):
+        """
+        Process queued inbound messages (commands from server).
+        Processes messages one at a time to ensure reliable execution.
+        """
+        if self.inbound_queue_processor_running:
+            self.logger.debug("Inbound queue processor already running, exiting")
+            return  # Already running
+
+        self.inbound_queue_processor_running = True
+        self.logger.info("Starting inbound queue processing")
+
+        try:
+            while self.agent.running:
+                # Get pending inbound messages ordered by priority
+                messages = self.queue_manager.dequeue_messages(
+                    direction=QueueDirection.INBOUND, limit=1, priority_order=True
+                )
+
+                if not messages:
+                    # No messages to process, exit the loop
+                    # Will be restarted when new messages arrive
+                    break
+
+                for message in messages:
+                    if not self.agent.running:
+                        break  # Agent shutting down
+
+                    # Mark message as being processed
+                    if not self.queue_manager.mark_processing(message.message_id):
+                        self.logger.warning(
+                            "Could not mark inbound message %s as processing",
+                            message.message_id,
+                        )
+                        continue  # Already processed or failed to mark
+
+                    try:
+                        # Deserialize message data
+                        message_data = self.queue_manager.deserialize_message_data(
+                            message
+                        )
+
+                        self.logger.info(
+                            "Processing queued inbound command: %s (queue_id: %s)",
+                            message_data.get("data", {}).get("command_type", "unknown"),
+                            message.message_id,
+                        )
+
+                        # Process the command
+                        await self.handle_command(message_data)
+
+                        # Mark message as completed
+                        self.queue_manager.mark_completed(message.message_id)
+                        self.logger.info(
+                            "Successfully processed inbound message: %s",
+                            message.message_id,
+                        )
+
+                    except Exception as error:
+                        # Mark message as failed with retry
+                        error_msg = (
+                            f"Exception processing inbound message: {str(error)}"
+                        )
+                        self.queue_manager.mark_failed(
+                            message.message_id, error_msg, retry=True
+                        )
+                        self.logger.error(
+                            "Error processing inbound message %s: %s",
+                            message.message_id,
+                            error,
+                        )
+
+                # Small delay between processing messages to prevent CPU spinning
+                await asyncio.sleep(0.1)
+
+        except Exception as error:
+            self.logger.error("Error in inbound queue processor: %s", error)
+        finally:
+            self.inbound_queue_processor_running = False
+            self.logger.debug("Inbound queue processing stopped")
+
     async def send_message_direct(self, message: Dict[str, Any]) -> bool:
         """
         Send message directly over WebSocket (bypassing queue).
@@ -613,38 +702,66 @@ class MessageHandler:
     async def on_connection_established(self):
         """
         Called when WebSocket connection is established.
-        Starts processing queued messages.
+        Starts processing queued messages (both outbound and inbound).
         """
         self.logger.info(_("Connection established, starting queue processing"))
 
-        # Start queue processing task
+        # Start outbound queue processing task
         if not self.queue_processor_running:
             self.logger.info(
-                "Creating queue processing task from on_connection_established"
+                "Creating outbound queue processing task from on_connection_established"
             )
             try:
                 self.processing_task = asyncio.create_task(
                     self.process_outbound_queue()
                 )
                 self.logger.info(
-                    "Queue processing task created successfully: %s",
+                    "Outbound queue processing task created successfully: %s",
                     self.processing_task,
                 )
             except Exception as error:
                 self.logger.error(
-                    "Failed to create queue processing task: %s", error, exc_info=True
+                    "Failed to create outbound queue processing task: %s",
+                    error,
+                    exc_info=True,
                 )
         else:
-            self.logger.info("Queue processor already running, not starting another")
+            self.logger.info(
+                "Outbound queue processor already running, not starting another"
+            )
+
+        # Start inbound queue processing task (to handle any pending commands)
+        if not self.inbound_queue_processor_running:
+            self.logger.info(
+                "Creating inbound queue processing task from on_connection_established"
+            )
+            try:
+                self.inbound_processing_task = asyncio.create_task(
+                    self.process_inbound_queue()
+                )
+                self.logger.info(
+                    "Inbound queue processing task created successfully: %s",
+                    self.inbound_processing_task,
+                )
+            except Exception as error:
+                self.logger.error(
+                    "Failed to create inbound queue processing task: %s",
+                    error,
+                    exc_info=True,
+                )
+        else:
+            self.logger.info(
+                "Inbound queue processor already running, not starting another"
+            )
 
     async def on_connection_lost(self):
         """
         Called when WebSocket connection is lost.
-        Stops queue processing.
+        Stops outbound queue processing (inbound continues to process any pending commands).
         """
-        self.logger.info(_("Connection lost, stopping queue processing"))
+        self.logger.info(_("Connection lost, stopping outbound queue processing"))
 
-        # Stop queue processing
+        # Stop outbound queue processing
         if self.processing_task and not self.processing_task.done():
             self.processing_task.cancel()
             try:
@@ -652,8 +769,12 @@ class MessageHandler:
             except asyncio.CancelledError:
                 pass
 
-        # Reset the queue processor flag so it can start again on reconnection
+        # Reset the outbound queue processor flag so it can start again on reconnection
         self.queue_processor_running = False
+
+        # Note: We intentionally do NOT stop inbound queue processing here.
+        # Inbound commands should continue to process even when disconnected,
+        # as they have already been received and queued.
 
     def get_queue_statistics(self) -> Dict[str, Any]:
         """
@@ -692,8 +813,12 @@ class MessageHandler:
     def close(self):
         """Clean up resources."""
         try:
+            # Cancel outbound processing task
             if self.processing_task and not self.processing_task.done():
                 self.processing_task.cancel()
+            # Cancel inbound processing task
+            if self.inbound_processing_task and not self.inbound_processing_task.done():
+                self.inbound_processing_task.cancel()
             if hasattr(self.queue_manager, "db_manager"):
                 self.queue_manager.db_manager.close()
         except Exception as error:
