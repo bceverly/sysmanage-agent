@@ -227,6 +227,26 @@ class ChildHostListing:
                 hostname = result.stdout.strip()
                 if hostname:
                     return hostname
+
+            # Fall back to reading /etc/hostname if hostname command not available
+            # (e.g., openSUSE Tumbleweed minimal install doesn't have hostname command)
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                    if hasattr(subprocess, "CREATE_NO_WINDOW")
+                    else 0
+                ),
+            )
+
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname:
+                    return hostname
         except Exception as error:
             self.logger.debug("Error getting hostname for %s: %s", distribution, error)
 
