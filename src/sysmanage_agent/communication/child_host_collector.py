@@ -6,8 +6,12 @@ periodic heartbeat updates on Windows systems.
 """
 
 import asyncio
+import configparser
 import logging
+import os
 import platform
+import subprocess  # nosec B404
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -27,6 +31,106 @@ class ChildHostCollector:
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
 
+    def _ensure_wslconfig(self) -> bool:
+        """
+        Ensure .wslconfig exists with vmIdleTimeout=-1 to prevent WSL auto-shutdown.
+
+        Returns:
+            True if config was created/modified and WSL needs restart, False otherwise.
+        """
+        # Get current user's home directory
+        user_home = Path(os.path.expanduser("~"))
+        wslconfig_path = user_home / ".wslconfig"
+
+        config = configparser.ConfigParser()
+        needs_restart = False
+        creating_new_file = not wslconfig_path.exists()
+
+        # Read existing config if it exists
+        if wslconfig_path.exists():
+            try:
+                config.read(str(wslconfig_path))
+            except configparser.Error as parse_error:
+                self.logger.warning(
+                    "Could not parse existing .wslconfig: %s", parse_error
+                )
+                # Continue anyway, we'll add/update the section
+
+            # Check if already configured correctly
+            if config.has_section("wsl2"):
+                current_timeout = config.get("wsl2", "vmIdleTimeout", fallback=None)
+                if current_timeout == "-1":
+                    self.logger.debug(
+                        ".wslconfig already configured with vmIdleTimeout=-1"
+                    )
+                    return False
+
+        # Ensure [wsl2] section exists
+        if not config.has_section("wsl2"):
+            config.add_section("wsl2")
+
+        # Set vmIdleTimeout=-1 to disable auto-shutdown
+        config.set("wsl2", "vmIdleTimeout", "-1")
+
+        try:
+            if creating_new_file:
+                self.logger.info(
+                    ".wslconfig not found, creating with vmIdleTimeout=-1 to prevent "
+                    "WSL auto-shutdown at %s",
+                    wslconfig_path,
+                )
+            else:
+                self.logger.info(
+                    "Updating .wslconfig with vmIdleTimeout=-1 at %s",
+                    wslconfig_path,
+                )
+
+            with open(wslconfig_path, "w", encoding="utf-8") as config_file:
+                config.write(config_file)
+            self.logger.info(".wslconfig saved successfully")
+            needs_restart = True
+        except PermissionError:
+            self.logger.error("Permission denied writing to %s", wslconfig_path)
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.error("Failed to write .wslconfig: %s", error)
+
+        return needs_restart
+
+    def _restart_wsl(self):
+        """
+        Shutdown and restart WSL to apply .wslconfig changes.
+
+        This performs a full WSL shutdown so the new vmIdleTimeout setting takes effect.
+        """
+        creationflags = (
+            subprocess.CREATE_NO_WINDOW
+            if hasattr(subprocess, "CREATE_NO_WINDOW")
+            else 0
+        )
+
+        try:
+            self.logger.info("Shutting down WSL to apply .wslconfig changes...")
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "--shutdown"],
+                capture_output=True,
+                timeout=30,
+                check=False,
+                creationflags=creationflags,
+            )
+
+            if result.returncode == 0:
+                self.logger.info(
+                    "WSL shutdown complete, new settings will apply on next start"
+                )
+            else:
+                stderr = result.stderr.decode("utf-8", errors="ignore")
+                self.logger.warning("WSL shutdown returned non-zero: %s", stderr)
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning("WSL shutdown timed out")
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.error("Failed to shutdown WSL: %s", error)
+
     async def child_host_heartbeat(self):
         """
         Handle frequent child host status updates (Windows only).
@@ -42,6 +146,11 @@ class ChildHostCollector:
             return
 
         self.logger.debug("Child host heartbeat started")
+
+        # Ensure .wslconfig exists with vmIdleTimeout=-1
+        # If we had to create/modify it, restart WSL to apply the setting
+        if self._ensure_wslconfig():
+            self._restart_wsl()
 
         # Poke WSL instances immediately at startup to wake them up
         self.logger.debug("Poking WSL instances at startup")
@@ -77,8 +186,6 @@ class ChildHostCollector:
         stopped instances get woken up.
         """
         try:
-            import subprocess  # nosec B404 # pylint: disable=import-outside-toplevel
-
             creationflags = (
                 subprocess.CREATE_NO_WINDOW
                 if hasattr(subprocess, "CREATE_NO_WINDOW")
