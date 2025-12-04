@@ -183,25 +183,69 @@ class ChildHostListing:
         """
         Get the FQDN hostname from inside a running WSL instance.
 
+        Tries multiple methods in order:
+        1. Read hostname from /etc/wsl.conf [network] section (most reliable for our setup)
+        2. Read from /etc/hostname file
+        3. Run hostname -f command
+        4. Fall back to hostname command
+
         Args:
             distribution: WSL distribution name
 
         Returns:
             FQDN hostname string or None if unable to retrieve
         """
+        creationflags = (
+            subprocess.CREATE_NO_WINDOW
+            if hasattr(subprocess, "CREATE_NO_WINDOW")
+            else 0
+        )
+
         try:
-            # Try to get FQDN first using hostname -f
+            # Method 1: Try reading from wsl.conf where we set the hostname
+            result = subprocess.run(  # nosec B603 B607
+                [
+                    "wsl",
+                    "-d",
+                    distribution,
+                    "--",
+                    "sh",
+                    "-c",
+                    "grep -E '^hostname=' /etc/wsl.conf 2>/dev/null | cut -d= -f2",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                creationflags=creationflags,
+            )
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname and hostname != "localhost" and "." in hostname:
+                    return hostname
+
+            # Method 2: Try reading from /etc/hostname
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                creationflags=creationflags,
+            )
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname and hostname != "localhost" and "." in hostname:
+                    return hostname
+
+            # Method 3: Try to get FQDN using hostname -f
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "hostname", "-f"],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 check=False,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW
-                    if hasattr(subprocess, "CREATE_NO_WINDOW")
-                    else 0
-                ),
+                creationflags=creationflags,
             )
 
             if result.returncode == 0:
@@ -209,18 +253,14 @@ class ChildHostListing:
                 if hostname and hostname != "localhost":
                     return hostname
 
-            # Fall back to short hostname if FQDN not available
+            # Method 4: Fall back to short hostname if FQDN not available
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "hostname"],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 check=False,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW
-                    if hasattr(subprocess, "CREATE_NO_WINDOW")
-                    else 0
-                ),
+                creationflags=creationflags,
             )
 
             if result.returncode == 0:
