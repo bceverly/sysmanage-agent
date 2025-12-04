@@ -43,6 +43,10 @@ class ChildHostCollector:
 
         self.logger.debug("Child host heartbeat started")
 
+        # Poke WSL instances immediately at startup to wake them up
+        self.logger.debug("Poking WSL instances at startup")
+        await self._poke_wsl_instances()
+
         # Send child host status every 60 seconds
         heartbeat_interval = 60  # 1 minute
 
@@ -65,24 +69,25 @@ class ChildHostCollector:
 
     async def _poke_wsl_instances(self):
         """
-        Poke running WSL instances to keep them awake.
+        Poke ALL WSL instances to wake them up and keep them running.
 
-        WSL instances go to sleep after a short idle period. By running a
-        simple command in each running instance, we prevent them from sleeping
-        so their sysmanage-agents can send heartbeats.
+        WSL instances shut down when idle. By running a simple command in each
+        instance, we wake them up so their sysmanage-agents can start and send
+        heartbeats. This pokes ALL instances, not just running ones, to ensure
+        stopped instances get woken up.
         """
         try:
             import subprocess  # nosec B404 # pylint: disable=import-outside-toplevel
 
-            # Get list of running WSL instances
             creationflags = (
                 subprocess.CREATE_NO_WINDOW
                 if hasattr(subprocess, "CREATE_NO_WINDOW")
                 else 0
             )
 
+            # Get list of ALL WSL instances (not just running)
             result = subprocess.run(  # nosec B603 B607
-                ["wsl", "--list", "--running", "--quiet"],
+                ["wsl", "--list", "--quiet"],
                 capture_output=True,
                 timeout=10,
                 check=False,
@@ -92,27 +97,28 @@ class ChildHostCollector:
             if result.returncode != 0:
                 return
 
-            # Parse running distributions (output is UTF-16LE on Windows)
+            # Parse distributions (output is UTF-16LE on Windows)
             try:
                 output = result.stdout.decode("utf-16-le").strip()
             except UnicodeDecodeError:
                 output = result.stdout.decode("utf-8", errors="ignore").strip()
 
-            running_distros = [
+            all_distros = [
                 line.strip()
                 for line in output.splitlines()
                 if line.strip() and not line.strip().startswith("Windows")
             ]
 
-            # Poke each running instance with a simple command
-            for distro in running_distros:
+            # Poke each instance to wake it up - this starts systemd which
+            # starts the sysmanage-agent service
+            for distro in all_distros:
                 if not distro:
                     continue
                 try:
                     subprocess.run(  # nosec B603 B607
                         ["wsl", "-d", distro, "--", "true"],
                         capture_output=True,
-                        timeout=5,
+                        timeout=10,
                         check=False,
                         creationflags=creationflags,
                     )
