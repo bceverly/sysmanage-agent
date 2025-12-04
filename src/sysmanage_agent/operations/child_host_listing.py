@@ -181,15 +181,35 @@ class ChildHostListing:
 
     def _get_wsl_hostname(self, distribution: str) -> Optional[str]:
         """
-        Get the hostname from inside a running WSL instance.
+        Get the FQDN hostname from inside a running WSL instance.
 
         Args:
             distribution: WSL distribution name
 
         Returns:
-            Hostname string or None if unable to retrieve
+            FQDN hostname string or None if unable to retrieve
         """
         try:
+            # Try to get FQDN first using hostname -f
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl", "-d", distribution, "--", "hostname", "-f"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                    if hasattr(subprocess, "CREATE_NO_WINDOW")
+                    else 0
+                ),
+            )
+
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname and hostname != "localhost":
+                    return hostname
+
+            # Fall back to short hostname if FQDN not available
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "hostname"],
                 capture_output=True,
