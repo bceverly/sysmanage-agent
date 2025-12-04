@@ -10,6 +10,12 @@ import shutil
 import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict, List, Optional
 
+# Windows registry access for WSL GUID retrieval
+try:
+    import winreg
+except ImportError:
+    winreg = None  # type: ignore[misc, assignment]
+
 
 class ChildHostListing:
     """Methods to list child hosts on various platforms."""
@@ -99,6 +105,9 @@ class ChildHostListing:
                     if mapped_status == "running":
                         hostname = self._get_wsl_hostname(name)
 
+                    # Get unique GUID for this WSL instance from registry
+                    wsl_guid = self._get_wsl_guid(name)
+
                     instance = {
                         "child_type": "wsl",
                         "child_name": name,
@@ -107,6 +116,7 @@ class ChildHostListing:
                         "wsl_version": version,
                         "distribution": self._parse_wsl_distribution(name),
                         "hostname": hostname,
+                        "wsl_guid": wsl_guid,
                     }
                     instances.append(instance)
 
@@ -120,6 +130,54 @@ class ChildHostListing:
             self.logger.error("Error listing WSL instances: %s", error)
 
         return instances
+
+    def _get_wsl_guid(self, distribution_name: str) -> Optional[str]:
+        """
+        Get the unique GUID for a WSL distribution from the Windows registry.
+
+        WSL assigns a unique GUID to each distribution instance. This GUID changes
+        when a distribution is deleted and recreated, even with the same name.
+        This allows us to distinguish between different instances with the same name.
+
+        Args:
+            distribution_name: WSL distribution name (e.g., "Ubuntu-24.04")
+
+        Returns:
+            GUID string (e.g., "0283592d-be56-40d4-b935-3dc18c3aa007") or None
+        """
+        if winreg is None:
+            return None
+
+        try:
+            lxss_key_path = r"Software\Microsoft\Windows\CurrentVersion\Lxss"
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, lxss_key_path) as lxss_key:
+                # Enumerate all subkeys (each is a GUID)
+                index = 0
+                while True:
+                    try:
+                        guid = winreg.EnumKey(lxss_key, index)
+                        # Open the subkey to get the DistributionName
+                        with winreg.OpenKey(lxss_key, guid) as dist_key:
+                            try:
+                                dist_name, _ = winreg.QueryValueEx(
+                                    dist_key, "DistributionName"
+                                )
+                                if dist_name == distribution_name:
+                                    # Remove curly braces if present
+                                    return guid.strip("{}")
+                            except FileNotFoundError:
+                                pass  # DistributionName not found in this key
+                        index += 1
+                    except OSError:
+                        break  # No more subkeys
+        except FileNotFoundError:
+            self.logger.debug("WSL registry key not found")
+        except Exception as error:
+            self.logger.debug(
+                "Error reading WSL GUID for %s: %s", distribution_name, error
+            )
+
+        return None
 
     def _get_wsl_hostname(self, distribution: str) -> Optional[str]:
         """

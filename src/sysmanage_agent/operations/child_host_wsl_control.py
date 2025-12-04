@@ -3,9 +3,15 @@ WSL child host control operations (start, stop, restart, delete).
 """
 
 import subprocess  # nosec B404 # Required for system command execution
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
+
+# Windows registry access for WSL GUID verification
+try:
+    import winreg
+except ImportError:
+    winreg = None  # type: ignore[misc, assignment]
 
 
 class WslControlOperations:
@@ -29,6 +35,50 @@ class WslControlOperations:
             if hasattr(subprocess, "CREATE_NO_WINDOW")
             else 0
         )
+
+    def _get_wsl_guid(self, distribution_name: str) -> Optional[str]:
+        """
+        Get the unique GUID for a WSL distribution from the Windows registry.
+
+        WSL assigns a unique GUID to each distribution instance. This GUID changes
+        when a distribution is deleted and recreated, even with the same name.
+
+        Args:
+            distribution_name: WSL distribution name (e.g., "Ubuntu-24.04")
+
+        Returns:
+            GUID string (e.g., "0283592d-be56-40d4-b935-3dc18c3aa007") or None
+        """
+        if winreg is None:
+            return None
+
+        try:
+            lxss_key_path = r"Software\Microsoft\Windows\CurrentVersion\Lxss"
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, lxss_key_path) as lxss_key:
+                index = 0
+                while True:
+                    try:
+                        guid = winreg.EnumKey(lxss_key, index)
+                        with winreg.OpenKey(lxss_key, guid) as dist_key:
+                            try:
+                                dist_name, _ = winreg.QueryValueEx(
+                                    dist_key, "DistributionName"
+                                )
+                                if dist_name == distribution_name:
+                                    return guid.strip("{}")
+                            except FileNotFoundError:
+                                pass
+                        index += 1
+                    except OSError:
+                        break
+        except FileNotFoundError:
+            self.logger.debug("WSL registry key not found")
+        except Exception as error:
+            self.logger.debug(
+                "Error reading WSL GUID for %s: %s", distribution_name, error
+            )
+
+        return None
 
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -189,9 +239,15 @@ class WslControlOperations:
         Delete (unregister) a WSL instance. This permanently removes the instance
         and all its data.
 
+        If a wsl_guid is provided in the parameters, the agent will verify that
+        the current WSL instance's GUID matches before deleting. This prevents
+        stale delete commands from deleting a newly recreated instance with
+        the same name.
+
         Args:
             parameters: Dict containing:
                 - child_name: Name of the WSL distribution to delete
+                - wsl_guid: (optional) Expected GUID of the instance to delete
 
         Returns:
             Dict with success status
@@ -199,6 +255,48 @@ class WslControlOperations:
         child_name = parameters.get("child_name")
         if not child_name:
             return {"success": False, "error": _("Child name is required")}
+
+        expected_guid = parameters.get("wsl_guid")
+
+        # If a GUID was provided, verify it matches the current instance
+        if expected_guid:
+            current_guid = self._get_wsl_guid(child_name)
+
+            if current_guid is None:
+                # Instance doesn't exist, consider it already deleted
+                self.logger.info(
+                    "WSL instance %s not found (expected GUID: %s)",
+                    child_name,
+                    expected_guid,
+                )
+                return {
+                    "success": True,
+                    "child_name": child_name,
+                    "child_type": "wsl",
+                    "message": _("WSL instance '%s' was already deleted") % child_name,
+                }
+
+            if current_guid.lower() != expected_guid.lower():
+                # GUID mismatch - this is a different instance with the same name
+                self.logger.warning(
+                    "WSL GUID mismatch for %s: expected %s, found %s. "
+                    "Refusing to delete - this is a different instance.",
+                    child_name,
+                    expected_guid,
+                    current_guid,
+                )
+                return {
+                    "success": False,
+                    "error": _(
+                        "WSL instance '%s' has a different GUID than expected. "
+                        "This instance was likely recreated. Refusing to delete."
+                    )
+                    % child_name,
+                    "expected_guid": expected_guid,
+                    "current_guid": current_guid,
+                }
+
+            self.logger.info("WSL GUID verified for %s: %s", child_name, current_guid)
 
         self.logger.info(_("Deleting WSL instance: %s"), child_name)
 

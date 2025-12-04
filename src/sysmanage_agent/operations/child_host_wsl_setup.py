@@ -279,12 +279,21 @@ class WslSetupOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Add hostname to /etc/hosts if not already present
-            # This ensures localhost resolution works properly
-            # Use escaped hostname in grep pattern (dots escaped), literal hostname in echo
+            # Set up /etc/hosts with proper FQDN resolution
+            # Extract short hostname for the hosts entry
+            short_hostname = hostname.split(".")[0] if "." in hostname else hostname
+
+            # Create a proper /etc/hosts file with FQDN support
+            # The 127.0.1.1 line is used for FQDN resolution in Linux
             hosts_cmd = (
-                f'grep -qF "{hostname}" /etc/hosts || '
-                f'printf "127.0.0.1 %s\\n" "{hostname}" >> /etc/hosts'
+                f'printf "127.0.0.1\\tlocalhost\\n'
+                f"127.0.1.1\\t{hostname}\\t{short_hostname}\\n\\n"
+                f"# IPv6\\n"
+                f"::1\\tip6-localhost ip6-loopback\\n"
+                f"fe00::0\\tip6-localnet\\n"
+                f"ff00::0\\tip6-mcastprefix\\n"
+                f"ff02::1\\tip6-allnodes\\n"
+                f'ff02::2\\tip6-allrouters\\n" > /etc/hosts'
             )
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", hosts_cmd],
@@ -302,17 +311,23 @@ class WslSetupOperations:
                 )
                 # Continue anyway - this is not critical
 
-            # Also set hostname in wsl.conf so it persists across restarts
+            # Also set hostname and disable auto-generation of /etc/hosts in wsl.conf
             # WSL reads [network] hostname= from wsl.conf
-            # Check if [network] section exists and if hostname is already set
-            # If so, update it; otherwise add new [network] section with hostname
+            # Setting generateHosts=false prevents WSL from overwriting /etc/hosts
+            # which mangles FQDNs with dots
             wsl_conf_cmd = (
                 f'if grep -q "^hostname=" /etc/wsl.conf 2>/dev/null; then '
-                f'sed -i "s/^hostname=.*/hostname={hostname}/" /etc/wsl.conf; '
+                f'sed -i "s/^hostname=.*/hostname={short_hostname}/" /etc/wsl.conf; '
                 f'elif grep -q "\\[network\\]" /etc/wsl.conf 2>/dev/null; then '
-                f'sed -i "/\\[network\\]/a hostname={hostname}" /etc/wsl.conf; '
+                f'sed -i "/\\[network\\]/a hostname={short_hostname}" /etc/wsl.conf; '
                 f"else "
-                f'printf "\\n[network]\\nhostname=%s\\n" "{hostname}" >> /etc/wsl.conf; '
+                f'printf "\\n[network]\\nhostname=%s\\n" "{short_hostname}" >> /etc/wsl.conf; '
+                f"fi && "
+                # Add generateHosts=false to prevent WSL from overwriting /etc/hosts
+                f'if grep -q "^generateHosts=" /etc/wsl.conf 2>/dev/null; then '
+                f'sed -i "s/^generateHosts=.*/generateHosts=false/" /etc/wsl.conf; '
+                f'elif grep -q "\\[network\\]" /etc/wsl.conf 2>/dev/null; then '
+                f'sed -i "/\\[network\\]/a generateHosts=false" /etc/wsl.conf; '
                 f"fi"
             )
             result = subprocess.run(  # nosec B603 B607
