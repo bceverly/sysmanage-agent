@@ -87,16 +87,9 @@ class HardwareCollector:
                     else None
                 ),
                 # Individual memory fields for easy querying
-                "memory_total_bytes": (
-                    memory_info.get("total_bytes", 0)
-                    if memory_info.get("total_bytes")
-                    else None
-                ),
-                "memory_available_bytes": (
-                    memory_info.get("available_bytes", 0)
-                    if memory_info.get("available_bytes")
-                    else None
-                ),
+                # Server expects memory_total_mb
+                "memory_total_mb": memory_info.get("total_mb"),
+                "memory_available_mb": memory_info.get("available_mb"),
                 # Detailed JSON for complex data
                 "hardware_details": json.dumps(
                     {

@@ -30,10 +30,18 @@ class ChildHostCollector:
         """
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
+        # Track persistent WSL keep-alive processes (distro_name -> Popen)
+        self._wsl_keepalive_processes: dict = {}
 
     def _ensure_wslconfig(self) -> bool:
         """
-        Ensure .wslconfig exists with vmIdleTimeout=-1 to prevent WSL auto-shutdown.
+        Ensure .wslconfig exists with settings to prevent WSL auto-shutdown.
+
+        Configures:
+        - [wsl2] vmIdleTimeout=-1: Prevents VM shutdown when idle
+        - [wsl] autoStop=false: Prevents instance shutdown (WSL 2.6.x regression workaround)
+
+        Uses case-preserving config parser since WSL settings may be case-sensitive.
 
         Returns:
             True if config was created/modified and WSL needs restart, False otherwise.
@@ -42,8 +50,11 @@ class ChildHostCollector:
         user_home = Path(os.path.expanduser("~"))
         wslconfig_path = user_home / ".wslconfig"
 
-        config = configparser.ConfigParser()
-        needs_restart = False
+        # Use a case-preserving ConfigParser (default lowercases keys)
+        config = configparser.RawConfigParser()
+        config.optionxform = str  # Preserve case for keys
+
+        needs_update = False
         creating_new_file = not wslconfig_path.exists()
 
         # Read existing config if it exists
@@ -54,47 +65,75 @@ class ChildHostCollector:
                 self.logger.warning(
                     "Could not parse existing .wslconfig: %s", parse_error
                 )
-                # Continue anyway, we'll add/update the section
+                # Continue anyway, we'll add/update the sections
 
-            # Check if already configured correctly
-            if config.has_section("wsl2"):
-                current_timeout = config.get("wsl2", "vmIdleTimeout", fallback=None)
-                if current_timeout == "-1":
-                    self.logger.debug(
-                        ".wslconfig already configured with vmIdleTimeout=-1"
-                    )
-                    return False
-
-        # Ensure [wsl2] section exists
+        # Check and set [wsl2] vmIdleTimeout=-1
         if not config.has_section("wsl2"):
             config.add_section("wsl2")
+            needs_update = True
 
-        # Set vmIdleTimeout=-1 to disable auto-shutdown
-        config.set("wsl2", "vmIdleTimeout", "-1")
+        # Check for correct case vmIdleTimeout, also detect lowercase version
+        has_correct_timeout = config.has_option("wsl2", "vmIdleTimeout")
+        has_lowercase_timeout = config.has_option("wsl2", "vmidletimeout")
+        current_timeout = config.get("wsl2", "vmIdleTimeout", fallback=None)
+
+        if has_lowercase_timeout and not has_correct_timeout:
+            # Remove lowercase version, we'll add correct case
+            config.remove_option("wsl2", "vmidletimeout")
+            self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
+            needs_update = True
+
+        if current_timeout != "-1":
+            config.set("wsl2", "vmIdleTimeout", "-1")
+            needs_update = True
+
+        # Check and set [wsl] autoStop=false (workaround for WSL 2.6.x regression)
+        # See: https://github.com/microsoft/wsl/issues/13416
+        if not config.has_section("wsl"):
+            config.add_section("wsl")
+            needs_update = True
+
+        # Check for correct case autoStop, also detect lowercase version
+        has_correct_autostop = config.has_option("wsl", "autoStop")
+        has_lowercase_autostop = config.has_option("wsl", "autostop")
+        current_autostop = config.get("wsl", "autoStop", fallback=None)
+
+        if has_lowercase_autostop and not has_correct_autostop:
+            # Remove lowercase version, we'll add correct case
+            config.remove_option("wsl", "autostop")
+            self.logger.info("Removing lowercase autostop, will add autoStop")
+            needs_update = True
+
+        if current_autostop != "false":
+            config.set("wsl", "autoStop", "false")
+            needs_update = True
+
+        if not needs_update:
+            self.logger.debug(".wslconfig already configured correctly")
+            return False
 
         try:
             if creating_new_file:
                 self.logger.info(
-                    ".wslconfig not found, creating with vmIdleTimeout=-1 to prevent "
-                    "WSL auto-shutdown at %s",
+                    ".wslconfig not found, creating to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
             else:
                 self.logger.info(
-                    "Updating .wslconfig with vmIdleTimeout=-1 at %s",
+                    "Updating .wslconfig to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
 
             with open(wslconfig_path, "w", encoding="utf-8") as config_file:
                 config.write(config_file)
             self.logger.info(".wslconfig saved successfully")
-            needs_restart = True
+            return True
         except PermissionError:
             self.logger.error("Permission denied writing to %s", wslconfig_path)
         except Exception as error:  # pylint: disable=broad-except
             self.logger.error("Failed to write .wslconfig: %s", error)
 
-        return needs_restart
+        return False
 
     def _restart_wsl(self):
         """
@@ -137,8 +176,9 @@ class ChildHostCollector:
 
         This runs more frequently than the main data collector to ensure
         child host status (WSL instances) is kept up to date in the UI.
-        Also pokes WSL instances to keep them awake so their agents can
-        send heartbeats.
+        Also maintains persistent keep-alive processes for WSL instances
+        to work around WSL 2.6.x regression where instances shut down
+        even with active systemd services.
         """
         # Only run on Windows where we have WSL
         if platform.system().lower() != "windows":
@@ -147,43 +187,47 @@ class ChildHostCollector:
 
         self.logger.debug("Child host heartbeat started")
 
-        # Ensure .wslconfig exists with vmIdleTimeout=-1
+        # Ensure .wslconfig exists with proper settings
         # If we had to create/modify it, restart WSL to apply the setting
         if self._ensure_wslconfig():
             self._restart_wsl()
 
-        # Poke WSL instances immediately at startup to wake them up
-        self.logger.debug("Poking WSL instances at startup")
-        await self._poke_wsl_instances()
+        # Start persistent keep-alive processes for all WSL instances
+        self.logger.info("Starting WSL keep-alive processes")
+        self._ensure_keepalive_processes()
 
         # Send child host status every 60 seconds
         heartbeat_interval = 60  # 1 minute
 
-        while self.agent.running:
-            try:
-                await asyncio.sleep(heartbeat_interval)
+        try:
+            while self.agent.running:
+                try:
+                    await asyncio.sleep(heartbeat_interval)
 
-                # Poke running WSL instances to keep them awake
-                await self._poke_wsl_instances()
+                    # Ensure keep-alive processes are still running
+                    # (handles new distros, removed distros, and crashed processes)
+                    self._ensure_keepalive_processes()
 
-                await self.send_child_hosts_update()
-                self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
-            except asyncio.CancelledError:
-                self.logger.debug("Child host heartbeat cancelled")
-                raise
-            except Exception as error:
-                self.logger.error("Child host heartbeat error: %s", error)
-                # Continue the loop on non-critical errors
-                continue
+                    await self.send_child_hosts_update()
+                    self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
+                except asyncio.CancelledError:
+                    self.logger.debug("Child host heartbeat cancelled")
+                    raise
+                except Exception as error:
+                    self.logger.error("Child host heartbeat error: %s", error)
+                    # Continue the loop on non-critical errors
+                    continue
+        finally:
+            # Clean up keep-alive processes when heartbeat stops
+            self.logger.info("Stopping WSL keep-alive processes")
+            self._stop_all_keepalive_processes()
 
-    async def _poke_wsl_instances(self):
+    def _get_wsl_distros(self) -> list:
         """
-        Poke ALL WSL instances to wake them up and keep them running.
+        Get list of all WSL distributions.
 
-        WSL instances shut down when idle. By running a simple command in each
-        instance, we wake them up so their sysmanage-agents can start and send
-        heartbeats. This pokes ALL instances, not just running ones, to ensure
-        stopped instances get woken up.
+        Returns:
+            List of distribution names.
         """
         try:
             creationflags = (
@@ -192,7 +236,6 @@ class ChildHostCollector:
                 else 0
             )
 
-            # Get list of ALL WSL instances (not just running)
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--list", "--quiet"],
                 capture_output=True,
@@ -202,7 +245,7 @@ class ChildHostCollector:
             )
 
             if result.returncode != 0:
-                return
+                return []
 
             # Parse distributions (output is UTF-16LE on Windows)
             try:
@@ -210,31 +253,125 @@ class ChildHostCollector:
             except UnicodeDecodeError:
                 output = result.stdout.decode("utf-8", errors="ignore").strip()
 
-            all_distros = [
+            return [
                 line.strip()
                 for line in output.splitlines()
                 if line.strip() and not line.strip().startswith("Windows")
             ]
 
-            # Poke each instance to wake it up - this starts systemd which
-            # starts the sysmanage-agent service
-            for distro in all_distros:
-                if not distro:
-                    continue
-                try:
-                    subprocess.run(  # nosec B603 B607
-                        ["wsl", "-d", distro, "--", "true"],
-                        capture_output=True,
-                        timeout=10,
-                        check=False,
-                        creationflags=creationflags,
-                    )
-                    self.logger.debug("Poked WSL instance: %s", distro)
-                except Exception:  # pylint: disable=broad-except  # nosec B110
-                    pass  # Ignore errors for individual instances
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.debug("Failed to get WSL distros: %s", error)
+            return []
+
+    def _start_keepalive_process(self, distro: str) -> bool:
+        """
+        Start a persistent keep-alive process for a WSL distribution.
+
+        This runs 'sleep infinity' via wsl.exe which keeps the WSL instance
+        running. This is a workaround for WSL 2.6.x regression where instances
+        shut down even with active systemd services.
+        See: https://github.com/microsoft/wsl/issues/13416
+
+        Args:
+            distro: Name of the WSL distribution.
+
+        Returns:
+            True if process started successfully, False otherwise.
+        """
+        try:
+            creationflags = (
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            )
+
+            # Start wsl.exe with sleep infinity - this keeps the instance alive
+            # pylint: disable-next=consider-using-with
+            process = subprocess.Popen(  # nosec B603 B607
+                ["wsl", "-d", distro, "--", "sleep", "infinity"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=creationflags,
+            )
+
+            self._wsl_keepalive_processes[distro] = process
+            self.logger.info("Started keep-alive process for WSL instance: %s", distro)
+            return True
 
         except Exception as error:  # pylint: disable=broad-except
-            self.logger.debug("WSL poke failed: %s", error)
+            self.logger.error(
+                "Failed to start keep-alive for WSL instance %s: %s", distro, error
+            )
+            return False
+
+    def _stop_keepalive_process(self, distro: str):
+        """
+        Stop the keep-alive process for a WSL distribution.
+
+        Args:
+            distro: Name of the WSL distribution.
+        """
+        process = self._wsl_keepalive_processes.pop(distro, None)
+        if process:
+            try:
+                process.terminate()
+                process.wait(timeout=5)
+                self.logger.debug(
+                    "Stopped keep-alive process for WSL instance: %s", distro
+                )
+            except subprocess.TimeoutExpired:
+                process.kill()
+                self.logger.warning(
+                    "Had to kill keep-alive process for WSL instance: %s", distro
+                )
+            except Exception as error:  # pylint: disable=broad-except
+                self.logger.debug("Error stopping keep-alive for %s: %s", distro, error)
+
+    def _stop_all_keepalive_processes(self):
+        """Stop all WSL keep-alive processes."""
+        for distro in list(self._wsl_keepalive_processes.keys()):
+            self._stop_keepalive_process(distro)
+
+    def _ensure_keepalive_processes(self):
+        """
+        Ensure all WSL distributions have keep-alive processes running.
+
+        Starts new processes for any distributions that don't have one,
+        and cleans up processes for distributions that no longer exist.
+        """
+        current_distros = set(self._get_wsl_distros())
+
+        # Stop processes for distributions that no longer exist
+        for distro in list(self._wsl_keepalive_processes.keys()):
+            if distro not in current_distros:
+                self.logger.info(
+                    "WSL distribution %s no longer exists, stopping keep-alive", distro
+                )
+                self._stop_keepalive_process(distro)
+
+        # Start or restart processes for each distribution
+        for distro in current_distros:
+            if not distro:
+                continue
+
+            process = self._wsl_keepalive_processes.get(distro)
+
+            # Check if process is still running
+            if process is not None:
+                poll_result = process.poll()
+                if poll_result is not None:
+                    # Process has exited, remove it so we start a new one
+                    self.logger.debug(
+                        "Keep-alive process for %s exited (code %s), restarting",
+                        distro,
+                        poll_result,
+                    )
+                    del self._wsl_keepalive_processes[distro]
+                    process = None
+
+            # Start process if not running
+            if process is None:
+                self._start_keepalive_process(distro)
 
     async def send_child_hosts_update(self):
         """Send child hosts (WSL/VM/container) status update."""

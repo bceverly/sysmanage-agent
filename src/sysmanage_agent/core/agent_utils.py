@@ -786,14 +786,11 @@ def _check_sudoers_privileges(username: str) -> bool:
     sudoers_path = f"/etc/sudoers.d/{username}"
 
     try:
-        # Check if sudoers file exists
-        if not os.path.exists(sudoers_path):
-            return False
-
         # Try to read sudoers file
         content = _read_sudoers_file(sudoers_path)
         if content is None:
-            # Can't read sudoers file, try to infer from common commands
+            # Can't read sudoers file (doesn't exist or permission denied)
+            # Try to infer from running actual sudo commands
             return _test_sudo_access()
 
         # Parse sudoers content for NOPASSWD privileges
