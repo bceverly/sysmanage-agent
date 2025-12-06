@@ -226,7 +226,8 @@ script_execution:
             )
 
             if username != "root":
-                write_cmd = f"sudo sh -c \"{write_cmd.replace('\"', '\\\"')}\""
+                escaped_cmd = write_cmd.replace('"', '\\"')
+                write_cmd = f'sudo sh -c "{escaped_cmd}"'
 
             result = await self.run_ssh_command(
                 ip_address, username, password, write_cmd
