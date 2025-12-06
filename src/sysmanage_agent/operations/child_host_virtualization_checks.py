@@ -473,6 +473,7 @@ class VirtualizationChecks:
             "running": False,
             "initialized": False,
             "kernel_supported": False,
+            "cpu_supported": False,
             "needs_enable": False,
         }
 
@@ -487,6 +488,24 @@ class VirtualizationChecks:
                 return result
 
             result["available"] = True
+
+            # Check CPU virtualization support (VMX for Intel, SVM for AMD)
+            try:
+                # On OpenBSD, the presence of /dev/vmm is the primary indicator
+                # of CPU support since OpenBSD only creates it when VMX/SVM is available.
+                # We also verify by checking if we can read the CPU vendor.
+                vmm_check = subprocess.run(  # nosec B603 B607
+                    ["sysctl", "hw.vendor"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if vmm_check.returncode == 0:
+                    # CPU vendor detected, VMM support depends on /dev/vmm
+                    result["cpu_supported"] = True
+            except Exception as cpu_error:
+                self.logger.debug("Error checking CPU virtualization: %s", cpu_error)
 
             # Check if kernel has VMM support (/dev/vmm exists)
             if os.path.exists("/dev/vmm"):
@@ -541,11 +560,12 @@ class VirtualizationChecks:
 
             self.logger.info(
                 "VMM support check: available=%s, enabled=%s, running=%s, "
-                "kernel_supported=%s",
+                "kernel_supported=%s, cpu_supported=%s",
                 result["available"],
                 result["enabled"],
                 result["running"],
                 result["kernel_supported"],
+                result["cpu_supported"],
             )
 
         except Exception as error:

@@ -12,6 +12,9 @@ from urllib.parse import urlparse
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
+from src.sysmanage_agent.operations.child_host_vmm_lifecycle import (
+    VmmLifecycleOperations,
+)
 from src.sysmanage_agent.operations.child_host_vmm_ssh import VmmSshOperations
 
 # Default paths for VMM
@@ -35,6 +38,7 @@ class VmmOperations:
         self.logger = logger
         self.virtualization_checks = virtualization_checks
         self.ssh_ops = VmmSshOperations(logger)
+        self.lifecycle = VmmLifecycleOperations(logger, virtualization_checks)
 
     async def initialize_vmd(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -154,6 +158,33 @@ class VmmOperations:
                 "error": _("Error initializing vmd: %s") % str(error),
             }
 
+    async def check_vmd_ready(self) -> Dict[str, Any]:
+        """
+        Check if vmd is operational and ready to create VMs.
+
+        Returns:
+            Dict with success status and vmd status info
+        """
+        return await self.lifecycle.check_vmd_ready()
+
+    async def get_vm_status(self, vm_name: str) -> Dict[str, Any]:
+        """
+        Get the status of a specific VM.
+
+        Args:
+            vm_name: Name of the VM to check
+
+        Returns:
+            Dict with VM status info including:
+            - success: Whether the check succeeded
+            - found: Whether the VM was found
+            - status: running/stopped
+            - vm_id: VM ID if running
+            - memory: Memory allocation
+            - vcpus: Number of vCPUs
+        """
+        return await self.lifecycle.get_vm_status(vm_name)
+
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Start a stopped VMM virtual machine.
@@ -161,53 +192,20 @@ class VmmOperations:
         Args:
             parameters: Dict containing:
                 - child_name: Name of the VM to start
+                - wait: If True, wait for VM to be running (default: True)
 
         Returns:
             Dict with success status
         """
         child_name = parameters.get("child_name")
+        wait = parameters.get("wait", True)
         if not child_name:
             return {
                 "success": False,
                 "error": _("VM name is required"),
             }
 
-        self.logger.info(_("Starting VMM VM: %s"), child_name)
-
-        try:
-            # Start the VM using vmctl
-            result = subprocess.run(  # nosec B603 B607
-                ["vmctl", "start", child_name],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info(_("VM %s started successfully"), child_name)
-                return {
-                    "success": True,
-                    "message": _("VM %s started") % child_name,
-                }
-
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            self.logger.error(_("Failed to start VM %s: %s"), child_name, error_msg)
-            return {
-                "success": False,
-                "error": _("Failed to start VM: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout starting VM %s") % child_name,
-            }
-        except Exception as error:
-            return {
-                "success": False,
-                "error": _("Error starting VM: %s") % str(error),
-            }
+        return await self.lifecycle.start_vm(child_name, wait=wait)
 
     async def stop_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -217,12 +215,14 @@ class VmmOperations:
             parameters: Dict containing:
                 - child_name: Name of the VM to stop
                 - force: If True, force stop the VM
+                - wait: If True, wait for VM to be stopped (default: True)
 
         Returns:
             Dict with success status
         """
         child_name = parameters.get("child_name")
         force = parameters.get("force", False)
+        wait = parameters.get("wait", True)
 
         if not child_name:
             return {
@@ -230,47 +230,7 @@ class VmmOperations:
                 "error": _("VM name is required"),
             }
 
-        self.logger.info(_("Stopping VMM VM: %s (force=%s)"), child_name, force)
-
-        try:
-            # Build vmctl stop command
-            cmd = ["vmctl", "stop"]
-            if force:
-                cmd.append("-f")
-            cmd.append(child_name)
-
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120,  # Longer timeout for graceful shutdown
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info(_("VM %s stopped successfully"), child_name)
-                return {
-                    "success": True,
-                    "message": _("VM %s stopped") % child_name,
-                }
-
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            self.logger.error(_("Failed to stop VM %s: %s"), child_name, error_msg)
-            return {
-                "success": False,
-                "error": _("Failed to stop VM: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout stopping VM %s") % child_name,
-            }
-        except Exception as error:
-            return {
-                "success": False,
-                "error": _("Error stopping VM: %s") % str(error),
-            }
+        return await self.lifecycle.stop_vm(child_name, force=force, wait=wait)
 
     async def restart_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -290,22 +250,7 @@ class VmmOperations:
                 "error": _("VM name is required"),
             }
 
-        self.logger.info(_("Restarting VMM VM: %s"), child_name)
-
-        # Stop the VM first
-        stop_result = await self.stop_child_host(parameters)
-        if not stop_result.get("success"):
-            return stop_result
-
-        # Then start it
-        start_result = await self.start_child_host(parameters)
-        if not start_result.get("success"):
-            return start_result
-
-        return {
-            "success": True,
-            "message": _("VM %s restarted") % child_name,
-        }
+        return await self.lifecycle.restart_vm(child_name)
 
     async def delete_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -327,32 +272,7 @@ class VmmOperations:
                 "error": _("VM name is required"),
             }
 
-        self.logger.info(_("Deleting VMM VM: %s"), child_name)
-
-        try:
-            # First, try to stop the VM if it's running
-            # Using force to ensure it stops
-            stop_params = {"child_name": child_name, "force": True}
-            await self.stop_child_host(stop_params)
-
-            # Delete disk image if requested
-            if delete_disk:
-                disk_path = os.path.join(VMM_DISK_DIR, f"{child_name}.qcow2")
-                if os.path.exists(disk_path):
-                    os.remove(disk_path)
-                    self.logger.info(_("Deleted disk image: %s"), disk_path)
-
-            self.logger.info(_("VM %s has been deleted"), child_name)
-            return {
-                "success": True,
-                "message": _("VM %s has been deleted") % child_name,
-            }
-
-        except Exception as error:
-            return {
-                "success": False,
-                "error": _("Error deleting VM: %s") % str(error),
-            }
+        return await self.lifecycle.delete_vm(child_name, delete_disk=delete_disk)
 
     # =========================================================================
     # VM Creation Methods (Phase 5)

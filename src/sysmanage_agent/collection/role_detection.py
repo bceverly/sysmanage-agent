@@ -430,7 +430,7 @@ class RoleDetector:
                 return None
 
             # Get OpenBSD version for the package_version field
-            version = "unknown"
+            obsd_version = "unknown"
             try:
                 uname_result = subprocess.run(  # nosec B603 B607
                     ["uname", "-r"],
@@ -440,19 +440,44 @@ class RoleDetector:
                     check=False,
                 )
                 if uname_result.returncode == 0:
-                    version = uname_result.stdout.strip()
+                    obsd_version = uname_result.stdout.strip()
             except Exception:  # nosec B110 - version is optional
                 pass
 
-            self.logger.info("Detected VMM Host role: OpenBSD %s", version)
+            # Get vmd version info from pkg_info if available
+            vmd_version = obsd_version  # vmd version matches OpenBSD version
+            vm_count = 0
+            try:
+                # Get count of running VMs
+                vmctl_status = subprocess.run(  # nosec B603 B607
+                    ["vmctl", "status"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if vmctl_status.returncode == 0:
+                    # Count VMs (lines after header, excluding empty lines)
+                    lines = vmctl_status.stdout.strip().split("\n")
+                    if len(lines) > 1:
+                        vm_count = len([ln for ln in lines[1:] if ln.strip()])
+            except Exception:  # nosec B110 - VM count is optional
+                pass
+
+            self.logger.info(
+                "Detected VMM Host role: OpenBSD %s, %d VMs",
+                obsd_version,
+                vm_count,
+            )
 
             return {
                 "role": "VMM Host",
                 "package_name": "vmd",
-                "package_version": version,
+                "package_version": vmd_version,
                 "service_name": "vmd",
                 "service_status": "running",
                 "is_active": True,
+                "vm_count": vm_count,
             }
 
         except Exception as error:
