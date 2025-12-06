@@ -863,3 +863,90 @@ class ChildHostListing:
                 return state_value
 
         return "unknown"
+
+    def list_vmm_vms(self) -> List[Dict[str, Any]]:
+        """
+        List VMM virtual machines on OpenBSD.
+
+        Parses the output of 'vmctl status' to enumerate VMs.
+
+        Returns:
+            List of VMM VM information dicts with:
+            - child_type: 'vmm'
+            - child_name: VM name
+            - status: running/stopped
+            - vm_id: VM ID (if running)
+            - memory: Memory allocation
+            - vcpus: Number of vCPUs
+        """
+        vms = []
+
+        try:
+            # Use vmctl status to list VMs
+            result = subprocess.run(  # nosec B603 B607
+                ["vmctl", "status"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                self.logger.debug("vmctl status failed: %s", result.stderr)
+                return vms
+
+            # Parse vmctl status output
+            # Format:
+            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER NAME
+            #    1 12345     1    1.0G   512.0M   ttyp0        root myvm
+            lines = result.stdout.strip().split("\n")
+            if len(lines) < 2:
+                return vms
+
+            # Skip header line
+            for line in lines[1:]:
+                line = line.strip()
+                if not line:
+                    continue
+
+                parts = line.split()
+                if len(parts) >= 8:
+                    vm_id = parts[0]
+                    pid = parts[1]
+                    vcpus = parts[2]
+                    max_mem = parts[3]
+                    cur_mem = parts[4]
+                    tty = parts[5]
+                    owner = parts[6]
+                    name = parts[7]
+
+                    # Determine status based on PID
+                    # If PID is "-", VM is stopped
+                    if pid == "-":
+                        status = "stopped"
+                        vm_id = None
+                    else:
+                        status = "running"
+
+                    vms.append(
+                        {
+                            "child_type": "vmm",
+                            "child_name": name,
+                            "status": status,
+                            "vm_id": vm_id,
+                            "vcpus": vcpus,
+                            "memory": max_mem,
+                            "current_memory": cur_mem,
+                            "tty": tty if tty != "-" else None,
+                            "owner": owner,
+                        }
+                    )
+
+            self.logger.info("Found %d VMM VMs", len(vms))
+
+        except FileNotFoundError:
+            self.logger.debug("vmctl command not found")
+        except Exception as error:
+            self.logger.debug("Error listing VMM VMs: %s", error)
+
+        return vms

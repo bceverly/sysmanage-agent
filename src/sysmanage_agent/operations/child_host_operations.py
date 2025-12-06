@@ -19,7 +19,12 @@ import logging
 import platform
 from typing import Any, Dict
 
-from src.sysmanage_agent.operations.child_host_types import LxdContainerConfig
+from src.sysmanage_agent.operations.child_host_types import (
+    LxdContainerConfig,
+    VmmResourceConfig,
+    VmmServerConfig,
+    VmmVmConfig,
+)
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_listing import ChildHostListing
@@ -196,6 +201,12 @@ class ChildHostOperations:
                     kvm_vms = self.listing_helper.list_kvm_vms()
                     child_hosts.extend(kvm_vms)
 
+            elif os_type == "openbsd":
+                # Get VMM VMs
+                if not child_type_filter or child_type_filter == "vmm":
+                    vmm_vms = self.listing_helper.list_vmm_vms()
+                    child_hosts.extend(vmm_vms)
+
             # VirtualBox VMs (cross-platform)
             if not child_type_filter or child_type_filter == "virtualbox":
                 vbox_vms = self.listing_helper.list_virtualbox_vms()
@@ -290,6 +301,36 @@ class ChildHostOperations:
                 use_https=use_https,
             )
             return await self.lxd_ops.create_lxd_container(config)
+
+        if child_type == "vmm":
+            # For VMM, vm_name comes from hostname or explicit parameter
+            vm_name = parameters.get("vm_name") or hostname.split(".")[0]
+            iso_url = parameters.get("iso_url", "")
+
+            # Create sub-configs for server and resource settings
+            server_cfg = VmmServerConfig(
+                server_url=server_url,
+                server_port=server_port,
+                use_https=use_https,
+            )
+            resource_cfg = VmmResourceConfig(
+                memory=parameters.get("memory", "1G"),
+                disk_size=parameters.get("disk_size", "20G"),
+                cpus=parameters.get("cpus", 1),
+            )
+
+            config = VmmVmConfig(
+                distribution=distribution,
+                vm_name=vm_name,
+                hostname=hostname,
+                username=username,
+                password=password,
+                agent_install_commands=agent_install_commands,
+                iso_url=iso_url,
+                server_config=server_cfg,
+                resource_config=resource_cfg,
+            )
+            return await self.vmm_ops.create_vmm_vm(config)
 
         return {
             "success": False,
