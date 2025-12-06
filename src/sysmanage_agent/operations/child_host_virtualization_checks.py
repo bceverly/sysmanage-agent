@@ -2,8 +2,11 @@
 Virtualization support check methods for child host operations.
 """
 
+import grp
+import json
 import os
 import platform
+import pwd
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict
@@ -228,38 +231,166 @@ class VirtualizationChecks:
 
         return result
 
-    def check_lxd_support(self) -> Dict[str, Any]:
+    def _is_ubuntu_22_or_newer(self) -> bool:
         """
-        Check LXD/LXC container support on Linux.
+        Check if the system is running Ubuntu 22.04 or newer.
 
         Returns:
-            Dict with LXD availability info
+            True if Ubuntu 22.04+, False otherwise
+        """
+        try:
+            # Read /etc/os-release to get distribution info
+            if not os.path.exists("/etc/os-release"):
+                return False
+
+            with open("/etc/os-release", "r", encoding="utf-8") as os_release_file:
+                os_release = {}
+                for line in os_release_file:
+                    line = line.strip()
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        os_release[key] = value.strip('"')
+
+            # Check if it's Ubuntu
+            if os_release.get("ID", "").lower() != "ubuntu":
+                return False
+
+            # Check version (VERSION_ID is like "22.04" or "24.04")
+            version_id = os_release.get("VERSION_ID", "")
+            if not version_id:
+                return False
+
+            try:
+                major_version = float(version_id)
+                return major_version >= 22.04
+            except ValueError:
+                return False
+
+        except Exception as error:
+            self.logger.debug("Error checking Ubuntu version: %s", error)
+            return False
+
+    def _is_user_in_lxd_group(self) -> bool:
+        """
+        Check if the current user is in the lxd group.
+
+        Returns:
+            True if user is in lxd group, False otherwise
+        """
+        try:
+            # Get current user
+            username = pwd.getpwuid(os.getuid()).pw_name
+
+            # Check if lxd group exists and user is a member
+            try:
+                lxd_group = grp.getgrnam("lxd")
+                return username in lxd_group.gr_mem
+            except KeyError:
+                # lxd group doesn't exist
+                return False
+
+        except Exception as error:
+            self.logger.debug("Error checking lxd group membership: %s", error)
+            return False
+
+    def check_lxd_support(self) -> Dict[str, Any]:
+        """
+        Check LXD/LXC container support on Linux (Ubuntu 22.04+ only).
+
+        Returns:
+            Dict with LXD availability info including:
+            - available: True if LXD can potentially be used (Ubuntu 22.04+)
+            - installed: True if LXD snap is installed
+            - initialized: True if LXD has been initialized (has storage pool)
+            - user_in_group: True if current user is in lxd group
+            - needs_install: True if LXD needs to be installed
+            - needs_init: True if LXD needs initialization
+            - snap_available: True if snap is available for installation
         """
         result = {
             "available": False,
             "installed": False,
             "initialized": False,
+            "user_in_group": False,
+            "needs_install": False,
+            "needs_init": False,
+            "snap_available": False,
         }
 
         try:
             if platform.system().lower() != "linux":
                 return result
 
-            # Check if lxd/lxc is installed
-            lxc_path = shutil.which("lxc")
-            if lxc_path:
-                result["available"] = True
-                result["installed"] = True
+            # Only support Ubuntu 22.04+
+            if not self._is_ubuntu_22_or_newer():
+                self.logger.debug("LXD support requires Ubuntu 22.04 or newer")
+                return result
 
-                # Check if LXD is initialized
-                lxc_result = subprocess.run(  # nosec B603 B607
-                    ["lxc", "info"],
+            # Ubuntu 22.04+ can use LXD
+            result["available"] = True
+
+            # Check if snap is available (for installation)
+            snap_path = shutil.which("snap")
+            result["snap_available"] = snap_path is not None
+
+            # Check if LXD snap is installed
+            if snap_path:
+                snap_result = subprocess.run(  # nosec B603 B607
+                    ["snap", "list", "lxd"],
                     capture_output=True,
                     text=True,
                     timeout=10,
                     check=False,
                 )
-                result["initialized"] = lxc_result.returncode == 0
+                result["installed"] = snap_result.returncode == 0
+
+            # If not installed via snap, check if lxc command exists anyway
+            if not result["installed"]:
+                lxc_path = shutil.which("lxc")
+                if lxc_path:
+                    result["installed"] = True
+
+            if not result["installed"]:
+                result["needs_install"] = True
+                self.logger.info("LXD is not installed")
+                return result
+
+            # Check if user is in lxd group
+            result["user_in_group"] = self._is_user_in_lxd_group()
+
+            # Check if LXD is initialized by checking for storage pools
+            try:
+                storage_result = subprocess.run(  # nosec B603 B607
+                    ["lxc", "storage", "list", "--format", "json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+
+                if storage_result.returncode == 0:
+                    try:
+                        storage_pools = json.loads(storage_result.stdout)
+                        result["initialized"] = len(storage_pools) > 0
+                    except json.JSONDecodeError:
+                        result["initialized"] = False
+                else:
+                    result["initialized"] = False
+
+            except Exception as storage_error:
+                self.logger.debug("Error checking LXD storage: %s", storage_error)
+                result["initialized"] = False
+
+            if not result["initialized"]:
+                result["needs_init"] = True
+                self.logger.info("LXD is installed but not initialized")
+
+            self.logger.info(
+                "LXD support check: installed=%s, initialized=%s, user_in_group=%s",
+                result["installed"],
+                result["initialized"],
+                result["user_in_group"],
+            )
 
         except Exception as error:
             self.logger.debug("Error checking LXD support: %s", error)

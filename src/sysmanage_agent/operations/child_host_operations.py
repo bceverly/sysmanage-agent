@@ -6,7 +6,7 @@ and WSL instances as "child hosts" of the parent system.
 
 Supported child host types:
 - WSL v2 (Windows Subsystem for Linux)
-- LXD/LXC containers (future)
+- LXD/LXC containers (Ubuntu 22.04+)
 - VirtualBox VMs (future)
 - Hyper-V VMs (future)
 - VMM/vmd (OpenBSD, future)
@@ -19,8 +19,11 @@ import logging
 import platform
 from typing import Any, Dict
 
+from src.sysmanage_agent.operations.child_host_types import LxdContainerConfig
+
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_listing import ChildHostListing
+from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
 from src.sysmanage_agent.operations.child_host_virtualization_checks import (
     VirtualizationChecks,
 )
@@ -48,6 +51,9 @@ class ChildHostOperations:
         self.virtualization_checks = VirtualizationChecks(self.logger)
         self.listing_helper = ChildHostListing(self.logger)
         self.wsl_ops = WslOperations(
+            self.agent, self.logger, self.virtualization_checks
+        )
+        self.lxd_ops = LxdOperations(
             self.agent, self.logger, self.virtualization_checks
         )
 
@@ -265,7 +271,22 @@ class ChildHostOperations:
                 use_https=use_https,
             )
 
-        # Future: Add support for other child types
+        if child_type == "lxd":
+            # For LXD, container_name comes from distribution (but the user also provides name)
+            container_name = parameters.get("container_name") or hostname.split(".")[0]
+            config = LxdContainerConfig(
+                distribution=distribution,
+                container_name=container_name,
+                hostname=hostname,
+                username=username,
+                password=password,
+                server_url=server_url,
+                agent_install_commands=agent_install_commands,
+                server_port=server_port,
+                use_https=use_https,
+            )
+            return await self.lxd_ops.create_lxd_container(config)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -284,6 +305,22 @@ class ChildHostOperations:
             Dict with success status and whether reboot is required
         """
         return await self.wsl_ops.enable_wsl(parameters)
+
+    async def initialize_lxd(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initialize LXD on an Ubuntu system.
+
+        This is called when the user clicks "Enable LXD" in the UI.
+        It installs LXD via snap if not installed, and runs lxd init --auto.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status and whether user needs to re-login
+        """
+        self.logger.info(_("Initializing LXD"))
+        return await self.lxd_ops.initialize_lxd(parameters)
 
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -307,6 +344,9 @@ class ChildHostOperations:
 
         if child_type == "wsl":
             return await self.wsl_ops.start_child_host(parameters)
+
+        if child_type == "lxd":
+            return await self.lxd_ops.start_child_host(parameters)
 
         return {
             "success": False,
@@ -336,6 +376,9 @@ class ChildHostOperations:
         if child_type == "wsl":
             return await self.wsl_ops.stop_child_host(parameters)
 
+        if child_type == "lxd":
+            return await self.lxd_ops.stop_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -364,6 +407,9 @@ class ChildHostOperations:
         if child_type == "wsl":
             return await self.wsl_ops.restart_child_host(parameters)
 
+        if child_type == "lxd":
+            return await self.lxd_ops.restart_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -391,6 +437,9 @@ class ChildHostOperations:
 
         if child_type == "wsl":
             return await self.wsl_ops.delete_child_host(parameters)
+
+        if child_type == "lxd":
+            return await self.lxd_ops.delete_child_host(parameters)
 
         return {
             "success": False,

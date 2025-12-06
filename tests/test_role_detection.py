@@ -49,8 +49,11 @@ class TestDetectRoles:
         """Create a RoleDetector instance for testing."""
         return RoleDetector()
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
-    def test_detect_roles_no_packages(self, mock_get_packages, detector):
+    def test_detect_roles_no_packages(
+        self, mock_get_packages, mock_detect_virt, detector
+    ):
         """Test detect_roles when no packages are found."""
         mock_get_packages.return_value = {}
 
@@ -59,10 +62,11 @@ class TestDetectRoles:
         assert result == []
         mock_get_packages.assert_called_once()
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_web_server_nginx(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of Nginx web server."""
         mock_get_packages.return_value = {"nginx": "1.18.0"}
@@ -78,10 +82,11 @@ class TestDetectRoles:
         assert result[0]["service_status"] == "running"
         assert result[0]["is_active"] is True
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_web_server_apache(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of Apache web server."""
         mock_get_packages.return_value = {"apache2": "2.4.41"}
@@ -94,10 +99,11 @@ class TestDetectRoles:
         assert result[0]["package_name"] == "apache2"
         assert result[0]["service_name"] in ["apache2", "httpd"]
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_database_postgresql(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of PostgreSQL database."""
         mock_get_packages.return_value = {"postgresql": "14.5"}
@@ -110,10 +116,11 @@ class TestDetectRoles:
         assert result[0]["package_name"] == "postgresql"
         assert result[0]["service_name"] in ["postgresql", "postgres"]
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_database_mysql(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of MySQL database."""
         mock_get_packages.return_value = {"mysql-server": "8.0.30"}
@@ -125,8 +132,11 @@ class TestDetectRoles:
         assert result[0]["role"] == "Database Server"
         assert result[0]["service_name"] in ["mysql", "mysqld"]
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
-    def test_detect_roles_database_sqlite(self, mock_get_packages, detector):
+    def test_detect_roles_database_sqlite(
+        self, mock_get_packages, mock_detect_virt, detector
+    ):
         """Test detection of SQLite database (no service)."""
         mock_get_packages.return_value = {"sqlite3": "3.36.0"}
 
@@ -138,10 +148,11 @@ class TestDetectRoles:
         assert result[0]["service_status"] == "installed"
         assert result[0]["service_name"] is None
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_monitoring_grafana(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of Grafana monitoring server."""
         mock_get_packages.return_value = {"grafana": "9.3.2"}
@@ -154,10 +165,11 @@ class TestDetectRoles:
         assert result[0]["package_name"] == "grafana"
         assert result[0]["service_name"] in ["grafana-server", "grafana"]
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_multiple_roles(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection of multiple server roles."""
         mock_get_packages.return_value = {
@@ -174,10 +186,11 @@ class TestDetectRoles:
         assert "Web Server" in roles
         assert "Database Server" in roles
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_detect_roles_service_stopped(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test detection when service is stopped."""
         mock_get_packages.return_value = {"nginx": "1.18.0"}
@@ -1504,10 +1517,11 @@ class TestEdgeCases:
         """Create a RoleDetector instance for testing."""
         return RoleDetector()
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_multiple_service_names_first_running(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test when first service name is running."""
         mock_get_packages.return_value = {"apache2": "2.4.41"}
@@ -1521,10 +1535,11 @@ class TestEdgeCases:
         assert result[0]["service_name"] == "apache2"
         assert result[0]["service_status"] == "running"
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_multiple_service_names_second_running(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test when second service name is running."""
         mock_get_packages.return_value = {"apache2": "2.4.41"}
@@ -1538,10 +1553,11 @@ class TestEdgeCases:
         assert result[0]["service_name"] == "httpd"
         assert result[0]["service_status"] == "running"
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_service_status_unknown_then_stopped(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test service status when all service names return unknown, then one returns stopped."""
         mock_get_packages.return_value = {"apache2": "2.4.41"}
@@ -1574,10 +1590,11 @@ class TestEdgeCases:
 
         assert result == {}
 
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
     @patch.object(RoleDetector, "_get_installed_packages")
     @patch.object(RoleDetector, "_get_service_status")
     def test_empty_service_names_list(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test package with empty service names list."""
         mock_get_packages.return_value = {"sqlite3": "3.36.0"}

@@ -193,3 +193,38 @@ class LinuxFirewallOperations(FirewallBase):
                 "No supported firewall found on this system"
             ),
         }
+
+    def configure_lxd_firewall(self, bridge_name: str = "lxdbr0") -> Dict:
+        """
+        Configure firewall for LXD container networking.
+
+        This sets up IP forwarding, NAT masquerade, and forwarding rules
+        to allow LXD containers on the specified bridge to access the network.
+
+        Args:
+            bridge_name: Name of the LXD bridge (default: lxdbr0)
+
+        Returns:
+            Dict with success status and message
+        """
+        # Try ufw first (Ubuntu/Debian)
+        if UfwOperations.is_available():
+            return self._get_ufw().configure_lxd_firewall(bridge_name)
+
+        # firewalld doesn't need special configuration for LXD
+        # as it typically handles this automatically with zones
+        if FirewalldOperations.is_available():
+            self.logger.info(
+                "firewalld detected - LXD networking should work automatically"
+            )
+            return {
+                "success": True,
+                "message": _(
+                    "firewalld detected - LXD networking configured automatically"
+                ),
+            }
+
+        return {
+            "success": False,
+            "error": _("No supported firewall found on this system"),
+        }

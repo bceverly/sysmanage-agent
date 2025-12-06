@@ -102,6 +102,20 @@ class RoleDetector:
                     "graylog": {"service_names": ["graylog-server", "graylog"]},
                 },
             },
+            # Virtualization host roles - these require special detection
+            # to verify the host is actually configured and ready for child hosts
+            "lxd_host": {
+                "role": "LXD Host",
+                "packages": {
+                    "lxd": {"service_names": ["snap.lxd.daemon", "lxd"]},
+                },
+                "special_detection": "lxd",  # Flag for special handling
+            },
+            "wsl_host": {
+                "role": "WSL Host",
+                "packages": {},  # WSL is a Windows feature, not a package
+                "special_detection": "wsl",  # Flag for special handling
+            },
         }
 
     def detect_roles(self) -> List[Dict[str, Any]]:
@@ -120,14 +134,25 @@ class RoleDetector:
                 self.logger.warning(
                     "No packages detected or unsupported package manager"
                 )
+                # Still check special detection roles even without packages
+                self._detect_virtualization_host_roles(roles)
                 return roles
 
             # Check each role category
-            for role_info in self.role_mappings.values():
+            for _, role_info in self.role_mappings.items():
                 role_name = role_info["role"]
+
+                # Handle special detection for virtualization hosts
+                if role_info.get("special_detection"):
+                    # These are handled separately below
+                    continue
+
                 self._check_role_packages(
                     role_name, role_info["packages"], installed_packages, roles
                 )
+
+            # Detect virtualization host roles (LXD, WSL)
+            self._detect_virtualization_host_roles(roles)
 
         except Exception as error:
             self.logger.error("Error detecting roles: %s", error)
@@ -216,6 +241,152 @@ class RoleDetector:
                             "is_active": service_status == "running",
                         }
                     )
+
+    def _detect_virtualization_host_roles(self, roles: List[Dict[str, Any]]) -> None:
+        """
+        Detect virtualization host roles (LXD Host, WSL Host).
+
+        These roles require special detection beyond package checking because
+        the host must be properly configured and ready to create child hosts,
+        not just have the software installed.
+        """
+        # Detect LXD Host on Linux
+        if self.system == "linux":
+            lxd_role = self._detect_lxd_host_role()
+            if lxd_role:
+                roles.append(lxd_role)
+
+        # Detect WSL Host on Windows
+        if self.system == "windows":
+            wsl_role = self._detect_wsl_host_role()
+            if wsl_role:
+                roles.append(wsl_role)
+
+    def _detect_lxd_host_role(self) -> Optional[Dict[str, Any]]:
+        """
+        Detect if this host is a configured LXD host ready for containers.
+
+        Returns role dict if LXD is installed AND initialized, None otherwise.
+        """
+        try:
+            # Check if lxd command exists (snap or system)
+            lxd_path = shutil.which("lxd") or "/snap/bin/lxd"
+            lxc_path = shutil.which("lxc") or "/snap/bin/lxc"
+
+            if not os.path.exists(lxd_path) and not os.path.exists(lxc_path):
+                return None
+
+            # Check if LXD is initialized by looking for lxdbr0 or running lxc info
+            # lxc info will fail if LXD is not initialized
+            result = subprocess.run(  # nosec B603 B607
+                [lxc_path, "info"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                self.logger.debug("LXD installed but not initialized")
+                return None
+
+            # Get LXD version from snap or lxd --version
+            version = "unknown"
+            try:
+                snap_result = subprocess.run(  # nosec B603 B607
+                    ["snap", "list", "lxd"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if snap_result.returncode == 0:
+                    # Parse: "lxd  5.21.4-8a3cf61  36579  5.21/stable  canonical**  -"
+                    lines = snap_result.stdout.strip().split("\n")
+                    if len(lines) >= 2:
+                        parts = lines[1].split()
+                        if len(parts) >= 2:
+                            version = parts[1]
+            except Exception:
+                pass
+
+            # Check service status
+            service_status = self._get_service_status("snap.lxd.daemon")
+            if service_status == "unknown":
+                service_status = self._get_service_status("lxd")
+
+            self.logger.info(
+                "Detected LXD Host role: v%s, status=%s", version, service_status
+            )
+
+            return {
+                "role": "LXD Host",
+                "package_name": "lxd",
+                "package_version": version,
+                "service_name": "snap.lxd.daemon",
+                "service_status": service_status,
+                "is_active": service_status == "running",
+            }
+
+        except Exception as error:
+            self.logger.debug("Error detecting LXD host role: %s", error)
+            return None
+
+    def _detect_wsl_host_role(self) -> Optional[Dict[str, Any]]:
+        """
+        Detect if this Windows host has WSL enabled and ready for instances.
+
+        Returns role dict if WSL is enabled and functional, None otherwise.
+        """
+        try:
+            # Check if wsl.exe exists and is functional
+            result = subprocess.run(  # nosec B603 B607
+                ["wsl.exe", "--status"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            # --status returns 0 if WSL is properly configured
+            if result.returncode != 0:
+                self.logger.debug("WSL not enabled or not functional")
+                return None
+
+            # Get WSL version info
+            version = "2"  # Default to WSL2
+            version_result = subprocess.run(  # nosec B603 B607
+                ["wsl.exe", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if version_result.returncode == 0:
+                # Parse first line for version
+                lines = version_result.stdout.strip().split("\n")
+                if lines:
+                    version = lines[0].replace("WSL version:", "").strip()
+                    if not version:
+                        version = "2"
+
+            self.logger.info("Detected WSL Host role: v%s", version)
+
+            return {
+                "role": "WSL Host",
+                "package_name": "wsl",
+                "package_version": version,
+                "service_name": None,  # WSL doesn't have a traditional service
+                "service_status": "running",  # If --status works, it's running
+                "is_active": True,
+            }
+
+        except FileNotFoundError:
+            self.logger.debug("wsl.exe not found - WSL not installed")
+            return None
+        except Exception as error:
+            self.logger.debug("Error detecting WSL host role: %s", error)
+            return None
 
     def _get_installed_packages(self) -> Dict[str, str]:
         """Get list of installed packages with versions."""

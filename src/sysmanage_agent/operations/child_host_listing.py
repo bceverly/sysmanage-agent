@@ -412,7 +412,17 @@ class ChildHostListing:
         List LXD/LXC containers on Linux.
 
         Returns:
-            List of LXD container information dicts
+            List of LXD container information dicts with:
+            - child_type: 'lxd'
+            - child_name: container name
+            - status: running/stopped/etc
+            - type: container or virtual-machine
+            - architecture: e.g., x86_64
+            - created_at: ISO timestamp
+            - ipv4_address: primary IPv4 address if running
+            - ipv6_address: primary IPv6 address if running
+            - hostname: hostname from inside container if running
+            - distribution: dict with distribution_name and distribution_version
         """
         containers = []
 
@@ -430,6 +440,8 @@ class ChildHostListing:
                 container_data = json.loads(result.stdout)
 
                 for container in container_data:
+                    name = container.get("name")
+
                     # Map LXD status to our status
                     status = container.get("status", "").lower()
                     if status == "running":
@@ -439,15 +451,41 @@ class ChildHostListing:
                     else:
                         mapped_status = status
 
+                    # Extract IP addresses from state.network
+                    ipv4_address, ipv6_address = self._extract_container_ips(
+                        container, mapped_status
+                    )
+
+                    # Get hostname from inside the container if running
+                    hostname = None
+                    if mapped_status == "running":
+                        hostname = self._get_lxd_hostname(name)
+
+                    # Parse distribution info from config
+                    config = container.get("config", {})
+                    distribution = self._parse_lxd_distribution(config)
+
+                    # Get created date
+                    created_at = container.get("created_at")
+
                     containers.append(
                         {
                             "child_type": "lxd",
-                            "child_name": container.get("name"),
+                            "child_name": name,
                             "status": mapped_status,
-                            "type": container.get("type"),  # container or vm
+                            "type": container.get(
+                                "type"
+                            ),  # container or virtual-machine
                             "architecture": container.get("architecture"),
+                            "created_at": created_at,
+                            "ipv4_address": ipv4_address,
+                            "ipv6_address": ipv6_address,
+                            "hostname": hostname,
+                            "distribution": distribution,
                         }
                     )
+
+                self.logger.info("Found %d LXD containers", len(containers))
 
         except json.JSONDecodeError:
             self.logger.debug("No LXD containers found or invalid JSON output")
@@ -457,6 +495,193 @@ class ChildHostListing:
             self.logger.debug("Error listing LXD containers: %s", error)
 
         return containers
+
+    def _extract_container_ips(
+        self, container: Dict[str, Any], status: str
+    ) -> tuple[Optional[str], Optional[str]]:
+        """
+        Extract IPv4 and IPv6 addresses from container state.
+
+        Args:
+            container: Container data dict from lxc list
+            status: Container status string
+
+        Returns:
+            Tuple of (ipv4_address, ipv6_address), either can be None
+        """
+        ipv4_address = None
+        ipv6_address = None
+
+        if status != "running":
+            return ipv4_address, ipv6_address
+
+        state = container.get("state")
+        if not state:
+            return ipv4_address, ipv6_address
+
+        network = state.get("network", {})
+        for iface_name, iface_data in network.items():
+            if iface_name == "lo":
+                continue
+            for addr in iface_data.get("addresses", []):
+                family = addr.get("family")
+                if family == "inet" and not ipv4_address:
+                    ipv4_address = addr.get("address")
+                elif family == "inet6" and not ipv6_address:
+                    addr_val = addr.get("address", "")
+                    if not addr_val.startswith("fe80:"):
+                        ipv6_address = addr_val
+            if ipv4_address:
+                break
+
+        return ipv4_address, ipv6_address
+
+    def _get_lxd_hostname(self, container_name: str) -> Optional[str]:
+        """
+        Get the hostname from inside a running LXD container.
+
+        Args:
+            container_name: LXD container name
+
+        Returns:
+            Hostname string or None if unable to retrieve
+        """
+        try:
+            # Try reading from /etc/hostname first
+            result = subprocess.run(  # nosec B603 B607
+                ["lxc", "exec", container_name, "--", "cat", "/etc/hostname"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname:
+                    return hostname
+
+            # Fall back to hostname command
+            result = subprocess.run(  # nosec B603 B607
+                ["lxc", "exec", container_name, "--", "hostname", "-f"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname and hostname != "localhost":
+                    return hostname
+
+            # Try just hostname without -f
+            result = subprocess.run(  # nosec B603 B607
+                ["lxc", "exec", container_name, "--", "hostname"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+                if hostname:
+                    return hostname
+
+        except Exception as error:
+            self.logger.debug(
+                "Error getting hostname for LXD container %s: %s", container_name, error
+            )
+
+        return None
+
+    def _parse_lxd_distribution(
+        self, config: Dict[str, Any]
+    ) -> Dict[str, Optional[str]]:
+        """
+        Parse distribution info from LXD container config.
+
+        Args:
+            config: Container config dict containing image.* keys
+
+        Returns:
+            Dict with distribution_name and distribution_version
+        """
+        # LXD stores image info in config keys like:
+        # image.os, image.release, image.description
+        image_os = config.get("image.os", "")
+        image_release = config.get("image.release", "")
+        image_description = config.get("image.description", "")
+
+        # Map OS names to proper capitalization
+        os_name_map = {
+            "ubuntu": "Ubuntu",
+            "debian": "Debian",
+            "fedora": "Fedora",
+            "rockylinux": "Rocky Linux",
+            "rocky": "Rocky Linux",
+            "almalinux": "AlmaLinux",
+            "alma": "AlmaLinux",
+            "centos": "CentOS",
+            "opensuse": "openSUSE",
+        }
+
+        # Ubuntu codename to version mapping
+        ubuntu_codename_map = {
+            "noble": "24.04",
+            "mantic": "23.10",
+            "lunar": "23.04",
+            "kinetic": "22.10",
+            "jammy": "22.04",
+            "impish": "21.10",
+            "hirsute": "21.04",
+            "groovy": "20.10",
+            "focal": "20.04",
+            "bionic": "18.04",
+            "xenial": "16.04",
+        }
+
+        # Debian codename to version mapping
+        debian_codename_map = {
+            "trixie": "13",
+            "bookworm": "12",
+            "bullseye": "11",
+            "buster": "10",
+        }
+
+        # Normalize the OS name
+        distribution_name = None
+        if image_os:
+            os_lower = image_os.lower()
+            distribution_name = os_name_map.get(os_lower, image_os.capitalize())
+
+        # Process the release/version - might be a codename or version number
+        distribution_version = None
+        if image_release:
+            release_lower = image_release.lower()
+            # Check if it's an Ubuntu or Debian codename, else use as-is
+            distribution_version = ubuntu_codename_map.get(
+                release_lower, debian_codename_map.get(release_lower, image_release)
+            )
+
+        # If we don't have image.os, try to parse from description
+        if not distribution_name and image_description:
+            # Common patterns: "Ubuntu 24.04 LTS", "Debian 12", "Fedora 40"
+            desc_lower = image_description.lower()
+            for os_key, os_display in os_name_map.items():
+                if os_key in desc_lower:
+                    distribution_name = os_display
+                    break
+
+            # Try to extract version from description
+            if not distribution_version:
+                # Match patterns like "24.04", "12", "40"
+                version_match = re.search(r"(\d+(?:\.\d+)?)", image_description)
+                if version_match:
+                    distribution_version = version_match.group(1)
+
+        return {
+            "distribution_name": distribution_name,
+            "distribution_version": distribution_version,
+        }
 
     def list_kvm_vms(self) -> List[Dict[str, Any]]:
         """

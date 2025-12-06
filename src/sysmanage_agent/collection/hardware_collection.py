@@ -61,6 +61,8 @@ class HardwareCollector:
                 ),
                 "storage_details": json.dumps([]),
                 "network_details": json.dumps([]),
+                "storage_devices": [],
+                "network_interfaces": [],
             }
 
         try:
@@ -90,7 +92,7 @@ class HardwareCollector:
                 # Server expects memory_total_mb
                 "memory_total_mb": memory_info.get("total_mb"),
                 "memory_available_mb": memory_info.get("available_mb"),
-                # Detailed JSON for complex data
+                # Detailed JSON for complex data (stored in host table)
                 "hardware_details": json.dumps(
                     {
                         "cpu": cpu_info,
@@ -99,6 +101,13 @@ class HardwareCollector:
                 ),
                 "storage_details": json.dumps(storage_info),
                 "network_details": json.dumps(network_info),
+                # Raw arrays for separate storage_device and network_interface tables
+                "storage_devices": (
+                    storage_info if isinstance(storage_info, list) else []
+                ),
+                "network_interfaces": (
+                    network_info if isinstance(network_info, list) else []
+                ),
             }
 
             return hardware_data
@@ -109,4 +118,6 @@ class HardwareCollector:
                 "hardware_details": json.dumps({"error": str(error)}),
                 "storage_details": json.dumps([]),
                 "network_details": json.dumps([]),
+                "storage_devices": [],
+                "network_interfaces": [],
             }
