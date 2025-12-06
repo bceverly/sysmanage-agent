@@ -459,10 +459,21 @@ class VirtualizationChecks:
         Check VMM/vmd support on OpenBSD.
 
         Returns:
-            Dict with VMM availability info
+            Dict with VMM availability info including:
+            - available: True if VMM can potentially be used (OpenBSD with vmctl)
+            - enabled: True if vmd is enabled in rc.conf
+            - running: True if vmd daemon is currently running
+            - initialized: True if vmd is ready to create VMs
+            - kernel_supported: True if /dev/vmm device exists
+            - needs_enable: True if vmd needs to be enabled
         """
         result = {
             "available": False,
+            "enabled": False,
+            "running": False,
+            "initialized": False,
+            "kernel_supported": False,
+            "needs_enable": False,
         }
 
         try:
@@ -471,8 +482,71 @@ class VirtualizationChecks:
 
             # Check if vmctl is available
             vmctl_path = shutil.which("vmctl")
-            if vmctl_path:
-                result["available"] = True
+            if not vmctl_path:
+                self.logger.debug("vmctl not found - VMM not available")
+                return result
+
+            result["available"] = True
+
+            # Check if kernel has VMM support (/dev/vmm exists)
+            if os.path.exists("/dev/vmm"):
+                result["kernel_supported"] = True
+            else:
+                self.logger.debug("/dev/vmm not found - kernel VMM support not enabled")
+                result["needs_enable"] = True
+                return result
+
+            # Check if vmd is enabled using rcctl
+            try:
+                rcctl_result = subprocess.run(  # nosec B603 B607
+                    ["rcctl", "get", "vmd", "flags"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                # If rcctl get vmd flags returns 0, vmd is enabled
+                # If it returns non-zero or "NO", it's not enabled
+                if rcctl_result.returncode == 0:
+                    flags_output = rcctl_result.stdout.strip()
+                    # "NO" means disabled, anything else means enabled
+                    if flags_output.upper() != "NO":
+                        result["enabled"] = True
+            except subprocess.TimeoutExpired:
+                self.logger.debug("Timeout checking vmd enabled status")
+            except Exception as rcctl_error:
+                self.logger.debug("Error checking vmd enabled status: %s", rcctl_error)
+
+            # Check if vmd is running using rcctl check
+            try:
+                check_result = subprocess.run(  # nosec B603 B607
+                    ["rcctl", "check", "vmd"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                # rcctl check returns 0 if service is running
+                if check_result.returncode == 0:
+                    result["running"] = True
+                    result["initialized"] = True
+            except subprocess.TimeoutExpired:
+                self.logger.debug("Timeout checking vmd running status")
+            except Exception as check_error:
+                self.logger.debug("Error checking vmd running status: %s", check_error)
+
+            # If not enabled and not running, it needs to be enabled
+            if not result["enabled"] and not result["running"]:
+                result["needs_enable"] = True
+
+            self.logger.info(
+                "VMM support check: available=%s, enabled=%s, running=%s, "
+                "kernel_supported=%s",
+                result["available"],
+                result["enabled"],
+                result["running"],
+                result["kernel_supported"],
+            )
 
         except Exception as error:
             self.logger.debug("Error checking VMM support: %s", error)

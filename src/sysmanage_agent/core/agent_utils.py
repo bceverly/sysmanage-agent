@@ -318,6 +318,7 @@ class MessageProcessor:
             "create_child_host": self.agent.child_host_ops.create_child_host,
             "enable_wsl": self.agent.child_host_ops.enable_wsl,
             "initialize_lxd": self.agent.child_host_ops.initialize_lxd,
+            "initialize_vmm": self.agent.child_host_ops.initialize_vmm,
             "start_child_host": self.agent.child_host_ops.start_child_host,
             "stop_child_host": self.agent.child_host_ops.stop_child_host,
             "restart_child_host": self.agent.child_host_ops.restart_child_host,

@@ -27,6 +27,7 @@ from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
 from src.sysmanage_agent.operations.child_host_virtualization_checks import (
     VirtualizationChecks,
 )
+from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
 from src.sysmanage_agent.operations.child_host_wsl import WslOperations
 
 
@@ -54,6 +55,9 @@ class ChildHostOperations:
             self.agent, self.logger, self.virtualization_checks
         )
         self.lxd_ops = LxdOperations(
+            self.agent, self.logger, self.virtualization_checks
+        )
+        self.vmm_ops = VmmOperations(
             self.agent, self.logger, self.virtualization_checks
         )
 
@@ -322,6 +326,22 @@ class ChildHostOperations:
         self.logger.info(_("Initializing LXD"))
         return await self.lxd_ops.initialize_lxd(parameters)
 
+    async def initialize_vmm(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initialize VMM/vmd on an OpenBSD system.
+
+        This is called when the user clicks "Enable VMM" in the UI.
+        It enables and starts the vmd daemon.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status and whether reboot is required
+        """
+        self.logger.info(_("Initializing VMM/vmd"))
+        return await self.vmm_ops.initialize_vmd(parameters)
+
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Start a stopped child host.
@@ -347,6 +367,9 @@ class ChildHostOperations:
 
         if child_type == "lxd":
             return await self.lxd_ops.start_child_host(parameters)
+
+        if child_type == "vmm":
+            return await self.vmm_ops.start_child_host(parameters)
 
         return {
             "success": False,
@@ -379,6 +402,9 @@ class ChildHostOperations:
         if child_type == "lxd":
             return await self.lxd_ops.stop_child_host(parameters)
 
+        if child_type == "vmm":
+            return await self.vmm_ops.stop_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -410,6 +436,9 @@ class ChildHostOperations:
         if child_type == "lxd":
             return await self.lxd_ops.restart_child_host(parameters)
 
+        if child_type == "vmm":
+            return await self.vmm_ops.restart_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -440,6 +469,9 @@ class ChildHostOperations:
 
         if child_type == "lxd":
             return await self.lxd_ops.delete_child_host(parameters)
+
+        if child_type == "vmm":
+            return await self.vmm_ops.delete_child_host(parameters)
 
         return {
             "success": False,

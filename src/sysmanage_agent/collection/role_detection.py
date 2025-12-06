@@ -116,6 +116,11 @@ class RoleDetector:
                 "packages": {},  # WSL is a Windows feature, not a package
                 "special_detection": "wsl",  # Flag for special handling
             },
+            "vmm_host": {
+                "role": "VMM Host",
+                "packages": {},  # VMM is an OpenBSD kernel feature
+                "special_detection": "vmm",  # Flag for special handling
+            },
         }
 
     def detect_roles(self) -> List[Dict[str, Any]]:
@@ -244,7 +249,7 @@ class RoleDetector:
 
     def _detect_virtualization_host_roles(self, roles: List[Dict[str, Any]]) -> None:
         """
-        Detect virtualization host roles (LXD Host, WSL Host).
+        Detect virtualization host roles (LXD Host, WSL Host, VMM Host).
 
         These roles require special detection beyond package checking because
         the host must be properly configured and ready to create child hosts,
@@ -261,6 +266,12 @@ class RoleDetector:
             wsl_role = self._detect_wsl_host_role()
             if wsl_role:
                 roles.append(wsl_role)
+
+        # Detect VMM Host on OpenBSD
+        if self.system == "openbsd":
+            vmm_role = self._detect_vmm_host_role()
+            if vmm_role:
+                roles.append(vmm_role)
 
     def _detect_lxd_host_role(self) -> Optional[Dict[str, Any]]:
         """
@@ -307,7 +318,7 @@ class RoleDetector:
                         parts = lines[1].split()
                         if len(parts) >= 2:
                             version = parts[1]
-            except Exception:
+            except Exception:  # nosec B110 - version is optional, defaults to "unknown"
                 pass
 
             # Check service status
@@ -386,6 +397,66 @@ class RoleDetector:
             return None
         except Exception as error:
             self.logger.debug("Error detecting WSL host role: %s", error)
+            return None
+
+    def _detect_vmm_host_role(self) -> Optional[Dict[str, Any]]:
+        """
+        Detect if this OpenBSD host has VMM/vmd enabled and ready for VMs.
+
+        Returns role dict if VMM is available AND vmd is running, None otherwise.
+        """
+        try:
+            # Check if vmctl command exists
+            vmctl_path = shutil.which("vmctl")
+            if not vmctl_path:
+                return None
+
+            # Check if /dev/vmm exists (kernel VMM support)
+            if not os.path.exists("/dev/vmm"):
+                self.logger.debug("VMM kernel support not enabled (/dev/vmm missing)")
+                return None
+
+            # Check if vmd is running using rcctl check
+            result = subprocess.run(  # nosec B603 B607
+                ["rcctl", "check", "vmd"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                self.logger.debug("vmd is not running")
+                return None
+
+            # Get OpenBSD version for the package_version field
+            version = "unknown"
+            try:
+                uname_result = subprocess.run(  # nosec B603 B607
+                    ["uname", "-r"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if uname_result.returncode == 0:
+                    version = uname_result.stdout.strip()
+            except Exception:  # nosec B110 - version is optional
+                pass
+
+            self.logger.info("Detected VMM Host role: OpenBSD %s", version)
+
+            return {
+                "role": "VMM Host",
+                "package_name": "vmd",
+                "package_version": version,
+                "service_name": "vmd",
+                "service_status": "running",
+                "is_active": True,
+            }
+
+        except Exception as error:
+            self.logger.debug("Error detecting VMM host role: %s", error)
             return None
 
     def _get_installed_packages(self) -> Dict[str, str]:

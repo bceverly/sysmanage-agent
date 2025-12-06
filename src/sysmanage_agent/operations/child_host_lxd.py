@@ -406,7 +406,7 @@ class LxdOperations:
                 if len(parts) >= 2:
                     domain = ".".join(parts[-2:])
                     return f"{hostname}.{domain}"
-        except Exception:
+        except Exception:  # nosec B110 - returns original hostname on parse failure
             pass
 
         return hostname

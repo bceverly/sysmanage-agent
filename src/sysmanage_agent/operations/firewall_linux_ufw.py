@@ -620,8 +620,8 @@ class UfwOperations:
                         network = ipaddress.ip_network(addr_cidr, strict=False)
                         subnet = str(network)
                         break
-        except Exception:
-            pass  # Use default subnet
+        except Exception:  # nosec B110 - uses default subnet 10.0.0.0/8 on failure
+            pass
 
         nat_rules = f"""# LXD NAT rules - added by sysmanage-agent
 *nat
