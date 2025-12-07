@@ -967,3 +967,49 @@ msgstr "Impossible de chiffrer le mot de passe, utilisation du texte brut (NON R
 
 msgid "Port already in use"
 msgstr "Port déjà utilisé"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "Intégration de install.conf dans bsd.rd pour la VM %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "Échec de la configuration du périphérique vnd pour ISO : %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "Échec du montage ISO : %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "Impossible de trouver bsd.rd dans ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "Échec de la décompression de bsd.rd : %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "Échec de l'extraction du ramdisk : %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "Échec de la configuration du périphérique vnd : %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "Échec du montage du ramdisk : %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "Échec de la réinjection du ramdisk : %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "install.conf intégré avec succès dans bsd.rd pour la VM %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "Délai d'attente dépassé lors des opérations ramdisk : %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "Délai d'attente dépassé lors des opérations ramdisk"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "Échec de l'intégration de install.conf : %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "Répertoire de travail d'installation automatique nettoyé"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "Échec du nettoyage du répertoire de travail d'installation automatique : %s"

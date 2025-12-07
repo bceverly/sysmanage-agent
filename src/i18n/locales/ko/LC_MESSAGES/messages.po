@@ -967,3 +967,49 @@ msgstr "비밀번호를 암호화할 수 없어 일반 텍스트 사용 중 (권
 
 msgid "Port already in use"
 msgstr "포트가 이미 사용 중입니다"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "VM %s의 bsd.rd에 install.conf를 삽입하는 중"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "ISO용 vnd 장치 구성 실패: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "ISO 마운트 실패: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "ISO에서 bsd.rd를 찾을 수 없음"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "bsd.rd 압축 해제 실패: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "ramdisk 추출 실패: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "vnd 장치 구성 실패: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "ramdisk 마운트 실패: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "ramdisk 재주입 실패: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "VM %s의 bsd.rd에 install.conf를 성공적으로 삽입함"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "ramdisk 작업 중 시간 초과: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "ramdisk 작업 중 시간 초과"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "install.conf 삽입 실패: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "자동 설치 작업 디렉토리 정리 완료"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "자동 설치 작업 디렉토리 정리 실패: %s"

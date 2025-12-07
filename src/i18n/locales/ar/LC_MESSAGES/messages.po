@@ -970,3 +970,49 @@ msgstr "لا يمكن تشفير كلمة المرور، استخدام نص ع�
 
 msgid "Port already in use"
 msgstr "المنفذ قيد الاستخدام بالفعل"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "تضمين install.conf في bsd.rd للجهاز الافتراضي %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "فشل في تكوين جهاز vnd لـ ISO: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "فشل في تركيب ISO: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "لا يمكن العثور على bsd.rd في ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "فشل في فك ضغط bsd.rd: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "فشل في استخراج ramdisk: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "فشل في تكوين جهاز vnd: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "فشل في تركيب ramdisk: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "فشل في إعادة حقن ramdisk: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "تم تضمين install.conf بنجاح في bsd.rd للجهاز الافتراضي %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "انتهت مهلة عمليات ramdisk: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "انتهت مهلة عمليات ramdisk"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "فشل في تضمين install.conf: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "تم تنظيف دليل عمل التثبيت التلقائي"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "فشل في تنظيف دليل عمل التثبيت التلقائي: %s"

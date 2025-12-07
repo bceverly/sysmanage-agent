@@ -589,7 +589,7 @@ class VmmAutoinstallOperations:
 
             os.chmod(auto_install_path, 0o644)
 
-            # Step 5: Unmount ramdisk
+            # Step 6: Unmount ramdisk
             self.logger.debug("Unmounting ramdisk")
 
             result = subprocess.run(  # nosec B603 B607
@@ -619,7 +619,7 @@ class VmmAutoinstallOperations:
                 self.logger.warning("Failed to unconfigure vnd0: %s", result.stderr)
             vnd_device = None
 
-            # Step 6: Re-inject ramdisk into uncompressed bsd.rd
+            # Step 7: Re-inject ramdisk into uncompressed bsd.rd
             self.logger.debug("Re-injecting ramdisk into bsd.rd")
 
             result = subprocess.run(  # nosec B603 B607
@@ -636,7 +636,7 @@ class VmmAutoinstallOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Step 7: Compress the modified bsd.rd back to gzip format
+            # Step 8: Compress the modified bsd.rd back to gzip format
             self.logger.debug("Compressing modified bsd.rd")
 
             result = subprocess.run(  # nosec B603 B607

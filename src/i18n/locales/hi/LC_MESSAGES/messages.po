@@ -965,3 +965,49 @@ msgstr "पासवर्ड एन्क्रिप्ट नहीं हो
 
 msgid "Port already in use"
 msgstr "पोर्ट पहले से उपयोग में है"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "VM %s के लिए bsd.rd में install.conf एम्बेड कर रहा है"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "ISO के लिए vnd डिवाइस कॉन्फ़िगर करने में विफल: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "ISO माउंट करने में विफल: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "ISO में bsd.rd नहीं मिला"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "bsd.rd को डीकंप्रेस करने में विफल: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "ramdisk निकालने में विफल: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "vnd डिवाइस कॉन्फ़िगर करने में विफल: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "ramdisk माउंट करने में विफल: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "ramdisk को फिर से इंजेक्ट करने में विफल: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "VM %s के लिए bsd.rd में install.conf सफलतापूर्वक एम्बेड किया गया"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "ramdisk ऑपरेशन के दौरान टाइमआउट: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "ramdisk ऑपरेशन के दौरान टाइमआउट"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "install.conf एम्बेड करने में विफल: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "ऑटोइंस्टॉल वर्क डायरेक्टरी साफ की गई"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "ऑटोइंस्टॉल वर्क डायरेक्टरी साफ करने में विफल: %s"

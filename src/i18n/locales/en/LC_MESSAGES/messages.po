@@ -332,3 +332,49 @@ msgstr "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 
 msgid "Port already in use"
 msgstr "Port already in use"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "Embedding install.conf into bsd.rd for VM %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "Failed to configure vnd device for ISO: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "Failed to mount ISO: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "Could not find bsd.rd in ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "Failed to decompress bsd.rd: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "Failed to extract ramdisk: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "Failed to configure vnd device: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "Failed to mount ramdisk: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "Failed to re-inject ramdisk: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "Successfully embedded install.conf into bsd.rd for VM %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "Timeout during ramdisk operations: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "Timeout during ramdisk operations"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "Failed to embed install.conf: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "Cleaned up autoinstall work directory"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "Failed to cleanup autoinstall work directory: %s"

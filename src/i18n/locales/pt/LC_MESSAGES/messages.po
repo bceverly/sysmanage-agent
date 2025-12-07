@@ -967,3 +967,49 @@ msgstr "Não foi possível criptografar a senha, usando texto simples (NÃO RECO
 
 msgid "Port already in use"
 msgstr "Porta já em uso"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "Incorporando install.conf em bsd.rd para VM %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "Falha ao configurar dispositivo vnd para ISO: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "Falha ao montar ISO: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "Não foi possível encontrar bsd.rd em ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "Falha ao descompactar bsd.rd: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "Falha ao extrair ramdisk: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "Falha ao configurar dispositivo vnd: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "Falha ao montar ramdisk: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "Falha ao reinjetar ramdisk: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "install.conf incorporado com sucesso em bsd.rd para VM %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "Tempo esgotado durante operações de ramdisk: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "Tempo esgotado durante operações de ramdisk"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "Falha ao incorporar install.conf: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "Diretório de trabalho de instalação automática limpo"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "Falha ao limpar diretório de trabalho de instalação automática: %s"

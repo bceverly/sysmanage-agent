@@ -969,3 +969,49 @@ msgstr "パスワードを暗号化できませんでした。プレーンテキ
 
 msgid "Port already in use"
 msgstr "ポートは既に使用中です"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "VM %s のbsd.rdにinstall.confを埋め込んでいます"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "ISO用のvndデバイスの設定に失敗しました: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "ISOのマウントに失敗しました: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "ISO内にbsd.rdが見つかりませんでした"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "bsd.rdの解凍に失敗しました: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "ramdiskの抽出に失敗しました: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "vndデバイスの設定に失敗しました: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "ramdiskのマウントに失敗しました: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "ramdiskの再注入に失敗しました: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "VM %s のbsd.rdにinstall.confを正常に埋め込みました"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "ramdisk操作中にタイムアウトしました: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "ramdisk操作中にタイムアウトしました"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "install.confの埋め込みに失敗しました: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "自動インストール作業ディレクトリをクリーンアップしました"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "自動インストール作業ディレクトリのクリーンアップに失敗しました: %s"
