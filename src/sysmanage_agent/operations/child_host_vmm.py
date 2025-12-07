@@ -531,7 +531,7 @@ class VmmOperations:
             # Ensure autoinstall resources are cleaned up
             try:
                 # Clean up embedded autoinstall work directory if it exists
-                work_dir = f"/tmp/autoinstall-{config.vm_name}"
+                work_dir = f"/tmp/autoinstall-{config.vm_name}"  # nosec B108
                 self.autoinstall.cleanup_embedded_autoinstall(work_dir)
             except Exception:  # nosec B110 - cleanup failures are not critical
                 pass

@@ -359,7 +359,7 @@ class VmmAutoinstallOperations:
                 "error": str(error),
             }
 
-    def embed_install_conf_in_bsd_rd(
+    def embed_install_conf_in_bsd_rd(  # nosec B108 - /tmp is appropriate for temp work files
         self,
         iso_path: str,
         vm_name: str,
