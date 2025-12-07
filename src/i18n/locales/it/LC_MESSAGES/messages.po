@@ -906,3 +906,64 @@ msgstr "Errore nella configurazione dei profili utente"
 
 msgid "Permission denied writing to %s"
 msgstr "Permesso negato per la scrittura su %s"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "Configurazione dell'installazione automatica..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "Installazione automatica di OpenBSD in corso. La VM si installerà e riavvierà automaticamente. Potrebbero volerci 10-15 minuti."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "Richiesta HTTP di installazione automatica: %s da %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "install.conf generato per la VM %s in %s"
+
+msgid "Created autoinstall directory: %s"
+msgstr "Directory di installazione automatica creata: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "Impossibile scrivere install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "Server HTTP di installazione automatica avviato su %s:%d"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "Porta HTTP %d già in uso, l'installazione automatica potrebbe funzionare"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "Impossibile avviare il server HTTP: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "Server HTTP di installazione automatica arrestato"
+
+msgid "HTTP server already running"
+msgstr "Server HTTP già in esecuzione"
+
+msgid "HTTP server not running"
+msgstr "Server HTTP non in esecuzione"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "Impossibile arrestare il server HTTP: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf ripulito"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "Impossibile ripulire install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf non trovato"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "Installazione automatica rilevata: install.conf è stato acceduto"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "Timeout in attesa che l'installazione automatica recuperi install.conf"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "Impossibile crittografare la password, utilizzo di testo normale (NON CONSIGLIATO)"
+
+msgid "Port already in use"
+msgstr "Porta già in uso"

@@ -906,3 +906,64 @@ msgstr "Не удалось настроить профили пользоват
 
 msgid "Permission denied writing to %s"
 msgstr "Отказано в доступе на запись в %s"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "Настройка конфигурации автоустановки..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "Выполняется автоустановка OpenBSD. ВМ будет автоматически установлена и перезагружена. Это может занять 10-15 минут."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "HTTP-запрос автоустановки: %s от %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "Создан install.conf для ВМ %s в %s"
+
+msgid "Created autoinstall directory: %s"
+msgstr "Создан каталог автоустановки: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "Не удалось записать install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "HTTP-сервер автоустановки запущен на %s:%d"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP-порт %d уже используется, автоустановка может работать"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "Не удалось запустить HTTP-сервер: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "HTTP-сервер автоустановки остановлен"
+
+msgid "HTTP server already running"
+msgstr "HTTP-сервер уже запущен"
+
+msgid "HTTP server not running"
+msgstr "HTTP-сервер не запущен"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "Не удалось остановить HTTP-сервер: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf очищен"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "Не удалось очистить install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf не найден"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "Обнаружена автоустановка: был получен доступ к install.conf"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "Тайм-аут ожидания загрузки install.conf автоустановкой"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "Не удалось зашифровать пароль, используется открытый текст (НЕ РЕКОМЕНДУЕТСЯ)"
+
+msgid "Port already in use"
+msgstr "Порт уже используется"

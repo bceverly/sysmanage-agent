@@ -906,3 +906,64 @@ msgstr "사용자 프로필 구성 실패"
 
 msgid "Permission denied writing to %s"
 msgstr "%s에 대한 쓰기 권한이 거부되었습니다"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "자동 설치 구성 설정 중..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정도 소요될 수 있습니다."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "자동 설치 HTTP 요청: %s에서 %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "VM %s용 install.conf를 %s에 생성함"
+
+msgid "Created autoinstall directory: %s"
+msgstr "자동 설치 디렉토리 생성됨: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "install.conf 쓰기 실패: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "자동 설치 HTTP 서버가 %s:%d에서 시작됨"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP 포트 %d가 이미 사용 중이지만 자동 설치가 작동할 수 있습니다"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "HTTP 서버 시작 실패: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "자동 설치 HTTP 서버 중지됨"
+
+msgid "HTTP server already running"
+msgstr "HTTP 서버가 이미 실행 중입니다"
+
+msgid "HTTP server not running"
+msgstr "HTTP 서버가 실행 중이 아닙니다"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "HTTP 서버 중지 실패: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf 정리됨"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "install.conf 정리 실패: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf를 찾을 수 없음"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "자동 설치 감지됨: install.conf에 접근됨"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "자동 설치가 install.conf를 가져오는 것을 기다리는 중 시간 초과"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "비밀번호를 암호화할 수 없어 일반 텍스트 사용 중 (권장하지 않음)"
+
+msgid "Port already in use"
+msgstr "포트가 이미 사용 중입니다"

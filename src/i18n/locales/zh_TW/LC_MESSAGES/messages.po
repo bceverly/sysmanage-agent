@@ -904,3 +904,64 @@ msgstr "設定使用者設定檔失敗"
 
 msgid "Permission denied writing to %s"
 msgstr "沒有寫入 %s 的權限"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "正在設定自動安裝設定..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分鐘。"
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "自動安裝 HTTP 請求: %s 來自 %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "已為虛擬機 %s 在 %s 產生 install.conf"
+
+msgid "Created autoinstall directory: %s"
+msgstr "已建立自動安裝目錄: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "寫入 install.conf 失敗: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "自動安裝 HTTP 伺服器已在 %s:%d 啟動"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP 連接埠 %d 已在使用中，自動安裝可能仍然有效"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "啟動 HTTP 伺服器失敗: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "自動安裝 HTTP 伺服器已停止"
+
+msgid "HTTP server already running"
+msgstr "HTTP 伺服器已在執行"
+
+msgid "HTTP server not running"
+msgstr "HTTP 伺服器未執行"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "停止 HTTP 伺服器失敗: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "已清理 install.conf"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "清理 install.conf 失敗: %s"
+
+msgid "install.conf not found"
+msgstr "找不到 install.conf"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "偵測到自動安裝: install.conf 已被存取"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "等待自動安裝取得 install.conf 逾時"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "無法加密密碼，使用明文（不建議）"
+
+msgid "Port already in use"
+msgstr "連接埠已在使用中"

@@ -904,3 +904,64 @@ msgstr "किसी भी उपयोगकर्ता प्रोफ़ा
 
 msgid "Permission denied writing to %s"
 msgstr "%s पर लिखने की अनुमति नहीं है"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "ऑटोइंस्टॉल कॉन्फ़िगरेशन सेट अप हो रहा है..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD ऑटोइंस्टॉल प्रगति पर है। VM स्वचालित रूप से इंस्टॉल और रीबूट होगा। इसमें 10-15 मिनट लग सकते हैं।"
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "ऑटोइंस्टॉल HTTP अनुरोध: %s से %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "VM %s के लिए install.conf %s पर जनरेट किया गया"
+
+msgid "Created autoinstall directory: %s"
+msgstr "ऑटोइंस्टॉल डायरेक्टरी बनाई गई: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "install.conf लिखने में विफल: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "ऑटोइंस्टॉल HTTP सर्वर %s:%d पर शुरू हुआ"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP पोर्ट %d पहले से उपयोग में है, ऑटोइंस्टॉल फिर भी काम कर सकता है"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "HTTP सर्वर शुरू करने में विफल: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "ऑटोइंस्टॉल HTTP सर्वर बंद हुआ"
+
+msgid "HTTP server already running"
+msgstr "HTTP सर्वर पहले से चल रहा है"
+
+msgid "HTTP server not running"
+msgstr "HTTP सर्वर नहीं चल रहा है"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "HTTP सर्वर बंद करने में विफल: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf साफ कर दिया गया"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "install.conf साफ करने में विफल: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf नहीं मिला"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "ऑटोइंस्टॉल पता चला: install.conf एक्सेस किया गया"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "ऑटोइंस्टॉल द्वारा install.conf प्राप्त करने की प्रतीक्षा में समय समाप्त"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "पासवर्ड एन्क्रिप्ट नहीं हो सका, प्लेन टेक्स्ट का उपयोग हो रहा है (अनुशंसित नहीं)"
+
+msgid "Port already in use"
+msgstr "पोर्ट पहले से उपयोग में है"

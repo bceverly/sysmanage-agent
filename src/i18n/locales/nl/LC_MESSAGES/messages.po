@@ -906,3 +906,64 @@ msgstr "Kon geen gebruikersprofielen configureren"
 
 msgid "Permission denied writing to %s"
 msgstr "Geen schrijfrechten voor %s"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "Autoinstall-configuratie instellen..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en opnieuw opgestart. Dit kan 10-15 minuten duren."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "Autoinstall HTTP-verzoek: %s van %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "install.conf gegenereerd voor VM %s op %s"
+
+msgid "Created autoinstall directory: %s"
+msgstr "Autoinstall-map aangemaakt: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "Fout bij schrijven van install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "Autoinstall HTTP-server gestart op %s:%d"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP-poort %d al in gebruik, autoinstall kan nog steeds werken"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "Fout bij starten HTTP-server: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "Autoinstall HTTP-server gestopt"
+
+msgid "HTTP server already running"
+msgstr "HTTP-server draait al"
+
+msgid "HTTP server not running"
+msgstr "HTTP-server draait niet"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "Fout bij stoppen HTTP-server: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf opgeruimd"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "Fout bij opruimen van install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf niet gevonden"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "Autoinstall gedetecteerd: install.conf werd benaderd"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "Time-out bij wachten op autoinstall om install.conf op te halen"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "Kon wachtwoord niet versleutelen, platte tekst wordt gebruikt (NIET AANBEVOLEN)"
+
+msgid "Port already in use"
+msgstr "Poort al in gebruik"

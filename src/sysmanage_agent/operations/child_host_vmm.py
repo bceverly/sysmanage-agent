@@ -12,6 +12,9 @@ from urllib.parse import urlparse
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
+from src.sysmanage_agent.operations.child_host_vmm_autoinstall import (
+    VmmAutoinstallOperations,
+)
 from src.sysmanage_agent.operations.child_host_vmm_lifecycle import (
     VmmLifecycleOperations,
 )
@@ -39,6 +42,7 @@ class VmmOperations:
         self.virtualization_checks = virtualization_checks
         self.ssh_ops = VmmSshOperations(logger)
         self.lifecycle = VmmLifecycleOperations(logger, virtualization_checks)
+        self.autoinstall = VmmAutoinstallOperations(logger)
 
     async def initialize_vmd(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -370,7 +374,35 @@ class VmmOperations:
                 return iso_result
             iso_path = iso_result.get("iso_path")
 
-            # Step 6: Launch VM with install ISO
+            # Step 6: Set up autoinstall
+            await self._send_progress(
+                "setting_up_autoinstall",
+                _("Setting up autoinstall configuration..."),
+            )
+
+            # Generate install.conf with VM configuration
+            conf_result = self.autoinstall.write_install_conf(
+                vm_name=config.vm_name,
+                hostname=fqdn_hostname,
+                username=config.username,
+                password=config.password,
+            )
+            if not conf_result.get("success"):
+                self.logger.warning(
+                    "Failed to create install.conf: %s", conf_result.get("error")
+                )
+                # Continue anyway - user can do manual install
+
+            # Start HTTP server for autoinstall
+            http_result = self.autoinstall.start_http_server()
+            if not http_result.get("success"):
+                self.logger.warning(
+                    "Failed to start autoinstall HTTP server: %s",
+                    http_result.get("error"),
+                )
+                # Continue anyway - might already be running or user can do manual
+
+            # Step 7: Launch VM with install ISO
             await self._send_progress(
                 "launching_vm",
                 _("Launching VM %s with install media...") % config.vm_name,
@@ -383,31 +415,40 @@ class VmmOperations:
                 config.cpus,
             )
             if not launch_result.get("success"):
+                self.autoinstall.stop_http_server()
                 return launch_result
 
-            # Step 7: Wait for installation to complete
-            # For now, we need manual installation via serial console
-            # This can be enhanced with autoinstall support later
+            # Step 8: Wait for autoinstall to complete
+            # OpenBSD autoinstall will:
+            # 1. Boot from ISO
+            # 2. Automatically select (A)utoinstall when it detects a response file
+            # 3. Fetch install.conf from http://10.0.0.1/install.conf
+            # 4. Run through the installation automatically
+            # 5. Reboot into the installed system
             await self._send_progress(
-                "awaiting_installation",
+                "awaiting_autoinstall",
                 _(
-                    "VM is running with install media. "
-                    "Complete the installation via serial console "
-                    "(vmctl console %s), then the setup will continue."
-                )
-                % config.vm_name,
+                    "OpenBSD autoinstall in progress. "
+                    "The VM will automatically install and reboot. "
+                    "This may take 10-15 minutes."
+                ),
             )
 
-            # Step 8: Wait for VM to get an IP address (indicates OS is booted)
+            # Step 9: Wait for VM to get an IP address (indicates OS is booted)
             await self._send_progress(
                 "waiting_for_ip", _("Waiting for VM to obtain IP address...")
             )
             ip_result = await self._wait_for_vm_ip(config.vm_name, timeout=1800)
+
+            # Cleanup autoinstall resources regardless of result
+            self.autoinstall.stop_http_server()
+            self.autoinstall.cleanup_install_conf(config.vm_name)
+
             if not ip_result.get("success"):
                 return ip_result
             vm_ip = ip_result.get("ip")
 
-            # Step 9: Wait for SSH to become available
+            # Step 10: Wait for SSH to become available
             await self._send_progress(
                 "waiting_for_ssh", _("Waiting for SSH to become available...")
             )
@@ -415,7 +456,7 @@ class VmmOperations:
             if not ssh_result.get("success"):
                 return ssh_result
 
-            # Step 10: Set hostname
+            # Step 11: Set hostname
             await self._send_progress(
                 "setting_hostname", _("Setting hostname to %s...") % fqdn_hostname
             )
@@ -430,7 +471,7 @@ class VmmOperations:
                     "Hostname configuration failed: %s", hostname_result.get("error")
                 )
 
-            # Step 11: Install sysmanage-agent
+            # Step 12: Install sysmanage-agent
             if config.agent_install_commands:
                 await self._send_progress(
                     "installing_agent", _("Installing sysmanage-agent...")
@@ -446,7 +487,7 @@ class VmmOperations:
                         "Agent installation failed: %s", agent_result.get("error")
                     )
 
-            # Step 12: Configure agent
+            # Step 13: Configure agent
             if config.server_url:
                 await self._send_progress(
                     "configuring_agent", _("Configuring sysmanage-agent...")
@@ -465,7 +506,7 @@ class VmmOperations:
                         "Agent configuration failed: %s", config_result.get("error")
                     )
 
-            # Step 13: Start agent service
+            # Step 14: Start agent service
             await self._send_progress("starting_agent", _("Starting agent service..."))
             start_result = await self.ssh_ops.start_agent_service_via_ssh(
                 vm_ip,
@@ -492,6 +533,12 @@ class VmmOperations:
 
         except Exception as error:
             self.logger.error(_("Error creating VMM VM: %s"), error)
+            # Ensure autoinstall resources are cleaned up
+            try:
+                self.autoinstall.stop_http_server()
+                self.autoinstall.cleanup_install_conf(config.vm_name)
+            except Exception:  # nosec B110 - cleanup failures are not critical
+                pass
             return {"success": False, "error": str(error)}
 
     async def _send_progress(self, step: str, message: str):

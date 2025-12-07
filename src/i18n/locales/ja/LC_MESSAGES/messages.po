@@ -908,3 +908,64 @@ msgstr "ユーザープロファイルの構成に失敗しました"
 
 msgid "Permission denied writing to %s"
 msgstr "%sへの書き込み権限がありません"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "自動インストール設定をセットアップしています..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD自動インストール進行中。VMは自動的にインストールして再起動します。10〜15分かかる場合があります。"
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "自動インストールHTTPリクエスト: %s から %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "VM %s用のinstall.confを%sに生成しました"
+
+msgid "Created autoinstall directory: %s"
+msgstr "自動インストールディレクトリを作成しました: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "install.confの書き込みに失敗しました: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "自動インストールHTTPサーバーを%s:%dで開始しました"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTPポート%dは既に使用中ですが、自動インストールは機能する可能性があります"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "HTTPサーバーの開始に失敗しました: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "自動インストールHTTPサーバーを停止しました"
+
+msgid "HTTP server already running"
+msgstr "HTTPサーバーは既に実行中です"
+
+msgid "HTTP server not running"
+msgstr "HTTPサーバーは実行されていません"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "HTTPサーバーの停止に失敗しました: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.confをクリーンアップしました"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "install.confのクリーンアップに失敗しました: %s"
+
+msgid "install.conf not found"
+msgstr "install.confが見つかりません"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "自動インストール検出: install.confがアクセスされました"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "自動インストールがinstall.confを取得するのを待機中にタイムアウト"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "パスワードを暗号化できませんでした。プレーンテキストを使用します（非推奨）"
+
+msgid "Port already in use"
+msgstr "ポートは既に使用中です"

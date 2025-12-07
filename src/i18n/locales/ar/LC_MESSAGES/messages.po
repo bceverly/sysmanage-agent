@@ -909,3 +909,64 @@ msgstr "فشل في تكوين أي ملفات تعريف للمستخدمين"
 
 msgid "Permission denied writing to %s"
 msgstr "تم رفض الإذن للكتابة إلى %s"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "إعداد تكوين التثبيت التلقائي..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة تشغيله تلقائياً. قد يستغرق هذا 10-15 دقيقة."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "طلب HTTP للتثبيت التلقائي: %s من %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "تم إنشاء install.conf للجهاز الافتراضي %s في %s"
+
+msgid "Created autoinstall directory: %s"
+msgstr "تم إنشاء دليل التثبيت التلقائي: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "فشل في كتابة install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "تم بدء خادم HTTP للتثبيت التلقائي على %s:%d"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "المنفذ HTTP %d قيد الاستخدام بالفعل، قد يعمل التثبيت التلقائي"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "فشل في بدء خادم HTTP: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "تم إيقاف خادم HTTP للتثبيت التلقائي"
+
+msgid "HTTP server already running"
+msgstr "خادم HTTP قيد التشغيل بالفعل"
+
+msgid "HTTP server not running"
+msgstr "خادم HTTP لا يعمل"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "فشل في إيقاف خادم HTTP: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "تم تنظيف install.conf"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "فشل في تنظيف install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "لم يتم العثور على install.conf"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "تم اكتشاف التثبيت التلقائي: تم الوصول إلى install.conf"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "انتهت مهلة انتظار التثبيت التلقائي لجلب install.conf"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "لا يمكن تشفير كلمة المرور، استخدام نص عادي (غير مستحسن)"
+
+msgid "Port already in use"
+msgstr "المنفذ قيد الاستخدام بالفعل"

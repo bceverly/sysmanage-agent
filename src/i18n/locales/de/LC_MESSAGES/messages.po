@@ -908,3 +908,64 @@ msgstr "Fehler beim Konfigurieren von Benutzerprofilen"
 
 msgid "Permission denied writing to %s"
 msgstr "Schreibzugriff auf %s verweigert"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "Autoinstall-Konfiguration wird eingerichtet..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD Autoinstall läuft. Die VM wird automatisch installiert und neu gestartet. Dies kann 10-15 Minuten dauern."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "Autoinstall HTTP-Anfrage: %s von %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "install.conf für VM %s unter %s generiert"
+
+msgid "Created autoinstall directory: %s"
+msgstr "Autoinstall-Verzeichnis erstellt: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "Fehler beim Schreiben von install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "Autoinstall HTTP-Server auf %s:%d gestartet"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert möglicherweise trotzdem"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "Fehler beim Starten des HTTP-Servers: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "Autoinstall HTTP-Server gestoppt"
+
+msgid "HTTP server already running"
+msgstr "HTTP-Server läuft bereits"
+
+msgid "HTTP server not running"
+msgstr "HTTP-Server läuft nicht"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "Fehler beim Stoppen des HTTP-Servers: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "install.conf aufgeräumt"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "Fehler beim Aufräumen von install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf nicht gefunden"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "Autoinstall erkannt: install.conf wurde abgerufen"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "Zeitüberschreitung beim Warten auf Abruf von install.conf durch Autoinstall"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet (NICHT EMPFOHLEN)"
+
+msgid "Port already in use"
+msgstr "Port bereits in Verwendung"

@@ -271,3 +271,64 @@ msgstr "Failed to configure any user profiles"
 
 msgid "Permission denied writing to %s"
 msgstr "Permission denied writing to %s"
+
+# OpenBSD Autoinstall
+msgid "Setting up autoinstall configuration..."
+msgstr "Setting up autoinstall configuration..."
+
+msgid "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+msgstr "OpenBSD autoinstall in progress. The VM will automatically install and reboot. This may take 10-15 minutes."
+
+msgid "Autoinstall HTTP request: %s from %s"
+msgstr "Autoinstall HTTP request: %s from %s"
+
+msgid "Generated install.conf for VM %s at %s"
+msgstr "Generated install.conf for VM %s at %s"
+
+msgid "Created autoinstall directory: %s"
+msgstr "Created autoinstall directory: %s"
+
+msgid "Failed to write install.conf: %s"
+msgstr "Failed to write install.conf: %s"
+
+msgid "Started autoinstall HTTP server on %s:%d"
+msgstr "Started autoinstall HTTP server on %s:%d"
+
+msgid "HTTP port %d already in use, autoinstall may still work"
+msgstr "HTTP port %d already in use, autoinstall may still work"
+
+msgid "Failed to start HTTP server: %s"
+msgstr "Failed to start HTTP server: %s"
+
+msgid "Stopped autoinstall HTTP server"
+msgstr "Stopped autoinstall HTTP server"
+
+msgid "HTTP server already running"
+msgstr "HTTP server already running"
+
+msgid "HTTP server not running"
+msgstr "HTTP server not running"
+
+msgid "Failed to stop HTTP server: %s"
+msgstr "Failed to stop HTTP server: %s"
+
+msgid "Cleaned up install.conf"
+msgstr "Cleaned up install.conf"
+
+msgid "Failed to cleanup install.conf: %s"
+msgstr "Failed to cleanup install.conf: %s"
+
+msgid "install.conf not found"
+msgstr "install.conf not found"
+
+msgid "Autoinstall detected: install.conf was accessed"
+msgstr "Autoinstall detected: install.conf was accessed"
+
+msgid "Timeout waiting for autoinstall to fetch install.conf"
+msgstr "Timeout waiting for autoinstall to fetch install.conf"
+
+msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+msgstr "Could not encrypt password, using plain text (NOT RECOMMENDED)"
+
+msgid "Port already in use"
+msgstr "Port already in use"
