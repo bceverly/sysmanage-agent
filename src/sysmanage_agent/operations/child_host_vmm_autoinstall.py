@@ -485,7 +485,40 @@ class VmmAutoinstallOperations:
 
             self.logger.debug("Extracted bsd.rd from ISO")
 
-            # Step 2: Extract ramdisk from bsd.rd
+            # Step 2: Check if bsd.rd is gzip-compressed and decompress if needed
+            # OpenBSD install ISOs typically have gzip-compressed bsd.rd files
+            self.logger.debug("Checking if bsd.rd is compressed")
+
+            # Use file(1) to check if it's gzip compressed
+            result = subprocess.run(  # nosec B603 B607
+                ["file", bsd_rd_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if "gzip" in result.stdout.lower():
+                self.logger.debug("bsd.rd is gzip compressed, decompressing")
+                bsd_rd_compressed = bsd_rd_path + ".gz"
+                os.rename(bsd_rd_path, bsd_rd_compressed)
+
+                result = subprocess.run(  # nosec B603 B607
+                    ["gunzip", "-f", bsd_rd_compressed],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    return {
+                        "success": False,
+                        "error": _("Failed to decompress bsd.rd: %s")
+                        % (result.stderr or result.stdout),
+                    }
+                self.logger.debug("bsd.rd decompressed successfully")
+
+            # Step 3: Extract ramdisk from bsd.rd
             disk_fs_path = os.path.join(vm_work_dir, "disk.fs")
             self.logger.debug("Extracting ramdisk from bsd.rd")
 
@@ -503,7 +536,7 @@ class VmmAutoinstallOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Step 3: Mount ramdisk
+            # Step 4: Mount ramdisk
             self.logger.debug("Mounting ramdisk")
 
             # Find available vnd device
@@ -548,7 +581,7 @@ class VmmAutoinstallOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Step 4: Generate and copy install.conf
+            # Step 5: Generate and copy install.conf
             self.logger.debug("Creating auto_install.conf in ramdisk")
 
             conf_content = self.generate_install_conf(
@@ -563,7 +596,7 @@ class VmmAutoinstallOperations:
 
             os.chmod(auto_install_path, 0o644)
 
-            # Step 5: Unmount ramdisk
+            # Step 6: Unmount ramdisk
             self.logger.debug("Unmounting ramdisk")
 
             result = subprocess.run(  # nosec B603 B607
@@ -593,7 +626,7 @@ class VmmAutoinstallOperations:
                 self.logger.warning("Failed to unconfigure vnd0: %s", result.stderr)
             vnd_device = None
 
-            # Step 6: Re-inject ramdisk into bsd.rd
+            # Step 7: Re-inject ramdisk into bsd.rd
             self.logger.debug("Re-injecting ramdisk into bsd.rd")
 
             result = subprocess.run(  # nosec B603 B607

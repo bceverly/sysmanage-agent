@@ -967,3 +967,49 @@ msgstr "Kon wachtwoord niet versleutelen, platte tekst wordt gebruikt (NIET AANB
 
 msgid "Port already in use"
 msgstr "Poort al in gebruik"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "install.conf wordt ingebed in bsd.rd voor VM %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "Configureren van vnd-apparaat voor ISO mislukt: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "Koppelen van ISO mislukt: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "Kon bsd.rd niet vinden in ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "Uitpakken van bsd.rd mislukt: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "Uitpakken van ramdisk mislukt: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "Configureren van vnd-apparaat mislukt: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "Koppelen van ramdisk mislukt: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "Herinjecteren van ramdisk mislukt: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "install.conf succesvol ingebed in bsd.rd voor VM %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "Time-out tijdens ramdisk-bewerkingen: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "Time-out tijdens ramdisk-bewerkingen"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "Inbedden van install.conf mislukt: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "Autoinstall werkmap opgeschoond"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "Opschonen van autoinstall werkmap mislukt: %s"

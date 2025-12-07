@@ -967,3 +967,49 @@ msgstr "Не удалось зашифровать пароль, использ�
 
 msgid "Port already in use"
 msgstr "Порт уже используется"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "Встраивание install.conf в bsd.rd для ВМ %s"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "Не удалось настроить устройство vnd для ISO: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "Не удалось смонтировать ISO: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "Не удалось найти bsd.rd в ISO"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "Не удалось распаковать bsd.rd: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "Не удалось извлечь ramdisk: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "Не удалось настроить устройство vnd: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "Не удалось смонтировать ramdisk: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "Не удалось повторно внедрить ramdisk: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "install.conf успешно встроен в bsd.rd для ВМ %s"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "Тайм-аут во время операций с ramdisk: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "Тайм-аут во время операций с ramdisk"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "Не удалось встроить install.conf: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "Рабочий каталог автоустановки очищен"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "Не удалось очистить рабочий каталог автоустановки: %s"

@@ -965,3 +965,49 @@ msgstr "無法加密密碼，使用明文（不建議）"
 
 msgid "Port already in use"
 msgstr "連接埠已在使用中"
+
+# OpenBSD Autoinstall - bsd.rd embedding
+msgid "Embedding install.conf into bsd.rd for VM %s"
+msgstr "正在將 install.conf 嵌入 VM %s 的 bsd.rd"
+
+msgid "Failed to configure vnd device for ISO: %s"
+msgstr "為 ISO 設定 vnd 裝置失敗: %s"
+
+msgid "Failed to mount ISO: %s"
+msgstr "掛載 ISO 失敗: %s"
+
+msgid "Could not find bsd.rd in ISO"
+msgstr "在 ISO 中找不到 bsd.rd"
+
+msgid "Failed to decompress bsd.rd: %s"
+msgstr "解壓縮 bsd.rd 失敗: %s"
+
+msgid "Failed to extract ramdisk: %s"
+msgstr "提取 ramdisk 失敗: %s"
+
+msgid "Failed to configure vnd device: %s"
+msgstr "設定 vnd 裝置失敗: %s"
+
+msgid "Failed to mount ramdisk: %s"
+msgstr "掛載 ramdisk 失敗: %s"
+
+msgid "Failed to re-inject ramdisk: %s"
+msgstr "重新注入 ramdisk 失敗: %s"
+
+msgid "Successfully embedded install.conf into bsd.rd for VM %s"
+msgstr "成功將 install.conf 嵌入 VM %s 的 bsd.rd"
+
+msgid "Timeout during ramdisk operations: %s"
+msgstr "ramdisk 操作逾時: %s"
+
+msgid "Timeout during ramdisk operations"
+msgstr "ramdisk 操作逾時"
+
+msgid "Failed to embed install.conf: %s"
+msgstr "嵌入 install.conf 失敗: %s"
+
+msgid "Cleaned up autoinstall work directory"
+msgstr "已清理自動安裝工作目錄"
+
+msgid "Failed to cleanup autoinstall work directory: %s"
+msgstr "清理自動安裝工作目錄失敗: %s"
