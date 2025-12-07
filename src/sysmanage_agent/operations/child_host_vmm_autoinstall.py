@@ -10,6 +10,7 @@ import http.server
 import os
 import socketserver
 import subprocess  # nosec B404 # Required for system command execution
+import tempfile
 import threading
 import time
 from typing import Any, Dict, Optional
@@ -366,7 +367,7 @@ class VmmAutoinstallOperations:
         hostname: str,
         username: str,
         password: str,
-        work_dir: str = "/tmp",
+        work_dir: str = None,
     ) -> Dict[str, Any]:
         """
         Embed install.conf directly into bsd.rd ramdisk for autoinstall.
@@ -392,6 +393,10 @@ class VmmAutoinstallOperations:
 
         try:
             self.logger.info(_("Embedding install.conf into bsd.rd for VM %s"), vm_name)
+
+            # Use system temp directory if not specified
+            if work_dir is None:
+                work_dir = tempfile.gettempdir()
 
             # Create work directory for this VM
             vm_work_dir = os.path.join(work_dir, f"autoinstall-{vm_name}")
@@ -485,12 +490,33 @@ class VmmAutoinstallOperations:
 
             self.logger.debug("Extracted bsd.rd from ISO")
 
-            # Step 2: Extract ramdisk from bsd.rd
+            # Step 2: Decompress bsd.rd (it's gzip compressed)
+            bsd_rd_uncompressed = os.path.join(vm_work_dir, "bsd.rd.uncompressed")
+            self.logger.debug("Decompressing bsd.rd")
+
+            result = subprocess.run(  # nosec B603 B607
+                ["gunzip", "-c", bsd_rd_path],
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to decompress bsd.rd: %s")
+                    % (result.stderr.decode() if result.stderr else "Unknown error"),
+                }
+
+            # Write decompressed data to file
+            with open(bsd_rd_uncompressed, "wb") as uncompressed_file:
+                uncompressed_file.write(result.stdout)
+
+            # Step 3: Extract ramdisk from decompressed bsd.rd
             disk_fs_path = os.path.join(vm_work_dir, "disk.fs")
             self.logger.debug("Extracting ramdisk from bsd.rd")
 
             result = subprocess.run(  # nosec B603 B607
-                ["rdsetroot", "-x", bsd_rd_path, disk_fs_path],
+                ["rdsetroot", "-x", bsd_rd_uncompressed, disk_fs_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -503,7 +529,7 @@ class VmmAutoinstallOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Step 3: Mount ramdisk
+            # Step 4: Mount ramdisk
             self.logger.debug("Mounting ramdisk")
 
             # Find available vnd device
@@ -548,7 +574,7 @@ class VmmAutoinstallOperations:
                     % (result.stderr or result.stdout),
                 }
 
-            # Step 4: Generate and copy install.conf
+            # Step 5: Generate and copy install.conf
             self.logger.debug("Creating auto_install.conf in ramdisk")
 
             conf_content = self.generate_install_conf(
@@ -593,11 +619,11 @@ class VmmAutoinstallOperations:
                 self.logger.warning("Failed to unconfigure vnd0: %s", result.stderr)
             vnd_device = None
 
-            # Step 6: Re-inject ramdisk into bsd.rd
+            # Step 6: Re-inject ramdisk into uncompressed bsd.rd
             self.logger.debug("Re-injecting ramdisk into bsd.rd")
 
             result = subprocess.run(  # nosec B603 B607
-                ["rdsetroot", bsd_rd_path, disk_fs_path],
+                ["rdsetroot", bsd_rd_uncompressed, disk_fs_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -609,6 +635,26 @@ class VmmAutoinstallOperations:
                     "error": _("Failed to re-inject ramdisk: %s")
                     % (result.stderr or result.stdout),
                 }
+
+            # Step 7: Compress the modified bsd.rd back to gzip format
+            self.logger.debug("Compressing modified bsd.rd")
+
+            result = subprocess.run(  # nosec B603 B607
+                ["gzip", "-c", bsd_rd_uncompressed],
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to compress bsd.rd: %s")
+                    % (result.stderr.decode() if result.stderr else "Unknown error"),
+                }
+
+            # Write compressed data back to bsd.rd
+            with open(bsd_rd_path, "wb") as compressed_file:
+                compressed_file.write(result.stdout)
 
             self.logger.info(
                 _("Successfully embedded install.conf into bsd.rd for VM %s"), vm_name
