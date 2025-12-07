@@ -359,14 +359,14 @@ class VmmAutoinstallOperations:
                 "error": str(error),
             }
 
-    def embed_install_conf_in_bsd_rd(  # nosec B108 - /tmp is appropriate for temp work files
+    def embed_install_conf_in_bsd_rd(
         self,
         iso_path: str,
         vm_name: str,
         hostname: str,
         username: str,
         password: str,
-        work_dir: str = "/tmp",
+        work_dir: str = "/tmp",  # nosec B108
     ) -> Dict[str, Any]:
         """
         Embed install.conf directly into bsd.rd ramdisk for autoinstall.
