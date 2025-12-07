@@ -359,6 +359,339 @@ class VmmAutoinstallOperations:
                 "error": str(error),
             }
 
+    def embed_install_conf_in_bsd_rd(
+        self,
+        iso_path: str,
+        vm_name: str,
+        hostname: str,
+        username: str,
+        password: str,
+        work_dir: str = "/tmp",
+    ) -> Dict[str, Any]:
+        """
+        Embed install.conf directly into bsd.rd ramdisk for autoinstall.
+
+        This eliminates the need for DHCP next-server and HTTP server by
+        embedding the response file directly into the ramdisk kernel.
+
+        Args:
+            iso_path: Path to the OpenBSD install ISO
+            vm_name: Name of the VM
+            hostname: System hostname
+            username: Non-root user to create
+            password: Password for accounts
+            work_dir: Working directory for temporary files
+
+        Returns:
+            Dict with success status and path to modified bsd.rd
+        """
+        bsd_rd_path = None
+        disk_fs_path = None
+        mount_point = None
+        vnd_device = None
+
+        try:
+            self.logger.info(_("Embedding install.conf into bsd.rd for VM %s"), vm_name)
+
+            # Create work directory for this VM
+            vm_work_dir = os.path.join(work_dir, f"autoinstall-{vm_name}")
+            if not os.path.exists(vm_work_dir):
+                os.makedirs(vm_work_dir, mode=0o755)
+
+            # Step 1: Extract bsd.rd from ISO
+            bsd_rd_path = os.path.join(vm_work_dir, "bsd.rd")
+            self.logger.debug("Extracting bsd.rd from ISO")
+
+            # Mount the ISO temporarily to extract bsd.rd
+            iso_mount = os.path.join(vm_work_dir, "iso_mount")
+            if not os.path.exists(iso_mount):
+                os.makedirs(iso_mount, mode=0o755)
+
+            # Mount ISO using vnconfig
+            result = subprocess.run(  # nosec B603 B607
+                ["vnconfig", "vnd1", iso_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to configure vnd device for ISO: %s")
+                    % (result.stderr or result.stdout),
+                }
+
+            try:
+                # Mount the ISO
+                result = subprocess.run(  # nosec B603 B607
+                    ["mount", "-t", "cd9660", "/dev/vnd1c", iso_mount],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    subprocess.run(  # nosec B603 B607
+                        ["vnconfig", "-u", "vnd1"],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    return {
+                        "success": False,
+                        "error": _("Failed to mount ISO: %s")
+                        % (result.stderr or result.stdout),
+                    }
+
+                # Find and copy bsd.rd (usually in <version>/amd64/bsd.rd)
+                iso_bsd_rd = None
+                for root, _dirs, files in os.walk(iso_mount):
+                    if "bsd.rd" in files:
+                        iso_bsd_rd = os.path.join(root, "bsd.rd")
+                        break
+
+                if not iso_bsd_rd:
+                    return {
+                        "success": False,
+                        "error": _("Could not find bsd.rd in ISO"),
+                    }
+
+                # Copy bsd.rd to work directory
+                subprocess.run(  # nosec B603 B607
+                    ["cp", iso_bsd_rd, bsd_rd_path],
+                    capture_output=True,
+                    timeout=30,
+                    check=True,
+                )
+
+            finally:
+                # Unmount ISO and unconfigure vnd1
+                subprocess.run(  # nosec B603 B607
+                    ["umount", iso_mount],
+                    capture_output=True,
+                    timeout=30,
+                    check=False,
+                )
+                subprocess.run(  # nosec B603 B607
+                    ["vnconfig", "-u", "vnd1"],
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+                # Clean up mount point
+                if os.path.exists(iso_mount):
+                    os.rmdir(iso_mount)
+
+            self.logger.debug("Extracted bsd.rd from ISO")
+
+            # Step 2: Extract ramdisk from bsd.rd
+            disk_fs_path = os.path.join(vm_work_dir, "disk.fs")
+            self.logger.debug("Extracting ramdisk from bsd.rd")
+
+            result = subprocess.run(  # nosec B603 B607
+                ["rdsetroot", "-x", bsd_rd_path, disk_fs_path],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to extract ramdisk: %s")
+                    % (result.stderr or result.stdout),
+                }
+
+            # Step 3: Mount ramdisk
+            self.logger.debug("Mounting ramdisk")
+
+            # Find available vnd device
+            result = subprocess.run(  # nosec B603 B607
+                ["vnconfig", "vnd0", disk_fs_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to configure vnd device: %s")
+                    % (result.stderr or result.stdout),
+                }
+            vnd_device = "vnd0"
+
+            # Create mount point
+            mount_point = os.path.join(vm_work_dir, "ramdisk")
+            if not os.path.exists(mount_point):
+                os.makedirs(mount_point, mode=0o755)
+
+            # Mount the ramdisk
+            result = subprocess.run(  # nosec B603 B607
+                ["mount", "/dev/vnd0a", mount_point],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                subprocess.run(  # nosec B603 B607
+                    ["vnconfig", "-u", "vnd0"],
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to mount ramdisk: %s")
+                    % (result.stderr or result.stdout),
+                }
+
+            # Step 4: Generate and copy install.conf
+            self.logger.debug("Creating auto_install.conf in ramdisk")
+
+            conf_content = self.generate_install_conf(
+                hostname=hostname,
+                username=username,
+                password=password,
+            )
+
+            auto_install_path = os.path.join(mount_point, "auto_install.conf")
+            with open(auto_install_path, "w", encoding="utf-8") as conf_file:
+                conf_file.write(conf_content)
+
+            os.chmod(auto_install_path, 0o644)
+
+            # Step 5: Unmount ramdisk
+            self.logger.debug("Unmounting ramdisk")
+
+            result = subprocess.run(  # nosec B603 B607
+                ["umount", mount_point],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                self.logger.warning("Failed to unmount ramdisk: %s", result.stderr)
+
+            # Remove mount point
+            if os.path.exists(mount_point):
+                os.rmdir(mount_point)
+            mount_point = None
+
+            # Unconfigure vnd device
+            result = subprocess.run(  # nosec B603 B607
+                ["vnconfig", "-u", "vnd0"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                self.logger.warning("Failed to unconfigure vnd0: %s", result.stderr)
+            vnd_device = None
+
+            # Step 6: Re-inject ramdisk into bsd.rd
+            self.logger.debug("Re-injecting ramdisk into bsd.rd")
+
+            result = subprocess.run(  # nosec B603 B607
+                ["rdsetroot", bsd_rd_path, disk_fs_path],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to re-inject ramdisk: %s")
+                    % (result.stderr or result.stdout),
+                }
+
+            self.logger.info(
+                _("Successfully embedded install.conf into bsd.rd for VM %s"), vm_name
+            )
+
+            return {
+                "success": True,
+                "bsd_rd_path": bsd_rd_path,
+                "work_dir": vm_work_dir,
+            }
+
+        except subprocess.TimeoutExpired as error:
+            self.logger.error(_("Timeout during ramdisk operations: %s"), error)
+            return {
+                "success": False,
+                "error": _("Timeout during ramdisk operations"),
+            }
+        except Exception as error:
+            self.logger.error(_("Failed to embed install.conf: %s"), error)
+            return {
+                "success": False,
+                "error": str(error),
+            }
+        finally:
+            # Cleanup: ensure everything is unmounted and unconfigured
+            try:
+                if mount_point and os.path.exists(mount_point):
+                    subprocess.run(  # nosec B603 B607
+                        ["umount", mount_point],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    os.rmdir(mount_point)
+            except Exception:  # nosec B110
+                pass
+
+            try:
+                if vnd_device:
+                    subprocess.run(  # nosec B603 B607
+                        ["vnconfig", "-u", vnd_device],
+                        capture_output=True,
+                        timeout=10,
+                        check=False,
+                    )
+            except Exception:  # nosec B110
+                pass
+
+    def cleanup_embedded_autoinstall(self, work_dir: str) -> Dict[str, Any]:
+        """
+        Clean up temporary files from embedded autoinstall.
+
+        Args:
+            work_dir: Work directory containing temporary files
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            if os.path.exists(work_dir):
+                # Remove all files in work directory
+                for item in os.listdir(work_dir):
+                    item_path = os.path.join(work_dir, item)
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                    elif os.path.isdir(item_path):
+                        os.rmdir(item_path)
+
+                # Remove work directory
+                os.rmdir(work_dir)
+                self.logger.info(_("Cleaned up autoinstall work directory"))
+
+            return {"success": True}
+
+        except Exception as error:
+            self.logger.warning(
+                _("Failed to cleanup autoinstall work directory: %s"), error
+            )
+            return {
+                "success": False,
+                "error": str(error),
+            }
+
     def wait_for_autoinstall_fetch(
         self, timeout: int = 300, check_interval: int = 5
     ) -> Dict[str, Any]:
@@ -398,8 +731,8 @@ class VmmAutoinstallOperations:
                         _("Autoinstall detected: install.conf was accessed")
                     )
                     return {"success": True}
-            except Exception:
-                pass
+            except Exception as error:  # nosec B110
+                self.logger.debug("Error checking file access time: %s", error)
 
             time.sleep(check_interval)
 

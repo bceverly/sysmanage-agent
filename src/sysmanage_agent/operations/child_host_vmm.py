@@ -374,57 +374,53 @@ class VmmOperations:
                 return iso_result
             iso_path = iso_result.get("iso_path")
 
-            # Step 6: Set up autoinstall
+            # Step 6: Set up autoinstall by embedding install.conf into bsd.rd
             await self._send_progress(
                 "setting_up_autoinstall",
-                _("Setting up autoinstall configuration..."),
+                _("Embedding autoinstall configuration into bsd.rd..."),
             )
 
-            # Generate install.conf with VM configuration
-            conf_result = self.autoinstall.write_install_conf(
+            # Embed install.conf directly into bsd.rd ramdisk
+            embed_result = self.autoinstall.embed_install_conf_in_bsd_rd(
+                iso_path=iso_path,
                 vm_name=config.vm_name,
                 hostname=fqdn_hostname,
                 username=config.username,
                 password=config.password,
             )
-            if not conf_result.get("success"):
-                self.logger.warning(
-                    "Failed to create install.conf: %s", conf_result.get("error")
-                )
-                # Continue anyway - user can do manual install
+            if not embed_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to embed autoinstall config: %s")
+                    % embed_result.get("error"),
+                }
 
-            # Start HTTP server for autoinstall
-            http_result = self.autoinstall.start_http_server()
-            if not http_result.get("success"):
-                self.logger.warning(
-                    "Failed to start autoinstall HTTP server: %s",
-                    http_result.get("error"),
-                )
-                # Continue anyway - might already be running or user can do manual
+            bsd_rd_path = embed_result.get("bsd_rd_path")
+            autoinstall_work_dir = embed_result.get("work_dir")
 
-            # Step 7: Launch VM with install ISO
+            # Step 7: Launch VM with embedded bsd.rd
             await self._send_progress(
                 "launching_vm",
-                _("Launching VM %s with install media...") % config.vm_name,
+                _("Launching VM %s with autoinstall kernel...") % config.vm_name,
             )
-            launch_result = await self._launch_vm_with_iso(
+            launch_result = await self._launch_vm_with_bsd_rd(
                 config.vm_name,
                 disk_path,
-                iso_path,
+                bsd_rd_path,
                 config.memory,
                 config.cpus,
             )
             if not launch_result.get("success"):
-                self.autoinstall.stop_http_server()
+                # Clean up work directory on failure
+                self.autoinstall.cleanup_embedded_autoinstall(autoinstall_work_dir)
                 return launch_result
 
             # Step 8: Wait for autoinstall to complete
             # OpenBSD autoinstall will:
-            # 1. Boot from ISO
-            # 2. Automatically select (A)utoinstall when it detects a response file
-            # 3. Fetch install.conf from http://10.0.0.1/install.conf
-            # 4. Run through the installation automatically
-            # 5. Reboot into the installed system
+            # 1. Boot from embedded bsd.rd kernel
+            # 2. Automatically detect auto_install.conf in the ramdisk
+            # 3. Run through the installation automatically using the embedded config
+            # 4. Reboot into the installed system
             await self._send_progress(
                 "awaiting_autoinstall",
                 _(
@@ -441,8 +437,7 @@ class VmmOperations:
             ip_result = await self._wait_for_vm_ip(config.vm_name, timeout=1800)
 
             # Cleanup autoinstall resources regardless of result
-            self.autoinstall.stop_http_server()
-            self.autoinstall.cleanup_install_conf(config.vm_name)
+            self.autoinstall.cleanup_embedded_autoinstall(autoinstall_work_dir)
 
             if not ip_result.get("success"):
                 return ip_result
@@ -535,8 +530,9 @@ class VmmOperations:
             self.logger.error(_("Error creating VMM VM: %s"), error)
             # Ensure autoinstall resources are cleaned up
             try:
-                self.autoinstall.stop_http_server()
-                self.autoinstall.cleanup_install_conf(config.vm_name)
+                # Clean up embedded autoinstall work directory if it exists
+                work_dir = f"/tmp/autoinstall-{config.vm_name}"
+                self.autoinstall.cleanup_embedded_autoinstall(work_dir)
             except Exception:  # nosec B110 - cleanup failures are not critical
                 pass
             return {"success": False, "error": str(error)}
@@ -767,6 +763,82 @@ class VmmOperations:
 
             if result.returncode == 0:
                 self.logger.info(_("VM %s launched with install media"), vm_name)
+                return {"success": True}
+
+            error_msg = result.stderr or result.stdout or "Unknown error"
+            return {
+                "success": False,
+                "error": _("Failed to launch VM: %s") % error_msg,
+            }
+
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "error": _("Timeout launching VM"),
+            }
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
+    async def _launch_vm_with_bsd_rd(
+        self,
+        vm_name: str,
+        disk_path: str,
+        bsd_rd_path: str,
+        memory: str,
+        _cpus: int,
+    ) -> Dict[str, Any]:
+        """
+        Launch a VM with embedded bsd.rd kernel for autoinstall.
+
+        Uses vmd's built-in local networking (-L flag) for DHCP.
+        Boots from the modified bsd.rd kernel with embedded auto_install.conf.
+
+        Args:
+            vm_name: Name for the VM
+            disk_path: Path to the disk image
+            bsd_rd_path: Path to the modified bsd.rd kernel
+            memory: Memory allocation (e.g., "1G")
+            _cpus: Number of CPUs (reserved for future use with vm.conf)
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            # Build vmctl start command
+            # -m: memory
+            # -L: local network with DHCP
+            # -i 1: one network interface
+            # -b: boot from custom kernel (bsd.rd with embedded autoinstall)
+            # -d: disk image
+            cmd = [
+                "vmctl",
+                "start",
+                "-m",
+                memory,
+                "-L",
+                "-i",
+                "1",
+                "-b",
+                bsd_rd_path,
+                "-d",
+                disk_path,
+                vm_name,
+            ]
+
+            self.logger.info(
+                _("Launching VM with autoinstall kernel: %s"), " ".join(cmd)
+            )
+
+            result = subprocess.run(  # nosec B603 B607
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                self.logger.info(_("VM %s launched with autoinstall kernel"), vm_name)
                 return {"success": True}
 
             error_msg = result.stderr or result.stdout or "Unknown error"
