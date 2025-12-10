@@ -1498,6 +1498,13 @@ installer-openbsd:
 	fi; \
 	echo "✓ Source directory found"; \
 	echo ""; \
+	echo "Generating OpenBSD PLIST..."; \
+	python3 installer/openbsd/generate-plist.py || { \
+		echo "ERROR: Failed to generate PLIST"; \
+		exit 1; \
+	}; \
+	echo "✓ PLIST generated"; \
+	echo ""; \
 	echo "Creating ports directory (requires doas)..."; \
 	doas mkdir -p "$$PORTS_DIR" || { \
 		echo "ERROR: Failed to create $$PORTS_DIR"; \

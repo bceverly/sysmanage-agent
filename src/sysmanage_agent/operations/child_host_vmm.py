@@ -373,59 +373,81 @@ class VmmOperations:
             iso_result = await self._get_install_iso(config.iso_url)
             if not iso_result.get("success"):
                 return iso_result
-            iso_path = iso_result.get("iso_path")
+            _iso_path = iso_result.get(
+                "iso_path"
+            )  # Downloaded but not used with PXE boot
 
-            # Step 6: Set up autoinstall by embedding install.conf into bsd.rd
+            # Step 6: Set up autoinstall infrastructure (DHCP + TFTP + HTTP)
             await self._send_progress(
                 "setting_up_autoinstall",
-                _("Embedding autoinstall configuration into bsd.rd..."),
+                _("Setting up autoinstall infrastructure (DHCP + HTTP)..."),
             )
 
-            # Embed install.conf directly into bsd.rd ramdisk
-            embed_result = self.autoinstall.embed_install_conf_in_bsd_rd(
-                iso_path=iso_path,
+            # Set up DHCP, TFTP (for PXE), and HTTP for autoinstall
+            infra_result = self.autoinstall.setup_autoinstall_infrastructure(
+                vm_name=config.vm_name,
+                hostname=fqdn_hostname,
+                iso_url=config.iso_url,
+                use_pxe=True,  # Use PXE boot for fully automatic installation
+            )
+            if not infra_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to setup autoinstall infrastructure: %s")
+                    % infra_result.get("error"),
+                }
+
+            autoinstall_state = infra_result.get("state")
+            subnet_info = autoinstall_state.get("subnet_info", {})
+            gateway_ip = subnet_info.get("gateway_ip", "10.0.0.1")
+
+            # Write install.conf for HTTP serving
+            conf_result = self.autoinstall.write_install_conf(
                 vm_name=config.vm_name,
                 hostname=fqdn_hostname,
                 username=config.username,
                 password=config.password,
             )
-            if not embed_result.get("success"):
-                return {
-                    "success": False,
-                    "error": _("Failed to embed autoinstall config: %s")
-                    % embed_result.get("error"),
-                }
+            if not conf_result.get("success"):
+                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
+                return conf_result
 
-            bsd_rd_path = embed_result.get("bsd_rd_path")
-            autoinstall_work_dir = embed_result.get("work_dir")
+            # Start HTTP server to serve install.conf on the gateway IP
+            http_result = self.autoinstall.start_http_server(bind_address=gateway_ip)
+            if not http_result.get("success"):
+                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
+                return http_result
 
-            # Step 7: Launch VM with embedded bsd.rd
+            # Step 7: Launch VM with PXE boot for fully automatic autoinstall
             await self._send_progress(
                 "launching_vm",
-                _("Launching VM %s with autoinstall kernel...") % config.vm_name,
+                _("Launching VM %s with PXE boot for autoinstall...") % config.vm_name,
             )
-            launch_result = await self._launch_vm_with_bsd_rd(
+            launch_result = await self._launch_vm_pxe(
                 config.vm_name,
                 disk_path,
-                bsd_rd_path,
                 config.memory,
                 config.cpus,
             )
             if not launch_result.get("success"):
-                # Clean up work directory on failure
-                self.autoinstall.cleanup_embedded_autoinstall(autoinstall_work_dir)
+                self.autoinstall.stop_http_server()
+                self.autoinstall.cleanup_install_conf()
+                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
                 return launch_result
 
             # Step 8: Wait for autoinstall to complete
-            # OpenBSD autoinstall will:
-            # 1. Boot from embedded bsd.rd kernel
-            # 2. Automatically detect auto_install.conf in the ramdisk
-            # 3. Run through the installation automatically using the embedded config
-            # 4. Reboot into the installed system
+            # OpenBSD PXE autoinstall will:
+            # 1. Boot via PXE (network boot)
+            # 2. Get DHCP which provides pxeboot filename and TFTP server
+            # 3. Fetch pxeboot and auto_install kernel via TFTP
+            # 4. Boot into auto_install mode
+            # 5. Get DHCP again and fetch install.conf via HTTP
+            # 6. Run through installation automatically
+            # 7. Reboot into installed system
             await self._send_progress(
                 "awaiting_autoinstall",
                 _(
-                    "OpenBSD autoinstall in progress. "
+                    "OpenBSD autoinstall in progress via PXE+DHCP+HTTP. "
                     "The VM will automatically install and reboot. "
                     "This may take 10-15 minutes."
                 ),
@@ -438,7 +460,9 @@ class VmmOperations:
             ip_result = await self._wait_for_vm_ip(config.vm_name, timeout=1800)
 
             # Cleanup autoinstall resources regardless of result
-            self.autoinstall.cleanup_embedded_autoinstall(autoinstall_work_dir)
+            self.autoinstall.stop_http_server()
+            self.autoinstall.cleanup_install_conf()
+            self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
 
             if not ip_result.get("success"):
                 return ip_result
@@ -735,7 +759,7 @@ class VmmOperations:
         try:
             # Build vmctl start command
             # -m: memory
-            # -L: local network with DHCP
+            # -n local: use the "local" switch defined in vm.conf
             # -i 1: one network interface
             # -r: boot from ISO (CDROM)
             # -d: disk image
@@ -744,7 +768,8 @@ class VmmOperations:
                 "start",
                 "-m",
                 memory,
-                "-L",
+                "-n",
+                "local",
                 "-i",
                 "1",
                 "-r",
@@ -782,24 +807,19 @@ class VmmOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def _launch_vm_with_bsd_rd(
+    async def _launch_vm_pxe(
         self,
         vm_name: str,
         disk_path: str,
-        bsd_rd_path: str,
         memory: str,
         _cpus: int,
     ) -> Dict[str, Any]:
         """
-        Launch a VM with embedded bsd.rd kernel for autoinstall.
-
-        Uses vmd's built-in local networking (-L flag) for DHCP.
-        Boots from the modified bsd.rd kernel with embedded auto_install.conf.
+        Launch a VM with PXE boot for autoinstall.
 
         Args:
             vm_name: Name for the VM
             disk_path: Path to the disk image
-            bsd_rd_path: Path to the modified bsd.rd kernel
             memory: Memory allocation (e.g., "1G")
             _cpus: Number of CPUs (reserved for future use with vm.conf)
 
@@ -807,30 +827,29 @@ class VmmOperations:
             Dict with success status
         """
         try:
-            # Build vmctl start command
+            # Build vmctl start command for PXE boot
             # -m: memory
-            # -L: local network with DHCP
+            # -n local: use the "local" switch defined in vm.conf
             # -i 1: one network interface
-            # -b: boot from custom kernel (bsd.rd with embedded autoinstall)
+            # -B net: boot from network (PXE)
             # -d: disk image
             cmd = [
                 "vmctl",
                 "start",
                 "-m",
                 memory,
-                "-L",
+                "-n",
+                "local",
                 "-i",
                 "1",
-                "-b",
-                bsd_rd_path,
+                "-B",
+                "net",
                 "-d",
                 disk_path,
                 vm_name,
             ]
 
-            self.logger.info(
-                _("Launching VM with autoinstall kernel: %s"), " ".join(cmd)
-            )
+            self.logger.info(_("Launching VM with PXE boot: %s"), " ".join(cmd))
 
             result = subprocess.run(  # nosec B603 B607
                 cmd,
@@ -841,7 +860,7 @@ class VmmOperations:
             )
 
             if result.returncode == 0:
-                self.logger.info(_("VM %s launched with autoinstall kernel"), vm_name)
+                self.logger.info(_("VM %s launched with PXE boot"), vm_name)
                 return {"success": True}
 
             error_msg = result.stderr or result.stdout or "Unknown error"

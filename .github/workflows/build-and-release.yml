@@ -1077,6 +1077,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building OpenBSD port for version: $VERSION"
 
+      - name: Generate OpenBSD PLIST
+        run: |
+          echo "Generating OpenBSD PLIST..."
+          python3 installer/openbsd/generate-plist.py
+          echo "✓ PLIST generated successfully"
+
       - name: Create port directory structure
         env:
           VERSION: ${{ steps.version.outputs.version }}
