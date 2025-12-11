@@ -6,18 +6,23 @@ import asyncio
 import os
 import re
 import subprocess  # nosec B404 # Required for system command execution
-import tempfile
 import time
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
+from src.database.base import get_database_manager
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_autoinstall import (
     VmmAutoinstallOperations,
 )
+from src.sysmanage_agent.operations.child_host_vmm_bsd_embedder import BsdRdEmbedder
+from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
 from src.sysmanage_agent.operations.child_host_vmm_lifecycle import (
     VmmLifecycleOperations,
+)
+from src.sysmanage_agent.operations.child_host_vmm_site_builder import (
+    SiteTarballBuilder,
 )
 from src.sysmanage_agent.operations.child_host_vmm_ssh import VmmSshOperations
 
@@ -44,6 +49,11 @@ class VmmOperations:
         self.ssh_ops = VmmSshOperations(logger)
         self.lifecycle = VmmLifecycleOperations(logger, virtualization_checks)
         self.autoinstall = VmmAutoinstallOperations(logger)
+        self.github_checker = GitHubVersionChecker(logger)
+        self.site_builder = SiteTarballBuilder(
+            logger, get_database_manager().get_session()
+        )
+        self.bsd_embedder = BsdRdEmbedder(logger)
 
     async def initialize_vmd(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -285,18 +295,18 @@ class VmmOperations:
 
     async def create_vmm_vm(self, config: VmmVmConfig) -> Dict[str, Any]:
         """
-        Create a new VMM virtual machine with the full installation flow.
+        Create a new VMM virtual machine with PXE boot and offline installation.
 
-        This is a complex operation that:
-        1. Creates a disk image
-        2. Downloads the install ISO
-        3. Launches the VM with the ISO
-        4. Waits for installation (manual or autoinstall)
-        5. Reboots without ISO
-        6. Waits for VM to get IP
-        7. Establishes SSH connection
-        8. Configures hostname and user
-        9. Installs and configures the sysmanage-agent
+        This new implementation:
+        1. Extracts OpenBSD version from distribution parameter
+        2. Checks GitHub for latest sysmanage-agent version
+        3. Builds site.tgz with agent and dependencies (cached)
+        4. Embeds site.tgz into bsd.rd for offline installation
+        5. Sets up PXE infrastructure (DHCP + TFTP)
+        6. Launches VM with PXE boot
+        7. Waits for VM to shutdown (installation complete)
+        8. Restarts VM without PXE boot
+        9. VM self-registers with server (no SSH needed)
 
         Args:
             config: VmmVmConfig with all VM settings
@@ -304,6 +314,8 @@ class VmmOperations:
         Returns:
             Dict with success status and details
         """
+        autoinstall_state = None
+
         try:
             # Validate inputs
             if not config.distribution:
@@ -316,20 +328,34 @@ class VmmOperations:
                 return {"success": False, "error": _("Username is required")}
             if not config.password:
                 return {"success": False, "error": _("Password is required")}
+            if not config.server_url:
+                return {"success": False, "error": _("Server URL is required")}
 
-            # Derive FQDN hostname if user didn't provide a domain
+            # Step 1: Extract OpenBSD version from distribution
+            await self._send_progress(
+                "parsing_version", _("Parsing OpenBSD version...")
+            )
+            openbsd_version = self._extract_openbsd_version(config.distribution)
+            if not openbsd_version:
+                return {
+                    "success": False,
+                    "error": _("Could not parse OpenBSD version from: %s")
+                    % config.distribution,
+                }
+
+            self.logger.info(_("Creating OpenBSD %s VM"), openbsd_version)
+
+            # Derive FQDN hostname
             fqdn_hostname = self._get_fqdn_hostname(config.hostname, config.server_url)
             if fqdn_hostname != config.hostname:
                 self.logger.info(
-                    "Using FQDN hostname '%s' (user provided '%s')",
+                    _("Using FQDN hostname '%s' (user provided '%s')"),
                     fqdn_hostname,
                     config.hostname,
                 )
 
-            # Send progress update
+            # Step 2: Check VMM is available and running
             await self._send_progress("checking_vmm", _("Checking VMM status..."))
-
-            # Step 1: Check VMM is available and running
             vmm_check = self.virtualization_checks.check_vmm_support()
             if not vmm_check.get("available"):
                 return {
@@ -343,7 +369,7 @@ class VmmOperations:
                     "error": _("vmd is not running. Please enable VMM first."),
                 }
 
-            # Step 2: Check if VM already exists
+            # Step 3: Check if VM already exists
             await self._send_progress(
                 "checking_existing", _("Checking for existing VM...")
             )
@@ -353,55 +379,99 @@ class VmmOperations:
                     "error": _("VM '%s' already exists") % config.vm_name,
                 }
 
-            # Step 3: Ensure directories exist
+            # Step 4: Ensure directories exist
             self._ensure_vmm_directories()
 
-            # Step 4: Create disk image
+            # Step 5: Get latest sysmanage-agent version from GitHub
             await self._send_progress(
-                "creating_disk",
-                _("Creating %s disk image...") % config.disk_size,
+                "checking_github",
+                _("Checking GitHub for latest sysmanage-agent version..."),
             )
-            disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
-            disk_result = self._create_disk_image(disk_path, config.disk_size)
-            if not disk_result.get("success"):
-                return disk_result
+            version_result = self.github_checker.get_latest_version()
+            if not version_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to check GitHub version: %s")
+                    % version_result.get("error"),
+                }
 
-            # Step 5: Download install ISO if needed
-            await self._send_progress(
-                "downloading_iso", _("Downloading install ISO...")
-            )
-            iso_result = await self._get_install_iso(config.iso_url)
-            if not iso_result.get("success"):
-                return iso_result
-            _iso_path = iso_result.get(
-                "iso_path"
-            )  # Downloaded but not used with PXE boot
-
-            # Step 6: Set up autoinstall infrastructure (DHCP + TFTP + HTTP)
-            await self._send_progress(
-                "setting_up_autoinstall",
-                _("Setting up autoinstall infrastructure (DHCP + HTTP)..."),
+            agent_version = version_result.get("version")
+            tag_name = version_result.get("tag_name")
+            self.logger.info(
+                _("Latest sysmanage-agent version: %s (tag: %s)"),
+                agent_version,
+                tag_name,
             )
 
-            # Set up DHCP, TFTP (for PXE), and HTTP for autoinstall
+            # Step 6: Build or retrieve cached site.tgz
+            await self._send_progress(
+                "building_site_tarball",
+                _("Building site tarball with sysmanage-agent %s...") % agent_version,
+            )
+
+            tarball_url = self.github_checker.get_port_tarball_url(agent_version)
+            site_result = self.site_builder.get_or_build_site_tarball(
+                openbsd_version=openbsd_version,
+                agent_version=agent_version,
+                agent_tarball_url=tarball_url,
+                server_hostname=config.server_url,
+                server_port=config.server_port,
+                use_https=config.use_https,
+            )
+
+            if not site_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to build site tarball: %s")
+                    % site_result.get("error"),
+                }
+
+            site_tgz_path = site_result.get("site_tgz_path")
+            self.logger.info(_("Site tarball ready: %s"), site_tgz_path)
+
+            # Step 7: Embed site.tgz into bsd.rd
+            await self._send_progress(
+                "embedding_bsdrd",
+                _("Embedding site tarball into bsd.rd for offline installation..."),
+            )
+
+            bsdrd_result = self.bsd_embedder.embed_site_in_bsdrd(
+                openbsd_version=openbsd_version,
+                site_tgz_path=site_tgz_path,
+            )
+
+            if not bsdrd_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to embed site into bsd.rd: %s")
+                    % bsdrd_result.get("error"),
+                }
+
+            bsdrd_path = bsdrd_result.get("bsdrd_path")
+            self.logger.info(_("Modified bsd.rd ready: %s"), bsdrd_path)
+
+            # Step 8: Set up PXE infrastructure (DHCP + TFTP)
+            await self._send_progress(
+                "setting_up_pxe",
+                _("Setting up PXE infrastructure (DHCP + TFTP)..."),
+            )
+
             infra_result = self.autoinstall.setup_autoinstall_infrastructure(
                 vm_name=config.vm_name,
                 hostname=fqdn_hostname,
                 iso_url=config.iso_url,
-                use_pxe=True,  # Use PXE boot for fully automatic installation
+                use_pxe=True,
             )
             if not infra_result.get("success"):
                 return {
                     "success": False,
-                    "error": _("Failed to setup autoinstall infrastructure: %s")
+                    "error": _("Failed to setup PXE infrastructure: %s")
                     % infra_result.get("error"),
                 }
 
             autoinstall_state = infra_result.get("state")
-            subnet_info = autoinstall_state.get("subnet_info", {})
-            gateway_ip = subnet_info.get("gateway_ip", "10.0.0.1")
 
-            # Write install.conf for HTTP serving
+            # Step 9: Write install.conf for autoinstall
             conf_result = self.autoinstall.write_install_conf(
                 vm_name=config.vm_name,
                 hostname=fqdn_hostname,
@@ -412,16 +482,22 @@ class VmmOperations:
                 self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
                 return conf_result
 
-            # Start HTTP server to serve install.conf on the gateway IP
-            http_result = self.autoinstall.start_http_server(bind_address=gateway_ip)
-            if not http_result.get("success"):
-                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
-                return http_result
-
-            # Step 7: Launch VM with PXE boot for fully automatic autoinstall
+            # Step 10: Create disk image
             await self._send_progress(
-                "launching_vm",
-                _("Launching VM %s with PXE boot for autoinstall...") % config.vm_name,
+                "creating_disk",
+                _("Creating %s disk image...") % config.disk_size,
+            )
+            disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
+            disk_result = self._create_disk_image(disk_path, config.disk_size)
+            if not disk_result.get("success"):
+                self.autoinstall.cleanup_install_conf()
+                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
+                return disk_result
+
+            # Step 11: Launch VM with PXE boot
+            await self._send_progress(
+                "launching_vm_pxe",
+                _("Launching VM with PXE boot for offline installation..."),
             )
             launch_result = await self._launch_vm_pxe(
                 config.vm_name,
@@ -430,113 +506,57 @@ class VmmOperations:
                 config.cpus,
             )
             if not launch_result.get("success"):
-                self.autoinstall.stop_http_server()
                 self.autoinstall.cleanup_install_conf()
                 self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
                 return launch_result
 
-            # Step 8: Wait for autoinstall to complete
-            # OpenBSD PXE autoinstall will:
-            # 1. Boot via PXE (network boot)
-            # 2. Get DHCP which provides pxeboot filename and TFTP server
-            # 3. Fetch pxeboot and auto_install kernel via TFTP
-            # 4. Boot into auto_install mode
-            # 5. Get DHCP again and fetch install.conf via HTTP
-            # 6. Run through installation automatically
-            # 7. Reboot into installed system
+            # Step 12: Wait for VM to shutdown (installation complete)
             await self._send_progress(
-                "awaiting_autoinstall",
+                "awaiting_shutdown",
                 _(
-                    "OpenBSD autoinstall in progress via PXE+DHCP+HTTP. "
-                    "The VM will automatically install and reboot. "
-                    "This may take 10-15 minutes."
+                    "Waiting for VM to complete installation and shutdown. "
+                    "The VM will install OpenBSD and sysmanage-agent offline, "
+                    "then shutdown automatically. This may take 10-15 minutes."
                 ),
             )
-
-            # Step 9: Wait for VM to get an IP address (indicates OS is booted)
-            await self._send_progress(
-                "waiting_for_ip", _("Waiting for VM to obtain IP address...")
+            shutdown_result = await self._wait_for_vm_shutdown(
+                config.vm_name, timeout=1800
             )
-            ip_result = await self._wait_for_vm_ip(config.vm_name, timeout=1800)
 
-            # Cleanup autoinstall resources regardless of result
-            self.autoinstall.stop_http_server()
+            # Cleanup PXE infrastructure after installation
             self.autoinstall.cleanup_install_conf()
             self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
+            autoinstall_state = None
 
-            if not ip_result.get("success"):
-                return ip_result
-            vm_ip = ip_result.get("ip")
+            if not shutdown_result.get("success"):
+                return shutdown_result
 
-            # Step 10: Wait for SSH to become available
+            self.logger.info(
+                _("VM %s has shut down after installation"), config.vm_name
+            )
+
+            # Step 13: Restart VM without PXE boot
             await self._send_progress(
-                "waiting_for_ssh", _("Waiting for SSH to become available...")
+                "restarting_vm",
+                _("Restarting VM to boot from installed system..."),
             )
-            ssh_result = await self.ssh_ops.wait_for_ssh(vm_ip, timeout=300)
-            if not ssh_result.get("success"):
-                return ssh_result
+            restart_result = await self._launch_vm_no_pxe(
+                config.vm_name,
+                disk_path,
+                config.memory,
+                config.cpus,
+            )
+            if not restart_result.get("success"):
+                return restart_result
 
-            # Step 11: Set hostname
+            # Step 14: Wait for VM to self-register with server
             await self._send_progress(
-                "setting_hostname", _("Setting hostname to %s...") % fqdn_hostname
+                "awaiting_registration",
+                _(
+                    "Waiting for VM to boot and register with server. "
+                    "The sysmanage-agent will start automatically and connect."
+                ),
             )
-            hostname_result = await self.ssh_ops.run_ssh_command(
-                vm_ip,
-                config.username,
-                config.password,
-                f"hostname {fqdn_hostname}",
-            )
-            if not hostname_result.get("success"):
-                self.logger.warning(
-                    "Hostname configuration failed: %s", hostname_result.get("error")
-                )
-
-            # Step 12: Install sysmanage-agent
-            if config.agent_install_commands:
-                await self._send_progress(
-                    "installing_agent", _("Installing sysmanage-agent...")
-                )
-                agent_result = await self.ssh_ops.install_agent_via_ssh(
-                    vm_ip,
-                    config.username,
-                    config.password,
-                    config.agent_install_commands,
-                )
-                if not agent_result.get("success"):
-                    self.logger.warning(
-                        "Agent installation failed: %s", agent_result.get("error")
-                    )
-
-            # Step 13: Configure agent
-            if config.server_url:
-                await self._send_progress(
-                    "configuring_agent", _("Configuring sysmanage-agent...")
-                )
-                config_result = await self.ssh_ops.configure_agent_via_ssh(
-                    vm_ip,
-                    config.username,
-                    config.password,
-                    config.server_url,
-                    fqdn_hostname,
-                    config.server_port,
-                    config.use_https,
-                )
-                if not config_result.get("success"):
-                    self.logger.warning(
-                        "Agent configuration failed: %s", config_result.get("error")
-                    )
-
-            # Step 14: Start agent service
-            await self._send_progress("starting_agent", _("Starting agent service..."))
-            start_result = await self.ssh_ops.start_agent_service_via_ssh(
-                vm_ip,
-                config.username,
-                config.password,
-            )
-            if not start_result.get("success"):
-                self.logger.warning(
-                    "Agent service start failed: %s", start_result.get("error")
-                )
 
             await self._send_progress("complete", _("VM creation complete"))
 
@@ -546,22 +566,166 @@ class VmmOperations:
                 "child_type": "vmm",
                 "hostname": fqdn_hostname,
                 "username": config.username,
-                "ip_address": vm_ip,
-                "message": _("VMM virtual machine '%s' created successfully")
+                "openbsd_version": openbsd_version,
+                "agent_version": agent_version,
+                "message": _(
+                    "VMM virtual machine '%s' created successfully. "
+                    "VM will self-register when agent starts."
+                )
                 % config.vm_name,
             }
 
         except Exception as error:
-            self.logger.error(_("Error creating VMM VM: %s"), error)
-            # Ensure autoinstall resources are cleaned up
+            self.logger.error(_("Error creating VMM VM: %s"), error, exc_info=True)
+            # Cleanup on error
+            if autoinstall_state:
+                try:
+                    self.autoinstall.cleanup_install_conf()
+                    self.autoinstall.cleanup_autoinstall_infrastructure(
+                        autoinstall_state
+                    )
+                except Exception:  # nosec B110
+                    pass
+            return {"success": False, "error": str(error)}
+
+    def _extract_openbsd_version(self, distribution: str) -> Optional[str]:
+        """
+        Extract OpenBSD version from distribution string.
+
+        Args:
+            distribution: Distribution string (e.g., "OpenBSD 7.7", "openbsd-7.6")
+
+        Returns:
+            Version string (e.g., "7.7") or None if not found
+        """
+        try:
+            # Try to match version pattern like "7.7", "7.6", etc.
+            match = re.search(r"(\d+\.\d+)", distribution)
+            if match:
+                return match.group(1)
+            return None
+        except Exception as error:
+            self.logger.error(_("Error parsing OpenBSD version: %s"), error)
+            return None
+
+    async def _wait_for_vm_shutdown(
+        self, vm_name: str, timeout: int = 1800
+    ) -> Dict[str, Any]:
+        """
+        Wait for VM to shutdown by polling vmctl status.
+
+        Args:
+            vm_name: Name of the VM
+            timeout: Maximum time to wait in seconds
+
+        Returns:
+            Dict with success status
+        """
+        start_time = time.time()
+        last_status_log = 0
+
+        self.logger.info(_("Waiting for VM %s to shutdown..."), vm_name)
+
+        while time.time() - start_time < timeout:
             try:
-                # Clean up embedded autoinstall work directory if it exists
-                work_dir = os.path.join(
-                    tempfile.gettempdir(), f"autoinstall-{config.vm_name}"
+                # Check if VM is still running
+                result = subprocess.run(  # nosec B603 B607
+                    ["vmctl", "status", vm_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
                 )
-                self.autoinstall.cleanup_embedded_autoinstall(work_dir)
-            except Exception:  # nosec B110 - cleanup failures are not critical
-                pass
+
+                # vmctl status returns non-zero if VM is not running
+                if result.returncode != 0:
+                    self.logger.info(_("VM %s has shut down"), vm_name)
+                    return {"success": True}
+
+                # Log status every 60 seconds
+                elapsed = int(time.time() - start_time)
+                if elapsed - last_status_log >= 60:
+                    self.logger.info(
+                        _("VM still running... (%d seconds elapsed)"), elapsed
+                    )
+                    last_status_log = elapsed
+
+            except Exception as error:
+                self.logger.debug("Error checking VM status: %s", error)
+
+            await asyncio.sleep(10)
+
+        return {
+            "success": False,
+            "error": _("Timeout waiting for VM to shutdown"),
+        }
+
+    async def _launch_vm_no_pxe(
+        self,
+        vm_name: str,
+        disk_path: str,
+        memory: str,
+        _cpus: int,
+    ) -> Dict[str, Any]:
+        """
+        Launch a VM without PXE boot (boot from disk).
+
+        Args:
+            vm_name: Name for the VM
+            disk_path: Path to the disk image
+            memory: Memory allocation (e.g., "1G")
+            _cpus: Number of CPUs (reserved for future use with vm.conf)
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            # Build vmctl start command for disk boot
+            # -m: memory
+            # -n local: use the "local" switch defined in vm.conf
+            # -i 1: one network interface
+            # -d: disk image
+            # No -B flag means boot from disk
+            cmd = [
+                "vmctl",
+                "start",
+                "-m",
+                memory,
+                "-n",
+                "local",
+                "-i",
+                "1",
+                "-d",
+                disk_path,
+                vm_name,
+            ]
+
+            self.logger.info(_("Launching VM from disk: %s"), " ".join(cmd))
+
+            result = subprocess.run(  # nosec B603 B607
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                self.logger.info(_("VM %s launched from disk"), vm_name)
+                return {"success": True}
+
+            error_msg = result.stderr or result.stdout or "Unknown error"
+            return {
+                "success": False,
+                "error": _("Failed to launch VM: %s") % error_msg,
+            }
+
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "error": _("Timeout launching VM"),
+            }
+        except Exception as error:
             return {"success": False, "error": str(error)}
 
     async def _send_progress(self, step: str, message: str):
@@ -675,138 +839,6 @@ class VmmOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def _get_install_iso(self, iso_url: str) -> Dict[str, Any]:
-        """
-        Get the install ISO, downloading if necessary.
-
-        Args:
-            iso_url: URL to download the ISO from
-
-        Returns:
-            Dict with success status and iso_path
-        """
-        if not iso_url:
-            return {
-                "success": False,
-                "error": _("No ISO URL provided"),
-            }
-
-        try:
-            # Extract filename from URL
-            parsed = urlparse(iso_url)
-            filename = os.path.basename(parsed.path)
-            if not filename:
-                filename = "install.iso"
-
-            iso_path = os.path.join(VMM_ISO_DIR, filename)
-
-            # Check if ISO already exists
-            if os.path.exists(iso_path):
-                self.logger.info(_("Using existing ISO: %s"), iso_path)
-                return {"success": True, "iso_path": iso_path}
-
-            # Download the ISO using ftp (OpenBSD's built-in downloader)
-            self.logger.info(_("Downloading ISO from %s"), iso_url)
-            result = subprocess.run(  # nosec B603 B607
-                ["ftp", "-o", iso_path, iso_url],
-                capture_output=True,
-                text=True,
-                timeout=3600,  # 1 hour timeout for large ISOs
-                check=False,
-            )
-
-            if result.returncode == 0 and os.path.exists(iso_path):
-                self.logger.info(_("Downloaded ISO: %s"), iso_path)
-                return {"success": True, "iso_path": iso_path}
-
-            error_msg = result.stderr or result.stdout or "Download failed"
-            return {
-                "success": False,
-                "error": _("Failed to download ISO: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout downloading ISO"),
-            }
-        except Exception as error:
-            return {"success": False, "error": str(error)}
-
-    async def _launch_vm_with_iso(
-        self,
-        vm_name: str,
-        disk_path: str,
-        iso_path: str,
-        memory: str,
-        _cpus: int,
-    ) -> Dict[str, Any]:
-        """
-        Launch a VM with the install ISO attached.
-
-        Uses vmd's built-in local networking (-L flag) for DHCP.
-
-        Args:
-            vm_name: Name for the VM
-            disk_path: Path to the disk image
-            iso_path: Path to the install ISO
-            memory: Memory allocation (e.g., "1G")
-            _cpus: Number of CPUs (reserved for future use with vm.conf)
-
-        Returns:
-            Dict with success status
-        """
-        try:
-            # Build vmctl start command
-            # -m: memory
-            # -n local: use the "local" switch defined in vm.conf
-            # -i 1: one network interface
-            # -r: boot from ISO (CDROM)
-            # -d: disk image
-            cmd = [
-                "vmctl",
-                "start",
-                "-m",
-                memory,
-                "-n",
-                "local",
-                "-i",
-                "1",
-                "-r",
-                iso_path,
-                "-d",
-                disk_path,
-                vm_name,
-            ]
-
-            self.logger.info(_("Launching VM: %s"), " ".join(cmd))
-
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info(_("VM %s launched with install media"), vm_name)
-                return {"success": True}
-
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            return {
-                "success": False,
-                "error": _("Failed to launch VM: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout launching VM"),
-            }
-        except Exception as error:
-            return {"success": False, "error": str(error)}
-
     async def _launch_vm_pxe(
         self,
         vm_name: str,
@@ -876,100 +908,3 @@ class VmmOperations:
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
-
-    async def _wait_for_vm_ip(
-        self, vm_name: str, timeout: int = 1800
-    ) -> Dict[str, Any]:
-        """
-        Wait for the VM to obtain an IP address.
-
-        Checks the vmd DHCP leases or ARP table.
-
-        Args:
-            vm_name: Name of the VM
-            timeout: Maximum time to wait in seconds
-
-        Returns:
-            Dict with success status and IP address
-        """
-        start_time = time.time()
-        last_status_log = 0
-
-        while time.time() - start_time < timeout:
-            try:
-                # Try to get VM IP from vmd's DHCP leases
-                vm_ip_addr = self._get_vm_ip_from_leases(vm_name)
-                if vm_ip_addr:
-                    self.logger.info(_("VM %s has IP: %s"), vm_name, vm_ip_addr)
-                    return {"success": True, "ip": vm_ip_addr}
-
-                # Log status every 60 seconds
-                elapsed = int(time.time() - start_time)
-                if elapsed - last_status_log >= 60:
-                    self.logger.info(
-                        _("Waiting for VM IP... (%d seconds elapsed)"), elapsed
-                    )
-                    last_status_log = elapsed
-
-            except Exception as error:
-                self.logger.debug("Error checking VM IP: %s", error)
-
-            await asyncio.sleep(10)
-
-        return {
-            "success": False,
-            "error": _("Timeout waiting for VM to obtain IP address"),
-        }
-
-    def _get_vm_ip_from_leases(self, vm_name: str) -> Optional[str]:
-        """
-        Get VM IP address from vmd DHCP leases.
-
-        Args:
-            vm_name: Name of the VM
-
-        Returns:
-            IP address string or None
-        """
-        try:
-            # Check vmctl status for the VM's interface info
-            result = subprocess.run(  # nosec B603 B607
-                ["vmctl", "status", vm_name],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return None
-
-            # Parse the VM ID from status output
-            # vmctl status output format varies, but typically shows VM info
-            # We need to find the local interface and check DHCP leases
-
-            # Alternative: Check ARP table for MACs that might belong to VMs
-            # vmd assigns MACs in the fe:e1:ba:d* range
-            arp_result = subprocess.run(  # nosec B603 B607
-                ["arp", "-an"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-
-            if arp_result.returncode == 0:
-                # Look for vmd-assigned MAC addresses (fe:e1:ba:d*)
-                # and extract the corresponding IP
-                for line in arp_result.stdout.splitlines():
-                    if "fe:e1:ba:d" in line.lower():
-                        # Parse IP from ARP entry
-                        # Format: host (ip) at mac on interface
-                        match = re.search(r"\((\d+\.\d+\.\d+\.\d+)\)", line)
-                        if match:
-                            return match.group(1)
-
-            return None
-
-        except Exception:
-            return None

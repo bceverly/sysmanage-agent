@@ -444,3 +444,61 @@ class InstallationRequestTracking(Base):
             f"request_id='{self.request_id}', "
             f"status='{self.status}')>"
         )
+
+
+class VmmBuildCache(Base):
+    """
+    Table for caching VMM build artifacts (site77.tgz files).
+    Stores version information and file paths to avoid rebuilding unchanged versions.
+    """
+
+    __tablename__ = "vmm_build_cache"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+
+    # OpenBSD version (e.g., "7.7")
+    openbsd_version = Column(String(10), nullable=False, index=True)
+
+    # sysmanage-agent version (e.g., "0.9.9.8")
+    agent_version = Column(String(20), nullable=False, index=True)
+
+    # Path to cached site77.tgz file
+    site_tgz_path = Column(String(512), nullable=False)
+
+    # Path to cached sysmanage-agent package
+    agent_package_path = Column(String(512), nullable=True)
+
+    # SHA256 checksum of the site tarball for integrity verification
+    site_tgz_checksum = Column(String(64), nullable=True)
+
+    # Build metadata
+    built_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    last_used_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    # Success/failure tracking
+    build_status = Column(
+        String(20), nullable=False, default="success"
+    )  # success, failed, building
+    build_log = Column(Text, nullable=True)
+
+    # Index for quick lookups by version combination
+    __table_args__ = (
+        Index(
+            "idx_vmm_cache_version",
+            "openbsd_version",
+            "agent_version",
+            unique=True,
+        ),
+    )
+
+    def __repr__(self):
+        return (
+            f"<VmmBuildCache(id={self.id}, "
+            f"openbsd_version='{self.openbsd_version}', "
+            f"agent_version='{self.agent_version}', "
+            f"status='{self.build_status}')>"
+        )

@@ -1527,6 +1527,20 @@ installer-openbsd:
 	}; \
 	echo "✓ Version updated to v$$VERSION"; \
 	echo ""; \
+	echo "Generating distinfo checksums..."; \
+	cd "$$PORTS_DIR" && doas make makesum || { \
+		echo "ERROR: Failed to generate distinfo checksums"; \
+		exit 1; \
+	}; \
+	echo "✓ Checksums generated"; \
+	echo ""; \
+	echo "Copying updated distinfo back to source..."; \
+	doas cp "$$PORTS_DIR/distinfo" "$$SOURCE_DIR/distinfo" || { \
+		echo "ERROR: Failed to copy distinfo back to source"; \
+		exit 1; \
+	}; \
+	echo "✓ Updated distinfo copied to $$SOURCE_DIR/distinfo"; \
+	echo ""; \
 	echo "==================================="; \
 	echo "Port Preparation Complete!"; \
 	echo "==================================="; \
@@ -1535,21 +1549,18 @@ installer-openbsd:
 	echo ""; \
 	echo "Next steps:"; \
 	echo ""; \
-	echo "1. Generate checksums:"; \
+	echo "1. Build the port:"; \
 	echo "   cd $$PORTS_DIR"; \
-	echo "   doas make makesum"; \
-	echo ""; \
-	echo "2. Build the port:"; \
 	echo "   doas make"; \
 	echo ""; \
-	echo "3. Install the port:"; \
+	echo "2. Install the port:"; \
 	echo "   doas make install"; \
 	echo ""; \
-	echo "4. Enable and start the service:"; \
+	echo "3. Enable and start the service:"; \
 	echo "   doas rcctl enable sysmanage_agent"; \
 	echo "   doas rcctl start sysmanage_agent"; \
 	echo ""; \
-	echo "5. Configure:"; \
+	echo "4. Configure:"; \
 	echo "   doas vi /etc/sysmanage-agent/sysmanage-agent.yaml"; \
 	echo "   doas rcctl restart sysmanage_agent"; \
 	echo ""; \
