@@ -11,6 +11,7 @@ This module handles building the site77.tgz file that contains:
 import hashlib
 import logging
 import os
+import re
 import shutil
 import subprocess  # nosec B404 # Required for system commands
 import tarfile
@@ -293,7 +294,9 @@ class SiteTarballBuilder:
                 "error": f"Download failed: {error}",
             }
 
-    def _build_agent_package(self, port_dir: Path, agent_version: str) -> Dict[str, Any]:
+    def _build_agent_package(
+        self, port_dir: Path, agent_version: str
+    ) -> Dict[str, Any]:
         """Build sysmanage-agent package from port."""
         try:
             self.logger.info(_("ENTERED _build_agent_package, port_dir: %s"), port_dir)
@@ -320,12 +323,11 @@ class SiteTarballBuilder:
                     makefile_content = makefile.read()
 
                 # Replace GH_TAGNAME line with correct version
-                import re
                 makefile_content = re.sub(
-                    r'^GH_TAGNAME\s*=.*$',
-                    f'GH_TAGNAME = {agent_version}',
+                    r"^GH_TAGNAME\s*=.*$",
+                    f"GH_TAGNAME = {agent_version}",
                     makefile_content,
-                    flags=re.MULTILINE
+                    flags=re.MULTILINE,
                 )
 
                 with open(makefile_path, "w", encoding="utf-8") as makefile:
@@ -333,32 +335,33 @@ class SiteTarballBuilder:
 
                 self.logger.info(_("Updated GH_TAGNAME to: %s"), agent_version)
 
+            # Set ownership of port directory for _pbuild user
+            self.logger.info(_("Setting port directory ownership to _pbuild"))
+            subprocess.run(  # nosec B603 B607
+                ["chown", "-R", "_pbuild:_pbuild", str(ports_dir)],
+                check=True,
+                capture_output=True,
+                timeout=30,
+            )
+
             # Fix distinfo file version mismatch
             self.logger.info(_("Patching distinfo file for correct version"))
             distinfo_path = ports_dir / "distinfo"
             if distinfo_path.exists():
-                # Read Makefile to get correct version
-                makefile_path = ports_dir / "Makefile"
-                gh_tagname = None
-                if makefile_path.exists():
-                    with open(makefile_path, "r", encoding="utf-8") as makefile:
-                        for line in makefile:
-                            if line.startswith("GH_TAGNAME"):
-                                gh_tagname = line.split("=")[1].strip()
-                                break
-
-                if gh_tagname:
-                    self.logger.info(_("Found GH_TAGNAME: %s"), gh_tagname)
-                    # Create stub distinfo with correct version to trigger makesum
-                    stub_distinfo = f"""SHA256 ({gh_tagname}.tar.gz) = 0000000000000000000000000000000000000000000000000000000000000000
-SIZE ({gh_tagname}.tar.gz) = 0
+                # Create stub distinfo with correct version to trigger makesum
+                # Use agent_version directly since we just patched the Makefile with it
+                self.logger.info(
+                    _("Creating stub distinfo for version: %s"), agent_version
+                )
+                stub_distinfo = f"""SHA256 ({agent_version}.tar.gz) = 0000000000000000000000000000000000000000000000000000000000000000
+SIZE ({agent_version}.tar.gz) = 0
 """
-                    with open(distinfo_path, "w", encoding="utf-8") as distinfo_file:
-                        distinfo_file.write(stub_distinfo)
-                    self.logger.info(
-                        _("Created stub distinfo for %s, makesum will regenerate it"),
-                        gh_tagname,
-                    )
+                with open(distinfo_path, "w", encoding="utf-8") as distinfo_file:
+                    distinfo_file.write(stub_distinfo)
+                self.logger.info(
+                    _("Created stub distinfo for %s, makesum will regenerate it"),
+                    agent_version,
+                )
 
             # Fix permissions for _pbuild user (OpenBSD's designated port build user)
             self.logger.info(_("Setting up build directories for _pbuild user"))

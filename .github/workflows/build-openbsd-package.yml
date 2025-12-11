@@ -37,7 +37,6 @@ jobs:
         uses: vmactions/openbsd-vm@v1
         with:
           release: ${{ matrix.openbsd_version }}
-          usesh: true
           prepare: |
             pkg_add wget
           run: |
