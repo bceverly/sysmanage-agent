@@ -15,9 +15,6 @@ from urllib.parse import urlparse
 from src.database.base import get_database_manager
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
-from src.sysmanage_agent.operations.child_host_vmm_autoinstall import (
-    VmmAutoinstallOperations,
-)
 from src.sysmanage_agent.operations.child_host_vmm_bsd_embedder import BsdRdEmbedder
 from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
 from src.sysmanage_agent.operations.child_host_vmm_httpd_autoinstall import (
@@ -53,7 +50,6 @@ class VmmOperations:
         self.virtualization_checks = virtualization_checks
         self.ssh_ops = VmmSshOperations(logger)
         self.lifecycle = VmmLifecycleOperations(logger, virtualization_checks)
-        self.autoinstall = VmmAutoinstallOperations(logger)
         self.github_checker = GitHubVersionChecker(logger)
         self.site_builder = SiteTarballBuilder(
             logger, get_database_manager().get_session()
@@ -320,8 +316,6 @@ class VmmOperations:
         Returns:
             Dict with success status and details
         """
-        autoinstall_state = None
-
         try:
             # Validate inputs
             if not config.distribution:
@@ -621,15 +615,6 @@ class VmmOperations:
 
         except Exception as error:
             self.logger.error(_("Error creating VMM VM: %s"), error, exc_info=True)
-            # Cleanup on error
-            if autoinstall_state:
-                try:
-                    self.autoinstall.cleanup_install_conf()
-                    self.autoinstall.cleanup_autoinstall_infrastructure(
-                        autoinstall_state
-                    )
-                except Exception:  # nosec B110
-                    pass
             return {"success": False, "error": str(error)}
 
     def _extract_openbsd_version(self, distribution: str) -> Optional[str]:
