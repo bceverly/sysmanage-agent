@@ -25,7 +25,7 @@ from src.sysmanage_agent.operations import (
 # Default autoinstall HTTP server settings
 AUTOINSTALL_DIR = "/var/vmm/autoinstall"
 AUTOINSTALL_PORT = 80  # OpenBSD autoinstall looks for HTTP on port 80
-AUTOINSTALL_BIND = "10.0.0.1"  # vmd local network address when using -L
+AUTOINSTALL_BIND = "100.64.0.1"  # vmd local network address (matches pf.conf vm_net)
 
 # PXE boot settings
 PXE_CACHE_DIR = "/var/vmm/pxeboot"  # Cache for downloaded PXE boot files
@@ -135,7 +135,9 @@ class VmmAutoinstallOperations:
             f"What timezone are you in = {timezone}",
             f"DNS nameservers = {dns_nameservers}",
             "Network interfaces = vio0",
-            "IPv4 address for vio0 = dhcp",
+            "IPv4 address for vio0 = 100.64.0.100",
+            "Netmask for vio0 = 255.255.255.0",
+            "Default IPv4 route = 100.64.0.1",
             "Location of sets = http",
             "HTTP Server = cdn.openbsd.org",
             f"Set name(s) = {sets}",
@@ -548,7 +550,14 @@ class VmmAutoinstallOperations:
         )
         state["tftpd_was_running"] = result.returncode == 0
 
-        # Enable tftpd (uses default /tftpboot directory from rc.d/tftpd)
+        # Configure tftpd to serve from TFTP_DIR
+        subprocess.run(  # nosec B603 B607
+            ["rcctl", "set", "tftpd", "flags", TFTP_DIR],
+            check=True,
+            timeout=10,
+        )
+
+        # Enable tftpd
         subprocess.run(  # nosec B603 B607
             ["rcctl", "enable", "tftpd"],
             check=True,
@@ -609,13 +618,17 @@ class VmmAutoinstallOperations:
         }
 
         try:
-            # Step 1: Select unused subnet for VM network
-            subnet_info = network_helpers.select_unused_subnet(self.logger)
-            if not subnet_info:
-                raise RuntimeError(_("Failed to select unused subnet"))
+            # Step 1: Use fixed subnet from AUTOINSTALL_BIND constant (matches pf.conf NAT)
+            # Extract network from gateway IP (e.g., "100.64.0.1" -> "100.64.0.0")
+            gateway_parts = AUTOINSTALL_BIND.split(".")
+            subnet_network = (
+                f"{gateway_parts[0]}.{gateway_parts[1]}.{gateway_parts[2]}.0"
+            )
+            subnet_info = network_helpers.format_subnet_info(subnet_network)
 
             self.logger.info(
-                _("Selected subnet %s for VM network"), subnet_info["network"]
+                _("Using fixed subnet %s for VM network (matches pf.conf)"),
+                subnet_info["network"],
             )
             state["subnet_info"] = subnet_info
 
@@ -825,9 +838,11 @@ subnet {subnet_info['network']} netmask {subnet_info['netmask']} {{
             self.logger.info(_("Created dhcpd.conf for autoinstall"))
 
             # Step 6: Configure and start dhcpd on vether0
-            # Set flags first (this also enables the service)
+            # Use default lease file location /var/db/dhcpd.leases (OpenBSD default)
+            # Set flags to listen only on vether0 interface
+            dhcpd_flags = "vether0"
             subprocess.run(  # nosec B603 B607
-                ["rcctl", "set", "dhcpd", "flags", "vether0"],
+                ["rcctl", "set", "dhcpd", "flags", dhcpd_flags],
                 check=True,
                 timeout=10,
             )
@@ -854,6 +869,31 @@ subnet {subnet_info['network']} netmask {subnet_info['netmask']} {{
                     timeout=30,
                 )
                 self.logger.info(_("Started dhcpd for autoinstall"))
+
+            # Verify dhcpd is actually running (catches immediate crashes)
+            time.sleep(2)  # Give dhcpd time to start and stabilize
+            result = subprocess.run(  # nosec B603 B607
+                ["rcctl", "check", "dhcpd"],
+                capture_output=True,
+                check=False,
+                timeout=10,
+            )
+            if result.returncode != 0:
+                # dhcpd crashed or failed to start
+                self.logger.error(_("dhcpd failed to start or crashed immediately"))
+                # Check for error messages in system logs
+                log_result = subprocess.run(  # nosec B603 B607
+                    ["tail", "-20", "/var/log/messages"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=10,
+                )
+                if "dhcpd" in log_result.stdout:
+                    self.logger.error(_("Recent dhcpd errors: %s"), log_result.stdout)
+                raise RuntimeError(_("dhcpd failed to start - check /var/log/messages"))
+
+            self.logger.info(_("Verified dhcpd is running"))
 
             return {
                 "success": True,
@@ -950,6 +990,15 @@ subnet {subnet_info['network']} netmask {subnet_info['netmask']} {{
                         timeout=10,
                     )
                 self.logger.info(_("Stopped dhcpd and restored original state"))
+
+            # Restore dhcpleased state (DHCP client daemon)
+            if state.get("dhcpleased_was_running"):
+                subprocess.run(  # nosec B603 B607
+                    ["rcctl", "start", "dhcpleased"],
+                    check=False,
+                    timeout=30,
+                )
+                self.logger.info(_("Restarted dhcpleased"))
 
             # Clean up TFTP server if it was set up
             if state.get("use_pxe") and state.get("tftpd_was_running") is not None:

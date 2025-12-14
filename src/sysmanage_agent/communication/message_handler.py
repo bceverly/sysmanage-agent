@@ -521,7 +521,9 @@ class MessageHandler:
         elif message_type == "error":
             priority = Priority.URGENT
 
-        message_id = self.queue_manager.enqueue_message(
+        # Run blocking database operation in thread to avoid blocking event loop
+        message_id = await asyncio.to_thread(
+            self.queue_manager.enqueue_message,
             message_type=message_type,
             message_data=message,
             direction=QueueDirection.OUTBOUND,
@@ -560,7 +562,9 @@ class MessageHandler:
         """
         message_type = message.get("message_type", "unknown")
 
-        message_id = self.queue_manager.enqueue_message(
+        # Run blocking database operation in thread to avoid blocking event loop
+        message_id = await asyncio.to_thread(
+            self.queue_manager.enqueue_message,
             message_type=message_type,
             message_data=message,
             direction=QueueDirection.INBOUND,

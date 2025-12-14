@@ -53,9 +53,9 @@ do-install:
 	test -d ${WRKSRC}/security && \
 		cp -R ${WRKSRC}/security ${PREFIX}/libexec/sysmanage-agent/ || true
 	${INSTALL_DATA_DIR} ${PREFIX}/share/examples/sysmanage-agent
-	test -f ${WRKSRC}/sysmanage-agent.yaml && \
-		${INSTALL_DATA} ${WRKSRC}/sysmanage-agent.yaml \
-			${PREFIX}/share/examples/sysmanage-agent/sysmanage-agent.yaml || true
+	test -f ${WRKSRC}/sysmanage-agent-system.yaml && \
+		${INSTALL_DATA} ${WRKSRC}/sysmanage-agent-system.yaml \
+			${PREFIX}/share/examples/sysmanage-agent/sysmanage-agent-system.yaml || true
 	${INSTALL_DATA_DIR} ${PREFIX}/share/doc/sysmanage-agent
 	${INSTALL_DATA} ${WRKSRC}/README.md ${PREFIX}/share/doc/sysmanage-agent/
 	test -f ${WRKSRC}/LICENSE && \
