@@ -11,9 +11,7 @@ This module handles building the site77.tgz file that contains:
 import hashlib
 import logging
 import os
-import re
 import shutil
-import subprocess  # nosec B404 # Required for system commands
 import tarfile
 import tempfile
 import urllib.error
@@ -26,6 +24,9 @@ from sqlalchemy.orm import Session
 
 from src.database.models import VmmBuildCache
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_vmm_package_builder import (
+    PackageBuilder,
+)
 
 
 class SiteTarballBuilder:
@@ -298,234 +299,8 @@ class SiteTarballBuilder:
         self, port_dir: Path, agent_version: str
     ) -> Dict[str, Any]:
         """Build sysmanage-agent package from port."""
-        try:
-            self.logger.info(_("ENTERED _build_agent_package, port_dir: %s"), port_dir)
-            # Copy port to /usr/ports/sysutils/sysmanage-agent
-            ports_dir = Path("/usr/ports/sysutils/sysmanage-agent")
-
-            # Remove old port directory if exists
-            if ports_dir.exists():
-                self.logger.info(_("Removing old port directory: %s"), ports_dir)
-                shutil.rmtree(ports_dir)
-
-            # Create directory and copy files
-            self.logger.info(_("Creating ports directory: %s"), ports_dir.parent)
-            ports_dir.parent.mkdir(parents=True, exist_ok=True)
-
-            self.logger.info(_("Copying port from %s to %s"), port_dir, ports_dir)
-            shutil.copytree(port_dir, ports_dir)
-
-            # Update Makefile GH_TAGNAME to match the agent version we're building
-            self.logger.info(_("Updating Makefile GH_TAGNAME to agent version"))
-            makefile_path = ports_dir / "Makefile"
-            if makefile_path.exists():
-                with open(makefile_path, "r", encoding="utf-8") as makefile:
-                    makefile_content = makefile.read()
-
-                # Replace GH_TAGNAME line with correct version
-                makefile_content = re.sub(
-                    r"^GH_TAGNAME\s*=.*$",
-                    f"GH_TAGNAME = {agent_version}",
-                    makefile_content,
-                    flags=re.MULTILINE,
-                )
-
-                with open(makefile_path, "w", encoding="utf-8") as makefile:
-                    makefile.write(makefile_content)
-
-                self.logger.info(_("Updated GH_TAGNAME to: %s"), agent_version)
-
-            # Set ownership of port directory for _pbuild user
-            self.logger.info(_("Setting port directory ownership to _pbuild"))
-            subprocess.run(  # nosec B603 B607
-                ["chown", "-R", "_pbuild:_pbuild", str(ports_dir)],
-                check=True,
-                capture_output=True,
-                timeout=30,
-            )
-
-            # Fix distinfo file version mismatch
-            self.logger.info(_("Patching distinfo file for correct version"))
-            distinfo_path = ports_dir / "distinfo"
-            if distinfo_path.exists():
-                # Create stub distinfo with correct version to trigger makesum
-                # Use agent_version directly since we just patched the Makefile with it
-                self.logger.info(
-                    _("Creating stub distinfo for version: %s"), agent_version
-                )
-                stub_distinfo = f"""SHA256 ({agent_version}.tar.gz) = 0000000000000000000000000000000000000000000000000000000000000000
-SIZE ({agent_version}.tar.gz) = 0
-"""
-                with open(distinfo_path, "w", encoding="utf-8") as distinfo_file:
-                    distinfo_file.write(stub_distinfo)
-                self.logger.info(
-                    _("Created stub distinfo for %s, makesum will regenerate it"),
-                    agent_version,
-                )
-
-            # Fix permissions for _pbuild user (OpenBSD's designated port build user)
-            self.logger.info(_("Setting up build directories for _pbuild user"))
-
-            # Create and set ownership of /usr/obj/ports for build artifacts
-            obj_ports = Path("/usr/obj/ports")
-            obj_ports.mkdir(parents=True, exist_ok=True)
-
-            # Allow _pbuild to traverse /usr/obj
-            subprocess.run(  # nosec B603 B607
-                ["chmod", "o+x", "/usr/obj"],
-                check=True,
-                capture_output=True,
-                timeout=30,
-            )
-
-            subprocess.run(  # nosec B603 B607
-                ["chown", "-R", "_pbuild:_pbuild", str(obj_ports)],
-                check=True,
-                capture_output=True,
-                timeout=30,
-            )
-
-            # Set ownership of port directory
-            subprocess.run(  # nosec B603 B607
-                ["chown", "-R", "_pbuild:_pbuild", str(ports_dir)],
-                check=True,
-                capture_output=True,
-                timeout=30,
-            )
-
-            # Build package as _pbuild user (ports won't build as root)
-            # Use su since agent runs as root - no password prompt needed
-            self.logger.info(_("Running make clean as _pbuild"))
-            result = subprocess.run(  # nosec B603 B607
-                ["su", "-m", "_pbuild", "-c", "make clean"],
-                cwd=ports_dir,
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-            self.logger.info(
-                _("make clean output: %s"),
-                result.stdout if result.stdout else "(no output)",
-            )
-            if result.stderr:
-                self.logger.warning(_("make clean stderr: %s"), result.stderr)
-
-            self.logger.info(_("Running make makesum as _pbuild"))
-            result = subprocess.run(  # nosec B603 B607
-                ["su", "-m", "_pbuild", "-c", "make makesum"],
-                cwd=ports_dir,
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-            self.logger.info(
-                _("make makesum output: %s"),
-                result.stdout if result.stdout else "(no output)",
-            )
-            if result.stderr:
-                self.logger.warning(_("make makesum stderr: %s"), result.stderr)
-
-            # Try to fetch distfiles first
-            self.logger.info(_("Running make fetch as _pbuild"))
-            result = subprocess.run(  # nosec B603 B607
-                ["su", "-m", "_pbuild", "-c", "make fetch"],
-                cwd=ports_dir,
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
-            )
-            self.logger.info(
-                _("make fetch output: %s"),
-                result.stdout if result.stdout else "(no output)",
-            )
-            self.logger.info(_("make fetch return code: %d"), result.returncode)
-            if result.stderr:
-                self.logger.warning(_("make fetch stderr: %s"), result.stderr)
-
-            # Now try to build and package
-            self.logger.info(_("Running make package as _pbuild"))
-            result = subprocess.run(  # nosec B603 B607
-                ["su", "-m", "_pbuild", "-c", "make package"],
-                cwd=ports_dir,
-                capture_output=True,
-                text=True,
-                timeout=600,
-                check=False,
-            )
-            self.logger.info(
-                _("make package output: %s"),
-                result.stdout if result.stdout else "(no output)",
-            )
-            self.logger.info(_("make package return code: %d"), result.returncode)
-            if result.stderr:
-                self.logger.warning(_("make package stderr: %s"), result.stderr)
-            if result.returncode != 0:
-                self.logger.error(
-                    _("make package failed with return code: %d"), result.returncode
-                )
-                return {
-                    "success": False,
-                    "package_path": None,
-                    "error": f"make package failed: {result.stderr}",
-                }
-
-            self.logger.info(_("Package build completed, searching for package file"))
-            # Find built package (newest by timestamp)
-            pkg_pattern = "/usr/ports/packages/amd64/all/sysmanage-agent-*.tgz"
-            result = subprocess.run(  # nosec B603 B607
-                ["sh", "-c", f"ls -t {pkg_pattern} 2>/dev/null | head -1"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-
-            pkg_path = result.stdout.strip()
-            self.logger.info(
-                _("Package search result: %s"), pkg_path if pkg_path else "NOT FOUND"
-            )
-            if not pkg_path or not os.path.exists(pkg_path):
-                self.logger.error(
-                    _("Built package not found at pattern: %s"), pkg_pattern
-                )
-                return {
-                    "success": False,
-                    "package_path": None,
-                    "error": _("Built package not found"),
-                }
-
-            self.logger.info(_("Package built successfully: %s"), pkg_path)
-            return {
-                "success": True,
-                "package_path": pkg_path,
-                "error": None,
-            }
-
-        except subprocess.TimeoutExpired as error:
-            self.logger.error(_("Build timeout: %s"), error)
-            return {
-                "success": False,
-                "package_path": None,
-                "error": f"Build timeout: {error}",
-            }
-        except subprocess.CalledProcessError as error:
-            self.logger.error(_("Build failed with CalledProcessError: %s"), error)
-            self.logger.error(_("stderr: %s"), error.stderr)
-            return {
-                "success": False,
-                "package_path": None,
-                "error": f"Build failed: {error.stderr.decode() if error.stderr else str(error)}",
-            }
-        except Exception as error:  # pylint: disable=broad-except
-            self.logger.error(_("Unexpected build error: %s"), error, exc_info=True)
-            return {
-                "success": False,
-                "package_path": None,
-                "error": f"Build error: {error}",
-            }
+        package_builder = PackageBuilder(self.logger)
+        return package_builder.build_agent_package(port_dir, agent_version)
 
     def _download_dependencies(
         self, openbsd_version: str, build_path: Path
@@ -595,6 +370,10 @@ SIZE ({agent_version}.tar.gz) = 0
             root_dir = site_dir / "root"
             root_dir.mkdir(exist_ok=True)
 
+            # Create etc subdirectory for config files
+            etc_dir = site_dir / "etc"
+            etc_dir.mkdir(exist_ok=True)
+
             # Copy sysmanage-agent package
             shutil.copy2(agent_pkg_path, root_dir)
 
@@ -602,17 +381,17 @@ SIZE ({agent_version}.tar.gz) = 0
             dest_packages = root_dir / "packages"
             shutil.copytree(packages_dir, dest_packages)
 
-            # Create sysmanage-agent.yaml configuration
+            # Create sysmanage-agent.yaml configuration in /etc
+            # Note: Agent expects /etc/sysmanage-agent.yaml (not sysmanage-agent-system.yaml)
             config_content = self._generate_agent_config(
                 server_hostname, server_port, use_https
             )
-            config_path = root_dir / "sysmanage-agent.yaml"
+            config_path = etc_dir / "sysmanage-agent.yaml"
             config_path.write_text(config_content)
 
             # Create rc.firsttime script for first boot
             firsttime_script = self._generate_firsttime_script()
-            firsttime_path = site_dir / "etc" / "rc.firsttime"
-            firsttime_path.parent.mkdir(parents=True, exist_ok=True)
+            firsttime_path = etc_dir / "rc.firsttime"
             firsttime_path.write_text(firsttime_script)
             firsttime_path.chmod(0o755)
 

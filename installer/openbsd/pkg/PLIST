@@ -209,8 +209,8 @@ libexec/sysmanage-agent/database/
 libexec/sysmanage-agent/i18n/
 libexec/sysmanage-agent/security/
 share/examples/sysmanage-agent/
-@sample ${SYSCONFDIR}/sysmanage-agent.yaml
-share/examples/sysmanage-agent/sysmanage-agent.yaml
+@sample ${SYSCONFDIR}/sysmanage-agent-system.yaml
+share/examples/sysmanage-agent/sysmanage-agent-system.yaml
 share/doc/sysmanage-agent/
 share/doc/sysmanage-agent/README.md
 share/doc/sysmanage-agent/LICENSE

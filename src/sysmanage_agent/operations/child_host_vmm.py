@@ -5,8 +5,10 @@ VMM/vmd-specific child host operations for OpenBSD hosts.
 import asyncio
 import os
 import re
+import shutil
 import subprocess  # nosec B404 # Required for system command execution
 import time
+from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -18,6 +20,9 @@ from src.sysmanage_agent.operations.child_host_vmm_autoinstall import (
 )
 from src.sysmanage_agent.operations.child_host_vmm_bsd_embedder import BsdRdEmbedder
 from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
+from src.sysmanage_agent.operations.child_host_vmm_httpd_autoinstall import (
+    HttpdAutoinstallSetup,
+)
 from src.sysmanage_agent.operations.child_host_vmm_lifecycle import (
     VmmLifecycleOperations,
 )
@@ -54,6 +59,7 @@ class VmmOperations:
             logger, get_database_manager().get_session()
         )
         self.bsd_embedder = BsdRdEmbedder(logger)
+        self.httpd_setup = HttpdAutoinstallSetup(logger)
 
     async def initialize_vmd(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -429,58 +435,104 @@ class VmmOperations:
             site_tgz_path = site_result.get("site_tgz_path")
             self.logger.info(_("Site tarball ready: %s"), site_tgz_path)
 
-            # Step 7: Embed site.tgz into bsd.rd
-            await self._send_progress(
-                "embedding_bsdrd",
-                _("Embedding site tarball into bsd.rd for offline installation..."),
-            )
-
-            bsdrd_result = self.bsd_embedder.embed_site_in_bsdrd(
-                openbsd_version=openbsd_version,
-                site_tgz_path=site_tgz_path,
-            )
-
-            if not bsdrd_result.get("success"):
+            # Step 7: Get gateway IP from vether0 (already configured by vm.conf setup)
+            # No PXE/TFTP/DHCP needed - using embedded bsd.rd with HTTP instead
+            try:
+                result = subprocess.run(  # nosec B603
+                    ["ifconfig", "vether0"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+                # Parse inet line: "inet 10.1.0.1 netmask 0xffffff00..."
+                for line in result.stdout.split("\n"):
+                    if "inet " in line and "netmask" in line:
+                        gateway_ip = line.split()[1]
+                        break
+                else:
+                    return {
+                        "success": False,
+                        "error": _("Could not determine gateway IP from vether0"),
+                    }
+            except Exception as error:
                 return {
                     "success": False,
-                    "error": _("Failed to embed site into bsd.rd: %s")
-                    % bsdrd_result.get("error"),
+                    "error": _("Failed to get vether0 IP: %s") % str(error),
                 }
 
-            bsdrd_path = bsdrd_result.get("bsdrd_path")
-            self.logger.info(_("Modified bsd.rd ready: %s"), bsdrd_path)
+            self.logger.info(_("Using gateway IP from vether0: %s"), gateway_ip)
 
-            # Step 8: Set up PXE infrastructure (DHCP + TFTP)
+            # Step 9: Setup httpd to serve OpenBSD sets (using detected gateway IP)
             await self._send_progress(
-                "setting_up_pxe",
-                _("Setting up PXE infrastructure (DHCP + TFTP)..."),
+                "setting_up_httpd",
+                _("Setting up httpd to serve OpenBSD installation sets..."),
             )
-
-            infra_result = self.autoinstall.setup_autoinstall_infrastructure(
-                vm_name=config.vm_name,
-                hostname=fqdn_hostname,
-                iso_url=config.iso_url,
-                use_pxe=True,
-            )
-            if not infra_result.get("success"):
+            httpd_result = self.httpd_setup.setup_httpd(gateway_ip)
+            if not httpd_result.get("success"):
                 return {
                     "success": False,
-                    "error": _("Failed to setup PXE infrastructure: %s")
-                    % infra_result.get("error"),
+                    "error": _("Failed to setup httpd: %s") % httpd_result.get("error"),
                 }
 
-            autoinstall_state = infra_result.get("state")
+            # Download OpenBSD sets to /var/www/htdocs
+            await self._send_progress(
+                "downloading_sets",
+                _("Downloading OpenBSD %s installation sets...") % openbsd_version,
+            )
+            sets_result = self.httpd_setup.download_openbsd_sets(openbsd_version)
+            if not sets_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to download OpenBSD sets: %s")
+                    % sets_result.get("error"),
+                }
 
-            # Step 9: Write install.conf for autoinstall
-            conf_result = self.autoinstall.write_install_conf(
-                vm_name=config.vm_name,
+            sets_dir = Path(sets_result.get("sets_dir"))
+            self.logger.info(_("OpenBSD sets downloaded to: %s"), sets_dir)
+
+            # Copy site.tgz to sets directory for HTTP serving
+            version_nodot = openbsd_version.replace(".", "")
+            site_filename = f"site{version_nodot}.tgz"
+            site_dest = sets_dir / site_filename
+
+            await self._send_progress(
+                "copying_site_tarball",
+                _("Copying site tarball to HTTP directory..."),
+            )
+            shutil.copy2(site_tgz_path, site_dest)
+            self.logger.info(_("Copied site.tgz to: %s"), site_dest)
+
+            # Create install.conf content (to be embedded in bsd.rd)
+            install_conf_content = self.httpd_setup.create_install_conf_content(
                 hostname=fqdn_hostname,
                 username=config.username,
-                password=config.password,
+                _password=config.password,
+                gateway_ip=gateway_ip,
+                _openbsd_version=openbsd_version,
             )
-            if not conf_result.get("success"):
-                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
-                return conf_result
+
+            # Embed install.conf into bsd.rd
+            await self._send_progress(
+                "embedding_install_conf",
+                _("Embedding install.conf into bsd.rd..."),
+            )
+
+            embed_result = self.httpd_setup.embed_install_conf_in_bsdrd(
+                install_conf_content=install_conf_content,
+                openbsd_version=openbsd_version,
+                sets_dir=sets_dir,
+            )
+
+            if not embed_result.get("success"):
+                return {
+                    "success": False,
+                    "error": _("Failed to embed install.conf: %s")
+                    % embed_result.get("error"),
+                }
+
+            bsdrd_path = embed_result.get("bsdrd_path")
+            self.logger.info(_("Modified bsd.rd ready: %s"), bsdrd_path)
 
             # Step 10: Create disk image
             await self._send_progress(
@@ -490,24 +542,21 @@ class VmmOperations:
             disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
             disk_result = self._create_disk_image(disk_path, config.disk_size)
             if not disk_result.get("success"):
-                self.autoinstall.cleanup_install_conf()
-                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
                 return disk_result
 
-            # Step 11: Launch VM with PXE boot
+            # Step 11: Launch VM with embedded bsd.rd boot
             await self._send_progress(
-                "launching_vm_pxe",
-                _("Launching VM with PXE boot for offline installation..."),
+                "launching_vm_http",
+                _("Launching VM with embedded bsd.rd for HTTP installation..."),
             )
-            launch_result = await self._launch_vm_pxe(
+            launch_result = await self._launch_vm_with_bsdrd(
                 config.vm_name,
                 disk_path,
+                bsdrd_path,
                 config.memory,
                 config.cpus,
             )
             if not launch_result.get("success"):
-                self.autoinstall.cleanup_install_conf()
-                self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
                 return launch_result
 
             # Step 12: Wait for VM to shutdown (installation complete)
@@ -523,11 +572,6 @@ class VmmOperations:
                 config.vm_name, timeout=1800
             )
 
-            # Cleanup PXE infrastructure after installation
-            self.autoinstall.cleanup_install_conf()
-            self.autoinstall.cleanup_autoinstall_infrastructure(autoinstall_state)
-            autoinstall_state = None
-
             if not shutdown_result.get("success"):
                 return shutdown_result
 
@@ -535,7 +579,7 @@ class VmmOperations:
                 _("VM %s has shut down after installation"), config.vm_name
             )
 
-            # Step 13: Restart VM without PXE boot
+            # Step 13: Restart VM to boot from installed disk
             await self._send_progress(
                 "restarting_vm",
                 _("Restarting VM to boot from installed system..."),
@@ -839,19 +883,21 @@ class VmmOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def _launch_vm_pxe(
+    async def _launch_vm_with_bsdrd(
         self,
         vm_name: str,
         disk_path: str,
+        bsdrd_path: str,
         memory: str,
         _cpus: int,
     ) -> Dict[str, Any]:
         """
-        Launch a VM with PXE boot for autoinstall.
+        Launch a VM with embedded bsd.rd boot for HTTP-based autoinstall.
 
         Args:
             vm_name: Name for the VM
             disk_path: Path to the disk image
+            bsdrd_path: Path to the embedded bsd.rd file
             memory: Memory allocation (e.g., "1G")
             _cpus: Number of CPUs (reserved for future use with vm.conf)
 
@@ -859,11 +905,11 @@ class VmmOperations:
             Dict with success status
         """
         try:
-            # Build vmctl start command for PXE boot
+            # Build vmctl start command for embedded bsd.rd boot
             # -m: memory
             # -n local: use the "local" switch defined in vm.conf
             # -i 1: one network interface
-            # -B net: boot from network (PXE)
+            # -b bsdrd_path: boot from embedded bsd.rd kernel
             # -d: disk image
             cmd = [
                 "vmctl",
@@ -874,14 +920,14 @@ class VmmOperations:
                 "local",
                 "-i",
                 "1",
-                "-B",
-                "net",
+                "-b",
+                bsdrd_path,
                 "-d",
                 disk_path,
                 vm_name,
             ]
 
-            self.logger.info(_("Launching VM with PXE boot: %s"), " ".join(cmd))
+            self.logger.info(_("Launching VM with embedded bsd.rd: %s"), " ".join(cmd))
 
             result = subprocess.run(  # nosec B603 B607
                 cmd,
@@ -892,7 +938,7 @@ class VmmOperations:
             )
 
             if result.returncode == 0:
-                self.logger.info(_("VM %s launched with PXE boot"), vm_name)
+                self.logger.info(_("VM %s launched with embedded bsd.rd"), vm_name)
                 return {"success": True}
 
             error_msg = result.stderr or result.stdout or "Unknown error"
