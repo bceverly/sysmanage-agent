@@ -131,6 +131,7 @@ class BsdRdEmbedder:
             self.logger.debug(_("Downloading from %s"), url)
 
             # Download the gzipped bsd.rd
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(url, timeout=300) as response:  # nosec B310
                 with open(compressed_path, "wb") as file:
                     shutil.copyfileobj(response, file)

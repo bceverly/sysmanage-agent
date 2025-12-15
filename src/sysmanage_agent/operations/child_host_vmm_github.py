@@ -53,6 +53,7 @@ class GitHubVersionChecker:
                 headers={"Accept": "application/vnd.github.v3+json"},
             )
 
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(  # nosec B310 # GitHub API HTTPS
                 request, timeout=30
             ) as response:

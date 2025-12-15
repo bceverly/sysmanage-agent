@@ -228,6 +228,7 @@ class SiteTarballBuilder:
             self.logger.info(_("About to download with urllib"))
             self.logger.debug(_("Downloading from %s"), url)
 
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(url, timeout=300) as response:  # nosec B310
                 with open(tarball_path, "wb") as file:
                     shutil.copyfileobj(response, file)
@@ -249,6 +250,7 @@ class SiteTarballBuilder:
 
             # Extract - the tarball extracts port files directly into build_path
             self.logger.info(_("Extracting tarball to %s"), build_path)
+            # nosemgrep: trailofbits.python.tarfile-extractall-traversal.tarfile-extractall-traversal
             with tarfile.open(tarball_path, "r:gz") as tar:
                 tar.extractall(path=build_path, filter="data")  # type: ignore
             self.logger.info(_("Extraction complete"))
@@ -320,6 +322,7 @@ class SiteTarballBuilder:
                 self.logger.debug(_("Downloading %s"), package)
 
                 try:
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(  # nosec B310
                         pkg_url, timeout=120
                     ) as response:

@@ -375,8 +375,12 @@ class ChildHostCollector:
 
     async def send_child_hosts_update(self):
         """Send child hosts (WSL/VM/container) status update."""
-        # Only collect child hosts on Windows (WSL) for now
-        if platform.system().lower() != "windows":
+        # Collect child hosts on platforms that support virtualization
+        # Windows: WSL, Hyper-V, VirtualBox
+        # Linux: LXD, KVM, VirtualBox
+        # OpenBSD: VMM
+        os_type = platform.system().lower()
+        if os_type not in ("windows", "linux", "openbsd"):
             return
 
         self.logger.debug("AGENT_DEBUG: Collecting child hosts data")

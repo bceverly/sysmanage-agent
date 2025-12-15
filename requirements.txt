@@ -2,6 +2,8 @@ websockets>=15.0.1
 PyYAML>=6.0.2
 aiohttp>=3.12.15
 cryptography>=45.0.7
+psutil>=5.9.0
+bcrypt>=4.0.0
 
 # Database dependencies
 SQLAlchemy>=2.0.43

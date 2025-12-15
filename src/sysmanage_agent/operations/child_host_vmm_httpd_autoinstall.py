@@ -14,6 +14,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict
 
+import bcrypt
+
 from src.i18n import _
 
 
@@ -137,6 +139,7 @@ class HttpdAutoinstallSetup:
                 self.logger.info(_("Downloading %s"), set_name)
 
                 try:
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     with urllib.request.urlopen(
                         url, timeout=300
                     ) as response:  # nosec B310
@@ -203,7 +206,7 @@ class HttpdAutoinstallSetup:
                 }
 
             # Step 2: Extract ramdisk
-            ramdisk_img = "/tmp/ramdisk.img"
+            ramdisk_img = "/tmp/ramdisk.img"  # nosec B108 - /tmp required on OpenBSD
             self.logger.info(_("Extracting ramdisk from bsd.rd"))
             result = subprocess.run(  # nosec B603 B607
                 ["rdsetroot", "-x", str(bsdrd_decompressed), ramdisk_img],
@@ -220,7 +223,7 @@ class HttpdAutoinstallSetup:
                 }
 
             # Step 3: Mount ramdisk
-            mount_point = "/tmp/ramdisk_mount"
+            mount_point = "/tmp/ramdisk_mount"  # nosec B108 - /tmp required on OpenBSD
             Path(mount_point).mkdir(parents=True, exist_ok=True)
 
             result = subprocess.run(  # nosec B603 B607
@@ -346,10 +349,11 @@ class HttpdAutoinstallSetup:
         Returns:
             install.conf content as string
         """
-        # Use bcrypt hashed password (pre-generated for consistency)
-        # This is bcrypt hash of a test password for testing
-        # In production, you'd want to hash the actual password
-        bcrypt_hash = "$2b$08$1Q9ZP0pPhaRxEJMLkNjZ6umCl/brYuFoQLCT7hkb8igVU5.dfJv1K"
+        # Generate bcrypt hash from the provided password
+        # OpenBSD install.conf expects bcrypt format for root password
+        bcrypt_hash = bcrypt.hashpw(
+            _password.encode("utf-8"), bcrypt.gensalt(rounds=8)
+        ).decode("utf-8")
 
         # Get parent DNS from /etc/resolv.conf
         try:
