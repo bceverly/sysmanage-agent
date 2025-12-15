@@ -2,7 +2,10 @@
 VMM/vmd-specific child host operations for OpenBSD hosts.
 """
 
+# pylint: disable=too-many-lines
+
 import asyncio
+import json
 import os
 import re
 import shutil
@@ -31,6 +34,7 @@ from src.sysmanage_agent.operations.child_host_vmm_ssh import VmmSshOperations
 # Default paths for VMM
 VMM_DISK_DIR = "/var/vmm"
 VMM_ISO_DIR = "/var/vmm/iso"
+VMM_METADATA_DIR = "/var/vmm/metadata"
 
 
 class VmmOperations:
@@ -326,8 +330,8 @@ class VmmOperations:
                 return {"success": False, "error": _("Hostname is required")}
             if not config.username:
                 return {"success": False, "error": _("Username is required")}
-            if not config.password:
-                return {"success": False, "error": _("Password is required")}
+            if not config.password_hash:
+                return {"success": False, "error": _("Password hash is required")}
             if not config.server_url:
                 return {"success": False, "error": _("Server URL is required")}
 
@@ -498,12 +502,14 @@ class VmmOperations:
             self.logger.info(_("Copied site.tgz to: %s"), site_dest)
 
             # Create install.conf content (to be embedded in bsd.rd)
+            # Use pre-hashed passwords from server (security: no clear text in transit)
+            root_pwd_hash = config.root_password_hash or config.password_hash
             install_conf_content = self.httpd_setup.create_install_conf_content(
                 hostname=fqdn_hostname,
                 username=config.username,
-                _password=config.password,
+                user_password_hash=config.password_hash,
+                root_password_hash=root_pwd_hash,
                 gateway_ip=gateway_ip,
-                _openbsd_version=openbsd_version,
             )
 
             # Embed install.conf into bsd.rd
@@ -598,6 +604,14 @@ class VmmOperations:
 
             await self._send_progress("complete", _("VM creation complete"))
 
+            # Save VM metadata for listing (hostname, distribution)
+            self._save_vm_metadata(
+                vm_name=config.vm_name,
+                hostname=fqdn_hostname,
+                distribution=config.distribution,
+                openbsd_version=openbsd_version,
+            )
+
             return {
                 "success": True,
                 "child_name": config.vm_name,
@@ -636,6 +650,57 @@ class VmmOperations:
         except Exception as error:
             self.logger.error(_("Error parsing OpenBSD version: %s"), error)
             return None
+
+    def _save_vm_metadata(
+        self,
+        vm_name: str,
+        hostname: str,
+        distribution: str,
+        openbsd_version: str,
+    ) -> bool:
+        """
+        Save VM metadata to a JSON file for later retrieval during listing.
+
+        This allows the listing to include hostname and distribution info
+        even though vmctl status doesn't provide this information.
+
+        Args:
+            vm_name: Name of the VM
+            hostname: FQDN hostname configured for the VM
+            distribution: Full distribution string (e.g., "OpenBSD 7.7")
+            openbsd_version: Extracted version number (e.g., "7.7")
+
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        try:
+            metadata_dir = Path(VMM_METADATA_DIR)
+            metadata_dir.mkdir(parents=True, exist_ok=True)
+
+            metadata = {
+                "vm_name": vm_name,
+                "hostname": hostname,
+                "distribution": {
+                    "distribution_name": "OpenBSD",
+                    "distribution_version": openbsd_version,
+                },
+                "distribution_string": distribution,
+            }
+
+            metadata_file = metadata_dir / f"{vm_name}.json"
+            with open(metadata_file, "w", encoding="utf-8") as metadata_fp:
+                json.dump(metadata, metadata_fp, indent=2)
+
+            self.logger.info(
+                _("Saved VM metadata for '%s' to %s"), vm_name, metadata_file
+            )
+            return True
+
+        except Exception as error:
+            self.logger.error(
+                _("Error saving VM metadata for '%s': %s"), vm_name, error
+            )
+            return False
 
     async def _wait_for_vm_shutdown(
         self, vm_name: str, timeout: int = 1800

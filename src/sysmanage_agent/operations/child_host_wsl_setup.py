@@ -123,7 +123,7 @@ class WslSetupOperations:
             return {"success": False, "error": str(error)}
 
     async def create_user(
-        self, distribution: str, username: str, password: str
+        self, distribution: str, username: str, password_hash: str
     ) -> Dict[str, Any]:
         """
         Create a non-root user in a WSL distribution.
@@ -131,7 +131,7 @@ class WslSetupOperations:
         Args:
             distribution: Distribution name
             username: Username to create
-            password: Password for the user
+            password_hash: Pre-hashed password (bcrypt) for the user
 
         Returns:
             Dict with success status
@@ -159,9 +159,9 @@ class WslSetupOperations:
                         % (result.stderr or result.stdout),
                     }
 
-            # Set password
-            # Use chpasswd which reads from stdin
-            passwd_cmd = f"echo '{username}:{password}' | chpasswd"
+            # Set password using pre-hashed value
+            # Use chpasswd -e which accepts encrypted (hashed) passwords
+            passwd_cmd = f"echo '{username}:{password_hash}' | chpasswd -e"
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "-d", distribution, "--", "sh", "-c", passwd_cmd],
                 capture_output=True,

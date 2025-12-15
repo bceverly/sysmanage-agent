@@ -14,8 +14,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict
 
-import bcrypt
-
 from src.i18n import _
 
 
@@ -332,9 +330,9 @@ class HttpdAutoinstallSetup:
         self,
         hostname: str,
         username: str,
-        _password: str,
+        user_password_hash: str,
+        root_password_hash: str,
         gateway_ip: str,
-        _openbsd_version: str,
     ) -> str:
         """
         Create install.conf content for httpd-based autoinstall.
@@ -342,18 +340,15 @@ class HttpdAutoinstallSetup:
         Args:
             hostname: VM hostname
             username: User to create
-            _password: Password (currently unused, using pre-generated hash for testing)
+            user_password_hash: Pre-hashed bcrypt password for the user
+            root_password_hash: Pre-hashed bcrypt password for root
             gateway_ip: Gateway IP for HTTP server and network
-            _openbsd_version: OpenBSD version (currently unused, using wildcards)
 
         Returns:
             install.conf content as string
         """
-        # Generate bcrypt hash from the provided password
-        # OpenBSD install.conf expects bcrypt format for root password
-        bcrypt_hash = bcrypt.hashpw(
-            _password.encode("utf-8"), bcrypt.gensalt(rounds=8)
-        ).decode("utf-8")
+        # Passwords are pre-hashed on the server for security
+        # (no clear text passwords in transit or logs)
 
         # Get parent DNS from /etc/resolv.conf
         try:
@@ -373,9 +368,9 @@ class HttpdAutoinstallSetup:
 Which disk is the root disk = sd0
 Use (W)hole disk MBR, whole disk (G)PT, (O)penBSD area or (E)dit = whole
 Use (A)uto layout, (E)dit auto layout, or create (C)ustom layout = a
-Password for root account = {bcrypt_hash}
+Password for root account = {root_password_hash}
 Setup a user = {username}
-Password for user {username} = {bcrypt_hash}
+Password for user {username} = {user_password_hash}
 Allow root ssh login = no
 What timezone are you in = US/Eastern
 Network interfaces = vio0

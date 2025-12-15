@@ -8,6 +8,7 @@ import platform
 import re
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Windows registry access for WSL GUID retrieval
@@ -15,6 +16,9 @@ try:
     import winreg
 except ImportError:
     winreg = None  # type: ignore[misc, assignment]
+
+# VMM metadata directory for storing hostname/distribution info
+VMM_METADATA_DIR = "/var/vmm/metadata"
 
 
 class ChildHostListing:
@@ -896,9 +900,10 @@ class ChildHostListing:
                 return vms
 
             # Parse vmctl status output
-            # Format:
-            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER NAME
-            #    1 12345     1    1.0G   512.0M   ttyp0        root myvm
+            # Format (9 columns):
+            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER STATE   NAME
+            #    1 85075     1    1.0G   1006M   ttyp8        root running vm1
+            #    2     -     1    1.0G       -       -        root stopped vm2
             lines = result.stdout.strip().split("\n")
             if len(lines) < 2:
                 return vms
@@ -910,23 +915,29 @@ class ChildHostListing:
                     continue
 
                 parts = line.split()
-                if len(parts) >= 8:
+                if len(parts) >= 9:
+                    # 9 columns: ID, PID, VCPUS, MAXMEM, CURMEM, TTY, OWNER, STATE, NAME
                     vm_id = parts[0]
-                    pid = parts[1]
+                    # parts[1] is PID (unused, status comes from STATE column)
                     vcpus = parts[2]
                     max_mem = parts[3]
                     cur_mem = parts[4]
                     tty = parts[5]
                     owner = parts[6]
-                    name = parts[7]
+                    state = parts[7]  # STATE column: running/stopped
+                    name = parts[8]  # NAME is the 9th column
 
-                    # Determine status based on PID
-                    # If PID is "-", VM is stopped
-                    if pid == "-":
+                    # Use STATE column for status (more reliable than PID check)
+                    if state == "running":
+                        status = "running"
+                    else:
                         status = "stopped"
                         vm_id = None
-                    else:
-                        status = "running"
+
+                    # Get stored metadata (hostname, distribution) if available
+                    metadata = self._get_vmm_metadata(name)
+                    hostname = metadata.get("hostname") if metadata else None
+                    distribution = metadata.get("distribution") if metadata else None
 
                     vms.append(
                         {
@@ -939,6 +950,8 @@ class ChildHostListing:
                             "current_memory": cur_mem,
                             "tty": tty if tty != "-" else None,
                             "owner": owner,
+                            "hostname": hostname,
+                            "distribution": distribution,
                         }
                     )
 
@@ -950,3 +963,28 @@ class ChildHostListing:
             self.logger.debug("Error listing VMM VMs: %s", error)
 
         return vms
+
+    def _get_vmm_metadata(self, vm_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Read VM metadata from stored JSON file.
+
+        The metadata is stored when VM is created and includes hostname
+        and distribution info that vmctl status doesn't provide.
+
+        Args:
+            vm_name: Name of the VM
+
+        Returns:
+            Dict with hostname, distribution, etc. or None if not found
+        """
+        try:
+            metadata_file = Path(VMM_METADATA_DIR) / f"{vm_name}.json"
+            if not metadata_file.exists():
+                return None
+
+            with open(metadata_file, "r", encoding="utf-8") as metadata_fp:
+                return json.load(metadata_fp)
+
+        except Exception as error:
+            self.logger.debug("Error reading VMM metadata for '%s': %s", vm_name, error)
+            return None

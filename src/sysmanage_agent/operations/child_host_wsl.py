@@ -36,7 +36,7 @@ class WslOperations:
         distribution: str,
         hostname: str,
         username: str,
-        password: str,
+        password_hash: str,
         server_url: str,
         agent_install_commands: List[str],
         listing_helper,
@@ -50,7 +50,7 @@ class WslOperations:
             distribution: WSL distribution identifier (e.g., 'Ubuntu-24.04')
             hostname: Hostname for the WSL instance
             username: Non-root username to create
-            password: Password for the user
+            password_hash: Pre-hashed password (bcrypt) for the user
             server_url: URL for the sysmanage server
             agent_install_commands: Commands to install the agent
             listing_helper: ChildHostListing instance for checking existing instances
@@ -68,8 +68,8 @@ class WslOperations:
                 return {"success": False, "error": _("Hostname is required")}
             if not username:
                 return {"success": False, "error": _("Username is required")}
-            if not password:
-                return {"success": False, "error": _("Password is required")}
+            if not password_hash:
+                return {"success": False, "error": _("Password hash is required")}
 
             # Derive FQDN hostname early if user didn't provide a domain
             # This uses the server_url domain (e.g., t14.theeverlys.com -> theeverlys.com)
@@ -194,7 +194,7 @@ class WslOperations:
                 "creating_user", _("Creating user %s...") % username
             )
             user_result = await self._setup_ops.create_user(
-                actual_wsl_name, username, password
+                actual_wsl_name, username, password_hash
             )
             if not user_result.get("success"):
                 return user_result

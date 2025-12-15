@@ -14,7 +14,7 @@ class LxdContainerConfig:
     container_name: str
     hostname: str
     username: str
-    password: str
+    password_hash: str  # Pre-hashed password (bcrypt)
     server_url: str
     agent_install_commands: List[str]
     server_port: int = 8443
@@ -47,9 +47,12 @@ class VmmVmConfig:  # pylint: disable=too-many-instance-attributes
     vm_name: str
     hostname: str
     username: str
-    password: str
+    password_hash: str  # Pre-hashed user password (bcrypt)
     agent_install_commands: List[str]
     iso_url: str = ""  # URL to download install ISO
+    root_password_hash: str = (
+        ""  # Pre-hashed root password (bcrypt), uses password_hash if empty
+    )
     server_config: VmmServerConfig = field(default_factory=lambda: VmmServerConfig(""))
     resource_config: VmmResourceConfig = field(default_factory=VmmResourceConfig)
 

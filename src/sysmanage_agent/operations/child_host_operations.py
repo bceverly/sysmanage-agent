@@ -253,7 +253,8 @@ class ChildHostOperations:
         distribution = parameters.get("distribution")
         hostname = parameters.get("hostname")
         username = parameters.get("username")
-        password = parameters.get("password")
+        # Accept pre-hashed password from server (security: no clear text in transit)
+        password_hash = parameters.get("password_hash")
         server_url = parameters.get("server_url")
         server_port = parameters.get("server_port", 8443)
         use_https = parameters.get("use_https", True)
@@ -278,7 +279,7 @@ class ChildHostOperations:
                 distribution=distribution,
                 hostname=hostname,
                 username=username,
-                password=password,
+                password_hash=password_hash,
                 server_url=server_url,
                 agent_install_commands=agent_install_commands,
                 listing_helper=self.listing_helper,
@@ -294,7 +295,7 @@ class ChildHostOperations:
                 container_name=container_name,
                 hostname=hostname,
                 username=username,
-                password=password,
+                password_hash=password_hash,
                 server_url=server_url,
                 agent_install_commands=agent_install_commands,
                 server_port=server_port,
@@ -306,6 +307,8 @@ class ChildHostOperations:
             # For VMM, vm_name comes from hostname or explicit parameter
             vm_name = parameters.get("vm_name") or hostname.split(".")[0]
             iso_url = parameters.get("iso_url", "")
+            # VMM has separate root password (falls back to user password if not provided)
+            root_password_hash = parameters.get("root_password_hash", password_hash)
 
             # Create sub-configs for server and resource settings
             server_cfg = VmmServerConfig(
@@ -324,9 +327,10 @@ class ChildHostOperations:
                 vm_name=vm_name,
                 hostname=hostname,
                 username=username,
-                password=password,
+                password_hash=password_hash,
                 agent_install_commands=agent_install_commands,
                 iso_url=iso_url,
+                root_password_hash=root_password_hash,
                 server_config=server_cfg,
                 resource_config=resource_cfg,
             )

@@ -15,6 +15,7 @@ from src.i18n import _
 
 # Default paths for VMM
 VMM_DISK_DIR = "/var/vmm"
+VMM_METADATA_DIR = "/var/vmm/metadata"
 
 
 class VmmLifecycleOperations:
@@ -134,9 +135,10 @@ class VmmLifecycleOperations:
                 }
 
             # Parse vmctl status output
-            # Format:
-            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER NAME
-            #    1 12345     1    1.0G   512.0M   ttyp0        root myvm
+            # Format (9 columns):
+            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER STATE   NAME
+            #    1 85075     1    1.0G   1006M   ttyp8        root running vm1
+            #    2     -     1    1.0G       -       -        root stopped vm2
             lines = result.stdout.strip().split("\n")
             if len(lines) < 2:
                 return {
@@ -151,19 +153,20 @@ class VmmLifecycleOperations:
                     continue
 
                 parts = line.split()
-                if len(parts) >= 8 and parts[7] == vm_name:
+                # 9 columns: ID, PID, VCPUS, MAXMEM, CURMEM, TTY, OWNER, STATE, NAME
+                if len(parts) >= 9 and parts[8] == vm_name:
                     vm_id = parts[0]
-                    pid = parts[1]
                     vcpus = parts[2]
                     max_mem = parts[3]
                     cur_mem = parts[4]
+                    state = parts[7]  # STATE column: running/stopped
 
-                    # Determine status based on PID
-                    if pid == "-":
+                    # Use STATE column for status (more reliable than PID check)
+                    if state == "running":
+                        status = "running"
+                    else:
                         status = "stopped"
                         vm_id = None
-                    else:
-                        status = "running"
 
                     return {
                         "success": True,
@@ -415,6 +418,12 @@ class VmmLifecycleOperations:
                 if os.path.exists(disk_path):
                     os.remove(disk_path)
                     self.logger.info(_("Deleted disk image: %s"), disk_path)
+
+            # Delete metadata file if it exists
+            metadata_path = os.path.join(VMM_METADATA_DIR, f"{child_name}.json")
+            if os.path.exists(metadata_path):
+                os.remove(metadata_path)
+                self.logger.info(_("Deleted VM metadata: %s"), metadata_path)
 
             self.logger.info(_("VM %s has been deleted"), child_name)
             return {
