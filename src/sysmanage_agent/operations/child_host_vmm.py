@@ -332,7 +332,7 @@ class VmmOperations:
                 return {"success": False, "error": _("Username is required")}
             if not config.password_hash:
                 return {"success": False, "error": _("Password hash is required")}
-            if not config.server_url:
+            if not config.server_config.server_url:
                 return {"success": False, "error": _("Server URL is required")}
 
             # Step 1: Extract OpenBSD version from distribution
@@ -350,7 +350,9 @@ class VmmOperations:
             self.logger.info(_("Creating OpenBSD %s VM"), openbsd_version)
 
             # Derive FQDN hostname
-            fqdn_hostname = self._get_fqdn_hostname(config.hostname, config.server_url)
+            fqdn_hostname = self._get_fqdn_hostname(
+                config.hostname, config.server_config.server_url
+            )
             if fqdn_hostname != config.hostname:
                 self.logger.info(
                     _("Using FQDN hostname '%s' (user provided '%s')"),
@@ -418,9 +420,9 @@ class VmmOperations:
                 openbsd_version=openbsd_version,
                 agent_version=agent_version,
                 agent_tarball_url=tarball_url,
-                server_hostname=config.server_url,
-                server_port=config.server_port,
-                use_https=config.use_https,
+                server_hostname=config.server_config.server_url,
+                server_port=config.server_config.server_port,
+                use_https=config.server_config.use_https,
             )
 
             if not site_result.get("success"):
@@ -537,10 +539,12 @@ class VmmOperations:
             # Step 10: Create disk image
             await self._send_progress(
                 "creating_disk",
-                _("Creating %s disk image...") % config.disk_size,
+                _("Creating %s disk image...") % config.resource_config.disk_size,
             )
             disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
-            disk_result = self._create_disk_image(disk_path, config.disk_size)
+            disk_result = self._create_disk_image(
+                disk_path, config.resource_config.disk_size
+            )
             if not disk_result.get("success"):
                 return disk_result
 
@@ -553,8 +557,8 @@ class VmmOperations:
                 config.vm_name,
                 disk_path,
                 bsdrd_path,
-                config.memory,
-                config.cpus,
+                config.resource_config.memory,
+                config.resource_config.cpus,
             )
             if not launch_result.get("success"):
                 return launch_result
@@ -587,8 +591,8 @@ class VmmOperations:
             restart_result = await self._launch_vm_no_pxe(
                 config.vm_name,
                 disk_path,
-                config.memory,
-                config.cpus,
+                config.resource_config.memory,
+                config.resource_config.cpus,
             )
             if not restart_result.get("success"):
                 return restart_result
