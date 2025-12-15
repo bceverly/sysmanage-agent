@@ -577,6 +577,12 @@ features:
   firewall_management: true
   certificate_management: true
   script_execution: true
+
+# Logging configuration
+logging:
+  level: "INFO|WARNING|ERROR|CRITICAL"
+  file: "/var/log/sysmanage-agent/agent.log"
+  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
 """
 
             # Write configuration file

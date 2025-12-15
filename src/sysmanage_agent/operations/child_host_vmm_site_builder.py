@@ -436,7 +436,7 @@ i18n:
 
 # Logging configuration
 logging:
-  level: "INFO"
+  level: "INFO|WARNING|ERROR|CRITICAL"
   file: "/var/log/sysmanage-agent/agent.log"
   format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
 
