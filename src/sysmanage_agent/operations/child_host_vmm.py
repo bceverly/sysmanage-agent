@@ -280,13 +280,13 @@ class VmmOperations:
         Args:
             parameters: Dict containing:
                 - child_name: Name of the VM to delete
-                - delete_disk: If True, also delete the disk image
+                - delete_disk: If True, also delete the disk image (default: True)
 
         Returns:
             Dict with success status
         """
         child_name = parameters.get("child_name")
-        delete_disk = parameters.get("delete_disk", False)
+        delete_disk = parameters.get("delete_disk", True)
         if not child_name:
             return {
                 "success": False,
