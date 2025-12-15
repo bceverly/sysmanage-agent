@@ -432,7 +432,7 @@ class VmmOperations:
             # Step 7: Get gateway IP from vether0 (already configured by vm.conf setup)
             # No PXE/TFTP/DHCP needed - using embedded bsd.rd with HTTP instead
             try:
-                result = subprocess.run(  # nosec B603
+                result = subprocess.run(  # nosec B603 B607
                     ["ifconfig", "vether0"],
                     capture_output=True,
                     text=True,
