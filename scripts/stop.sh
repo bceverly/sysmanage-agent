@@ -89,6 +89,9 @@ kill_by_pidfile() {
 
 # Function to kill agent processes by pattern with privilege handling
 kill_by_pattern() {
+    # Define pattern at the top of the function so it's available throughout
+    pattern="sysmanage-agent.*python.*main\.py"
+
     # First try to find processes using pgrep (more reliable for full command matching)
     agent_pids=""
     if command -v pgrep >/dev/null 2>&1; then
@@ -112,7 +115,6 @@ kill_by_pattern() {
 
     # Fallback: use pattern matching if pgrep didn't work
     if [ -z "$process_info" ]; then
-        pattern="sysmanage-agent.*python.*main\.py"
         # Use ps aux format which works reliably on NetBSD and other BSDs
         process_info=$(ps aux 2>/dev/null | grep "$pattern" | grep -v grep | grep -v $$)
 
