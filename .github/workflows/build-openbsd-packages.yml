@@ -94,7 +94,7 @@ jobs:
 
             # Step 4: Build the package
             echo "=== Step 4: Building package ==="
-            if ! make package FLAVOR= SUBPACKAGE= 2>&1; then
+            if ! make package 2>&1; then
               echo "ERROR: Package build failed"
               exit 1
             fi
