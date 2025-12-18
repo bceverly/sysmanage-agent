@@ -473,8 +473,10 @@ class VmmVmCreator:
                         metadata = json.load(meta_file)
                         if "vm_ip" in metadata:
                             used_ips.add(metadata["vm_ip"])
-                except Exception:
-                    pass
+                except (OSError, json.JSONDecodeError) as err:
+                    self.logger.debug(
+                        _("Could not read metadata file %s: %s"), metadata_file, err
+                    )
 
         # Find next available IP starting from .100
         # Check both metadata AND ping to avoid collisions with VMs
