@@ -82,49 +82,26 @@ jobs:
             sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
             sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
 
-            # Debug: Explore Python ports structure (especially for 7.6)
+            # Workaround for OpenBSD 7.6: The ports tarball is missing the lang/python/3 directory
+            # but the Makefile references it. We fetch it from OpenBSD 7.5's ports tree.
             if [ "$OPENBSD_VERSION" = "7.6" ]; then
-              echo "=== DEBUGGING PYTHON PORTS STRUCTURE FOR 7.6 ==="
+              echo "=== Applying OpenBSD 7.6 Python 3 workaround ==="
+              echo "The 7.6 ports tarball is missing lang/python/3 directory."
+              echo "Fetching Python 3.11 port from OpenBSD 7.5 ports tree..."
 
-              echo "--- Search entire ports tree for Python 3 directories ---"
-              find /usr/ports -type d -name "python*" 2>/dev/null | head -50
+              cd /tmp
+              PORTS75_URL="https://ftp.openbsd.org/pub/OpenBSD/7.5/ports.tar.gz"
+              if ftp -o - "$PORTS75_URL" 2>/dev/null | gunzip | tar xf - ports/lang/python/3.11; then
+                echo "Successfully extracted Python 3.11 port from 7.5"
+                cp -R /tmp/ports/lang/python/3.11 /usr/ports/lang/python/3
+                echo "Copied to /usr/ports/lang/python/3"
+                ls -la /usr/ports/lang/python/
+              else
+                echo "ERROR: Failed to fetch Python 3.11 port from 7.5"
+                exit 1
+              fi
 
-              echo "--- Search for any '3.11' in ports ---"
-              find /usr/ports -type d -name "*3.11*" 2>/dev/null | head -20
-
-              echo "--- Search for py3 directories ---"
-              find /usr/ports -type d -name "*py3*" 2>/dev/null | head -20
-
-              echo "--- Contents of /usr/ports/lang/python/ ---"
-              ls -la /usr/ports/lang/python/
-
-              echo "--- Contents of /usr/ports/lang/python/Makefile ---"
-              cat /usr/ports/lang/python/Makefile
-
-              echo "--- Look for python.port.mk in infrastructure ---"
-              find /usr/ports/infrastructure -name "python*" -type f 2>/dev/null
-
-              echo "--- Contents of python.port.mk (first 200 lines) ---"
-              head -200 /usr/ports/lang/python/python.port.mk 2>/dev/null || echo "Not found at lang/python/python.port.mk"
-
-              echo "--- Search for MODPY_DEFAULT_VERSION in all .mk files ---"
-              grep -r "MODPY_DEFAULT_VERSION" /usr/ports/infrastructure/mk/ 2>/dev/null | head -20
-
-              echo "--- What Python packages are installed/available? ---"
-              pkg_info -a 2>/dev/null | grep -i python || echo "No python packages installed"
-              pkg_info -Q python 2>/dev/null | head -30 || echo "pkg_info -Q failed"
-
-              echo "--- Check if ports tarball was complete ---"
-              echo "Size of lang directory:"
-              du -sh /usr/ports/lang/
-              echo "Number of subdirectories in lang:"
-              ls -1 /usr/ports/lang/ | wc -l
-
-              echo "=== END DEBUGGING ==="
-
-              # Exit early for debugging - remove this once we understand the structure
-              echo "Exiting early for debugging purposes"
-              exit 1
+              cd /usr/ports/mystuff/sysutils/sysmanage-agent
             fi
 
             echo "=== Makefile contents ==="
