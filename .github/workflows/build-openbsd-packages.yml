@@ -56,39 +56,15 @@ jobs:
             echo "Ports tarball downloaded:"
             ls -la /tmp/ports.tar.gz
 
-            echo "Extracting ports tree..."
-            # Extract infrastructure and dependency port categories
-            if ! tar xzf /tmp/ports.tar.gz -C /usr \
-                ports/infrastructure \
-                ports/lang/python \
-                ports/net/py-websockets \
-                ports/textproc/py-yaml \
-                ports/www/py-aiohttp \
-                ports/security/py-cryptography \
-                ports/databases/py-sqlalchemy \
-                ports/databases/py-alembic \
-                ports/devel/py-mako \
-                ports/devel/py-typing-extensions \
-                ports/devel/py-greenlet \
-                ports/devel/py-cffi \
-                ports/devel/py-cparser \
-                ports/devel/py-attrs \
-                ports/devel/py-async-timeout \
-                ports/devel/py-idna \
-                ports/devel/py-multidict \
-                ports/devel/py-yarl \
-                ports/devel/py-aiosignal \
-                ports/devel/py-frozenlist \
-                ports/archivers/py-brotli \
-                2>/dev/null; then
-              echo "Some ports not found, extracting what we can..."
-              # Fall back to extracting just infrastructure
-              tar xzf /tmp/ports.tar.gz -C /usr ports/infrastructure ports/lang || true
+            echo "Extracting full ports tree..."
+            if ! tar xzf /tmp/ports.tar.gz -C /usr; then
+              echo "ERROR: Failed to extract ports tarball"
+              exit 1
             fi
             rm /tmp/ports.tar.gz
 
             echo "Ports extracted:"
-            ls /usr/ports/ | head -10
+            ls /usr/ports/
 
             # Step 2: Setup port directory
             echo "=== Step 2: Setting up port directory ==="
