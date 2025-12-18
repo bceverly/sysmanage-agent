@@ -101,16 +101,16 @@ jobs:
 
             # Step 5: Find and copy the package
             echo "=== Step 5: Finding built package ==="
-            find /usr/packages -name "*.tgz" -type f 2>/dev/null || true
+            find /usr/ports/packages -name "*.tgz" -type f 2>/dev/null || true
 
-            PKG_FILE=$(find /usr/packages -name "sysmanage-agent*.tgz" -type f 2>/dev/null | head -1)
+            PKG_FILE=$(find /usr/ports/packages -name "sysmanage-agent*.tgz" -type f 2>/dev/null | head -1)
             if [ -n "$PKG_FILE" ]; then
               cp "$PKG_FILE" "$GITHUB_WORKSPACE/sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
               echo "SUCCESS: Package copied to workspace"
               ls -la $GITHUB_WORKSPACE/*.tgz
             else
               echo "ERROR: Package file not found!"
-              find /usr/packages -type f 2>/dev/null || echo "No files in /usr/packages"
+              find /usr/ports/packages -type f 2>/dev/null || echo "No files in /usr/ports/packages"
               exit 1
             fi
 
