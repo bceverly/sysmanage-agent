@@ -86,7 +86,8 @@ jobs:
             # The 7.6 ports infrastructure doesn't expand MODPY_VERSION correctly
             if [ "$OPENBSD_VERSION" = "7.6" ]; then
               echo "Applying OpenBSD 7.6 python version workaround..."
-              sed -i 's/MODULES.*=.*lang\/python/MODULES = lang\/python\nMODPY_VERSION = 3.11/' Makefile
+              sed -i '/MODULES.*=.*lang\/python/a\
+MODPY_VERSION = 3.11' Makefile
             fi
 
             echo "=== Makefile contents ==="
