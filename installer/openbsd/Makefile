@@ -18,8 +18,6 @@ PERMIT_PACKAGE =	Yes
 
 MODULES =		lang/python
 
-MODPY_VERSION =		${MODPY_DEFAULT_VERSION_3}
-
 RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			textproc/py-yaml${MODPY_FLAVOR} \
 			www/py-aiohttp${MODPY_FLAVOR} \
