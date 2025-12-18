@@ -82,6 +82,13 @@ jobs:
             sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
             sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
 
+            # Workaround for OpenBSD 7.6 python module bug
+            # The 7.6 ports infrastructure doesn't expand MODPY_VERSION correctly
+            if [ "$OPENBSD_VERSION" = "7.6" ]; then
+              echo "Applying OpenBSD 7.6 python version workaround..."
+              sed -i 's/MODULES.*=.*lang\/python/MODULES = lang\/python\nMODPY_VERSION = 3.11/' Makefile
+            fi
+
             echo "=== Makefile contents ==="
             cat Makefile
             echo "========================="
