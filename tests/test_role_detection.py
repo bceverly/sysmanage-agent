@@ -50,7 +50,9 @@ class TestDetectRoles:
         return RoleDetector()
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
     def test_detect_roles_no_packages(
         self, mock_get_packages, mock_detect_virt, detector
     ):
@@ -63,8 +65,12 @@ class TestDetectRoles:
         mock_get_packages.assert_called_once()
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_web_server_nginx(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -83,8 +89,12 @@ class TestDetectRoles:
         assert result[0]["is_active"] is True
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_web_server_apache(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -100,8 +110,12 @@ class TestDetectRoles:
         assert result[0]["service_name"] in ["apache2", "httpd"]
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_database_postgresql(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -117,8 +131,12 @@ class TestDetectRoles:
         assert result[0]["service_name"] in ["postgresql", "postgres"]
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_database_mysql(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -133,7 +151,9 @@ class TestDetectRoles:
         assert result[0]["service_name"] in ["mysql", "mysqld"]
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
     def test_detect_roles_database_sqlite(
         self, mock_get_packages, mock_detect_virt, detector
     ):
@@ -149,8 +169,12 @@ class TestDetectRoles:
         assert result[0]["service_name"] is None
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_monitoring_grafana(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -166,8 +190,12 @@ class TestDetectRoles:
         assert result[0]["service_name"] in ["grafana-server", "grafana"]
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_multiple_roles(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -187,8 +215,12 @@ class TestDetectRoles:
         assert "Database Server" in roles
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_service_stopped(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -202,10 +234,15 @@ class TestDetectRoles:
         assert result[0]["service_status"] == "stopped"
         assert result[0]["is_active"] is False
 
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_detect_roles_duplicate_prevention(
-        self, mock_service_status, mock_get_packages, detector
+        self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
         """Test that duplicate roles are prevented."""
         # PostgreSQL has multiple package patterns that could match
@@ -226,8 +263,13 @@ class TestDetectRoles:
         }
         assert len(postgres_services) <= 1
 
-    @patch.object(RoleDetector, "_get_installed_packages")
-    def test_detect_roles_exception_handling(self, mock_get_packages, detector):
+    @patch.object(RoleDetector, "_detect_virtualization_host_roles")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    def test_detect_roles_exception_handling(
+        self, mock_get_packages, mock_detect_virt, detector
+    ):
         """Test exception handling in detect_roles."""
         mock_get_packages.side_effect = Exception("Test error")
 
@@ -245,8 +287,12 @@ class TestGetInstalledPackages:
         return RoleDetector()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_dpkg_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_dpkg_packages"
+    )
     def test_get_installed_packages_linux_dpkg(
         self, mock_dpkg, mock_cmd_exists, mock_system, detector
     ):
@@ -256,14 +302,19 @@ class TestGetInstalledPackages:
         mock_dpkg.return_value = {"nginx": "1.18.0"}
 
         detector.system = "linux"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "linux"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"nginx": "1.18.0"}
         mock_dpkg.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_rpm_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_rpm_packages"
+    )
     def test_get_installed_packages_linux_rpm(
         self, mock_rpm, mock_cmd_exists, mock_system, detector
     ):
@@ -273,14 +324,19 @@ class TestGetInstalledPackages:
         mock_rpm.return_value = {"httpd": "2.4.41"}
 
         detector.system = "linux"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "linux"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"httpd": "2.4.41"}
         mock_rpm.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_pacman_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_pacman_packages"
+    )
     def test_get_installed_packages_linux_pacman(
         self, mock_pacman, mock_cmd_exists, mock_system, detector
     ):
@@ -290,14 +346,19 @@ class TestGetInstalledPackages:
         mock_pacman.return_value = {"nginx": "1.18.0"}
 
         detector.system = "linux"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "linux"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"nginx": "1.18.0"}
         mock_pacman.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_homebrew_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_homebrew_packages"
+    )
     def test_get_installed_packages_macos(
         self, mock_brew, mock_cmd_exists, mock_system, detector
     ):
@@ -307,14 +368,19 @@ class TestGetInstalledPackages:
         mock_brew.return_value = {"nginx": "1.18.0"}
 
         detector.system = "darwin"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "darwin"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"nginx": "1.18.0"}
         mock_brew.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_pkgin_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_pkgin_packages"
+    )
     def test_get_installed_packages_netbsd(
         self, mock_pkgin, mock_cmd_exists, mock_system, detector
     ):
@@ -324,14 +390,19 @@ class TestGetInstalledPackages:
         mock_pkgin.return_value = {"nginx": "1.18.0"}
 
         detector.system = "netbsd"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "netbsd"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"nginx": "1.18.0"}
         mock_pkgin.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_pkg_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_pkg_packages"
+    )
     def test_get_installed_packages_freebsd(
         self, mock_pkg, mock_cmd_exists, mock_system, detector
     ):
@@ -341,27 +412,33 @@ class TestGetInstalledPackages:
         mock_pkg.return_value = {"nginx": "1.18.0"}
 
         detector.system = "freebsd"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "freebsd"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"nginx": "1.18.0"}
         mock_pkg.assert_called_once()
 
     @patch("src.sysmanage_agent.collection.role_detection.platform.system")
-    @patch.object(RoleDetector, "_get_windows_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_windows_packages"
+    )
     def test_get_installed_packages_windows(self, mock_windows, mock_system, detector):
         """Test getting packages on Windows."""
         mock_system.return_value = "Windows"
         mock_windows.return_value = {"postgresql": "14.5"}
 
         detector.system = "windows"
-        result = detector._get_installed_packages()
+        detector.package_detector.system = "windows"
+        result = detector.package_detector.get_installed_packages()
 
         assert result == {"postgresql": "14.5"}
         mock_windows.assert_called_once()
 
-    @patch.object(RoleDetector, "_get_installed_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
     def test_get_installed_packages_exception(self, mock_get_packages, detector):
-        """Test exception handling in _get_installed_packages."""
+        """Test exception handling in get_installed_packages."""
         mock_get_packages.side_effect = Exception("Test error")
 
         result = detector.detect_roles()
@@ -378,7 +455,9 @@ class TestPackageManagerMethods:
         return RoleDetector()
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_dpkg_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful dpkg package retrieval."""
         mock_cmd_path.return_value = "/usr/bin/dpkg-query"
@@ -386,34 +465,40 @@ class TestPackageManagerMethods:
             returncode=0, stdout="nginx\t1.18.0\npostgresql\t14.5\n"
         )
 
-        result = detector._get_dpkg_packages()
+        result = detector.package_detector._get_dpkg_packages()
 
         assert result == {"nginx": "1.18.0", "postgresql": "14.5"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_dpkg_packages_no_command(self, mock_cmd_path, mock_run, detector):
         """Test dpkg package retrieval when command not found."""
         mock_cmd_path.return_value = None
 
-        result = detector._get_dpkg_packages()
+        result = detector.package_detector._get_dpkg_packages()
 
         assert result == {}
         mock_run.assert_not_called()
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_dpkg_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test dpkg package retrieval with command error."""
         mock_cmd_path.return_value = "/usr/bin/dpkg-query"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_dpkg_packages()
+        result = detector.package_detector._get_dpkg_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_rpm_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful RPM package retrieval."""
         mock_cmd_path.return_value = "/usr/bin/rpm"
@@ -421,23 +506,27 @@ class TestPackageManagerMethods:
             returncode=0, stdout="httpd\t2.4.41\nmysql-server\t8.0.30\n"
         )
 
-        result = detector._get_rpm_packages()
+        result = detector.package_detector._get_rpm_packages()
 
         assert result == {"httpd": "2.4.41", "mysql-server": "8.0.30"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_rpm_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test RPM package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/bin/rpm"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_rpm_packages()
+        result = detector.package_detector._get_rpm_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pacman_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful pacman package retrieval."""
         mock_cmd_path.return_value = "/usr/bin/pacman"
@@ -445,12 +534,14 @@ class TestPackageManagerMethods:
             returncode=0, stdout="nginx 1.18.0\npostgresql 14.5\n"
         )
 
-        result = detector._get_pacman_packages()
+        result = detector.package_detector._get_pacman_packages()
 
         assert result == {"nginx": "1.18.0", "postgresql": "14.5"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_snap_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful snap package retrieval."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -459,12 +550,14 @@ class TestPackageManagerMethods:
             stdout="Name  Version  Rev  Tracking  Publisher  Notes\nnginx 1.18.0   123  stable    nginx      -\n",
         )
 
-        result = detector._get_snap_packages()
+        result = detector.package_detector._get_snap_packages()
 
         assert result == {"nginx": "1.18.0"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_snap_packages_empty_lines(self, mock_cmd_path, mock_run, detector):
         """Test snap package retrieval with empty lines."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -472,13 +565,18 @@ class TestPackageManagerMethods:
             returncode=0, stdout="Name  Version\n\n\nnginx 1.18.0\n"
         )
 
-        result = detector._get_snap_packages()
+        result = detector.package_detector._get_snap_packages()
 
         assert "nginx" in result
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.os.getuid",
+        create=True,
+    )
     @patch("os.environ.get")
     def test_get_homebrew_packages_as_root(
         self, mock_env_get, mock_getuid, mock_cmd_path, mock_run, detector
@@ -491,7 +589,7 @@ class TestPackageManagerMethods:
             returncode=0, stdout="nginx 1.18.0\npostgresql@14 14.5\n"
         )
 
-        result = detector._get_homebrew_packages()
+        result = detector.package_detector._get_homebrew_packages()
 
         assert result == {"nginx": "1.18.0", "postgresql@14": "14.5"}
         # Verify sudo command was used
@@ -499,8 +597,13 @@ class TestPackageManagerMethods:
         assert "sudo" in call_args
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.os.getuid",
+        create=True,
+    )
     def test_get_homebrew_packages_as_regular_user(
         self, mock_getuid, mock_cmd_path, mock_run, detector
     ):
@@ -509,12 +612,14 @@ class TestPackageManagerMethods:
         mock_getuid.return_value = 1000
         mock_run.return_value = Mock(returncode=0, stdout="nginx 1.18.0 1.18.1\n")
 
-        result = detector._get_homebrew_packages()
+        result = detector.package_detector._get_homebrew_packages()
 
         assert result == {"nginx": "1.18.0"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkgin_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful pkgin package retrieval."""
         mock_cmd_path.return_value = "/usr/pkg/bin/pkgin"
@@ -523,12 +628,14 @@ class TestPackageManagerMethods:
             stdout="nginx-1.18.0 Web server\npostgresql14-server-14.5 Database\n",
         )
 
-        result = detector._get_pkgin_packages()
+        result = detector.package_detector._get_pkgin_packages()
 
         assert result == {"nginx": "1.18.0", "postgresql14-server": "14.5"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkgin_packages_invalid_format(self, mock_cmd_path, mock_run, detector):
         """Test pkgin package retrieval with invalid format."""
         mock_cmd_path.return_value = "/usr/pkg/bin/pkgin"
@@ -536,12 +643,14 @@ class TestPackageManagerMethods:
             returncode=0, stdout="invalid\nnginx-1.18.0\nnoversion\n"
         )
 
-        result = detector._get_pkgin_packages()
+        result = detector.package_detector._get_pkgin_packages()
 
         assert result == {"nginx": "1.18.0"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkg_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful pkg package retrieval."""
         mock_cmd_path.return_value = "/usr/sbin/pkg"
@@ -549,18 +658,20 @@ class TestPackageManagerMethods:
             returncode=0, stdout="nginx-1.18.0 Web server\npostgresql14-14.5 Database\n"
         )
 
-        result = detector._get_pkg_packages()
+        result = detector.package_detector._get_pkg_packages()
 
         assert result == {"nginx": "1.18.0", "postgresql14": "14.5"}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkg_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test pkg package retrieval with error."""
         mock_cmd_path.return_value = "/usr/sbin/pkg"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_pkg_packages()
+        result = detector.package_detector._get_pkg_packages()
 
         assert result == {}
 
@@ -576,10 +687,18 @@ class TestWindowsPackageMethods:
             detector.system = "windows"
             return detector
 
-    @patch.object(RoleDetector, "_get_windows_installed_programs")
-    @patch.object(RoleDetector, "_get_python_packages")
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_winget_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_windows_installed_programs"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_python_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_winget_packages"
+    )
     def test_get_windows_packages_all_sources(
         self,
         mock_winget,
@@ -594,7 +713,7 @@ class TestWindowsPackageMethods:
         mock_cmd_exists.return_value = True
         mock_winget.return_value = {"mysql": "8.0.30"}
 
-        result = detector._get_windows_packages()
+        result = detector.package_detector._get_windows_packages()
 
         assert "postgresql" in result
         assert "sqlite3" in result
@@ -611,7 +730,7 @@ class TestWindowsPackageMethods:
         mock_listdir.return_value = ["14", "15"]
         mock_isdir.return_value = True
 
-        result = detector._get_windows_installed_programs()
+        result = detector.package_detector._get_windows_installed_programs()
 
         assert "postgresql" in result
 
@@ -632,7 +751,7 @@ class TestWindowsPackageMethods:
         mock_exists.side_effect = exists_side_effect
         mock_listdir.return_value = ["MySQL Server 8.0"]
 
-        result = detector._get_windows_installed_programs()
+        result = detector.package_detector._get_windows_installed_programs()
 
         assert "mysql-server" in result
         assert result["mysql-server"] == "8.0"
@@ -646,7 +765,7 @@ class TestWindowsPackageMethods:
         mock_exists.return_value = True
         mock_listdir.side_effect = Exception("Test error")
 
-        result = detector._get_windows_installed_programs()
+        result = detector.package_detector._get_windows_installed_programs()
 
         assert result == {}
 
@@ -655,7 +774,7 @@ class TestWindowsPackageMethods:
         """Test successful Python SQLite detection."""
         mock_run.return_value = Mock(returncode=0, stdout="3.36.0\n")
 
-        result = detector._get_python_packages()
+        result = detector.package_detector._get_python_packages()
 
         assert result == {"sqlite3": "3.36.0"}
 
@@ -664,12 +783,14 @@ class TestWindowsPackageMethods:
         """Test Python SQLite detection failure."""
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_python_packages()
+        result = detector.package_detector._get_python_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_winget_packages_success(self, mock_cmd_path, mock_run, detector):
         """Test successful winget package retrieval."""
         mock_cmd_path.return_value = "winget"
@@ -678,12 +799,14 @@ class TestWindowsPackageMethods:
             stdout="Name  Id  Version  Available  Source\n-----\nPostgreSQL postgresql 14.5 14.6 winget\n",
         )
 
-        result = detector._get_winget_packages()
+        result = detector.package_detector._get_winget_packages()
 
         assert "postgresql" in result
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_winget_packages_filters_databases(
         self, mock_cmd_path, mock_run, detector
     ):
@@ -694,7 +817,7 @@ class TestWindowsPackageMethods:
             stdout="Name  Id  Version\n-----\nMySQL mysql 8.0\nSomeApp app 1.0\n",
         )
 
-        result = detector._get_winget_packages()
+        result = detector.package_detector._get_winget_packages()
 
         assert "mysql" in result
         assert "someapp" not in result
@@ -708,57 +831,72 @@ class TestServiceStatusMethods:
         """Create a RoleDetector instance for testing."""
         return RoleDetector()
 
-    @patch.object(RoleDetector, "_get_linux_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_linux_service_status"
+    )
     def test_get_service_status_linux(self, mock_linux_status, detector):
         """Test service status on Linux."""
         detector.system = "linux"
+        detector.service_detector.system = "linux"
         mock_linux_status.return_value = "running"
 
-        result = detector._get_service_status("nginx")
+        result = detector.service_detector.get_service_status("nginx")
 
         assert result == "running"
         mock_linux_status.assert_called_once_with("nginx")
 
-    @patch.object(RoleDetector, "_get_macos_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_macos_service_status"
+    )
     def test_get_service_status_macos(self, mock_macos_status, detector):
         """Test service status on macOS."""
         detector.system = "darwin"
+        detector.service_detector.system = "darwin"
         mock_macos_status.return_value = "running"
 
-        result = detector._get_service_status("nginx")
+        result = detector.service_detector.get_service_status("nginx")
 
         assert result == "running"
         mock_macos_status.assert_called_once_with("nginx")
 
-    @patch.object(RoleDetector, "_get_bsd_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_bsd_service_status"
+    )
     def test_get_service_status_bsd(self, mock_bsd_status, detector):
         """Test service status on BSD."""
         detector.system = "freebsd"
+        detector.service_detector.system = "freebsd"
         mock_bsd_status.return_value = "running"
 
-        result = detector._get_service_status("nginx")
+        result = detector.service_detector.get_service_status("nginx")
 
         assert result == "running"
         mock_bsd_status.assert_called_once_with("nginx")
 
-    @patch.object(RoleDetector, "_get_windows_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_windows_service_status"
+    )
     def test_get_service_status_windows(self, mock_windows_status, detector):
         """Test service status on Windows."""
         detector.system = "windows"
+        detector.service_detector.system = "windows"
         mock_windows_status.return_value = "running"
 
-        result = detector._get_service_status("nginx")
+        result = detector.service_detector.get_service_status("nginx")
 
         assert result == "running"
         mock_windows_status.assert_called_once_with("nginx")
 
-    @patch.object(RoleDetector, "_get_linux_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_linux_service_status"
+    )
     def test_get_service_status_exception(self, mock_linux_status, detector):
         """Test service status with exception."""
         detector.system = "linux"
+        detector.service_detector.system = "linux"
         mock_linux_status.side_effect = Exception("Test error")
 
-        result = detector._get_service_status("nginx")
+        result = detector.service_detector.get_service_status("nginx")
 
         assert result == "unknown"
 
@@ -774,8 +912,12 @@ class TestLinuxServiceStatus:
         return detector
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch.object(RoleDetector, "_command_exists")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._command_exists"
+    )
     def test_linux_service_status_systemctl_running(
         self, mock_cmd_exists, mock_cmd_path, mock_run, detector
     ):
@@ -784,13 +926,17 @@ class TestLinuxServiceStatus:
         mock_cmd_path.return_value = "/usr/bin/systemctl"
         mock_run.return_value = Mock(returncode=0, stdout="active\n")
 
-        result = detector._get_linux_service_status("nginx")
+        result = detector.service_detector._get_linux_service_status("nginx")
 
         assert result == "running"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch.object(RoleDetector, "_command_exists")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._command_exists"
+    )
     def test_linux_service_status_systemctl_stopped(
         self, mock_cmd_exists, mock_cmd_path, mock_run, detector
     ):
@@ -799,13 +945,17 @@ class TestLinuxServiceStatus:
         mock_cmd_path.return_value = "/usr/bin/systemctl"
         mock_run.return_value = Mock(returncode=3, stdout="inactive\n")
 
-        result = detector._get_linux_service_status("nginx")
+        result = detector.service_detector._get_linux_service_status("nginx")
 
         assert result == "stopped"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch.object(RoleDetector, "_command_exists")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._command_exists"
+    )
     def test_linux_service_status_service_command(
         self, mock_cmd_exists, mock_cmd_path, mock_run, detector
     ):
@@ -822,14 +972,20 @@ class TestLinuxServiceStatus:
         mock_cmd_path.side_effect = cmd_path_side_effect
         mock_run.return_value = Mock(returncode=0)
 
-        result = detector._get_linux_service_status("nginx")
+        result = detector.service_detector._get_linux_service_status("nginx")
 
         assert result == "running"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_snap_service_status")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch.object(RoleDetector, "_command_exists")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_snap_service_status"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._command_exists"
+    )
     def test_linux_service_status_snap(
         self, mock_cmd_exists, mock_cmd_path, mock_snap_status, mock_run, detector
     ):
@@ -837,7 +993,7 @@ class TestLinuxServiceStatus:
         mock_cmd_exists.return_value = True
         mock_snap_status.return_value = "running"
 
-        result = detector._get_linux_service_status("nginx")
+        result = detector.service_detector._get_linux_service_status("nginx")
 
         assert result == "running"
         mock_snap_status.assert_called_once_with("nginx")
@@ -853,17 +1009,23 @@ class TestMacOSServiceStatus:
         detector.system = "darwin"
         return detector
 
-    @patch.object(RoleDetector, "_check_brew_services")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._check_brew_services"
+    )
     def test_macos_service_status_brew_running(self, mock_brew_services, detector):
         """Test macOS service status with brew services - running."""
         mock_brew_services.return_value = "running"
 
-        result = detector._get_macos_service_status("nginx")
+        result = detector.service_detector._get_macos_service_status("nginx")
 
         assert result == "running"
 
-    @patch.object(RoleDetector, "_check_brew_services")
-    @patch.object(RoleDetector, "_check_process_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._check_brew_services"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._check_process_status"
+    )
     def test_macos_service_status_fallback_to_process(
         self, mock_process_status, mock_brew_services, detector
     ):
@@ -871,13 +1033,18 @@ class TestMacOSServiceStatus:
         mock_brew_services.return_value = "unknown"
         mock_process_status.return_value = "running"
 
-        result = detector._get_macos_service_status("nginx")
+        result = detector.service_detector._get_macos_service_status("nginx")
 
         assert result == "running"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch("src.sysmanage_agent.collection.role_detection.os.getuid", create=True)
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.os.getuid",
+        create=True,
+    )
     @patch("os.environ.get")
     def test_check_brew_services_as_root(
         self, mock_env_get, mock_getuid, mock_cmd_path, mock_run, detector
@@ -890,14 +1057,16 @@ class TestMacOSServiceStatus:
             returncode=0, stdout="Name  Status\nnginx started\n"
         )
 
-        result = detector._check_brew_services("nginx")
+        result = detector.service_detector._check_brew_services("nginx")
 
         assert result == "running"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
     @patch(
-        "src.sysmanage_agent.collection.role_detection.os.getuid",
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.os.getuid",
         return_value=1000,
         create=True,
     )
@@ -910,12 +1079,14 @@ class TestMacOSServiceStatus:
             returncode=0, stdout="Name  Status\nnginx stopped\n"
         )
 
-        result = detector._check_brew_services("nginx")
+        result = detector.service_detector._check_brew_services("nginx")
 
         assert result == "stopped"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_check_brew_services_not_found(self, mock_cmd_path, mock_run, detector):
         """Test brew services check - service not found."""
         mock_cmd_path.return_value = "/usr/local/bin/brew"
@@ -923,7 +1094,7 @@ class TestMacOSServiceStatus:
             returncode=0, stdout="Name  Status\napache started\n"
         )
 
-        result = detector._check_brew_services("nginx")
+        result = detector.service_detector._check_brew_services("nginx")
 
         assert result == "unknown"
 
@@ -935,7 +1106,7 @@ class TestMacOSServiceStatus:
             stdout="user  1234  0.0  0.1  12345  6789  ?  S  10:00  0:00 nginx: master process\n",
         )
 
-        result = detector._check_process_status("nginx")
+        result = detector.service_detector._check_process_status("nginx")
 
         assert result == "running"
 
@@ -947,7 +1118,7 @@ class TestMacOSServiceStatus:
             stdout="user  1234  0.0  0.1  12345  6789  ?  S  10:00  0:00 postgres: master process\n",
         )
 
-        result = detector._check_process_status("postgresql")
+        result = detector.service_detector._check_process_status("postgresql")
 
         assert result == "running"
 
@@ -956,7 +1127,7 @@ class TestMacOSServiceStatus:
         """Test process status check - not running."""
         mock_run.return_value = Mock(returncode=0, stdout="user  1234  apache\n")
 
-        result = detector._check_process_status("nginx")
+        result = detector.service_detector._check_process_status("nginx")
 
         assert result == "stopped"
 
@@ -968,7 +1139,7 @@ class TestMacOSServiceStatus:
             stdout="user  1234  0.0  0.1  12345  6789  ?  S  10:00  0:00 grep nginx\n",
         )
 
-        result = detector._check_process_status("nginx")
+        result = detector.service_detector._check_process_status("nginx")
 
         assert result == "stopped"
 
@@ -991,7 +1162,7 @@ class TestBSDServiceStatus:
             stdout="user  1234  0.0  0.1  12345  6789  ?  S  10:00  0:00 nginx: master\n",
         )
 
-        result = detector._get_bsd_service_status("nginx")
+        result = detector.service_detector._get_bsd_service_status("nginx")
 
         assert result == "running"
 
@@ -1005,9 +1176,11 @@ class TestBSDServiceStatus:
         mock_run.side_effect = [ps_result, service_result]
 
         with patch.object(
-            detector, "_get_command_path", return_value="/usr/sbin/service"
+            detector.service_detector,
+            "_get_command_path",
+            return_value="/usr/sbin/service",
         ):
-            result = detector._get_bsd_service_status("nginx")
+            result = detector.service_detector._get_bsd_service_status("nginx")
 
         # Service command returns success, so service is running
         assert result == "running"
@@ -1017,7 +1190,7 @@ class TestBSDServiceStatus:
         """Test BSD service status - stopped."""
         mock_run.return_value = Mock(returncode=0, stdout="other process\n")
 
-        result = detector._get_bsd_service_status("nginx")
+        result = detector.service_detector._get_bsd_service_status("nginx")
 
         assert result == "stopped"
 
@@ -1031,7 +1204,9 @@ class TestSnapServiceStatus:
         return RoleDetector()
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_active(self, mock_cmd_path, mock_run, detector):
         """Test snap service status - active."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -1040,12 +1215,14 @@ class TestSnapServiceStatus:
             stdout="Service  Startup  Current  Notes\nnginx.nginx  enabled  active  -\n",
         )
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "running"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_inactive(self, mock_cmd_path, mock_run, detector):
         """Test snap service status - inactive."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -1054,47 +1231,61 @@ class TestSnapServiceStatus:
             stdout="Service  Startup  Current  Notes\nnginx.nginx  disabled  inactive  -\n",
         )
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "stopped"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_error(self, mock_cmd_path, mock_run, detector):
         """Test snap service status - command error."""
         mock_cmd_path.return_value = "/usr/bin/snap"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "unknown"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_exception(self, mock_cmd_path, mock_run, detector):
         """Test snap service status - exception."""
         mock_cmd_path.return_value = "/usr/bin/snap"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "unknown"
 
     def test_is_snap_service_match_exact(self, detector):
         """Test snap service name matching - exact match."""
-        assert detector._is_snap_service_match("nginx", "nginx") is True
+        assert (
+            detector.service_detector._is_snap_service_match("nginx", "nginx") is True
+        )
 
     def test_is_snap_service_match_contains(self, detector):
         """Test snap service name matching - contains."""
-        assert detector._is_snap_service_match("nginx.service", "nginx") is True
+        assert (
+            detector.service_detector._is_snap_service_match("nginx.service", "nginx")
+            is True
+        )
 
     def test_is_snap_service_match_dotted(self, detector):
         """Test snap service name matching - dotted notation."""
-        assert detector._is_snap_service_match("snap.nginx", "nginx") is True
+        assert (
+            detector.service_detector._is_snap_service_match("snap.nginx", "nginx")
+            is True
+        )
 
     def test_is_snap_service_match_no_match(self, detector):
         """Test snap service name matching - no match."""
-        assert detector._is_snap_service_match("apache", "nginx") is False
+        assert (
+            detector.service_detector._is_snap_service_match("apache", "nginx") is False
+        )
 
 
 class TestWindowsServiceStatus:
@@ -1115,7 +1306,7 @@ class TestWindowsServiceStatus:
             stdout="SERVICE_NAME: postgresql-x64-14\n        STATE              : 4  RUNNING\n",
         )
 
-        result = detector._get_windows_service_status("postgresql")
+        result = detector.service_detector._get_windows_service_status("postgresql")
 
         assert result == "running"
 
@@ -1127,7 +1318,7 @@ class TestWindowsServiceStatus:
             stdout="SERVICE_NAME: MySQL80\n        STATE              : 1  STOPPED\n",
         )
 
-        result = detector._get_windows_service_status("mysql")
+        result = detector.service_detector._get_windows_service_status("mysql")
 
         assert result == "stopped"
 
@@ -1136,7 +1327,7 @@ class TestWindowsServiceStatus:
         """Test Windows service status - service not found."""
         mock_run.return_value = Mock(returncode=0, stdout="SERVICE_NAME: other\n")
 
-        result = detector._get_windows_service_status("nginx")
+        result = detector.service_detector._get_windows_service_status("nginx")
 
         assert result == "unknown"
 
@@ -1145,27 +1336,39 @@ class TestWindowsServiceStatus:
         """Test Windows service status - exception."""
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_windows_service_status("nginx")
+        result = detector.service_detector._get_windows_service_status("nginx")
 
         assert result == "unknown"
 
     def test_matches_service_pattern_exact(self, detector):
         """Test Windows service pattern matching - exact."""
-        assert detector._matches_service_pattern("MySQL80", "MySQL80") is True
+        assert (
+            detector.service_detector._matches_service_pattern("MySQL80", "MySQL80")
+            is True
+        )
 
     def test_matches_service_pattern_wildcard(self, detector):
         """Test Windows service pattern matching - wildcard."""
-        assert detector._matches_service_pattern("MySQL80", "MySQL*") is True
+        assert (
+            detector.service_detector._matches_service_pattern("MySQL80", "MySQL*")
+            is True
+        )
 
     def test_matches_service_pattern_substring(self, detector):
         """Test Windows service pattern matching - substring."""
         assert (
-            detector._matches_service_pattern("postgresql-x64-14", "postgresql") is True
+            detector.service_detector._matches_service_pattern(
+                "postgresql-x64-14", "postgresql"
+            )
+            is True
         )
 
     def test_matches_service_pattern_no_match(self, detector):
         """Test Windows service pattern matching - no match."""
-        assert detector._matches_service_pattern("Apache", "nginx") is False
+        assert (
+            detector.service_detector._matches_service_pattern("Apache", "nginx")
+            is False
+        )
 
 
 class TestUtilityMethods:
@@ -1181,7 +1384,7 @@ class TestUtilityMethods:
         """Test command exists check - command found."""
         mock_which.return_value = "/usr/bin/nginx"
 
-        result = detector._command_exists("nginx")
+        result = detector.package_detector._command_exists("nginx")
 
         assert result is True
 
@@ -1190,7 +1393,7 @@ class TestUtilityMethods:
         """Test command exists check - command not found."""
         mock_which.return_value = None
 
-        result = detector._command_exists("nonexistent")
+        result = detector.package_detector._command_exists("nonexistent")
 
         assert result is False
 
@@ -1199,7 +1402,7 @@ class TestUtilityMethods:
         """Test get command path - found."""
         mock_which.return_value = "/usr/bin/nginx"
 
-        result = detector._get_command_path("nginx")
+        result = detector.package_detector._get_command_path("nginx")
 
         assert result == "/usr/bin/nginx"
 
@@ -1208,7 +1411,7 @@ class TestUtilityMethods:
         """Test get command path - not found."""
         mock_which.return_value = None
 
-        result = detector._get_command_path("nonexistent")
+        result = detector.package_detector._get_command_path("nonexistent")
 
         assert result is None
 
@@ -1216,7 +1419,7 @@ class TestUtilityMethods:
         """Test finding package version - exact match."""
         packages = {"nginx": "1.18.0", "apache2": "2.4.41"}
 
-        result = detector._find_package_version("nginx", packages)
+        result = detector.package_detector.find_package_version("nginx", packages)
 
         assert result == "1.18.0"
 
@@ -1224,7 +1427,7 @@ class TestUtilityMethods:
         """Test finding package version - pattern match."""
         packages = {"postgresql14-server": "14.5", "postgresql15-server": "15.2"}
 
-        result = detector._find_package_version("postgresql", packages)
+        result = detector.package_detector.find_package_version("postgresql", packages)
 
         assert result in ["14.5", "15.2"]
 
@@ -1232,7 +1435,7 @@ class TestUtilityMethods:
         """Test finding package version - not found."""
         packages = {"nginx": "1.18.0"}
 
-        result = detector._find_package_version("apache", packages)
+        result = detector.package_detector.find_package_version("apache", packages)
 
         assert result is None
 
@@ -1245,114 +1448,141 @@ class TestAdditionalCoverage:
         """Create a RoleDetector instance for testing."""
         return RoleDetector()
 
-    @patch.object(RoleDetector, "_command_exists")
-    @patch.object(RoleDetector, "_get_dpkg_packages")
-    @patch.object(RoleDetector, "_get_snap_packages")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_dpkg_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_snap_packages"
+    )
     def test_get_installed_packages_linux_with_snap(
         self, mock_snap, mock_dpkg, mock_cmd_exists, detector
     ):
         """Test getting packages on Linux with both dpkg and snap."""
         detector.system = "linux"
+        detector.package_detector.system = "linux"
         mock_cmd_exists.side_effect = lambda cmd: cmd in ["dpkg", "snap"]
         mock_dpkg.return_value = {"nginx": "1.18.0"}
         mock_snap.return_value = {"grafana": "9.3.2"}
 
-        result = detector._get_installed_packages()
+        result = detector.package_detector.get_installed_packages()
 
         assert "nginx" in result
         assert "grafana" in result
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkgin_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test pkgin package retrieval with error."""
         mock_cmd_path.return_value = "/usr/pkg/bin/pkgin"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_pkgin_packages()
+        result = detector.package_detector._get_pkgin_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkgin_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test pkgin package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/pkg/bin/pkgin"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_pkgin_packages()
+        result = detector.package_detector._get_pkgin_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pkg_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test pkg package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/sbin/pkg"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_pkg_packages()
+        result = detector.package_detector._get_pkg_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_snap_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test snap package retrieval with error."""
         mock_cmd_path.return_value = "/usr/bin/snap"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_snap_packages()
+        result = detector.package_detector._get_snap_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_snap_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test snap package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/bin/snap"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_snap_packages()
+        result = detector.package_detector._get_snap_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_homebrew_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test Homebrew package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/local/bin/brew"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_homebrew_packages()
+        result = detector.package_detector._get_homebrew_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pacman_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test pacman package retrieval with error."""
         mock_cmd_path.return_value = "/usr/bin/pacman"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_pacman_packages()
+        result = detector.package_detector._get_pacman_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_get_pacman_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test pacman package retrieval with exception."""
         mock_cmd_path.return_value = "/usr/bin/pacman"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_pacman_packages()
+        result = detector.package_detector._get_pacman_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
-    @patch.object(RoleDetector, "_command_exists")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+    )
     def test_linux_service_status_no_commands(
         self, mock_cmd_exists, mock_cmd_path, mock_run, detector
     ):
@@ -1361,12 +1591,14 @@ class TestAdditionalCoverage:
         mock_cmd_exists.return_value = False
         mock_cmd_path.return_value = None
 
-        result = detector._get_linux_service_status("nginx")
+        result = detector.service_detector._get_linux_service_status("nginx")
 
         assert result == "unknown"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_check_brew_services")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._check_brew_services"
+    )
     def test_macos_service_status_process_exception(
         self, mock_brew_services, mock_run, detector
     ):
@@ -1376,18 +1608,20 @@ class TestAdditionalCoverage:
         # Process check should raise exception
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_macos_service_status("nginx")
+        result = detector.service_detector._get_macos_service_status("nginx")
 
         assert result == "unknown"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_check_brew_services_exception(self, mock_cmd_path, mock_run, detector):
         """Test brew services check with exception."""
         mock_cmd_path.return_value = "/usr/local/bin/brew"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._check_brew_services("nginx")
+        result = detector.service_detector._check_brew_services("nginx")
 
         assert result == "unknown"
 
@@ -1396,7 +1630,7 @@ class TestAdditionalCoverage:
         """Test process status check with exception."""
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._check_process_status("nginx")
+        result = detector.service_detector._check_process_status("nginx")
 
         assert result == "unknown"
 
@@ -1405,12 +1639,14 @@ class TestAdditionalCoverage:
         """Test process status check with command error."""
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._check_process_status("nginx")
+        result = detector.service_detector._check_process_status("nginx")
 
         assert result == "unknown"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_empty_lines(self, mock_cmd_path, mock_run, detector):
         """Test snap service status with empty lines."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -1419,12 +1655,14 @@ class TestAdditionalCoverage:
             stdout="Service  Startup  Current\n\n\n",
         )
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "unknown"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
+    )
     def test_snap_service_status_disabled(self, mock_cmd_path, mock_run, detector):
         """Test snap service status - disabled."""
         mock_cmd_path.return_value = "/usr/bin/snap"
@@ -1433,7 +1671,7 @@ class TestAdditionalCoverage:
             stdout="Service  Startup  Current  Notes\nnginx.nginx  disabled  disabled  -\n",
         )
 
-        result = detector._get_snap_service_status("nginx")
+        result = detector.service_detector._get_snap_service_status("nginx")
 
         assert result == "stopped"
 
@@ -1444,8 +1682,10 @@ class TestAdditionalCoverage:
         # ps returns non-zero and no service command is available
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        with patch.object(detector, "_get_command_path", return_value=None):
-            result = detector._get_bsd_service_status("nginx")
+        with patch.object(
+            detector.service_detector, "_get_command_path", return_value=None
+        ):
+            result = detector.service_detector._get_bsd_service_status("nginx")
 
         assert result == "unknown"
 
@@ -1460,42 +1700,50 @@ class TestAdditionalCoverage:
         mock_run.side_effect = [ps_result, service_result]
 
         with patch.object(
-            detector, "_get_command_path", return_value="/usr/sbin/service"
+            detector.service_detector,
+            "_get_command_path",
+            return_value="/usr/sbin/service",
         ):
-            result = detector._get_bsd_service_status("nginx")
+            result = detector.service_detector._get_bsd_service_status("nginx")
 
         assert result == "stopped"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_winget_packages_no_command(self, mock_cmd_path, mock_run, detector):
         """Test winget package retrieval when command not found."""
         mock_cmd_path.return_value = None
 
-        result = detector._get_winget_packages()
+        result = detector.package_detector._get_winget_packages()
 
         assert result == {}
         mock_run.assert_not_called()
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_winget_packages_error(self, mock_cmd_path, mock_run, detector):
         """Test winget package retrieval with error."""
         mock_cmd_path.return_value = "winget"
         mock_run.return_value = Mock(returncode=1, stdout="")
 
-        result = detector._get_winget_packages()
+        result = detector.package_detector._get_winget_packages()
 
         assert result == {}
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_winget_packages_exception(self, mock_cmd_path, mock_run, detector):
         """Test winget package retrieval with exception."""
         mock_cmd_path.return_value = "winget"
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_winget_packages()
+        result = detector.package_detector._get_winget_packages()
 
         assert result == {}
 
@@ -1504,7 +1752,7 @@ class TestAdditionalCoverage:
         """Test Python SQLite detection with exception."""
         mock_run.side_effect = Exception("Test error")
 
-        result = detector._get_python_packages()
+        result = detector.package_detector._get_python_packages()
 
         assert result == {}
 
@@ -1518,8 +1766,12 @@ class TestEdgeCases:
         return RoleDetector()
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_multiple_service_names_first_running(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -1536,8 +1788,12 @@ class TestEdgeCases:
         assert result[0]["service_status"] == "running"
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_multiple_service_names_second_running(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -1554,8 +1810,12 @@ class TestEdgeCases:
         assert result[0]["service_status"] == "running"
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_service_status_unknown_then_stopped(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):
@@ -1580,19 +1840,25 @@ class TestEdgeCases:
         assert result[0]["service_status"] == "stopped"
 
     @patch("subprocess.run")
-    @patch.object(RoleDetector, "_get_command_path")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+    )
     def test_subprocess_timeout(self, mock_cmd_path, mock_run, detector):
         """Test subprocess timeout handling."""
         mock_cmd_path.return_value = "/usr/bin/dpkg-query"
         mock_run.side_effect = Exception("Timeout")
 
-        result = detector._get_dpkg_packages()
+        result = detector.package_detector._get_dpkg_packages()
 
         assert result == {}
 
     @patch.object(RoleDetector, "_detect_virtualization_host_roles")
-    @patch.object(RoleDetector, "_get_installed_packages")
-    @patch.object(RoleDetector, "_get_service_status")
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector.get_installed_packages"
+    )
+    @patch(
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector.get_service_status"
+    )
     def test_empty_service_names_list(
         self, mock_service_status, mock_get_packages, mock_detect_virt, detector
     ):

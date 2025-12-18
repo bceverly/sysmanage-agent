@@ -1,0 +1,128 @@
+name: Build OpenBSD Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 0.9.9.8)'
+        required: true
+        default: '0.9.9.8'
+
+permissions:
+  contents: write
+
+jobs:
+  build-openbsd:
+    name: Build OpenBSD ${{ matrix.openbsd-version }} Package
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        openbsd-version: ['7.5', '7.6', '7.7']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build on OpenBSD ${{ matrix.openbsd-version }}
+        uses: vmactions/openbsd-vm@v1
+        with:
+          release: ${{ matrix.openbsd-version }}
+          usesh: true
+          prepare: |
+            pkg_add git
+          run: |
+            set -e
+
+            echo "=== Building sysmanage-agent on OpenBSD ${{ matrix.openbsd-version }} ==="
+
+            # Create ports directory structure
+            mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/files
+            mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/pkg
+
+            # Copy port files from repo
+            cp installer/openbsd/Makefile /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp installer/openbsd/distinfo /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp -r installer/openbsd/files/* /usr/ports/mystuff/sysutils/sysmanage-agent/files/ 2>/dev/null || true
+            cp -r installer/openbsd/pkg/* /usr/ports/mystuff/sysutils/sysmanage-agent/pkg/ 2>/dev/null || true
+
+            # Update version in Makefile
+            cd /usr/ports/mystuff/sysutils/sysmanage-agent
+            VERSION="${{ github.event.inputs.version }}"
+            sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
+            sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
+
+            echo "=== Makefile contents ==="
+            cat Makefile
+            echo "========================="
+
+            # Fetch distinfo (checksum)
+            echo "=== Fetching source and generating distinfo ==="
+            make makesum || true
+            cat distinfo || true
+
+            # Build the package
+            echo "=== Building package ==="
+            make package FLAVOR= SUBPACKAGE=
+
+            # Find and copy the package
+            echo "=== Finding built package ==="
+            find /usr/packages -name "sysmanage-agent*.tgz" -type f
+
+            OPENBSD_VERSION="${{ matrix.openbsd-version }}"
+            OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
+
+            # Copy package with version-specific name to shared workspace
+            PKG_FILE=$(find /usr/packages -name "sysmanage-agent*.tgz" -type f | head -1)
+            if [ -n "$PKG_FILE" ]; then
+              # Copy to current directory (shared with host)
+              cp "$PKG_FILE" "./sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
+              echo "Package copied to workspace"
+              ls -la ./*.tgz
+            else
+              echo "ERROR: Package file not found!"
+              exit 1
+            fi
+
+      - name: List built package
+        run: |
+          echo "=== Built packages in workspace ==="
+          ls -la *.tgz 2>/dev/null || echo "No packages found"
+
+      - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}
+          path: "*.tgz"
+          if-no-files-found: error
+
+  # Job to collect all packages and create a summary
+  collect-packages:
+    name: Collect All Packages
+    runs-on: ubuntu-latest
+    needs: build-openbsd
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages/
+
+      - name: List all packages
+        run: |
+          echo "=== All built packages ==="
+          find packages/ -name "*.tgz" -type f
+          echo ""
+          echo "=== Package details ==="
+          for pkg in packages/*/*.tgz; do
+            echo "Package: $pkg"
+            ls -lh "$pkg"
+            echo ""
+          done
+
+      - name: Upload combined packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-openbsd-all
+          path: packages/

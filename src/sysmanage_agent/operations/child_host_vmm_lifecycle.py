@@ -12,6 +12,7 @@ import time
 from typing import Any, Dict
 
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_vmm_vmconf import VmConfManager
 
 # Default paths for VMM
 VMM_DISK_DIR = "/var/vmm"
@@ -31,6 +32,7 @@ class VmmLifecycleOperations:
         """
         self.logger = logger
         self.virtualization_checks = virtualization_checks
+        self.vmconf_manager = VmConfManager(logger)
 
     async def check_vmd_ready(self) -> Dict[str, Any]:
         """
@@ -411,6 +413,9 @@ class VmmLifecycleOperations:
         try:
             # First, try to stop the VM if it's running (force stop)
             await self.stop_vm(child_name, force=True, wait=True)
+
+            # Remove VM from /etc/vm.conf
+            self.vmconf_manager.remove_vm(child_name)
 
             # Delete disk image if requested
             if delete_disk:

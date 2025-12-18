@@ -146,6 +146,7 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
     """
     # Common private subnets to try
     candidate_subnets = [
+        "100.64.0.0",  # CGNAT range - won't conflict with typical networks
         "10.0.0.0",
         "10.1.0.0",
         "10.2.0.0",

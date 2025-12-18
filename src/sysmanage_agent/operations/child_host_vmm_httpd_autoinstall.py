@@ -333,6 +333,8 @@ class HttpdAutoinstallSetup:
         user_password_hash: str,
         root_password_hash: str,
         gateway_ip: str,
+        openbsd_version: str,
+        vm_ip: str,
     ) -> str:
         """
         Create install.conf content for httpd-based autoinstall.
@@ -343,6 +345,8 @@ class HttpdAutoinstallSetup:
             user_password_hash: Pre-hashed bcrypt password for the user
             root_password_hash: Pre-hashed bcrypt password for root
             gateway_ip: Gateway IP for HTTP server and network
+            openbsd_version: OpenBSD version (e.g., "7.7")
+            vm_ip: Static IP address for the VM (e.g., "100.64.0.101")
 
         Returns:
             install.conf content as string
@@ -362,8 +366,8 @@ class HttpdAutoinstallSetup:
         except Exception:
             parent_dns = "8.8.8.8"  # Fallback
 
-        # Create install.conf content using DHCP for networking
-        # DHCP will be provided by dhcpd configured on the host
+        # Create install.conf content with static IP for networking
+        # Each VM gets a unique static IP to avoid conflicts
         install_conf = f"""System hostname = {hostname}
 Which disk is the root disk = sd0
 Use (W)hole disk MBR, whole disk (G)PT, (O)penBSD area or (E)dit = whole
@@ -374,12 +378,13 @@ Password for user {username} = {user_password_hash}
 Allow root ssh login = no
 What timezone are you in = US/Eastern
 Network interfaces = vio0
-IPv4 address for vio0 = 100.64.0.100
+IPv4 address for vio0 = {vm_ip}
 Netmask for vio0 = 255.255.255.0
-Default IPv4 route = 100.64.0.1
+Default IPv4 route = {gateway_ip}
 DNS nameservers = {parent_dns}
 Location of sets = http
 HTTP Server = {gateway_ip}
+Server directory = pub/OpenBSD/{openbsd_version}/amd64
 Set name(s) = -game* -x* +site*
 Continue without verification = yes
 Reboot after install = no
