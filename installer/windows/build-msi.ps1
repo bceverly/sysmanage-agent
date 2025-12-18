@@ -107,21 +107,42 @@ if (-not (Test-Path $NssmExe)) {
     $nssmExtract = Join-Path $env:TEMP "nssm-extract"
     $downloadSuccess = $false
 
-    foreach ($nssmUrl in $nssmUrls) {
-        try {
-            Write-Host "  Trying: $nssmUrl" -ForegroundColor Gray
-            Invoke-WebRequest -Uri $nssmUrl -OutFile $nssmZip -UseBasicParsing -TimeoutSec 30
-            Write-Host "  Downloaded NSSM archive" -ForegroundColor Gray
-            $downloadSuccess = $true
+    # Retry configuration: up to 10 attempts with exponential backoff
+    $maxRetries = 10
+    $baseDelaySeconds = 5
+
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        Write-Host "  Download attempt $attempt of $maxRetries..." -ForegroundColor Cyan
+
+        foreach ($nssmUrl in $nssmUrls) {
+            try {
+                Write-Host "    Trying: $nssmUrl" -ForegroundColor Gray
+                Invoke-WebRequest -Uri $nssmUrl -OutFile $nssmZip -UseBasicParsing -TimeoutSec 60
+                Write-Host "    Downloaded NSSM archive" -ForegroundColor Gray
+                $downloadSuccess = $true
+                break
+            } catch {
+                Write-Host "    Failed: $_" -ForegroundColor Yellow
+                continue
+            }
+        }
+
+        if ($downloadSuccess) {
             break
-        } catch {
-            Write-Host "  Failed to download from this URL: $_" -ForegroundColor Yellow
-            continue
+        }
+
+        if ($attempt -lt $maxRetries) {
+            # Exponential backoff: 5s, 10s, 20s, 40s, 80s, 160s, 320s, 640s, 1280s
+            $delaySeconds = $baseDelaySeconds * [Math]::Pow(2, $attempt - 1)
+            # Cap at 5 minutes max delay
+            $delaySeconds = [Math]::Min($delaySeconds, 300)
+            Write-Host "  All URLs failed. Waiting $delaySeconds seconds before retry..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $delaySeconds
         }
     }
 
     if (-not $downloadSuccess) {
-        Write-Host "ERROR: Failed to download NSSM from all mirror URLs" -ForegroundColor Red
+        Write-Host "ERROR: Failed to download NSSM after $maxRetries attempts from all mirror URLs" -ForegroundColor Red
         Write-Host "Please manually download NSSM from https://nssm.cc/download" -ForegroundColor Red
         Write-Host "Extract nssm.exe ($nssmArch) to: $NssmExe" -ForegroundColor Red
         exit 1
