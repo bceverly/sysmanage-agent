@@ -30,25 +30,45 @@ jobs:
         with:
           release: ${{ matrix.openbsd-version }}
           usesh: true
+          sync: rsync
           run: |
-            set -e
-
-            echo "=== Building sysmanage-agent on OpenBSD ${{ matrix.openbsd-version }} ==="
+            set -x
 
             OPENBSD_VERSION="${{ matrix.openbsd-version }}"
             OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
             VERSION="${{ github.event.inputs.version }}"
 
-            # Fetch ports tree (infrastructure and lang/python needed for ports build)
-            echo "=== Fetching ports tree ==="
-            cd /usr
-            ftp -o - "https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz" | tar xzf - ports/infrastructure ports/lang/python
+            echo "=== Building sysmanage-agent ${VERSION} on OpenBSD ${OPENBSD_VERSION} ==="
 
-            # Create ports directory structure
+            # Step 1: Fetch ports tree
+            echo "=== Step 1: Fetching ports tree ==="
+            PORTS_URL="https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz"
+
+            cd /usr
+            if ! ftp -o /tmp/ports.tar.gz "$PORTS_URL"; then
+              echo "ERROR: Failed to download ports from $PORTS_URL"
+              exit 1
+            fi
+
+            echo "Ports tarball downloaded:"
+            ls -la /tmp/ports.tar.gz
+
+            echo "Extracting ports infrastructure..."
+            if ! tar xzf /tmp/ports.tar.gz -C /usr ports/infrastructure ports/lang/python; then
+              echo "ERROR: Failed to extract ports tarball"
+              exit 1
+            fi
+            rm /tmp/ports.tar.gz
+
+            echo "Ports infrastructure extracted:"
+            ls /usr/ports/infrastructure/ | head -5
+
+            # Step 2: Setup port directory
+            echo "=== Step 2: Setting up port directory ==="
             mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/files
             mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/pkg
 
-            # Copy port files from repo
+            # Copy port files
             cp $GITHUB_WORKSPACE/installer/openbsd/Makefile /usr/ports/mystuff/sysutils/sysmanage-agent/
             cp $GITHUB_WORKSPACE/installer/openbsd/distinfo /usr/ports/mystuff/sysutils/sysmanage-agent/
             cp -r $GITHUB_WORKSPACE/installer/openbsd/files/* /usr/ports/mystuff/sysutils/sysmanage-agent/files/ 2>/dev/null || true
@@ -63,27 +83,31 @@ jobs:
             cat Makefile
             echo "========================="
 
-            # Fetch distinfo (checksum)
-            echo "=== Fetching source and generating distinfo ==="
-            make makesum || true
-            cat distinfo || true
+            # Step 3: Generate checksums
+            echo "=== Step 3: Generating checksums ==="
+            make makesum 2>&1 || echo "makesum had warnings"
+            echo "distinfo contents:"
+            cat distinfo
 
-            # Build the package
-            echo "=== Building package ==="
-            make package FLAVOR= SUBPACKAGE=
+            # Step 4: Build the package
+            echo "=== Step 4: Building package ==="
+            if ! make package FLAVOR= SUBPACKAGE= 2>&1; then
+              echo "ERROR: Package build failed"
+              exit 1
+            fi
 
-            # Find and copy the package
-            echo "=== Finding built package ==="
-            find /usr/packages -name "sysmanage-agent*.tgz" -type f
+            # Step 5: Find and copy the package
+            echo "=== Step 5: Finding built package ==="
+            find /usr/packages -name "*.tgz" -type f 2>/dev/null || true
 
-            # Copy package with version-specific name to shared workspace
-            PKG_FILE=$(find /usr/packages -name "sysmanage-agent*.tgz" -type f | head -1)
+            PKG_FILE=$(find /usr/packages -name "sysmanage-agent*.tgz" -type f 2>/dev/null | head -1)
             if [ -n "$PKG_FILE" ]; then
               cp "$PKG_FILE" "$GITHUB_WORKSPACE/sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
-              echo "Package copied to workspace"
+              echo "SUCCESS: Package copied to workspace"
               ls -la $GITHUB_WORKSPACE/*.tgz
             else
               echo "ERROR: Package file not found!"
+              find /usr/packages -type f 2>/dev/null || echo "No files in /usr/packages"
               exit 1
             fi
 

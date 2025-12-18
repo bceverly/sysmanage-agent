@@ -1578,10 +1578,10 @@ class TestAdditionalCoverage:
 
     @patch("subprocess.run")
     @patch(
-        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._get_command_path"
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._get_command_path"
     )
     @patch(
-        "src.sysmanage_agent.collection.role_detection_package_managers.PackageManagerDetector._command_exists"
+        "src.sysmanage_agent.collection.role_detection_service_status.ServiceStatusDetector._command_exists"
     )
     def test_linux_service_status_no_commands(
         self, mock_cmd_exists, mock_cmd_path, mock_run, detector
