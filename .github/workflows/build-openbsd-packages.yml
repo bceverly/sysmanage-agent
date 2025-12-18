@@ -30,26 +30,32 @@ jobs:
         with:
           release: ${{ matrix.openbsd-version }}
           usesh: true
-          prepare: |
-            pkg_add git
           run: |
             set -e
 
             echo "=== Building sysmanage-agent on OpenBSD ${{ matrix.openbsd-version }} ==="
+
+            OPENBSD_VERSION="${{ matrix.openbsd-version }}"
+            OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
+            VERSION="${{ github.event.inputs.version }}"
+
+            # Fetch ports tree (infrastructure and lang/python needed for ports build)
+            echo "=== Fetching ports tree ==="
+            cd /usr
+            ftp -o - "https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz" | tar xzf - ports/infrastructure ports/lang/python
 
             # Create ports directory structure
             mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/files
             mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/pkg
 
             # Copy port files from repo
-            cp installer/openbsd/Makefile /usr/ports/mystuff/sysutils/sysmanage-agent/
-            cp installer/openbsd/distinfo /usr/ports/mystuff/sysutils/sysmanage-agent/
-            cp -r installer/openbsd/files/* /usr/ports/mystuff/sysutils/sysmanage-agent/files/ 2>/dev/null || true
-            cp -r installer/openbsd/pkg/* /usr/ports/mystuff/sysutils/sysmanage-agent/pkg/ 2>/dev/null || true
+            cp $GITHUB_WORKSPACE/installer/openbsd/Makefile /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp $GITHUB_WORKSPACE/installer/openbsd/distinfo /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp -r $GITHUB_WORKSPACE/installer/openbsd/files/* /usr/ports/mystuff/sysutils/sysmanage-agent/files/ 2>/dev/null || true
+            cp -r $GITHUB_WORKSPACE/installer/openbsd/pkg/* /usr/ports/mystuff/sysutils/sysmanage-agent/pkg/ 2>/dev/null || true
 
             # Update version in Makefile
             cd /usr/ports/mystuff/sysutils/sysmanage-agent
-            VERSION="${{ github.event.inputs.version }}"
             sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
             sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
 
@@ -70,16 +76,12 @@ jobs:
             echo "=== Finding built package ==="
             find /usr/packages -name "sysmanage-agent*.tgz" -type f
 
-            OPENBSD_VERSION="${{ matrix.openbsd-version }}"
-            OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
-
             # Copy package with version-specific name to shared workspace
             PKG_FILE=$(find /usr/packages -name "sysmanage-agent*.tgz" -type f | head -1)
             if [ -n "$PKG_FILE" ]; then
-              # Copy to current directory (shared with host)
-              cp "$PKG_FILE" "./sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
+              cp "$PKG_FILE" "$GITHUB_WORKSPACE/sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
               echo "Package copied to workspace"
-              ls -la ./*.tgz
+              ls -la $GITHUB_WORKSPACE/*.tgz
             else
               echo "ERROR: Package file not found!"
               exit 1
@@ -102,27 +104,32 @@ jobs:
     name: Collect All Packages
     runs-on: ubuntu-latest
     needs: build-openbsd
+    if: always()
 
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: packages/
+        continue-on-error: true
 
       - name: List all packages
         run: |
           echo "=== All built packages ==="
-          find packages/ -name "*.tgz" -type f
+          find packages/ -name "*.tgz" -type f 2>/dev/null || echo "No packages found"
           echo ""
           echo "=== Package details ==="
           for pkg in packages/*/*.tgz; do
-            echo "Package: $pkg"
-            ls -lh "$pkg"
-            echo ""
+            if [ -f "$pkg" ]; then
+              echo "Package: $pkg"
+              ls -lh "$pkg"
+              echo ""
+            fi
           done
 
       - name: Upload combined packages
         uses: actions/upload-artifact@v4
+        if: hashFiles('packages/*/*.tgz') != ''
         with:
           name: sysmanage-agent-openbsd-all
           path: packages/
