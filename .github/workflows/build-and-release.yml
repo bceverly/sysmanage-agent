@@ -1415,11 +1415,154 @@ jobs:
             installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak.sha256
             installer/flatpak/repo/**
 
+  # Build OpenBSD Packages (.tgz) for 7.5, 7.6, and 7.7
+  build-openbsd-packages:
+    name: Build OpenBSD ${{ matrix.openbsd-version }} Package
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        openbsd-version: ['7.5', '7.6', '7.7']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Determine version
+        id: version
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          VERSION="${REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building OpenBSD package for version: $VERSION"
+
+      - name: Build on OpenBSD ${{ matrix.openbsd-version }}
+        uses: vmactions/openbsd-vm@v1
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          release: ${{ matrix.openbsd-version }}
+          usesh: true
+          sync: rsync
+          run: |
+            set -x
+
+            OPENBSD_VERSION="${{ matrix.openbsd-version }}"
+            OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
+            VERSION="${{ steps.version.outputs.version }}"
+
+            echo "=== Building sysmanage-agent ${VERSION} on OpenBSD ${OPENBSD_VERSION} ==="
+
+            # Step 1: Fetch ports tree
+            echo "=== Step 1: Fetching ports tree ==="
+            cd /usr
+
+            PORTS_URL="https://ftp.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz"
+            echo "Downloading ports from: $PORTS_URL"
+
+            if ! ftp -o /tmp/ports.tar.gz "$PORTS_URL"; then
+              echo "ERROR: Failed to download ports from $PORTS_URL"
+              exit 1
+            fi
+
+            echo "Extracting full ports tree..."
+            if ! tar xzf /tmp/ports.tar.gz -C /usr; then
+              echo "ERROR: Failed to extract ports tarball"
+              exit 1
+            fi
+            rm /tmp/ports.tar.gz
+
+            # Step 2: Setup port directory
+            echo "=== Step 2: Setting up port directory ==="
+            mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/files
+            mkdir -p /usr/ports/mystuff/sysutils/sysmanage-agent/pkg
+
+            # Copy port files
+            cp $GITHUB_WORKSPACE/installer/openbsd/Makefile /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp $GITHUB_WORKSPACE/installer/openbsd/distinfo /usr/ports/mystuff/sysutils/sysmanage-agent/
+            cp -r $GITHUB_WORKSPACE/installer/openbsd/files/* /usr/ports/mystuff/sysutils/sysmanage-agent/files/ 2>/dev/null || true
+            cp -r $GITHUB_WORKSPACE/installer/openbsd/pkg/* /usr/ports/mystuff/sysutils/sysmanage-agent/pkg/ 2>/dev/null || true
+
+            # Update version in Makefile
+            cd /usr/ports/mystuff/sysutils/sysmanage-agent
+            sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
+            sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
+
+            # Workaround for OpenBSD 7.6: The ports tarball is missing the lang/python/3 directory
+            # but the Makefile references it. We fetch it from OpenBSD 7.5's ports tree.
+            if [ "$OPENBSD_VERSION" = "7.6" ]; then
+              echo "=== Applying OpenBSD 7.6 Python 3 workaround ==="
+              echo "The 7.6 ports tarball is missing lang/python/3 directory."
+              echo "Fetching Python 3.11 port from OpenBSD 7.5 ports tree..."
+
+              cd /tmp
+              PORTS75_URL="https://ftp.openbsd.org/pub/OpenBSD/7.5/ports.tar.gz"
+              if ftp -o - "$PORTS75_URL" 2>/dev/null | gunzip | tar xf - ports/lang/python/3.11; then
+                echo "Successfully extracted Python 3.11 port from 7.5"
+                cp -R /tmp/ports/lang/python/3.11 /usr/ports/lang/python/3
+                echo "Copied to /usr/ports/lang/python/3"
+                ls -la /usr/ports/lang/python/
+              else
+                echo "ERROR: Failed to fetch Python 3.11 port from 7.5"
+                exit 1
+              fi
+
+              cd /usr/ports/mystuff/sysutils/sysmanage-agent
+            fi
+
+            echo "=== Makefile contents ==="
+            cat Makefile
+            echo "========================="
+
+            # Step 3: Generate checksums
+            echo "=== Step 3: Generating checksums ==="
+            make makesum 2>&1 || echo "makesum had warnings"
+
+            # Step 4: Build the package
+            echo "=== Step 4: Building package ==="
+            if ! make package 2>&1; then
+              echo "ERROR: Package build failed"
+              exit 1
+            fi
+
+            # Step 5: Find and copy the package
+            echo "=== Step 5: Finding built package ==="
+            PKG_FILE=$(find /usr/ports/packages -name "sysmanage-agent*.tgz" -type f 2>/dev/null | head -1)
+            if [ -n "$PKG_FILE" ]; then
+              cp "$PKG_FILE" "$GITHUB_WORKSPACE/sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
+              echo "SUCCESS: Package copied to workspace"
+              ls -la $GITHUB_WORKSPACE/*.tgz
+            else
+              echo "ERROR: Package file not found!"
+              exit 1
+            fi
+
+      - name: Generate SHA256 checksum
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          OPENBSD_VERSION_NODOT=$(echo "${{ matrix.openbsd-version }}" | tr -d '.')
+          PKG_FILE="sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
+          sha256sum "$PKG_FILE" > "${PKG_FILE}.sha256"
+          echo "Checksum:"
+          cat "${PKG_FILE}.sha256"
+
+      - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
+        uses: actions/upload-artifact@v5
+        with:
+          name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}-pkg
+          path: |
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd*.tgz
+            sysmanage-agent-${{ steps.version.outputs.version }}-openbsd*.tgz.sha256
+
   # Consolidated Release - Push to sysmanage-docs and create GitHub release
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak]
+    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak, build-openbsd-packages]
 
     steps:
       - name: Checkout code
@@ -1482,6 +1625,7 @@ jobs:
           mkdir -p "repo/agent/freebsd/packages/$VERSION"
           mkdir -p "repo/agent/netbsd/packages/$VERSION"
           mkdir -p "repo/agent/openbsd/ports/$VERSION"
+          mkdir -p "repo/agent/openbsd/packages/$VERSION"
 
           # Copy package files to appropriate locations
           # DEB packages
@@ -1524,6 +1668,14 @@ jobs:
           # OpenBSD port tarball
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
+
+          # OpenBSD packages (.tgz) for 7.5, 7.6, 7.7
+          cp ${{ github.workspace }}/release-files/*-openbsd75.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd75.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd76.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd76.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd77.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd77.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
 
           # Flatpak package and repository
           echo "Copying Flatpak files..."
@@ -1747,7 +1899,29 @@ jobs:
           sudo /etc/rc.d/sysmanage_agent start
           \`\`\`
 
-          ### OpenBSD
+          ### OpenBSD (Pre-built Package - Recommended)
+          \`\`\`bash
+          # Download the pre-built package for your OpenBSD version (7.5, 7.6, or 7.7)
+          # For OpenBSD 7.7:
+          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd77.tgz
+          doas pkg_add sysmanage-agent-${VERSION}-openbsd77.tgz
+
+          # For OpenBSD 7.6:
+          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd76.tgz
+          # doas pkg_add sysmanage-agent-${VERSION}-openbsd76.tgz
+
+          # For OpenBSD 7.5:
+          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd75.tgz
+          # doas pkg_add sysmanage-agent-${VERSION}-openbsd75.tgz
+
+          # Configure and start
+          doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml /etc/sysmanage-agent.yaml
+          doas vi /etc/sysmanage-agent.yaml
+          doas rcctl enable sysmanage_agent
+          doas rcctl start sysmanage_agent
+          \`\`\`
+
+          ### OpenBSD (Build from Port)
           \`\`\`bash
           # Download the port tarball
           ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd-port.tar.gz
@@ -1810,7 +1984,7 @@ jobs:
           - **Windows**: 10 (1809+), 11, Server 2019+ (x64 and ARM64)
           - **FreeBSD**: 13.x, 14.x
           - **NetBSD**: 10.x (tested on 10.1)
-          - **OpenBSD**: 7.4+ (tested on 7.7)
+          - **OpenBSD**: 7.5, 7.6, 7.7 (pre-built packages available)
 
           ## Software Bill of Materials (SBOM)
 
@@ -1839,7 +2013,21 @@ jobs:
           - Certificate storage directory
           - Sudoers configuration for system management (Linux only)
 
+          ## OpenBSD Package Checksums (SHA256)
+
           EOF
+
+          # Append OpenBSD package checksums to release notes
+          echo "" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          for obsd_ver in 75 76 77; do
+            OBSD_PKG="release-files/sysmanage-agent-${VERSION}-openbsd${obsd_ver}.tgz"
+            if [ -f "$OBSD_PKG.sha256" ]; then
+              cat "$OBSD_PKG.sha256" >> release_notes.md
+            fi
+          done
+          echo "\`\`\`" >> release_notes.md
+          echo "" >> release_notes.md
 
       - name: Create consolidated GitHub Release
         uses: softprops/action-gh-release@v2
