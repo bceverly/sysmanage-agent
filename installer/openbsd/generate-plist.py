@@ -204,8 +204,8 @@ def generate_plist():
     plist_lines.extend(
         [
             "share/examples/sysmanage-agent/",
-            "@sample ${SYSCONFDIR}/sysmanage-agent.yaml",
-            "share/examples/sysmanage-agent/sysmanage-agent.yaml",
+            "@sample ${SYSCONFDIR}/sysmanage-agent-system.yaml",
+            "share/examples/sysmanage-agent/sysmanage-agent-system.yaml",
         ]
     )
 
