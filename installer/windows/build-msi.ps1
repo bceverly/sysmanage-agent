@@ -95,15 +95,39 @@ if (-not (Test-Path $NssmExe)) {
     # Note: ARM64 systems can run win64 binaries via emulation
     $nssmArch = if ($Architecture -eq "x64" -or $Architecture -eq "arm64") { "win64" } else { "win32" }
     $nssmVersion = "2.24"
-    $nssmUrl = "https://nssm.cc/release/nssm-$nssmVersion.zip"
+
+    # Multiple URLs to try (nssm.cc can be unreliable)
+    $nssmUrls = @(
+        "https://nssm.cc/release/nssm-$nssmVersion.zip",
+        "https://web.archive.org/web/2024/https://nssm.cc/release/nssm-$nssmVersion.zip",
+        "https://github.com/kirillkovalenko/nssm/releases/download/v$nssmVersion/nssm-$nssmVersion.zip"
+    )
+
     $nssmZip = Join-Path $env:TEMP "nssm-download.zip"
     $nssmExtract = Join-Path $env:TEMP "nssm-extract"
+    $downloadSuccess = $false
+
+    foreach ($nssmUrl in $nssmUrls) {
+        try {
+            Write-Host "  Trying: $nssmUrl" -ForegroundColor Gray
+            Invoke-WebRequest -Uri $nssmUrl -OutFile $nssmZip -UseBasicParsing -TimeoutSec 30
+            Write-Host "  Downloaded NSSM archive" -ForegroundColor Gray
+            $downloadSuccess = $true
+            break
+        } catch {
+            Write-Host "  Failed to download from this URL: $_" -ForegroundColor Yellow
+            continue
+        }
+    }
+
+    if (-not $downloadSuccess) {
+        Write-Host "ERROR: Failed to download NSSM from all mirror URLs" -ForegroundColor Red
+        Write-Host "Please manually download NSSM from https://nssm.cc/download" -ForegroundColor Red
+        Write-Host "Extract nssm.exe ($nssmArch) to: $NssmExe" -ForegroundColor Red
+        exit 1
+    }
 
     try {
-        # Download NSSM
-        Invoke-WebRequest -Uri $nssmUrl -OutFile $nssmZip -UseBasicParsing
-        Write-Host "  Downloaded NSSM archive" -ForegroundColor Gray
-
         # Extract NSSM
         if (Test-Path $nssmExtract) {
             Remove-Item -Path $nssmExtract -Recurse -Force
@@ -126,9 +150,7 @@ if (-not (Test-Path $NssmExe)) {
         Remove-Item -Path $nssmExtract -Recurse -Force -ErrorAction SilentlyContinue
 
     } catch {
-        Write-Host "ERROR: Failed to download NSSM: $_" -ForegroundColor Red
-        Write-Host "Please manually download NSSM from https://nssm.cc/download" -ForegroundColor Red
-        Write-Host "Extract nssm.exe ($nssmArch) to: $NssmExe" -ForegroundColor Red
+        Write-Host "ERROR: Failed to extract NSSM: $_" -ForegroundColor Red
         exit 1
     }
 } else {

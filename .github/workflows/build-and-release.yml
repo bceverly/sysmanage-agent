@@ -1415,7 +1415,7 @@ jobs:
             installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak.sha256
             installer/flatpak/repo/**
 
-  # Build OpenBSD Packages (.tgz) for 7.5, 7.6, and 7.7
+  # Build OpenBSD Packages (.tgz) for 7.4, 7.5, 7.6, and 7.7
   build-openbsd-packages:
     name: Build OpenBSD ${{ matrix.openbsd-version }} Package
     runs-on: ubuntu-latest
@@ -1424,7 +1424,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.5', '7.6', '7.7']
+        openbsd-version: ['7.4', '7.5', '7.6', '7.7']
 
     steps:
       - name: Checkout code
