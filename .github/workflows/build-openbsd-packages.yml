@@ -86,36 +86,39 @@ jobs:
             if [ "$OPENBSD_VERSION" = "7.6" ]; then
               echo "=== DEBUGGING PYTHON PORTS STRUCTURE FOR 7.6 ==="
 
-              echo "--- Full recursive listing of /usr/ports/lang/python/ ---"
-              find /usr/ports/lang/python -type f -o -type d | head -100
+              echo "--- Search entire ports tree for Python 3 directories ---"
+              find /usr/ports -type d -name "python*" 2>/dev/null | head -50
 
-              echo "--- All directories under /usr/ports/lang/python/ ---"
-              find /usr/ports/lang/python -type d
+              echo "--- Search for any '3.11' in ports ---"
+              find /usr/ports -type d -name "*3.11*" 2>/dev/null | head -20
 
-              echo "--- All Makefiles under /usr/ports/lang/python/ ---"
-              find /usr/ports/lang/python -name "Makefile*" -type f
+              echo "--- Search for py3 directories ---"
+              find /usr/ports -type d -name "*py3*" 2>/dev/null | head -20
+
+              echo "--- Contents of /usr/ports/lang/python/ ---"
+              ls -la /usr/ports/lang/python/
 
               echo "--- Contents of /usr/ports/lang/python/Makefile ---"
-              cat /usr/ports/lang/python/Makefile 2>/dev/null || echo "No Makefile found"
+              cat /usr/ports/lang/python/Makefile
 
-              echo "--- Contents of /usr/ports/lang/python/Makefile.inc ---"
-              cat /usr/ports/lang/python/Makefile.inc 2>/dev/null || echo "No Makefile.inc found"
+              echo "--- Look for python.port.mk in infrastructure ---"
+              find /usr/ports/infrastructure -name "python*" -type f 2>/dev/null
 
-              echo "--- Search for Python 3.11 references in ports ---"
-              find /usr/ports/lang -type d -name "*3.11*" 2>/dev/null || echo "No 3.11 directories"
-              find /usr/ports/lang -type d -name "*python3*" 2>/dev/null || echo "No python3 directories"
+              echo "--- Contents of python.port.mk (first 200 lines) ---"
+              head -200 /usr/ports/lang/python/python.port.mk 2>/dev/null || echo "Not found at lang/python/python.port.mk"
 
-              echo "--- Check /usr/ports/infrastructure/mk/modules/lang/python.port.mk ---"
-              head -100 /usr/ports/infrastructure/mk/modules/lang/python.port.mk 2>/dev/null || echo "File not found"
+              echo "--- Search for MODPY_DEFAULT_VERSION in all .mk files ---"
+              grep -r "MODPY_DEFAULT_VERSION" /usr/ports/infrastructure/mk/ 2>/dev/null | head -20
 
-              echo "--- Grep for MODPY_DEFAULT_VERSION in python.port.mk ---"
-              grep -n "MODPY_DEFAULT_VERSION" /usr/ports/infrastructure/mk/modules/lang/python.port.mk 2>/dev/null || echo "Not found"
+              echo "--- What Python packages are installed/available? ---"
+              pkg_info -a 2>/dev/null | grep -i python || echo "No python packages installed"
+              pkg_info -Q python 2>/dev/null | head -30 || echo "pkg_info -Q failed"
 
-              echo "--- Grep for 'lang/python/3' pattern in python.port.mk ---"
-              grep -n "lang/python/3" /usr/ports/infrastructure/mk/modules/lang/python.port.mk 2>/dev/null || echo "Not found"
-
-              echo "--- What Python packages are available? ---"
-              pkg_info -Q python 2>/dev/null | head -20 || echo "pkg_info failed"
+              echo "--- Check if ports tarball was complete ---"
+              echo "Size of lang directory:"
+              du -sh /usr/ports/lang/
+              echo "Number of subdirectories in lang:"
+              ls -1 /usr/ports/lang/ | wc -l
 
               echo "=== END DEBUGGING ==="
 
