@@ -97,9 +97,10 @@ if (-not (Test-Path $NssmExe)) {
     $nssmVersion = "2.24"
 
     # Multiple URLs to try (nssm.cc can be unreliable)
+    # Note: archive.org URLs need 'id_/' suffix to return raw file instead of framed HTML
     $nssmUrls = @(
         "https://nssm.cc/release/nssm-$nssmVersion.zip",
-        "https://web.archive.org/web/2024/https://nssm.cc/release/nssm-$nssmVersion.zip",
+        "https://web.archive.org/web/2024id_/https://nssm.cc/release/nssm-$nssmVersion.zip",
         "https://github.com/kirillkovalenko/nssm/releases/download/v$nssmVersion/nssm-$nssmVersion.zip"
     )
 
@@ -117,8 +118,37 @@ if (-not (Test-Path $NssmExe)) {
         foreach ($nssmUrl in $nssmUrls) {
             try {
                 Write-Host "    Trying: $nssmUrl" -ForegroundColor Gray
+
+                # Clean up any previous failed download
+                if (Test-Path $nssmZip) {
+                    Remove-Item -Path $nssmZip -Force -ErrorAction SilentlyContinue
+                }
+
                 Invoke-WebRequest -Uri $nssmUrl -OutFile $nssmZip -UseBasicParsing -TimeoutSec 60
-                Write-Host "    Downloaded NSSM archive" -ForegroundColor Gray
+
+                # Validate the downloaded file is actually a ZIP (starts with PK signature)
+                $fileBytes = [System.IO.File]::ReadAllBytes($nssmZip)
+                if ($fileBytes.Length -lt 4 -or $fileBytes[0] -ne 0x50 -or $fileBytes[1] -ne 0x4B) {
+                    Write-Host "    Downloaded file is not a valid ZIP archive (got HTML or other content)" -ForegroundColor Yellow
+                    continue
+                }
+
+                # Try to extract to verify the ZIP is valid
+                if (Test-Path $nssmExtract) {
+                    Remove-Item -Path $nssmExtract -Recurse -Force
+                }
+                $ProgressPreference = 'SilentlyContinue'
+                Expand-Archive -Path $nssmZip -DestinationPath $nssmExtract -Force
+                $ProgressPreference = 'Continue'
+
+                # Verify nssm.exe exists in the extracted content
+                $nssmSource = Join-Path $nssmExtract "nssm-$nssmVersion\$nssmArch\nssm.exe"
+                if (-not (Test-Path $nssmSource)) {
+                    Write-Host "    ZIP extracted but nssm.exe not found at expected path" -ForegroundColor Yellow
+                    continue
+                }
+
+                Write-Host "    Downloaded and verified NSSM archive" -ForegroundColor Gray
                 $downloadSuccess = $true
                 break
             } catch {
@@ -132,7 +162,7 @@ if (-not (Test-Path $NssmExe)) {
         }
 
         if ($attempt -lt $maxRetries) {
-            # Exponential backoff: 5s, 10s, 20s, 40s, 80s, 160s, 320s, 640s, 1280s
+            # Exponential backoff: 5s, 10s, 20s, 40s, 80s, 160s, capped at 300s
             $delaySeconds = $baseDelaySeconds * [Math]::Pow(2, $attempt - 1)
             # Cap at 5 minutes max delay
             $delaySeconds = [Math]::Min($delaySeconds, 300)
@@ -148,30 +178,17 @@ if (-not (Test-Path $NssmExe)) {
         exit 1
     }
 
+    # Copy the nssm.exe to the installer directory
     try {
-        # Extract NSSM
-        if (Test-Path $nssmExtract) {
-            Remove-Item -Path $nssmExtract -Recurse -Force
-        }
-        $ProgressPreference = 'SilentlyContinue'
-        Expand-Archive -Path $nssmZip -DestinationPath $nssmExtract -Force
-        $ProgressPreference = 'Continue'
-
-        # Copy the appropriate architecture version
         $nssmSource = Join-Path $nssmExtract "nssm-$nssmVersion\$nssmArch\nssm.exe"
-        if (Test-Path $nssmSource) {
-            Copy-Item $nssmSource $NssmExe -Force
-            Write-Host "[OK] NSSM downloaded and ready for bundling" -ForegroundColor Green
-        } else {
-            throw "NSSM executable not found in downloaded archive at: $nssmSource"
-        }
+        Copy-Item $nssmSource $NssmExe -Force
+        Write-Host "[OK] NSSM downloaded and ready for bundling" -ForegroundColor Green
 
         # Clean up
         Remove-Item -Path $nssmZip -Force -ErrorAction SilentlyContinue
         Remove-Item -Path $nssmExtract -Recurse -Force -ErrorAction SilentlyContinue
-
     } catch {
-        Write-Host "ERROR: Failed to extract NSSM: $_" -ForegroundColor Red
+        Write-Host "ERROR: Failed to copy NSSM: $_" -ForegroundColor Red
         exit 1
     }
 } else {
