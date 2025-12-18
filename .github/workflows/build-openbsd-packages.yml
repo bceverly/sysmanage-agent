@@ -42,9 +42,12 @@ jobs:
 
             # Step 1: Fetch ports tree
             echo "=== Step 1: Fetching ports tree ==="
-            PORTS_URL="https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz"
-
             cd /usr
+
+            # Use ftp.openbsd.org which has older versions
+            PORTS_URL="https://ftp.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz"
+            echo "Downloading ports from: $PORTS_URL"
+
             if ! ftp -o /tmp/ports.tar.gz "$PORTS_URL"; then
               echo "ERROR: Failed to download ports from $PORTS_URL"
               exit 1
