@@ -84,9 +84,10 @@ jobs:
 
             # Workaround for OpenBSD 7.6 python module bug
             # The 7.6 ports infrastructure doesn't expand MODPY_VERSION correctly
+            # MODPY_VERSION must be set BEFORE MODULES line
             if [ "$OPENBSD_VERSION" = "7.6" ]; then
               echo "Applying OpenBSD 7.6 python version workaround..."
-              awk '/MODULES[[:space:]]*=.*lang\/python/ { print; print "MODPY_VERSION = 3.11"; next } { print }' Makefile > Makefile.tmp && mv Makefile.tmp Makefile
+              awk '/MODULES[[:space:]]*=.*lang\/python/ { print "MODPY_VERSION = 3.11"; print; next } { print }' Makefile > Makefile.tmp && mv Makefile.tmp Makefile
             fi
 
             echo "=== Makefile contents ==="
