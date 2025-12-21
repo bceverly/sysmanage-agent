@@ -212,6 +212,16 @@ class ChildHostOperations:
                 vbox_vms = self.listing_helper.list_virtualbox_vms()
                 child_hosts.extend(vbox_vms)
 
+            # Also send a proactive child host list update to the server
+            try:
+                if hasattr(self.agent, "child_host_collector"):
+                    await self.agent.child_host_collector.send_child_hosts_update()
+                    self.logger.info(_("Sent child host list update to server"))
+            except Exception as error:
+                self.logger.warning(
+                    _("Failed to send child host list update: %s"), error
+                )
+
             return {
                 "success": True,
                 "child_hosts": child_hosts,
@@ -509,16 +519,28 @@ class ChildHostOperations:
             parameters.get("child_name"),
         )
 
+        result = None
         if child_type == "wsl":
-            return await self.wsl_ops.delete_child_host(parameters)
+            result = await self.wsl_ops.delete_child_host(parameters)
+        elif child_type == "lxd":
+            result = await self.lxd_ops.delete_child_host(parameters)
+        elif child_type == "vmm":
+            result = await self.vmm_ops.delete_child_host(parameters)
+        else:
+            return {
+                "success": False,
+                "error": _("Unsupported child host type: %s") % child_type,
+            }
 
-        if child_type == "lxd":
-            return await self.lxd_ops.delete_child_host(parameters)
+        # Send updated child host list to server after successful delete
+        if result and result.get("success"):
+            try:
+                if hasattr(self.agent, "child_host_collector"):
+                    await self.agent.child_host_collector.send_child_hosts_update()
+                    self.logger.info(_("Sent updated child host list after delete"))
+            except Exception as error:
+                self.logger.warning(
+                    _("Failed to send child host list update: %s"), error
+                )
 
-        if child_type == "vmm":
-            return await self.vmm_ops.delete_child_host(parameters)
-
-        return {
-            "success": False,
-            "error": _("Unsupported child host type: %s") % child_type,
-        }
+        return result

@@ -2,6 +2,7 @@
 VMM/vmd-specific child host operations for OpenBSD hosts.
 """
 
+import asyncio
 import os
 import subprocess  # nosec B404 # Required for system command execution
 from pathlib import Path
@@ -57,6 +58,33 @@ class VmmOperations:
             httpd_setup=self.httpd_setup,
             github_checker=self.github_checker,
             site_builder=self.site_builder,
+        )
+
+    async def _run_subprocess(
+        self,
+        cmd: list,
+        timeout: int = 60,
+    ) -> subprocess.CompletedProcess:
+        """
+        Run a subprocess command asynchronously.
+
+        Uses asyncio.to_thread() to run the blocking subprocess.run call
+        in a separate thread, preventing WebSocket keepalive timeouts.
+
+        Args:
+            cmd: Command and arguments as a list
+            timeout: Timeout in seconds
+
+        Returns:
+            CompletedProcess instance with return code, stdout, stderr
+        """
+        return await asyncio.to_thread(
+            subprocess.run,  # nosec B603 B607
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
         )
 
     async def initialize_vmd(self, _parameters: dict) -> dict:
@@ -163,12 +191,10 @@ class VmmOperations:
                         sysctl_file.write("net.inet.ip.forwarding=1\n")
                     self.logger.info(_("Added IP forwarding to /etc/sysctl.conf"))
 
-                # Enable immediately
-                subprocess.run(  # nosec B603 B607
+                # Enable immediately (use async helper to avoid blocking)
+                await self._run_subprocess(
                     ["sysctl", "net.inet.ip.forwarding=1"],
-                    capture_output=True,
                     timeout=10,
-                    check=False,
                 )
             except Exception as sysctl_error:
                 self.logger.warning(
@@ -177,27 +203,20 @@ class VmmOperations:
 
             # Step 5: Create vether0 interface now
             self.logger.info(_("Creating vether0 interface"))
-            subprocess.run(  # nosec B603 B607
+            await self._run_subprocess(
                 ["ifconfig", "vether0", "create"],
-                capture_output=True,
                 timeout=10,
-                check=False,
             )
-            subprocess.run(  # nosec B603 B607
+            await self._run_subprocess(
                 ["sh", "/etc/netstart", "vether0"],
-                capture_output=True,
                 timeout=30,
-                check=False,
             )
 
             # Step 6: Create bridge0 interface
             self.logger.info(_("Creating bridge0 interface"))
-            bridge_result = subprocess.run(  # nosec B603 B607
+            bridge_result = await self._run_subprocess(
                 ["sh", "/etc/netstart", "bridge0"],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if bridge_result.returncode != 0:
@@ -207,11 +226,9 @@ class VmmOperations:
                 )
 
             # Step 7: Ensure vether0 is added to bridge0
-            subprocess.run(  # nosec B603 B607
+            await self._run_subprocess(
                 ["ifconfig", "bridge0", "add", "vether0"],
-                capture_output=True,
                 timeout=10,
-                check=False,
             )
 
             # Step 8: Create /etc/vm.conf with local switch configuration
@@ -236,12 +253,9 @@ switch "local" {
             # Step 9: Enable vmd service using rcctl
             if not vmm_check.get("enabled"):
                 self.logger.info(_("Enabling vmd service"))
-                enable_result = subprocess.run(  # nosec B603 B607
+                enable_result = await self._run_subprocess(
                     ["rcctl", "enable", "vmd"],
-                    capture_output=True,
-                    text=True,
                     timeout=30,
-                    check=False,
                 )
 
                 if enable_result.returncode != 0:
@@ -258,12 +272,9 @@ switch "local" {
 
             # Step 10: Start vmd service using rcctl
             self.logger.info(_("Starting vmd service"))
-            start_result = subprocess.run(  # nosec B603 B607
+            start_result = await self._run_subprocess(
                 ["rcctl", "start", "vmd"],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if start_result.returncode != 0:

@@ -12,24 +12,29 @@ This module handles the complete VM creation workflow including:
 """
 
 import asyncio
+import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess  # nosec B404
-import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
-from urllib.parse import urlparse
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_disk import VmmDiskOperations
+from src.sysmanage_agent.operations.child_host_vmm_launcher import VmmLauncher
+from src.sysmanage_agent.operations.child_host_vmm_utils import (
+    VMM_DISK_DIR,
+    VMM_METADATA_DIR,
+    ensure_vmm_directories,
+    extract_openbsd_version,
+    get_fqdn_hostname,
+    save_vm_metadata,
+    vm_exists,
+)
 from src.sysmanage_agent.operations.child_host_vmm_vmconf import VmConfManager
-
-# VMM directories
-VMM_DISK_DIR = "/var/vmm"
-VMM_METADATA_DIR = "/var/vmm/metadata"
 
 
 class VmmVmCreator:
@@ -63,6 +68,34 @@ class VmmVmCreator:
         self.site_builder = site_builder
         self.disk_ops = VmmDiskOperations(logger)
         self.vmconf_manager = VmConfManager(logger)
+        self.launcher = VmmLauncher(agent_instance, logger)
+
+    async def _run_subprocess(
+        self,
+        cmd: list,
+        timeout: int = 60,
+    ) -> subprocess.CompletedProcess:
+        """
+        Run a subprocess command asynchronously.
+
+        Uses asyncio.to_thread() to run the blocking subprocess.run call
+        in a separate thread, preventing WebSocket keepalive timeouts.
+
+        Args:
+            cmd: Command and arguments as a list
+            timeout: Timeout in seconds
+
+        Returns:
+            CompletedProcess instance with return code, stdout, stderr
+        """
+        return await asyncio.to_thread(
+            subprocess.run,  # nosec B603 B607
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
 
     async def create_vmm_vm(self, config: VmmVmConfig) -> Dict[str, Any]:
         """
@@ -110,10 +143,10 @@ class VmmVmCreator:
             self.logger.info(
                 "📋 [STEP_2] Extracting OpenBSD version from distribution..."
             )
-            await self._send_progress(
+            await self.launcher.send_progress(
                 "parsing_version", _("Parsing OpenBSD version...")
             )
-            openbsd_version = self._extract_openbsd_version(config.distribution)
+            openbsd_version = extract_openbsd_version(config.distribution, self.logger)
             self.logger.info("🔍 [STEP_2] Extracted version: %s", openbsd_version)
             if not openbsd_version:
                 self.logger.error(
@@ -131,7 +164,7 @@ class VmmVmCreator:
 
             # Derive FQDN hostname
             self.logger.info("📋 [STEP_3] Deriving FQDN hostname...")
-            fqdn_hostname = self._get_fqdn_hostname(
+            fqdn_hostname = get_fqdn_hostname(
                 config.hostname, config.server_config.server_url
             )
             self.logger.info("✅ [STEP_3] FQDN hostname: %s", fqdn_hostname)
@@ -155,12 +188,12 @@ class VmmVmCreator:
 
             # Step 3: Check if VM already exists
             self.logger.info("📋 [STEP_5] Checking if VM already exists...")
-            await self._send_progress(
+            await self.launcher.send_progress(
                 "checking_existing", _("Checking for existing VM...")
             )
-            vm_exists = self._vm_exists(config.vm_name)
-            self.logger.info("🔍 [STEP_5] VM exists check: %s", vm_exists)
-            if vm_exists:
+            vm_already_exists = vm_exists(config.vm_name, self.logger)
+            self.logger.info("🔍 [STEP_5] VM exists check: %s", vm_already_exists)
+            if vm_already_exists:
                 self.logger.error("❌ [STEP_5] VM '%s' already exists", config.vm_name)
                 return {
                     "success": False,
@@ -170,7 +203,7 @@ class VmmVmCreator:
 
             # Step 4: Ensure directories exist
             self.logger.info("📋 [STEP_6] Ensuring VMM directories exist...")
-            self._ensure_vmm_directories()
+            ensure_vmm_directories(self.logger)
             self.logger.info("✅ [STEP_6] Directories ensured")
 
             # Step 5: Get latest sysmanage-agent version
@@ -244,7 +277,11 @@ class VmmVmCreator:
                 }
             self.logger.info("✅ [STEP_13] Disk image created: %s", disk_path)
 
-            # Step 12: Launch VM with embedded bsd.rd
+            # NOTE: We do NOT add VM to vm.conf yet. Adding during install causes
+            # an install loop because vmd auto-restarts the VM from bsd.rd on reboot.
+            # We'll add to vm.conf only after the VM is fully provisioned.
+
+            # Step 14: Launch VM with embedded bsd.rd
             self.logger.info(
                 "📋 [STEP_14] Launching VM with embedded bsd.rd for installation..."
             )
@@ -271,7 +308,10 @@ class VmmVmCreator:
                 return shutdown_result
             self.logger.info("✅ [STEP_15] Installation completed and VM shutdown")
 
-            # Step 14: Restart VM to boot from disk
+            # NOTE: No need to remove boot device from vm.conf since we never
+            # added the VM to vm.conf during installation.
+
+            # Step 16: Restart VM to boot from disk
             self.logger.info("📋 [STEP_16] Restarting VM to boot from disk...")
             restart_result = await self._restart_vm_from_disk(config, disk_path)
             self.logger.info("🔍 [STEP_16] Restart result: %s", restart_result)
@@ -284,7 +324,7 @@ class VmmVmCreator:
 
             # Step 15: Wait for self-registration
             self.logger.info("📋 [STEP_17] Sending final progress update...")
-            await self._send_progress(
+            await self.launcher.send_progress(
                 "awaiting_registration",
                 _(
                     "Waiting for VM to boot and register with server. "
@@ -293,30 +333,41 @@ class VmmVmCreator:
             )
             self.logger.info("✅ [STEP_17] Progress update sent")
 
-            await self._send_progress("complete", _("VM creation complete"))
+            await self.launcher.send_progress("complete", _("VM creation complete"))
             self.logger.info("🎉 [STEP_17] VM creation complete progress sent")
 
             # Save metadata
             self.logger.info("📋 [STEP_18] Saving VM metadata...")
-            self._save_vm_metadata(
+            save_vm_metadata(
                 vm_name=config.vm_name,
                 hostname=fqdn_hostname,
                 distribution=config.distribution,
                 openbsd_version=openbsd_version,
                 vm_ip=vm_ip,
+                logger=self.logger,
             )
             self.logger.info("✅ [STEP_18] Metadata saved")
 
-            # Step 19: Add VM to /etc/vm.conf for boot persistence
+            # Step 19: Add VM to /etc/vm.conf for persistence and auto-start
+            # We only add to vm.conf now (after successful provisioning) to avoid
+            # the install loop problem where vmd auto-restarts from bsd.rd
             self.logger.info(
-                "📋 [STEP_19] Adding VM to /etc/vm.conf for boot persistence..."
+                "📋 [STEP_19] Adding VM to /etc/vm.conf for persistence..."
             )
-            self.vmconf_manager.persist_vm(
-                vm_name=config.vm_name,
-                disk_path=disk_path,
-                memory=config.memory or "1G",
+            persist_result = self.vmconf_manager.persist_vm(
+                config.vm_name,
+                disk_path,
+                config.resource_config.memory,
+                enable=True,  # Enable auto-start on boot
+                boot_device=None,  # Boot from disk, not bsd.rd
             )
-            self.logger.info("✅ [STEP_19] VM added to /etc/vm.conf")
+            if not persist_result:
+                self.logger.warning(
+                    "⚠️ [STEP_19] Failed to add VM to vm.conf - VM will work but "
+                    "won't auto-start on host reboot"
+                )
+            else:
+                self.logger.info("✅ [STEP_19] VM added to vm.conf for auto-start")
 
             self.logger.info(
                 "🎉 [VM_CREATE_SUCCESS] VM '%s' created successfully!", config.vm_name
@@ -374,7 +425,7 @@ class VmmVmCreator:
 
     async def _check_vmm_ready(self) -> Dict[str, Any]:
         """Check if VMM is available and running."""
-        await self._send_progress("checking_vmm", _("Checking VMM status..."))
+        await self.launcher.send_progress("checking_vmm", _("Checking VMM status..."))
         vmm_check = self.virtualization_checks.check_vmm_support()
         if not vmm_check.get("available"):
             return {
@@ -390,7 +441,7 @@ class VmmVmCreator:
 
     async def _get_agent_version(self) -> tuple:
         """Get latest sysmanage-agent version from GitHub."""
-        await self._send_progress(
+        await self.launcher.send_progress(
             "checking_github",
             _("Checking GitHub for latest sysmanage-agent version..."),
         )
@@ -404,14 +455,22 @@ class VmmVmCreator:
     async def _build_site_tarball(
         self, openbsd_version: str, agent_version: str, config: VmmVmConfig
     ) -> str:
-        """Build or retrieve cached site.tgz."""
-        await self._send_progress(
+        """Build or retrieve cached site.tgz.
+
+        Uses asyncio.to_thread() to run the blocking site tarball build
+        in a separate thread, preventing WebSocket keepalive timeouts.
+        """
+        await self.launcher.send_progress(
             "building_site_tarball",
             _("Building site tarball with sysmanage-agent %s...") % agent_version,
         )
 
         tarball_url = self.github_checker.get_port_tarball_url(agent_version)
-        site_result = self.site_builder.get_or_build_site_tarball(
+
+        # Run blocking site tarball build in a separate thread to avoid
+        # blocking the async event loop and causing WebSocket timeouts
+        site_result = await asyncio.to_thread(
+            self.site_builder.get_or_build_site_tarball,
             openbsd_version=openbsd_version,
             agent_version=agent_version,
             agent_tarball_url=tarball_url,
@@ -521,24 +580,31 @@ class VmmVmCreator:
     async def _setup_http_and_download_sets(
         self, openbsd_version: str, gateway_ip: str
     ) -> Path:
-        """Setup HTTP server and download OpenBSD sets."""
-        # Setup httpd
-        await self._send_progress(
+        """Setup HTTP server and download OpenBSD sets.
+
+        Uses asyncio.to_thread() for blocking operations to prevent
+        WebSocket keepalive timeouts during long downloads.
+        """
+        # Setup httpd (quick operation but still wrap for consistency)
+        await self.launcher.send_progress(
             "setting_up_httpd",
             _("Setting up httpd to serve OpenBSD installation sets..."),
         )
-        httpd_result = self.httpd_setup.setup_httpd(gateway_ip)
+        httpd_result = await asyncio.to_thread(self.httpd_setup.setup_httpd, gateway_ip)
         if not httpd_result.get("success"):
             raise RuntimeError(
                 _("Failed to setup httpd: %s") % httpd_result.get("error")
             )
 
-        # Download sets
-        await self._send_progress(
+        # Download sets - this is a LONG operation (~10 minutes)
+        # Must run in thread to avoid blocking WebSocket event loop
+        await self.launcher.send_progress(
             "downloading_sets",
             _("Downloading OpenBSD %s installation sets...") % openbsd_version,
         )
-        sets_result = self.httpd_setup.download_openbsd_sets(openbsd_version)
+        sets_result = await asyncio.to_thread(
+            self.httpd_setup.download_openbsd_sets, openbsd_version
+        )
         if not sets_result.get("success"):
             raise RuntimeError(
                 _("Failed to download OpenBSD sets: %s") % sets_result.get("error")
@@ -549,16 +615,62 @@ class VmmVmCreator:
     async def _copy_site_tarball(
         self, site_tgz_path: str, sets_dir: Path, openbsd_version: str
     ) -> Path:
-        """Copy site.tgz to HTTP sets directory."""
+        """Copy site.tgz to HTTP sets directory and update index.txt."""
         version_nodot = openbsd_version.replace(".", "")
         site_filename = f"site{version_nodot}.tgz"
         site_dest = sets_dir / site_filename
 
-        await self._send_progress(
+        await self.launcher.send_progress(
             "copying_site_tarball",
             _("Copying site tarball to HTTP directory..."),
         )
         shutil.copy2(site_tgz_path, site_dest)
+
+        # Update index.txt to include the site tarball
+        # The OpenBSD installer uses index.txt to discover available sets
+        index_txt_path = sets_dir / "index.txt"
+        if index_txt_path.exists():
+            # Check if site tarball is already in index.txt
+            index_content = index_txt_path.read_text()
+            if site_filename not in index_content:
+                # Get file stats for the site tarball
+                site_stat = site_dest.stat()
+                site_size = site_stat.st_size
+                # Append site tarball entry to index.txt (similar format to other entries)
+                # Format: -rw-r--r--  1 1001  0  <size> <date> <filename>
+                mtime = datetime.fromtimestamp(site_stat.st_mtime)
+                date_str = mtime.strftime("%b %d %H:%M:%S %Y")
+                site_entry = f"-rw-r--r--  1 1001  0  {site_size:>10} {date_str} {site_filename}\n"
+                with open(index_txt_path, "a", encoding="utf-8") as index_file:
+                    index_file.write(site_entry)
+                self.logger.info("Updated index.txt with %s", site_filename)
+
+        # Update SHA256.sig to include the site tarball checksum
+        # The OpenBSD installer uses SHA256.sig for checksum verification
+        # Adding our checksum will invalidate the signature, but
+        # "Continue without verification = yes" in install.conf handles that
+
+        # Calculate SHA256 checksum
+        sha256_hash = hashlib.sha256()
+        with open(site_dest, "rb") as site_file:
+            for chunk in iter(lambda: site_file.read(8192), b""):
+                sha256_hash.update(chunk)
+        checksum = sha256_hash.hexdigest()
+        # OpenBSD SHA256 format: SHA256 (filename) = checksum
+        sha256_entry = f"SHA256 ({site_filename}) = {checksum}\n"
+
+        # Update both SHA256 and SHA256.sig
+        for sha_file in ["SHA256", "SHA256.sig"]:
+            sha_path = sets_dir / sha_file
+            if sha_path.exists():
+                sha_content = sha_path.read_text()
+                if site_filename not in sha_content:
+                    with open(sha_path, "a", encoding="utf-8") as sha_handle:
+                        sha_handle.write(sha256_entry)
+                    self.logger.info(
+                        "Updated %s with %s checksum", sha_file, site_filename
+                    )
+
         return site_dest
 
     async def _create_and_embed_install_conf(
@@ -584,7 +696,7 @@ class VmmVmCreator:
         )
 
         # Embed into bsd.rd
-        await self._send_progress(
+        await self.launcher.send_progress(
             "embedding_install_conf",
             _("Embedding install.conf into bsd.rd..."),
         )
@@ -604,7 +716,7 @@ class VmmVmCreator:
 
     async def _create_vm_disk(self, config: VmmVmConfig) -> Optional[str]:
         """Create disk image for VM."""
-        await self._send_progress(
+        await self.launcher.send_progress(
             "creating_disk",
             _("Creating %s disk image...") % config.resource_config.disk_size,
         )
@@ -625,21 +737,20 @@ class VmmVmCreator:
         self, config: VmmVmConfig, disk_path: str, bsdrd_path: str
     ) -> Dict[str, Any]:
         """Launch VM with embedded bsd.rd for installation."""
-        await self._send_progress(
+        await self.launcher.send_progress(
             "launching_vm_http",
             _("Launching VM with embedded bsd.rd for HTTP installation..."),
         )
-        return await self._launch_vm_with_bsdrd(
+        return await self.launcher.launch_vm_with_bsdrd(
             config.vm_name,
             disk_path,
             bsdrd_path,
             config.resource_config.memory,
-            config.resource_config.cpus,
         )
 
     async def _wait_for_installation_complete(self, vm_name: str) -> Dict[str, Any]:
         """Wait for VM to complete installation and shutdown."""
-        await self._send_progress(
+        await self.launcher.send_progress(
             "awaiting_shutdown",
             _(
                 "Waiting for VM to complete installation and shutdown. "
@@ -647,347 +758,18 @@ class VmmVmCreator:
                 "then shutdown automatically. This may take 10-15 minutes."
             ),
         )
-        return await self._wait_for_vm_shutdown(vm_name, timeout=1800)
+        return await self.launcher.wait_for_vm_shutdown(vm_name, timeout=1800)
 
     async def _restart_vm_from_disk(
         self, config: VmmVmConfig, disk_path: str
     ) -> Dict[str, Any]:
         """Restart VM to boot from installed disk."""
-        await self._send_progress(
+        await self.launcher.send_progress(
             "restarting_vm",
             _("Restarting VM to boot from installed system..."),
         )
-        return await self._launch_vm_no_pxe(
+        return await self.launcher.launch_vm_from_disk(
             config.vm_name,
             disk_path,
             config.resource_config.memory,
-            config.resource_config.cpus,
         )
-
-    # =========================================================================
-    # Low-level VM Operations
-    # =========================================================================
-
-    async def _launch_vm_with_bsdrd(
-        self,
-        vm_name: str,
-        disk_path: str,
-        bsdrd_path: str,
-        memory: str,
-        _cpus: int,
-    ) -> Dict[str, Any]:
-        """Launch VM with embedded bsd.rd boot."""
-        try:
-            cmd = [
-                "vmctl",
-                "start",
-                "-m",
-                memory,
-                "-n",
-                "local",
-                "-i",
-                "1",
-                "-b",
-                bsdrd_path,
-                "-d",
-                disk_path,
-                vm_name,
-            ]
-
-            self.logger.info(_("Launching VM with embedded bsd.rd: %s"), " ".join(cmd))
-
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info(_("VM %s launched with embedded bsd.rd"), vm_name)
-                return {"success": True}
-
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            return {
-                "success": False,
-                "error": _("Failed to launch VM: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout launching VM"),
-            }
-        except Exception as error:
-            return {"success": False, "error": str(error)}
-
-    async def _launch_vm_no_pxe(
-        self,
-        vm_name: str,
-        disk_path: str,
-        memory: str,
-        _cpus: int,
-    ) -> Dict[str, Any]:
-        """Launch VM from disk (no PXE boot)."""
-        try:
-            cmd = [
-                "vmctl",
-                "start",
-                "-m",
-                memory,
-                "-n",
-                "local",
-                "-i",
-                "1",
-                "-d",
-                disk_path,
-                vm_name,
-            ]
-
-            self.logger.info(_("Launching VM from disk: %s"), " ".join(cmd))
-
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info(_("VM %s launched from disk"), vm_name)
-                return {"success": True}
-
-            error_msg = result.stderr or result.stdout or "Unknown error"
-            return {
-                "success": False,
-                "error": _("Failed to launch VM: %s") % error_msg,
-            }
-
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": _("Timeout launching VM"),
-            }
-        except Exception as error:
-            return {"success": False, "error": str(error)}
-
-    async def _wait_for_vm_shutdown(
-        self, vm_name: str, timeout: int = 1800
-    ) -> Dict[str, Any]:
-        """Wait for VM to shutdown by polling vmctl status."""
-        start_time = time.time()
-        last_status_log = 0
-
-        self.logger.info(_("Waiting for VM %s to shutdown..."), vm_name)
-
-        while time.time() - start_time < timeout:
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["vmctl", "status"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                # Check if VM name appears in output (vmctl status always returns 0)
-                if vm_name not in result.stdout:
-                    self.logger.info(_("VM %s has shut down"), vm_name)
-                    return {"success": True}
-
-                # Log status every 60 seconds
-                elapsed = int(time.time() - start_time)
-                if elapsed - last_status_log >= 60:
-                    self.logger.info(
-                        _("VM still running... (%d seconds elapsed)"), elapsed
-                    )
-                    last_status_log = elapsed
-
-            except Exception as error:
-                self.logger.debug("Error checking VM status: %s", error)
-
-            await asyncio.sleep(10)
-
-        return {
-            "success": False,
-            "error": _("Timeout waiting for VM to shutdown"),
-        }
-
-    # =========================================================================
-    # Utility Methods
-    # =========================================================================
-
-    def _vm_exists(self, vm_name: str) -> bool:
-        """
-        Check if a VM already exists.
-
-        Checks:
-        1. Metadata file exists
-        2. VM.conf contains VM definition
-        3. vmctl status shows the VM
-
-        Args:
-            vm_name: Name of the VM to check
-
-        Returns:
-            True if VM exists, False otherwise
-        """
-        self.logger.info("🔍 [VM_EXISTS_CHECK] Checking if VM '%s' exists...", vm_name)
-
-        # Check metadata file
-        metadata_path = Path(VMM_METADATA_DIR) / f"{vm_name}.json"
-        self.logger.info(
-            "🔍 [VM_EXISTS_CHECK] Checking metadata file: %s", metadata_path
-        )
-        if metadata_path.exists():
-            self.logger.info(
-                "✅ [VM_EXISTS_CHECK] VM '%s' exists (metadata file found)", vm_name
-            )
-            return True
-        self.logger.info("❌ [VM_EXISTS_CHECK] Metadata file not found")
-
-        # Check vm.conf
-        self.logger.info("🔍 [VM_EXISTS_CHECK] Checking /etc/vm.conf...")
-        try:
-            with open("/etc/vm.conf", "r", encoding="utf-8") as file_handle:
-                vm_conf_content = file_handle.read()
-                # Look for 'vm "vm_name" {' pattern
-                if f'vm "{vm_name}"' in vm_conf_content:
-                    self.logger.info(
-                        "✅ [VM_EXISTS_CHECK] VM '%s' exists (found in /etc/vm.conf)",
-                        vm_name,
-                    )
-                    return True
-            self.logger.info("❌ [VM_EXISTS_CHECK] VM not found in /etc/vm.conf")
-        except FileNotFoundError:
-            self.logger.info("❌ [VM_EXISTS_CHECK] /etc/vm.conf doesn't exist")
-        except Exception as error:
-            self.logger.warning(
-                "⚠️ [VM_EXISTS_CHECK] Error reading /etc/vm.conf: %s", error
-            )
-
-        # Check vmctl status
-        self.logger.info("🔍 [VM_EXISTS_CHECK] Checking vmctl status...")
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["vmctl", "status", vm_name],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            self.logger.info(
-                "🔍 [VM_EXISTS_CHECK] vmctl returncode: %d", result.returncode
-            )
-            self.logger.info(
-                "🔍 [VM_EXISTS_CHECK] vmctl stdout: %s", repr(result.stdout)
-            )
-            # vmctl status returns 0 even if VM doesn't exist (just shows empty list)
-            # So we need to check if the output contains the VM name
-            if result.returncode == 0 and vm_name in result.stdout:
-                self.logger.info(
-                    "✅ [VM_EXISTS_CHECK] VM '%s' exists (found in vmctl status)",
-                    vm_name,
-                )
-                return True
-            self.logger.info("❌ [VM_EXISTS_CHECK] VM not found in vmctl status")
-        except (FileNotFoundError, subprocess.TimeoutExpired) as error:
-            self.logger.warning(
-                "⚠️ [VM_EXISTS_CHECK] Error checking vmctl status: %s", error
-            )
-
-        self.logger.info("✅ [VM_EXISTS_CHECK] VM '%s' does NOT exist", vm_name)
-        return False
-
-    def _extract_openbsd_version(self, distribution: str) -> Optional[str]:
-        """Extract OpenBSD version from distribution string."""
-        try:
-            match = re.search(r"(\d+\.\d+)", distribution)
-            if match:
-                return match.group(1)
-            return None
-        except Exception as error:
-            self.logger.error(_("Error parsing OpenBSD version: %s"), error)
-            return None
-
-    def _get_fqdn_hostname(self, hostname: str, server_url: str) -> str:
-        """Derive FQDN hostname from server URL if not already FQDN."""
-        if "." in hostname:
-            return hostname
-
-        try:
-            parsed = urlparse(server_url)
-            server_host = parsed.hostname or ""
-            if "." in server_host:
-                parts = server_host.split(".")
-                if len(parts) >= 2:
-                    domain = ".".join(parts[-2:])
-                    return f"{hostname}.{domain}"
-        except Exception:  # nosec B110
-            pass
-
-        return hostname
-
-    def _ensure_vmm_directories(self):
-        """Ensure VMM directories exist."""
-        for dir_path in [VMM_DISK_DIR]:
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path, mode=0o755)
-                self.logger.info(_("Created VMM directory: %s"), dir_path)
-
-    def _save_vm_metadata(
-        self,
-        vm_name: str,
-        hostname: str,
-        distribution: str,
-        openbsd_version: str,
-        vm_ip: str,
-    ) -> bool:
-        """Save VM metadata to JSON file for listing."""
-        try:
-            metadata_dir = Path(VMM_METADATA_DIR)
-            metadata_dir.mkdir(parents=True, exist_ok=True)
-
-            metadata = {
-                "vm_name": vm_name,
-                "hostname": hostname,
-                "vm_ip": vm_ip,
-                "distribution": {
-                    "distribution_name": "OpenBSD",
-                    "distribution_version": openbsd_version,
-                },
-                "distribution_string": distribution,
-            }
-
-            metadata_file = metadata_dir / f"{vm_name}.json"
-            with open(metadata_file, "w", encoding="utf-8") as metadata_fp:
-                json.dump(metadata, metadata_fp, indent=2)
-
-            self.logger.info(
-                _("Saved VM metadata for '%s' to %s"), vm_name, metadata_file
-            )
-            return True
-
-        except Exception as error:
-            self.logger.error(
-                _("Error saving VM metadata for '%s': %s"), vm_name, error
-            )
-            return False
-
-    async def _send_progress(self, step: str, message: str):
-        """Send progress update to server."""
-        try:
-            if hasattr(self.agent, "send_message"):
-                progress_message = self.agent.create_message(
-                    "child_host_creation_progress",
-                    {
-                        "step": step,
-                        "message": message,
-                        "child_type": "vmm",
-                    },
-                )
-                await self.agent.send_message(progress_message)
-        except Exception as error:
-            self.logger.debug("Failed to send progress update: %s", error)

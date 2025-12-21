@@ -14,6 +14,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -27,6 +28,16 @@ from src.i18n import _
 from src.sysmanage_agent.operations.child_host_vmm_package_builder import (
     PackageBuilder,
 )
+from src.sysmanage_agent.operations.child_host_vmm_packages import (
+    REQUIRED_PACKAGES,
+    REQUIRED_PACKAGES_BY_VERSION,
+    SUPPORTED_OPENBSD_VERSIONS,
+)
+from src.sysmanage_agent.operations.child_host_vmm_scripts import (
+    generate_agent_config,
+    generate_firsttime_script,
+    generate_install_site_script,
+)
 
 
 class SiteTarballBuilder:
@@ -35,45 +46,12 @@ class SiteTarballBuilder:
     # OpenBSD package mirror
     PKG_URL_TEMPLATE = "https://ftp.openbsd.org/pub/OpenBSD/{version}/packages/amd64/"
 
-    # Python packages required for sysmanage-agent (OpenBSD 7.7 amd64)
-    REQUIRED_PACKAGES = [
-        "python-3.12.9",
-        "sqlite3-3.49.1p1",
-        "gettext-runtime-0.23.1",
-        "libiconv-1.17",
-        "bzip2-1.0.8p0",
-        "libffi-3.4.7p1",
-        "libb2-0.98.1v0",
-        "xz-5.6.4p0",
-        "libcares-1.34.3p0",
-        "gmp-6.3.0",
-        "py3-websockets-13.1p0",
-        "py3-yaml-6.0.2p0",
-        "py3-aiohttp-3.11.14",
-        "py3-cryptography-44.0.2",
-        "py3-cryptodome-3.22.0",
-        "py3-sqlalchemy-2.0.40",
-        "py3-alembic-1.15.1",
-        "py3-propcache-0.3.0",
-        "py3-aiosignal-1.3.2",
-        "py3-frozenlist-1.5.0",
-        "py3-aiodns-3.2.0p0",
-        "py3-aiohappyeyeballs-2.6.1",
-        "py3-multidict-6.1.0p0",
-        "py3-yarl-1.18.0p0",
-        "py3-brotli-1.1.0p0",
-        "py3-attrs-25.3.0",
-        "py3-cffi-1.17.1p0",
-        "py3-greenlet-3.1.1p0",
-        "py3-typing_extensions-4.12.2p1",
-        "py3-mako-1.3.9",
-        "libyaml-0.2.5",
-        "py3-cares-4.5.0",
-        "py3-idna-3.10p1",
-        "py3-cparser-2.22p0",
-        "py3-MarkupSafe-2.1.5p0",
-        "py3-beaker-1.13.0p0",
-    ]
+    # GitHub releases URL for pre-built agent packages
+    # Format: sysmanage-agent-{version}-openbsd{version_nodot}.tgz
+    GITHUB_RELEASE_URL_TEMPLATE = (
+        "https://github.com/bceverly/sysmanage-agent/releases/download/"
+        "v{agent_version}/sysmanage-agent-{agent_version}-openbsd{openbsd_nodot}.tgz"
+    )
 
     def __init__(self, logger: logging.Logger, db_session: Session):
         """
@@ -98,10 +76,14 @@ class SiteTarballBuilder:
         """
         Build site77.tgz with sysmanage-agent and dependencies.
 
+        For supported OpenBSD versions (7.4, 7.5, 7.6, 7.7), downloads pre-built
+        packages from GitHub releases. Falls back to building from ports if
+        pre-built package is not available.
+
         Args:
             openbsd_version: OpenBSD version (e.g., "7.7")
-            agent_version: sysmanage-agent version (e.g., "0.9.9.8")
-            agent_tarball_url: URL to download agent port tarball
+            agent_version: sysmanage-agent version (e.g., "1.0.0")
+            agent_tarball_url: URL to download agent port tarball (fallback)
             server_hostname: SysManage server hostname
             server_port: SysManage server port
             use_https: Whether to use HTTPS for server connection
@@ -127,38 +109,79 @@ class SiteTarballBuilder:
             ) as build_dir:
                 build_path = Path(build_dir)
 
-                # Step 1: Download and extract agent port tarball
-                self.logger.info(_("Downloading agent port tarball"))
-                self.logger.info(
-                    _("About to call _download_port_tarball with URL: %s"),
-                    agent_tarball_url,
-                )
-                port_result = self._download_port_tarball(agent_tarball_url, build_path)
-                self.logger.info(_("Returned from _download_port_tarball"))
-                self.logger.info(_("port_result: %s"), port_result)
-                if not port_result["success"]:
-                    self.logger.error(
-                        _("Download failed: %s"), port_result.get("error")
+                # Step 1: Get sysmanage-agent package
+                # Try to download pre-built package from GitHub releases first
+                agent_pkg_path = None
+
+                if openbsd_version in SUPPORTED_OPENBSD_VERSIONS:
+                    self.logger.info(
+                        _(
+                            "Attempting to download pre-built package for "
+                            "OpenBSD %s from GitHub releases"
+                        ),
+                        openbsd_version,
                     )
-                    return port_result
-                port_dir = port_result["port_dir"]
-                self.logger.info(_("port_dir: %s"), port_dir)
+                    prebuilt_result = self._download_prebuilt_agent_package(
+                        openbsd_version, agent_version, build_path
+                    )
 
-                # Step 2: Build sysmanage-agent package
-                self.logger.info(_("Building sysmanage-agent package"))
-                pkg_result = self._build_agent_package(port_dir, agent_version)
-                if not pkg_result["success"]:
-                    return pkg_result
-                agent_pkg_path = pkg_result["package_path"]
+                    if prebuilt_result["success"]:
+                        agent_pkg_path = prebuilt_result["package_path"]
+                        self.logger.info(
+                            _("Using pre-built package: %s"), agent_pkg_path
+                        )
+                    else:
+                        self.logger.warning(
+                            _(
+                                "Pre-built package not available: %s. "
+                                "Falling back to building from ports."
+                            ),
+                            prebuilt_result.get("error"),
+                        )
 
-                # Step 3: Download Python dependencies
+                # Fall back to building from ports if pre-built not available
+                if agent_pkg_path is None:
+                    self.logger.info(_("Building agent package from ports (fallback)"))
+
+                    # Download and extract agent port tarball
+                    self.logger.info(_("Downloading agent port tarball"))
+                    port_result = self._download_port_tarball(
+                        agent_tarball_url, build_path
+                    )
+                    if not port_result["success"]:
+                        self.logger.error(
+                            _("Download failed: %s"), port_result.get("error")
+                        )
+                        return {
+                            "success": False,
+                            "site_tgz_path": None,
+                            "site_tgz_checksum": None,
+                            "agent_package_path": None,
+                            "error": port_result.get("error"),
+                        }
+                    port_dir = port_result["port_dir"]
+
+                    # Build sysmanage-agent package
+                    self.logger.info(_("Building sysmanage-agent package"))
+                    pkg_result = self._build_agent_package(port_dir, agent_version)
+                    if not pkg_result["success"]:
+                        return {
+                            "success": False,
+                            "site_tgz_path": None,
+                            "site_tgz_checksum": None,
+                            "agent_package_path": None,
+                            "error": pkg_result.get("error"),
+                        }
+                    agent_pkg_path = pkg_result["package_path"]
+
+                # Step 2: Download Python dependencies
                 self.logger.info(_("Downloading Python dependencies"))
                 deps_result = self._download_dependencies(openbsd_version, build_path)
                 if not deps_result["success"]:
                     return deps_result
                 packages_dir = deps_result["packages_dir"]
 
-                # Step 4: Create site tarball structure
+                # Step 3: Create site tarball structure
                 self.logger.info(_("Creating site tarball structure"))
                 site_result = self._create_site_structure(
                     build_path,
@@ -171,8 +194,8 @@ class SiteTarballBuilder:
                 if not site_result["success"]:
                     return site_result
 
-                # Step 5: Create site77.tgz
-                self.logger.info(_("Creating site77.tgz"))
+                # Step 4: Create site77.tgz
+                self.logger.info(_("Creating site tarball"))
                 tarball_result = self._create_tarball(
                     build_path,
                     openbsd_version,
@@ -183,7 +206,7 @@ class SiteTarballBuilder:
                 site_tgz_path = tarball_result["tarball_path"]
                 checksum = self._calculate_checksum(site_tgz_path)
 
-                # Step 6: Copy agent package to permanent location
+                # Step 5: Copy agent package to permanent location
                 agent_dest = self._get_agent_package_path(
                     openbsd_version, agent_version
                 )
@@ -304,6 +327,153 @@ class SiteTarballBuilder:
         package_builder = PackageBuilder(self.logger)
         return package_builder.build_agent_package(port_dir, agent_version)
 
+    def _download_prebuilt_agent_package(
+        self,
+        openbsd_version: str,
+        agent_version: str,
+        build_path: Path,
+    ) -> Dict[str, Any]:
+        """
+        Download pre-built sysmanage-agent package from GitHub releases.
+
+        Args:
+            openbsd_version: OpenBSD version (e.g., "7.7")
+            agent_version: sysmanage-agent version (e.g., "1.0.0")
+            build_path: Directory to download the package to
+
+        Returns:
+            Dict containing:
+                - success: bool
+                - package_path: str if successful
+                - error: str if failed
+        """
+        # Validate OpenBSD version
+        if openbsd_version not in SUPPORTED_OPENBSD_VERSIONS:
+            return {
+                "success": False,
+                "package_path": None,
+                "error": _("OpenBSD version %s not supported. Supported versions: %s")
+                % (openbsd_version, ", ".join(SUPPORTED_OPENBSD_VERSIONS)),
+            }
+
+        # Build the download URL
+        openbsd_nodot = openbsd_version.replace(".", "")
+        download_url = self.GITHUB_RELEASE_URL_TEMPLATE.format(
+            agent_version=agent_version,
+            openbsd_nodot=openbsd_nodot,
+        )
+
+        # Package filename
+        pkg_filename = f"sysmanage-agent-{agent_version}-openbsd{openbsd_nodot}.tgz"
+        pkg_path = build_path / pkg_filename
+
+        self.logger.info(_("Downloading pre-built agent package from GitHub releases"))
+        self.logger.info(_("URL: %s"), download_url)
+
+        # Retry configuration
+        max_retries = 5
+        base_delay = 5
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                self.logger.info(
+                    _("Download attempt %d of %d..."), attempt, max_retries
+                )
+
+                # Download the package
+                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+                with urllib.request.urlopen(  # nosec B310
+                    download_url, timeout=120
+                ) as response:
+                    with open(pkg_path, "wb") as file:
+                        shutil.copyfileobj(response, file)
+
+                # Verify the file was downloaded and is a valid tgz
+                if not pkg_path.exists():
+                    raise FileNotFoundError(_("Downloaded file not found"))
+
+                file_size = pkg_path.stat().st_size
+                if file_size < 1000:
+                    # File too small, probably an error page
+                    raise ValueError(
+                        _("Downloaded file too small (%d bytes), likely an error")
+                        % file_size
+                    )
+
+                # Verify it's a valid gzip file by checking magic bytes
+                with open(pkg_path, "rb") as file:
+                    magic = file.read(2)
+                    if magic != b"\x1f\x8b":
+                        raise ValueError(
+                            _("Downloaded file is not a valid gzip archive")
+                        )
+
+                self.logger.info(
+                    _("Successfully downloaded pre-built package: %s (%d bytes)"),
+                    pkg_filename,
+                    file_size,
+                )
+
+                # Rename package to match OpenBSD naming convention
+                # The internal package name is sysmanage-agent-{version}p0
+                # (the p0 comes from REVISION=0 in the port Makefile)
+                # pkg_add requires filename to match internal package name
+                openbsd_pkg_name = f"sysmanage-agent-{agent_version}p0.tgz"
+                openbsd_pkg_path = build_path / openbsd_pkg_name
+                pkg_path.rename(openbsd_pkg_path)
+                self.logger.info(
+                    _("Renamed package to OpenBSD format: %s"), openbsd_pkg_name
+                )
+
+                return {
+                    "success": True,
+                    "package_path": str(openbsd_pkg_path),
+                    "error": None,
+                }
+
+            except urllib.error.HTTPError as error:
+                self.logger.warning(
+                    _("HTTP error downloading package (attempt %d): %s"),
+                    attempt,
+                    error,
+                )
+                if error.code == 404:
+                    # Package doesn't exist for this version
+                    return {
+                        "success": False,
+                        "package_path": None,
+                        "error": _(
+                            "Pre-built package not found for OpenBSD %s agent v%s. "
+                            "Please check if this version has been released."
+                        )
+                        % (openbsd_version, agent_version),
+                    }
+            except urllib.error.URLError as error:
+                self.logger.warning(
+                    _("Network error downloading package (attempt %d): %s"),
+                    attempt,
+                    error,
+                )
+            except Exception as error:  # pylint: disable=broad-except
+                self.logger.warning(
+                    _("Error downloading package (attempt %d): %s"),
+                    attempt,
+                    error,
+                )
+
+            # Wait before retry (exponential backoff, capped at 60 seconds)
+            if attempt < max_retries:
+                delay = min(base_delay * (2 ** (attempt - 1)), 60)
+                self.logger.info(_("Waiting %d seconds before retry..."), delay)
+                time.sleep(delay)
+
+        return {
+            "success": False,
+            "package_path": None,
+            "error": _("Failed to download pre-built package after %d attempts")
+            % max_retries,
+        }
+
     def _download_dependencies(
         self, openbsd_version: str, build_path: Path
     ) -> Dict[str, Any]:
@@ -314,7 +484,18 @@ class SiteTarballBuilder:
 
             pkg_url_base = self.PKG_URL_TEMPLATE.format(version=openbsd_version)
 
-            for package in self.REQUIRED_PACKAGES:
+            # Get version-specific package list, fall back to default if not found
+            required_packages = REQUIRED_PACKAGES_BY_VERSION.get(
+                openbsd_version, REQUIRED_PACKAGES
+            )
+
+            self.logger.info(
+                _("Downloading %d packages for OpenBSD %s"),
+                len(required_packages),
+                openbsd_version,
+            )
+
+            for package in required_packages:
                 pkg_file = f"{package}.tgz"
                 pkg_url = f"{pkg_url_base}{pkg_file}"
                 dest_path = packages_dir / pkg_file
@@ -334,12 +515,12 @@ class SiteTarballBuilder:
 
             # Verify we got at least some packages
             downloaded = list(packages_dir.glob("*.tgz"))
-            if len(downloaded) < len(self.REQUIRED_PACKAGES) // 2:
+            if len(downloaded) < len(required_packages) // 2:
                 return {
                     "success": False,
                     "packages_dir": None,
                     "error": _("Too few packages downloaded (%d/%d)")
-                    % (len(downloaded), len(self.REQUIRED_PACKAGES)),
+                    % (len(downloaded), len(required_packages)),
                 }
 
             return {
@@ -386,20 +567,20 @@ class SiteTarballBuilder:
 
             # Create sysmanage-agent.yaml configuration in /etc
             # Note: Agent expects /etc/sysmanage-agent.yaml (not sysmanage-agent-system.yaml)
-            config_content = self._generate_agent_config(
+            config_content = generate_agent_config(
                 server_hostname, server_port, use_https
             )
             config_path = etc_dir / "sysmanage-agent.yaml"
             config_path.write_text(config_content)
 
             # Create rc.firsttime script for first boot
-            firsttime_script = self._generate_firsttime_script()
+            firsttime_script = generate_firsttime_script()
             firsttime_path = etc_dir / "rc.firsttime"
             firsttime_path.write_text(firsttime_script)
             firsttime_path.chmod(0o755)
 
             # Create install.site script (runs during installation)
-            install_site = self._generate_install_site_script()
+            install_site = generate_install_site_script()
             install_site_path = site_dir / "install.site"
             install_site_path.write_text(install_site)
             install_site_path.chmod(0o755)
@@ -411,118 +592,6 @@ class SiteTarballBuilder:
                 "success": False,
                 "error": f"Site structure creation failed: {error}",
             }
-
-    def _generate_agent_config(self, hostname: str, port: int, use_https: bool) -> str:
-        """Generate sysmanage-agent.yaml configuration."""
-        return f"""# SysManage Agent Configuration
-# Auto-generated by VMM autoinstall
-
-# Server connection settings
-server:
-  hostname: "{hostname}"
-  port: {port}
-  use_https: {str(use_https).lower()}
-  verify_ssl: false
-
-# Client identification settings
-client:
-  registration_retry_interval: 30
-  max_registration_retries: 10
-  update_check_interval: 3600
-
-# Internationalization settings
-i18n:
-  language: "en"
-
-# Logging configuration
-logging:
-  level: "INFO|WARNING|ERROR|CRITICAL"
-  file: "/var/log/sysmanage-agent/agent.log"
-  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
-
-# WebSocket connection settings
-websocket:
-  auto_reconnect: true
-  reconnect_interval: 5
-  ping_interval: 60
-
-# Database configuration
-database:
-  path: "agent.db"
-  auto_migrate: true
-
-# Script execution configuration
-script_execution:
-  enabled: true
-  timeout: 300
-  max_concurrent: 3
-  allowed_shells:
-    - "sh"
-    - "ksh"
-    - "csh"
-  user_restrictions:
-    allow_user_switching: false
-    allowed_users: []
-  security:
-    restricted_paths:
-      - "/etc/passwd"
-      - "/etc/shadow"
-      - "/etc/ssh/"
-      - "/home/*/.ssh/"
-      - "/root/.ssh/"
-      - "*.key"
-      - "*.pem"
-    audit_logging: true
-    require_approval: false
-"""
-
-    @staticmethod
-    def _generate_firsttime_script() -> str:
-        """Generate rc.firsttime script for first boot setup."""
-        return """#!/bin/sh
-# First boot setup - install sysmanage-agent and dependencies
-
-echo "==> Installing Python dependencies (offline)..."
-PKG_COUNT=$(ls -1 /root/packages/*.tgz 2>/dev/null | wc -l)
-if [ ${PKG_COUNT} -gt 0 ]; then
-    PKG_PATH="file:///root/packages/" pkg_add -D unsigned /root/packages/*.tgz
-    echo "Installed ${PKG_COUNT} dependency packages"
-fi
-
-echo "==> Installing sysmanage-agent..."
-AGENT_PKG=$(ls /root/sysmanage-agent-*.tgz 2>/dev/null | head -1)
-if [ -n "$AGENT_PKG" ]; then
-    PKG_PATH="file:///root/packages/" pkg_add -D unsigned "$AGENT_PKG"
-
-    # Copy configuration
-    if [ -f /root/sysmanage-agent.yaml ]; then
-        mkdir -p /etc/sysmanage-agent
-        cp /root/sysmanage-agent.yaml /etc/sysmanage-agent/
-    fi
-
-    # Enable and start service
-    rcctl enable sysmanage_agent
-    rcctl start sysmanage_agent
-fi
-
-echo "==> Running syspatch..."
-syspatch
-
-echo "==> Setup complete, shutting down..."
-shutdown -p now
-"""
-
-    @staticmethod
-    def _generate_install_site_script() -> str:
-        """Generate install.site script (runs during installation)."""
-        return """#!/bin/sh
-# Post-installation script - runs during install
-
-# Fix installurl to use official mirror
-echo "https://cdn.openbsd.org/pub/OpenBSD" > /etc/installurl
-
-exit 0
-"""
 
     def _create_tarball(self, build_path: Path, openbsd_version: str) -> Dict[str, Any]:
         """Create site77.tgz from site directory."""

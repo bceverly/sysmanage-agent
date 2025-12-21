@@ -1137,9 +1137,15 @@ class SysManageAgent:  # pylint: disable=too-many-public-methods,too-many-instan
                     )
 
                     # Run sender, receiver, update checker, data collector, package collector, and child host heartbeat concurrently with proper error handling
+                    # IMPORTANT: Use message_handler's methods which properly queue commands
+                    # instead of blocking on command execution
                     try:
-                        sender_task = asyncio.create_task(self.message_sender())
-                        receiver_task = asyncio.create_task(self.message_receiver())
+                        sender_task = asyncio.create_task(
+                            self.message_handler.message_sender()
+                        )
+                        receiver_task = asyncio.create_task(
+                            self.message_handler.message_receiver()
+                        )
                         update_checker_task = asyncio.create_task(self.update_checker())
                         data_collector_task = asyncio.create_task(
                             self._collect_and_send_periodic_data()

@@ -172,29 +172,27 @@ class ChildHostCollector:
 
     async def child_host_heartbeat(self):
         """
-        Handle frequent child host status updates (Windows only).
+        Handle frequent child host status updates.
 
         This runs more frequently than the main data collector to ensure
-        child host status (WSL instances) is kept up to date in the UI.
-        Also maintains persistent keep-alive processes for WSL instances
-        to work around WSL 2.6.x regression where instances shut down
-        even with active systemd services.
+        child host status (VMs, containers, WSL instances) is kept up to date
+        in the UI. On Windows, also maintains persistent keep-alive processes
+        for WSL instances to work around WSL 2.6.x regression.
         """
-        # Only run on Windows where we have WSL
-        if platform.system().lower() != "windows":
-            self.logger.debug("Child host heartbeat skipped (not Windows)")
-            return
-
         self.logger.debug("Child host heartbeat started")
 
-        # Ensure .wslconfig exists with proper settings
-        # If we had to create/modify it, restart WSL to apply the setting
-        if self._ensure_wslconfig():
-            self._restart_wsl()
+        os_type = platform.system().lower()
 
-        # Start persistent keep-alive processes for all WSL instances
-        self.logger.info("Starting WSL keep-alive processes")
-        self._ensure_keepalive_processes()
+        # Windows-specific: WSL keep-alive setup
+        if os_type == "windows":
+            # Ensure .wslconfig exists with proper settings
+            # If we had to create/modify it, restart WSL to apply the setting
+            if self._ensure_wslconfig():
+                self._restart_wsl()
+
+            # Start persistent keep-alive processes for all WSL instances
+            self.logger.info("Starting WSL keep-alive processes")
+            self._ensure_keepalive_processes()
 
         # Send child host status every 60 seconds
         heartbeat_interval = 60  # 1 minute
@@ -204,9 +202,9 @@ class ChildHostCollector:
                 try:
                     await asyncio.sleep(heartbeat_interval)
 
-                    # Ensure keep-alive processes are still running
-                    # (handles new distros, removed distros, and crashed processes)
-                    self._ensure_keepalive_processes()
+                    # Windows-specific: Ensure keep-alive processes are still running
+                    if os_type == "windows":
+                        self._ensure_keepalive_processes()
 
                     await self.send_child_hosts_update()
                     self.logger.debug("AGENT_DEBUG: Child host heartbeat completed")
@@ -218,8 +216,9 @@ class ChildHostCollector:
                     # Continue the loop on non-critical errors
                     continue
         finally:
-            # Clean up keep-alive processes when heartbeat stops
-            self.logger.info("Stopping WSL keep-alive processes")
+            # Clean up keep-alive processes when heartbeat stops (Windows only)
+            if os_type == "windows":
+                self.logger.info("Stopping WSL keep-alive processes")
             self._stop_all_keepalive_processes()
 
     def _get_wsl_distros(self) -> list:

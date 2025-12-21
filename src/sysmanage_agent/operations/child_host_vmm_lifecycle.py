@@ -34,6 +34,33 @@ class VmmLifecycleOperations:
         self.virtualization_checks = virtualization_checks
         self.vmconf_manager = VmConfManager(logger)
 
+    async def _run_subprocess(
+        self,
+        cmd: list,
+        timeout: int = 60,
+    ) -> subprocess.CompletedProcess:
+        """
+        Run a subprocess command asynchronously.
+
+        Uses asyncio.to_thread() to run the blocking subprocess.run call
+        in a separate thread, preventing WebSocket keepalive timeouts.
+
+        Args:
+            cmd: Command and arguments as a list
+            timeout: Timeout in seconds
+
+        Returns:
+            CompletedProcess instance with return code, stdout, stderr
+        """
+        return await asyncio.to_thread(
+            subprocess.run,  # nosec B603 B607
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+
     async def check_vmd_ready(self) -> Dict[str, Any]:
         """
         Check if vmd is operational and ready to create VMs.
@@ -68,13 +95,7 @@ class VmmLifecycleOperations:
                 }
 
             # Try to run vmctl status to verify vmd is responsive
-            result = subprocess.run(  # nosec B603 B607
-                ["vmctl", "status"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
+            result = await self._run_subprocess(["vmctl", "status"], timeout=10)
 
             if result.returncode == 0:
                 return {
@@ -122,13 +143,7 @@ class VmmLifecycleOperations:
             - vcpus: Number of vCPUs
         """
         try:
-            result = subprocess.run(  # nosec B603 B607
-                ["vmctl", "status"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            result = await self._run_subprocess(["vmctl", "status"], timeout=30)
 
             if result.returncode != 0:
                 return {
@@ -254,13 +269,10 @@ class VmmLifecycleOperations:
         self.logger.info(_("Starting VMM VM: %s"), child_name)
 
         try:
-            # Start the VM using vmctl
-            result = subprocess.run(  # nosec B603 B607
+            # Start the VM using vmctl (async to avoid blocking event loop)
+            result = await self._run_subprocess(
                 ["vmctl", "start", child_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -323,13 +335,8 @@ class VmmLifecycleOperations:
                 cmd.append("-f")
             cmd.append(child_name)
 
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120,  # Longer timeout for graceful shutdown
-                check=False,
-            )
+            # Use async helper to avoid blocking event loop
+            result = await self._run_subprocess(cmd, timeout=120)
 
             if result.returncode == 0:
                 # Wait for VM to be stopped if requested

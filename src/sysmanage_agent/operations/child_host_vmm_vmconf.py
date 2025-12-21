@@ -32,6 +32,8 @@ class VmConfManager:
         vm_name: str,
         disk_path: str,
         memory: str,
+        enable: bool = True,
+        boot_device: str = None,
     ) -> bool:
         """
         Add VM definition to /etc/vm.conf for boot persistence.
@@ -42,6 +44,11 @@ class VmConfManager:
             vm_name: Name of the VM
             disk_path: Path to the VM's disk image
             memory: Memory allocation (e.g., "1G")
+            enable: If True, VM auto-starts on vmd reload/boot. Set False
+                    during initial install to prevent auto-start before
+                    installation completes.
+            boot_device: Optional boot device path (e.g., bsd.rd for install).
+                         If None, VM boots from disk.
 
         Returns:
             True if successful, False otherwise
@@ -59,15 +66,16 @@ class VmConfManager:
                 return True
 
             # Create VM definition block
-            # Use 'enable' to auto-start at boot
+            # Only include 'enable' if requested (avoid auto-start during install)
+            enable_line = "    enable\n" if enable else ""
+            boot_line = f'    boot "{boot_device}"\n' if boot_device else ""
             vm_definition = f"""
 vm "{vm_name}" {{
     memory {memory}
     disk "{disk_path}"
-    interface {{ switch "local" }}
+{boot_line}    interface {{ switch "local" }}
     owner root
-    enable
-}}
+{enable_line}}}
 """
 
             # Append to vm.conf
@@ -107,8 +115,11 @@ vm "{vm_name}" {{
                 content = vm_conf_file.read()
 
             # Remove the VM block using regex
-            # Match: vm "vm_name" { ... }
-            pattern = rf'\n?vm "{re.escape(vm_name)}" \{{[^}}]*\}}\n?'
+            # Match: vm "vm_name" { ... } where closing } is on its own line
+            # The [^}]* pattern fails because vm blocks contain nested braces
+            # like: interface { switch "local" }
+            # Use non-greedy .*? with DOTALL to match until final closing brace
+            pattern = rf'\n?vm "{re.escape(vm_name)}" \{{.*?\n\}}\n?'
             new_content = re.sub(pattern, "\n", content, flags=re.DOTALL)
 
             if new_content != content:
@@ -146,6 +157,111 @@ vm "{vm_name}" {{
                 return f'vm "{vm_name}"' in content
 
         except Exception:
+            return False
+
+    def remove_boot_device(self, vm_name: str) -> bool:
+        """
+        Remove 'boot' line from a VM definition in /etc/vm.conf.
+
+        This is called after installation completes so the VM boots from disk.
+
+        Args:
+            vm_name: Name of the VM
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not self.VM_CONF_PATH.exists():
+                return False
+
+            with open(self.VM_CONF_PATH, "r", encoding="utf-8") as vm_conf_file:
+                content = vm_conf_file.read()
+
+            # Remove the boot line from this VM's block
+            # Match: boot "/path/to/bsd.rd" within the VM block
+            # We need to be careful to only remove it from this VM's block
+            vm_pattern = (
+                rf'(vm "{re.escape(vm_name)}" \{{[^}}]*?)(\s*boot "[^"]+"\n)([^}}]*}})'
+            )
+            match = re.search(vm_pattern, content, re.DOTALL)
+            if match:
+                new_content = (
+                    content[: match.start()]
+                    + match.group(1)
+                    + match.group(3)
+                    + content[match.end() :]
+                )
+                with open(self.VM_CONF_PATH, "w", encoding="utf-8") as vm_conf_file:
+                    vm_conf_file.write(new_content)
+                self.logger.info(_("Removed boot device from VM '%s'"), vm_name)
+                self._reload_vmd()
+                return True
+
+            # No boot line found, that's fine
+            self.logger.info(_("No boot device to remove for VM '%s'"), vm_name)
+            return True
+
+        except Exception as error:
+            self.logger.error(
+                _("Error removing boot device from VM '%s': %s"), vm_name, error
+            )
+            return False
+
+    def enable_vm(self, vm_name: str) -> bool:
+        """
+        Add 'enable' to an existing VM definition in /etc/vm.conf.
+
+        This makes the VM auto-start when vmd starts at boot.
+
+        Args:
+            vm_name: Name of the VM to enable
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not self.VM_CONF_PATH.exists():
+                self.logger.error(_("vm.conf does not exist"))
+                return False
+
+            with open(self.VM_CONF_PATH, "r", encoding="utf-8") as vm_conf_file:
+                content = vm_conf_file.read()
+
+            # Check if VM is defined
+            if f'vm "{vm_name}"' not in content:
+                self.logger.error(_("VM '%s' not found in /etc/vm.conf"), vm_name)
+                return False
+
+            # Check if already enabled
+            # Look for the VM block and check if 'enable' is present
+            vm_pattern = rf'(vm "{re.escape(vm_name)}" \{{[^}}]*)(}})'
+            match = re.search(vm_pattern, content, re.DOTALL)
+            if match:
+                vm_block = match.group(1)
+                if "enable" in vm_block:
+                    self.logger.info(_("VM '%s' already enabled"), vm_name)
+                    return True
+
+                # Add 'enable' before the closing brace
+                new_block = vm_block + "    enable\n}"
+                new_content = (
+                    content[: match.start()] + new_block + content[match.end() :]
+                )
+
+                with open(self.VM_CONF_PATH, "w", encoding="utf-8") as vm_conf_file:
+                    vm_conf_file.write(new_content)
+
+                self.logger.info(_("Enabled VM '%s' in /etc/vm.conf"), vm_name)
+                self._reload_vmd()
+                return True
+
+            return False
+
+        except Exception as error:
+            self.logger.error(
+                _("Error enabling VM '%s' in /etc/vm.conf: %s"), vm_name, error
+            )
             return False
 
     def _reload_vmd(self) -> Dict[str, Any]:
