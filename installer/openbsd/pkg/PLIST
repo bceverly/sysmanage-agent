@@ -168,11 +168,15 @@ libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_bsd_embedd
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_disk.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_github.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_httpd_autoinstall.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_launcher.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_lifecycle.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_network_helpers.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_package_builder.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_packages.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_scripts.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_site_builder.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_ssh.py
+libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_utils.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_vm_creator.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_vmm_vmconf.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/child_host_wsl.py
