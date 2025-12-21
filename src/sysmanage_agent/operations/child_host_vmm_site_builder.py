@@ -17,13 +17,11 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from src.database.models import VmmBuildCache
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_vmm_package_builder import (
     PackageBuilder,
@@ -112,10 +110,19 @@ class SiteTarballBuilder:
                 build_path = Path(build_dir)
 
                 # Step 1: Get sysmanage-agent package
-                # Try to download pre-built package from GitHub releases first
+                # Check for cached package first, then try GitHub, then build
                 agent_pkg_path = None
 
-                if openbsd_version in SUPPORTED_OPENBSD_VERSIONS:
+                # Check if we have a cached agent package
+                cached_agent_path = self._get_agent_package_path(
+                    openbsd_version, agent_version
+                )
+                if os.path.exists(cached_agent_path):
+                    self.logger.info(
+                        _("Using cached agent package: %s"), cached_agent_path
+                    )
+                    agent_pkg_path = cached_agent_path
+                elif openbsd_version in SUPPORTED_OPENBSD_VERSIONS:
                     self.logger.info(
                         _(
                             "Attempting to download pre-built package for "
@@ -477,14 +484,22 @@ class SiteTarballBuilder:
             % max_retries,
         }
 
+    def _get_dependency_cache_dir(self, openbsd_version: str) -> Path:
+        """Get the cache directory for dependency packages."""
+        cache_dir = Path("/var/vmm/package-cache") / openbsd_version
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
+
     def _download_dependencies(
         self, openbsd_version: str, build_path: Path
     ) -> Dict[str, Any]:
-        """Download Python dependencies from OpenBSD mirror."""
+        """Download Python dependencies from OpenBSD mirror (with caching)."""
         try:
             packages_dir = build_path / "packages"
             packages_dir.mkdir(exist_ok=True)
 
+            # Check for cached packages first
+            cache_dir = self._get_dependency_cache_dir(openbsd_version)
             pkg_url_base = self.PKG_URL_TEMPLATE.format(version=openbsd_version)
 
             # Get version-specific package list, fall back to default if not found
@@ -492,17 +507,22 @@ class SiteTarballBuilder:
                 openbsd_version, REQUIRED_PACKAGES
             )
 
-            self.logger.info(
-                _("Downloading %d packages for OpenBSD %s"),
-                len(required_packages),
-                openbsd_version,
-            )
+            cached_count = 0
+            download_count = 0
 
             for package in required_packages:
                 pkg_file = f"{package}.tgz"
-                pkg_url = f"{pkg_url_base}{pkg_file}"
                 dest_path = packages_dir / pkg_file
+                cached_path = cache_dir / pkg_file
 
+                # Check cache first
+                if cached_path.exists():
+                    shutil.copy2(cached_path, dest_path)
+                    cached_count += 1
+                    continue
+
+                # Download if not cached
+                pkg_url = f"{pkg_url_base}{pkg_file}"
                 self.logger.debug(_("Downloading %s"), package)
 
                 try:
@@ -512,9 +532,19 @@ class SiteTarballBuilder:
                     ) as response:
                         with open(dest_path, "wb") as file:
                             shutil.copyfileobj(response, file)
+                    # Cache the downloaded package
+                    shutil.copy2(dest_path, cached_path)
+                    download_count += 1
                 except Exception as error:  # pylint: disable=broad-except
                     self.logger.warning(_("Failed to download %s: %s"), package, error)
                     # Continue with other packages
+
+            self.logger.info(
+                _("Packages: %d from cache, %d downloaded for OpenBSD %s"),
+                cached_count,
+                download_count,
+                openbsd_version,
+            )
 
             # Verify we got at least some packages
             downloaded = list(packages_dir.glob("*.tgz"))
@@ -678,51 +708,10 @@ class SiteTarballBuilder:
             Dict with success status and paths
         """
         try:
-            # Skip cache if auto_approve_token is provided
-            # Each VM with auto-approve needs a unique tarball with its own token
-            cached = None
-            if not auto_approve_token:
-                # Check cache only when no token is required
-                cached = (
-                    self.db_session.query(VmmBuildCache)
-                    .filter_by(
-                        openbsd_version=openbsd_version,
-                        agent_version=agent_version,
-                        build_status="success",
-                    )
-                    .first()
-                )
-
-            if cached:
-                # Verify cached file exists
-                if os.path.exists(cached.site_tgz_path):
-                    self.logger.info(
-                        _("Using cached site tarball: %s (built: %s)"),
-                        cached.site_tgz_path,
-                        cached.built_at,
-                    )
-
-                    # Update last_used_at
-                    cached.last_used_at = datetime.now(timezone.utc)
-                    self.db_session.commit()
-
-                    return {
-                        "success": True,
-                        "site_tgz_path": cached.site_tgz_path,
-                        "site_tgz_checksum": cached.site_tgz_checksum,
-                        "agent_package_path": cached.agent_package_path,
-                        "from_cache": True,
-                        "error": None,
-                    }
-
-                # Cached entry exists but file is missing - delete cache entry
-                self.logger.warning(
-                    _("Cached file missing, rebuilding: %s"),
-                    cached.site_tgz_path,
-                )
-                self.db_session.delete(cached)
-                self.db_session.commit()
-
+            # Always build fresh - the config file contains server-specific
+            # settings (hostname, port, auto_approve_token) that are unique
+            # to each VM creation request. Caching would cause VMs to get
+            # wrong configurations.
             # Build new tarball
             self.logger.info(_("Building new site tarball (not in cache)"))
             result = self.build_site_tarball(
@@ -737,23 +726,6 @@ class SiteTarballBuilder:
 
             if not result["success"]:
                 return result
-
-            # Only cache if no auto_approve_token was provided
-            # Tarballs with tokens are unique per VM and shouldn't be reused
-            if not auto_approve_token:
-                cache_entry = VmmBuildCache(
-                    openbsd_version=openbsd_version,
-                    agent_version=agent_version,
-                    site_tgz_path=result["site_tgz_path"],
-                    agent_package_path=result["agent_package_path"],
-                    site_tgz_checksum=result["site_tgz_checksum"],
-                    built_at=datetime.now(timezone.utc),
-                    last_used_at=datetime.now(timezone.utc),
-                    build_status="success",
-                    build_log=None,
-                )
-                self.db_session.add(cache_entry)
-                self.db_session.commit()
 
             result["from_cache"] = False
             return result

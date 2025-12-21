@@ -70,6 +70,14 @@ class ClientRegistration:
         # Add script execution capability
         script_exec_enabled = self.config.is_script_execution_enabled()
         basic_info["script_execution_enabled"] = script_exec_enabled
+
+        # Add auto-approve token if configured (used for automatic host approval
+        # during child host creation)
+        auto_approve_token = self.config.get_auto_approve_token()
+        if auto_approve_token:
+            basic_info["auto_approve_token"] = auto_approve_token
+            self.logger.info("Including auto_approve_token in registration data")
+
         # Debug logging
         logger = logging.getLogger(__name__)
         logger.info("=== AGENT REGISTRATION DEBUG ===")
@@ -78,6 +86,7 @@ class ClientRegistration:
             "Basic info script_execution_enabled: %s",
             basic_info["script_execution_enabled"],
         )
+        logger.info("Auto-approve token present: %s", auto_approve_token is not None)
         logger.info("=================================")
 
         return basic_info
