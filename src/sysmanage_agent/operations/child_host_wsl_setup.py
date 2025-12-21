@@ -521,6 +521,7 @@ class WslSetupOperations:
         hostname: str,
         server_port: int = 8443,
         use_https: bool = True,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """
         Configure sysmanage-agent in a WSL distribution.
@@ -531,6 +532,7 @@ class WslSetupOperations:
             hostname: Hostname for this agent
             server_port: Port of the sysmanage server (default 8443)
             use_https: Whether to use HTTPS for server connection (default True)
+            auto_approve_token: UUID token for automatic host approval (optional)
 
         Returns:
             Dict with success status
@@ -547,6 +549,17 @@ class WslSetupOperations:
 
             # Create the configuration file with enhanced settings for WSL
             use_https_str = "true" if use_https else "false"
+
+            # Build auto_approve_token section if token provided
+            auto_approve_section = ""
+            if auto_approve_token:
+                auto_approve_section = f"""
+# Auto-approval token for automatic host approval
+# This token is sent to the server during registration
+auto_approve:
+  token: "{auto_approve_token}"
+"""
+
             config_content = f"""# Sysmanage Agent Configuration
 # Auto-generated during WSL child host creation
 
@@ -558,7 +571,7 @@ server:
 
 agent:
   hostname_override: "{fqdn_hostname}"
-
+{auto_approve_section}
 # WebSocket settings - longer ping interval for WSL to reduce overhead
 # while staying within the server's "down" detection window
 websocket:

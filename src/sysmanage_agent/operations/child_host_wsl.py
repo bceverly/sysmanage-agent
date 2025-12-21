@@ -42,6 +42,7 @@ class WslOperations:
         listing_helper,
         server_port: int = 8443,
         use_https: bool = True,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """
         Create a new WSL instance with the full installation flow.
@@ -256,7 +257,12 @@ class WslOperations:
                     "configuring_agent", _("Configuring sysmanage-agent...")
                 )
                 config_agent_result = await self._setup_ops.configure_agent(
-                    actual_wsl_name, server_url, hostname, server_port, use_https
+                    actual_wsl_name,
+                    server_url,
+                    hostname,
+                    server_port,
+                    use_https,
+                    auto_approve_token,
                 )
                 if not config_agent_result.get("success"):
                     self.logger.warning(

@@ -477,6 +477,7 @@ class VmmVmCreator:
             server_hostname=config.server_config.server_url,
             server_port=config.server_config.server_port,
             use_https=config.server_config.use_https,
+            auto_approve_token=config.auto_approve_token,
         )
 
         if not site_result.get("success"):

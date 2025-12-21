@@ -72,6 +72,7 @@ class SiteTarballBuilder:
         server_hostname: str,
         server_port: int,
         use_https: bool,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """
         Build site77.tgz with sysmanage-agent and dependencies.
@@ -87,6 +88,7 @@ class SiteTarballBuilder:
             server_hostname: SysManage server hostname
             server_port: SysManage server port
             use_https: Whether to use HTTPS for server connection
+            auto_approve_token: Optional UUID token for automatic host approval
 
         Returns:
             Dict containing:
@@ -190,6 +192,7 @@ class SiteTarballBuilder:
                     server_hostname,
                     server_port,
                     use_https,
+                    auto_approve_token,
                 )
                 if not site_result["success"]:
                     return site_result
@@ -544,6 +547,7 @@ class SiteTarballBuilder:
         server_hostname: str,
         server_port: int,
         use_https: bool,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """Create the site77 directory structure."""
         try:
@@ -568,7 +572,7 @@ class SiteTarballBuilder:
             # Create sysmanage-agent.yaml configuration in /etc
             # Note: Agent expects /etc/sysmanage-agent.yaml (not sysmanage-agent-system.yaml)
             config_content = generate_agent_config(
-                server_hostname, server_port, use_https
+                server_hostname, server_port, use_https, auto_approve_token
             )
             config_path = etc_dir / "sysmanage-agent.yaml"
             config_path.write_text(config_content)
@@ -655,6 +659,7 @@ class SiteTarballBuilder:
         server_hostname: str,
         server_port: int,
         use_https: bool,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """
         Get cached site tarball or build new one if not cached.
@@ -666,21 +671,27 @@ class SiteTarballBuilder:
             server_hostname: SysManage server hostname
             server_port: SysManage server port
             use_https: Whether to use HTTPS
+            auto_approve_token: Optional UUID token for automatic host approval.
+                If provided, caching is skipped since each VM needs a unique token.
 
         Returns:
             Dict with success status and paths
         """
         try:
-            # Check cache
-            cached = (
-                self.db_session.query(VmmBuildCache)
-                .filter_by(
-                    openbsd_version=openbsd_version,
-                    agent_version=agent_version,
-                    build_status="success",
+            # Skip cache if auto_approve_token is provided
+            # Each VM with auto-approve needs a unique tarball with its own token
+            cached = None
+            if not auto_approve_token:
+                # Check cache only when no token is required
+                cached = (
+                    self.db_session.query(VmmBuildCache)
+                    .filter_by(
+                        openbsd_version=openbsd_version,
+                        agent_version=agent_version,
+                        build_status="success",
+                    )
+                    .first()
                 )
-                .first()
-            )
 
             if cached:
                 # Verify cached file exists
@@ -721,25 +732,28 @@ class SiteTarballBuilder:
                 server_hostname,
                 server_port,
                 use_https,
+                auto_approve_token,
             )
 
             if not result["success"]:
                 return result
 
-            # Store in cache
-            cache_entry = VmmBuildCache(
-                openbsd_version=openbsd_version,
-                agent_version=agent_version,
-                site_tgz_path=result["site_tgz_path"],
-                agent_package_path=result["agent_package_path"],
-                site_tgz_checksum=result["site_tgz_checksum"],
-                built_at=datetime.now(timezone.utc),
-                last_used_at=datetime.now(timezone.utc),
-                build_status="success",
-                build_log=None,
-            )
-            self.db_session.add(cache_entry)
-            self.db_session.commit()
+            # Only cache if no auto_approve_token was provided
+            # Tarballs with tokens are unique per VM and shouldn't be reused
+            if not auto_approve_token:
+                cache_entry = VmmBuildCache(
+                    openbsd_version=openbsd_version,
+                    agent_version=agent_version,
+                    site_tgz_path=result["site_tgz_path"],
+                    agent_package_path=result["agent_package_path"],
+                    site_tgz_checksum=result["site_tgz_checksum"],
+                    built_at=datetime.now(timezone.utc),
+                    last_used_at=datetime.now(timezone.utc),
+                    build_status="success",
+                    build_log=None,
+                )
+                self.db_session.add(cache_entry)
+                self.db_session.commit()
 
             result["from_cache"] = False
             return result

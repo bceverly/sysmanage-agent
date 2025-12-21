@@ -66,6 +66,7 @@ class LxdContainerCreator:
         agent_install_commands = config.agent_install_commands
         server_port = config.server_port
         use_https = config.use_https
+        auto_approve_token = config.auto_approve_token
 
         try:
             # Validate inputs
@@ -152,7 +153,12 @@ class LxdContainerCreator:
                     "configuring_agent", _("Configuring sysmanage-agent...")
                 )
                 config_result = await self._configure_agent(
-                    container_name, server_url, fqdn_hostname, server_port, use_https
+                    container_name,
+                    server_url,
+                    fqdn_hostname,
+                    server_port,
+                    use_https,
+                    auto_approve_token,
                 )
                 if not config_result.get("success"):
                     self.logger.warning(
@@ -602,16 +608,26 @@ class LxdContainerCreator:
         hostname: str,
         server_port: int,
         use_https: bool,
+        auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """Configure the sysmanage-agent inside the container."""
         try:
+            # Build auto_approve section if token provided
+            auto_approve_section = ""
+            if auto_approve_token:
+                auto_approve_section = f"""
+# Auto-approval token for automatic host approval
+auto_approve:
+  token: "{auto_approve_token}"
+"""
+
             # Create agent config
             config_yaml = f"""server:
   hostname: "{server_url}"
   port: {server_port}
   use_https: {str(use_https).lower()}
 hostname: "{hostname}"
-websocket:
+{auto_approve_section}websocket:
   reconnect_delay: 5
   max_reconnect_delay: 300
 privileged_mode: true

@@ -269,6 +269,8 @@ class ChildHostOperations:
         server_port = parameters.get("server_port", 8443)
         use_https = parameters.get("use_https", True)
         agent_install_commands = parameters.get("agent_install_commands", [])
+        # Auto-approve token for automatic host approval when child connects
+        auto_approve_token = parameters.get("auto_approve_token")
 
         # Handle agent_install_commands as JSON string (backward compatibility)
         if isinstance(agent_install_commands, str):
@@ -295,6 +297,7 @@ class ChildHostOperations:
                 listing_helper=self.listing_helper,
                 server_port=server_port,
                 use_https=use_https,
+                auto_approve_token=auto_approve_token,
             )
 
         if child_type == "lxd":
@@ -310,6 +313,7 @@ class ChildHostOperations:
                 agent_install_commands=agent_install_commands,
                 server_port=server_port,
                 use_https=use_https,
+                auto_approve_token=auto_approve_token,
             )
             return await self.lxd_ops.create_lxd_container(config)
 
@@ -343,6 +347,7 @@ class ChildHostOperations:
                 root_password_hash=root_password_hash,
                 server_config=server_cfg,
                 resource_config=resource_cfg,
+                auto_approve_token=auto_approve_token,
             )
             return await self.vmm_ops.create_vmm_vm(config)
 

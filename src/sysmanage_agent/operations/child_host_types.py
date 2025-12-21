@@ -3,7 +3,7 @@ Type definitions for child host operations.
 """
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -19,6 +19,7 @@ class LxdContainerConfig:
     agent_install_commands: List[str]
     server_port: int = 8443
     use_https: bool = True
+    auto_approve_token: Optional[str] = None  # Token for automatic host approval
 
 
 @dataclass
@@ -55,6 +56,7 @@ class VmmVmConfig:  # pylint: disable=too-many-instance-attributes
     )
     server_config: VmmServerConfig = field(default_factory=lambda: VmmServerConfig(""))
     resource_config: VmmResourceConfig = field(default_factory=VmmResourceConfig)
+    auto_approve_token: Optional[str] = None  # Token for automatic host approval
 
     # Convenience properties for backward compatibility
     @property

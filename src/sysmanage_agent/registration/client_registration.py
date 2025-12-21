@@ -107,6 +107,14 @@ class ClientRegistration:
         system_info = {**basic_info, **os_info}
         script_exec_enabled = self.config.is_script_execution_enabled()
         system_info["script_execution_enabled"] = script_exec_enabled
+
+        # Add auto-approve token if configured (used for automatic host approval
+        # during child host creation)
+        auto_approve_token = self.config.get_auto_approve_token()
+        if auto_approve_token:
+            system_info["auto_approve_token"] = auto_approve_token
+            self.logger.info("Including auto_approve_token in system_info")
+
         # Debug logging
         logger = logging.getLogger(__name__)
         logger.info("=== AGENT SYSTEM INFO DEBUG ===")

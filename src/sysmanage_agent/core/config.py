@@ -264,3 +264,18 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
     def is_script_approval_required(self) -> bool:
         """Check if script execution requires manual approval."""
         return self.get("script_execution.security.require_approval", False)
+
+    def get_auto_approve_token(self) -> Optional[str]:
+        """
+        Get auto-approval token if configured.
+
+        This token is used for automatic host approval during child host
+        creation. The server generates a UUID and sends it to the agent
+        with the create_child_host command. The agent stores it in the
+        child host's configuration, and when the child host registers,
+        it sends the token back for server-side validation.
+
+        Returns:
+            UUID token string if configured, None otherwise
+        """
+        return self.get("auto_approve.token")

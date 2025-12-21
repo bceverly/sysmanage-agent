@@ -22,6 +22,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         self.mock_config.is_script_execution_enabled.return_value = True
         self.mock_config.get_registration_retry_interval.return_value = 30
         self.mock_config.get_max_registration_retries.return_value = 3
+        self.mock_config.get_auto_approve_token.return_value = None
         self.mock_config.get_server_config.return_value = {
             "hostname": "test.example.com",
             "port": 8080,
@@ -178,6 +179,35 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "script_execution_enabled": True,
             "os": "Ubuntu",
             "version": "20.04",
+        }
+        assert result == expected
+
+    def test_get_system_info_with_auto_approve_token(self):
+        """Test that auto_approve_token is included in system_info when configured."""
+        # Mock all the data sources
+        self.client_reg.network_utils.get_hostname.return_value = "child-host"
+        self.client_reg.network_utils.get_ip_addresses.return_value = ("10.0.0.5", None)
+        self.client_reg.os_info_collector.get_os_version_info.return_value = {
+            "os": "OpenBSD",
+            "version": "7.7",
+        }
+        # Set up auto_approve_token
+        self.mock_config.get_auto_approve_token.return_value = (
+            "550e8400-e29b-41d4-a716-446655440000"
+        )
+
+        result = self.client_reg.get_system_info()
+
+        expected = {
+            "hostname": "child-host",
+            "fqdn": "child-host",
+            "ipv4": "10.0.0.5",
+            "ipv6": None,
+            "active": True,
+            "script_execution_enabled": True,
+            "os": "OpenBSD",
+            "version": "7.7",
+            "auto_approve_token": "550e8400-e29b-41d4-a716-446655440000",
         }
         assert result == expected
 
