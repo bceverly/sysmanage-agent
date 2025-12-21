@@ -19,14 +19,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.5', '7.6', '7.7']
+        openbsd-version: ['7.4', '7.5', '7.6', '7.7']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@v1
+        uses: vmactions/openbsd-vm@v1.2.5
         with:
           release: ${{ matrix.openbsd-version }}
           usesh: true
