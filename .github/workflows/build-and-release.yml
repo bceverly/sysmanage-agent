@@ -1558,11 +1558,150 @@ jobs:
             sysmanage-agent-${{ steps.version.outputs.version }}-openbsd*.tgz
             sysmanage-agent-${{ steps.version.outputs.version }}-openbsd*.tgz.sha256
 
+  # Alpine Linux .apk Package Build
+  build-alpine:
+    name: Build .apk Package for Alpine ${{ matrix.alpine-version }}
+    runs-on: ubuntu-latest
+    needs: wait-for-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        alpine-version: ['3.19', '3.20', '3.21']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Determine version
+        id: version
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          VERSION="${REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up Alpine container
+        run: |
+          docker pull alpine:${{ matrix.alpine-version }}
+
+      - name: Build package in Alpine container
+        env:
+          ALPINE_VERSION: ${{ matrix.alpine-version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cat > build-apk.sh << 'BUILDSCRIPT'
+          #!/bin/sh
+          set -ex
+
+          # Get Alpine version for repository URLs
+          ALPINE_VER=$(cat /etc/alpine-release | cut -d. -f1,2)
+          echo "Building on Alpine $ALPINE_VER"
+
+          # Enable community repository (required for Python packages)
+          echo "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/main" > /etc/apk/repositories
+          echo "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/community" >> /etc/apk/repositories
+          cat /etc/apk/repositories
+
+          # Update package index
+          apk update
+
+          # Install build dependencies
+          apk add --no-cache \
+            alpine-sdk \
+            sudo \
+            python3 \
+            py3-pip
+
+          # Set up abuild user (required for building packages)
+          adduser -D builder
+          addgroup builder abuild
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+          # Create build directory structure
+          mkdir -p /home/builder/packages
+          mkdir -p /home/builder/aports/sysutils/sysmanage-agent
+
+          # Copy installer files
+          cp /workspace/installer/alpine/APKBUILD /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.initd /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.confd /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.post-install /home/builder/aports/sysutils/sysmanage-agent/
+
+          # Update version in APKBUILD
+          cd /home/builder/aports/sysutils/sysmanage-agent
+          sed -i "s/^pkgver=.*/pkgver=$VERSION/" APKBUILD
+
+          # Fix ownership
+          chown -R builder:builder /home/builder
+
+          # Generate signing key (for local builds)
+          sudo -u builder abuild-keygen -a -i -n
+
+          # Download source and generate checksums
+          sudo -u builder abuild checksum
+
+          # Build the package
+          sudo -u builder abuild -r
+
+          # Find and copy the built package
+          find /home/builder/packages -name "*.apk" -type f
+          cp /home/builder/packages/sysutils/$(uname -m)/*.apk /workspace/ || \
+            cp /home/builder/packages/*/$(uname -m)/*.apk /workspace/ || \
+            find /home/builder/packages -name "*.apk" -exec cp {} /workspace/ \;
+
+          echo "Build complete!"
+          BUILDSCRIPT
+
+          chmod +x build-apk.sh
+
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -e VERSION="${VERSION}" \
+            alpine:${{ matrix.alpine-version }} \
+            /workspace/build-apk.sh
+
+      - name: Rename package with Alpine version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ALPINE_VERSION: ${{ matrix.alpine-version }}
+        run: |
+          ALPINE_NODOT=$(echo "$ALPINE_VERSION" | tr -d '.')
+
+          for pkg in sysmanage-agent-*.apk; do
+            if [ -f "$pkg" ]; then
+              newname="sysmanage-agent-${VERSION}-alpine${ALPINE_NODOT}.apk"
+              mv "$pkg" "$newname"
+              echo "Renamed $pkg to $newname"
+            fi
+          done
+
+          ls -la *.apk 2>/dev/null || echo "No packages found"
+
+      - name: Generate SHA256 checksum
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ALPINE_VERSION: ${{ matrix.alpine-version }}
+        run: |
+          ALPINE_NODOT=$(echo "$ALPINE_VERSION" | tr -d '.')
+          PKG_FILE="sysmanage-agent-${VERSION}-alpine${ALPINE_NODOT}.apk"
+          sha256sum "$PKG_FILE" > "${PKG_FILE}.sha256"
+          echo "Checksum:"
+          cat "${PKG_FILE}.sha256"
+
+      - name: Upload Alpine ${{ matrix.alpine-version }} package
+        uses: actions/upload-artifact@v5
+        with:
+          name: sysmanage-agent-alpine-${{ matrix.alpine-version }}-pkg
+          path: |
+            sysmanage-agent-${{ steps.version.outputs.version }}-alpine*.apk
+            sysmanage-agent-${{ steps.version.outputs.version }}-alpine*.apk.sha256
+
   # Consolidated Release - Push to sysmanage-docs and create GitHub release
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak, build-openbsd-packages]
+    needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak, build-openbsd-packages, build-alpine]
 
     steps:
       - name: Checkout code
@@ -1596,6 +1735,7 @@ jobs:
           find artifacts/ -name "*.tgz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.flatpak" -exec cp {} release-files/ \;
+          find artifacts/ -name "*.apk" -exec cp {} release-files/ \;
           find artifacts/ -name "*.sha256" -exec cp {} release-files/ \;
           find artifacts/ -name "*.json" -exec cp {} release-files/ \;
 
@@ -1626,6 +1766,7 @@ jobs:
           mkdir -p "repo/agent/netbsd/packages/$VERSION"
           mkdir -p "repo/agent/openbsd/ports/$VERSION"
           mkdir -p "repo/agent/openbsd/packages/$VERSION"
+          mkdir -p "repo/agent/alpine/packages/$VERSION"
 
           # Copy package files to appropriate locations
           # DEB packages
@@ -1669,13 +1810,23 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
-          # OpenBSD packages (.tgz) for 7.5, 7.6, 7.7
+          # OpenBSD packages (.tgz) for 7.4, 7.5, 7.6, 7.7
+          cp ${{ github.workspace }}/release-files/*-openbsd74.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd74.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd75.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd75.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd76.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd76.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd77.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd77.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+
+          # Alpine packages (.apk) for 3.19, 3.20, 3.21
+          cp ${{ github.workspace }}/release-files/*-alpine319.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-alpine319.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-alpine320.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-alpine320.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-alpine321.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-alpine321.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
 
           # Flatpak package and repository
           echo "Copying Flatpak files..."
@@ -1899,9 +2050,31 @@ jobs:
           sudo /etc/rc.d/sysmanage_agent start
           \`\`\`
 
+          ### Alpine Linux
+          \`\`\`bash
+          # Download the pre-built package for your Alpine version (3.19, 3.20, or 3.21)
+          # For Alpine 3.21:
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine321.apk
+          doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine321.apk
+
+          # For Alpine 3.20:
+          # wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine320.apk
+          # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine320.apk
+
+          # For Alpine 3.19:
+          # wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine319.apk
+          # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine319.apk
+
+          # Configure and start
+          doas cp /etc/sysmanage-agent/sysmanage-agent.yaml.example /etc/sysmanage-agent/sysmanage-agent.yaml
+          doas vi /etc/sysmanage-agent/sysmanage-agent.yaml
+          doas rc-update add sysmanage-agent default
+          doas rc-service sysmanage-agent start
+          \`\`\`
+
           ### OpenBSD (Pre-built Package - Recommended)
           \`\`\`bash
-          # Download the pre-built package for your OpenBSD version (7.5, 7.6, or 7.7)
+          # Download the pre-built package for your OpenBSD version (7.4, 7.5, 7.6, or 7.7)
           # For OpenBSD 7.7:
           ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd77.tgz
           doas pkg_add sysmanage-agent-${VERSION}-openbsd77.tgz
@@ -1913,6 +2086,10 @@ jobs:
           # For OpenBSD 7.5:
           # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd75.tgz
           # doas pkg_add sysmanage-agent-${VERSION}-openbsd75.tgz
+
+          # For OpenBSD 7.4:
+          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd74.tgz
+          # doas pkg_add sysmanage-agent-${VERSION}-openbsd74.tgz
 
           # Configure and start
           doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml /etc/sysmanage-agent.yaml
@@ -1973,6 +2150,11 @@ jobs:
           sha256 -C <package>.sha256 <package>
           \`\`\`
 
+          **Alpine Linux:**
+          \`\`\`bash
+          sha256sum -c <package>.sha256
+          \`\`\`
+
           ## Supported Platforms
 
           - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble), 24.10 (Oracular), 25.04 (Plucky), 25.10 (Questing)
@@ -1980,11 +2162,12 @@ jobs:
           - **CentOS/RHEL**: 9.x
           - **OpenSUSE**: Tumbleweed, Leap 15.x
           - **SUSE Linux Enterprise Server (SLES)**: 15.x
+          - **Alpine Linux**: 3.19, 3.20, 3.21 (pre-built packages available)
           - **macOS**: 12+ (Monterey and later)
           - **Windows**: 10 (1809+), 11, Server 2019+ (x64 and ARM64)
           - **FreeBSD**: 13.x, 14.x
           - **NetBSD**: 10.x (tested on 10.1)
-          - **OpenBSD**: 7.5, 7.6, 7.7 (pre-built packages available)
+          - **OpenBSD**: 7.4, 7.5, 7.6, 7.7 (pre-built packages available)
 
           ## Software Bill of Materials (SBOM)
 
@@ -2020,10 +2203,23 @@ jobs:
           # Append OpenBSD package checksums to release notes
           echo "" >> release_notes.md
           echo "\`\`\`" >> release_notes.md
-          for obsd_ver in 75 76 77; do
+          for obsd_ver in 74 75 76 77; do
             OBSD_PKG="release-files/sysmanage-agent-${VERSION}-openbsd${obsd_ver}.tgz"
             if [ -f "$OBSD_PKG.sha256" ]; then
               cat "$OBSD_PKG.sha256" >> release_notes.md
+            fi
+          done
+          echo "\`\`\`" >> release_notes.md
+          echo "" >> release_notes.md
+
+          # Append Alpine package checksums to release notes
+          echo "## Alpine Linux Package Checksums (SHA256)" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          for alpine_ver in 319 320 321; do
+            ALPINE_PKG="release-files/sysmanage-agent-${VERSION}-alpine${alpine_ver}.apk"
+            if [ -f "$ALPINE_PKG.sha256" ]; then
+              cat "$ALPINE_PKG.sha256" >> release_notes.md
             fi
           done
           echo "\`\`\`" >> release_notes.md
