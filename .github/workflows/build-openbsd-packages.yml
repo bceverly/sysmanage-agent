@@ -27,6 +27,9 @@ jobs:
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
         uses: vmactions/openbsd-vm@v1.2.5
+        env:
+          INPUT_OPENBSD_VERSION: ${{ matrix.openbsd-version }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         with:
           release: ${{ matrix.openbsd-version }}
           usesh: true
@@ -34,9 +37,9 @@ jobs:
           run: |
             set -x
 
-            OPENBSD_VERSION="${{ matrix.openbsd-version }}"
+            OPENBSD_VERSION="$INPUT_OPENBSD_VERSION"
             OPENBSD_VERSION_NODOT=$(echo "$OPENBSD_VERSION" | tr -d '.')
-            VERSION="${{ github.event.inputs.version }}"
+            VERSION="$INPUT_VERSION"
 
             echo "=== Building sysmanage-agent ${VERSION} on OpenBSD ${OPENBSD_VERSION} ==="
 
