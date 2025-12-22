@@ -48,6 +48,18 @@ jobs:
           #!/bin/sh
           set -ex
 
+          # Get Alpine version for repository URLs
+          ALPINE_VER=$(cat /etc/alpine-release | cut -d. -f1,2)
+          echo "Building on Alpine $ALPINE_VER"
+
+          # Enable community repository (required for Python packages)
+          echo "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/main" > /etc/apk/repositories
+          echo "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/community" >> /etc/apk/repositories
+          cat /etc/apk/repositories
+
+          # Update package index
+          apk update
+
           # Install build dependencies
           apk add --no-cache \
             alpine-sdk \

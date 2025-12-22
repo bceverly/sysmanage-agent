@@ -32,8 +32,8 @@ package() {
 	install -d "$pkgdir"/etc/sysmanage-agent
 	install -d "$pkgdir"/etc/init.d
 	install -d "$pkgdir"/etc/conf.d
-	install -d "$pkgdir"/var/lib/sysmanage-agent
-	install -d "$pkgdir"/var/log/sysmanage-agent
+	install -d -m 750 "$pkgdir"/var/lib/sysmanage-agent
+	install -d -m 750 "$pkgdir"/var/log/sysmanage-agent
 	install -d "$pkgdir"/usr/share/doc/sysmanage-agent
 
 	# Install main application
