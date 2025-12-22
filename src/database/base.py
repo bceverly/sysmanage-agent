@@ -35,6 +35,10 @@ class DatabaseManager:
         self._ensure_database_directory()
 
         # Create engine with SQLite-specific settings
+        # Note: isolation_level=None disables pysqlite's internal transaction
+        # handling, preventing conflicts with SQLAlchemy's transaction management.
+        # This fixes "cannot rollback - no transaction is active" errors when
+        # using StaticPool with asyncio.to_thread() for multi-threaded access.
         self.engine = create_engine(
             f"sqlite:///{database_path}",
             echo=False,  # Set to True for SQL debugging
@@ -42,6 +46,7 @@ class DatabaseManager:
             connect_args={
                 "check_same_thread": False,  # Allow multiple threads
                 "timeout": 30,  # Connection timeout in seconds
+                "isolation_level": None,  # Disable pysqlite transaction handling
             },
         )
 
