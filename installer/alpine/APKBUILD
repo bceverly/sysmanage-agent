@@ -1,0 +1,93 @@
+# Maintainer: SysManage <support@sysmanage.org>
+pkgname=sysmanage-agent
+pkgver=0.0.0
+pkgrel=0
+pkgdesc="Lightweight system monitoring agent for SysManage"
+url="https://sysmanage.org"
+arch="noarch"
+license="AGPL-3.0-or-later"
+depends="
+	python3
+	py3-websockets
+	py3-yaml
+	py3-aiohttp
+	py3-cryptography
+	py3-sqlalchemy
+	py3-alembic
+"
+makedepends=""
+install="$pkgname.post-install"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v$pkgver.tar.gz
+	sysmanage-agent.initd
+	sysmanage-agent.confd
+"
+options="!check"  # No test suite in package
+
+package() {
+	cd "$srcdir/$pkgname-$pkgver"
+
+	# Create directories
+	install -d "$pkgdir"/usr/libexec/sysmanage-agent
+	install -d "$pkgdir"/etc/sysmanage-agent
+	install -d "$pkgdir"/etc/init.d
+	install -d "$pkgdir"/etc/conf.d
+	install -d "$pkgdir"/var/lib/sysmanage-agent
+	install -d "$pkgdir"/var/log/sysmanage-agent
+	install -d "$pkgdir"/usr/share/doc/sysmanage-agent
+
+	# Install main application
+	install -m 755 main.py "$pkgdir"/usr/libexec/sysmanage-agent/
+
+	# Install source directories
+	cp -R src "$pkgdir"/usr/libexec/sysmanage-agent/
+
+	# Install alembic for database migrations
+	if [ -f alembic.ini ]; then
+		install -m 644 alembic.ini "$pkgdir"/usr/libexec/sysmanage-agent/
+	fi
+	if [ -d alembic ]; then
+		cp -R alembic "$pkgdir"/usr/libexec/sysmanage-agent/
+	fi
+
+	# Install database directory
+	if [ -d database ]; then
+		cp -R database "$pkgdir"/usr/libexec/sysmanage-agent/
+	fi
+
+	# Install i18n
+	if [ -d i18n ]; then
+		cp -R i18n "$pkgdir"/usr/libexec/sysmanage-agent/
+	fi
+
+	# Install security directory
+	if [ -d security ]; then
+		cp -R security "$pkgdir"/usr/libexec/sysmanage-agent/
+	fi
+
+	# Install example config
+	if [ -f sysmanage-agent-system.yaml ]; then
+		install -m 644 sysmanage-agent-system.yaml \
+			"$pkgdir"/etc/sysmanage-agent/sysmanage-agent.yaml.example
+	fi
+
+	# Install documentation
+	install -m 644 README.md "$pkgdir"/usr/share/doc/sysmanage-agent/
+	if [ -f LICENSE ]; then
+		install -m 644 LICENSE "$pkgdir"/usr/share/doc/sysmanage-agent/
+	fi
+
+	# Install SBOM if present
+	if [ -d sbom ]; then
+		install -d "$pkgdir"/usr/share/doc/sysmanage-agent/sbom
+		cp -R sbom/* "$pkgdir"/usr/share/doc/sysmanage-agent/sbom/
+	fi
+
+	# Install OpenRC init script
+	install -m 755 "$srcdir"/sysmanage-agent.initd \
+		"$pkgdir"/etc/init.d/sysmanage-agent
+	install -m 644 "$srcdir"/sysmanage-agent.confd \
+		"$pkgdir"/etc/conf.d/sysmanage-agent
+}
+
+sha512sums=""

@@ -1,0 +1,37 @@
+#!/sbin/openrc-run
+# OpenRC init script for sysmanage-agent
+
+name="sysmanage-agent"
+description="SysManage monitoring agent"
+
+command="/usr/bin/python3"
+command_args="/usr/libexec/sysmanage-agent/main.py"
+command_background="yes"
+pidfile="/run/${RC_SVCNAME}.pid"
+
+# Configuration
+export SYSMANAGE_CONFIG="${SYSMANAGE_CONFIG:-/etc/sysmanage-agent/sysmanage-agent.yaml}"
+export SYSMANAGE_DB_DIR="${SYSMANAGE_DB_DIR:-/var/lib/sysmanage-agent}"
+export SYSMANAGE_LOG_DIR="${SYSMANAGE_LOG_DIR:-/var/log/sysmanage-agent}"
+
+depend() {
+	need net
+	after firewall
+}
+
+start_pre() {
+	# Ensure required directories exist
+	checkpath --directory --mode 0750 "$SYSMANAGE_DB_DIR"
+	checkpath --directory --mode 0750 "$SYSMANAGE_LOG_DIR"
+
+	# Create default config if it doesn't exist
+	if [ ! -f "$SYSMANAGE_CONFIG" ]; then
+		if [ -f /etc/sysmanage-agent/sysmanage-agent.yaml.example ]; then
+			cp /etc/sysmanage-agent/sysmanage-agent.yaml.example "$SYSMANAGE_CONFIG"
+			chmod 0644 "$SYSMANAGE_CONFIG"
+			ewarn "Created default configuration at $SYSMANAGE_CONFIG"
+			ewarn "Please edit this file before starting the service."
+			return 1
+		fi
+	fi
+}

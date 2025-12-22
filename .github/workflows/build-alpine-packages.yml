@@ -1,0 +1,171 @@
+name: Build Alpine Packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-alpine:
+    name: Build Alpine ${{ matrix.alpine-version }} Package
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        alpine-version: ['3.19', '3.20', '3.21']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for tags
+
+      - name: Get latest tag version
+        id: version
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Strip the 'v' prefix
+          VERSION="${LATEST_TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION from tag: $LATEST_TAG"
+
+      - name: Set up Alpine container
+        run: |
+          # Pull Alpine image for the specific version
+          docker pull alpine:${{ matrix.alpine-version }}
+
+      - name: Build package in Alpine container
+        env:
+          ALPINE_VERSION: ${{ matrix.alpine-version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Create build script
+          cat > build-apk.sh << 'BUILDSCRIPT'
+          #!/bin/sh
+          set -ex
+
+          # Install build dependencies
+          apk add --no-cache \
+            alpine-sdk \
+            sudo \
+            python3 \
+            py3-pip
+
+          # Set up abuild user (required for building packages)
+          adduser -D builder
+          addgroup builder abuild
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+          # Create build directory structure
+          mkdir -p /home/builder/packages
+          mkdir -p /home/builder/aports/sysutils/sysmanage-agent
+
+          # Copy installer files
+          cp /workspace/installer/alpine/APKBUILD /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.initd /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.confd /home/builder/aports/sysutils/sysmanage-agent/
+          cp /workspace/installer/alpine/sysmanage-agent.post-install /home/builder/aports/sysutils/sysmanage-agent/
+
+          # Update version in APKBUILD
+          cd /home/builder/aports/sysutils/sysmanage-agent
+          sed -i "s/^pkgver=.*/pkgver=$VERSION/" APKBUILD
+
+          # Fix ownership
+          chown -R builder:builder /home/builder
+
+          # Generate signing key (for local builds)
+          sudo -u builder abuild-keygen -a -i -n
+
+          # Download source and generate checksums
+          sudo -u builder abuild checksum
+
+          # Build the package
+          sudo -u builder abuild -r
+
+          # Find and copy the built package
+          find /home/builder/packages -name "*.apk" -type f
+          cp /home/builder/packages/sysutils/$(uname -m)/*.apk /workspace/ || \
+            cp /home/builder/packages/*/$(uname -m)/*.apk /workspace/ || \
+            find /home/builder/packages -name "*.apk" -exec cp {} /workspace/ \;
+
+          echo "Build complete!"
+          BUILDSCRIPT
+
+          chmod +x build-apk.sh
+
+          # Run build in Alpine container
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -e VERSION="${VERSION}" \
+            alpine:${{ matrix.alpine-version }} \
+            /workspace/build-apk.sh
+
+      - name: Rename package with Alpine version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ALPINE_VERSION: ${{ matrix.alpine-version }}
+        run: |
+          # Convert Alpine version to nodot format (e.g., 3.20 -> 320)
+          ALPINE_NODOT=$(echo "$ALPINE_VERSION" | tr -d '.')
+
+          # Find and rename the package
+          for pkg in sysmanage-agent-*.apk; do
+            if [ -f "$pkg" ]; then
+              newname="sysmanage-agent-${VERSION}-alpine${ALPINE_NODOT}.apk"
+              mv "$pkg" "$newname"
+              echo "Renamed $pkg to $newname"
+            fi
+          done
+
+          ls -la *.apk 2>/dev/null || echo "No packages found"
+
+      - name: List built package
+        run: |
+          echo "=== Built packages in workspace ==="
+          ls -la *.apk 2>/dev/null || echo "No packages found"
+
+      - name: Upload Alpine ${{ matrix.alpine-version }} package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-agent-alpine-${{ matrix.alpine-version }}
+          path: "*.apk"
+          if-no-files-found: error
+
+  # Job to collect all packages and create a summary
+  collect-packages:
+    name: Collect All Packages
+    runs-on: ubuntu-latest
+    needs: build-alpine
+    if: always()
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages/
+        continue-on-error: true
+
+      - name: List all packages
+        run: |
+          echo "=== All built packages ==="
+          find packages/ -name "*.apk" -type f 2>/dev/null || echo "No packages found"
+          echo ""
+          echo "=== Package details ==="
+          for pkg in packages/*/*.apk; do
+            if [ -f "$pkg" ]; then
+              echo "Package: $pkg"
+              ls -lh "$pkg"
+              echo ""
+            fi
+          done
+
+      - name: Upload combined packages
+        uses: actions/upload-artifact@v4
+        if: hashFiles('packages/*/*.apk') != ''
+        with:
+          name: sysmanage-agent-alpine-all
+          path: packages/

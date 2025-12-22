@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Create directories if they don't exist
+mkdir -p /var/lib/sysmanage-agent
+mkdir -p /var/log/sysmanage-agent
+
+# Set permissions
+chmod 750 /var/lib/sysmanage-agent
+chmod 750 /var/log/sysmanage-agent
+
+echo ""
+echo "=========================================="
+echo " sysmanage-agent installed successfully"
+echo "=========================================="
+echo ""
+echo "To configure:"
+echo "  1. Copy the example config:"
+echo "     cp /etc/sysmanage-agent/sysmanage-agent.yaml.example \\"
+echo "        /etc/sysmanage-agent/sysmanage-agent.yaml"
+echo "  2. Edit /etc/sysmanage-agent/sysmanage-agent.yaml"
+echo ""
+echo "To enable and start the service:"
+echo "  rc-update add sysmanage-agent default"
+echo "  rc-service sysmanage-agent start"
+echo ""

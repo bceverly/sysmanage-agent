@@ -1,0 +1,10 @@
+# Configuration for sysmanage-agent
+
+# Path to the configuration file
+#SYSMANAGE_CONFIG="/etc/sysmanage-agent/sysmanage-agent.yaml"
+
+# Directory for database files
+#SYSMANAGE_DB_DIR="/var/lib/sysmanage-agent"
+
+# Directory for log files
+#SYSMANAGE_LOG_DIR="/var/log/sysmanage-agent"
