@@ -1015,3 +1015,13 @@ msgstr "自動インストール作業ディレクトリをクリーンアップ
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "自動インストール作業ディレクトリのクリーンアップに失敗しました: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "スタックしたメッセージ %s (タイプ: %s) を回復しました、再試行します"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "メッセージ %s (タイプ: %s) は最大再試行回数を超え、失敗としてマークされました"
+
+msgid "Recovered %d stuck messages"
+msgstr "%d 件のスタックしたメッセージを回復しました"

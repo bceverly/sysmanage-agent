@@ -1013,3 +1013,13 @@ msgstr "已清理自动安装工作目录"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "清理自动安装工作目录失败: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "已恢复卡住的消息 %s (类型: %s)，将重试"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
+
+msgid "Recovered %d stuck messages"
+msgstr "已恢复 %d 条卡住的消息"

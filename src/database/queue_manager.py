@@ -422,6 +422,82 @@ class MessageQueueManager:
             )
             return {}
 
+    def recover_stuck_messages(self, stale_minutes: int = 10) -> int:
+        """
+        Recover messages stuck in 'in_progress' status.
+
+        If a message has been in_progress for longer than stale_minutes,
+        it's likely due to a crash or error during processing. This method
+        resets such messages to 'pending' for retry, or marks them as 'failed'
+        if they've exceeded max_retries.
+
+        This should be called on agent startup and periodically during operation
+        to prevent messages from being permanently stuck.
+
+        Args:
+            stale_minutes: Consider messages stale after this many minutes
+
+        Returns:
+            int: Number of messages recovered/cleaned up
+        """
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=stale_minutes)
+        recovered_count = 0
+
+        with self.get_session() as session:
+            # Find stuck in_progress messages
+            stuck_messages = (
+                session.query(MessageQueue)
+                .filter(
+                    and_(
+                        MessageQueue.status == QueueStatus.IN_PROGRESS.value,
+                        or_(
+                            MessageQueue.started_at.is_(None),
+                            MessageQueue.started_at < cutoff_time,
+                        ),
+                    )
+                )
+                .all()
+            )
+
+            for message in stuck_messages:
+                message.retry_count += 1
+
+                if message.retry_count < message.max_retries:
+                    # Reset to pending for retry
+                    message.status = QueueStatus.PENDING.value
+                    message.started_at = None
+                    message.error_message = (
+                        f"Recovered from stuck in_progress state "
+                        f"(attempt {message.retry_count}/{message.max_retries})"
+                    )
+                    logger.info(
+                        _("Recovered stuck message %s (type: %s), will retry"),
+                        message.message_id,
+                        message.message_type,
+                    )
+                else:
+                    # Max retries exceeded, mark as failed
+                    message.status = QueueStatus.FAILED.value
+                    message.completed_at = datetime.now(timezone.utc)
+                    message.error_message = (
+                        f"Failed after {message.retry_count} attempts "
+                        "(stuck in in_progress state)"
+                    )
+                    logger.warning(
+                        _(
+                            "Message %s (type: %s) exceeded max retries, marked as failed"
+                        ),
+                        message.message_id,
+                        message.message_type,
+                    )
+
+                recovered_count += 1
+
+            if recovered_count > 0:
+                logger.info(_("Recovered %d stuck messages"), recovered_count)
+
+        return recovered_count
+
     def is_duplicate_message(self, message_id: str) -> bool:
         """
         Check if a message with this ID has already been received/processed.

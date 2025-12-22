@@ -1011,3 +1011,13 @@ msgstr "已清理自動安裝工作目錄"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "清理自動安裝工作目錄失敗: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "已恢復卡住的訊息 %s (類型: %s)，將重試"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "訊息 %s (類型: %s) 超過最大重試次數，標記為失敗"
+
+msgid "Recovered %d stuck messages"
+msgstr "已恢復 %d 條卡住的訊息"

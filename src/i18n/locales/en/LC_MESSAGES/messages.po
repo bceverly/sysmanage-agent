@@ -378,3 +378,13 @@ msgstr "Cleaned up autoinstall work directory"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "Failed to cleanup autoinstall work directory: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "Recovered stuck message %s (type: %s), will retry"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "Message %s (type: %s) exceeded max retries, marked as failed"
+
+msgid "Recovered %d stuck messages"
+msgstr "Recovered %d stuck messages"

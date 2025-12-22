@@ -1015,3 +1015,13 @@ msgstr "Autoinstall-Arbeitsverzeichnis bereinigt"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "Fehler beim Bereinigen des Autoinstall-Arbeitsverzeichnisses: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "Hängende Nachricht %s (Typ: %s) wiederhergestellt, wird erneut versucht"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "Nachricht %s (Typ: %s) hat maximale Wiederholungen überschritten, als fehlgeschlagen markiert"
+
+msgid "Recovered %d stuck messages"
+msgstr "%d hängende Nachrichten wiederhergestellt"

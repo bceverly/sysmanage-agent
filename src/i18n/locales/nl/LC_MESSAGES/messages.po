@@ -1013,3 +1013,13 @@ msgstr "Autoinstall werkmap opgeschoond"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "Opschonen van autoinstall werkmap mislukt: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "Bericht %s (type: %s) heeft maximale pogingen overschreden, gemarkeerd als mislukt"
+
+msgid "Recovered %d stuck messages"
+msgstr "%d vastgelopen berichten hersteld"

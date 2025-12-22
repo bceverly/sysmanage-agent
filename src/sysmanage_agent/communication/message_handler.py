@@ -771,9 +771,19 @@ class MessageHandler:
     async def on_connection_established(self):
         """
         Called when WebSocket connection is established.
-        Starts processing queued messages (both outbound and inbound).
+        Recovers stuck messages and starts processing queued messages.
         """
         self.logger.info(_("Connection established, starting queue processing"))
+
+        # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
+        try:
+            recovered = self.queue_manager.recover_stuck_messages(stale_minutes=10)
+            if recovered > 0:
+                self.logger.info(
+                    "Recovered %d stuck messages on connection establishment", recovered
+                )
+        except Exception as error:
+            self.logger.error("Error recovering stuck messages: %s", error)
 
         # Start outbound queue processing task
         if not self.queue_processor_running:

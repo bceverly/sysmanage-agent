@@ -1013,3 +1013,13 @@ msgstr "Рабочий каталог автоустановки очищен"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "Не удалось очистить рабочий каталог автоустановки: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "Зависшее сообщение %s (тип: %s) восстановлено, будет повторная попытка"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "Сообщение %s (тип: %s) превысило максимальное количество попыток, отмечено как неудавшееся"
+
+msgid "Recovered %d stuck messages"
+msgstr "Восстановлено %d зависших сообщений"

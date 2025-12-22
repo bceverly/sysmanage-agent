@@ -1016,3 +1016,13 @@ msgstr "تم تنظيف دليل عمل التثبيت التلقائي"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "فشل في تنظيف دليل عمل التثبيت التلقائي: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "تم استرداد الرسالة المعلقة %s (النوع: %s)، ستتم إعادة المحاولة"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "الرسالة %s (النوع: %s) تجاوزت الحد الأقصى لإعادة المحاولة، تم تعليمها كفاشلة"
+
+msgid "Recovered %d stuck messages"
+msgstr "تم استرداد %d رسالة معلقة"

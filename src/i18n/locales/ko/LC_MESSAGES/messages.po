@@ -1013,3 +1013,13 @@ msgstr "자동 설치 작업 디렉토리 정리 완료"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "자동 설치 작업 디렉토리 정리 실패: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "멈춘 메시지 %s (유형: %s) 복구됨, 재시도 예정"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "메시지 %s (유형: %s)가 최대 재시도 횟수를 초과하여 실패로 표시됨"
+
+msgid "Recovered %d stuck messages"
+msgstr "%d개의 멈춘 메시지 복구됨"

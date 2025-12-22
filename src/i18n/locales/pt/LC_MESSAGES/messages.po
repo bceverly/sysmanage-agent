@@ -1013,3 +1013,13 @@ msgstr "Diretório de trabalho de instalação automática limpo"
 
 msgid "Failed to cleanup autoinstall work directory: %s"
 msgstr "Falha ao limpar diretório de trabalho de instalação automática: %s"
+
+# Message Queue Recovery
+msgid "Recovered stuck message %s (type: %s), will retry"
+msgstr "Mensagem travada %s (tipo: %s) recuperada, será tentado novamente"
+
+msgid "Message %s (type: %s) exceeded max retries, marked as failed"
+msgstr "Mensagem %s (tipo: %s) excedeu o máximo de tentativas, marcada como falha"
+
+msgid "Recovered %d stuck messages"
+msgstr "%d mensagens travadas recuperadas"
