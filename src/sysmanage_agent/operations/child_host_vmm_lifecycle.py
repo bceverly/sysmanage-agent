@@ -441,10 +441,14 @@ class VmmLifecycleOperations:
             return {
                 "success": True,
                 "message": _("VM %s has been deleted") % child_name,
+                "child_name": child_name,
+                "child_type": "vmm",
             }
 
         except Exception as error:
             return {
                 "success": False,
                 "error": _("Error deleting VM: %s") % str(error),
+                "child_name": child_name,
+                "child_type": "vmm",
             }
