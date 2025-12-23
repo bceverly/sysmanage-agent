@@ -116,8 +116,9 @@ jobs:
 
     - name: Run Bandit security scan
       run: |
-        bandit -r *.py src/ -f screen --skip B101,B404,B603,B607
-        bandit -r *.py src/ -f json --skip B101,B404,B603,B607 -o bandit-report.json || true
+        # B608: false positive on shell script f-strings (not SQL)
+        bandit -r *.py src/ -f screen --skip B101,B404,B603,B607,B608
+        bandit -r *.py src/ -f json --skip B101,B404,B603,B607,B608 -o bandit-report.json || true
 
     - name: Upload Bandit results
       uses: actions/upload-artifact@v5

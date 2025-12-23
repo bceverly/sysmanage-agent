@@ -1900,6 +1900,8 @@ jobs:
           # Commit and push changes
           git add .
           git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
+          # Pull any changes that occurred during the build to avoid push rejection
+          git pull --rebase origin main || true
           git push origin main
 
       - name: Generate consolidated release notes
@@ -2917,7 +2919,18 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
-          snapcraft upload --release=edge ${{ steps.snap_file.outputs.snap_file }}
+          # Retry logic for transient network errors with Snapcraft store
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i of 5..."
+            if snapcraft upload --release=edge ${{ steps.snap_file.outputs.snap_file }}; then
+              echo "Upload successful!"
+              exit 0
+            fi
+            echo "Upload failed, waiting 30 seconds before retry..."
+            sleep 30
+          done
+          echo "All upload attempts failed"
+          exit 1
 
       - name: Get snap status
         env:
