@@ -352,8 +352,63 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
     def _collect_apk_packages(self):
         """Collect packages from APK (Alpine Linux)."""
-        # Implementation would use 'apk info'
-        logger.debug(_("APK package collection not implemented"))
+        try:
+            logger.debug(_("Collecting APK packages"))
+
+            # Use 'apk info -v' to get package names with versions
+            result = subprocess.run(
+                ["apk", "info", "-v"],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                for line in result.stdout.strip().split("\n"):
+                    if line:
+                        # Format is: package-name-version
+                        # We need to split at the last hyphen before the version
+                        # e.g., "busybox-1.36.1-r0" -> name="busybox", version="1.36.1-r0"
+                        parts = line.rsplit("-", 2)
+                        if len(parts) >= 2:
+                            # Handle packages like "py3-foo-1.0-r0" correctly
+                            # by checking if second-to-last part looks like a version
+                            if len(parts) == 3 and parts[1][0].isdigit():
+                                package_name = parts[0]
+                                version = f"{parts[1]}-{parts[2]}"
+                            elif len(parts) >= 2 and parts[-1][0].isdigit():
+                                # Simple case: name-version
+                                package_name = "-".join(parts[:-1])
+                                version = parts[-1]
+                            else:
+                                package_name = line
+                                version = None
+
+                            package = {
+                                "package_name": package_name,
+                                "version": version,
+                                "package_manager": "apk",
+                                "source": "alpine_repository",
+                                "is_system_package": self._is_system_package_linux(
+                                    package_name
+                                ),
+                                "is_user_installed": True,
+                            }
+
+                            self.collected_packages.append(package)
+
+                apk_count = len(
+                    [
+                        p
+                        for p in self.collected_packages
+                        if p.get("package_manager") == "apk"
+                    ]
+                )
+                logger.debug(_("Successfully collected %d APK packages"), apk_count)
+
+        except Exception as error:
+            logger.error(_("Failed to collect APK packages: %s"), str(error))
 
     def _is_system_package_linux(self, package_name: str) -> bool:
         """Determine if a Linux package is a system package."""

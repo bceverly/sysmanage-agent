@@ -210,3 +210,36 @@ def format_subnet_info(network: str) -> Dict[str, str]:
         "dhcp_start": f"{parts[0]}.{parts[1]}.{parts[2]}.10",
         "dhcp_end": f"{parts[0]}.{parts[1]}.{parts[2]}.254",
     }
+
+
+def get_host_dns_server(logger) -> Optional[str]:
+    """
+    Get the DNS server from the host's /etc/resolv.conf.
+
+    Args:
+        logger: Logger instance for warnings
+
+    Returns:
+        First nameserver IP address or None if not found
+    """
+    try:
+        with open("/etc/resolv.conf", "r", encoding="utf-8") as resolv_file:
+            for line in resolv_file:
+                line = line.strip()
+                # Skip comments and empty lines
+                if not line or line.startswith("#"):
+                    continue
+                # Parse nameserver lines
+                if line.startswith("nameserver"):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        dns_server = parts[1]
+                        # Strip any trailing comments
+                        if "#" in dns_server:
+                            dns_server = dns_server.split("#")[0].strip()
+                        logger.info(_("Detected host DNS server: %s"), dns_server)
+                        return dns_server
+        return None
+    except Exception as error:
+        logger.warning(_("Error reading /etc/resolv.conf: %s"), error)
+        return None

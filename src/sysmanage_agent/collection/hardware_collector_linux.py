@@ -20,16 +20,22 @@ class HardwareCollectorLinux(HardwareCollectorBase):
         """Get CPU information on Linux using /proc/cpuinfo and lscpu."""
         cpu_info = {}
         try:  # pylint: disable=too-many-nested-blocks
-            # First try lscpu for structured info
+            # First try lscpu for structured info (may not exist on Alpine/BusyBox)
+            try:
+                result = subprocess.run(
+                    ["lscpu"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,  # nosec B603, B607
+                )
+                lscpu_success = result.returncode == 0
+            except FileNotFoundError:
+                # lscpu not available (e.g., Alpine Linux with BusyBox)
+                lscpu_success = False
+                result = None
 
-            result = subprocess.run(
-                ["lscpu"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,  # nosec B603, B607
-            )
-            if result.returncode == 0:
+            if lscpu_success and result:
                 for line in result.stdout.split("\n"):
                     if ":" in line:
                         key, value = line.split(":", 1)
@@ -142,20 +148,27 @@ class HardwareCollectorLinux(HardwareCollectorBase):
 
         storage_devices = []
         try:
-            # Use lsblk to get block devices
-            result = subprocess.run(
-                [
-                    "lsblk",
-                    "-J",
-                    "-o",
-                    "NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE",
-                ],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
+            # Use lsblk to get block devices (may not exist on Alpine/BusyBox)
+            try:
+                result = subprocess.run(
+                    [
+                        "lsblk",
+                        "-J",
+                        "-o",
+                        "NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE",
+                    ],  # nosec B603, B607
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+                lsblk_success = result.returncode == 0
+            except FileNotFoundError:
+                # lsblk not available (e.g., Alpine Linux with BusyBox)
+                lsblk_success = False
+                result = None
+
+            if lsblk_success and result:
                 data = json.loads(result.stdout)
                 for device in data.get("blockdevices", []):
                     device_info = {

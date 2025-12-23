@@ -1,5 +1,9 @@
 """
 VMM/vmd-specific child host operations for OpenBSD hosts.
+
+Supports creating VMs for:
+- OpenBSD 7.4, 7.5, 7.6, 7.7
+- Alpine Linux 3.19, 3.20, 3.21
 """
 
 import asyncio
@@ -9,6 +13,9 @@ from pathlib import Path
 
 from src.database.base import get_database_manager
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_alpine_vm_creator import (
+    AlpineVmCreator,
+)
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
 from src.sysmanage_agent.operations.child_host_vmm_httpd_autoinstall import (
@@ -27,7 +34,7 @@ from src.sysmanage_agent.operations.child_host_vmm_ssh import VmmSshOperations
 from src.sysmanage_agent.operations.child_host_vmm_vm_creator import VmmVmCreator
 
 
-class VmmOperations:
+class VmmOperations:  # pylint: disable=too-many-instance-attributes
     """VMM/vmd-specific operations for child host management on OpenBSD."""
 
     def __init__(self, agent_instance, logger, virtualization_checks):
@@ -45,12 +52,11 @@ class VmmOperations:
         self.ssh_ops = VmmSshOperations(logger)
         self.lifecycle = VmmLifecycleOperations(logger, virtualization_checks)
         self.github_checker = GitHubVersionChecker(logger)
-        self.site_builder = SiteTarballBuilder(
-            logger, get_database_manager().get_session()
-        )
+        self.db_session = get_database_manager().get_session()
+        self.site_builder = SiteTarballBuilder(logger, self.db_session)
         self.httpd_setup = HttpdAutoinstallSetup(logger)
 
-        # Create VM creator with all dependencies
+        # Create OpenBSD VM creator with all dependencies
         self.vm_creator = VmmVmCreator(
             agent_instance=agent_instance,
             logger=logger,
@@ -58,6 +64,15 @@ class VmmOperations:
             httpd_setup=self.httpd_setup,
             github_checker=self.github_checker,
             site_builder=self.site_builder,
+        )
+
+        # Create Alpine VM creator
+        self.alpine_vm_creator = AlpineVmCreator(
+            agent_instance=agent_instance,
+            logger=logger,
+            virtualization_checks=virtualization_checks,
+            github_checker=self.github_checker,
+            db_session=self.db_session,
         )
 
     async def _run_subprocess(
@@ -420,11 +435,28 @@ switch "local" {
 
         return await self.lifecycle.delete_vm(child_name, delete_disk=delete_disk)
 
+    def _is_alpine_distribution(self, distribution: str) -> bool:
+        """
+        Check if the distribution string indicates Alpine Linux.
+
+        Args:
+            distribution: Distribution string (e.g., "Alpine Linux 3.20")
+
+        Returns:
+            True if this is an Alpine distribution
+        """
+        if not distribution:
+            return False
+        dist_lower = distribution.lower()
+        return "alpine" in dist_lower
+
     async def create_vmm_vm(self, config: VmmVmConfig) -> dict:
         """
-        Create a new VMM virtual machine with HTTP-based autoinstall.
+        Create a new VMM virtual machine.
 
-        Delegates to VmmVmCreator for the full creation workflow.
+        Routes to the appropriate creator based on distribution:
+        - Alpine Linux -> AlpineVmCreator
+        - OpenBSD -> VmmVmCreator (default)
 
         Args:
             config: VmmVmConfig with all VM settings
@@ -432,4 +464,15 @@ switch "local" {
         Returns:
             Dict with success status and details
         """
+        # Route to appropriate creator based on distribution
+        if self._is_alpine_distribution(config.distribution):
+            self.logger.info(
+                _("Detected Alpine Linux distribution: %s"), config.distribution
+            )
+            return await self.alpine_vm_creator.create_alpine_vm(config)
+
+        # Default to OpenBSD creator
+        self.logger.info(
+            _("Using OpenBSD VM creator for distribution: %s"), config.distribution
+        )
         return await self.vm_creator.create_vmm_vm(config)
