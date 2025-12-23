@@ -757,7 +757,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
                     self.logger.info(_("VM '%s' has shutdown"), vm_name)
                     return {"success": True}
 
-            except Exception:
+            except Exception:  # nosec B110 - polling loop, VM may not exist yet
                 pass
 
             await asyncio.sleep(10)

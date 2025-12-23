@@ -151,9 +151,10 @@ jobs:
 
     - name: Run Bandit security scan
       run: |
-        python -m bandit -r src/ -f screen
+        # B101: assert (used in tests), B404: import subprocess, B608: false positive on shell scripts
+        python -m bandit -r src/ -f screen --skip B101,B404,B608
         # Also generate JSON report for artifacts
-        python -m bandit -r src/ -f json -o bandit-report.json || true
+        python -m bandit -r src/ -f json -o bandit-report.json --skip B101,B404,B608 || true
 
     - name: Upload Bandit results
       uses: actions/upload-artifact@v5

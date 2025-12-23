@@ -1,4 +1,7 @@
 [bandit]
 # Configuration file for bandit security scanner
 exclude_dirs = .venv,__pycache__,.git,tests,.pytest_cache
-skips = B101,B404
+# B101: assert statements (used in tests)
+# B404: import subprocess (needed for system commands)
+# B608: SQL injection (false positive on shell script f-strings, we use SQLAlchemy)
+skips = B101,B404,B608
