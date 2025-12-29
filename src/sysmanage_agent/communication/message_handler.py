@@ -337,6 +337,85 @@ class MessageHandler:
         self.logger.info("Disconnecting to trigger re-registration...")
         self.agent.running = False
 
+    async def _handle_command_message(self, data: Dict[str, Any]) -> bool:
+        """
+        Handle a command message from the server.
+
+        Args:
+            data: Parsed message data
+
+        Returns:
+            True if message was processed (including duplicates), False otherwise
+        """
+        # Get the queue_message_id for acknowledgment (this is what the server tracks)
+        queue_message_id = data.get("queue_message_id") or data.get("message_id")
+
+        # Extract command details for logging
+        command_data = data.get("data", {})
+        command_type = command_data.get("command_type")
+        params = command_data.get("parameters", {})
+
+        # Detailed logging for create_child_host commands
+        if command_type == "create_child_host":
+            self._log_child_host_received(data, queue_message_id, params)
+
+        # Check for duplicate messages (server retry)
+        if queue_message_id and self.queue_manager.is_duplicate_message(
+            queue_message_id
+        ):
+            self._log_duplicate_message(command_type, params, queue_message_id)
+            await self._send_command_acknowledgment(queue_message_id)
+            return True  # Duplicate handled
+
+        # Queue command for reliable processing
+        await self.queue_inbound_message(data)
+
+        if command_type == "create_child_host":
+            self.logger.info(
+                ">>> [CREATE_CHILD_HOST_QUEUED] vm_name=%s queue_message_id=%s",
+                params.get("vm_name"),
+                queue_message_id,
+            )
+
+        # Send acknowledgment to server to confirm receipt
+        if queue_message_id:
+            await self._send_command_acknowledgment(queue_message_id)
+
+        # Trigger inbound queue processing if not already running
+        if not self.inbound_queue_processor_running:
+            asyncio.create_task(self.process_inbound_queue())
+
+        return True
+
+    def _log_child_host_received(
+        self, data: Dict[str, Any], queue_message_id: str, params: Dict[str, Any]
+    ) -> None:
+        """Log detailed info when a create_child_host command is received."""
+        timestamp = datetime.now(timezone.utc).isoformat()
+        self.logger.info(
+            ">>> [CREATE_CHILD_HOST_RECEIVED] timestamp=%s queue_message_id=%s "
+            "message_id=%s vm_name=%s hostname=%s child_host_id=%s",
+            timestamp,
+            queue_message_id,
+            data.get("message_id"),
+            params.get("vm_name"),
+            params.get("hostname"),
+            params.get("child_host_id"),
+        )
+
+    def _log_duplicate_message(
+        self, command_type: str, params: Dict[str, Any], queue_message_id: str
+    ) -> None:
+        """Log when a duplicate message is skipped."""
+        if command_type == "create_child_host":
+            self.logger.info(
+                ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
+                "queue_message_id=%s",
+                params.get("vm_name"),
+                queue_message_id,
+            )
+        self.logger.info("Skipping duplicate command message: %s", queue_message_id)
+
     async def message_receiver(self):  # pylint: disable=too-many-branches
         """Handle incoming messages from server."""
         self.logger.debug("Message receiver started")
@@ -350,37 +429,8 @@ class MessageHandler:
                     message_type = data.get("message_type")
 
                     if message_type == "command":
-                        # Get the queue_message_id for acknowledgment (this is what the server tracks)
-                        # Fall back to message_id for backwards compatibility
-                        queue_message_id = data.get("queue_message_id") or data.get(
-                            "message_id"
-                        )
-
-                        # Check for duplicate messages (server retry)
-                        if (
-                            queue_message_id
-                            and self.queue_manager.is_duplicate_message(
-                                queue_message_id
-                            )
-                        ):
-                            self.logger.info(
-                                "Skipping duplicate command message: %s",
-                                queue_message_id,
-                            )
-                            # Still send acknowledgment for duplicate to confirm receipt
-                            await self._send_command_acknowledgment(queue_message_id)
+                        if await self._handle_command_message(data):
                             continue
-
-                        # Queue command for reliable processing instead of handling directly
-                        await self.queue_inbound_message(data)
-
-                        # Send acknowledgment to server to confirm receipt
-                        if queue_message_id:
-                            await self._send_command_acknowledgment(queue_message_id)
-
-                        # Trigger inbound queue processing if not already running
-                        if not self.inbound_queue_processor_running:
-                            asyncio.create_task(self.process_inbound_queue())
                     elif message_type == "ping":
                         # Respond to ping
                         pong = self.create_message(
