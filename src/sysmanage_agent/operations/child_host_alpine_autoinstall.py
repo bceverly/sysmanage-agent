@@ -67,7 +67,8 @@ class AlpineAutoinstallSetup:
             self.logger.info(_("Downloading Alpine %s ISO from %s"), version, iso_url)
 
             # URL is hardcoded Alpine mirror, not user-provided
-            with urllib.request.urlopen(iso_url, timeout=600) as response:  # nosec B310 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            with urllib.request.urlopen(iso_url, timeout=600) as response:  # nosec B310
                 with open(iso_path, "wb") as iso_file:
                     iso_file.write(response.read())
 
