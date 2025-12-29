@@ -4,6 +4,7 @@ VMM/vmd-specific child host operations for OpenBSD hosts.
 Supports creating VMs for:
 - OpenBSD 7.4, 7.5, 7.6, 7.7
 - Alpine Linux 3.19, 3.20, 3.21
+- Debian 12 (Bookworm)
 """
 
 import asyncio
@@ -15,6 +16,9 @@ from src.database.base import get_database_manager
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_alpine_vm_creator import (
     AlpineVmCreator,
+)
+from src.sysmanage_agent.operations.child_host_debian_vm_creator import (
+    DebianVmCreator,
 )
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
@@ -68,6 +72,15 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
 
         # Create Alpine VM creator
         self.alpine_vm_creator = AlpineVmCreator(
+            agent_instance=agent_instance,
+            logger=logger,
+            virtualization_checks=virtualization_checks,
+            github_checker=self.github_checker,
+            db_session=self.db_session,
+        )
+
+        # Create Debian VM creator
+        self.debian_vm_creator = DebianVmCreator(
             agent_instance=agent_instance,
             logger=logger,
             virtualization_checks=virtualization_checks,
@@ -450,12 +463,29 @@ switch "local" {
         dist_lower = distribution.lower()
         return "alpine" in dist_lower
 
+    def _is_debian_distribution(self, distribution: str) -> bool:
+        """
+        Check if the distribution string indicates Debian Linux.
+
+        Args:
+            distribution: Distribution string (e.g., "Debian 12", "Bookworm")
+
+        Returns:
+            True if this is a Debian distribution
+        """
+        if not distribution:
+            return False
+        dist_lower = distribution.lower()
+        # Check for debian or known codenames
+        return "debian" in dist_lower or "bookworm" in dist_lower
+
     async def create_vmm_vm(self, config: VmmVmConfig) -> dict:
         """
         Create a new VMM virtual machine.
 
         Routes to the appropriate creator based on distribution:
         - Alpine Linux -> AlpineVmCreator
+        - Debian -> DebianVmCreator
         - OpenBSD -> VmmVmCreator (default)
 
         Args:
@@ -470,6 +500,10 @@ switch "local" {
                 _("Detected Alpine Linux distribution: %s"), config.distribution
             )
             return await self.alpine_vm_creator.create_alpine_vm(config)
+
+        if self._is_debian_distribution(config.distribution):
+            self.logger.info(_("Detected Debian distribution: %s"), config.distribution)
+            return await self.debian_vm_creator.create_debian_vm(config)
 
         # Default to OpenBSD creator
         self.logger.info(
