@@ -202,8 +202,8 @@ class AlpineSiteTarballBuilder:
                     _("Download attempt %d of %d..."), attempt, max_retries
                 )
 
-                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-                with urllib.request.urlopen(  # nosec B310
+                # URL is hardcoded Alpine package repository, not user-provided
+                with urllib.request.urlopen(  # nosec B310 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                     download_url, timeout=120
                 ) as response:
                     with open(pkg_path, "wb") as pkg_file:
