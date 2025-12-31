@@ -86,6 +86,8 @@ class ClientRegistration:
             "Basic info script_execution_enabled: %s",
             basic_info["script_execution_enabled"],
         )
+        # nosemgrep: python.lang.security.audit.python-logger-credential-disclosure
+        # Safe: only logs boolean (is not None), not the actual token value
         logger.info("Auto-approve token present: %s", auto_approve_token is not None)
         logger.info("=================================")
 
