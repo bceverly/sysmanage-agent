@@ -56,7 +56,7 @@ class AgentPackageDownloader:
                 self.GITHUB_API_URL,
                 headers={"Accept": "application/vnd.github.v3+json"},
             )
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
                 return json.loads(response.read().decode("utf-8"))
         except Exception as error:  # pylint: disable=broad-except
@@ -216,7 +216,7 @@ class AgentPackageDownloader:
         # Download to temp file first
         temp_path = cache_dir / f"{filename}.downloading"
         try:
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(
                 download_url, timeout=300
             ) as response:  # nosec B310
