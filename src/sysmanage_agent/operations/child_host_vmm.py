@@ -5,6 +5,7 @@ Supports creating VMs for:
 - OpenBSD 7.4, 7.5, 7.6, 7.7
 - Alpine Linux 3.19, 3.20, 3.21
 - Debian 12 (Bookworm)
+- Ubuntu Server 24.04 LTS (Noble Numbat)
 """
 
 import asyncio
@@ -19,6 +20,9 @@ from src.sysmanage_agent.operations.child_host_alpine_vm_creator import (
 )
 from src.sysmanage_agent.operations.child_host_debian_vm_creator import (
     DebianVmCreator,
+)
+from src.sysmanage_agent.operations.child_host_ubuntu_vm_creator import (
+    UbuntuVmCreator,
 )
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_github import GitHubVersionChecker
@@ -87,6 +91,18 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             github_checker=self.github_checker,
             db_session=self.db_session,
         )
+
+        # Create Ubuntu VM creator
+        self.ubuntu_vm_creator = UbuntuVmCreator(
+            agent_instance=agent_instance,
+            logger=logger,
+            virtualization_checks=virtualization_checks,
+            github_checker=self.github_checker,
+            db_session=self.db_session,
+        )
+
+        # Track in-progress VM creations to prevent duplicate requests
+        self._in_progress_vms: set = set()
 
     async def _run_subprocess(
         self,
@@ -479,6 +495,22 @@ switch "local" {
         # Check for debian or known codenames
         return "debian" in dist_lower or "bookworm" in dist_lower
 
+    def _is_ubuntu_distribution(self, distribution: str) -> bool:
+        """
+        Check if the distribution string indicates Ubuntu Linux.
+
+        Args:
+            distribution: Distribution string (e.g., "Ubuntu 24.04", "Noble")
+
+        Returns:
+            True if this is an Ubuntu distribution
+        """
+        if not distribution:
+            return False
+        dist_lower = distribution.lower()
+        # Check for ubuntu or known codenames
+        return "ubuntu" in dist_lower or "noble" in dist_lower
+
     async def create_vmm_vm(self, config: VmmVmConfig) -> dict:
         """
         Create a new VMM virtual machine.
@@ -486,6 +518,7 @@ switch "local" {
         Routes to the appropriate creator based on distribution:
         - Alpine Linux -> AlpineVmCreator
         - Debian -> DebianVmCreator
+        - Ubuntu -> UbuntuVmCreator
         - OpenBSD -> VmmVmCreator (default)
 
         Args:
@@ -494,19 +527,51 @@ switch "local" {
         Returns:
             Dict with success status and details
         """
-        # Route to appropriate creator based on distribution
-        if self._is_alpine_distribution(config.distribution):
-            self.logger.info(
-                _("Detected Alpine Linux distribution: %s"), config.distribution
+        vm_name = config.vm_name
+
+        # Check if VM creation is already in progress (prevents duplicate requests)
+        if vm_name in self._in_progress_vms:
+            self.logger.warning(
+                _(
+                    "VM creation already in progress for '%s', rejecting duplicate request"
+                ),
+                vm_name,
             )
-            return await self.alpine_vm_creator.create_alpine_vm(config)
+            return {
+                "success": False,
+                "error": _("VM creation already in progress for '%s'") % vm_name,
+            }
 
-        if self._is_debian_distribution(config.distribution):
-            self.logger.info(_("Detected Debian distribution: %s"), config.distribution)
-            return await self.debian_vm_creator.create_debian_vm(config)
+        # Mark VM as in-progress
+        self._in_progress_vms.add(vm_name)
+        self.logger.info(_("Started VM creation for '%s'"), vm_name)
 
-        # Default to OpenBSD creator
-        self.logger.info(
-            _("Using OpenBSD VM creator for distribution: %s"), config.distribution
-        )
-        return await self.vm_creator.create_vmm_vm(config)
+        try:
+            # Route to appropriate creator based on distribution
+            if self._is_alpine_distribution(config.distribution):
+                self.logger.info(
+                    _("Detected Alpine Linux distribution: %s"), config.distribution
+                )
+                return await self.alpine_vm_creator.create_alpine_vm(config)
+
+            if self._is_debian_distribution(config.distribution):
+                self.logger.info(
+                    _("Detected Debian distribution: %s"), config.distribution
+                )
+                return await self.debian_vm_creator.create_debian_vm(config)
+
+            if self._is_ubuntu_distribution(config.distribution):
+                self.logger.info(
+                    _("Detected Ubuntu distribution: %s"), config.distribution
+                )
+                return await self.ubuntu_vm_creator.create_ubuntu_vm(config)
+
+            # Default to OpenBSD creator
+            self.logger.info(
+                _("Using OpenBSD VM creator for distribution: %s"), config.distribution
+            )
+            return await self.vm_creator.create_vmm_vm(config)
+        finally:
+            # Always remove from in-progress set when done
+            self._in_progress_vms.discard(vm_name)
+            self.logger.info(_("Completed VM creation for '%s'"), vm_name)
