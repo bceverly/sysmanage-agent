@@ -18,8 +18,8 @@ from typing import Optional
 from src.i18n import _
 
 # Supported Ubuntu versions for VMM child hosts
-# Starting with 24.04 LTS (Noble Numbat) as it's the current LTS
-SUPPORTED_UBUNTU_VERSIONS = ["24.04"]
+# Both current LTS versions are supported
+SUPPORTED_UBUNTU_VERSIONS = ["24.04", "22.04"]
 
 # Version-specific package lists for each supported Ubuntu version
 # These packages are installed via apt during autoinstall late-commands
@@ -59,6 +59,40 @@ REQUIRED_PACKAGES_BY_VERSION = {
         "wget",
         "ca-certificates",
     ],
+    "22.04": [
+        # Core Python (22.04 uses Python 3.10)
+        "python3",
+        "python3-pip",
+        "python3-venv",
+        # Required for sysmanage-agent
+        "python3-websockets",
+        "python3-yaml",
+        "python3-aiohttp",
+        "python3-cryptography",
+        "python3-sqlalchemy",
+        "python3-alembic",
+        "python3-bcrypt",
+        "python3-pydantic",
+        # Additional dependencies
+        "python3-cffi",
+        "python3-greenlet",
+        "python3-typing-extensions",
+        "python3-mako",
+        "python3-markupsafe",
+        "python3-attr",
+        "python3-multidict",
+        "python3-yarl",
+        "python3-frozenlist",
+        "python3-aiosignal",
+        "python3-idna",
+        "python3-charset-normalizer",
+        # System utilities
+        "openssh-server",
+        "sudo",
+        "curl",
+        "wget",
+        "ca-certificates",
+    ],
 }
 
 # Keep REQUIRED_PACKAGES for backwards compatibility (defaults to latest)
@@ -66,20 +100,23 @@ REQUIRED_PACKAGES = REQUIRED_PACKAGES_BY_VERSION["24.04"]
 
 # Ubuntu Server ISO URLs
 # Using the live-server ISO which includes Subiquity installer
-# Note: These are larger than Debian netinst (~3.1GB vs ~650MB)
-# Updated 2025-12-29: Current point release is 24.04.3
+# Note: These are larger than Debian netinst (~2-3GB vs ~650MB)
+# Updated 2025-12-31: Current point releases
 UBUNTU_ISO_URLS = {
     "24.04": "https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso",
+    "22.04": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso",
 }
 
 # Ubuntu mirror URLs for package installation
 UBUNTU_MIRROR_URLS = {
     "24.04": "http://archive.ubuntu.com/ubuntu",
+    "22.04": "http://archive.ubuntu.com/ubuntu",
 }
 
 # Ubuntu codenames
 UBUNTU_CODENAMES = {
     "24.04": "noble",
+    "22.04": "jammy",
 }
 
 # Minimum packages to install during autoinstall
