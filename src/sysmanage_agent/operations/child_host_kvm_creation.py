@@ -117,10 +117,8 @@ class KvmCreation:
             download_dir = os.path.join(KVM_IMAGES_DIR, ".downloads")
             os.makedirs(download_dir, mode=0o755, exist_ok=True)
 
-            # Generate filename from URL
-            url_hash = hashlib.md5(url.encode()).hexdigest()[
-                :8
-            ]  # nosec B324  # nosemgrep: insecure-hash-algorithm-md5
+            # Generate filename from URL (MD5 used only for cache key, not security)
+            url_hash = hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
             filename = os.path.basename(url.split("?")[0])
             cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
 
