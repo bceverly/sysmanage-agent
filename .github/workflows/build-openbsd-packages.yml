@@ -145,7 +145,7 @@ jobs:
           ls -la *.tgz 2>/dev/null || echo "No packages found"
 
       - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}
           path: "*.tgz"
@@ -180,7 +180,7 @@ jobs:
           done
 
       - name: Upload combined packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: hashFiles('packages/*/*.tgz') != ''
         with:
           name: sysmanage-agent-openbsd-all

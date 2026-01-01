@@ -157,7 +157,7 @@ jobs:
         python -m bandit -r src/ -f json -o bandit-report.json --skip B101,B404,B608 || true
 
     - name: Upload Bandit results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: bandit-security-report
         path: bandit-report.json
@@ -172,7 +172,7 @@ jobs:
         safety scan --output json --output-file safety-report.json || true
 
     - name: Upload Safety results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: hashFiles('safety-report.json') != ''
       with:
         name: safety-report

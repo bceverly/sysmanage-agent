@@ -187,7 +187,7 @@ jobs:
           echo "Size: $(du -h "$DEB_FILE" | cut -f1)"
 
       - name: Upload .deb as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-deb
           path: |
@@ -195,7 +195,7 @@ jobs:
             sysmanage-agent_*.deb.sha256
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-sbom
           path: |
@@ -333,7 +333,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-rpm
           path: |
@@ -500,7 +500,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-rpm-${{ matrix.target }}
           path: |
@@ -601,7 +601,7 @@ jobs:
           echo "SHA256: $(cat "$PKG_FILE.sha256")"
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-macos-pkg
           path: |
@@ -741,7 +741,7 @@ jobs:
           Get-Content $checksumFile
 
       - name: Upload MSI as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-windows-${{ matrix.arch }}-msi
           path: |
@@ -878,7 +878,7 @@ jobs:
           tar -tf "$PKG_FILE" | head -20
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-freebsd-pkg
           path: |
@@ -1043,7 +1043,7 @@ jobs:
           cat "$PKG_FILE.sha256"
 
       - name: Upload .tgz as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-netbsd-tgz
           path: |
@@ -1302,7 +1302,7 @@ jobs:
           cat "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
 
       - name: Upload tarball as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-openbsd-port
           path: |
@@ -1407,7 +1407,7 @@ jobs:
           ls -lh sysmanage-agent-$VERSION.flatpak
 
       - name: Upload Flatpak as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-flatpak
           path: |
@@ -1551,7 +1551,7 @@ jobs:
           cat "${PKG_FILE}.sha256"
 
       - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}-pkg
           path: |
@@ -1690,7 +1690,7 @@ jobs:
           cat "${PKG_FILE}.sha256"
 
       - name: Upload Alpine ${{ matrix.alpine-version }} package
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sysmanage-agent-alpine-${{ matrix.alpine-version }}-pkg
           path: |
