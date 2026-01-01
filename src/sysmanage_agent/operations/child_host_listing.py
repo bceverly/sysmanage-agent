@@ -530,8 +530,12 @@ class ChildHostListing:
                 and platform.system().lower() == "windows"
                 else 0
             )
-            result = subprocess.run(  # nosec B603 B607  # nosemgrep: dangerous-subprocess-use-tainted-env-args
-                [vboxmanage, "list", "vms"],
+            result = subprocess.run(  # nosec B603 B607
+                [
+                    vboxmanage,
+                    "list",
+                    "vms",
+                ],  # nosemgrep: dangerous-subprocess-use-tainted-env-args
                 capture_output=True,
                 text=True,
                 timeout=30,

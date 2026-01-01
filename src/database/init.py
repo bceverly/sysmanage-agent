@@ -149,7 +149,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         env = os.environ.copy()
         env["SYSMANAGE_DB_PATH"] = db_path
 
-        result = subprocess.run(  # nosec B603, B607
+        result = subprocess.run(  # nosec B603
             cmd,
             cwd=agent_dir,
             capture_output=True,

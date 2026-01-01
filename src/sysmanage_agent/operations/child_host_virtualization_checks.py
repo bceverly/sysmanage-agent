@@ -814,7 +814,7 @@ class VirtualizationChecks:
                 result["available"] = True
 
                 # Get version
-                version_result = subprocess.run(  # nosec B603 B607
+                version_result = subprocess.run(  # nosec B603 B607  # nosemgrep: dangerous-subprocess-use-tainted-env-args
                     [vboxmanage, "--version"],
                     capture_output=True,
                     text=True,

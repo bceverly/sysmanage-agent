@@ -142,13 +142,13 @@ class AntivirusCollector:
         """Check for ClamAV on Unix-like systems."""
         try:
             # Try to find clamscan binary
-            which_result = subprocess.run(
+            which_result = subprocess.run(  # nosec B603 B607
                 ["which", "clamscan"],
                 capture_output=True,
                 text=True,
                 timeout=5,
                 check=False,
-            )  # nosec B603 B607
+            )
 
             if which_result.returncode == 0:
                 install_path = which_result.stdout.strip()
@@ -156,13 +156,13 @@ class AntivirusCollector:
                 # Get version
                 version = None
                 try:
-                    version_result = subprocess.run(
+                    version_result = subprocess.run(  # nosec B603 B607
                         ["clamscan", "--version"],
                         capture_output=True,
                         text=True,
                         timeout=5,
                         check=False,
-                    )  # nosec B603 B607
+                    )
                     if version_result.returncode == 0:
                         # Parse version from output like "ClamAV 0.103.8/26853/..."
                         version_line = version_result.stdout.strip()

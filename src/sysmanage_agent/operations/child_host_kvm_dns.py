@@ -56,7 +56,7 @@ def _get_dns_from_systemd_resolve() -> List[str]:
         )
         if result.returncode == 0:
             return _parse_dns_from_systemd_resolve(result.stdout)
-    except Exception:
+    except Exception:  # nosec B110 # Expected: continue to next DNS detection method
         pass
     return []
 
@@ -73,7 +73,7 @@ def _get_dns_from_resolvectl() -> List[str]:
         )
         if result.returncode == 0:
             return _parse_dns_from_systemd_resolve(result.stdout)
-    except Exception:
+    except Exception:  # nosec B110 # Expected: continue to next DNS detection method
         pass
     return []
 
@@ -101,7 +101,7 @@ def _get_dns_from_resolv_conf() -> List[str]:
                         dns_ip
                     ):
                         dns_servers.append(dns_ip)
-    except Exception:
+    except Exception:  # nosec B110 # Expected: continue to next DNS detection method
         pass
     return dns_servers
 
@@ -133,7 +133,7 @@ def _get_dns_from_networkmanager() -> List[str]:
         )
         if result.returncode == 0:
             return _parse_nmcli_dns(result.stdout)
-    except Exception:
+    except Exception:  # nosec B110 # Expected: continue to next DNS detection method
         pass
     return []
 

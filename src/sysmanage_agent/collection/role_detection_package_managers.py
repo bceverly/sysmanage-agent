@@ -215,8 +215,8 @@ class PackageManagerDetector:
                     cmd = ["sudo", "-u", original_user] + cmd
 
             # Get formula packages (command-line tools and libraries)
-            result = subprocess.run(  # nosec B603 B607  # nosemgrep: dangerous-subprocess-use-tainted-env-args
-                cmd,
+            result = subprocess.run(  # nosec B603 B607
+                cmd,  # nosemgrep: dangerous-subprocess-use-tainted-env-args
                 capture_output=True,
                 text=True,
                 timeout=30,

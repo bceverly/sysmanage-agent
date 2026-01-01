@@ -111,7 +111,7 @@ class KvmOperations:
 
             # Load the KVM module using modprobe
             self.logger.info(_("Loading KVM module: %s"), module_name)
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["modprobe", module_name],
                 capture_output=True,
                 text=True,
@@ -166,7 +166,9 @@ class KvmOperations:
                     if line.startswith("ID="):
                         distro_id = line.strip().split("=")[1].strip('"').lower()
                         break
-        except Exception:
+        except (
+            Exception
+        ):  # nosec B110 # Expected: continue to package manager detection
             pass
 
         # Detect package manager and get appropriate packages
