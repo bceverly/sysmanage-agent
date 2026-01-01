@@ -5,9 +5,32 @@ Service status detection utilities for role detection.
 import fnmatch
 import logging
 import os
+import re
 import shutil
 import subprocess  # nosec B404 # Required for service status checking
 from typing import Optional
+
+
+def is_valid_unix_username(username: str) -> bool:
+    """
+    Validate that a string is a valid Unix username.
+
+    Valid usernames:
+    - Start with a lowercase letter or underscore
+    - Contain only lowercase letters, digits, underscores, and hyphens
+    - Are 1-32 characters long
+
+    Args:
+        username: The username to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not username:
+        return False
+    # POSIX portable username: starts with letter/underscore, alphanumeric/underscore/hyphen
+    pattern = r"^[a-z_][a-z0-9_-]{0,31}$"
+    return bool(re.match(pattern, username))
 
 
 class ServiceStatusDetector:
@@ -111,8 +134,10 @@ class ServiceStatusDetector:
         """Build the brew services command, handling root user case."""
         cmd = [brew_path, "services", "list"]
         if os.getuid() == 0:  # Running as root
+            # Get the original user from SUDO_USER environment variable
+            # and validate it to prevent command injection
             original_user = os.environ.get("SUDO_USER")
-            if original_user:
+            if original_user and is_valid_unix_username(original_user):
                 cmd = ["sudo", "-u", original_user] + cmd
         return cmd
 

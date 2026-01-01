@@ -233,19 +233,36 @@ class LxdOperations:
             )
 
             if result.returncode == 0:
-                return {"success": True, "message": _("Container started")}
+                return {
+                    "success": True,
+                    "child_name": container_name,
+                    "child_type": "lxd",
+                    "message": _("Container started"),
+                }
 
             return {
                 "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
                 "error": result.stderr
                 or result.stdout
                 or _("Failed to start container"),
             }
 
         except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Start operation timed out")}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": _("Start operation timed out"),
+            }
         except Exception as error:
-            return {"success": False, "error": str(error)}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": str(error),
+            }
 
     async def stop_child_host(self, parameters: dict) -> dict:
         """Stop a running LXD container."""
@@ -265,19 +282,36 @@ class LxdOperations:
             )
 
             if result.returncode == 0:
-                return {"success": True, "message": _("Container stopped")}
+                return {
+                    "success": True,
+                    "child_name": container_name,
+                    "child_type": "lxd",
+                    "message": _("Container stopped"),
+                }
 
             return {
                 "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
                 "error": result.stderr
                 or result.stdout
                 or _("Failed to stop container"),
             }
 
         except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Stop operation timed out")}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": _("Stop operation timed out"),
+            }
         except Exception as error:
-            return {"success": False, "error": str(error)}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": str(error),
+            }
 
     async def restart_child_host(self, parameters: dict) -> dict:
         """Restart an LXD container."""
@@ -297,19 +331,36 @@ class LxdOperations:
             )
 
             if result.returncode == 0:
-                return {"success": True, "message": _("Container restarted")}
+                return {
+                    "success": True,
+                    "child_name": container_name,
+                    "child_type": "lxd",
+                    "message": _("Container restarted"),
+                }
 
             return {
                 "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
                 "error": result.stderr
                 or result.stdout
                 or _("Failed to restart container"),
             }
 
         except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Restart operation timed out")}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": _("Restart operation timed out"),
+            }
         except Exception as error:
-            return {"success": False, "error": str(error)}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": str(error),
+            }
 
     async def delete_child_host(self, parameters: dict) -> dict:
         """Delete an LXD container permanently."""
@@ -330,16 +381,33 @@ class LxdOperations:
             )
 
             if result.returncode == 0:
-                return {"success": True, "message": _("Container deleted")}
+                return {
+                    "success": True,
+                    "child_name": container_name,
+                    "child_type": "lxd",
+                    "message": _("Container deleted"),
+                }
 
             return {
                 "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
                 "error": result.stderr
                 or result.stdout
                 or _("Failed to delete container"),
             }
 
         except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Delete operation timed out")}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": _("Delete operation timed out"),
+            }
         except Exception as error:
-            return {"success": False, "error": str(error)}
+            return {
+                "success": False,
+                "child_name": container_name,
+                "child_type": "lxd",
+                "error": str(error),
+            }

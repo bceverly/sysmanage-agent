@@ -397,32 +397,232 @@ class VirtualizationChecks:
 
         return result
 
+    def _is_user_in_kvm_group(self) -> bool:
+        """
+        Check if the current user is in the kvm or libvirt groups.
+
+        Returns:
+            True if user is in kvm or libvirt group, False otherwise
+        """
+        try:
+            username = pwd.getpwuid(os.getuid()).pw_name
+
+            # Check kvm group
+            try:
+                kvm_group = grp.getgrnam("kvm")
+                if username in kvm_group.gr_mem:
+                    return True
+            except KeyError:
+                pass
+
+            # Check libvirt group
+            try:
+                libvirt_group = grp.getgrnam("libvirt")
+                if username in libvirt_group.gr_mem:
+                    return True
+            except KeyError:
+                pass
+
+            # Root always has access
+            if os.getuid() == 0:
+                return True
+
+            return False
+        except Exception as error:
+            self.logger.debug("Error checking kvm/libvirt group membership: %s", error)
+            return False
+
+    def _check_cpu_virtualization_flags(self) -> bool:
+        """
+        Check if CPU has virtualization extensions (Intel VMX or AMD SVM).
+
+        Returns:
+            True if vmx or svm flags found in /proc/cpuinfo
+        """
+        try:
+            if not os.path.exists("/proc/cpuinfo"):
+                return False
+
+            with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
+                content = cpuinfo_file.read().lower()
+                # Intel VT-x or AMD-V
+                return "vmx" in content or "svm" in content
+
+        except Exception as error:
+            self.logger.debug("Error checking CPU virtualization flags: %s", error)
+            return False
+
+    def _check_libvirtd_status(self) -> Dict[str, bool]:
+        """
+        Check libvirtd service status using systemctl.
+
+        Returns:
+            Dict with enabled and running status
+        """
+        result = {"enabled": False, "running": False}
+
+        try:
+            # Check if libvirtd is enabled
+            enabled_result = subprocess.run(  # nosec B603 B607
+                ["systemctl", "is-enabled", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            result["enabled"] = enabled_result.returncode == 0
+
+            # Check if libvirtd is active/running
+            active_result = subprocess.run(  # nosec B603 B607
+                ["systemctl", "is-active", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            result["running"] = (
+                active_result.returncode == 0
+                and active_result.stdout.strip() == "active"
+            )
+
+        except Exception as error:
+            self.logger.debug("Error checking libvirtd status: %s", error)
+
+        return result
+
+    def _check_default_network_exists(self) -> bool:
+        """
+        Check if libvirt default network exists and is active.
+
+        Returns:
+            True if default network exists and is active
+        """
+        try:
+            virsh_path = shutil.which("virsh")
+            if not virsh_path:
+                return False
+
+            # Check if default network exists and is active
+            result = subprocess.run(  # nosec B603 B607
+                ["virsh", "net-info", "default"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return False
+
+            # Parse output for "Active: yes"
+            return "active:" in result.stdout.lower() and "yes" in result.stdout.lower()
+
+        except Exception as error:
+            self.logger.debug("Error checking default network: %s", error)
+            return False
+
     def check_kvm_support(self) -> Dict[str, Any]:
         """
         Check KVM/QEMU support on Linux.
 
         Returns:
-            Dict with KVM availability info
+            Dict with KVM availability info including:
+            - available: True if /dev/kvm exists (hardware virtualization available)
+            - installed: True if libvirt/virsh is installed
+            - enabled: True if libvirtd service is enabled
+            - running: True if libvirtd is currently running
+            - initialized: True if ready to create VMs (network configured)
+            - cpu_supported: True if CPU has VMX/SVM flags
+            - kernel_supported: True if /dev/kvm exists
+            - user_in_group: True if user is in kvm/libvirt group
+            - management: "libvirt" or "qemu" or None
+            - needs_install: True if libvirt needs to be installed
+            - needs_enable: True if libvirtd needs to be enabled
+            - needs_init: True if network needs to be initialized
         """
         result = {
             "available": False,
-            "kvm_module_loaded": False,
-            "libvirt_installed": False,
+            "installed": False,
+            "enabled": False,
+            "running": False,
+            "initialized": False,
+            "cpu_supported": False,
+            "kernel_supported": False,
+            "user_in_group": False,
+            "management": None,
+            "needs_install": False,
+            "needs_enable": False,
+            "needs_init": False,
         }
 
         try:
             if platform.system().lower() != "linux":
                 return result
 
-            # Check if KVM kernel module is loaded
-            if os.path.exists("/dev/kvm"):
-                result["kvm_module_loaded"] = True
-                result["available"] = True
+            # Check CPU virtualization support (vmx/svm flags)
+            result["cpu_supported"] = self._check_cpu_virtualization_flags()
 
-            # Check if libvirt is installed
+            # Check if KVM kernel module is loaded (/dev/kvm exists)
+            if os.path.exists("/dev/kvm"):
+                result["kernel_supported"] = True
+                result["available"] = True
+            else:
+                # /dev/kvm not found - KVM hardware not available yet
+                # but we still check if libvirt is installed so user can
+                # install/configure it before enabling virtualization in BIOS
+                self.logger.debug(
+                    "/dev/kvm not found - hardware virtualization not available, "
+                    "but checking libvirt installation status"
+                )
+
+            # Check if user has access to KVM
+            result["user_in_group"] = self._is_user_in_kvm_group()
+
+            # Check if libvirt/virsh is installed
             virsh_path = shutil.which("virsh")
+            qemu_path = shutil.which("qemu-system-x86_64")
+
             if virsh_path:
-                result["libvirt_installed"] = True
+                result["installed"] = True
+                result["management"] = "libvirt"
+
+                # Check libvirtd service status
+                libvirtd_status = self._check_libvirtd_status()
+                result["enabled"] = libvirtd_status["enabled"]
+                result["running"] = libvirtd_status["running"]
+
+                # Check if default network is configured
+                if result["running"]:
+                    result["initialized"] = self._check_default_network_exists()
+                    if not result["initialized"]:
+                        result["needs_init"] = True
+
+                if not result["enabled"]:
+                    result["needs_enable"] = True
+
+            elif qemu_path:
+                # QEMU is installed but not libvirt - can still use direct QEMU
+                result["installed"] = True
+                result["management"] = "qemu"
+                result["enabled"] = True  # No service to enable for direct QEMU
+                result["running"] = True
+                result["initialized"] = True
+
+            else:
+                # Neither libvirt nor QEMU installed
+                result["needs_install"] = True
+
+            self.logger.info(
+                "KVM support check: available=%s, installed=%s, enabled=%s, "
+                "running=%s, initialized=%s, management=%s, cpu=%s",
+                result["available"],
+                result["installed"],
+                result["enabled"],
+                result["running"],
+                result["initialized"],
+                result["management"],
+                result["cpu_supported"],
+            )
 
         except Exception as error:
             self.logger.debug("Error checking KVM support: %s", error)

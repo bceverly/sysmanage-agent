@@ -25,8 +25,10 @@ from src.sysmanage_agent.operations.child_host_types import (
     VmmServerConfig,
     VmmVmConfig,
 )
+from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_kvm import KvmOperations
 from src.sysmanage_agent.operations.child_host_listing import ChildHostListing
 from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
 from src.sysmanage_agent.operations.child_host_virtualization_checks import (
@@ -63,6 +65,9 @@ class ChildHostOperations:
             self.agent, self.logger, self.virtualization_checks
         )
         self.vmm_ops = VmmOperations(
+            self.agent, self.logger, self.virtualization_checks
+        )
+        self.kvm_ops = KvmOperations(
             self.agent, self.logger, self.virtualization_checks
         )
 
@@ -351,6 +356,29 @@ class ChildHostOperations:
             )
             return await self.vmm_ops.create_vmm_vm(config)
 
+        if child_type == "kvm":
+            # For KVM, vm_name comes from hostname or explicit parameter
+            vm_name = parameters.get("vm_name") or hostname.split(".")[0]
+            cloud_image_url = parameters.get("cloud_image_url", "")
+
+            config = KvmVmConfig(
+                distribution=distribution,
+                vm_name=vm_name,
+                hostname=hostname,
+                username=username,
+                password_hash=password_hash,
+                server_url=server_url,
+                agent_install_commands=agent_install_commands,
+                server_port=server_port,
+                use_https=use_https,
+                cloud_image_url=cloud_image_url,
+                memory=parameters.get("memory", "2G"),
+                disk_size=parameters.get("disk_size", "20G"),
+                cpus=parameters.get("cpus", 2),
+                auto_approve_token=auto_approve_token,
+            )
+            return await self.kvm_ops.create_vm(config)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -402,6 +430,49 @@ class ChildHostOperations:
         self.logger.info(_("Initializing VMM/vmd"))
         return await self.vmm_ops.initialize_vmd(parameters)
 
+    async def initialize_kvm(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initialize KVM/libvirt on a Linux system.
+
+        This is called when the user clicks "Enable KVM" in the UI.
+        It installs libvirt packages, enables and starts libvirtd,
+        and configures the default network.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Initializing KVM/libvirt"))
+        return await self.kvm_ops.initialize_kvm(parameters)
+
+    async def setup_kvm_networking(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Configure KVM networking based on the specified mode.
+
+        Args:
+            parameters: Dict with:
+                - mode: 'nat' (default) or 'bridged'
+                - network_name: Name for the network (default: 'default' for NAT)
+                - bridge: Linux bridge interface name (required for bridged mode)
+
+        Returns:
+            Dict with success status and network details
+        """
+        self.logger.info(_("Setting up KVM networking"))
+        return await self.kvm_ops.setup_kvm_networking(parameters)
+
+    async def list_kvm_networks(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        List all configured KVM/libvirt networks.
+
+        Returns:
+            Dict with success status and list of networks
+        """
+        self.logger.info(_("Listing KVM networks"))
+        return await self.kvm_ops.list_kvm_networks(parameters)
+
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Start a stopped child host.
@@ -430,6 +501,9 @@ class ChildHostOperations:
 
         if child_type == "vmm":
             return await self.vmm_ops.start_child_host(parameters)
+
+        if child_type == "kvm":
+            return await self.kvm_ops.start_child_host(parameters)
 
         return {
             "success": False,
@@ -465,6 +539,9 @@ class ChildHostOperations:
         if child_type == "vmm":
             return await self.vmm_ops.stop_child_host(parameters)
 
+        if child_type == "kvm":
+            return await self.kvm_ops.stop_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -499,6 +576,9 @@ class ChildHostOperations:
         if child_type == "vmm":
             return await self.vmm_ops.restart_child_host(parameters)
 
+        if child_type == "kvm":
+            return await self.kvm_ops.restart_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -531,6 +611,8 @@ class ChildHostOperations:
             result = await self.lxd_ops.delete_child_host(parameters)
         elif child_type == "vmm":
             result = await self.vmm_ops.delete_child_host(parameters)
+        elif child_type == "kvm":
+            result = await self.kvm_ops.delete_child_host(parameters)
         else:
             return {
                 "success": False,

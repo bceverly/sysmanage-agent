@@ -1023,3 +1023,216 @@ msgstr "Messaggio %s (tipo: %s) ha superato i tentativi massimi, contrassegnato 
 
 msgid "Recovered %d stuck messages"
 msgstr "%d messaggi bloccati recuperati"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "Impossibile rilevare il gestore pacchetti"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "Installazione pacchetti libvirt con %s: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "Gestore pacchetti non supportato: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "Installazione pacchetti libvirt fallita: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "Pacchetti libvirt installati con successo"
+
+msgid "libvirt packages installed"
+msgstr "Pacchetti libvirt installati"
+
+msgid "Package installation timed out"
+msgstr "Timeout installazione pacchetti"
+
+msgid "Enabling libvirtd service"
+msgstr "Abilitazione servizio libvirtd"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "Impossibile abilitare libvirtd: %s"
+
+msgid "Starting libvirtd service"
+msgstr "Avvio servizio libvirtd"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "Avvio libvirtd fallito: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "Servizio libvirtd avviato con successo"
+
+msgid "libvirtd service enabled and started"
+msgstr "Servizio libvirtd abilitato e avviato"
+
+msgid "Service operation timed out"
+msgstr "Timeout operazione servizio"
+
+msgid "Adding user %s to group %s"
+msgstr "Aggiunta utente %s al gruppo %s"
+
+msgid "Could not add user to %s group: %s"
+msgstr "Impossibile aggiungere utente al gruppo %s: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "Errore nell'aggiunta utente ai gruppi: %s"
+
+msgid "virsh command not found after installation"
+msgstr "Comando virsh non trovato dopo l'installazione"
+
+msgid "Creating default libvirt network"
+msgstr "Creazione rete libvirt predefinita"
+
+msgid "Creating default network XML"
+msgstr "Creazione XML rete predefinita"
+
+msgid "Could not define default network: %s"
+msgstr "Impossibile definire la rete predefinita: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "Impossibile impostare avvio automatico rete: %s"
+
+msgid "Could not start default network: %s"
+msgstr "Impossibile avviare la rete predefinita: %s"
+
+msgid "Default libvirt network is active"
+msgstr "La rete libvirt predefinita è attiva"
+
+msgid "Default network configured"
+msgstr "Rete predefinita configurata"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "Configurazione rete tentata ma potrebbe richiedere verifica manuale"
+
+msgid "Network setup timed out"
+msgstr "Timeout configurazione rete"
+
+msgid "Error setting up default network: %s"
+msgstr "Errore nella configurazione della rete predefinita: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "Inizializzazione KVM/libvirt"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM è supportato solo su sistemi Linux"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "KVM non è disponibile su questo sistema. Assicurarsi che /dev/kvm esista e che la virtualizzazione CPU sia abilitata nel BIOS."
+
+msgid "KVM is already initialized"
+msgstr "KVM è già inizializzato"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "KVM è già inizializzato e pronto all'uso"
+
+msgid "Network setup warning: %s"
+msgstr "Avviso configurazione rete: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt è pronto all'uso"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "KVM/libvirt è stato installato e configurato"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "Inizializzazione KVM completata ma verifica fallita"
+
+msgid "KVM initialization timed out"
+msgstr "Timeout inizializzazione KVM"
+
+msgid "Error initializing KVM: %s"
+msgstr "Errore nell'inizializzazione di KVM: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "Nome VM richiesto"
+
+msgid "VM started"
+msgstr "VM avviata"
+
+msgid "Failed to start VM"
+msgstr "Avvio VM fallito"
+
+msgid "Start operation timed out"
+msgstr "Timeout operazione di avvio"
+
+msgid "VM shutdown initiated"
+msgstr "Arresto VM avviato"
+
+msgid "Failed to stop VM"
+msgstr "Arresto VM fallito"
+
+msgid "Stop operation timed out"
+msgstr "Timeout operazione di arresto"
+
+msgid "VM reboot initiated"
+msgstr "Riavvio VM avviato"
+
+msgid "Failed to restart VM"
+msgstr "Riavvio VM fallito"
+
+msgid "Restart operation timed out"
+msgstr "Timeout operazione di riavvio"
+
+msgid "VM deleted"
+msgstr "VM eliminata"
+
+msgid "Failed to delete VM"
+msgstr "Eliminazione VM fallita"
+
+msgid "Delete operation timed out"
+msgstr "Timeout operazione di eliminazione"

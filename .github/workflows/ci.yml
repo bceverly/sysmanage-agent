@@ -247,7 +247,18 @@ jobs:
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
 
+    - name: Check SONAR_TOKEN
+      id: check_token
+      run: |
+        if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
+          echo "has_token=false" >> $GITHUB_OUTPUT
+          echo "::warning::SONAR_TOKEN is not set. Skipping SonarCloud scan."
+        else
+          echo "has_token=true" >> $GITHUB_OUTPUT
+        fi
+
     - name: SonarCloud Scan
+      if: steps.check_token.outputs.has_token == 'true'
       uses: SonarSource/sonarqube-scan-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information

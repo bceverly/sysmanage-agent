@@ -1021,3 +1021,216 @@ msgstr "संदेश %s (प्रकार: %s) अधिकतम पुन
 
 msgid "Recovered %d stuck messages"
 msgstr "%d अटके हुए संदेश पुनर्प्राप्त किए गए"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "पैकेज प्रबंधक का पता नहीं लगा सका"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "%s का उपयोग करके libvirt पैकेज इंस्टॉल हो रहे हैं: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "असमर्थित पैकेज प्रबंधक: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "libvirt पैकेज इंस्टॉल करने में विफल: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "libvirt पैकेज सफलतापूर्वक इंस्टॉल हुए"
+
+msgid "libvirt packages installed"
+msgstr "libvirt पैकेज इंस्टॉल हुए"
+
+msgid "Package installation timed out"
+msgstr "पैकेज इंस्टॉलेशन का समय समाप्त"
+
+msgid "Enabling libvirtd service"
+msgstr "libvirtd सेवा सक्षम हो रही है"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "libvirtd सक्षम नहीं हो सका: %s"
+
+msgid "Starting libvirtd service"
+msgstr "libvirtd सेवा शुरू हो रही है"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "libvirtd शुरू करने में विफल: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "libvirtd सेवा सफलतापूर्वक शुरू हुई"
+
+msgid "libvirtd service enabled and started"
+msgstr "libvirtd सेवा सक्षम और शुरू हुई"
+
+msgid "Service operation timed out"
+msgstr "सेवा संचालन का समय समाप्त"
+
+msgid "Adding user %s to group %s"
+msgstr "उपयोगकर्ता %s को समूह %s में जोड़ा जा रहा है"
+
+msgid "Could not add user to %s group: %s"
+msgstr "उपयोगकर्ता को %s समूह में नहीं जोड़ सका: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+
+msgid "virsh command not found after installation"
+msgstr "इंस्टॉलेशन के बाद virsh कमांड नहीं मिला"
+
+msgid "Creating default libvirt network"
+msgstr "डिफ़ॉल्ट libvirt नेटवर्क बनाया जा रहा है"
+
+msgid "Creating default network XML"
+msgstr "डिफ़ॉल्ट नेटवर्क XML बनाया जा रहा है"
+
+msgid "Could not define default network: %s"
+msgstr "डिफ़ॉल्ट नेटवर्क परिभाषित नहीं कर सका: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+
+msgid "Could not start default network: %s"
+msgstr "डिफ़ॉल्ट नेटवर्क शुरू नहीं कर सका: %s"
+
+msgid "Default libvirt network is active"
+msgstr "डिफ़ॉल्ट libvirt नेटवर्क सक्रिय है"
+
+msgid "Default network configured"
+msgstr "डिफ़ॉल्ट नेटवर्क कॉन्फ़िगर किया गया"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "नेटवर्क सेटअप का प्रयास किया गया लेकिन मैन्युअल सत्यापन की आवश्यकता हो सकती है"
+
+msgid "Network setup timed out"
+msgstr "नेटवर्क सेटअप का समय समाप्त"
+
+msgid "Error setting up default network: %s"
+msgstr "डिफ़ॉल्ट नेटवर्क सेट करने में त्रुटि: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "KVM/libvirt इनिशियलाइज़ हो रहा है"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM केवल Linux सिस्टम पर समर्थित है"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "इस सिस्टम पर KVM उपलब्ध नहीं है। सुनिश्चित करें कि /dev/kvm मौजूद है और BIOS में CPU वर्चुअलाइजेशन सक्षम है।"
+
+msgid "KVM is already initialized"
+msgstr "KVM पहले से इनिशियलाइज़ है"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "KVM पहले से इनिशियलाइज़ है और उपयोग के लिए तैयार है"
+
+msgid "Network setup warning: %s"
+msgstr "नेटवर्क सेटअप चेतावनी: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt उपयोग के लिए तैयार है"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "KVM/libvirt इंस्टॉल और कॉन्फ़िगर किया गया है"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "KVM इनिशियलाइज़ेशन पूर्ण लेकिन सत्यापन विफल"
+
+msgid "KVM initialization timed out"
+msgstr "KVM इनिशियलाइज़ेशन का समय समाप्त"
+
+msgid "Error initializing KVM: %s"
+msgstr "KVM इनिशियलाइज़ करने में त्रुटि: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "VM नाम आवश्यक है"
+
+msgid "VM started"
+msgstr "VM शुरू हुई"
+
+msgid "Failed to start VM"
+msgstr "VM शुरू करने में विफल"
+
+msgid "Start operation timed out"
+msgstr "शुरू करने का समय समाप्त"
+
+msgid "VM shutdown initiated"
+msgstr "VM शटडाउन शुरू किया गया"
+
+msgid "Failed to stop VM"
+msgstr "VM रोकने में विफल"
+
+msgid "Stop operation timed out"
+msgstr "रोकने का समय समाप्त"
+
+msgid "VM reboot initiated"
+msgstr "VM रीबूट शुरू किया गया"
+
+msgid "Failed to restart VM"
+msgstr "VM पुनः शुरू करने में विफल"
+
+msgid "Restart operation timed out"
+msgstr "पुनः शुरू करने का समय समाप्त"
+
+msgid "VM deleted"
+msgstr "VM हटाई गई"
+
+msgid "Failed to delete VM"
+msgstr "VM हटाने में विफल"
+
+msgid "Delete operation timed out"
+msgstr "हटाने का समय समाप्त"

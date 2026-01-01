@@ -250,6 +250,7 @@ class MessageProcessor:
                 "command_result",
                 {
                     "command_id": command_id,
+                    "command_type": command_type,
                     "success": success,
                     "result": result_data if result_data else None,
                     "error": error,
@@ -319,10 +320,14 @@ class MessageProcessor:
             "enable_wsl": self.agent.child_host_ops.enable_wsl,
             "initialize_lxd": self.agent.child_host_ops.initialize_lxd,
             "initialize_vmm": self.agent.child_host_ops.initialize_vmm,
+            "initialize_kvm": self.agent.child_host_ops.initialize_kvm,
             "start_child_host": self.agent.child_host_ops.start_child_host,
             "stop_child_host": self.agent.child_host_ops.stop_child_host,
             "restart_child_host": self.agent.child_host_ops.restart_child_host,
             "delete_child_host": self.agent.child_host_ops.delete_child_host,
+            # KVM networking commands
+            "setup_kvm_networking": self.agent.child_host_ops.setup_kvm_networking,
+            "list_kvm_networks": self.agent.child_host_ops.list_kvm_networks,
         }
 
     async def _handle_execute_script(

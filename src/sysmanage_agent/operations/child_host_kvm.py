@@ -1,0 +1,539 @@
+"""
+KVM/libvirt-specific child host operations for Linux hosts.
+
+This module handles KVM/QEMU virtual machine management via libvirt/virsh.
+"""
+
+import os
+import platform
+import pwd
+import shutil
+import subprocess  # nosec B404 # Required for system command execution
+import time
+from typing import Any, Dict
+
+from src.i18n import _
+from src.sysmanage_agent.operations.child_host_kvm_creation import KvmCreation
+from src.sysmanage_agent.operations.child_host_kvm_lifecycle import KvmLifecycle
+from src.sysmanage_agent.operations.child_host_kvm_networking import KvmNetworking
+from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
+
+
+# Package installation commands by Linux distribution
+LIBVIRT_PACKAGES = {
+    "debian": [
+        "qemu-kvm",
+        "libvirt-daemon-system",
+        "libvirt-clients",
+        "virtinst",
+        "bridge-utils",
+    ],
+    "ubuntu": [
+        "qemu-kvm",
+        "libvirt-daemon-system",
+        "libvirt-clients",
+        "virtinst",
+        "bridge-utils",
+    ],
+    "fedora": ["@virtualization"],
+    "rhel": ["qemu-kvm", "libvirt", "virt-install"],
+    "centos": ["qemu-kvm", "libvirt", "virt-install"],
+    "rocky": ["qemu-kvm", "libvirt", "virt-install"],
+    "alma": ["qemu-kvm", "libvirt", "virt-install"],
+    "alpine": ["qemu", "qemu-system-x86_64", "libvirt", "libvirt-daemon"],
+    "opensuse": ["patterns-server-kvm_server", "patterns-server-kvm_tools"],
+    "suse": ["patterns-server-kvm_server", "patterns-server-kvm_tools"],
+}
+
+
+class KvmOperations:
+    """KVM/libvirt-specific operations for child host management on Linux."""
+
+    def __init__(self, agent_instance, logger, virtualization_checks):
+        """
+        Initialize KVM operations.
+
+        Args:
+            agent_instance: Reference to the main SysManageAgent instance
+            logger: Logger instance
+            virtualization_checks: VirtualizationChecks instance
+        """
+        self.agent = agent_instance
+        self.logger = logger
+        self.virtualization_checks = virtualization_checks
+        self.networking = KvmNetworking(logger)
+        self.lifecycle = KvmLifecycle(logger)
+        self.creation = KvmCreation(logger)
+
+    def _load_kvm_module(self) -> Dict[str, Any]:
+        """
+        Load the appropriate KVM kernel module based on CPU type.
+
+        Returns:
+            Dict with success status and loaded module name
+        """
+        try:
+            # Check if /dev/kvm already exists
+            if os.path.exists("/dev/kvm"):
+                self.logger.info(_("KVM device already exists"))
+                return {"success": True, "message": "KVM already available"}
+
+            # Read CPU flags to determine virtualization type
+            cpu_flags = ""
+            try:
+                with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
+                    for line in cpuinfo_file:
+                        if line.startswith("flags"):
+                            cpu_flags = line
+                            break
+            except Exception as read_error:
+                self.logger.warning(_("Could not read CPU flags: %s"), read_error)
+                return {"success": False, "error": str(read_error)}
+
+            # Determine which module to load
+            module_name = None
+            if "vmx" in cpu_flags:
+                module_name = "kvm_intel"
+                self.logger.info(_("Detected Intel CPU with VMX support"))
+            elif "svm" in cpu_flags:
+                module_name = "kvm_amd"
+                self.logger.info(_("Detected AMD CPU with SVM support"))
+            else:
+                self.logger.warning(
+                    _("No hardware virtualization support detected in CPU flags")
+                )
+                return {
+                    "success": False,
+                    "error": _(
+                        "CPU does not support hardware virtualization (no vmx or svm flags)"
+                    ),
+                }
+
+            # Load the KVM module using modprobe
+            self.logger.info(_("Loading KVM module: %s"), module_name)
+            result = subprocess.run(
+                ["modprobe", module_name],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                self.logger.error(_("Failed to load KVM module: %s"), error_msg)
+                return {"success": False, "error": error_msg}
+
+            # Verify /dev/kvm now exists
+            # Give it a moment for the device to appear
+            time.sleep(0.5)
+
+            if os.path.exists("/dev/kvm"):
+                self.logger.info(
+                    _("KVM module loaded successfully, /dev/kvm is available")
+                )
+                return {
+                    "success": True,
+                    "message": f"Loaded {module_name} module",
+                    "module": module_name,
+                }
+
+            self.logger.warning(_("KVM module loaded but /dev/kvm not created"))
+            return {
+                "success": False,
+                "error": _("Module loaded but /dev/kvm not created"),
+            }
+
+        except subprocess.TimeoutExpired:
+            self.logger.error(_("Timeout loading KVM module"))
+            return {"success": False, "error": _("Timeout loading KVM module")}
+        except Exception as load_error:
+            self.logger.error(_("Error loading KVM module: %s"), load_error)
+            return {"success": False, "error": str(load_error)}
+
+    def _detect_package_manager(self) -> Dict[str, Any]:
+        """
+        Detect which package manager is available on this system.
+
+        Returns:
+            Dict with package manager info (name, packages, install_cmd)
+        """
+        # Try to detect distribution
+        distro_id = ""
+        try:
+            with open("/etc/os-release", "r", encoding="utf-8") as os_release:
+                for line in os_release:
+                    if line.startswith("ID="):
+                        distro_id = line.strip().split("=")[1].strip('"').lower()
+                        break
+        except Exception:
+            pass
+
+        # Detect package manager and get appropriate packages
+        if shutil.which("apt-get"):
+            packages = LIBVIRT_PACKAGES.get(distro_id, LIBVIRT_PACKAGES["debian"])
+            return {
+                "name": "apt",
+                "packages": packages,
+                "install_cmd": ["apt-get", "install", "-y"],
+                "update_cmd": ["apt-get", "update"],
+            }
+        if shutil.which("dnf"):
+            packages = LIBVIRT_PACKAGES.get(distro_id, LIBVIRT_PACKAGES["fedora"])
+            return {
+                "name": "dnf",
+                "packages": packages,
+                "install_cmd": ["dnf", "install", "-y"],
+                "update_cmd": None,
+            }
+        if shutil.which("yum"):
+            packages = LIBVIRT_PACKAGES.get(distro_id, LIBVIRT_PACKAGES["centos"])
+            return {
+                "name": "yum",
+                "packages": packages,
+                "install_cmd": ["yum", "install", "-y"],
+                "update_cmd": None,
+            }
+        if shutil.which("zypper"):
+            packages = LIBVIRT_PACKAGES.get(distro_id, LIBVIRT_PACKAGES["opensuse"])
+            return {
+                "name": "zypper",
+                "packages": packages,
+                "install_cmd": ["zypper", "install", "-y"],
+                "update_cmd": ["zypper", "refresh"],
+            }
+        if shutil.which("apk"):
+            packages = LIBVIRT_PACKAGES.get(distro_id, LIBVIRT_PACKAGES["alpine"])
+            return {
+                "name": "apk",
+                "packages": packages,
+                "install_cmd": ["apk", "add"],
+                "update_cmd": ["apk", "update"],
+            }
+        return {"name": None, "packages": [], "install_cmd": None, "update_cmd": None}
+
+    def _install_libvirt_packages(self, pkg_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Install libvirt packages using the detected package manager.
+
+        Args:
+            pkg_info: Dict with package manager info from _detect_package_manager
+
+        Returns:
+            Dict with success status and message
+        """
+        if not pkg_info.get("install_cmd"):
+            return {
+                "success": False,
+                "error": _("No supported package manager found"),
+            }
+
+        try:
+            # Run update command if available
+            if pkg_info.get("update_cmd"):
+                self.logger.info(_("Updating package lists"))
+                subprocess.run(  # nosec B603 B607
+                    ["sudo"] + pkg_info["update_cmd"],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    check=False,
+                )
+
+            # Install packages
+            self.logger.info(_("Installing libvirt packages: %s"), pkg_info["packages"])
+            install_cmd = ["sudo"] + pkg_info["install_cmd"] + pkg_info["packages"]
+
+            result = subprocess.run(  # nosec B603 B607
+                install_cmd,
+                capture_output=True,
+                text=True,
+                timeout=600,  # 10 minutes timeout for package installation
+                check=False,
+            )
+
+            if result.returncode != 0:
+                error_msg = result.stderr or result.stdout or "Unknown error"
+                self.logger.error(_("Failed to install libvirt: %s"), error_msg)
+                return {"success": False, "error": error_msg}
+
+            self.logger.info(_("Libvirt packages installed successfully"))
+            return {"success": True, "message": _("Libvirt packages installed")}
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": _("Package installation timed out")}
+        except Exception as install_error:
+            self.logger.error(_("Error installing libvirt: %s"), install_error)
+            return {"success": False, "error": str(install_error)}
+
+    def _enable_libvirtd_service(self) -> Dict[str, Any]:
+        """
+        Enable and start the libvirtd service.
+
+        Returns:
+            Dict with success status and message
+        """
+        try:
+            # Enable libvirtd
+            self.logger.info(_("Enabling libvirtd service"))
+            enable_result = subprocess.run(  # nosec B603 B607
+                ["sudo", "systemctl", "enable", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if enable_result.returncode != 0:
+                self.logger.warning(
+                    _("Could not enable libvirtd: %s"),
+                    enable_result.stderr or enable_result.stdout,
+                )
+
+            # Start libvirtd
+            self.logger.info(_("Starting libvirtd service"))
+            start_result = subprocess.run(  # nosec B603 B607
+                ["sudo", "systemctl", "start", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if start_result.returncode != 0:
+                error_msg = (
+                    start_result.stderr or start_result.stdout or "Unknown error"
+                )
+                self.logger.error(_("Failed to start libvirtd: %s"), error_msg)
+                return {"success": False, "error": error_msg}
+
+            # Verify service is running
+            status_result = subprocess.run(  # nosec B603 B607
+                ["sudo", "systemctl", "is-active", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if status_result.returncode == 0 and "active" in status_result.stdout:
+                self.logger.info(_("libvirtd service is active"))
+                return {"success": True, "message": _("libvirtd service started")}
+
+            return {
+                "success": False,
+                "error": _("libvirtd service not active after start attempt"),
+            }
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": _("Service operation timed out")}
+        except Exception as service_error:
+            self.logger.error(_("Error with libvirtd service: %s"), service_error)
+            return {"success": False, "error": str(service_error)}
+
+    def _add_user_to_groups(self) -> Dict[str, Any]:
+        """
+        Add the current user to libvirt and kvm groups.
+
+        Returns:
+            Dict with success status and groups added
+        """
+        try:
+            # Get current user
+            current_user = pwd.getpwuid(os.getuid()).pw_name
+            groups_to_add = ["libvirt", "kvm"]
+            groups_added = []
+
+            for group in groups_to_add:
+                # Check if group exists
+                try:
+                    subprocess.run(  # nosec B603 B607
+                        ["getent", "group", group],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError:
+                    # Group doesn't exist, skip
+                    continue
+
+                # Add user to group
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "usermod", "-aG", group, current_user],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    groups_added.append(group)
+                    self.logger.info(
+                        _("Added user %s to group %s"), current_user, group
+                    )
+
+            return {
+                "success": True,
+                "groups_added": groups_added,
+                "needs_relogin": len(groups_added) > 0,
+            }
+
+        except Exception as group_error:
+            self.logger.warning(_("Error adding user to groups: %s"), group_error)
+            return {"success": False, "error": str(group_error)}
+
+    async def initialize_kvm(self, _parameters: dict) -> dict:
+        """
+        Initialize KVM/libvirt on Linux: install packages, enable service, configure network.
+
+        Args:
+            _parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status and details
+        """
+        try:
+            self.logger.info(_("Initializing KVM/libvirt"))
+
+            # Verify we're on Linux
+            if platform.system() != "Linux":
+                return {
+                    "success": False,
+                    "error": _("KVM is only supported on Linux systems"),
+                }
+
+            # Step 0: Load KVM kernel module if /dev/kvm doesn't exist
+            # Do this first, before checking status, so hardware accel is available
+            module_loaded = False
+            if not os.path.exists("/dev/kvm"):
+                module_result = self._load_kvm_module()
+                if module_result.get("success"):
+                    module_loaded = True
+                else:
+                    self.logger.warning(
+                        _("KVM module loading warning: %s"), module_result.get("error")
+                    )
+                    # Continue anyway - libvirt can still be installed
+
+            # Check current KVM status
+            kvm_check = self.virtualization_checks.check_kvm_support()
+
+            # If already fully initialized (and we didn't just load the module), return success
+            if kvm_check.get("initialized") and not module_loaded:
+                self.logger.info(_("KVM is already initialized"))
+                return {
+                    "success": True,
+                    "message": _("KVM is already initialized and ready to use"),
+                    "already_initialized": True,
+                }
+
+            # If we just loaded the module and KVM is now fully initialized, return success
+            if kvm_check.get("initialized") and module_loaded:
+                self.logger.info(_("KVM module loaded and KVM is ready"))
+                return {
+                    "success": True,
+                    "message": _(
+                        "KVM kernel module loaded - hardware acceleration now available"
+                    ),
+                    "module_loaded": True,
+                    "initialized": True,
+                }
+
+            # Step 1: Install libvirt packages if not installed
+            if not kvm_check.get("installed"):
+                pkg_info = self._detect_package_manager()
+                install_result = self._install_libvirt_packages(pkg_info)
+                if not install_result.get("success"):
+                    return install_result
+
+            # Step 2: Enable and start libvirtd service
+            if not kvm_check.get("running"):
+                service_result = self._enable_libvirtd_service()
+                if not service_result.get("success"):
+                    return service_result
+
+            # Step 3: Add user to libvirt/kvm groups
+            groups_result = self._add_user_to_groups()
+            needs_relogin = groups_result.get("needs_relogin", False)
+
+            # Step 4: Set up default network
+            network_result = self.networking.setup_default_network()
+            if not network_result.get("success"):
+                self.logger.warning(
+                    _("Network setup warning: %s"), network_result.get("error")
+                )
+                # Continue anyway - VMs may still work or user can fix manually
+
+            # Verify KVM is now working
+            verify_result = self.virtualization_checks.check_kvm_support()
+
+            if verify_result.get("installed") and verify_result.get("running"):
+                self.logger.info(_("KVM/libvirt is ready for use"))
+                return {
+                    "success": True,
+                    "message": _("KVM/libvirt has been installed and configured"),
+                    "user_needs_relogin": needs_relogin,
+                    "network_configured": network_result.get("success", False),
+                    "initialized": verify_result.get("initialized", False),
+                }
+
+            return {
+                "success": False,
+                "error": _("KVM initialization completed but verification failed"),
+            }
+
+        except subprocess.TimeoutExpired:
+            self.logger.error(_("KVM initialization timed out"))
+            return {
+                "success": False,
+                "error": _("KVM initialization timed out"),
+            }
+        except Exception as init_error:
+            self.logger.error(_("Error initializing KVM: %s"), init_error)
+            return {
+                "success": False,
+                "error": str(init_error),
+            }
+
+    # Delegate networking methods to KvmNetworking
+    async def setup_kvm_networking(self, parameters: dict) -> dict:
+        """Configure KVM networking based on the specified mode."""
+        return await self.networking.setup_networking(parameters)
+
+    async def list_kvm_networks(self, parameters: dict) -> dict:
+        """List all configured KVM/libvirt networks."""
+        return await self.networking.list_all_networks(parameters)
+
+    # Delegate lifecycle methods to KvmLifecycle
+    async def check_kvm_ready(self) -> Dict[str, Any]:
+        """Check if KVM is fully operational and ready to create VMs."""
+        return self.lifecycle.check_ready(self.virtualization_checks)
+
+    async def start_child_host(self, parameters: dict) -> dict:
+        """Start a stopped KVM virtual machine."""
+        return await self.lifecycle.start_vm(parameters)
+
+    async def stop_child_host(self, parameters: dict) -> dict:
+        """Stop a running KVM virtual machine (graceful shutdown)."""
+        return await self.lifecycle.stop_vm(parameters)
+
+    async def restart_child_host(self, parameters: dict) -> dict:
+        """Restart a KVM virtual machine."""
+        return await self.lifecycle.restart_vm(parameters)
+
+    async def delete_child_host(self, parameters: dict) -> dict:
+        """Delete a KVM virtual machine and its storage."""
+        return await self.lifecycle.delete_vm(parameters)
+
+    async def create_vm(self, config: KvmVmConfig) -> Dict[str, Any]:
+        """
+        Create a KVM virtual machine with cloud-init.
+
+        Args:
+            config: KvmVmConfig instance with VM parameters
+
+        Returns:
+            Dict with success status and VM details
+        """
+        return await self.creation.create_vm(config)

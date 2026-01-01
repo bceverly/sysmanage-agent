@@ -291,6 +291,8 @@ class VmmLifecycleOperations:
                 self.logger.info(_("VM %s started successfully"), child_name)
                 return {
                     "success": True,
+                    "child_name": child_name,
+                    "child_type": "vmm",
                     "message": _("VM %s started") % child_name,
                 }
 
@@ -298,17 +300,23 @@ class VmmLifecycleOperations:
             self.logger.error(_("Failed to start VM %s: %s"), child_name, error_msg)
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Failed to start VM: %s") % error_msg,
             }
 
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Timeout starting VM %s") % child_name,
             }
         except Exception as error:
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Error starting VM: %s") % str(error),
             }
 
@@ -354,6 +362,8 @@ class VmmLifecycleOperations:
                 self.logger.info(_("VM %s stopped successfully"), child_name)
                 return {
                     "success": True,
+                    "child_name": child_name,
+                    "child_type": "vmm",
                     "message": _("VM %s stopped") % child_name,
                 }
 
@@ -361,17 +371,23 @@ class VmmLifecycleOperations:
             self.logger.error(_("Failed to stop VM %s: %s"), child_name, error_msg)
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Failed to stop VM: %s") % error_msg,
             }
 
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Timeout stopping VM %s") % child_name,
             }
         except Exception as error:
             return {
                 "success": False,
+                "child_name": child_name,
+                "child_type": "vmm",
                 "error": _("Error stopping VM: %s") % str(error),
             }
 
@@ -399,6 +415,8 @@ class VmmLifecycleOperations:
 
         return {
             "success": True,
+            "child_name": child_name,
+            "child_type": "vmm",
             "message": _("VM %s restarted") % child_name,
         }
 

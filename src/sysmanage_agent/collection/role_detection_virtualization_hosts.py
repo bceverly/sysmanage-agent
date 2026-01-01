@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 
 
 class VirtualizationHostDetector:
-    """Handles detection of virtualization host roles (LXD, WSL, VMM)."""
+    """Handles detection of virtualization host roles (LXD, WSL, VMM, KVM)."""
 
     def __init__(self, system: str, logger: logging.Logger, service_status_detector):
         self.system = system
@@ -228,4 +228,88 @@ class VirtualizationHostDetector:
 
         except Exception as error:
             self.logger.debug("Error detecting VMM host role: %s", error)
+            return None
+
+    def detect_kvm_host_role(self) -> Optional[Dict[str, Any]]:
+        """
+        Detect if this Linux host has KVM enabled and ready for VMs.
+
+        Returns role dict if KVM is available AND libvirtd is running, None otherwise.
+        """
+        try:
+            # Check if /dev/kvm exists (kernel KVM support)
+            if not os.path.exists("/dev/kvm"):
+                self.logger.debug("KVM kernel support not enabled (/dev/kvm missing)")
+                return None
+
+            # Check if virsh command exists (libvirt installed)
+            virsh_path = shutil.which("virsh")
+            if not virsh_path:
+                self.logger.debug("libvirt/virsh not installed")
+                return None
+
+            # Check if libvirtd is running using systemctl
+            result = subprocess.run(  # nosec B603 B607
+                ["systemctl", "is-active", "libvirtd"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if result.returncode != 0 or result.stdout.strip() != "active":
+                self.logger.debug("libvirtd is not running")
+                return None
+
+            # Get libvirt version
+            version = "unknown"
+            try:
+                version_result = subprocess.run(  # nosec B603 B607
+                    ["virsh", "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if version_result.returncode == 0:
+                    version = version_result.stdout.strip()
+            except Exception:  # nosec B110 - version is optional
+                pass
+
+            # Get count of defined VMs
+            vm_count = 0
+            try:
+                vmlist_result = subprocess.run(  # nosec B603 B607
+                    ["virsh", "list", "--all", "--name"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if vmlist_result.returncode == 0:
+                    # Count non-empty lines
+                    vm_count = len(
+                        [ln for ln in vmlist_result.stdout.strip().split("\n") if ln]
+                    )
+            except Exception:  # nosec B110 - VM count is optional
+                pass
+
+            self.logger.info(
+                "Detected KVM Host role: libvirt v%s, %d VMs",
+                version,
+                vm_count,
+            )
+
+            return {
+                "role": "KVM Host",
+                "package_name": "libvirt",
+                "package_version": version,
+                "service_name": "libvirtd",
+                "service_status": "running",
+                "is_active": True,
+                "vm_count": vm_count,
+            }
+
+        except Exception as error:
+            self.logger.debug("Error detecting KVM host role: %s", error)
             return None

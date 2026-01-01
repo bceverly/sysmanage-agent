@@ -126,6 +126,11 @@ class RoleDetector:
                 "packages": {},  # VMM is an OpenBSD kernel feature
                 "special_detection": "vmm",  # Flag for special handling
             },
+            "kvm_host": {
+                "role": "KVM Host",
+                "packages": {},  # KVM is a Linux kernel feature + libvirt
+                "special_detection": "kvm",  # Flag for special handling
+            },
         }
 
     def detect_roles(self) -> List[Dict[str, Any]]:
@@ -254,7 +259,7 @@ class RoleDetector:
 
     def _detect_virtualization_host_roles(self, roles: List[Dict[str, Any]]) -> None:
         """
-        Detect virtualization host roles (LXD Host, WSL Host, VMM Host).
+        Detect virtualization host roles (LXD Host, WSL Host, VMM Host, KVM Host).
 
         These roles require special detection beyond package checking because
         the host must be properly configured and ready to create child hosts,
@@ -265,6 +270,11 @@ class RoleDetector:
             lxd_role = self.virt_detector.detect_lxd_host_role()
             if lxd_role:
                 roles.append(lxd_role)
+
+            # Detect KVM Host on Linux
+            kvm_role = self.virt_detector.detect_kvm_host_role()
+            if kvm_role:
+                roles.append(kvm_role)
 
         # Detect WSL Host on Windows
         if self.system == "windows":

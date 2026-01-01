@@ -1023,3 +1023,216 @@ msgstr "메시지 %s (유형: %s)가 최대 재시도 횟수를 초과하여 실
 
 msgid "Recovered %d stuck messages"
 msgstr "%d개의 멈춘 메시지 복구됨"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "패키지 관리자를 감지할 수 없습니다"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "%s를 사용하여 libvirt 패키지 설치 중: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "지원되지 않는 패키지 관리자: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "libvirt 패키지 설치 실패: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "libvirt 패키지가 성공적으로 설치되었습니다"
+
+msgid "libvirt packages installed"
+msgstr "libvirt 패키지 설치됨"
+
+msgid "Package installation timed out"
+msgstr "패키지 설치 시간 초과"
+
+msgid "Enabling libvirtd service"
+msgstr "libvirtd 서비스 활성화 중"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "libvirtd를 활성화할 수 없습니다: %s"
+
+msgid "Starting libvirtd service"
+msgstr "libvirtd 서비스 시작 중"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "libvirtd 시작 실패: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "libvirtd 서비스가 성공적으로 시작되었습니다"
+
+msgid "libvirtd service enabled and started"
+msgstr "libvirtd 서비스가 활성화되고 시작되었습니다"
+
+msgid "Service operation timed out"
+msgstr "서비스 작업 시간 초과"
+
+msgid "Adding user %s to group %s"
+msgstr "사용자 %s를 그룹 %s에 추가 중"
+
+msgid "Could not add user to %s group: %s"
+msgstr "사용자를 %s 그룹에 추가할 수 없습니다: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "사용자를 그룹에 추가하는 중 오류: %s"
+
+msgid "virsh command not found after installation"
+msgstr "설치 후 virsh 명령을 찾을 수 없습니다"
+
+msgid "Creating default libvirt network"
+msgstr "기본 libvirt 네트워크 생성 중"
+
+msgid "Creating default network XML"
+msgstr "기본 네트워크 XML 생성 중"
+
+msgid "Could not define default network: %s"
+msgstr "기본 네트워크를 정의할 수 없습니다: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
+
+msgid "Could not start default network: %s"
+msgstr "기본 네트워크를 시작할 수 없습니다: %s"
+
+msgid "Default libvirt network is active"
+msgstr "기본 libvirt 네트워크가 활성 상태입니다"
+
+msgid "Default network configured"
+msgstr "기본 네트워크 구성됨"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "네트워크 설정을 시도했지만 수동 확인이 필요할 수 있습니다"
+
+msgid "Network setup timed out"
+msgstr "네트워크 설정 시간 초과"
+
+msgid "Error setting up default network: %s"
+msgstr "기본 네트워크 설정 중 오류: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "KVM/libvirt 초기화 중"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM은 Linux 시스템에서만 지원됩니다"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU 가상화가 활성화되어 있는지 확인하세요."
+
+msgid "KVM is already initialized"
+msgstr "KVM이 이미 초기화되었습니다"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "KVM이 이미 초기화되어 사용할 준비가 되었습니다"
+
+msgid "Network setup warning: %s"
+msgstr "네트워크 설정 경고: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt 사용 준비 완료"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "KVM/libvirt가 설치 및 구성되었습니다"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "KVM 초기화 완료되었지만 검증 실패"
+
+msgid "KVM initialization timed out"
+msgstr "KVM 초기화 시간 초과"
+
+msgid "Error initializing KVM: %s"
+msgstr "KVM 초기화 중 오류: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "VM 이름이 필요합니다"
+
+msgid "VM started"
+msgstr "VM 시작됨"
+
+msgid "Failed to start VM"
+msgstr "VM 시작 실패"
+
+msgid "Start operation timed out"
+msgstr "시작 작업 시간 초과"
+
+msgid "VM shutdown initiated"
+msgstr "VM 종료 시작됨"
+
+msgid "Failed to stop VM"
+msgstr "VM 중지 실패"
+
+msgid "Stop operation timed out"
+msgstr "중지 작업 시간 초과"
+
+msgid "VM reboot initiated"
+msgstr "VM 재부팅 시작됨"
+
+msgid "Failed to restart VM"
+msgstr "VM 재시작 실패"
+
+msgid "Restart operation timed out"
+msgstr "재시작 작업 시간 초과"
+
+msgid "VM deleted"
+msgstr "VM 삭제됨"
+
+msgid "Failed to delete VM"
+msgstr "VM 삭제 실패"
+
+msgid "Delete operation timed out"
+msgstr "삭제 작업 시간 초과"

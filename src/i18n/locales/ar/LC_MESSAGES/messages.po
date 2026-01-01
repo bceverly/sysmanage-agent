@@ -1026,3 +1026,216 @@ msgstr "الرسالة %s (النوع: %s) تجاوزت الحد الأقصى ل
 
 msgid "Recovered %d stuck messages"
 msgstr "تم استرداد %d رسالة معلقة"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "تعذر اكتشاف مدير الحزم"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "جاري تثبيت حزم libvirt باستخدام %s: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "مدير حزم غير مدعوم: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "فشل تثبيت حزم libvirt: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "تم تثبيت حزم libvirt بنجاح"
+
+msgid "libvirt packages installed"
+msgstr "تم تثبيت حزم libvirt"
+
+msgid "Package installation timed out"
+msgstr "انتهت مهلة تثبيت الحزمة"
+
+msgid "Enabling libvirtd service"
+msgstr "جاري تمكين خدمة libvirtd"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "تعذر تمكين libvirtd: %s"
+
+msgid "Starting libvirtd service"
+msgstr "جاري بدء خدمة libvirtd"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "فشل بدء libvirtd: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "تم بدء خدمة libvirtd بنجاح"
+
+msgid "libvirtd service enabled and started"
+msgstr "تم تمكين وبدء خدمة libvirtd"
+
+msgid "Service operation timed out"
+msgstr "انتهت مهلة عملية الخدمة"
+
+msgid "Adding user %s to group %s"
+msgstr "جاري إضافة المستخدم %s إلى المجموعة %s"
+
+msgid "Could not add user to %s group: %s"
+msgstr "تعذر إضافة المستخدم إلى مجموعة %s: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+
+msgid "virsh command not found after installation"
+msgstr "لم يتم العثور على أمر virsh بعد التثبيت"
+
+msgid "Creating default libvirt network"
+msgstr "جاري إنشاء شبكة libvirt الافتراضية"
+
+msgid "Creating default network XML"
+msgstr "جاري إنشاء XML للشبكة الافتراضية"
+
+msgid "Could not define default network: %s"
+msgstr "تعذر تحديد الشبكة الافتراضية: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+
+msgid "Could not start default network: %s"
+msgstr "تعذر بدء الشبكة الافتراضية: %s"
+
+msgid "Default libvirt network is active"
+msgstr "شبكة libvirt الافتراضية نشطة"
+
+msgid "Default network configured"
+msgstr "تم تكوين الشبكة الافتراضية"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "تمت محاولة إعداد الشبكة ولكن قد تحتاج إلى التحقق اليدوي"
+
+msgid "Network setup timed out"
+msgstr "انتهت مهلة إعداد الشبكة"
+
+msgid "Error setting up default network: %s"
+msgstr "خطأ في إعداد الشبكة الافتراضية: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "جاري تهيئة KVM/libvirt"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM مدعوم فقط على أنظمة Linux"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "KVM غير متاح على هذا النظام. تأكد من وجود /dev/kvm وتمكين المحاكاة الافتراضية لوحدة المعالجة المركزية في BIOS."
+
+msgid "KVM is already initialized"
+msgstr "تم تهيئة KVM بالفعل"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "تم تهيئة KVM بالفعل وهو جاهز للاستخدام"
+
+msgid "Network setup warning: %s"
+msgstr "تحذير إعداد الشبكة: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt جاهز للاستخدام"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "تم تثبيت وتكوين KVM/libvirt"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "اكتملت تهيئة KVM لكن فشل التحقق"
+
+msgid "KVM initialization timed out"
+msgstr "انتهت مهلة تهيئة KVM"
+
+msgid "Error initializing KVM: %s"
+msgstr "خطأ في تهيئة KVM: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "اسم الآلة الافتراضية مطلوب"
+
+msgid "VM started"
+msgstr "تم بدء الآلة الافتراضية"
+
+msgid "Failed to start VM"
+msgstr "فشل بدء الآلة الافتراضية"
+
+msgid "Start operation timed out"
+msgstr "انتهت مهلة عملية البدء"
+
+msgid "VM shutdown initiated"
+msgstr "تم بدء إيقاف الآلة الافتراضية"
+
+msgid "Failed to stop VM"
+msgstr "فشل إيقاف الآلة الافتراضية"
+
+msgid "Stop operation timed out"
+msgstr "انتهت مهلة عملية الإيقاف"
+
+msgid "VM reboot initiated"
+msgstr "تم بدء إعادة تشغيل الآلة الافتراضية"
+
+msgid "Failed to restart VM"
+msgstr "فشل إعادة تشغيل الآلة الافتراضية"
+
+msgid "Restart operation timed out"
+msgstr "انتهت مهلة عملية إعادة التشغيل"
+
+msgid "VM deleted"
+msgstr "تم حذف الآلة الافتراضية"
+
+msgid "Failed to delete VM"
+msgstr "فشل حذف الآلة الافتراضية"
+
+msgid "Delete operation timed out"
+msgstr "انتهت مهلة عملية الحذف"

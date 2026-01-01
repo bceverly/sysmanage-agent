@@ -1023,3 +1023,216 @@ msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
 
 msgid "Recovered %d stuck messages"
 msgstr "已恢复 %d 条卡住的消息"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "无法检测包管理器"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "使用 %s 安装 libvirt 包: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "不支持的包管理器: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "安装 libvirt 包失败: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "libvirt 包安装成功"
+
+msgid "libvirt packages installed"
+msgstr "libvirt 包已安装"
+
+msgid "Package installation timed out"
+msgstr "包安装超时"
+
+msgid "Enabling libvirtd service"
+msgstr "正在启用 libvirtd 服务"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "无法启用 libvirtd: %s"
+
+msgid "Starting libvirtd service"
+msgstr "正在启动 libvirtd 服务"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "启动 libvirtd 失败: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "libvirtd 服务启动成功"
+
+msgid "libvirtd service enabled and started"
+msgstr "libvirtd 服务已启用并启动"
+
+msgid "Service operation timed out"
+msgstr "服务操作超时"
+
+msgid "Adding user %s to group %s"
+msgstr "正在将用户 %s 添加到组 %s"
+
+msgid "Could not add user to %s group: %s"
+msgstr "无法将用户添加到 %s 组: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "将用户添加到组时出错: %s"
+
+msgid "virsh command not found after installation"
+msgstr "安装后未找到 virsh 命令"
+
+msgid "Creating default libvirt network"
+msgstr "正在创建默认 libvirt 网络"
+
+msgid "Creating default network XML"
+msgstr "正在创建默认网络 XML"
+
+msgid "Could not define default network: %s"
+msgstr "无法定义默认网络: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "无法设置网络自动启动: %s"
+
+msgid "Could not start default network: %s"
+msgstr "无法启动默认网络: %s"
+
+msgid "Default libvirt network is active"
+msgstr "默认 libvirt 网络已激活"
+
+msgid "Default network configured"
+msgstr "默认网络已配置"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "已尝试网络设置，但可能需要手动验证"
+
+msgid "Network setup timed out"
+msgstr "网络设置超时"
+
+msgid "Error setting up default network: %s"
+msgstr "设置默认网络时出错: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "正在初始化 KVM/libvirt"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM 仅在 Linux 系统上受支持"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "此系统上不可用 KVM。请确保 /dev/kvm 存在且 BIOS 中已启用 CPU 虚拟化。"
+
+msgid "KVM is already initialized"
+msgstr "KVM 已初始化"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "KVM 已初始化并可以使用"
+
+msgid "Network setup warning: %s"
+msgstr "网络设置警告: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt 已准备就绪"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "KVM/libvirt 已安装并配置"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "KVM 初始化完成但验证失败"
+
+msgid "KVM initialization timed out"
+msgstr "KVM 初始化超时"
+
+msgid "Error initializing KVM: %s"
+msgstr "初始化 KVM 时出错: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "需要虚拟机名称"
+
+msgid "VM started"
+msgstr "虚拟机已启动"
+
+msgid "Failed to start VM"
+msgstr "启动虚拟机失败"
+
+msgid "Start operation timed out"
+msgstr "启动操作超时"
+
+msgid "VM shutdown initiated"
+msgstr "虚拟机关机已启动"
+
+msgid "Failed to stop VM"
+msgstr "停止虚拟机失败"
+
+msgid "Stop operation timed out"
+msgstr "停止操作超时"
+
+msgid "VM reboot initiated"
+msgstr "虚拟机重启已启动"
+
+msgid "Failed to restart VM"
+msgstr "重启虚拟机失败"
+
+msgid "Restart operation timed out"
+msgstr "重启操作超时"
+
+msgid "VM deleted"
+msgstr "虚拟机已删除"
+
+msgid "Failed to delete VM"
+msgstr "删除虚拟机失败"
+
+msgid "Delete operation timed out"
+msgstr "删除操作超时"

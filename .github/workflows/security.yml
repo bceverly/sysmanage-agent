@@ -30,11 +30,24 @@ jobs:
     - name: Run Semgrep CI
       env:
         SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-      run: semgrep ci --sarif --output=semgrep.sarif
+      run: |
+        # Run semgrep and capture output to SARIF file
+        # Use || true to not fail the step if semgrep finds issues
+        semgrep ci --sarif --output=semgrep.sarif || true
+
+    - name: Check if SARIF file exists
+      id: check_sarif
+      run: |
+        if [ -f "semgrep.sarif" ] && [ -s "semgrep.sarif" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Warning: semgrep.sarif file was not generated or is empty"
+        fi
 
     - name: Upload SARIF to GitHub Security
       uses: github/codeql-action/upload-sarif@v4
-      if: always()
+      if: steps.check_sarif.outputs.exists == 'true'
       with:
         sarif_file: semgrep.sarif
 

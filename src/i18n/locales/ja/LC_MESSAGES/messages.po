@@ -1025,3 +1025,216 @@ msgstr "メッセージ %s (タイプ: %s) は最大再試行回数を超え、�
 
 msgid "Recovered %d stuck messages"
 msgstr "%d 件のスタックしたメッセージを回復しました"
+
+# KVM/libvirt operations
+msgid "Could not detect package manager"
+msgstr "パッケージマネージャーを検出できませんでした"
+
+msgid "Installing libvirt packages using %s: %s"
+msgstr "%s を使用して libvirt パッケージをインストールしています: %s"
+
+msgid "Unsupported package manager: %s"
+msgstr "サポートされていないパッケージマネージャー: %s"
+
+msgid "Failed to install libvirt packages: %s"
+msgstr "libvirt パッケージのインストールに失敗しました: %s"
+
+msgid "libvirt packages installed successfully"
+msgstr "libvirt パッケージが正常にインストールされました"
+
+msgid "libvirt packages installed"
+msgstr "libvirt パッケージがインストールされました"
+
+msgid "Package installation timed out"
+msgstr "パッケージのインストールがタイムアウトしました"
+
+msgid "Enabling libvirtd service"
+msgstr "libvirtd サービスを有効化しています"
+
+msgid "Could not enable libvirtd: %s"
+msgstr "libvirtd を有効化できませんでした: %s"
+
+msgid "Starting libvirtd service"
+msgstr "libvirtd サービスを開始しています"
+
+msgid "Failed to start libvirtd: %s"
+msgstr "libvirtd の開始に失敗しました: %s"
+
+msgid "libvirtd service started successfully"
+msgstr "libvirtd サービスが正常に開始されました"
+
+msgid "libvirtd service enabled and started"
+msgstr "libvirtd サービスが有効化および開始されました"
+
+msgid "Service operation timed out"
+msgstr "サービス操作がタイムアウトしました"
+
+msgid "Adding user %s to group %s"
+msgstr "ユーザー %s をグループ %s に追加しています"
+
+msgid "Could not add user to %s group: %s"
+msgstr "ユーザーを %s グループに追加できませんでした: %s"
+
+msgid "Error adding user to groups: %s"
+msgstr "ユーザーをグループに追加中にエラーが発生しました: %s"
+
+msgid "virsh command not found after installation"
+msgstr "インストール後に virsh コマンドが見つかりません"
+
+msgid "Creating default libvirt network"
+msgstr "デフォルトの libvirt ネットワークを作成しています"
+
+msgid "Creating default network XML"
+msgstr "デフォルトネットワーク XML を作成しています"
+
+msgid "Could not define default network: %s"
+msgstr "デフォルトネットワークを定義できませんでした: %s"
+
+msgid "Could not set network autostart: %s"
+msgstr "ネットワークの自動起動を設定できませんでした: %s"
+
+msgid "Could not start default network: %s"
+msgstr "デフォルトネットワークを開始できませんでした: %s"
+
+msgid "Default libvirt network is active"
+msgstr "デフォルトの libvirt ネットワークがアクティブです"
+
+msgid "Default network configured"
+msgstr "デフォルトネットワークが設定されました"
+
+msgid "Network setup attempted but may need manual verification"
+msgstr "ネットワーク設定を試みましたが、手動確認が必要な場合があります"
+
+msgid "Network setup timed out"
+msgstr "ネットワーク設定がタイムアウトしました"
+
+msgid "Error setting up default network: %s"
+msgstr "デフォルトネットワークの設定中にエラーが発生しました: %s"
+
+msgid "Initializing KVM/libvirt"
+msgstr "KVM/libvirt を初期化しています"
+
+msgid "KVM is only supported on Linux systems"
+msgstr "KVM は Linux システムでのみサポートされています"
+
+msgid "KVM is not available on this system. Ensure /dev/kvm exists and CPU virtualization is enabled in BIOS."
+msgstr "このシステムでは KVM が利用できません。/dev/kvm が存在し、BIOS で CPU 仮想化が有効になっていることを確認してください。"
+
+msgid "KVM is already initialized"
+msgstr "KVM は既に初期化されています"
+
+msgid "KVM is already initialized and ready to use"
+msgstr "KVM は既に初期化されており、使用可能です"
+
+msgid "Network setup warning: %s"
+msgstr "ネットワーク設定の警告: %s"
+
+msgid "KVM/libvirt is ready for use"
+msgstr "KVM/libvirt が使用可能です"
+
+msgid "KVM/libvirt has been installed and configured"
+msgstr "KVM/libvirt がインストールおよび設定されました"
+
+msgid "KVM initialization completed but verification failed"
+msgstr "KVM の初期化は完了しましたが、検証に失敗しました"
+
+msgid "KVM initialization timed out"
+msgstr "KVM の初期化がタイムアウトしました"
+
+msgid "Error initializing KVM: %s"
+msgstr "KVM の初期化中にエラーが発生しました: %s"
+
+# KVM Networking Configuration strings
+
+msgid "Failed to list networks"
+msgstr "Failed to list networks"
+
+msgid "List networks timed out"
+msgstr "List networks timed out"
+
+msgid "Bridge interface '%s' does not exist"
+msgstr "Bridge interface '%s' does not exist"
+
+msgid "Network '%s' already exists"
+msgstr "Network '%s' already exists"
+
+msgid "Failed to define network"
+msgstr "Failed to define network"
+
+msgid "Could not start network: %s"
+msgstr "Could not start network: %s"
+
+msgid "Created bridged network '%s' using bridge '%s'"
+msgstr "Created bridged network '%s' using bridge '%s'"
+
+msgid "Bridged network '%s' created successfully"
+msgstr "Bridged network '%s' created successfully"
+
+msgid "Network creation timed out"
+msgstr "Network creation timed out"
+
+msgid "Error creating bridged network: %s"
+msgstr "Error creating bridged network: %s"
+
+msgid "Setting up KVM networking in %s mode"
+msgstr "Setting up KVM networking in %s mode"
+
+msgid "NAT networking configured successfully"
+msgstr "NAT networking configured successfully"
+
+msgid "Bridge interface name is required for bridged mode"
+msgstr "Bridge interface name is required for bridged mode"
+
+msgid "Bridged networking configured successfully"
+msgstr "Bridged networking configured successfully"
+
+msgid "Unknown network mode: %s. Use 'nat' or 'bridged'"
+msgstr "Unknown network mode: %s. Use 'nat' or 'bridged'"
+
+msgid "Error configuring KVM networking: %s"
+msgstr "Error configuring KVM networking: %s"
+
+msgid "Setting up KVM networking"
+msgstr "Setting up KVM networking"
+
+msgid "Listing KVM networks"
+msgstr "Listing KVM networks"
+
+msgid "VM name is required"
+msgstr "VM 名が必要です"
+
+msgid "VM started"
+msgstr "VM が開始されました"
+
+msgid "Failed to start VM"
+msgstr "VM の開始に失敗しました"
+
+msgid "Start operation timed out"
+msgstr "開始操作がタイムアウトしました"
+
+msgid "VM shutdown initiated"
+msgstr "VM のシャットダウンが開始されました"
+
+msgid "Failed to stop VM"
+msgstr "VM の停止に失敗しました"
+
+msgid "Stop operation timed out"
+msgstr "停止操作がタイムアウトしました"
+
+msgid "VM reboot initiated"
+msgstr "VM の再起動が開始されました"
+
+msgid "Failed to restart VM"
+msgstr "VM の再起動に失敗しました"
+
+msgid "Restart operation timed out"
+msgstr "再起動操作がタイムアウトしました"
+
+msgid "VM deleted"
+msgstr "VM が削除されました"
+
+msgid "Failed to delete VM"
+msgstr "VM の削除に失敗しました"
+
+msgid "Delete operation timed out"
+msgstr "削除操作がタイムアウトしました"

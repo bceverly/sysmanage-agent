@@ -4,9 +4,32 @@ Package manager detection utilities for role detection.
 
 import logging
 import os
+import re
 import shutil
 import subprocess  # nosec B404 # Required for system package management
 from typing import Dict, Optional
+
+
+def is_valid_unix_username(username: str) -> bool:
+    """
+    Validate that a string is a valid Unix username.
+
+    Valid usernames:
+    - Start with a lowercase letter or underscore
+    - Contain only lowercase letters, digits, underscores, and hyphens
+    - Are 1-32 characters long
+
+    Args:
+        username: The username to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not username:
+        return False
+    # POSIX portable username: starts with letter/underscore, alphanumeric/underscore/hyphen
+    pattern = r"^[a-z_][a-z0-9_-]{0,31}$"
+    return bool(re.match(pattern, username))
 
 
 class PackageManagerDetector:
@@ -186,12 +209,13 @@ class PackageManagerDetector:
             cmd = [brew_path, "list", "--formula", "--versions"]
             if os.getuid() == 0:  # Running as root
                 # Get the original user from SUDO_USER environment variable
+                # and validate it to prevent command injection
                 original_user = os.environ.get("SUDO_USER")
-                if original_user:
+                if original_user and is_valid_unix_username(original_user):
                     cmd = ["sudo", "-u", original_user] + cmd
 
             # Get formula packages (command-line tools and libraries)
-            result = subprocess.run(  # nosec B603 B607 # brew with controlled args
+            result = subprocess.run(  # nosec B603 B607  # nosemgrep: dangerous-subprocess-use-tainted-env-args
                 cmd,
                 capture_output=True,
                 text=True,
