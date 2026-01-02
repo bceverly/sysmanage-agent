@@ -35,7 +35,7 @@ jobs:
         allow-prereleases: true  # Allow testing on pre-release Python versions
 
     - name: Cache pip packages
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -222,7 +222,7 @@ jobs:
         python-version: '3.12'
 
     - name: Cache pip packages
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/requirements.txt') }}
@@ -241,7 +241,7 @@ jobs:
         python -m pytest tests/ -v --cov=src --cov=main --cov-report=xml --cov-report=term-missing
 
     - name: Cache SonarCloud packages
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
