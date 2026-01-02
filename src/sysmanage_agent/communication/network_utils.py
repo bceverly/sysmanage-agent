@@ -43,8 +43,8 @@ class NetworkUtils:
             if result.returncode == 0:
                 cmd_fqdn = result.stdout.strip()
                 self.logger.debug("hostname -f returned: %r", cmd_fqdn)
-                if self._is_valid_fqdn(cmd_fqdn):
-                    self.logger.debug("Using hostname -f result as FQDN: %s", cmd_fqdn)
+                if self._is_valid_hostname(cmd_fqdn):
+                    self.logger.debug("Using hostname -f result: %s", cmd_fqdn)
                     return cmd_fqdn
         except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as error:
             self.logger.debug("hostname -f command failed: %s", error)
