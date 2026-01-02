@@ -321,6 +321,7 @@ class MessageProcessor:
             "initialize_lxd": self.agent.child_host_ops.initialize_lxd,
             "initialize_vmm": self.agent.child_host_ops.initialize_vmm,
             "initialize_kvm": self.agent.child_host_ops.initialize_kvm,
+            "initialize_bhyve": self.agent.child_host_ops.initialize_bhyve,
             "start_child_host": self.agent.child_host_ops.start_child_host,
             "stop_child_host": self.agent.child_host_ops.stop_child_host,
             "restart_child_host": self.agent.child_host_ops.restart_child_host,
