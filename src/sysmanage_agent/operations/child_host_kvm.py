@@ -20,6 +20,8 @@ from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
 
 # Package installation commands by Linux distribution
+# libguestfs-tools is needed for guest filesystem operations
+# genisoimage is needed to create cloud-init ISOs
 LIBVIRT_PACKAGES = {
     "debian": [
         "qemu-kvm",
@@ -27,6 +29,8 @@ LIBVIRT_PACKAGES = {
         "libvirt-clients",
         "virtinst",
         "bridge-utils",
+        "libguestfs-tools",
+        "genisoimage",
     ],
     "ubuntu": [
         "qemu-kvm",
@@ -34,15 +38,33 @@ LIBVIRT_PACKAGES = {
         "libvirt-clients",
         "virtinst",
         "bridge-utils",
+        "libguestfs-tools",
+        "genisoimage",
     ],
-    "fedora": ["@virtualization"],
-    "rhel": ["qemu-kvm", "libvirt", "virt-install"],
-    "centos": ["qemu-kvm", "libvirt", "virt-install"],
-    "rocky": ["qemu-kvm", "libvirt", "virt-install"],
-    "alma": ["qemu-kvm", "libvirt", "virt-install"],
-    "alpine": ["qemu", "qemu-system-x86_64", "libvirt", "libvirt-daemon"],
-    "opensuse": ["patterns-server-kvm_server", "patterns-server-kvm_tools"],
-    "suse": ["patterns-server-kvm_server", "patterns-server-kvm_tools"],
+    "fedora": ["@virtualization", "libguestfs-tools", "genisoimage"],
+    "rhel": ["qemu-kvm", "libvirt", "virt-install", "libguestfs-tools", "genisoimage"],
+    "centos": [
+        "qemu-kvm",
+        "libvirt",
+        "virt-install",
+        "libguestfs-tools",
+        "genisoimage",
+    ],
+    "rocky": ["qemu-kvm", "libvirt", "virt-install", "libguestfs-tools", "genisoimage"],
+    "alma": ["qemu-kvm", "libvirt", "virt-install", "libguestfs-tools", "genisoimage"],
+    "alpine": ["qemu", "qemu-system-x86_64", "libvirt", "libvirt-daemon", "cdrkit"],
+    "opensuse": [
+        "patterns-server-kvm_server",
+        "patterns-server-kvm_tools",
+        "guestfs-tools",
+        "genisoimage",
+    ],
+    "suse": [
+        "patterns-server-kvm_server",
+        "patterns-server-kvm_tools",
+        "guestfs-tools",
+        "genisoimage",
+    ],
 }
 
 

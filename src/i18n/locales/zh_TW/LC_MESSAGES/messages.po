@@ -1259,3 +1259,97 @@ msgstr "已載入KVM核心模組並啟用巢狀虛擬化"
 
 msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 msgstr " - 設定已儲存至 /etc/modprobe.d/kvm.conf 以實現持久化"
+
+# FreeBSD KVM Support
+msgid "Decompressing xz archive: %s"
+msgstr "正在解壓縮 xz 檔案: %s"
+
+msgid "Decompressed to: %s"
+msgstr "已解壓縮至: %s"
+
+msgid "Failed to decompress xz archive"
+msgstr "解壓縮 xz 檔案失敗"
+
+msgid "xz decompression timed out"
+msgstr "xz 解壓縮逾時"
+
+msgid "Using cached decompressed cloud image: %s"
+msgstr "使用快取的已解壓縮雲端映像: %s"
+
+msgid "Generating FreeBSD-specific cloud-init configuration"
+msgstr "正在產生 FreeBSD 專用的 cloud-init 設定"
+
+# FreeBSD Firstboot Provisioning
+msgid "Provisioning FreeBSD image with firstboot mechanism"
+msgstr "Provisioning FreeBSD image with firstboot mechanism"
+
+msgid "Provisioning FreeBSD image with firstboot configuration"
+msgstr "Provisioning FreeBSD image with firstboot configuration"
+
+msgid "FreeBSD image provisioned successfully"
+msgstr "FreeBSD image provisioned successfully"
+
+msgid "Connecting qcow2 image to %s"
+msgstr "Connecting qcow2 image to %s"
+
+msgid "Disconnecting qcow2 image from %s"
+msgstr "Disconnecting qcow2 image from %s"
+
+msgid "Failed to load nbd module: %s"
+msgstr "Failed to load nbd module: %s"
+
+msgid "Failed to connect qcow2: %s"
+msgstr "Failed to connect qcow2: %s"
+
+msgid "Failed to disconnect qcow2: %s"
+msgstr "Failed to disconnect qcow2: %s"
+
+msgid "Found root partition: %s"
+msgstr "Found root partition: %s"
+
+msgid "Mounting %s at %s"
+msgstr "Mounting %s at %s"
+
+msgid "Unmounting %s"
+msgstr "Unmounting %s"
+
+msgid "Failed to mount partition: %s"
+msgstr "Failed to mount partition: %s"
+
+msgid "Failed to write %s: %s"
+msgstr "Failed to write %s: %s"
+
+# libguestfs-tools (guestmount) support
+msgid "guestmount not found. Install libguestfs-tools package."
+msgstr "找不到guestmount。請安裝libguestfs-tools套件。"
+
+msgid "guestunmount not found. Install libguestfs-tools package."
+msgstr "找不到guestunmount。請安裝libguestfs-tools套件。"
+
+msgid "Found FreeBSD root: %s"
+msgstr "找到FreeBSD根目錄: %s"
+
+msgid "Error detecting partitions: %s"
+msgstr "偵測分割區時發生錯誤: %s"
+
+msgid "Mounting FreeBSD image %s partition %s at %s"
+msgstr "將FreeBSD映像 %s 分割區 %s 掛載到 %s"
+
+msgid "Failed to mount image: %s"
+msgstr "掛載映像失敗: %s"
+
+msgid "Detected filesystems: %s"
+msgstr "偵測到的檔案系統: %s"
+
+msgid "Found FreeBSD UFS root: %s"
+msgstr "找到FreeBSD UFS根目錄: %s"
+
+msgid "Using FreeBSD sda4: %s"
+msgstr "使用FreeBSD sda4: %s"
+
+msgid "Using FreeBSD sda3: %s"
+msgstr "使用FreeBSD sda3: %s"
+
+msgid "Defaulting to FreeBSD standard root: /dev/sda4"
+msgstr "預設使用FreeBSD標準根目錄: /dev/sda4"
+

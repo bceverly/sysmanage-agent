@@ -1,6 +1,6 @@
 name: sysmanage-agent
 version: "1.0.0"
-arch: freebsd:*:x86_64
+arch: FreeBSD:*:amd64
 origin: sysutils/sysmanage-agent
 comment: System management agent for SysManage
 maintainer: bryan@theeverlys.com

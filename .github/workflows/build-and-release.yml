@@ -783,8 +783,6 @@ jobs:
       - name: Install FreeBSD package build tools
         run: |
           sudo apt-get update
-          # Try to install FreeBSD pkg tools or alternatives
-          # We may need to install libarchive-tools for tar/archive handling
           sudo apt-get install -y \
             libarchive-tools \
             python3-dev \
@@ -794,69 +792,141 @@ jobs:
             pkg-config \
             gzip \
             tar \
-            xz-utils
+            xz-utils \
+            zstd
 
       - name: Set up FreeBSD package structure
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          echo "Setting up FreeBSD package structure..."
+          echo "Setting up FreeBSD package structure for version $VERSION..."
 
-          # Create build directories
-          mkdir -p build/freebsd/package-root/usr/local/lib/sysmanage-agent
-          mkdir -p build/freebsd/package-root/usr/local/etc/sysmanage-agent
-          mkdir -p build/freebsd/package-root/usr/local/etc/rc.d
-          mkdir -p build/freebsd/package-root/var/log/sysmanage-agent
-          mkdir -p build/freebsd/package-root/var/run/sysmanage
+          # Create build directory
+          mkdir -p build/freebsd/staging
+          cd build/freebsd/staging
+
+          # Create directory structure (paths relative to /, no leading slash)
+          mkdir -p usr/local/lib/sysmanage-agent
+          mkdir -p usr/local/etc/sysmanage-agent
+          mkdir -p usr/local/etc/rc.d
+          mkdir -p usr/local/share/doc/sysmanage-agent/sbom
 
           # Copy agent files
-          cp -R src build/freebsd/package-root/usr/local/lib/sysmanage-agent/
-          cp main.py build/freebsd/package-root/usr/local/lib/sysmanage-agent/
-          cp requirements.txt build/freebsd/package-root/usr/local/lib/sysmanage-agent/
-          cp alembic.ini build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+          cp -R $GITHUB_WORKSPACE/src usr/local/lib/sysmanage-agent/
+          cp $GITHUB_WORKSPACE/main.py usr/local/lib/sysmanage-agent/
+          cp $GITHUB_WORKSPACE/requirements.txt usr/local/lib/sysmanage-agent/
+          cp $GITHUB_WORKSPACE/alembic.ini usr/local/lib/sysmanage-agent/
 
           # Copy configuration files
-          cp installer/freebsd/config.yaml.example build/freebsd/package-root/usr/local/etc/sysmanage-agent/
-          cp installer/freebsd/sysmanage-agent.rc build/freebsd/package-root/usr/local/etc/rc.d/sysmanage_agent
-          cp installer/freebsd/sysmanage-agent-wrapper.sh build/freebsd/package-root/usr/local/lib/sysmanage-agent/
+          cp $GITHUB_WORKSPACE/installer/freebsd/config.yaml.example usr/local/etc/sysmanage-agent/
+          cp $GITHUB_WORKSPACE/installer/freebsd/sysmanage-agent.rc usr/local/etc/rc.d/sysmanage_agent
+          cp $GITHUB_WORKSPACE/installer/freebsd/sysmanage-agent-wrapper.sh usr/local/lib/sysmanage-agent/
+
+          # Create SBOM placeholder
+          echo '{"bomFormat": "CycloneDX", "specVersion": "1.4", "version": 1}' > usr/local/share/doc/sysmanage-agent/sbom/sysmanage-agent-sbom.json
 
           # Set executable permissions
-          chmod +x build/freebsd/package-root/usr/local/etc/rc.d/sysmanage_agent
-          chmod +x build/freebsd/package-root/usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh
+          chmod +x usr/local/etc/rc.d/sysmanage_agent
+          chmod +x usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh
 
-          # Update manifest with version
-          sed "s/version: \".*\"/version: \"$VERSION\"/" installer/freebsd/+MANIFEST > build/freebsd/+MANIFEST
+          echo "File structure created."
 
-      - name: Create FreeBSD package using libarchive
+      - name: Create FreeBSD package
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          echo "Creating FreeBSD package..."
+          echo "Creating FreeBSD package version $VERSION..."
           cd build/freebsd
 
-          # Create the package archive
-          # FreeBSD packages are typically txz (tar.xz) files with specific structure
-          # First create the manifest and metadata
-
-          # Create package metadata files
-          echo "+COMPACT_MANIFEST" > +COMPACT_MANIFEST
-
-          # Create the package contents
-          cd package-root
-          find . -type f | sort > ../+CONTENTS
-
-          # Create the final package file
+          # Generate the files list dynamically from staging
+          echo "Generating files list..."
+          FILES_UCL=""
+          cd staging
+          find usr -type f | sort | while read f; do
+            # Determine permissions
+            if [ -x "$f" ]; then
+              PERM="0755"
+            else
+              PERM="0644"
+            fi
+            echo "  /$f: {uname: root, gname: wheel, perm: $PERM},"
+          done > ../files_list.txt
           cd ..
+
+          # Create +COMPACT_MANIFEST (minimal UCL format, no heredocs or complex types)
+          cat > staging/+COMPACT_MANIFEST << EOF
+          name: sysmanage-agent
+          version: "$VERSION"
+          origin: sysutils/sysmanage-agent
+          comment: System management agent for SysManage
+          arch: FreeBSD:*:amd64
+          maintainer: bryan@theeverlys.com
+          prefix: /usr/local
+          www: https://github.com/bceverly/sysmanage-agent
+          EOF
+
+          # Create +MANIFEST (full UCL format) with all required dependencies
+          cat > staging/+MANIFEST << EOF
+          name: sysmanage-agent
+          version: "$VERSION"
+          origin: sysutils/sysmanage-agent
+          comment: System management agent for SysManage
+          arch: FreeBSD:*:amd64
+          maintainer: bryan@theeverlys.com
+          prefix: /usr/local
+          www: https://github.com/bceverly/sysmanage-agent
+          desc: "SysManage Agent - system management capabilities including package inventory, updates, monitoring, security policy enforcement, certificate management, firewall configuration, and remote command execution."
+          categories: ["sysutils", "python"]
+          licenselogic: single
+          licenses: ["MIT"]
+          deps: {
+            python311: {origin: "lang/python311", version: "3.11"},
+            py311-pip: {origin: "devel/py-pip"},
+            py311-aiosqlite: {origin: "databases/py-aiosqlite"},
+            py311-cryptography: {origin: "security/py-cryptography"},
+            py311-pyyaml: {origin: "devel/py-yaml"},
+            py311-aiohttp: {origin: "www/py-aiohttp"},
+            py311-sqlalchemy20: {origin: "databases/py-sqlalchemy20"},
+            py311-alembic: {origin: "databases/py-alembic"},
+            py311-websockets: {origin: "www/py-websockets"}
+          }
+          scripts: {
+            pre-install: "#!/bin/sh\necho 'Installing SysManage Agent...'\n",
+            post-install: "#!/bin/sh\n# Create sysmanage user and group if they don't exist\nif ! pw groupshow sysmanage >/dev/null 2>&1; then\n    pw groupadd sysmanage -g 9999\nfi\nif ! pw usershow sysmanage >/dev/null 2>&1; then\n    pw useradd sysmanage -u 9999 -g sysmanage -h - -s /usr/sbin/nologin -d /usr/local/lib/sysmanage-agent -c 'SysManage Agent User'\nfi\n# Create directories\nmkdir -p /var/log/sysmanage-agent /var/run/sysmanage /var/lib/sysmanage-agent\nchown -R sysmanage:sysmanage /usr/local/lib/sysmanage-agent /var/log/sysmanage-agent /var/run/sysmanage /var/lib/sysmanage-agent\n# Use existing config or create from example\nif [ -f /etc/sysmanage-agent.yaml ]; then\n    ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml\nelif [ ! -f /usr/local/etc/sysmanage-agent/config.yaml ]; then\n    cp /usr/local/etc/sysmanage-agent/config.yaml.example /usr/local/etc/sysmanage-agent/config.yaml\nfi\necho 'SysManage Agent installed. Configure /etc/sysmanage-agent.yaml and run: sysrc sysmanage_agent_enable=YES && service sysmanage_agent start'\n",
+            pre-deinstall: "#!/bin/sh\nservice sysmanage_agent stop 2>/dev/null || true\n"
+          }
+          EOF
+
+          # Create the package using bsdtar (libarchive) which handles FreeBSD pkg format properly
           PKG_FILE="sysmanage-agent-$VERSION.pkg"
 
-          # Create package archive (FreeBSD packages are .txz files)
-          tar -cf - +COMPACT_MANIFEST +MANIFEST +CONTENTS package-root | xz -c > "../$PKG_FILE"
+          cd staging
+
+          # FreeBSD pkg format: tar.zst archive with +COMPACT_MANIFEST, +MANIFEST, then files
+          # Use pax format which is what FreeBSD pkg uses
+          bsdtar --zstd -cf "../$PKG_FILE" \
+            --format=pax \
+            --uid=0 --gid=0 \
+            --options='compression-level=19' \
+            +COMPACT_MANIFEST \
+            +MANIFEST \
+            usr
+
+          cd ..
 
           # Move to dist directory
-          mkdir -p ../../installer/dist
-          mv "../$PKG_FILE" ../../installer/dist/
+          mkdir -p $GITHUB_WORKSPACE/installer/dist
+          mv "$PKG_FILE" $GITHUB_WORKSPACE/installer/dist/
 
           echo "Package created: installer/dist/$PKG_FILE"
+
+          # Verify package contents
+          echo ""
+          echo "Package contents:"
+          bsdtar -tf $GITHUB_WORKSPACE/installer/dist/$PKG_FILE | head -40
+
+          echo ""
+          echo "Package size: $(du -h $GITHUB_WORKSPACE/installer/dist/$PKG_FILE | cut -f1)"
 
       - name: Generate package information
         id: package_info

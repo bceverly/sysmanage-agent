@@ -1259,3 +1259,97 @@ msgstr "KVM कर्नेल मॉड्यूल नेस्टेड व�
 
 msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 msgstr " - स्थायित्व के लिए /etc/modprobe.d/kvm.conf में कॉन्फ़िगरेशन सहेजा गया"
+
+# FreeBSD KVM Support
+msgid "Decompressing xz archive: %s"
+msgstr "xz आर्काइव डीकंप्रेस हो रहा है: %s"
+
+msgid "Decompressed to: %s"
+msgstr "डीकंप्रेस किया गया: %s"
+
+msgid "Failed to decompress xz archive"
+msgstr "xz आर्काइव डीकंप्रेस करने में विफल"
+
+msgid "xz decompression timed out"
+msgstr "xz डीकंप्रेशन का समय समाप्त"
+
+msgid "Using cached decompressed cloud image: %s"
+msgstr "कैश्ड डीकंप्रेस्ड क्लाउड इमेज का उपयोग: %s"
+
+msgid "Generating FreeBSD-specific cloud-init configuration"
+msgstr "FreeBSD-विशिष्ट cloud-init कॉन्फ़िगरेशन जनरेट हो रहा है"
+
+# FreeBSD Firstboot Provisioning
+msgid "Provisioning FreeBSD image with firstboot mechanism"
+msgstr "Provisioning FreeBSD image with firstboot mechanism"
+
+msgid "Provisioning FreeBSD image with firstboot configuration"
+msgstr "Provisioning FreeBSD image with firstboot configuration"
+
+msgid "FreeBSD image provisioned successfully"
+msgstr "FreeBSD image provisioned successfully"
+
+msgid "Connecting qcow2 image to %s"
+msgstr "Connecting qcow2 image to %s"
+
+msgid "Disconnecting qcow2 image from %s"
+msgstr "Disconnecting qcow2 image from %s"
+
+msgid "Failed to load nbd module: %s"
+msgstr "Failed to load nbd module: %s"
+
+msgid "Failed to connect qcow2: %s"
+msgstr "Failed to connect qcow2: %s"
+
+msgid "Failed to disconnect qcow2: %s"
+msgstr "Failed to disconnect qcow2: %s"
+
+msgid "Found root partition: %s"
+msgstr "Found root partition: %s"
+
+msgid "Mounting %s at %s"
+msgstr "Mounting %s at %s"
+
+msgid "Unmounting %s"
+msgstr "Unmounting %s"
+
+msgid "Failed to mount partition: %s"
+msgstr "Failed to mount partition: %s"
+
+msgid "Failed to write %s: %s"
+msgstr "Failed to write %s: %s"
+
+# libguestfs-tools (guestmount) support
+msgid "guestmount not found. Install libguestfs-tools package."
+msgstr "guestmount नहीं मिला। libguestfs-tools पैकेज इंस्टॉल करें।"
+
+msgid "guestunmount not found. Install libguestfs-tools package."
+msgstr "guestunmount नहीं मिला। libguestfs-tools पैकेज इंस्टॉल करें।"
+
+msgid "Found FreeBSD root: %s"
+msgstr "FreeBSD रूट मिला: %s"
+
+msgid "Error detecting partitions: %s"
+msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+
+msgid "Mounting FreeBSD image %s partition %s at %s"
+msgstr "FreeBSD इमेज %s पार्टीशन %s को %s पर माउंट कर रहा है"
+
+msgid "Failed to mount image: %s"
+msgstr "इमेज माउंट करने में विफल: %s"
+
+msgid "Detected filesystems: %s"
+msgstr "पता लगाए गए फाइल सिस्टम: %s"
+
+msgid "Found FreeBSD UFS root: %s"
+msgstr "FreeBSD UFS रूट मिला: %s"
+
+msgid "Using FreeBSD sda4: %s"
+msgstr "FreeBSD sda4 का उपयोग: %s"
+
+msgid "Using FreeBSD sda3: %s"
+msgstr "FreeBSD sda3 का उपयोग: %s"
+
+msgid "Defaulting to FreeBSD standard root: /dev/sda4"
+msgstr "FreeBSD मानक रूट पर डिफ़ॉल्ट: /dev/sda4"
+

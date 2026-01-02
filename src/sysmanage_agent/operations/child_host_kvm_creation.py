@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_kvm_cloudinit import KvmCloudInit
+from src.sysmanage_agent.operations.child_host_kvm_freebsd import FreeBSDProvisioner
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
 # Default paths
@@ -31,6 +32,19 @@ class KvmCreation:
         """
         self.logger = logger
         self._cloudinit = KvmCloudInit(logger)
+        self._freebsd = FreeBSDProvisioner(logger)
+
+    def _is_freebsd(self, config: KvmVmConfig) -> bool:
+        """
+        Check if the distribution is FreeBSD.
+
+        Args:
+            config: VM configuration
+
+        Returns:
+            True if FreeBSD, False otherwise
+        """
+        return self._freebsd.is_freebsd(config)
 
     def _vm_exists(self, vm_name: str) -> bool:
         """
@@ -99,9 +113,49 @@ class KvmCreation:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    def _decompress_xz(self, xz_path: str, output_path: str) -> Dict[str, Any]:
+        """
+        Decompress an xz-compressed file.
+
+        Args:
+            xz_path: Path to the .xz file
+            output_path: Path for the decompressed output
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            self.logger.info(_("Decompressing xz archive: %s"), xz_path)
+
+            # Use xz with -k to keep the original and -d to decompress
+            # Output to stdout and redirect to target file
+            result = subprocess.run(  # nosec B603 B607
+                ["sudo", "sh", "-c", f"xz -dk -c '{xz_path}' > '{output_path}'"],
+                capture_output=True,
+                text=True,
+                timeout=600,  # 10 minutes for decompression
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": result.stderr or _("Failed to decompress xz archive"),
+                }
+
+            self.logger.info(_("Decompressed to: %s"), output_path)
+            return {"success": True, "path": output_path}
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": _("xz decompression timed out")}
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
     def _download_cloud_image(self, url: str, dest_path: str) -> Dict[str, Any]:
         """
         Download a cloud image and convert it if necessary.
+
+        Supports compressed formats (.xz) commonly used by FreeBSD.
 
         Args:
             url: URL of the cloud image
@@ -122,8 +176,25 @@ class KvmCreation:
             filename = os.path.basename(url.split("?")[0])
             cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
 
-            # Check if we have a cached copy
-            if not os.path.exists(cached_path):
+            # Determine if this is a compressed file that needs extraction
+            is_xz_compressed = filename.endswith(".xz")
+            if is_xz_compressed:
+                # The cached path is for the compressed file
+                # We need a separate path for the decompressed image
+                decompressed_filename = filename[:-3]  # Remove .xz suffix
+                decompressed_path = os.path.join(
+                    download_dir, f"{url_hash}_{decompressed_filename}"
+                )
+            else:
+                decompressed_path = cached_path
+
+            # Check if we have a cached decompressed copy
+            if is_xz_compressed and os.path.exists(decompressed_path):
+                self.logger.info(
+                    _("Using cached decompressed cloud image: %s"), decompressed_path
+                )
+                cached_path = decompressed_path
+            elif not os.path.exists(cached_path):
                 # Download the image
                 result = subprocess.run(  # nosec B603 B607
                     ["sudo", "curl", "-L", "-o", cached_path, url],
@@ -140,6 +211,16 @@ class KvmCreation:
                     }
 
                 self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
+
+                # Decompress if needed
+                if is_xz_compressed:
+                    decompress_result = self._decompress_xz(
+                        cached_path, decompressed_path
+                    )
+                    if not decompress_result.get("success"):
+                        return decompress_result
+                    # Use the decompressed path going forward
+                    cached_path = decompressed_path
             else:
                 self.logger.info(_("Using cached cloud image: %s"), cached_path)
 
@@ -539,12 +620,24 @@ class KvmCreation:
                 if not disk_result.get("success"):
                     return disk_result
 
-            # Step 4: Create cloud-init ISO
+            # Step 4: Provision the VM (cloud-init for Linux, config disk for FreeBSD)
             if config.use_cloud_init:
-                self.logger.info(_("Creating cloud-init ISO"))
-                cloudinit_result = self._cloudinit.create_cloud_init_iso(config)
-                if not cloudinit_result.get("success"):
-                    return cloudinit_result
+                if self._is_freebsd(config):
+                    # FreeBSD: Create config disk with cloud-init compatible format
+                    self.logger.info(_("Provisioning FreeBSD with config disk"))
+                    freebsd_result = self._freebsd.provision_image(
+                        config.disk_path, config
+                    )
+                    if not freebsd_result.get("success"):
+                        return freebsd_result
+                    # Set cloud_init_iso_path to the FreeBSD config disk
+                    config.cloud_init_iso_path = freebsd_result.get("config_disk_path")
+                else:
+                    # Linux: Use cloud-init ISO
+                    self.logger.info(_("Creating cloud-init ISO"))
+                    cloudinit_result = self._cloudinit.create_cloud_init_iso(config)
+                    if not cloudinit_result.get("success"):
+                        return cloudinit_result
 
             # Step 5: Define and start VM
             self.logger.info(_("Defining and starting VM"))
@@ -576,6 +669,24 @@ class KvmCreation:
                     "ip_address": vm_ip,
                     "ssh_pending": True,
                 }
+
+            # Step 8: For FreeBSD, run the bootstrap script automatically
+            if self._is_freebsd(config) and self._freebsd.has_ssh_key():
+                self.logger.info(_("Running FreeBSD bootstrap script"))
+                bootstrap_result = await self._freebsd.run_bootstrap_via_ssh(vm_ip)
+                if not bootstrap_result.get("success"):
+                    self.logger.warning(
+                        _(
+                            "FreeBSD bootstrap failed: %s. Manual bootstrap may be required."
+                        ),
+                        bootstrap_result.get("error"),
+                    )
+                    # Don't fail the whole operation - VM is created and running
+                else:
+                    self.logger.info(_("FreeBSD bootstrap completed successfully"))
+
+                # Clean up the temporary SSH key
+                self._freebsd.cleanup()
 
             self.logger.info(
                 _("KVM VM '%s' created successfully at %s"), config.vm_name, vm_ip

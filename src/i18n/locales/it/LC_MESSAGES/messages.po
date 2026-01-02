@@ -1261,3 +1261,97 @@ msgstr "Moduli kernel KVM caricati con virtualizzazione annidata abilitata"
 
 msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 msgstr " - configurazione salvata in /etc/modprobe.d/kvm.conf per la persistenza"
+
+# FreeBSD KVM Support
+msgid "Decompressing xz archive: %s"
+msgstr "Decompressione archivio xz: %s"
+
+msgid "Decompressed to: %s"
+msgstr "Decompresso in: %s"
+
+msgid "Failed to decompress xz archive"
+msgstr "Impossibile decomprimere l'archivio xz"
+
+msgid "xz decompression timed out"
+msgstr "Timeout decompressione xz"
+
+msgid "Using cached decompressed cloud image: %s"
+msgstr "Utilizzo immagine cloud decompressa dalla cache: %s"
+
+msgid "Generating FreeBSD-specific cloud-init configuration"
+msgstr "Generazione configurazione cloud-init specifica per FreeBSD"
+
+# FreeBSD Firstboot Provisioning
+msgid "Provisioning FreeBSD image with firstboot mechanism"
+msgstr "Provisioning FreeBSD image with firstboot mechanism"
+
+msgid "Provisioning FreeBSD image with firstboot configuration"
+msgstr "Provisioning FreeBSD image with firstboot configuration"
+
+msgid "FreeBSD image provisioned successfully"
+msgstr "FreeBSD image provisioned successfully"
+
+msgid "Connecting qcow2 image to %s"
+msgstr "Connecting qcow2 image to %s"
+
+msgid "Disconnecting qcow2 image from %s"
+msgstr "Disconnecting qcow2 image from %s"
+
+msgid "Failed to load nbd module: %s"
+msgstr "Failed to load nbd module: %s"
+
+msgid "Failed to connect qcow2: %s"
+msgstr "Failed to connect qcow2: %s"
+
+msgid "Failed to disconnect qcow2: %s"
+msgstr "Failed to disconnect qcow2: %s"
+
+msgid "Found root partition: %s"
+msgstr "Found root partition: %s"
+
+msgid "Mounting %s at %s"
+msgstr "Mounting %s at %s"
+
+msgid "Unmounting %s"
+msgstr "Unmounting %s"
+
+msgid "Failed to mount partition: %s"
+msgstr "Failed to mount partition: %s"
+
+msgid "Failed to write %s: %s"
+msgstr "Failed to write %s: %s"
+
+# libguestfs-tools (guestmount) support
+msgid "guestmount not found. Install libguestfs-tools package."
+msgstr "guestmount non trovato. Installare il pacchetto libguestfs-tools."
+
+msgid "guestunmount not found. Install libguestfs-tools package."
+msgstr "guestunmount non trovato. Installare il pacchetto libguestfs-tools."
+
+msgid "Found FreeBSD root: %s"
+msgstr "Root FreeBSD trovata: %s"
+
+msgid "Error detecting partitions: %s"
+msgstr "Errore nel rilevamento delle partizioni: %s"
+
+msgid "Mounting FreeBSD image %s partition %s at %s"
+msgstr "Montaggio dell'immagine FreeBSD %s partizione %s su %s"
+
+msgid "Failed to mount image: %s"
+msgstr "Impossibile montare l'immagine: %s"
+
+msgid "Detected filesystems: %s"
+msgstr "Filesystem rilevati: %s"
+
+msgid "Found FreeBSD UFS root: %s"
+msgstr "Root UFS FreeBSD trovata: %s"
+
+msgid "Using FreeBSD sda4: %s"
+msgstr "Utilizzo di FreeBSD sda4: %s"
+
+msgid "Using FreeBSD sda3: %s"
+msgstr "Utilizzo di FreeBSD sda3: %s"
+
+msgid "Defaulting to FreeBSD standard root: /dev/sda4"
+msgstr "Root standard FreeBSD predefinita: /dev/sda4"
+
