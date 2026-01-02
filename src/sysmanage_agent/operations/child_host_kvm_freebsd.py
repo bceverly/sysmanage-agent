@@ -456,8 +456,8 @@ local-hostname: {config.hostname.split('.')[0]}
                     mdf.write(meta_data)
                 with open(bootstrap_path, "w", encoding="utf-8") as bsf:
                     bsf.write(bootstrap_script)
-                # Make bootstrap script executable
-                os.chmod(bootstrap_path, 0o755)
+                # Make bootstrap script executable - must be 755 to run as shell script
+                os.chmod(bootstrap_path, 0o755)  # nosec B103
 
                 # Create ISO image (more compatible than FAT32 for cloud-init)
                 self._config_disk_path = os.path.join(
