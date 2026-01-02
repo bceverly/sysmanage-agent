@@ -131,6 +131,11 @@ class RoleDetector:
                 "packages": {},  # KVM is a Linux kernel feature + libvirt
                 "special_detection": "kvm",  # Flag for special handling
             },
+            "bhyve_host": {
+                "role": "bhyve Host",
+                "packages": {},  # bhyve is a FreeBSD kernel feature
+                "special_detection": "bhyve",  # Flag for special handling
+            },
         }
 
     def detect_roles(self) -> List[Dict[str, Any]]:
@@ -287,3 +292,9 @@ class RoleDetector:
             vmm_role = self.virt_detector.detect_vmm_host_role()
             if vmm_role:
                 roles.append(vmm_role)
+
+        # Detect bhyve Host on FreeBSD
+        if self.system == "freebsd":
+            bhyve_role = self.virt_detector.detect_bhyve_host_role()
+            if bhyve_role:
+                roles.append(bhyve_role)

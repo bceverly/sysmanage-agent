@@ -266,6 +266,42 @@ class OSInfoCollector:
             os_info["windows_version"] = win_ver[0] if win_ver[0] else ""
             os_info["windows_service_pack"] = win_ver[1] if win_ver[1] else ""
 
+        elif system_name == "FreeBSD":
+            # FreeBSD handling
+            friendly_platform = system_name
+            friendly_release = system_release  # e.g., "14.2-RELEASE"
+
+            # Get FreeBSD-specific information
+            os_info["freebsd_version"] = system_release
+
+            # Try to get more detailed FreeBSD info
+            try:
+                result = subprocess.run(
+                    ["freebsd-version", "-u"],  # nosec B603, B607
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    os_info["freebsd_userland_version"] = result.stdout.strip()
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
+
+        elif system_name == "OpenBSD":
+            # OpenBSD handling
+            friendly_platform = system_name
+            friendly_release = system_release  # e.g., "7.6"
+
+            os_info["openbsd_version"] = system_release
+
+        elif system_name == "NetBSD":
+            # NetBSD handling
+            friendly_platform = system_name
+            friendly_release = system_release
+
+            os_info["netbsd_version"] = system_release
+
         else:
             # Default behavior for other platforms
             friendly_platform = system_name

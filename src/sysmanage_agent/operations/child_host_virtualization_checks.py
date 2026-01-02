@@ -629,31 +629,6 @@ class VirtualizationChecks:
 
         return result
 
-    def check_bhyve_support(self) -> Dict[str, Any]:
-        """
-        Check bhyve support on FreeBSD.
-
-        Returns:
-            Dict with bhyve availability info
-        """
-        result = {
-            "available": False,
-        }
-
-        try:
-            if platform.system().lower() != "freebsd":
-                return result
-
-            # Check if bhyve is available
-            bhyve_path = shutil.which("bhyve")
-            if bhyve_path:
-                result["available"] = True
-
-        except Exception as error:
-            self.logger.debug("Error checking bhyve support: %s", error)
-
-        return result
-
     def check_vmm_support(self) -> Dict[str, Any]:
         """
         Check VMM/vmd support on OpenBSD.
@@ -826,5 +801,124 @@ class VirtualizationChecks:
 
         except Exception as error:
             self.logger.debug("Error checking VirtualBox support: %s", error)
+
+        return result
+
+    def check_bhyve_support(self) -> Dict[str, Any]:
+        """
+        Check bhyve support on FreeBSD.
+
+        Returns:
+            Dict with bhyve availability info including:
+            - available: True if bhyve can potentially be used (FreeBSD with bhyvectl)
+            - enabled: True if vmm.ko is loaded
+            - running: True if bhyve is ready to create VMs
+            - initialized: True if bhyve is fully configured
+            - kernel_supported: True if vmm.ko can be loaded
+            - cpu_supported: True if CPU has VT-x/AMD-V with EPT/RVI
+            - uefi_available: True if UEFI firmware is installed
+            - needs_enable: True if vmm.ko needs to be loaded
+        """
+        result = {
+            "available": False,
+            "enabled": False,
+            "running": False,
+            "initialized": False,
+            "kernel_supported": False,
+            "cpu_supported": False,
+            "uefi_available": False,
+            "needs_enable": False,
+        }
+
+        try:
+            if platform.system().lower() != "freebsd":
+                return result
+
+            # Check if bhyvectl is available
+            bhyvectl_path = shutil.which("bhyvectl")
+            if not bhyvectl_path:
+                self.logger.debug("bhyvectl not found - bhyve not available")
+                return result
+
+            result["available"] = True
+
+            # Check CPU virtualization support (VMX for Intel, SVM for AMD)
+            try:
+                # Check Intel VT-x with EPT
+                vmx_result = subprocess.run(  # nosec B603 B607
+                    ["sysctl", "-n", "hw.vmm.vmx.initialized"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if vmx_result.returncode == 0 and vmx_result.stdout.strip() == "1":
+                    result["cpu_supported"] = True
+                else:
+                    # Check AMD-V with RVI
+                    svm_result = subprocess.run(  # nosec B603 B607
+                        ["sysctl", "-n", "hw.vmm.svm.initialized"],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if svm_result.returncode == 0 and svm_result.stdout.strip() == "1":
+                        result["cpu_supported"] = True
+            except Exception as cpu_error:
+                self.logger.debug("Error checking CPU virtualization: %s", cpu_error)
+
+            # Check if vmm.ko kernel module is loaded
+            try:
+                kldstat_result = subprocess.run(  # nosec B603 B607
+                    ["kldstat", "-q", "-m", "vmm"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if kldstat_result.returncode == 0:
+                    result["enabled"] = True
+                    result["kernel_supported"] = True
+                    result["running"] = True
+                    result["initialized"] = True
+                else:
+                    # vmm.ko not loaded, check if it can be loaded
+                    # The module exists if the file is present
+                    if os.path.exists("/boot/kernel/vmm.ko"):
+                        result["kernel_supported"] = True
+                    result["needs_enable"] = True
+            except Exception as kld_error:
+                self.logger.debug("Error checking vmm.ko status: %s", kld_error)
+                result["needs_enable"] = True
+
+            # Check if /dev/vmm directory exists (created when vmm.ko is loaded)
+            if os.path.isdir("/dev/vmm"):
+                result["enabled"] = True
+                result["running"] = True
+
+            # Check if UEFI firmware is available (required for non-FreeBSD guests)
+            uefi_firmware_paths = [
+                "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd",
+                "/usr/local/share/bhyve-firmware/BHYVE_UEFI.fd",
+            ]
+            for uefi_path in uefi_firmware_paths:
+                if os.path.exists(uefi_path):
+                    result["uefi_available"] = True
+                    break
+
+            self.logger.info(
+                "bhyve support check: available=%s, enabled=%s, running=%s, "
+                "kernel_supported=%s, cpu_supported=%s, uefi_available=%s",
+                result["available"],
+                result["enabled"],
+                result["running"],
+                result["kernel_supported"],
+                result["cpu_supported"],
+                result["uefi_available"],
+            )
+
+        except Exception as error:
+            self.logger.debug("Error checking bhyve support: %s", error)
 
         return result

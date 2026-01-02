@@ -732,3 +732,45 @@ class ChildHostListing:
         except Exception as error:
             self.logger.debug("Error reading VMM metadata for '%s': %s", vm_name, error)
             return None
+
+    def list_bhyve_vms(self) -> List[Dict[str, Any]]:
+        """
+        List bhyve virtual machines on FreeBSD.
+
+        Enumerates VMs by checking /dev/vmm directory for running VMs.
+
+        Returns:
+            List of bhyve VM information dicts with:
+            - child_type: 'bhyve'
+            - child_name: VM name
+            - status: running/stopped
+        """
+        vms = []
+
+        try:
+            # Check if /dev/vmm directory exists (vmm.ko loaded)
+            vmm_dir = "/dev/vmm"
+            if not os.path.isdir(vmm_dir):
+                self.logger.debug("/dev/vmm not found - bhyve not enabled")
+                return vms
+
+            # List running VMs from /dev/vmm entries
+            try:
+                vm_names = os.listdir(vmm_dir)
+                for vm_name in vm_names:
+                    vms.append(
+                        {
+                            "child_type": "bhyve",
+                            "child_name": vm_name,
+                            "status": "running",  # If in /dev/vmm, it's running
+                        }
+                    )
+            except PermissionError:
+                self.logger.debug("Permission denied reading /dev/vmm")
+
+            self.logger.info("Found %d bhyve VMs", len(vms))
+
+        except Exception as error:
+            self.logger.debug("Error listing bhyve VMs: %s", error)
+
+        return vms

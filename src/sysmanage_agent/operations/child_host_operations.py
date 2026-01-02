@@ -35,6 +35,7 @@ from src.sysmanage_agent.operations.child_host_virtualization_checks import (
     VirtualizationChecks,
 )
 from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
+from src.sysmanage_agent.operations.child_host_bhyve import BhyveOperations
 from src.sysmanage_agent.operations.child_host_wsl import WslOperations
 
 
@@ -68,6 +69,9 @@ class ChildHostOperations:
             self.agent, self.logger, self.virtualization_checks
         )
         self.kvm_ops = KvmOperations(
+            self.agent, self.logger, self.virtualization_checks
+        )
+        self.bhyve_ops = BhyveOperations(
             self.agent, self.logger, self.virtualization_checks
         )
 
@@ -211,6 +215,12 @@ class ChildHostOperations:
                 if not child_type_filter or child_type_filter == "vmm":
                     vmm_vms = self.listing_helper.list_vmm_vms()
                     child_hosts.extend(vmm_vms)
+
+            elif os_type == "freebsd":
+                # Get bhyve VMs
+                if not child_type_filter or child_type_filter == "bhyve":
+                    bhyve_vms = self.listing_helper.list_bhyve_vms()
+                    child_hosts.extend(bhyve_vms)
 
             # VirtualBox VMs (cross-platform)
             if not child_type_filter or child_type_filter == "virtualbox":
@@ -447,6 +457,22 @@ class ChildHostOperations:
         self.logger.info(_("Initializing KVM/libvirt"))
         return await self.kvm_ops.initialize_kvm(parameters)
 
+    async def initialize_bhyve(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initialize bhyve on a FreeBSD system.
+
+        This is called when the user clicks "Enable bhyve" in the UI.
+        It loads vmm.ko and configures /boot/loader.conf for persistence.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Initializing bhyve"))
+        return await self.bhyve_ops.initialize_bhyve(parameters)
+
     async def setup_kvm_networking(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Configure KVM networking based on the specified mode.
@@ -505,6 +531,9 @@ class ChildHostOperations:
         if child_type == "kvm":
             return await self.kvm_ops.start_child_host(parameters)
 
+        if child_type == "bhyve":
+            return await self.bhyve_ops.start_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -541,6 +570,9 @@ class ChildHostOperations:
 
         if child_type == "kvm":
             return await self.kvm_ops.stop_child_host(parameters)
+
+        if child_type == "bhyve":
+            return await self.bhyve_ops.stop_child_host(parameters)
 
         return {
             "success": False,
@@ -579,6 +611,9 @@ class ChildHostOperations:
         if child_type == "kvm":
             return await self.kvm_ops.restart_child_host(parameters)
 
+        if child_type == "bhyve":
+            return await self.bhyve_ops.restart_child_host(parameters)
+
         return {
             "success": False,
             "error": _("Unsupported child host type: %s") % child_type,
@@ -613,6 +648,8 @@ class ChildHostOperations:
             result = await self.vmm_ops.delete_child_host(parameters)
         elif child_type == "kvm":
             result = await self.kvm_ops.delete_child_host(parameters)
+        elif child_type == "bhyve":
+            result = await self.bhyve_ops.delete_child_host(parameters)
         else:
             return {
                 "success": False,

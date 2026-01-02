@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 
 
 class VirtualizationHostDetector:
-    """Handles detection of virtualization host roles (LXD, WSL, VMM, KVM)."""
+    """Handles detection of virtualization host roles (LXD, WSL, VMM, KVM, bhyve)."""
 
     def __init__(self, system: str, logger: logging.Logger, service_status_detector):
         self.system = system
@@ -312,4 +312,78 @@ class VirtualizationHostDetector:
 
         except Exception as error:
             self.logger.debug("Error detecting KVM host role: %s", error)
+            return None
+
+    def detect_bhyve_host_role(self) -> Optional[Dict[str, Any]]:
+        """
+        Detect if this FreeBSD host has bhyve enabled and ready for VMs.
+
+        Returns role dict if bhyve is available AND vmm.ko is loaded, None otherwise.
+        """
+        try:
+            # Check if bhyvectl command exists
+            bhyvectl_path = shutil.which("bhyvectl")
+            if not bhyvectl_path:
+                return None
+
+            # Check if vmm.ko is loaded by checking /dev/vmm directory
+            if not os.path.isdir("/dev/vmm"):
+                self.logger.debug("bhyve vmm.ko not loaded (/dev/vmm missing)")
+                return None
+
+            # Get FreeBSD version for the package_version field
+            freebsd_version = "unknown"
+            try:
+                uname_result = subprocess.run(  # nosec B603 B607
+                    ["uname", "-r"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if uname_result.returncode == 0:
+                    freebsd_version = uname_result.stdout.strip()
+            except Exception:  # nosec B110 - version is optional
+                pass
+
+            # Get count of running VMs by listing /dev/vmm entries
+            vm_count = 0
+            try:
+                if os.path.isdir("/dev/vmm"):
+                    vms = os.listdir("/dev/vmm")
+                    vm_count = len(vms)
+            except Exception:  # nosec B110 - VM count is optional
+                pass
+
+            # Check if UEFI firmware is available
+            uefi_available = False
+            uefi_paths = [
+                "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd",
+                "/usr/local/share/bhyve-firmware/BHYVE_UEFI.fd",
+            ]
+            for uefi_path in uefi_paths:
+                if os.path.exists(uefi_path):
+                    uefi_available = True
+                    break
+
+            self.logger.info(
+                "Detected bhyve Host role: FreeBSD %s, %d VMs, UEFI=%s",
+                freebsd_version,
+                vm_count,
+                uefi_available,
+            )
+
+            return {
+                "role": "bhyve Host",
+                "package_name": "bhyve",
+                "package_version": freebsd_version,
+                "service_name": None,  # bhyve doesn't have a service daemon
+                "service_status": "running",  # If vmm.ko is loaded, it's ready
+                "is_active": True,
+                "vm_count": vm_count,
+                "uefi_available": uefi_available,
+            }
+
+        except Exception as error:
+            self.logger.debug("Error detecting bhyve host role: %s", error)
             return None
