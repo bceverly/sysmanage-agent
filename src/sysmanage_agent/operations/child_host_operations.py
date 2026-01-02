@@ -473,6 +473,39 @@ class ChildHostOperations:
         self.logger.info(_("Initializing bhyve"))
         return await self.bhyve_ops.initialize_bhyve(parameters)
 
+    async def enable_kvm_modules(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enable KVM by loading kernel modules via modprobe.
+
+        This is called when the user clicks "Enable KVM Modules" in the UI.
+        It loads the kvm and kvm_intel/kvm_amd kernel modules.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Enabling KVM kernel modules"))
+        return await self.kvm_ops.enable_kvm_modules(parameters)
+
+    async def disable_kvm_modules(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Disable KVM by unloading kernel modules via modprobe -r.
+
+        This is called when the user clicks "Disable KVM Modules" in the UI.
+        It unloads the kvm and kvm_intel/kvm_amd kernel modules.
+        Note: This will fail if any VMs are running.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Disabling KVM kernel modules"))
+        return await self.kvm_ops.disable_kvm_modules(parameters)
+
     async def setup_kvm_networking(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Configure KVM networking based on the specified mode.

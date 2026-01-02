@@ -151,6 +151,142 @@ class KvmOperations:
             self.logger.error(_("Error loading KVM module: %s"), load_error)
             return {"success": False, "error": str(load_error)}
 
+    async def enable_kvm_modules(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enable KVM by loading the kernel modules via modprobe.
+
+        This is called when the user clicks "Enable KVM" to load the kvm
+        and kvm_intel/kvm_amd kernel modules.
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            self.logger.info(_("Enabling KVM kernel modules"))
+
+            # Use the existing _load_kvm_module method
+            result = self._load_kvm_module()
+
+            if result.get("success"):
+                return {
+                    "success": True,
+                    "message": _("KVM kernel modules loaded successfully"),
+                    "module": result.get("module"),
+                }
+
+            return result
+
+        except Exception as error:
+            self.logger.error(_("Error enabling KVM modules: %s"), error)
+            return {"success": False, "error": str(error)}
+
+    async def disable_kvm_modules(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Disable KVM by unloading the kernel modules via modprobe -r.
+
+        This is called when the user clicks "Disable KVM" to unload the kvm
+        kernel modules. Note: This will fail if any VMs are running.
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            self.logger.info(_("Disabling KVM kernel modules"))
+
+            # First check if any VMs are running
+            if os.path.exists("/dev/kvm"):
+                # Try to check for running VMs via virsh if available
+                virsh_path = shutil.which("virsh")
+                if virsh_path:
+                    result = subprocess.run(  # nosec B603 B607
+                        ["virsh", "list", "--state-running", "--name"],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0:
+                        running_vms = [
+                            vm.strip()
+                            for vm in result.stdout.strip().split("\n")
+                            if vm.strip()
+                        ]
+                        if running_vms:
+                            return {
+                                "success": False,
+                                "error": _(
+                                    "Cannot disable KVM while VMs are running: %s"
+                                )
+                                % ", ".join(running_vms),
+                            }
+
+            # Determine which vendor module to unload first
+            vendor_module = None
+            lsmod_result = subprocess.run(  # nosec B603 B607
+                ["lsmod"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if lsmod_result.returncode == 0:
+                if "kvm_intel" in lsmod_result.stdout:
+                    vendor_module = "kvm_intel"
+                elif "kvm_amd" in lsmod_result.stdout:
+                    vendor_module = "kvm_amd"
+
+            # Unload vendor-specific module first (kvm_intel or kvm_amd)
+            if vendor_module:
+                self.logger.info(_("Unloading %s module"), vendor_module)
+                result = subprocess.run(  # nosec B603 B607
+                    ["modprobe", "-r", vendor_module],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    error_msg = result.stderr.strip() or result.stdout.strip()
+                    self.logger.error(
+                        _("Failed to unload %s: %s"), vendor_module, error_msg
+                    )
+                    return {"success": False, "error": error_msg}
+
+            # Unload base kvm module
+            self.logger.info(_("Unloading kvm module"))
+            result = subprocess.run(  # nosec B603 B607
+                ["modprobe", "-r", "kvm"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode != 0:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                self.logger.error(_("Failed to unload kvm: %s"), error_msg)
+                return {"success": False, "error": error_msg}
+
+            # Verify /dev/kvm is gone
+            time.sleep(0.5)
+            if os.path.exists("/dev/kvm"):
+                return {
+                    "success": False,
+                    "error": _("Modules unloaded but /dev/kvm still exists"),
+                }
+
+            self.logger.info(_("KVM kernel modules unloaded successfully"))
+            return {
+                "success": True,
+                "message": _("KVM kernel modules unloaded successfully"),
+            }
+
+        except subprocess.TimeoutExpired:
+            self.logger.error(_("Timeout unloading KVM modules"))
+            return {"success": False, "error": _("Timeout unloading KVM modules")}
+        except Exception as error:
+            self.logger.error(_("Error disabling KVM modules: %s"), error)
+            return {"success": False, "error": str(error)}
+
     def _detect_package_manager(self) -> Dict[str, Any]:
         """
         Detect which package manager is available on this system.
