@@ -1236,3 +1236,28 @@ msgstr "Не удалось удалить ВМ"
 
 msgid "Delete operation timed out"
 msgstr "Время ожидания операции удаления истекло"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Загрузка модуля KVM: %s с включённой вложенной виртуализацией"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Невозможно прочитать %s - всё равно попытаемся записать"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Вложенная виртуализация уже настроена в %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Конфигурация вложенной виртуализации сохранена в %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Не удалось записать конфигурацию вложенной виртуализации: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Ошибка настройки постоянной вложенной виртуализации: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "Модули ядра KVM загружены с включённой вложенной виртуализацией"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения настроек"

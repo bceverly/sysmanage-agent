@@ -1234,3 +1234,28 @@ msgstr "刪除虛擬機失敗"
 
 msgid "Delete operation timed out"
 msgstr "刪除作業逾時"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "正在載入KVM模組: %s（已啟用巢狀虛擬化）"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "無法讀取 %s - 仍將嘗試寫入"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "巢狀虛擬化已在 %s 中設定"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "巢狀虛擬化設定已儲存至 %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "寫入巢狀虛擬化設定失敗: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "設定持久巢狀虛擬化時發生錯誤: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "已載入KVM核心模組並啟用巢狀虛擬化"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - 設定已儲存至 /etc/modprobe.d/kvm.conf 以實現持久化"

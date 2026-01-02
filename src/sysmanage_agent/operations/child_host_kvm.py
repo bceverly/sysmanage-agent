@@ -109,10 +109,14 @@ class KvmOperations:
                     ),
                 }
 
-            # Load the KVM module using modprobe
-            self.logger.info(_("Loading KVM module: %s"), module_name)
+            # Load the KVM module using modprobe with nested virtualization enabled
+            # nested=1 allows running hypervisors inside VMs (e.g., bhyve in FreeBSD guest)
+            self.logger.info(
+                _("Loading KVM module: %s with nested virtualization enabled"),
+                module_name,
+            )
             result = subprocess.run(  # nosec B603 B607
-                ["modprobe", module_name],
+                ["modprobe", module_name, "nested=1"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -132,10 +136,18 @@ class KvmOperations:
                 self.logger.info(
                     _("KVM module loaded successfully, /dev/kvm is available")
                 )
+
+                # Make nested virtualization persistent across reboots
+                persistent_ok = self._configure_nested_virtualization_persistent(
+                    module_name
+                )
+
                 return {
                     "success": True,
-                    "message": f"Loaded {module_name} module",
+                    "message": f"Loaded {module_name} module with nested virtualization",
                     "module": module_name,
+                    "nested_enabled": True,
+                    "nested_persistent": persistent_ok,
                 }
 
             self.logger.warning(_("KVM module loaded but /dev/kvm not created"))
@@ -150,6 +162,84 @@ class KvmOperations:
         except Exception as load_error:
             self.logger.error(_("Error loading KVM module: %s"), load_error)
             return {"success": False, "error": str(load_error)}
+
+    def _configure_nested_virtualization_persistent(self, module_name: str) -> bool:
+        """
+        Make nested virtualization configuration persistent across reboots.
+
+        Creates or updates /etc/modprobe.d/kvm.conf to enable nested virtualization
+        for the specified KVM module (kvm_intel or kvm_amd).
+
+        Args:
+            module_name: The KVM module name (kvm_intel or kvm_amd)
+
+        Returns:
+            True if configuration was successfully written, False otherwise
+        """
+        config_file = "/etc/modprobe.d/kvm.conf"
+        nested_option = f"options {module_name} nested=1"
+
+        try:
+            # Read existing config if it exists
+            existing_content = ""
+            if os.path.exists(config_file):
+                try:
+                    with open(config_file, "r", encoding="utf-8") as config:
+                        existing_content = config.read()
+                except PermissionError:
+                    self.logger.warning(
+                        _("Cannot read %s - will attempt to write anyway"), config_file
+                    )
+
+            # Check if nested option is already configured
+            if nested_option in existing_content:
+                self.logger.info(
+                    _("Nested virtualization already configured in %s"), config_file
+                )
+                return True
+
+            # Remove any existing nested= line for this module and add the new one
+            lines = (
+                existing_content.strip().split("\n") if existing_content.strip() else []
+            )
+            filtered_lines = [
+                line
+                for line in lines
+                if not (line.startswith(f"options {module_name}") and "nested=" in line)
+            ]
+            filtered_lines.append(nested_option)
+
+            # Write the configuration file
+            new_content = "\n".join(filtered_lines) + "\n"
+
+            # Use subprocess to write with sudo since /etc requires root
+            write_result = subprocess.run(  # nosec B603 B607
+                ["sudo", "tee", config_file],
+                input=new_content,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if write_result.returncode == 0:
+                self.logger.info(
+                    _("Nested virtualization configuration saved to %s"), config_file
+                )
+                return True
+
+            self.logger.warning(
+                _("Failed to write nested virtualization config: %s"),
+                write_result.stderr,
+            )
+            return False
+
+        except Exception as config_error:
+            self.logger.warning(
+                _("Error configuring persistent nested virtualization: %s"),
+                config_error,
+            )
+            return False
 
     async def enable_kvm_modules(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -168,10 +258,19 @@ class KvmOperations:
             result = self._load_kvm_module()
 
             if result.get("success"):
+                message = _(
+                    "KVM kernel modules loaded with nested virtualization enabled"
+                )
+                if result.get("nested_persistent"):
+                    message += _(
+                        " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+                    )
                 return {
                     "success": True,
-                    "message": _("KVM kernel modules loaded successfully"),
+                    "message": message,
                     "module": result.get("module"),
+                    "nested_enabled": result.get("nested_enabled", False),
+                    "nested_persistent": result.get("nested_persistent", False),
                 }
 
             return result

@@ -1238,3 +1238,28 @@ msgstr "VM の削除に失敗しました"
 
 msgid "Delete operation timed out"
 msgstr "削除操作がタイムアウトしました"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "KVMモジュールをロード中: %s（ネスト仮想化有効）"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "%s を読み取れません - とにかく書き込みを試みます"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "ネスト仮想化は既に %s で設定されています"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "ネスト仮想化設定を %s に保存しました"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "ネスト仮想化設定の書き込みに失敗: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "永続的なネスト仮想化の設定中にエラー: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "KVMカーネルモジュールがネスト仮想化有効でロードされました"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - 永続化のため設定を /etc/modprobe.d/kvm.conf に保存しました"

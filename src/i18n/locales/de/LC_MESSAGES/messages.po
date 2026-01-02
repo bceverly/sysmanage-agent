@@ -1238,3 +1238,28 @@ msgstr "VM-Löschung fehlgeschlagen"
 
 msgid "Delete operation timed out"
 msgstr "Zeitüberschreitung bei Löschoperation"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Lade KVM-Modul: %s mit aktivierter verschachtelter Virtualisierung"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Kann %s nicht lesen - versuche trotzdem zu schreiben"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Verschachtelte Virtualisierung bereits in %s konfiguriert"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Konfiguration für verschachtelte Virtualisierung in %s gespeichert"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Fehler beim Schreiben der Konfiguration für verschachtelte Virtualisierung: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Fehler bei der persistenten Konfiguration der verschachtelten Virtualisierung: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "KVM-Kernelmodule mit aktivierter verschachtelter Virtualisierung geladen"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - Konfiguration in /etc/modprobe.d/kvm.conf für Persistenz gespeichert"

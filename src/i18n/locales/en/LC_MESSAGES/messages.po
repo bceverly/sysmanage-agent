@@ -601,3 +601,28 @@ msgstr "Failed to delete VM"
 
 msgid "Delete operation timed out"
 msgstr "Delete operation timed out"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Loading KVM module: %s with nested virtualization enabled"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Cannot read %s - will attempt to write anyway"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Nested virtualization already configured in %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Nested virtualization configuration saved to %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Failed to write nested virtualization config: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Error configuring persistent nested virtualization: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "KVM kernel modules loaded with nested virtualization enabled"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"

@@ -1236,3 +1236,28 @@ msgstr "Eliminazione VM fallita"
 
 msgid "Delete operation timed out"
 msgstr "Timeout operazione di eliminazione"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Caricamento modulo KVM: %s con virtualizzazione annidata abilitata"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Impossibile leggere %s - tentativo di scrittura comunque"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Virtualizzazione annidata già configurata in %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Configurazione virtualizzazione annidata salvata in %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Impossibile scrivere configurazione virtualizzazione annidata: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Errore nella configurazione persistente della virtualizzazione annidata: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "Moduli kernel KVM caricati con virtualizzazione annidata abilitata"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - configurazione salvata in /etc/modprobe.d/kvm.conf per la persistenza"

@@ -1236,3 +1236,28 @@ msgstr "Verwijderen van VM mislukt"
 
 msgid "Delete operation timed out"
 msgstr "Time-out bij verwijderbewerking"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "KVM-module laden: %s met geneste virtualisatie ingeschakeld"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Kan %s niet lezen - zal toch proberen te schrijven"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Geneste virtualisatie al geconfigureerd in %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Configuratie voor geneste virtualisatie opgeslagen in %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Kan configuratie voor geneste virtualisatie niet schrijven: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Fout bij configureren van persistente geneste virtualisatie: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "KVM-kernelmodules geladen met geneste virtualisatie ingeschakeld"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - configuratie opgeslagen in /etc/modprobe.d/kvm.conf voor persistentie"

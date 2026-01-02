@@ -1236,3 +1236,28 @@ msgstr "Falha ao excluir VM"
 
 msgid "Delete operation timed out"
 msgstr "Tempo esgotado na operação de exclusão"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Carregando módulo KVM: %s com virtualização aninhada habilitada"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Não é possível ler %s - tentará gravar mesmo assim"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Virtualização aninhada já configurada em %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Configuração de virtualização aninhada salva em %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Falha ao gravar configuração de virtualização aninhada: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Erro ao configurar virtualização aninhada persistente: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "Módulos do kernel KVM carregados com virtualização aninhada habilitada"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - configuração salva em /etc/modprobe.d/kvm.conf para persistência"

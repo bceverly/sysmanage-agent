@@ -1239,3 +1239,28 @@ msgstr "فشل حذف الآلة الافتراضية"
 
 msgid "Delete operation timed out"
 msgstr "انتهت مهلة عملية الحذف"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "جاري تحميل وحدة KVM: %s مع تمكين الافتراضية المتداخلة"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "لا يمكن قراءة %s - سيتم محاولة الكتابة على أي حال"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "الافتراضية المتداخلة مُعدة مسبقاً في %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "تم حفظ إعدادات الافتراضية المتداخلة في %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "فشل كتابة إعدادات الافتراضية المتداخلة: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "خطأ في تكوين الافتراضية المتداخلة المستمرة: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "تم تحميل وحدات KVM مع تمكين الافتراضية المتداخلة"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - تم حفظ الإعدادات في /etc/modprobe.d/kvm.conf للاستمرارية"

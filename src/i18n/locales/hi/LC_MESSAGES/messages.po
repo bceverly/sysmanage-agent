@@ -1234,3 +1234,28 @@ msgstr "VM हटाने में विफल"
 
 msgid "Delete operation timed out"
 msgstr "हटाने का समय समाप्त"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "KVM मॉड्यूल लोड हो रहा है: %s नेस्टेड वर्चुअलाइजेशन सक्षम के साथ"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "%s पढ़ नहीं सकते - फिर भी लिखने का प्रयास करेंगे"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "नेस्टेड वर्चुअलाइजेशन पहले से %s में कॉन्फ़िगर है"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "नेस्टेड वर्चुअलाइजेशन कॉन्फ़िगरेशन %s में सहेजा गया"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "नेस्टेड वर्चुअलाइजेशन कॉन्फ़िग लिखने में विफल: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "स्थायी नेस्टेड वर्चुअलाइजेशन कॉन्फ़िगर करने में त्रुटि: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "KVM कर्नेल मॉड्यूल नेस्टेड वर्चुअलाइजेशन सक्षम के साथ लोड हुए"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - स्थायित्व के लिए /etc/modprobe.d/kvm.conf में कॉन्फ़िगरेशन सहेजा गया"

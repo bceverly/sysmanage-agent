@@ -1236,3 +1236,28 @@ msgstr "Échec de la suppression de la VM"
 
 msgid "Delete operation timed out"
 msgstr "Délai d'opération de suppression dépassé"
+
+# KVM Nested Virtualization
+msgid "Loading KVM module: %s with nested virtualization enabled"
+msgstr "Chargement du module KVM: %s avec virtualisation imbriquée activée"
+
+msgid "Cannot read %s - will attempt to write anyway"
+msgstr "Impossible de lire %s - tentative d'écriture quand même"
+
+msgid "Nested virtualization already configured in %s"
+msgstr "Virtualisation imbriquée déjà configurée dans %s"
+
+msgid "Nested virtualization configuration saved to %s"
+msgstr "Configuration de virtualisation imbriquée enregistrée dans %s"
+
+msgid "Failed to write nested virtualization config: %s"
+msgstr "Échec de l'écriture de la configuration de virtualisation imbriquée: %s"
+
+msgid "Error configuring persistent nested virtualization: %s"
+msgstr "Erreur lors de la configuration persistante de virtualisation imbriquée: %s"
+
+msgid "KVM kernel modules loaded with nested virtualization enabled"
+msgstr "Modules KVM chargés avec virtualisation imbriquée activée"
+
+msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
+msgstr " - configuration enregistrée dans /etc/modprobe.d/kvm.conf pour la persistance"
