@@ -10,10 +10,13 @@ style configuration from an attached disk or ISO.
 
 import asyncio
 import os
+import pty
 import secrets
+import select
 import shutil
 import subprocess  # nosec B404 # Required for system commands
 import tempfile
+import time
 from typing import Any, Dict, Optional
 
 from src.i18n import _
@@ -166,6 +169,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
 {ssh_keys_section}
 ssh_pwauth: true
+disable_root: false
 {chpasswd_section}"""
 
     def _generate_bootstrap_script(self, config: KvmVmConfig) -> str:
@@ -228,13 +232,13 @@ USERNAME="{config.username}"
 
 echo "=== FreeBSD sysmanage-agent Bootstrap ==="
 
-# Step 0: Configure DNS (using host's DNS servers)
+# Step 1: Configure DNS (using host's DNS servers)
 echo "Configuring DNS..."
 echo "# Configured by sysmanage-agent bootstrap" > /etc/resolv.conf
 {dns_config}
 echo "DNS configured."
 
-# Step 1: Install sudo and configure user
+# Step 2: Install sudo and configure user
 echo "Installing sudo and configuring user access..."
 pkg install -y sudo
 
@@ -243,157 +247,54 @@ echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /usr/local/etc/sudoers.d/$USERNAME
 chmod 440 /usr/local/etc/sudoers.d/$USERNAME
 echo "User $USERNAME added to sudoers with NOPASSWD access."
 
-# Step 2: Install Python and dependencies
-echo "Installing Python and dependencies..."
-pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography \\
-    py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets
+# Step 3: Install Python and all agent dependencies
+echo "Installing Python 3.11 and agent dependencies..."
+pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets
 
-# Step 3: Create directories and user
-echo "Creating agent directories and user..."
+# Step 4: Create required directories BEFORE pkg install
+# The package post-install script needs these directories to exist
+echo "Creating required directories..."
 mkdir -p /usr/local/lib/sysmanage-agent
 mkdir -p /usr/local/etc/sysmanage-agent
-mkdir -p /var/lib/sysmanage-agent
 mkdir -p /var/log/sysmanage-agent
 mkdir -p /var/run/sysmanage
+mkdir -p /etc/sysmanage-agent
+mkdir -p /var/lib/sysmanage-agent
+mkdir -p /usr/local/etc/rc.d
 
-# Create sysmanage user and group if they don't exist
-if ! pw groupshow sysmanage >/dev/null 2>&1; then
-    pw groupadd sysmanage -g 9999
-fi
-if ! pw usershow sysmanage >/dev/null 2>&1; then
-    pw useradd sysmanage -u 9999 -g sysmanage -h - -s /usr/sbin/nologin \\
-       -d /usr/local/lib/sysmanage-agent -c "SysManage Agent User"
-fi
-
-# Step 4: Download and install agent from tarball
+# Step 5: Download and install agent from FreeBSD package
 echo "Fetching latest version from GitHub..."
 LATEST=$(fetch -q -o - https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest | grep -o '"tag_name": *"[^"]*"' | grep -o 'v[0-9.]*')
 VERSION=${{LATEST#v}}
 echo "Latest version: ${{VERSION}}"
 
-echo "Downloading agent tarball..."
-fetch -o /tmp/sysmanage-agent-${{VERSION}}.tgz "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.tgz"
+echo "Downloading agent package..."
+fetch -o /tmp/sysmanage-agent-${{VERSION}}.pkg "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.pkg"
 
-echo "Extracting agent files..."
-# The tarball has NetBSD-style paths (usr/pkg/lib/sysmanage-agent/)
-# Extract to temp and copy to FreeBSD location
-mkdir -p /tmp/sysmanage-extract
-cd /tmp/sysmanage-extract
-tar xzf /tmp/sysmanage-agent-${{VERSION}}.tgz
+echo "Installing agent package..."
+# Note: pkg add has a format issue that doesn't extract files properly
+# Register the package in the database first
+pkg add /tmp/sysmanage-agent-${{VERSION}}.pkg || true
 
-# Copy files to FreeBSD location
-if [ -d "usr/pkg/lib/sysmanage-agent" ]; then
-    cp -R usr/pkg/lib/sysmanage-agent/* /usr/local/lib/sysmanage-agent/
-elif [ -d "usr/local/lib/sysmanage-agent" ]; then
-    cp -R usr/local/lib/sysmanage-agent/* /usr/local/lib/sysmanage-agent/
-elif [ -f "main.py" ]; then
-    cp -R * /usr/local/lib/sysmanage-agent/
-else
-    echo "ERROR: Unexpected tarball structure"
-    ls -la
-    exit 1
-fi
+# Extract files manually using tar (workaround for pkg format issue)
+echo "Extracting package files..."
+cd / && tar -xf /tmp/sysmanage-agent-${{VERSION}}.pkg --include='usr/*'
 
-# Cleanup
-cd /
-rm -rf /tmp/sysmanage-extract
-rm -f /tmp/sysmanage-agent-${{VERSION}}.tgz
+# Cleanup downloaded package
+rm -f /tmp/sysmanage-agent-${{VERSION}}.pkg
 
-# Step 5: Install rc script
-echo "Installing rc script..."
-cat > /usr/local/etc/rc.d/sysmanage_agent << 'RC_SCRIPT_EOF'
-#!/bin/sh
-#
-# PROVIDE: sysmanage_agent
-# REQUIRE: NETWORKING
-# KEYWORD: shutdown
-#
-# Add the following lines to /etc/rc.conf to enable sysmanage_agent:
-#
-# sysmanage_agent_enable="YES"
-#
-
-. /etc/rc.subr
-
-name="sysmanage_agent"
-rcvar="sysmanage_agent_enable"
-pidfile="/var/run/sysmanage/${{name}}.pid"
-logfile="/var/log/sysmanage-agent/agent.log"
-
-command="/usr/local/bin/python3.11"
-command_args="/usr/local/lib/sysmanage-agent/main.py >> $logfile 2>&1 & echo \\$! > $pidfile"
-command_interpreter="/usr/local/bin/python3.11"
-
-start_cmd="${{name}}_start"
-stop_cmd="${{name}}_stop"
-status_cmd="${{name}}_status"
-
-sysmanage_agent_start()
-{{
-    if [ -f $pidfile ]; then
-        pid=$(cat $pidfile)
-        if kill -0 $pid 2>/dev/null; then
-            echo "${{name}} is already running as pid $pid"
-            return 1
-        fi
-    fi
-    echo "Starting ${{name}}..."
-    mkdir -p /var/run/sysmanage
-    mkdir -p /var/log/sysmanage-agent
-    cd /usr/local/lib/sysmanage-agent
-    /usr/local/bin/python3.11 main.py >> $logfile 2>&1 &
-    echo $! > $pidfile
-    echo "${{name}} started."
-}}
-
-sysmanage_agent_stop()
-{{
-    if [ -f $pidfile ]; then
-        pid=$(cat $pidfile)
-        echo "Stopping ${{name}}..."
-        kill $pid 2>/dev/null
-        rm -f $pidfile
-        echo "${{name}} stopped."
-    else
-        echo "${{name}} is not running."
-    fi
-}}
-
-sysmanage_agent_status()
-{{
-    if [ -f $pidfile ]; then
-        pid=$(cat $pidfile)
-        if kill -0 $pid 2>/dev/null; then
-            echo "${{name}} is running as pid $pid"
-        else
-            echo "${{name}} is not running (stale pid file)"
-        fi
-    else
-        echo "${{name}} is not running."
-    fi
-}}
-
-load_rc_config $name
-run_rc_command "$1"
-RC_SCRIPT_EOF
-
-chmod +x /usr/local/etc/rc.d/sysmanage_agent
-
-# Step 6: Set ownership
-echo "Setting ownership..."
-chown -R sysmanage:sysmanage /usr/local/lib/sysmanage-agent
-chown -R sysmanage:sysmanage /var/lib/sysmanage-agent
-chown -R sysmanage:sysmanage /var/log/sysmanage-agent
-chown -R sysmanage:sysmanage /var/run/sysmanage
-
-# Step 7: Write agent configuration (after install, overwriting any default)
+# Step 6: Write agent configuration
 echo "Creating agent configuration..."
 cat > /etc/sysmanage-agent.yaml << 'AGENT_CONFIG_EOF'
 {agent_config}AGENT_CONFIG_EOF
 
-# Step 8: Enable and start the agent service
+# Create symlink for package's expected config location
+ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
+
+# Step 7: Enable and start the agent service
 echo "Enabling and starting sysmanage-agent service..."
 sysrc sysmanage_agent_enable=YES
+sysrc sysmanage_agent_user=root
 service sysmanage_agent restart 2>/dev/null || service sysmanage_agent start
 
 echo ""
@@ -583,6 +484,104 @@ local-hostname: {config.hostname.split('.')[0]}
         """Check if SSH key is available for automated bootstrap."""
         return self._ssh_private_key_path is not None
 
+    def _install_sshpass(self) -> Dict[str, Any]:
+        """
+        Install sshpass package on the host system.
+
+        Detects the package manager and installs sshpass, which is needed
+        for FreeBSD VM bootstrap (to SSH as root with password auth).
+
+        Returns:
+            Dict with success status and error message if failed
+        """
+        try:
+            # Detect package manager and install sshpass
+            if shutil.which("apt-get"):
+                # Debian/Ubuntu
+                self.logger.info(_("Installing sshpass via apt..."))
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "apt-get", "install", "-y", "sshpass"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                )
+            elif shutil.which("dnf"):
+                # Fedora/RHEL 8+
+                self.logger.info(_("Installing sshpass via dnf..."))
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "dnf", "install", "-y", "sshpass"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                )
+            elif shutil.which("yum"):
+                # RHEL/CentOS 7
+                self.logger.info(_("Installing sshpass via yum..."))
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "yum", "install", "-y", "sshpass"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                )
+            elif shutil.which("zypper"):
+                # openSUSE/SLES
+                self.logger.info(_("Installing sshpass via zypper..."))
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "zypper", "install", "-y", "sshpass"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                )
+            elif shutil.which("apk"):
+                # Alpine
+                self.logger.info(_("Installing sshpass via apk..."))
+                result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "apk", "add", "sshpass"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                )
+            else:
+                return {
+                    "success": False,
+                    "error": _(
+                        "Could not detect package manager to install sshpass. "
+                        "Please install sshpass manually."
+                    ),
+                }
+
+            if result.returncode != 0:
+                self.logger.error(
+                    _("Failed to install sshpass: %s"),
+                    result.stderr.strip() if result.stderr else result.stdout.strip(),
+                )
+                return {
+                    "success": False,
+                    "error": _("Failed to install sshpass: %s")
+                    % (
+                        result.stderr.strip()
+                        if result.stderr
+                        else result.stdout.strip()
+                    ),
+                }
+
+            self.logger.info(_("sshpass installed successfully"))
+            return {"success": True}
+
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "error": _("Timeout while installing sshpass"),
+            }
+        except Exception as err:
+            self.logger.error(_("Error installing sshpass: %s"), err)
+            return {"success": False, "error": str(err)}
+
     async def run_bootstrap_via_ssh(
         self, ip_address: str, timeout: int = 600
     ) -> Dict[str, Any]:
@@ -692,72 +691,217 @@ local-hostname: {config.hostname.split('.')[0]}
 
             self.logger.info(_("SSH key authentication successful"))
 
-            # The bootstrap script using su with the temporary root password
-            # We use 'echo password | su -' pattern to provide password non-interactively
-            # Note: Single quotes around EOF to prevent variable expansion in heredoc
-            bootstrap_script = f"""#!/bin/sh
-# Provide password to su via stdin
-echo '{self._temp_root_password}' | su - root -c '
+            # FreeBSD's su doesn't read passwords from stdin (reads from /dev/tty)
+            # FreeBSD's sshd also doesn't allow root password login by default
+            # Solution: Use Python pty module to create interactive session with su
+
+            self.logger.info(_("Running bootstrap script as root via su with pty..."))
+
+            # Use pty to run SSH with an interactive terminal for su password entry
+            bootstrap_result = self._run_su_bootstrap_via_pty(
+                ip_address, self._temp_root_password, timeout
+            )
+
+            if not bootstrap_result.get("success"):
+                self.logger.error(
+                    _("Bootstrap script failed. stdout: %s, stderr: %s"),
+                    bootstrap_result.get("stdout", "(empty)"),
+                    bootstrap_result.get("stderr", "(empty)"),
+                )
+                return {
+                    "success": False,
+                    "error": _("Bootstrap script failed: %s")
+                    % bootstrap_result.get("error", "Unknown error"),
+                    "stdout": bootstrap_result.get("stdout", ""),
+                    "stderr": bootstrap_result.get("stderr", ""),
+                }
+
+            self.logger.info(_("FreeBSD bootstrap completed successfully"))
+            return {"success": True}
+
+        except subprocess.TimeoutExpired:
+            self.logger.error(_("SSH bootstrap timed out"))
+            return {"success": False, "error": _("SSH bootstrap timed out")}
+        except Exception as err:
+            self.logger.error(_("Error running bootstrap via SSH: %s"), err)
+            return {"success": False, "error": str(err)}
+
+    def _read_pty_data(self, master_fd: int) -> Optional[str]:
+        """
+        Read data from PTY file descriptor.
+
+        Returns:
+            Data string if available, empty string for EOF, None on error
+        """
+        try:
+            data = os.read(master_fd, 4096).decode("utf-8", errors="replace")
+            return data if data else ""
+        except OSError as os_err:
+            self.logger.debug(f"PTY read error: {os_err}")
+            return None
+
+    def _send_password_if_prompted(
+        self, master_fd: int, accumulated: str, password: str, password_sent: bool
+    ) -> bool:
+        """
+        Send password if prompt detected.
+
+        Returns:
+            True if password was sent (either now or previously)
+        """
+        if password_sent:
+            return True
+        if "assword:" not in accumulated:
+            return False
+
+        # Small delay to ensure prompt is ready
+        time.sleep(0.3)
+        self.logger.debug("Detected password prompt, sending password")
+        os.write(master_fd, (password + "\n").encode())
+        self.logger.debug("Password sent")
+        return True
+
+    def _run_su_bootstrap_via_pty(
+        self, ip_address: str, root_password: str, timeout: int = 600
+    ) -> Dict[str, Any]:
+        """
+        Run bootstrap as root using pty to interact with su password prompt.
+
+        This method creates a pseudo-terminal to handle su's password prompt
+        since su reads from /dev/tty, not stdin.
+        """
+        # The command to run after becoming root
+        root_commands = """
 set -e
 # Mount config disk (could be cd0 or cd1)
 if [ ! -d /mnt/cidata ]; then
     mkdir -p /mnt/cidata
 fi
-mount -t cd9660 /dev/cd0 /mnt/cidata 2>/dev/null || mount -t cd9660 /dev/cd1 /mnt/cidata
+mount -t cd9660 /dev/cd0 /mnt/cidata 2>/dev/null || mount -t cd9660 /dev/cd1 /mnt/cidata 2>/dev/null || true
 # Run the bootstrap script
-sh /mnt/cidata/bootstrap.sh
-'
+if [ -f /mnt/cidata/bootstrap.sh ]; then
+    sh /mnt/cidata/bootstrap.sh
+    exit $?
+else
+    echo "ERROR: bootstrap.sh not found on config disk"
+    exit 1
+fi
 """
 
-            # Run via SSH as regular user, using su to become root
-            self.logger.info(_("Running bootstrap script via su as root..."))
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "ssh",
-                    "-i",
-                    self._ssh_private_key_path,
-                    "-o",
-                    "StrictHostKeyChecking=no",
-                    "-o",
-                    "UserKnownHostsFile=/dev/null",
-                    "-o",
-                    "ConnectTimeout=30",
-                    "-o",
-                    "BatchMode=yes",
-                    f"{self._bootstrap_username}@{ip_address}",
-                    bootstrap_script,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                check=False,
+        # SSH command with pty allocation (-t flag forces pseudo-tty)
+        ssh_cmd = [
+            "ssh",
+            "-t",  # Force pseudo-tty allocation
+            "-t",  # Double -t forces tty even when stdin is not a terminal
+            "-i",
+            self._ssh_private_key_path,
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=30",
+            f"{self._bootstrap_username}@{ip_address}",
+            f"su -m root -c '{root_commands}'",
+        ]
+
+        output = []
+        master_fd = None
+        try:
+            # Create a pseudo-terminal
+            master_fd, slave_fd = pty.openpty()
+
+            self.logger.debug("Starting SSH with pty for su password entry")
+
+            # Start the SSH process with the pty
+            # pylint: disable=consider-using-with
+            process = subprocess.Popen(  # nosec B603
+                ssh_cmd,
+                stdin=slave_fd,
+                stdout=slave_fd,
+                stderr=slave_fd,
+                close_fds=True,
             )
+            # pylint: enable=consider-using-with
 
-            if result.returncode != 0:
-                self.logger.error(_("Bootstrap script failed: %s"), result.stderr)
-                return {
-                    "success": False,
-                    "error": _("Bootstrap script failed: %s") % result.stderr,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                }
+            os.close(slave_fd)  # Close slave in parent
 
-            self.logger.info(_("FreeBSD bootstrap completed successfully"))
-            return {
-                "success": True,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-            }
+            # Wait for password prompt and respond
+            password_sent = False
+            start_time = time.time()
+            accumulated = ""
 
-        except subprocess.TimeoutExpired:
-            self.logger.error(_("Bootstrap script timed out"))
+            while True:
+                if time.time() - start_time > timeout:
+                    process.kill()
+                    process.wait()
+                    return {
+                        "success": False,
+                        "error": "Timeout waiting for bootstrap",
+                        "stdout": "".join(output),
+                    }
+
+                # Check if there's data to read
+                readable, _, _ = select.select([master_fd], [], [], 0.5)
+
+                if not readable:
+                    # No data available, check if process has exited
+                    if process.poll() is None:
+                        continue
+                    # Process exited, do one more read to get any remaining data
+                    final_data = self._read_pty_data(master_fd)
+                    if final_data:
+                        output.append(final_data)
+                        self.logger.debug(f"Final PTY output: {repr(final_data)}")
+                    break
+
+                # Read data from PTY
+                data = self._read_pty_data(master_fd)
+                if data is None:
+                    # Error reading
+                    break
+                if not data:
+                    # Empty read means EOF
+                    self.logger.debug("PTY EOF reached")
+                    break
+
+                output.append(data)
+                accumulated += data
+                self.logger.debug(f"PTY output: {repr(data)}")
+
+                # Check for password prompt and send if needed
+                password_sent = self._send_password_if_prompted(
+                    master_fd, accumulated, root_password, password_sent
+                )
+
+            # Ensure process is finished and get exit code
+            exit_code = process.wait()
+            self.logger.debug(f"Process exit code: {exit_code}")
+
+            os.close(master_fd)
+            master_fd = None
+
+            full_output = "".join(output)
+
+            if exit_code == 0:
+                return {"success": True, "stdout": full_output, "exit_code": exit_code}
+
             return {
                 "success": False,
-                "error": _("Bootstrap script timed out after %d seconds") % timeout,
+                "error": f"Bootstrap exited with code {exit_code}",
+                "stdout": full_output,
+                "exit_code": exit_code,
             }
+
         except Exception as err:
-            self.logger.error(_("Error running bootstrap: %s"), err)
-            return {"success": False, "error": str(err)}
+            self.logger.error(f"PTY bootstrap error: {err}")
+            return {"success": False, "error": str(err), "stdout": "".join(output)}
+        finally:
+            if master_fd is not None:
+                try:
+                    os.close(master_fd)
+                except OSError:
+                    pass
 
     def cleanup(self):
         """Clean up any created resources."""

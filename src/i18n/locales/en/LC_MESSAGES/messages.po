@@ -814,5 +814,50 @@ msgstr "Running bootstrap script via su as root..."
 msgid "SSH key authentication failed: %s"
 msgstr "SSH key authentication failed: %s"
 
+msgid "Running bootstrap script as root via sshpass..."
+msgstr "Running bootstrap script as root via sshpass..."
+
+msgid "Running bootstrap script as root via su with pty..."
+msgstr "Running bootstrap script as root via su with pty..."
+
+msgid "Bootstrap script failed. stdout: %s, stderr: %s"
+msgstr "Bootstrap script failed. stdout: %s, stderr: %s"
+
+msgid "sshpass not found, installing..."
+msgstr "sshpass not found, installing..."
+
+msgid "sshpass installation succeeded but binary not found in PATH"
+msgstr "sshpass installation succeeded but binary not found in PATH"
+
+msgid "Installing sshpass via apt..."
+msgstr "Installing sshpass via apt..."
+
+msgid "Installing sshpass via dnf..."
+msgstr "Installing sshpass via dnf..."
+
+msgid "Installing sshpass via yum..."
+msgstr "Installing sshpass via yum..."
+
+msgid "Installing sshpass via zypper..."
+msgstr "Installing sshpass via zypper..."
+
+msgid "Installing sshpass via apk..."
+msgstr "Installing sshpass via apk..."
+
+msgid "Could not detect package manager to install sshpass. Please install sshpass manually."
+msgstr "Could not detect package manager to install sshpass. Please install sshpass manually."
+
+msgid "Failed to install sshpass: %s"
+msgstr "Failed to install sshpass: %s"
+
+msgid "sshpass installed successfully"
+msgstr "sshpass installed successfully"
+
+msgid "Timeout while installing sshpass"
+msgstr "Timeout while installing sshpass"
+
+msgid "Error installing sshpass: %s"
+msgstr "Error installing sshpass: %s"
+
 msgid "virt-customize not found. Install libguestfs-tools package."
 msgstr "virt-customize not found. Install libguestfs-tools package."
