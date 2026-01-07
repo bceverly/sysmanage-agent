@@ -26,6 +26,7 @@ from src.sysmanage_agent.operations.child_host_types import (
     VmmVmConfig,
 )
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
+from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_kvm import KvmOperations
@@ -388,6 +389,29 @@ class ChildHostOperations:
                 auto_approve_token=auto_approve_token,
             )
             return await self.kvm_ops.create_vm(config)
+
+        if child_type == "bhyve":
+            # For bhyve, vm_name comes from hostname or explicit parameter
+            vm_name = parameters.get("vm_name") or hostname.split(".")[0]
+            cloud_image_url = parameters.get("cloud_image_url", "")
+
+            config = BhyveVmConfig(
+                distribution=distribution,
+                vm_name=vm_name,
+                hostname=hostname,
+                username=username,
+                password_hash=password_hash,
+                server_url=server_url,
+                agent_install_commands=agent_install_commands,
+                server_port=server_port,
+                use_https=use_https,
+                cloud_image_url=cloud_image_url,
+                memory=parameters.get("memory", "1G"),
+                disk_size=parameters.get("disk_size", "20G"),
+                cpus=parameters.get("cpus", 1),
+                auto_approve_token=auto_approve_token,
+            )
+            return await self.bhyve_ops.create_bhyve_vm(config)
 
         return {
             "success": False,

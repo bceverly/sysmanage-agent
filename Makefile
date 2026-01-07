@@ -52,7 +52,7 @@ help:
 	@echo "    CentOS/RHEL/Fedora: rpm-build, rpmdevtools, python3-devel, etc."
 	@echo "    Windows: WiX Toolset v4 (for MSI creation)"
 	@echo "    OpenBSD: Python packages (websockets, yaml, aiohttp, cryptography, sqlalchemy, alembic)"
-	@echo "    FreeBSD: pkgconf (for package creation)"
+	@echo "    FreeBSD: pkgconf, rust (for package creation and cryptography compilation)"
 	@echo "    NetBSD: No additional tools needed (uses pkg_create)"
 	@echo "  BSD users: install-dev checks for C tracer dependencies"
 	@echo "    OpenBSD: gcc, py3-cffi (plus all Python deps as pre-built packages)"
@@ -404,6 +404,10 @@ else
 		if ! pkg info -q pkgconf; then \
 			echo "    Installing pkgconf for package creation..."; \
 			sudo pkg install -y pkgconf; \
+		fi; \
+		if ! pkg info -q rust; then \
+			echo "    Installing rust for cryptography compilation..."; \
+			sudo pkg install -y rust; \
 		fi; \
 		echo "✓ FreeBSD package creation tools ready"; \
 		$(PYTHON) scripts/install-dev-deps.py; \

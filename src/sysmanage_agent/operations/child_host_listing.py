@@ -737,7 +737,9 @@ class ChildHostListing:
         """
         List bhyve virtual machines on FreeBSD.
 
-        Enumerates VMs by checking /dev/vmm directory for running VMs.
+        Enumerates VMs by:
+        1. Checking /dev/vmm directory for running VMs
+        2. Checking /vm directory for VM disk images (to find stopped VMs)
 
         Returns:
             List of bhyve VM information dicts with:
@@ -746,27 +748,52 @@ class ChildHostListing:
             - status: running/stopped
         """
         vms = []
+        running_vms = set()
 
         try:
-            # Check if /dev/vmm directory exists (vmm.ko loaded)
+            # Check for running VMs in /dev/vmm
             vmm_dir = "/dev/vmm"
-            if not os.path.isdir(vmm_dir):
-                self.logger.debug("/dev/vmm not found - bhyve not enabled")
-                return vms
+            if os.path.isdir(vmm_dir):
+                try:
+                    vm_names = os.listdir(vmm_dir)
+                    for vm_name in vm_names:
+                        running_vms.add(vm_name)
+                        vms.append(
+                            {
+                                "child_type": "bhyve",
+                                "child_name": vm_name,
+                                "status": "running",
+                            }
+                        )
+                except PermissionError:
+                    self.logger.debug("Permission denied reading /dev/vmm")
 
-            # List running VMs from /dev/vmm entries
-            try:
-                vm_names = os.listdir(vmm_dir)
-                for vm_name in vm_names:
-                    vms.append(
-                        {
-                            "child_type": "bhyve",
-                            "child_name": vm_name,
-                            "status": "running",  # If in /dev/vmm, it's running
-                        }
-                    )
-            except PermissionError:
-                self.logger.debug("Permission denied reading /dev/vmm")
+            # Check for stopped VMs in /vm directory
+            vm_base_dir = "/vm"
+            if os.path.isdir(vm_base_dir):
+                try:
+                    for entry in os.listdir(vm_base_dir):
+                        # Skip hidden directories and special directories
+                        if entry.startswith(".") or entry in ("images", "cloud-init"):
+                            continue
+                        vm_dir = os.path.join(vm_base_dir, entry)
+                        if not os.path.isdir(vm_dir):
+                            continue
+                        # Check if there's a disk image in this directory
+                        disk_path = os.path.join(vm_dir, f"{entry}.img")
+                        if not os.path.exists(disk_path):
+                            continue
+                        # This is a valid VM - check if it's already listed as running
+                        if entry not in running_vms:
+                            vms.append(
+                                {
+                                    "child_type": "bhyve",
+                                    "child_name": entry,
+                                    "status": "stopped",
+                                }
+                            )
+                except PermissionError:
+                    self.logger.debug("Permission denied reading /vm")
 
             self.logger.info("Found %d bhyve VMs", len(vms))
 

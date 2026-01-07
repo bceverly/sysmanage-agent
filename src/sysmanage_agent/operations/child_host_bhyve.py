@@ -2,6 +2,13 @@
 bhyve-specific child host operations for FreeBSD hosts.
 
 Supports creating VMs using FreeBSD's bhyve hypervisor.
+bhyve is FreeBSD's native hypervisor that supports running FreeBSD, Linux,
+and other guests with near-native performance.
+
+This module provides the main BhyveOperations class which coordinates:
+- VM initialization (loading vmm.ko, installing UEFI firmware)
+- VM creation (via BhyveCreationHelper)
+- VM lifecycle management (via BhyveLifecycleHelper)
 """
 
 import asyncio
@@ -10,6 +17,16 @@ import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict
 
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_bhyve_creation import (
+    BHYVE_CLOUDINIT_DIR,
+    BHYVE_IMAGES_DIR,
+    BHYVE_VM_DIR,
+    BhyveCreationHelper,
+)
+from src.sysmanage_agent.operations.child_host_bhyve_lifecycle import (
+    BhyveLifecycleHelper,
+)
+from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 
 class BhyveOperations:
@@ -30,6 +47,10 @@ class BhyveOperations:
 
         # Track in-progress VM creations to prevent duplicate requests
         self._in_progress_vms: set = set()
+
+        # Initialize helper classes
+        self._creation_helper = BhyveCreationHelper(logger)
+        self._lifecycle_helper = BhyveLifecycleHelper(logger, self._creation_helper)
 
     async def _run_subprocess(
         self,
@@ -67,6 +88,7 @@ class BhyveOperations:
         Creates persistent configuration:
         - Adds vmm_load="YES" to /boot/loader.conf for persistence across reboots
         - Loads vmm.ko kernel module immediately
+        - Installs UEFI firmware for Linux guest support
 
         Returns:
             Dict with success status and any required actions (like reboot)
@@ -127,6 +149,10 @@ class BhyveOperations:
                     "error": _("Permission denied writing to %s") % loader_conf,
                 }
 
+            # Step 3: Create VM directories
+            for directory in [BHYVE_VM_DIR, BHYVE_IMAGES_DIR, BHYVE_CLOUDINIT_DIR]:
+                os.makedirs(directory, mode=0o755, exist_ok=True)
+
             # Verify /dev/vmm directory now exists
             if not os.path.isdir("/dev/vmm"):
                 return {
@@ -134,12 +160,16 @@ class BhyveOperations:
                     "error": _("/dev/vmm not created after loading vmm.ko"),
                 }
 
+            # Step 4: Install bhyve-firmware for UEFI support (needed for Linux guests)
+            uefi_installed = await self._install_uefi_firmware()
+
             self.logger.info(_("bhyve initialized successfully"))
             return {
                 "success": True,
                 "message": _("bhyve has been initialized successfully"),
                 "vmm_loaded": True,
                 "loader_conf_updated": True,
+                "uefi_installed": uefi_installed,
             }
 
         except subprocess.TimeoutExpired:
@@ -148,23 +178,203 @@ class BhyveOperations:
             self.logger.error(_("Error initializing bhyve: %s"), error)
             return {"success": False, "error": str(error)}
 
-    async def create_bhyve_vm(self, _config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _install_uefi_firmware(self) -> bool:
+        """
+        Install bhyve-firmware package for UEFI support.
+
+        UEFI firmware is required to boot Linux guests on bhyve.
+        FreeBSD guests can use bhyveload and don't require UEFI.
+
+        Returns:
+            True if UEFI firmware is available (already installed or newly installed),
+            False if installation failed.
+        """
+        # Check if UEFI firmware is already available
+        uefi_paths = [
+            "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd",
+            "/usr/local/share/bhyve-firmware/BHYVE_UEFI.fd",
+        ]
+
+        for path in uefi_paths:
+            if os.path.exists(path):
+                self.logger.info(_("UEFI firmware already available at %s"), path)
+                return True
+
+        # Try to install bhyve-firmware package
+        self.logger.info(_("Installing bhyve-firmware package for UEFI support"))
+        try:
+            # Use pkg install with -y for non-interactive
+            result = await self._run_subprocess(
+                ["pkg", "install", "-y", "bhyve-firmware"],
+                timeout=120,  # Package installation can take a while
+            )
+
+            if result.returncode == 0:
+                self.logger.info(_("bhyve-firmware package installed successfully"))
+                return True
+
+            # Check if package is already installed (different exit code)
+            if "already installed" in result.stdout.lower():
+                self.logger.info(_("bhyve-firmware package is already installed"))
+                return True
+
+            self.logger.warning(
+                _("Failed to install bhyve-firmware: %s"),
+                result.stderr or result.stdout,
+            )
+            return False
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(_("Timeout installing bhyve-firmware package"))
+            return False
+        except Exception as error:
+            self.logger.warning(_("Error installing bhyve-firmware: %s"), error)
+            return False
+
+    async def create_bhyve_vm(self, config: BhyveVmConfig) -> Dict[str, Any]:
         """
         Create a new bhyve VM.
 
-        This is a placeholder for future implementation (Phase 5).
-
         Args:
-            _config: VM configuration dictionary
+            config: VM configuration
 
         Returns:
             Dict with success status
         """
-        # TODO: Implement VM creation in Phase 5  # pylint: disable=fixme
-        return {
-            "success": False,
-            "error": _("bhyve VM creation not yet implemented"),
-        }
+        try:
+            self.logger.info(_("Creating bhyve VM: %s"), config.vm_name)
+
+            # Check if VM already exists
+            if self._creation_helper.vm_exists(config.vm_name):
+                return {
+                    "success": False,
+                    "error": _("VM '%s' already exists") % config.vm_name,
+                }
+
+            # Prevent duplicate creations
+            if config.vm_name in self._in_progress_vms:
+                return {
+                    "success": False,
+                    "error": _("VM '%s' creation already in progress") % config.vm_name,
+                }
+            self._in_progress_vms.add(config.vm_name)
+
+            try:
+                # Create VM directory
+                vm_dir = os.path.join(BHYVE_VM_DIR, config.vm_name)
+                os.makedirs(vm_dir, mode=0o755, exist_ok=True)
+
+                # Set up disk path
+                disk_filename = f"{config.vm_name}.img"
+                config.disk_path = os.path.join(vm_dir, disk_filename)
+
+                # Download cloud image or create empty disk
+                if config.cloud_image_url:
+                    self.logger.info(_("Downloading cloud image"))
+                    disk_result = self._creation_helper.download_cloud_image(
+                        config.cloud_image_url, config.disk_path
+                    )
+                    if not disk_result.get("success"):
+                        return disk_result
+                else:
+                    self.logger.info(_("Creating empty disk"))
+                    disk_result = self._creation_helper.create_disk_image(
+                        config.disk_path,
+                        config.get_disk_gb(),
+                        config.use_zvol,
+                        config.zvol_parent,
+                    )
+                    if not disk_result.get("success"):
+                        return disk_result
+                    config.disk_path = disk_result["path"]
+
+                # Create cloud-init ISO
+                if config.use_cloud_init:
+                    self.logger.info(_("Creating cloud-init ISO"))
+                    cloudinit_result = self._creation_helper.create_cloud_init_iso(
+                        config
+                    )
+                    if not cloudinit_result.get("success"):
+                        return cloudinit_result
+
+                # Set up networking
+                bridge_result = self._creation_helper.create_bridge_if_needed()
+                if not bridge_result.get("success"):
+                    self.logger.warning(
+                        _("Bridge setup warning: %s"), bridge_result.get("error")
+                    )
+
+                tap_result = self._creation_helper.create_tap_interface(config.vm_name)
+                if not tap_result.get("success"):
+                    return {
+                        "success": False,
+                        "error": _("Failed to create network interface: %s")
+                        % tap_result.get("error"),
+                    }
+                tap_interface = tap_result["tap"]
+
+                # Start the VM
+                if self._creation_helper.is_linux_guest(config) or config.use_uefi:
+                    start_result = self._creation_helper.start_vm_with_uefi(
+                        config, tap_interface
+                    )
+                else:
+                    start_result = self._creation_helper.start_vm_with_bhyveload(
+                        config, tap_interface
+                    )
+
+                if not start_result.get("success"):
+                    return start_result
+
+                # Wait for VM to get IP
+                vm_ip = await self._creation_helper.wait_for_vm_ip(
+                    config.vm_name, tap_interface
+                )
+                if not vm_ip:
+                    return {
+                        "success": True,
+                        "message": _("VM created but IP not yet available"),
+                        "vm_name": config.vm_name,
+                        "status": "running",
+                        "ip_pending": True,
+                        "child_name": config.vm_name,
+                        "child_type": "bhyve",
+                    }
+
+                # Wait for SSH
+                ssh_available = await self._creation_helper.wait_for_ssh(vm_ip)
+                if not ssh_available:
+                    return {
+                        "success": True,
+                        "message": _("VM created, cloud-init may still be running"),
+                        "vm_name": config.vm_name,
+                        "status": "running",
+                        "ip_address": vm_ip,
+                        "ssh_pending": True,
+                        "child_name": config.vm_name,
+                        "child_type": "bhyve",
+                    }
+
+                self.logger.info(
+                    _("bhyve VM '%s' created successfully at %s"), config.vm_name, vm_ip
+                )
+                return {
+                    "success": True,
+                    "message": _("VM created successfully"),
+                    "vm_name": config.vm_name,
+                    "status": "running",
+                    "ip_address": vm_ip,
+                    "child_name": config.vm_name,
+                    "child_type": "bhyve",
+                }
+
+            finally:
+                self._in_progress_vms.discard(config.vm_name)
+
+        except Exception as error:
+            self.logger.error(_("Error creating bhyve VM: %s"), error)
+            self._in_progress_vms.discard(config.vm_name)
+            return {"success": False, "error": str(error)}
 
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -176,15 +386,7 @@ class BhyveOperations:
         Returns:
             Dict with success status
         """
-        child_name = parameters.get("child_name")
-        if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
-
-        # TODO: Implement in Phase 6  # pylint: disable=fixme
-        return {
-            "success": False,
-            "error": _("bhyve VM start not yet implemented"),
-        }
+        return await self._lifecycle_helper.start_child_host(parameters)
 
     async def stop_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -196,15 +398,7 @@ class BhyveOperations:
         Returns:
             Dict with success status
         """
-        child_name = parameters.get("child_name")
-        if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
-
-        # TODO: Implement in Phase 6  # pylint: disable=fixme
-        return {
-            "success": False,
-            "error": _("bhyve VM stop not yet implemented"),
-        }
+        return await self._lifecycle_helper.stop_child_host(parameters)
 
     async def restart_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -216,15 +410,7 @@ class BhyveOperations:
         Returns:
             Dict with success status
         """
-        child_name = parameters.get("child_name")
-        if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
-
-        # TODO: Implement in Phase 6  # pylint: disable=fixme
-        return {
-            "success": False,
-            "error": _("bhyve VM restart not yet implemented"),
-        }
+        return await self._lifecycle_helper.restart_child_host(parameters)
 
     async def delete_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -236,12 +422,4 @@ class BhyveOperations:
         Returns:
             Dict with success status
         """
-        child_name = parameters.get("child_name")
-        if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
-
-        # TODO: Implement in Phase 6  # pylint: disable=fixme
-        return {
-            "success": False,
-            "error": _("bhyve VM delete not yet implemented"),
-        }
+        return await self._lifecycle_helper.delete_child_host(parameters)
