@@ -158,18 +158,30 @@ class BhyveOperations:
             for directory in [BHYVE_VM_DIR, BHYVE_IMAGES_DIR, BHYVE_CLOUDINIT_DIR]:
                 os.makedirs(directory, mode=0o755, exist_ok=True)
 
-            # Verify /dev/vmm directory now exists
-            if not os.path.isdir("/dev/vmm"):
-                return {
-                    "success": False,
-                    "error": _("/dev/vmm not created after loading vmm.ko"),
-                }
-
             # Step 4: Install bhyve-firmware for UEFI support (needed for Linux guests)
             uefi_installed = await self._install_uefi_firmware()
 
             # Step 5: Install qemu-img for cloud image conversion (qcow2 -> raw)
             qemu_img_installed = await self._install_qemu_img()
+
+            # Verify /dev/vmm directory exists (indicates CPU virtualization support)
+            if not os.path.isdir("/dev/vmm"):
+                self.logger.warning(
+                    _(
+                        "/dev/vmm not created - CPU virtualization may be disabled in BIOS"
+                    )
+                )
+                return {
+                    "success": False,
+                    "error": _(
+                        "/dev/vmm not created after loading vmm.ko. "
+                        "Please enable VT-x/AMD-V in BIOS settings."
+                    ),
+                    "vmm_loaded": True,
+                    "loader_conf_updated": True,
+                    "uefi_installed": uefi_installed,
+                    "qemu_img_installed": qemu_img_installed,
+                }
 
             self.logger.info(_("bhyve initialized successfully"))
             return {
@@ -501,6 +513,11 @@ class BhyveOperations:
                 vm_ip = await self._creation_helper.wait_for_vm_ip(
                     config.vm_name, tap_interface
                 )
+                # Get console device for user access
+                console_device = self._creation_helper.get_console_device(
+                    config.vm_name
+                )
+
                 if not vm_ip:
                     return {
                         "success": True,
@@ -510,6 +527,7 @@ class BhyveOperations:
                         "ip_pending": True,
                         "child_name": config.vm_name,
                         "child_type": "bhyve",
+                        "console_device": console_device,
                     }
 
                 # Wait for SSH
@@ -524,6 +542,7 @@ class BhyveOperations:
                         "ssh_pending": True,
                         "child_name": config.vm_name,
                         "child_type": "bhyve",
+                        "console_device": console_device,
                     }
 
                 self.logger.info(
@@ -537,6 +556,7 @@ class BhyveOperations:
                     "ip_address": vm_ip,
                     "child_name": config.vm_name,
                     "child_type": "bhyve",
+                    "console_device": console_device,
                 }
 
             finally:

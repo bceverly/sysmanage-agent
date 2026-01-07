@@ -60,6 +60,36 @@ class BhyveCreationHelper:
 
         return False
 
+    def get_nmdm_id(self, vm_name: str) -> int:
+        """
+        Get the nmdm device ID for a VM.
+
+        Uses a hash of the VM name to generate a consistent device ID.
+
+        Args:
+            vm_name: Name of the VM
+
+        Returns:
+            nmdm device ID (0-999)
+        """
+        return abs(hash(vm_name)) % 1000
+
+    def get_console_device(self, vm_name: str) -> str:
+        """
+        Get the console device path for a VM.
+
+        Returns the user-accessible side of the nmdm pair (/dev/nmdmNB).
+        Connect using: cu -l /dev/nmdmNB -s 115200
+
+        Args:
+            vm_name: Name of the VM
+
+        Returns:
+            Path to the console device (e.g., /dev/nmdm42B)
+        """
+        nmdm_id = self.get_nmdm_id(vm_name)
+        return f"/dev/nmdm{nmdm_id}B"
+
     def is_linux_guest(self, config: BhyveVmConfig) -> bool:
         """
         Check if the distribution is a Linux guest.
@@ -645,7 +675,7 @@ runcmd:
             return {"success": False, "error": str(error)}
 
     def generate_bhyve_command(
-        self, config: BhyveVmConfig, tap_interface: str
+        self, config: BhyveVmConfig, tap_interface: str, use_nmdm: bool = True
     ) -> List[str]:
         """
         Generate the bhyve command line for starting a VM.
@@ -653,11 +683,23 @@ runcmd:
         Args:
             config: VM configuration
             tap_interface: Name of the tap interface for networking
+            use_nmdm: If True, use nmdm (null modem) for console (for daemonized VMs).
+                      If False, use stdio (for interactive/foreground VMs).
 
         Returns:
             List of command arguments for bhyve
         """
         memory_mb = config.get_memory_mb()
+
+        # Determine console device
+        # When running daemonized via daemon(8), we can't use stdio
+        # Use nmdm (null modem device pair) instead - /dev/nmdm{N}A for bhyve,
+        # /dev/nmdm{N}B for console access via cu(1)
+        if use_nmdm:
+            nmdm_id = self.get_nmdm_id(config.vm_name)
+            console_device = f"/dev/nmdm{nmdm_id}A"
+        else:
+            console_device = "stdio"
 
         cmd = [
             "bhyve",
@@ -673,7 +715,7 @@ runcmd:
             "-s",
             f"3:0,virtio-blk,{config.disk_path}",  # Main disk
             "-l",
-            "com1,stdio",  # Serial console
+            f"com1,{console_device}",  # Serial console
             "-c",
             str(config.cpus),
             "-m",
