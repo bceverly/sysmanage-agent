@@ -497,6 +497,23 @@ class ChildHostOperations:
         self.logger.info(_("Initializing bhyve"))
         return await self.bhyve_ops.initialize_bhyve(parameters)
 
+    async def disable_bhyve(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Disable bhyve on a FreeBSD system.
+
+        This is called when the user clicks "Disable bhyve" in the UI.
+        It unloads vmm.ko and removes the configuration from /boot/loader.conf.
+        Note: This will fail if any VMs are running.
+
+        Args:
+            parameters: Optional parameters (unused)
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Disabling bhyve"))
+        return await self.bhyve_ops.disable_bhyve(parameters)
+
     async def enable_kvm_modules(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Enable KVM by loading kernel modules via modprobe.

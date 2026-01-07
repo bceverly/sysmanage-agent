@@ -100,10 +100,15 @@ class BhyveOperations:
             bhyve_status = self.virtualization_checks.check_bhyve_support()
             if bhyve_status["enabled"] and bhyve_status["running"]:
                 self.logger.info(_("bhyve is already initialized and running"))
+                # Still check for UEFI firmware and qemu-img even if already initialized
+                uefi_installed = await self._install_uefi_firmware()
+                qemu_img_installed = await self._install_qemu_img()
                 return {
                     "success": True,
                     "message": _("bhyve is already initialized and running"),
                     "already_initialized": True,
+                    "uefi_installed": uefi_installed,
+                    "qemu_img_installed": qemu_img_installed,
                 }
 
             # Step 1: Load vmm.ko kernel module if not already loaded
@@ -180,6 +185,95 @@ class BhyveOperations:
             return {"success": False, "error": _("Timeout initializing bhyve")}
         except Exception as error:
             self.logger.error(_("Error initializing bhyve: %s"), error)
+            return {"success": False, "error": str(error)}
+
+    async def disable_bhyve(self, _parameters: dict) -> dict:
+        """
+        Disable bhyve on FreeBSD: unload vmm.ko and remove from loader.conf.
+
+        This is called when the user clicks "Disable bhyve" in the UI.
+
+        Steps:
+        - Unloads vmm.ko kernel module
+        - Removes vmm_load="YES" from /boot/loader.conf
+
+        Note: This will fail if any VMs are currently running.
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            self.logger.info(_("Disabling bhyve"))
+
+            # Step 1: Check if any VMs are running
+            if os.path.isdir("/dev/vmm"):
+                vm_entries = os.listdir("/dev/vmm")
+                if vm_entries:
+                    return {
+                        "success": False,
+                        "error": _("Cannot disable bhyve: VMs are running: %s")
+                        % ", ".join(vm_entries),
+                    }
+
+            # Step 2: Unload vmm.ko kernel module
+            self.logger.info(_("Unloading vmm.ko kernel module"))
+            result = await self._run_subprocess(["kldunload", "vmm"], timeout=30)
+            if result.returncode != 0:
+                # Check if it's already unloaded
+                if "not loaded" not in result.stderr.lower():
+                    return {
+                        "success": False,
+                        "error": _("Failed to unload vmm.ko: %s")
+                        % (result.stderr or result.stdout),
+                    }
+                self.logger.info(_("vmm.ko was already unloaded"))
+
+            # Step 3: Remove vmm_load="YES" from /boot/loader.conf
+            loader_conf = "/boot/loader.conf"
+            vmm_load_line = 'vmm_load="YES"'
+
+            try:
+                if os.path.exists(loader_conf):
+                    with open(loader_conf, "r", encoding="utf-8") as loader_file:
+                        lines = loader_file.readlines()
+
+                    # Filter out vmm_load and its comment
+                    new_lines = []
+                    skip_next = False
+                    for line in lines:
+                        if skip_next:
+                            skip_next = False
+                            continue
+                        if "bhyve VMM support" in line:
+                            skip_next = True  # Skip the vmm_load line after comment
+                            continue
+                        if vmm_load_line in line:
+                            continue
+                        new_lines.append(line)
+
+                    with open(loader_conf, "w", encoding="utf-8") as loader_file:
+                        loader_file.writelines(new_lines)
+
+                    self.logger.info(_("Removed vmm.ko from %s"), loader_conf)
+
+            except PermissionError:
+                return {
+                    "success": False,
+                    "error": _("Permission denied writing to %s") % loader_conf,
+                }
+
+            self.logger.info(_("bhyve disabled successfully"))
+            return {
+                "success": True,
+                "message": _("bhyve has been disabled successfully"),
+                "vmm_unloaded": True,
+                "loader_conf_updated": True,
+            }
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": _("Timeout disabling bhyve")}
+        except Exception as error:
+            self.logger.error(_("Error disabling bhyve: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def _install_uefi_firmware(self) -> bool:

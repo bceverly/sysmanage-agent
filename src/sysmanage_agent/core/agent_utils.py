@@ -322,6 +322,7 @@ class MessageProcessor:
             "initialize_vmm": self.agent.child_host_ops.initialize_vmm,
             "initialize_kvm": self.agent.child_host_ops.initialize_kvm,
             "initialize_bhyve": self.agent.child_host_ops.initialize_bhyve,
+            "disable_bhyve": self.agent.child_host_ops.disable_bhyve,
             "enable_kvm_modules": self.agent.child_host_ops.enable_kvm_modules,
             "disable_kvm_modules": self.agent.child_host_ops.disable_kvm_modules,
             "start_child_host": self.agent.child_host_ops.start_child_host,
