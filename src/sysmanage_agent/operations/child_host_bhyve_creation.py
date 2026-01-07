@@ -236,13 +236,94 @@ class BhyveCreationHelper:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    def download_cloud_image(self, url: str, dest_path: str) -> Dict[str, Any]:
+    def _is_qcow2_image(self, path: str) -> bool:
         """
-        Download a cloud image.
+        Check if a disk image is in qcow2 format.
+
+        Args:
+            path: Path to the image file
+
+        Returns:
+            True if qcow2 format, False otherwise
+        """
+        try:
+            # Check file magic bytes - qcow2 starts with "QFI\xfb"
+            with open(path, "rb") as img_file:
+                magic = img_file.read(4)
+                return magic == b"QFI\xfb"
+        except Exception:
+            return False
+
+    def _convert_qcow2_to_raw(self, qcow2_path: str, raw_path: str) -> Dict[str, Any]:
+        """
+        Convert a qcow2 image to raw format for bhyve.
+
+        bhyve requires raw disk images - it does not support qcow2 natively.
+
+        Args:
+            qcow2_path: Path to the qcow2 image
+            raw_path: Destination path for raw image
+
+        Returns:
+            Dict with success status
+        """
+        try:
+            self.logger.info(
+                _("Converting qcow2 image to raw format for bhyve compatibility")
+            )
+
+            # Use qemu-img to convert (from qemu-utils package)
+            result = subprocess.run(  # nosec B603 B607
+                [
+                    "qemu-img",
+                    "convert",
+                    "-f",
+                    "qcow2",
+                    "-O",
+                    "raw",
+                    qcow2_path,
+                    raw_path,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=1800,  # 30 minutes for large images
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": _("Failed to convert qcow2 to raw: %s") % result.stderr,
+                }
+
+            self.logger.info(_("Converted image to raw format: %s"), raw_path)
+            return {"success": True, "path": raw_path}
+
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "error": _(
+                    "qemu-img not found. Install qemu-utils: pkg install qemu-utils"
+                ),
+            }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": _("Image conversion timed out")}
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
+    def download_cloud_image(
+        self, url: str, dest_path: str, disk_size_gb: int = 20
+    ) -> Dict[str, Any]:
+        """
+        Download a cloud image and convert to raw format if needed.
+
+        bhyve requires raw disk images. Cloud images are often in qcow2 format,
+        so this function detects and converts them automatically.
 
         Args:
             url: URL of the cloud image
             dest_path: Destination path for the image
+            disk_size_gb: Target disk size in GB (for resizing after conversion)
 
         Returns:
             Dict with success status and path
@@ -258,6 +339,8 @@ class BhyveCreationHelper:
             url_hash = hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
             filename = os.path.basename(url.split("?")[0])
             cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
+            # Raw converted cache path
+            raw_cached_path = cached_path + ".raw"
 
             # Handle compressed files
             is_xz = filename.endswith(".xz")
@@ -266,58 +349,80 @@ class BhyveCreationHelper:
             else:
                 decompressed_path = cached_path
 
-            # Check cache
-            if os.path.exists(decompressed_path):
-                self.logger.info(_("Using cached cloud image: %s"), decompressed_path)
-                # Copy to destination
-                shutil.copy2(decompressed_path, dest_path)
+            # Check if we have a cached raw conversion
+            if os.path.exists(raw_cached_path):
+                self.logger.info(_("Using cached raw cloud image: %s"), raw_cached_path)
+                shutil.copy2(raw_cached_path, dest_path)
+                # Resize to requested size
+                self._resize_disk_image(dest_path, disk_size_gb)
                 return {"success": True, "path": dest_path}
 
-            # Download
-            result = subprocess.run(  # nosec B603 B607
-                ["fetch", "-o", cached_path, url],
-                capture_output=True,
-                text=True,
-                timeout=1800,  # 30 minutes
-                check=False,
-            )
+            # Check cache for original (may need conversion)
+            need_download = not os.path.exists(decompressed_path)
 
-            if result.returncode != 0:
-                # Try curl as fallback
+            if need_download:
+                # Download
                 result = subprocess.run(  # nosec B603 B607
-                    ["curl", "-L", "-o", cached_path, url],
+                    ["fetch", "-o", cached_path, url],
                     capture_output=True,
                     text=True,
-                    timeout=1800,
+                    timeout=1800,  # 30 minutes
                     check=False,
                 )
-                if result.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": _("Failed to download image: %s") % result.stderr,
-                    }
 
-            self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
-
-            # Decompress if needed
-            if is_xz:
-                self.logger.info(_("Decompressing xz archive"))
-                result = subprocess.run(  # nosec B603 B607
-                    ["xz", "-dk", cached_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=600,
-                    check=False,
-                )
                 if result.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": _("Failed to decompress: %s") % result.stderr,
-                    }
-                # Copy decompressed file to destination
-                shutil.copy2(decompressed_path, dest_path)
+                    # Try curl as fallback
+                    result = subprocess.run(  # nosec B603 B607
+                        ["curl", "-L", "-o", cached_path, url],
+                        capture_output=True,
+                        text=True,
+                        timeout=1800,
+                        check=False,
+                    )
+                    if result.returncode != 0:
+                        return {
+                            "success": False,
+                            "error": _("Failed to download image: %s") % result.stderr,
+                        }
+
+                self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
+
+                # Decompress if needed
+                if is_xz:
+                    self.logger.info(_("Decompressing xz archive"))
+                    result = subprocess.run(  # nosec B603 B607
+                        ["xz", "-dk", cached_path],
+                        capture_output=True,
+                        text=True,
+                        timeout=600,
+                        check=False,
+                    )
+                    if result.returncode != 0:
+                        return {
+                            "success": False,
+                            "error": _("Failed to decompress: %s") % result.stderr,
+                        }
             else:
-                shutil.copy2(cached_path, dest_path)
+                self.logger.info(_("Using cached cloud image: %s"), decompressed_path)
+
+            # Check if image is qcow2 and needs conversion
+            if self._is_qcow2_image(decompressed_path):
+                self.logger.info(
+                    _("Detected qcow2 format, converting to raw for bhyve")
+                )
+                convert_result = self._convert_qcow2_to_raw(
+                    decompressed_path, raw_cached_path
+                )
+                if not convert_result.get("success"):
+                    return convert_result
+                # Copy converted raw image to destination
+                shutil.copy2(raw_cached_path, dest_path)
+            else:
+                # Already raw format, just copy
+                shutil.copy2(decompressed_path, dest_path)
+
+            # Resize disk to requested size
+            self._resize_disk_image(dest_path, disk_size_gb)
 
             return {"success": True, "path": dest_path}
 
@@ -325,6 +430,32 @@ class BhyveCreationHelper:
             return {"success": False, "error": _("Download timed out")}
         except Exception as error:
             return {"success": False, "error": str(error)}
+
+    def _resize_disk_image(self, path: str, size_gb: int) -> None:
+        """
+        Resize a raw disk image to the specified size.
+
+        Args:
+            path: Path to the raw disk image
+            size_gb: Target size in GB
+        """
+        try:
+            size_bytes = size_gb * 1024 * 1024 * 1024
+            current_size = os.path.getsize(path)
+
+            if current_size < size_bytes:
+                self.logger.info(_("Resizing disk image to %dGB"), size_gb)
+                result = subprocess.run(  # nosec B603 B607
+                    ["truncate", "-s", str(size_bytes), path],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    self.logger.warning(_("Failed to resize disk: %s"), result.stderr)
+        except Exception as error:
+            self.logger.warning(_("Error resizing disk: %s"), error)
 
     def create_disk_image(
         self, path: str, size_gb: int, use_zvol: bool = False, zvol_parent: str = ""
@@ -772,7 +903,7 @@ runcmd:
                 if result == 0:
                     self.logger.info(_("SSH is available on %s"), ip)
                     return True
-            except Exception:
+            except Exception:  # nosec B110 # polling loop - VM may not exist yet
                 pass
             await asyncio.sleep(5)
 

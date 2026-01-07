@@ -163,6 +163,9 @@ class BhyveOperations:
             # Step 4: Install bhyve-firmware for UEFI support (needed for Linux guests)
             uefi_installed = await self._install_uefi_firmware()
 
+            # Step 5: Install qemu-img for cloud image conversion (qcow2 -> raw)
+            qemu_img_installed = await self._install_qemu_img()
+
             self.logger.info(_("bhyve initialized successfully"))
             return {
                 "success": True,
@@ -170,6 +173,7 @@ class BhyveOperations:
                 "vmm_loaded": True,
                 "loader_conf_updated": True,
                 "uefi_installed": uefi_installed,
+                "qemu_img_installed": qemu_img_installed,
             }
 
         except subprocess.TimeoutExpired:
@@ -231,6 +235,77 @@ class BhyveOperations:
             self.logger.warning(_("Error installing bhyve-firmware: %s"), error)
             return False
 
+    async def _install_qemu_img(self) -> bool:
+        """
+        Install qemu-img tool for cloud image conversion.
+
+        bhyve requires raw disk images, but cloud images are often in qcow2 format.
+        qemu-img is needed to convert qcow2 images to raw format.
+
+        On FreeBSD, qemu-img is part of the qemu-nox11 package (or qemu for systems
+        with X11).
+
+        Returns:
+            True if qemu-img is available (already installed or newly installed),
+            False if installation failed.
+        """
+        # Check if qemu-img is already available
+        try:
+            result = await self._run_subprocess(
+                ["which", "qemu-img"],
+                timeout=10,
+            )
+            if result.returncode == 0:
+                self.logger.info(_("qemu-img already available"))
+                return True
+        except Exception:
+            pass
+
+        # Try to install qemu-nox11 package (smaller, no X11 dependencies)
+        self.logger.info(_("Installing qemu-nox11 package for qemu-img"))
+        try:
+            result = await self._run_subprocess(
+                ["pkg", "install", "-y", "qemu-nox11"],
+                timeout=300,  # QEMU package is large, may take a while
+            )
+
+            if result.returncode == 0:
+                self.logger.info(_("qemu-nox11 package installed successfully"))
+                return True
+
+            # Check if package is already installed
+            if "already installed" in result.stdout.lower():
+                self.logger.info(_("qemu-nox11 package is already installed"))
+                return True
+
+            # If qemu-nox11 fails, try regular qemu as fallback
+            self.logger.info(_("Trying qemu package as fallback"))
+            result = await self._run_subprocess(
+                ["pkg", "install", "-y", "qemu"],
+                timeout=300,
+            )
+
+            if result.returncode == 0:
+                self.logger.info(_("qemu package installed successfully"))
+                return True
+
+            if "already installed" in result.stdout.lower():
+                self.logger.info(_("qemu package is already installed"))
+                return True
+
+            self.logger.warning(
+                _("Failed to install qemu package: %s"),
+                result.stderr or result.stdout,
+            )
+            return False
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(_("Timeout installing qemu package"))
+            return False
+        except Exception as error:
+            self.logger.warning(_("Error installing qemu: %s"), error)
+            return False
+
     async def create_bhyve_vm(self, config: BhyveVmConfig) -> Dict[str, Any]:
         """
         Create a new bhyve VM.
@@ -272,7 +347,9 @@ class BhyveOperations:
                 if config.cloud_image_url:
                     self.logger.info(_("Downloading cloud image"))
                     disk_result = self._creation_helper.download_cloud_image(
-                        config.cloud_image_url, config.disk_path
+                        config.cloud_image_url,
+                        config.disk_path,
+                        config.get_disk_gb(),
                     )
                     if not disk_result.get("success"):
                         return disk_result
