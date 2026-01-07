@@ -124,29 +124,52 @@ class BhyveOperations:
                             % (result.stderr or result.stdout),
                         }
 
-            # Step 2: Add vmm_load="YES" to /boot/loader.conf for persistence
+            # Step 1b: Load nmdm.ko for null modem console support
+            self.logger.info(_("Loading nmdm.ko kernel module for console support"))
+            result = await self._run_subprocess(["kldload", "nmdm"], timeout=30)
+            if result.returncode != 0:
+                # Ignore if already loaded
+                if "already loaded" not in result.stderr.lower():
+                    self.logger.warning(
+                        _("Failed to load nmdm.ko (console may not work): %s"),
+                        result.stderr or result.stdout,
+                    )
+
+            # Step 2: Add vmm_load="YES" and nmdm_load="YES" to /boot/loader.conf
             loader_conf = "/boot/loader.conf"
             vmm_load_line = 'vmm_load="YES"'
+            nmdm_load_line = 'nmdm_load="YES"'
 
             try:
                 # Check if already configured
-                needs_update = True
+                needs_vmm_update = True
+                needs_nmdm_update = True
                 if os.path.exists(loader_conf):
                     with open(loader_conf, "r", encoding="utf-8") as loader_file:
                         content = loader_file.read()
                         if vmm_load_line in content:
-                            needs_update = False
+                            needs_vmm_update = False
                             self.logger.info(
                                 _("vmm.ko already configured in %s"), loader_conf
                             )
+                        if nmdm_load_line in content:
+                            needs_nmdm_update = False
+                            self.logger.info(
+                                _("nmdm.ko already configured in %s"), loader_conf
+                            )
 
-                if needs_update:
-                    self.logger.info(_("Adding vmm.ko to %s"), loader_conf)
+                if needs_vmm_update or needs_nmdm_update:
                     with open(loader_conf, "a", encoding="utf-8") as loader_file:
-                        loader_file.write(
-                            "\n# bhyve VMM support - added by sysmanage\n"
-                        )
-                        loader_file.write(f"{vmm_load_line}\n")
+                        if needs_vmm_update:
+                            self.logger.info(_("Adding vmm.ko to %s"), loader_conf)
+                            loader_file.write(
+                                "\n# bhyve VMM support - added by sysmanage\n"
+                            )
+                            loader_file.write(f"{vmm_load_line}\n")
+                        if needs_nmdm_update:
+                            self.logger.info(_("Adding nmdm.ko to %s"), loader_conf)
+                            loader_file.write("# nmdm console support for bhyve VMs\n")
+                            loader_file.write(f"{nmdm_load_line}\n")
 
             except PermissionError:
                 return {
