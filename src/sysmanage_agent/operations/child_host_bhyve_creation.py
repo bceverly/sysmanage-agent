@@ -611,8 +611,14 @@ write_files:
 """
 
             if runcmd_section:
+                # Add time sync commands before agent install to fix clock skew
+                # bhyve VMs often boot with incorrect time which breaks apt
+                time_sync_commands = """  - 'systemctl restart systemd-timesyncd || true'
+  - 'timedatectl set-ntp true || true'
+  - 'sleep 5'"""
                 user_data += f"""
 runcmd:
+{time_sync_commands}
 {runcmd_section}
 """
 
