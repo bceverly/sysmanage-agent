@@ -1353,3 +1353,12 @@ msgstr "FreeBSD sda3 का उपयोग: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "FreeBSD मानक रूट पर डिफ़ॉल्ट: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "वर्चुअलाइजेशन स्थिति अपडेट नहीं भेज सकते: होस्ट स्वीकृत नहीं"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "वर्चुअलाइजेशन स्थिति अपडेट सर्वर पर भेजने के लिए कतार में"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "वर्चुअलाइजेशन स्थिति अपडेट भेजने में त्रुटि: %s"

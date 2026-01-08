@@ -1355,3 +1355,12 @@ msgstr "Gebruikt FreeBSD sda3: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "Standaard FreeBSD-root: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "Kan virtualisatiestatusupdate niet verzenden: host niet goedgekeurd"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "Virtualisatiestatusupdate in wachtrij voor verzending naar server"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "Fout bij verzenden van virtualisatiestatusupdate: %s"

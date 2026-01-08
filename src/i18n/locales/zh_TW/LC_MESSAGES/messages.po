@@ -1353,3 +1353,12 @@ msgstr "使用FreeBSD sda3: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "預設使用FreeBSD標準根目錄: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "無法傳送虛擬化狀態更新：主機未獲批准"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "虛擬化狀態更新已排隊等待傳送至伺服器"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "傳送虛擬化狀態更新時發生錯誤：%s"

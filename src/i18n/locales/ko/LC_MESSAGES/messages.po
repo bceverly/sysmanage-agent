@@ -1355,3 +1355,12 @@ msgstr "FreeBSD sda3 사용: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "FreeBSD 표준 루트 기본값: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "가상화 상태 업데이트가 서버로 전송 대기열에 추가되었습니다"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "가상화 상태 업데이트 전송 오류: %s"

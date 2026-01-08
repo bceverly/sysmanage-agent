@@ -58,6 +58,52 @@ class BhyveOperations:
         self._creation_helper = BhyveCreationHelper(logger)
         self._lifecycle_helper = BhyveLifecycleHelper(logger, self._creation_helper)
 
+    async def _send_virtualization_status_update(self):
+        """Send updated virtualization status back to server via queue.
+
+        This is called after enable/disable operations to update the server
+        with the current bhyve status, so the web UI shows correct state.
+        """
+        try:
+            # Get host approval for host_id
+            host_approval = self.agent.registration_manager.get_host_approval_from_db()
+            if not host_approval:
+                self.logger.warning(
+                    _("Cannot send virtualization status update: host not approved")
+                )
+                return
+
+            # Get current bhyve status
+            bhyve_info = self.virtualization_checks.check_bhyve_support()
+
+            # Prepare virtualization status message with capabilities
+            virt_message_data = {
+                "success": True,
+                "hostname": self.agent.registration.get_system_info()["hostname"],
+                "host_id": str(host_approval.host_id),
+                "os_type": "freebsd",
+                "supported_types": ["bhyve"] if bhyve_info.get("available") else [],
+                "capabilities": {
+                    "bhyve": bhyve_info,
+                },
+            }
+
+            # Create and queue the message for sending
+            message = self.agent.message_handler.create_message(
+                message_type="virtualization_support_update",
+                data=virt_message_data,
+            )
+            await self.agent.message_handler.queue_outbound_message(message)
+
+            self.logger.info(
+                _("Virtualization status update queued for sending to server")
+            )
+
+        except Exception as exc:
+            self.logger.error(
+                _("Error sending virtualization status update: %s"), exc, exc_info=True
+            )
+
     async def _run_subprocess(
         self,
         cmd: list,
@@ -119,6 +165,8 @@ class BhyveOperations:
                         _("NAT networking setup had issues: %s"),
                         nat_result.get("error", "Unknown error"),
                     )
+                # Send virtualization status update to server
+                await self._send_virtualization_status_update()
                 return {
                     "success": True,
                     "message": _("bhyve is already initialized and running"),
@@ -240,6 +288,8 @@ class BhyveOperations:
                 }
 
             self.logger.info(_("bhyve initialized successfully"))
+            # Send virtualization status update to server
+            await self._send_virtualization_status_update()
             return {
                 "success": True,
                 "message": _("bhyve has been initialized successfully"),
@@ -335,6 +385,8 @@ class BhyveOperations:
                 }
 
             self.logger.info(_("bhyve disabled successfully"))
+            # Send virtualization status update to server
+            await self._send_virtualization_status_update()
             return {
                 "success": True,
                 "message": _("bhyve has been disabled successfully"),

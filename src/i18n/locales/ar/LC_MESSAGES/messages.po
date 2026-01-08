@@ -1358,3 +1358,12 @@ msgstr "استخدام FreeBSD sda3: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "الافتراضي إلى جذر FreeBSD القياسي: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "لا يمكن إرسال تحديث حالة الافتراضية: المضيف غير معتمد"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "تم وضع تحديث حالة الافتراضية في قائمة الانتظار للإرسال إلى الخادم"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "خطأ في إرسال تحديث حالة الافتراضية: %s"

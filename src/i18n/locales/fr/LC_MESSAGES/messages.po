@@ -1355,3 +1355,12 @@ msgstr "Utilisation de FreeBSD sda3: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "Racine FreeBSD standard par défaut: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "Impossible d'envoyer la mise à jour du statut de virtualisation : hôte non approuvé"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "Mise à jour du statut de virtualisation mise en file d'attente pour envoi au serveur"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "Erreur lors de l'envoi de la mise à jour du statut de virtualisation : %s"

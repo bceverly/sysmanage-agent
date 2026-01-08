@@ -1357,3 +1357,12 @@ msgstr "FreeBSD sda3を使用: %s"
 msgid "Defaulting to FreeBSD standard root: /dev/sda4"
 msgstr "FreeBSD標準ルートをデフォルト: /dev/sda4"
 
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "仮想化ステータス更新を送信できません：ホストが承認されていません"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "仮想化ステータス更新がサーバーへの送信キューに追加されました"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "仮想化ステータス更新の送信エラー: %s"

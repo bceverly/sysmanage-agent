@@ -861,3 +861,12 @@ msgstr "Error installing sshpass: %s"
 
 msgid "virt-customize not found. Install libguestfs-tools package."
 msgstr "virt-customize not found. Install libguestfs-tools package."
+
+msgid "Cannot send virtualization status update: host not approved"
+msgstr "Cannot send virtualization status update: host not approved"
+
+msgid "Virtualization status update queued for sending to server"
+msgstr "Virtualization status update queued for sending to server"
+
+msgid "Error sending virtualization status update: %s"
+msgstr "Error sending virtualization status update: %s"
