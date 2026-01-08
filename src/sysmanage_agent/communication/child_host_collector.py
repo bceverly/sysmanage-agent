@@ -378,8 +378,9 @@ class ChildHostCollector:
         # Windows: WSL, Hyper-V, VirtualBox
         # Linux: LXD, KVM, VirtualBox
         # OpenBSD: VMM
+        # FreeBSD: bhyve
         os_type = platform.system().lower()
-        if os_type not in ("windows", "linux", "openbsd"):
+        if os_type not in ("windows", "linux", "openbsd", "freebsd"):
             return
 
         self.logger.debug("AGENT_DEBUG: Collecting child hosts data")
