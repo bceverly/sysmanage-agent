@@ -12,7 +12,9 @@ from typing import Any, Dict, Optional
 from src.i18n import _
 
 # Default bhyve network configuration
-BHYVE_BRIDGE_NAME = "bhyve0"
+# Note: On FreeBSD, bridge interfaces must be named bridgeN (e.g., bridge0)
+# We use bridge1 to avoid conflict with existing bridge0 (which may be for WiFi bridging)
+BHYVE_BRIDGE_NAME = "bridge1"
 BHYVE_SUBNET = "10.0.100"  # Will use 10.0.100.0/24
 BHYVE_GATEWAY_IP = f"{BHYVE_SUBNET}.1"
 BHYVE_NETMASK = "255.255.255.0"
@@ -116,6 +118,11 @@ class BhyveNetworking:
                     timeout=10,
                 )
                 if create_result.returncode != 0:
+                    self.logger.error(
+                        _("Failed to create bridge %s: %s"),
+                        BHYVE_BRIDGE_NAME,
+                        create_result.stderr,
+                    )
                     return {
                         "success": False,
                         "error": _("Failed to create bridge %s: %s")

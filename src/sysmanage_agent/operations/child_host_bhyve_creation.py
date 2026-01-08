@@ -124,7 +124,7 @@ class BhyveCreationHelper:
         """
         Get the name of a bridge interface for VM networking.
 
-        Prefers bhyve0 (our NAT bridge) if it exists.
+        Prefers bridge1 (our NAT bridge) if it exists.
 
         Returns:
             Bridge interface name if found, None otherwise
@@ -139,9 +139,10 @@ class BhyveCreationHelper:
             )
             if result.returncode == 0:
                 interfaces = result.stdout.strip().split()
-                # Prefer bhyve0 (our NAT bridge) for VM networking
-                if "bhyve0" in interfaces:
-                    return "bhyve0"
+                # Prefer bridge1 (our NAT bridge) for VM networking
+                # bridge0 may be used for WiFi bridging
+                if "bridge1" in interfaces:
+                    return "bridge1"
                 # Look for any existing bridge as fallback
                 for iface in interfaces:
                     if iface.startswith("bridge"):
@@ -158,7 +159,7 @@ class BhyveCreationHelper:
         """
         Create or find the bridge interface for VM networking.
 
-        Uses bhyve0 (NAT bridge) if it exists, otherwise creates one.
+        Uses bridge1 (NAT bridge) if it exists, otherwise creates one.
         The NAT bridge is set up by enable_bhyve() with gateway IP
         and connected to pf for NAT.
 
@@ -170,9 +171,10 @@ class BhyveCreationHelper:
             return {"success": True, "bridge": existing_bridge}
 
         try:
-            # Create bhyve0 bridge for NAT networking
+            # Create bridge1 for NAT networking
             # Note: This is a fallback - enable_bhyve() should have created this
-            bridge_name = "bhyve0"
+            # bridge0 may be used for WiFi bridging
+            bridge_name = "bridge1"
             result = subprocess.run(  # nosec B603 B607
                 ["ifconfig", bridge_name, "create"],
                 capture_output=True,

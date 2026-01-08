@@ -114,6 +114,11 @@ class BhyveOperations:
                     self._run_subprocess
                 )
                 nat_configured = nat_result.get("success", False)
+                if not nat_configured:
+                    self.logger.warning(
+                        _("NAT networking setup had issues: %s"),
+                        nat_result.get("error", "Unknown error"),
+                    )
                 return {
                     "success": True,
                     "message": _("bhyve is already initialized and running"),
