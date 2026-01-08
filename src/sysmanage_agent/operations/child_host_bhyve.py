@@ -26,6 +26,9 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
 from src.sysmanage_agent.operations.child_host_bhyve_lifecycle import (
     BhyveLifecycleHelper,
 )
+from src.sysmanage_agent.operations.child_host_bhyve_networking import (
+    BhyveNetworking,
+)
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 
@@ -44,6 +47,9 @@ class BhyveOperations:
         self.agent = agent_instance
         self.logger = logger
         self.virtualization_checks = virtualization_checks
+
+        # Initialize networking helper
+        self._networking = BhyveNetworking(logger)
 
         # Track in-progress VM creations to prevent duplicate requests
         self._in_progress_vms: set = set()
@@ -100,15 +106,24 @@ class BhyveOperations:
             bhyve_status = self.virtualization_checks.check_bhyve_support()
             if bhyve_status["enabled"] and bhyve_status["running"]:
                 self.logger.info(_("bhyve is already initialized and running"))
-                # Still check for UEFI firmware and qemu-img even if already initialized
+                # Still check for UEFI firmware, qemu-img, and NAT networking
                 uefi_installed = await self._install_uefi_firmware()
                 qemu_img_installed = await self._install_qemu_img()
+                # Set up NAT networking (will skip if already configured)
+                nat_result = await self._networking.setup_nat_networking(
+                    self._run_subprocess
+                )
+                nat_configured = nat_result.get("success", False)
                 return {
                     "success": True,
                     "message": _("bhyve is already initialized and running"),
                     "already_initialized": True,
                     "uefi_installed": uefi_installed,
                     "qemu_img_installed": qemu_img_installed,
+                    "nat_configured": nat_configured,
+                    "nat_bridge": nat_result.get("bridge"),
+                    "nat_gateway": nat_result.get("gateway"),
+                    "nat_subnet": nat_result.get("subnet"),
                 }
 
             # Step 1: Load vmm.ko kernel module if not already loaded
@@ -187,6 +202,18 @@ class BhyveOperations:
             # Step 5: Install qemu-img for cloud image conversion (qcow2 -> raw)
             qemu_img_installed = await self._install_qemu_img()
 
+            # Step 6: Set up NAT networking for VMs
+            self.logger.info(_("Setting up NAT networking for bhyve VMs"))
+            nat_result = await self._networking.setup_nat_networking(
+                self._run_subprocess
+            )
+            nat_configured = nat_result.get("success", False)
+            if not nat_configured:
+                self.logger.warning(
+                    _("NAT networking setup had issues: %s"),
+                    nat_result.get("error", "Unknown error"),
+                )
+
             # Verify /dev/vmm directory exists (indicates CPU virtualization support)
             if not os.path.isdir("/dev/vmm"):
                 self.logger.warning(
@@ -204,6 +231,7 @@ class BhyveOperations:
                     "loader_conf_updated": True,
                     "uefi_installed": uefi_installed,
                     "qemu_img_installed": qemu_img_installed,
+                    "nat_configured": nat_configured,
                 }
 
             self.logger.info(_("bhyve initialized successfully"))
@@ -214,6 +242,10 @@ class BhyveOperations:
                 "loader_conf_updated": True,
                 "uefi_installed": uefi_installed,
                 "qemu_img_installed": qemu_img_installed,
+                "nat_configured": nat_configured,
+                "nat_bridge": nat_result.get("bridge"),
+                "nat_gateway": nat_result.get("gateway"),
+                "nat_subnet": nat_result.get("subnet"),
             }
 
         except subprocess.TimeoutExpired:

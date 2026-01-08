@@ -124,6 +124,8 @@ class BhyveCreationHelper:
         """
         Get the name of a bridge interface for VM networking.
 
+        Prefers bhyve0 (our NAT bridge) if it exists.
+
         Returns:
             Bridge interface name if found, None otherwise
         """
@@ -137,7 +139,10 @@ class BhyveCreationHelper:
             )
             if result.returncode == 0:
                 interfaces = result.stdout.strip().split()
-                # Look for existing bridge
+                # Prefer bhyve0 (our NAT bridge) for VM networking
+                if "bhyve0" in interfaces:
+                    return "bhyve0"
+                # Look for any existing bridge as fallback
                 for iface in interfaces:
                     if iface.startswith("bridge"):
                         return iface
@@ -151,7 +156,11 @@ class BhyveCreationHelper:
 
     def create_bridge_if_needed(self) -> Dict[str, Any]:
         """
-        Create a bridge interface for VM networking if one doesn't exist.
+        Create or find the bridge interface for VM networking.
+
+        Uses bhyve0 (NAT bridge) if it exists, otherwise creates one.
+        The NAT bridge is set up by enable_bhyve() with gateway IP
+        and connected to pf for NAT.
 
         Returns:
             Dict with bridge name and success status
@@ -161,8 +170,9 @@ class BhyveCreationHelper:
             return {"success": True, "bridge": existing_bridge}
 
         try:
-            # Create a bridge interface
-            bridge_name = "bridge0"
+            # Create bhyve0 bridge for NAT networking
+            # Note: This is a fallback - enable_bhyve() should have created this
+            bridge_name = "bhyve0"
             result = subprocess.run(  # nosec B603 B607
                 ["ifconfig", bridge_name, "create"],
                 capture_output=True,
@@ -179,36 +189,24 @@ class BhyveCreationHelper:
                         "error": _("Failed to create bridge: %s") % result.stderr,
                     }
 
-            # Find the primary network interface to add to bridge
-            primary_iface = None
-            result = subprocess.run(  # nosec B603 B607
-                ["route", "-n", "get", "default"],
+            # Configure the bridge with NAT gateway IP
+            # This matches the setup in enable_bhyve()
+            gateway_ip = "10.0.100.1"
+            netmask = "255.255.255.0"
+            subprocess.run(  # nosec B603 B607
+                [
+                    "ifconfig",
+                    bridge_name,
+                    "inet",
+                    gateway_ip,
+                    "netmask",
+                    netmask,
+                    "up",
+                ],
                 capture_output=True,
-                text=True,
-                timeout=10,
+                timeout=30,
                 check=False,
             )
-            if result.returncode == 0:
-                for line in result.stdout.split("\n"):
-                    if "interface:" in line:
-                        primary_iface = line.split(":")[1].strip()
-                        break
-
-            if primary_iface:
-                # Add member to bridge
-                subprocess.run(  # nosec B603 B607
-                    ["ifconfig", bridge_name, "addm", primary_iface],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-                # Enable bridge
-                subprocess.run(  # nosec B603 B607
-                    ["ifconfig", bridge_name, "up"],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
 
             return {"success": True, "bridge": bridge_name}
 
