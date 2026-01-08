@@ -152,19 +152,30 @@ class BhyveNetworking:
                     _("Failed to configure bridge IP: %s"), config_result.stderr
                 )
 
-            # Make bridge persistent in /etc/rc.conf using sysrc
-            # Use += to append to cloned_interfaces if it exists
-            await run_subprocess(
-                ["sysrc", f"cloned_interfaces+={BHYVE_BRIDGE_NAME}"],
-                timeout=10,
-            )
-            await run_subprocess(
-                [
-                    "sysrc",
-                    f"ifconfig_{BHYVE_BRIDGE_NAME}=inet {BHYVE_GATEWAY_IP} netmask {BHYVE_NETMASK}",
-                ],
-                timeout=10,
-            )
+            # Make bridge persistent in /etc/rc.conf
+            # First check what's already configured
+            rc_conf = "/etc/rc.conf"
+            rc_content = ""
+            if os.path.exists(rc_conf):
+                with open(rc_conf, "r", encoding="utf-8") as conf_file:
+                    rc_content = conf_file.read()
+
+            # Add cloned_interfaces if bridge1 not already there
+            if BHYVE_BRIDGE_NAME not in rc_content:
+                await run_subprocess(
+                    ["sysrc", f"cloned_interfaces+={BHYVE_BRIDGE_NAME}"],
+                    timeout=10,
+                )
+
+            # Add ifconfig entry if not already configured correctly
+            ifconfig_key = f"ifconfig_{BHYVE_BRIDGE_NAME}"
+            expected_value = f"inet {BHYVE_GATEWAY_IP} netmask {BHYVE_NETMASK}"
+            if ifconfig_key not in rc_content or expected_value not in rc_content:
+                # Use sysrc with proper quoting
+                await run_subprocess(
+                    ["sysrc", f"{ifconfig_key}={expected_value}"],
+                    timeout=10,
+                )
 
             return {
                 "success": True,
