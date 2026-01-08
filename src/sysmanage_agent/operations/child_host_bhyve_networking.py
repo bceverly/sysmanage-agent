@@ -152,16 +152,18 @@ class BhyveNetworking:
                     _("Failed to configure bridge IP: %s"), config_result.stderr
                 )
 
-            # Make bridge persistent in /etc/rc.conf
-            await self._add_rc_conf_entry(
-                f'cloned_interfaces="${{cloned_interfaces}} {BHYVE_BRIDGE_NAME}"',
-                "cloned_interfaces",
-                run_subprocess,
+            # Make bridge persistent in /etc/rc.conf using sysrc
+            # Use += to append to cloned_interfaces if it exists
+            await run_subprocess(
+                ["sysrc", f"cloned_interfaces+={BHYVE_BRIDGE_NAME}"],
+                timeout=10,
             )
-            await self._add_rc_conf_entry(
-                f'ifconfig_{BHYVE_BRIDGE_NAME}="inet {BHYVE_GATEWAY_IP} netmask {BHYVE_NETMASK}"',
-                f"ifconfig_{BHYVE_BRIDGE_NAME}",
-                run_subprocess,
+            await run_subprocess(
+                [
+                    "sysrc",
+                    f"ifconfig_{BHYVE_BRIDGE_NAME}=inet {BHYVE_GATEWAY_IP} netmask {BHYVE_NETMASK}",
+                ],
+                timeout=10,
             )
 
             return {
@@ -303,8 +305,18 @@ pass out all
                     "error": _("Permission denied writing to %s") % pf_conf,
                 }
 
-            # Enable pf if not enabled
+            # Enable pf in rc.conf
             await run_subprocess(["sysrc", "pf_enable=YES"], timeout=10)
+
+            # Start pf service (creates /dev/pf)
+            self.logger.info(_("Starting pf service"))
+            start_result = await run_subprocess(
+                ["service", "pf", "start"],
+                timeout=30,
+            )
+            if start_result.returncode != 0:
+                # Try onestart if already enabled but not running
+                await run_subprocess(["service", "pf", "onestart"], timeout=30)
 
             # Load the new rules
             self.logger.info(_("Loading pf rules"))
@@ -319,7 +331,7 @@ pass out all
                     load_result.stderr or load_result.stdout,
                 )
 
-            # Enable pf
+            # Enable pf (in case it's not enabled yet)
             await run_subprocess(["pfctl", "-e"], timeout=10)
 
             return {"success": True, "message": _("pf NAT rules configured")}
