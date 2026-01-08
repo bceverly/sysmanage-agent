@@ -263,8 +263,12 @@ class BhyveNetworking:
             # Check if our NAT rule already exists
             if "bhyve NAT" in pf_content or nat_rule in pf_content:
                 self.logger.info(_("pf NAT rules already configured"))
-                # Just reload pf
+                # Ensure pf is enabled and running
+                await run_subprocess(["sysrc", "pf_enable=YES"], timeout=10)
+                await run_subprocess(["service", "pf", "start"], timeout=30)
+                # Reload pf rules
                 await run_subprocess(["pfctl", "-f", pf_conf], timeout=30)
+                await run_subprocess(["pfctl", "-e"], timeout=10)
                 return {"success": True, "message": _("pf NAT rules already present")}
 
             # Add NAT rule to pf.conf
