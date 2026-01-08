@@ -1364,3 +1364,6 @@ msgstr "Virtualisatiestatusupdate in wachtrij voor verzending naar server"
 
 msgid "Error sending virtualization status update: %s"
 msgstr "Fout bij verzenden van virtualisatiestatusupdate: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img niet gevonden, poging tot installatie: %s"

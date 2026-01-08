@@ -870,3 +870,6 @@ msgstr "Virtualization status update queued for sending to server"
 
 msgid "Error sending virtualization status update: %s"
 msgstr "Error sending virtualization status update: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img not found, will try to install: %s"

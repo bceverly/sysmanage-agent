@@ -1366,3 +1366,6 @@ msgstr "Virtualisierungsstatus-Update für den Versand an den Server in Wartesch
 
 msgid "Error sending virtualization status update: %s"
 msgstr "Fehler beim Senden des Virtualisierungsstatus-Updates: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img nicht gefunden, versuche zu installieren: %s"

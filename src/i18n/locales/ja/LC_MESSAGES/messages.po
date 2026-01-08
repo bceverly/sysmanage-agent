@@ -1366,3 +1366,6 @@ msgstr "仮想化ステータス更新がサーバーへの送信キューに追
 
 msgid "Error sending virtualization status update: %s"
 msgstr "仮想化ステータス更新の送信エラー: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-imgが見つかりません。インストールを試みます: %s"

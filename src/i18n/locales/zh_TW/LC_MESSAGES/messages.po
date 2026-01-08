@@ -1362,3 +1362,6 @@ msgstr "虛擬化狀態更新已排隊等待傳送至伺服器"
 
 msgid "Error sending virtualization status update: %s"
 msgstr "傳送虛擬化狀態更新時發生錯誤：%s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "未找到qemu-img，將嘗試安裝: %s"

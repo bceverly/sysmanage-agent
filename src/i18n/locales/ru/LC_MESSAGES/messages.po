@@ -1364,3 +1364,6 @@ msgstr "Обновление статуса виртуализации доба�
 
 msgid "Error sending virtualization status update: %s"
 msgstr "Ошибка отправки обновления статуса виртуализации: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img не найден, попытка установки: %s"

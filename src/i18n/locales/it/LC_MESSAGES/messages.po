@@ -1364,3 +1364,6 @@ msgstr "Aggiornamento dello stato di virtualizzazione in coda per l'invio al ser
 
 msgid "Error sending virtualization status update: %s"
 msgstr "Errore nell'invio dell'aggiornamento dello stato di virtualizzazione: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img non trovato, tentativo di installazione: %s"

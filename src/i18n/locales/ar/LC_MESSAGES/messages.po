@@ -1367,3 +1367,6 @@ msgstr "تم وضع تحديث حالة الافتراضية في قائمة ا�
 
 msgid "Error sending virtualization status update: %s"
 msgstr "خطأ في إرسال تحديث حالة الافتراضية: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "لم يتم العثور على qemu-img، سيتم محاولة التثبيت: %s"

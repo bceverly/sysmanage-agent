@@ -1364,3 +1364,6 @@ msgstr "가상화 상태 업데이트가 서버로 전송 대기열에 추가되
 
 msgid "Error sending virtualization status update: %s"
 msgstr "가상화 상태 업데이트 전송 오류: %s"
+
+msgid "qemu-img not found, will try to install: %s"
+msgstr "qemu-img를 찾을 수 없습니다. 설치를 시도합니다: %s"
