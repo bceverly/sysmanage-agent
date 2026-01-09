@@ -591,8 +591,7 @@ users:
 chpasswd:
   expire: false
   users:
-    - name: {config.username}
-      password: {config.password_hash}
+    - {{name: {config.username}, password: {config.password_hash}}}
 
 ssh_pwauth: true
 
