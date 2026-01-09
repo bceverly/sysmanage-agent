@@ -577,7 +577,7 @@ local-hostname: {config.hostname}
             server_url = f"{protocol}://{config.server_url}:{config.server_port}"
 
             # Create user-data
-            # Note: passwd field uses unquoted hash like working KVM implementation
+            # Use chpasswd with hashed password for Ubuntu 24.04 compatibility
             user_data = f"""#cloud-config
 hostname: {config.hostname}
 manage_etc_hosts: true
@@ -587,10 +587,13 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock_passwd: false
-    passwd: {config.password_hash}
 
 chpasswd:
   expire: false
+  users:
+    - name: {config.username}
+      password: {config.password_hash}
+      type: HASH
 
 ssh_pwauth: true
 
