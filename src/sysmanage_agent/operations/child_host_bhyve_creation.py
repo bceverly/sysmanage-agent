@@ -593,7 +593,6 @@ chpasswd:
   users:
     - name: {config.username}
       password: {config.password_hash}
-      type: HASH
 
 ssh_pwauth: true
 
