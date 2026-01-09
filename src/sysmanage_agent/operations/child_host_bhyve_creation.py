@@ -576,11 +576,8 @@ local-hostname: {config.hostname}
             protocol = "https" if config.use_https else "http"
             server_url = f"{protocol}://{config.server_url}:{config.server_port}"
 
-            # Escape $ characters in password hash for YAML
-            # Cloud-init requires $ to be escaped as \$ in YAML strings
-            escaped_password_hash = config.password_hash.replace("$", "\\$")
-
             # Create user-data
+            # Note: passwd field uses unquoted hash like working KVM implementation
             user_data = f"""#cloud-config
 hostname: {config.hostname}
 manage_etc_hosts: true
@@ -588,9 +585,9 @@ manage_etc_hosts: true
 users:
   - name: {config.username}
     sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/sh
+    shell: /bin/bash
     lock_passwd: false
-    passwd: "{escaped_password_hash}"
+    passwd: {config.password_hash}
 
 chpasswd:
   expire: false
