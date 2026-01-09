@@ -586,7 +586,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/sh
     lock_passwd: false
-    hashed_passwd: "{config.password_hash}"
+    passwd: {config.password_hash}
 
 chpasswd:
   expire: false
