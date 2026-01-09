@@ -576,6 +576,10 @@ local-hostname: {config.hostname}
             protocol = "https" if config.use_https else "http"
             server_url = f"{protocol}://{config.server_url}:{config.server_port}"
 
+            # Escape $ characters in password hash for YAML
+            # Cloud-init requires $ to be escaped as \$ in YAML strings
+            escaped_password_hash = config.password_hash.replace("$", "\\$")
+
             # Create user-data
             user_data = f"""#cloud-config
 hostname: {config.hostname}
@@ -586,7 +590,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/sh
     lock_passwd: false
-    passwd: {config.password_hash}
+    passwd: "{escaped_password_hash}"
 
 chpasswd:
   expire: false
