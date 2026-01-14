@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/bceverly/sysmanage-agent
 Rules-Requires-Root: no
 
 Package: sysmanage-agent
-Architecture: all
+Architecture: amd64
 Depends: ${misc:Depends},
  python3 (>= 3.10),
  python3-pip,

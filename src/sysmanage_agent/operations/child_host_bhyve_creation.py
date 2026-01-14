@@ -566,8 +566,8 @@ local-hostname: {config.hostname}
             # Build agent install commands as runcmd entries
             runcmd_lines = []
             for cmd in config.agent_install_commands:
-                # Escape single quotes in command
-                escaped_cmd = cmd.replace("'", "'\"'\"'")
+                # Escape single quotes for YAML single-quoted strings (double them)
+                escaped_cmd = cmd.replace("'", "''")
                 runcmd_lines.append(f"  - '{escaped_cmd}'")
 
             runcmd_section = "\n".join(runcmd_lines) if runcmd_lines else ""
