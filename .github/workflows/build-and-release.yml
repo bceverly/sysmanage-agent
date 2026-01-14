@@ -89,7 +89,8 @@ jobs:
 
           # Update changelog with actual version and date
           # The changelog has version in format "sysmanage-agent (0.1.0)" - replace just the version number
-          sed -i "s/(0\.1\.0)/(${VERSION}-1)/g" installer/ubuntu/debian/changelog
+          # Note: Don't add Debian revision (-1) so filename matches what cloud-init expects
+          sed -i "s/(0\.1\.0)/(${VERSION})/g" installer/ubuntu/debian/changelog
           sed -i "s/Mon, 14 Oct 2025 00:00:00 -0400/$DATE/g" installer/ubuntu/debian/changelog
 
       - name: Generate requirements-prod.txt

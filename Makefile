@@ -409,6 +409,10 @@ else
 			echo "    Installing rust for cryptography compilation..."; \
 			sudo pkg install -y rust; \
 		fi; \
+		if ! pkg info -q py311-cython; then \
+			echo "    Installing py311-cython for coverage C tracer..."; \
+			sudo pkg install -y py311-cython; \
+		fi; \
 		echo "✓ FreeBSD package creation tools ready"; \
 		$(PYTHON) scripts/install-dev-deps.py; \
 	else \

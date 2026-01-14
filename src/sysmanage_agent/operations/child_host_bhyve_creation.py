@@ -565,6 +565,8 @@ local-hostname: {config.hostname}
 
             # Build agent install commands as runcmd entries
             runcmd_lines = []
+            # Always start with apt-get update to ensure fresh package lists
+            runcmd_lines.append("  - 'apt-get update'")
             for cmd in config.agent_install_commands:
                 # Escape single quotes for YAML single-quoted strings (double them)
                 escaped_cmd = cmd.replace("'", "''")
