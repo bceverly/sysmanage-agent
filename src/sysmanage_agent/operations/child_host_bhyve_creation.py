@@ -19,6 +19,9 @@ from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
+from src.sysmanage_agent.operations.child_host_config_generator import (
+    generate_agent_config,
+)
 
 
 # Default paths for bhyve
@@ -574,9 +577,32 @@ local-hostname: {config.hostname}
 
             runcmd_section = "\n".join(runcmd_lines) if runcmd_lines else ""
 
-            # Determine protocol and build server URL
-            protocol = "https" if config.use_https else "http"
-            server_url = f"{protocol}://{config.server_url}:{config.server_port}"
+            # Determine OS type from the image for config generation
+            # Default to ubuntu for Linux images
+            os_type = "ubuntu"
+            if config.cloud_image_url:
+                url_lower = config.cloud_image_url.lower()
+                if "debian" in url_lower:
+                    os_type = "debian"
+                elif "alpine" in url_lower:
+                    os_type = "alpine"
+                elif "freebsd" in url_lower:
+                    os_type = "freebsd"
+
+            # Generate the complete agent configuration using unified generator
+            agent_config = generate_agent_config(
+                hostname=config.server_url,
+                port=config.server_port,
+                use_https=config.use_https,
+                os_type=os_type,
+                auto_approve_token=config.auto_approve_token,
+                verify_ssl=False,
+            )
+
+            # Indent the config for YAML content block (6 spaces)
+            indented_config = "\n".join(
+                f"      {line}" if line else "" for line in agent_config.split("\n")
+            )
 
             # Create user-data
             # Use chpasswd with hashed password for Ubuntu 24.04 compatibility
@@ -598,14 +624,13 @@ chpasswd:
 ssh_pwauth: true
 
 write_files:
-  - path: /etc/sysmanage-agent/config.yaml
+  - path: /etc/sysmanage-agent.yaml
     content: |
-      server:
-        url: {server_url}
-        verify_ssl: false
+{indented_config}
     permissions: '0644'
 """
 
+            # Also write auto_approve_token to separate file for backward compatibility
             if config.auto_approve_token:
                 user_data += f"""
   - path: /etc/sysmanage-agent/auto_approve_token

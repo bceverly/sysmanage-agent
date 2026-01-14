@@ -8,6 +8,9 @@ import time
 from typing import Any, Dict
 
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_config_generator import (
+    generate_agent_config,
+)
 from src.sysmanage_agent.operations.child_host_kvm_dns import get_host_dns_servers
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
@@ -110,41 +113,15 @@ local-hostname: {config.hostname}
             escaped_cmd = cmd.replace("'", "'\"'\"'")
             runcmd_lines.append(f"  - {escaped_cmd}")
 
-        # Build auto_approve section if token provided
-        auto_approve_section = ""
-        if config.auto_approve_token:
-            auto_approve_section = f"""
-# Auto-approval token for automatic host approval
-auto_approve:
-  token: "{config.auto_approve_token}"
-"""
-
-        # Build agent config content for write_files module
-        agent_config_content = f"""server:
-  hostname: "{config.server_url}"
-  port: {config.server_port}
-  use_https: {str(config.use_https).lower()}
-hostname: "{config.hostname}"
-{auto_approve_section}websocket:
-  reconnect_delay: 5
-  max_reconnect_delay: 300
-privileged_mode: true
-script_execution:
-  enabled: true
-  allowed_shells:
-    - "sh"
-    - "csh"
-
-# Database configuration
-database:
-  path: "/var/lib/sysmanage-agent/agent.db"
-
-# Logging configuration
-logging:
-  level: "INFO|WARNING|ERROR|CRITICAL"
-  file: "/var/log/sysmanage-agent/agent.log"
-  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
-"""
+        # Build agent config content using unified generator
+        agent_config_content = generate_agent_config(
+            hostname=config.server_url,
+            port=config.server_port,
+            use_https=config.use_https,
+            os_type="freebsd",
+            auto_approve_token=config.auto_approve_token,
+            verify_ssl=False,
+        )
 
         # Create directories for database and logs (FreeBSD-specific)
         runcmd_lines.append("  - mkdir -p /var/lib/sysmanage-agent")
@@ -251,41 +228,25 @@ final_message: "Cloud-init completed after $UPTIME seconds"
             escaped_cmd = cmd.replace("'", "'\"'\"'")
             runcmd_lines.append(f"  - {escaped_cmd}")
 
-        # Build auto_approve section if token provided
-        auto_approve_section = ""
-        if config.auto_approve_token:
-            auto_approve_section = f"""
-# Auto-approval token for automatic host approval
-auto_approve:
-  token: "{config.auto_approve_token}"
-"""
+        # Determine OS type from distribution for config generation
+        os_type = "linux"  # Default
+        dist_lower = config.distribution.lower()
+        if "ubuntu" in dist_lower:
+            os_type = "ubuntu"
+        elif "debian" in dist_lower:
+            os_type = "debian"
+        elif "alpine" in dist_lower:
+            os_type = "alpine"
 
-        # Build agent config content for write_files module
-        agent_config_content = f"""server:
-  hostname: "{config.server_url}"
-  port: {config.server_port}
-  use_https: {str(config.use_https).lower()}
-hostname: "{config.hostname}"
-{auto_approve_section}websocket:
-  reconnect_delay: 5
-  max_reconnect_delay: 300
-privileged_mode: true
-script_execution:
-  enabled: true
-  allowed_shells:
-    - "bash"
-    - "sh"
-
-# Database configuration
-database:
-  path: "/var/lib/sysmanage-agent/agent.db"
-
-# Logging configuration
-logging:
-  level: "INFO|WARNING|ERROR|CRITICAL"
-  file: "/var/log/sysmanage-agent/agent.log"
-  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
-"""
+        # Build agent config content using unified generator
+        agent_config_content = generate_agent_config(
+            hostname=config.server_url,
+            port=config.server_port,
+            use_https=config.use_https,
+            os_type=os_type,
+            auto_approve_token=config.auto_approve_token,
+            verify_ssl=False,
+        )
 
         # Create directories for database and logs
         runcmd_lines.append("  - mkdir -p /var/lib/sysmanage-agent")

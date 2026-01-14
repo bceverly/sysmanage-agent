@@ -16,6 +16,9 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from src.i18n import _
+from src.sysmanage_agent.operations.child_host_config_generator import (
+    generate_agent_config,
+)
 from src.sysmanage_agent.operations.child_host_types import LxdContainerConfig
 
 
@@ -605,44 +608,23 @@ class LxdContainerCreator:
         self,
         container_name: str,
         server_url: str,
-        hostname: str,
+        hostname: str,  # pylint: disable=unused-argument
         server_port: int,
         use_https: bool,
         auto_approve_token: str = None,
     ) -> Dict[str, Any]:
         """Configure the sysmanage-agent inside the container."""
         try:
-            # Build auto_approve section if token provided
-            auto_approve_section = ""
-            if auto_approve_token:
-                auto_approve_section = f"""
-# Auto-approval token for automatic host approval
-auto_approve:
-  token: "{auto_approve_token}"
-"""
-
-            # Create agent config
-            config_yaml = f"""server:
-  hostname: "{server_url}"
-  port: {server_port}
-  use_https: {str(use_https).lower()}
-hostname: "{hostname}"
-{auto_approve_section}websocket:
-  reconnect_delay: 5
-  max_reconnect_delay: 300
-privileged_mode: true
-script_execution:
-  enabled: true
-  allowed_shells:
-    - "bash"
-    - "sh"
-
-# Logging configuration
-logging:
-  level: "INFO|WARNING|ERROR|CRITICAL"
-  file: "/var/log/sysmanage-agent/agent.log"
-  format: "[%(asctime)s UTC] %(name)s - %(levelname)s - %(message)s"
-"""
+            # Create agent config using unified generator
+            # LXD containers are typically Ubuntu-based
+            config_yaml = generate_agent_config(
+                hostname=server_url,
+                port=server_port,
+                use_https=use_https,
+                os_type="ubuntu",
+                auto_approve_token=auto_approve_token,
+                verify_ssl=False,
+            )
 
             # Write config file
             result = subprocess.run(  # nosec B603 B607
