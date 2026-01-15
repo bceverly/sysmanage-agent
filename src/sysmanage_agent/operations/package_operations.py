@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import socket
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -567,11 +568,12 @@ class PackageOperations:
 
             update_message = {
                 "message_type": "package_installation_status",
+                "message_id": str(uuid.uuid4()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "installation_id": installation_id,
                 "status": status,
                 "package_name": package_name,
                 "requested_by": requested_by,
-                "timestamp": asyncio.get_event_loop().time(),
                 "hostname": hostname,
             }
 

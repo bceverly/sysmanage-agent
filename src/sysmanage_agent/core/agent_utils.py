@@ -10,6 +10,7 @@ import socket
 import ssl
 import subprocess  # nosec B404 # Required for system command execution
 import sys
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -419,6 +420,8 @@ class MessageProcessor:
             # Build script execution result message with host_id and FQDN
             result_message = {
                 "message_type": "script_execution_result",
+                "message_id": str(uuid.uuid4()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "hostname": fqdn,  # Use FQDN instead of short hostname
                 "execution_id": execution_id,
                 "execution_uuid": execution_uuid,  # Include the UUID for tracking
@@ -431,7 +434,9 @@ class MessageProcessor:
                 "shell_used": result.get("shell_used"),
                 "error": result.get("error"),
                 "timeout": result.get("timeout", False),
-                "timestamp": parameters.get("timestamp"),  # Include original timestamp
+                "original_timestamp": parameters.get(
+                    "timestamp"
+                ),  # Original request timestamp
             }
 
             # Add host_id if available (preferred over hostname validation)
