@@ -205,6 +205,99 @@ script_execution:
 """
 
 
+def generate_cloudinit_userdata(
+    hostname: str,
+    username: str,
+    password_hash: str,
+    os_type: str,
+    agent_config: str,
+    auto_approve_token: Optional[str] = None,
+) -> str:
+    """
+    Generate cloud-init user-data content for VM provisioning.
+
+    This handles OS-specific differences:
+    - FreeBSD: Uses passwd field directly in users section, /bin/sh shell
+    - Linux: Uses chpasswd with hashed password, /bin/bash shell
+
+    Args:
+        hostname: Full hostname (FQDN) for the VM
+        username: Username to create
+        password_hash: Hashed password (bcrypt for FreeBSD, crypt for Linux)
+        os_type: Operating system type (freebsd, ubuntu, debian, etc.)
+        agent_config: Pre-generated agent config YAML content
+        auto_approve_token: Optional auto-approval token
+
+    Returns:
+        Cloud-init user-data content as string
+    """
+    # Indent the config for YAML content block (6 spaces)
+    indented_config = "\n".join(
+        f"      {line}" if line else "" for line in agent_config.split("\n")
+    )
+
+    if os_type.lower() == "freebsd":
+        # FreeBSD cloud-init (nuageinit) uses passwd field directly
+        short_hostname = hostname.split(".")[0]
+        user_data = f"""#cloud-config
+hostname: {short_hostname}
+fqdn: {hostname}
+
+users:
+  - name: {username}
+    groups: wheel
+    shell: /bin/sh
+    lock_passwd: false
+    passwd: "{password_hash}"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+
+ssh_pwauth: true
+disable_root: false
+
+write_files:
+  - path: /etc/sysmanage-agent.yaml
+    content: |
+{indented_config}
+    permissions: '0644'
+"""
+    else:
+        # Linux distros use chpasswd with hashed password
+        user_data = f"""#cloud-config
+hostname: {hostname}
+manage_etc_hosts: true
+
+users:
+  - name: {username}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+
+chpasswd:
+  expire: false
+  users:
+    - {{name: {username}, password: {password_hash}}}
+
+ssh_pwauth: true
+
+write_files:
+  - path: /etc/sysmanage-agent.yaml
+    content: |
+{indented_config}
+    permissions: '0644'
+"""
+
+    # Add auto_approve_token file if provided
+    if auto_approve_token:
+        user_data += f"""
+  - path: /etc/sysmanage-agent/auto_approve_token
+    content: |
+      {auto_approve_token}
+    permissions: '0600'
+"""
+
+    return user_data
+
+
 def gen_agent_config_shell_cmds(
     hostname: str,
     port: int,

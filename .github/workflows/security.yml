@@ -33,7 +33,26 @@ jobs:
       run: |
         # Run semgrep and capture output to SARIF file
         # Use || true to not fail the step if semgrep finds issues
-        semgrep ci --sarif --output=semgrep.sarif || true
+        semgrep ci --sarif --output=semgrep-raw.sarif || true
+
+    - name: Filter suppressed findings from SARIF
+      run: |
+        # GitHub Code Scanning doesn't recognize SARIF suppressions property,
+        # so we need to filter out nosemgrep-suppressed findings manually.
+        # See: https://github.com/semgrep/semgrep/issues/6658
+        if [ -f "semgrep-raw.sarif" ]; then
+          # Install jq if not available (semgrep container may not have it)
+          which jq || apk add --no-cache jq 2>/dev/null || true
+          # Filter out results that have suppressions
+          if which jq >/dev/null 2>&1; then
+            jq 'del(.runs[].results[] | select(.suppressions))' semgrep-raw.sarif > semgrep.sarif
+            echo "Filtered suppressed findings from SARIF output"
+          else
+            # Fallback: use raw file if jq is not available
+            cp semgrep-raw.sarif semgrep.sarif
+            echo "Warning: jq not available, using raw SARIF output"
+          fi
+        fi
 
     - name: Check if SARIF file exists
       id: check_sarif

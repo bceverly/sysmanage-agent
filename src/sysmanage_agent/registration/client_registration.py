@@ -14,6 +14,7 @@ from src.database.base import get_db_session
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
+from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
 from src.sysmanage_agent.collection.software_inventory_collection import (
     SoftwareInventoryCollector,
@@ -71,6 +72,14 @@ class ClientRegistration:
         script_exec_enabled = self.config.is_script_execution_enabled()
         basic_info["script_execution_enabled"] = script_exec_enabled
 
+        # Add privileged status - whether agent is running as root/admin
+        is_privileged = is_running_privileged()
+        basic_info["is_privileged"] = is_privileged
+
+        # Add enabled shells from configuration
+        enabled_shells = self.config.get_allowed_shells()
+        basic_info["enabled_shells"] = enabled_shells
+
         # Add auto-approve token if configured (used for automatic host approval
         # during child host creation)
         auto_approve_token = self.config.get_auto_approve_token()
@@ -86,6 +95,8 @@ class ClientRegistration:
             "Basic info script_execution_enabled: %s",
             basic_info["script_execution_enabled"],
         )
+        logger.info("Is privileged: %s", is_privileged)
+        logger.info("Enabled shells: %s", enabled_shells)
         # nosemgrep: python.lang.security.audit.python-logger-credential-disclosure
         # Safe: only logs boolean (is not None), not the actual token value
         logger.info("Auto-approve token present: %s", auto_approve_token is not None)
@@ -114,29 +125,21 @@ class ClientRegistration:
         basic_info = self.get_basic_registration_info()
         os_info = self.get_os_version_info()
 
-        # Add script execution status
+        # Merge basic_info and os_info
         system_info = {**basic_info, **os_info}
-        script_exec_enabled = self.config.is_script_execution_enabled()
-        system_info["script_execution_enabled"] = script_exec_enabled
 
-        # Add auto-approve token if configured (used for automatic host approval
-        # during child host creation)
+        # Explicitly set these fields to ensure they're always present
+        system_info["script_execution_enabled"] = (
+            self.config.is_script_execution_enabled()
+        )
+        system_info["is_privileged"] = is_running_privileged()
+        system_info["enabled_shells"] = self.config.get_allowed_shells()
+
+        # Add auto-approve token if configured
         auto_approve_token = self.config.get_auto_approve_token()
         if auto_approve_token:
             system_info["auto_approve_token"] = auto_approve_token
-            self.logger.info("Including auto_approve_token in system_info")
 
-        # Debug logging
-        logger = logging.getLogger(__name__)
-        logger.info("=== AGENT SYSTEM INFO DEBUG ===")
-        logger.info("Script execution enabled from config: %s", script_exec_enabled)
-        logger.info(
-            "System info script_execution_enabled: %s",
-            system_info["script_execution_enabled"],
-        )
-        logger.info("===============================")
-
-        # Merge for backward compatibility
         return system_info
 
     async def register_with_server(self) -> bool:

@@ -351,6 +351,11 @@ local-hostname: {config.hostname.split('.')[0]}
                 meta_data_path = os.path.join(temp_dir, "meta-data")
                 bootstrap_path = os.path.join(temp_dir, "bootstrap.sh")
 
+                # Write cloud-init files to temp directory for ISO creation.
+                # These files contain configuration data (including hashed passwords)
+                # that must be written to create the cloud-init ISO for VM provisioning.
+                # The temp directory is cleaned up after ISO creation.
+                # lgtm[py/clear-text-storage-sensitive-data]
                 with open(user_data_path, "w", encoding="utf-8") as udf:
                     udf.write(user_data)
                 with open(meta_data_path, "w", encoding="utf-8") as mdf:
@@ -358,6 +363,7 @@ local-hostname: {config.hostname.split('.')[0]}
                 with open(bootstrap_path, "w", encoding="utf-8") as bsf:
                     bsf.write(bootstrap_script)
                 # Make bootstrap script executable - must be 755 to run as shell script
+                # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
                 os.chmod(bootstrap_path, 0o755)  # nosec B103
 
                 # Create ISO image (more compatible than FAT32 for cloud-init)

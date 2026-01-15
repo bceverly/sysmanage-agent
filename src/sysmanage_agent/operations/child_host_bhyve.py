@@ -23,6 +23,9 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     BHYVE_VM_DIR,
     BhyveCreationHelper,
 )
+from src.sysmanage_agent.operations.child_host_bhyve_freebsd import (
+    FreeBSDBhyveProvisioner,
+)
 from src.sysmanage_agent.operations.child_host_bhyve_lifecycle import (
     BhyveLifecycleHelper,
 )
@@ -524,9 +527,39 @@ class BhyveOperations:
             self.logger.warning(_("Error installing qemu: %s"), error)
             return False
 
+    def _is_freebsd_distribution(self, config: BhyveVmConfig) -> bool:
+        """
+        Check if the distribution is FreeBSD.
+
+        FreeBSD requires special handling because nuageinit (FreeBSD's cloud-init)
+        only supports basic features. We use a bootstrap script instead.
+
+        Args:
+            config: VM configuration
+
+        Returns:
+            True if FreeBSD distribution
+        """
+        distro = (config.distribution or "").lower()
+        if "freebsd" in distro or "bsd" in distro:
+            return True
+
+        # Also check cloud image URL
+        if config.cloud_image_url:
+            url_lower = config.cloud_image_url.lower()
+            if "freebsd" in url_lower:
+                return True
+
+        return False
+
     async def create_bhyve_vm(self, config: BhyveVmConfig) -> Dict[str, Any]:
         """
         Create a new bhyve VM.
+
+        For FreeBSD guests, uses nuageinit-compatible config disk with a
+        bootstrap script that is run via SSH after boot.
+
+        For Linux guests, uses standard cloud-init.
 
         Args:
             config: VM configuration
@@ -534,6 +567,8 @@ class BhyveOperations:
         Returns:
             Dict with success status
         """
+        freebsd_provisioner = None
+
         try:
             self.logger.info(_("Creating bhyve VM: %s"), config.vm_name)
 
@@ -551,6 +586,14 @@ class BhyveOperations:
                     "error": _("VM '%s' creation already in progress") % config.vm_name,
                 }
             self._in_progress_vms.add(config.vm_name)
+
+            # Check if this is a FreeBSD guest
+            is_freebsd = self._is_freebsd_distribution(config)
+            if is_freebsd:
+                self.logger.info(
+                    _("Detected FreeBSD distribution, using nuageinit provisioner")
+                )
+                freebsd_provisioner = FreeBSDBhyveProvisioner(self.logger)
 
             try:
                 # Create VM directory
@@ -583,14 +626,29 @@ class BhyveOperations:
                         return disk_result
                     config.disk_path = disk_result["path"]
 
-                # Create cloud-init ISO
+                # Create cloud-init/config disk or inject firstboot
                 if config.use_cloud_init:
-                    self.logger.info(_("Creating cloud-init ISO"))
-                    cloudinit_result = self._creation_helper.create_cloud_init_iso(
-                        config
-                    )
-                    if not cloudinit_result.get("success"):
-                        return cloudinit_result
+                    if is_freebsd and freebsd_provisioner:
+                        # FreeBSD: Inject firstboot script directly into disk image
+                        # This doesn't rely on nuageinit/cloud-init
+                        self.logger.info(
+                            _("Injecting firstboot script into FreeBSD disk image")
+                        )
+                        provision_result = freebsd_provisioner.provision(
+                            config, config.disk_path, vm_dir
+                        )
+                        if not provision_result.get("success"):
+                            return provision_result
+                        # FreeBSD doesn't need a cloud-init ISO since we inject directly
+                        config.cloud_init_iso_path = None
+                    else:
+                        # Linux: Use standard cloud-init ISO
+                        self.logger.info(_("Creating cloud-init ISO"))
+                        cloudinit_result = self._creation_helper.create_cloud_init_iso(
+                            config
+                        )
+                        if not cloudinit_result.get("success"):
+                            return cloudinit_result
 
                 # Set up networking
                 bridge_result = self._creation_helper.create_bridge_if_needed()
@@ -645,9 +703,12 @@ class BhyveOperations:
                 # Wait for SSH
                 ssh_available = await self._creation_helper.wait_for_ssh(vm_ip)
                 if not ssh_available:
+                    msg = _("VM created, cloud-init may still be running")
+                    if is_freebsd:
+                        msg = _("VM created, firstboot may still be running")
                     return {
                         "success": True,
-                        "message": _("VM created, cloud-init may still be running"),
+                        "message": msg,
                         "vm_name": config.vm_name,
                         "status": "running",
                         "ip_address": vm_ip,
@@ -673,10 +734,14 @@ class BhyveOperations:
 
             finally:
                 self._in_progress_vms.discard(config.vm_name)
+                if freebsd_provisioner:
+                    freebsd_provisioner.cleanup()
 
         except Exception as error:
             self.logger.error(_("Error creating bhyve VM: %s"), error)
             self._in_progress_vms.discard(config.vm_name)
+            if freebsd_provisioner:
+                freebsd_provisioner.cleanup()
             return {"success": False, "error": str(error)}
 
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:

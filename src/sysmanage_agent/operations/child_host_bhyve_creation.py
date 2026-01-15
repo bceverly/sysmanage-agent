@@ -21,6 +21,7 @@ from src.i18n import _
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 from src.sysmanage_agent.operations.child_host_config_generator import (
     generate_agent_config,
+    generate_cloudinit_userdata,
 )
 
 
@@ -599,45 +600,15 @@ local-hostname: {config.hostname}
                 verify_ssl=False,
             )
 
-            # Indent the config for YAML content block (6 spaces)
-            indented_config = "\n".join(
-                f"      {line}" if line else "" for line in agent_config.split("\n")
+            # Generate cloud-init user-data using unified generator
+            user_data = generate_cloudinit_userdata(
+                hostname=config.hostname,
+                username=config.username,
+                password_hash=config.password_hash,
+                os_type=os_type,
+                agent_config=agent_config,
+                auto_approve_token=config.auto_approve_token,
             )
-
-            # Create user-data
-            # Use chpasswd with hashed password for Ubuntu 24.04 compatibility
-            user_data = f"""#cloud-config
-hostname: {config.hostname}
-manage_etc_hosts: true
-
-users:
-  - name: {config.username}
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-    lock_passwd: false
-
-chpasswd:
-  expire: false
-  users:
-    - {{name: {config.username}, password: {config.password_hash}}}
-
-ssh_pwauth: true
-
-write_files:
-  - path: /etc/sysmanage-agent.yaml
-    content: |
-{indented_config}
-    permissions: '0644'
-"""
-
-            # Also write auto_approve_token to separate file for backward compatibility
-            if config.auto_approve_token:
-                user_data += f"""
-  - path: /etc/sysmanage-agent/auto_approve_token
-    content: |
-      {config.auto_approve_token}
-    permissions: '0600'
-"""
 
             if runcmd_section:
                 user_data += f"""
