@@ -28,9 +28,5 @@ class ClientRegistration(ModularClientRegistration):
         """Get both IPv4 and IPv6 addresses of the machine."""
         return self.network_utils.get_ip_addresses()
 
-    # Override to use mockable methods for testing compatibility
-    def get_basic_registration_info(self):
-        """Get minimal system information for initial registration."""
-        hostname = self.get_hostname()
-        ipv4, ipv6 = self.get_ip_addresses()
-        return self._create_basic_registration_dict(hostname, ipv4, ipv6)
+    # Use parent's get_basic_registration_info which includes all fields
+    # (is_privileged, enabled_shells, script_execution_enabled, etc.)
