@@ -315,6 +315,8 @@ run_rc_command "$1"
             firstboot_script = self._generate_firstboot_script(config)
             with open(firstboot_script_path, "w", encoding="utf-8") as fbf:
                 fbf.write(firstboot_script)
+            # Make firstboot script executable - must be 755 to run as rc.d script
+            # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
             os.chmod(firstboot_script_path, 0o755)  # nosec B103
 
             # 5. Create /firstboot sentinel file to enable firstboot scripts
@@ -610,12 +612,17 @@ local-hostname: {config.hostname.split('.')[0]}
                 meta_data_path = os.path.join(temp_dir, "meta-data")
                 bootstrap_path = os.path.join(temp_dir, "bootstrap.sh")
 
+                # These files contain configuration data (including hashed passwords)
+                # that must be written to create the cloud-init ISO for VM provisioning.
+                # The temp directory is cleaned up after ISO creation.
                 with open(user_data_path, "w", encoding="utf-8") as udf:
-                    udf.write(user_data)
+                    udf.write(user_data)  # lgtm[py/clear-text-storage-sensitive-data]
                 with open(meta_data_path, "w", encoding="utf-8") as mdf:
                     mdf.write(meta_data)
                 with open(bootstrap_path, "w", encoding="utf-8") as bsf:
                     bsf.write(bootstrap_script)
+                # Make bootstrap script executable - must be 755 to run as shell script
+                # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
                 os.chmod(bootstrap_path, 0o755)  # nosec B103
 
                 self._config_disk_path = os.path.join(

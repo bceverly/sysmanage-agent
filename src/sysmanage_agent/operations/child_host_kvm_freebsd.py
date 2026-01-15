@@ -355,9 +355,8 @@ local-hostname: {config.hostname.split('.')[0]}
                 # These files contain configuration data (including hashed passwords)
                 # that must be written to create the cloud-init ISO for VM provisioning.
                 # The temp directory is cleaned up after ISO creation.
-                # lgtm[py/clear-text-storage-sensitive-data]
                 with open(user_data_path, "w", encoding="utf-8") as udf:
-                    udf.write(user_data)
+                    udf.write(user_data)  # lgtm[py/clear-text-storage-sensitive-data]
                 with open(meta_data_path, "w", encoding="utf-8") as mdf:
                     mdf.write(meta_data)
                 with open(bootstrap_path, "w", encoding="utf-8") as bsf:
