@@ -20,6 +20,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         """Set up test fixtures."""
         self.mock_config = Mock()
         self.mock_config.is_script_execution_enabled.return_value = True
+        self.mock_config.get_allowed_shells.return_value = ["sh", "bash"]
         self.mock_config.get_registration_retry_interval.return_value = 30
         self.mock_config.get_max_registration_retries.return_value = 3
         self.mock_config.get_auto_approve_token.return_value = None
@@ -87,8 +88,10 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         }
         assert result == expected
 
-    def test_get_basic_registration_info(self):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_basic_registration_info(self, mock_is_privileged):
         """Test getting basic registration information."""
+        mock_is_privileged.return_value = False
         # Mock network utils methods
         self.client_reg.network_utils.get_hostname.return_value = "test-hostname"
         self.client_reg.network_utils.get_ip_addresses.return_value = (
@@ -105,6 +108,8 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "ipv6": "fe80::1",
             "active": True,
             "script_execution_enabled": True,
+            "is_privileged": False,
+            "enabled_shells": ["sh", "bash"],
         }
         assert result == expected
         self.client_reg.network_utils.get_hostname.assert_called_once()
@@ -158,8 +163,10 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         assert result == expected_software_info
         self.client_reg.software_inventory_collector.get_software_inventory.assert_called_once()
 
-    def test_get_system_info(self):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_system_info(self, mock_is_privileged):
         """Test getting comprehensive system information (legacy method)."""
+        mock_is_privileged.return_value = False
         # Mock all the data sources
         self.client_reg.network_utils.get_hostname.return_value = "legacy-host"
         self.client_reg.network_utils.get_ip_addresses.return_value = ("10.0.0.1", None)
@@ -177,13 +184,17 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "ipv6": None,
             "active": True,
             "script_execution_enabled": True,
+            "is_privileged": False,
+            "enabled_shells": ["sh", "bash"],
             "os": "Ubuntu",
             "version": "20.04",
         }
         assert result == expected
 
-    def test_get_system_info_with_auto_approve_token(self):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_system_info_with_auto_approve_token(self, mock_is_privileged):
         """Test that auto_approve_token is included in system_info when configured."""
+        mock_is_privileged.return_value = False
         # Mock all the data sources
         self.client_reg.network_utils.get_hostname.return_value = "child-host"
         self.client_reg.network_utils.get_ip_addresses.return_value = ("10.0.0.5", None)
@@ -205,6 +216,8 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "ipv6": None,
             "active": True,
             "script_execution_enabled": True,
+            "is_privileged": False,
+            "enabled_shells": ["sh", "bash"],
             "os": "OpenBSD",
             "version": "7.7",
             "auto_approve_token": "550e8400-e29b-41d4-a716-446655440000",
@@ -232,8 +245,10 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
                 "aiohttp not available, skipping registration"
             )
 
-    def test_basic_registration_data_structure(self):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_basic_registration_data_structure(self, mock_is_privileged):
         """Test that basic registration data has correct structure."""
+        mock_is_privileged.return_value = False
         # Mock the network utils to return predictable data
         self.client_reg.network_utils.get_hostname.return_value = "test-host"
         self.client_reg.network_utils.get_ip_addresses.return_value = (
@@ -251,6 +266,8 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "ipv6": "fe80::1",
             "active": True,
             "script_execution_enabled": True,
+            "is_privileged": False,
+            "enabled_shells": ["sh", "bash"],
         }
         assert result == expected_data
 

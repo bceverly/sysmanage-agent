@@ -47,8 +47,12 @@ logging:
         """Create a mock registration handler."""
         return ClientRegistration(mock_config)
 
-    def test_get_basic_registration_info_minimal(self, mock_registration):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_basic_registration_info_minimal(
+        self, mock_is_privileged, mock_registration
+    ):
         """Test that get_basic_registration_info() returns only minimal data."""
+        mock_is_privileged.return_value = False
         with (
             patch.object(
                 mock_registration.network_utils,
@@ -72,6 +76,8 @@ logging:
                 "ipv6",
                 "active",
                 "script_execution_enabled",
+                "is_privileged",
+                "enabled_shells",
             }
             assert set(basic_info.keys()) == expected_fields
 
@@ -80,6 +86,7 @@ logging:
             assert basic_info["ipv4"] == "192.168.1.100"
             assert basic_info["ipv6"] == "::1"
             assert basic_info["active"] is True
+            assert basic_info["is_privileged"] is False
 
     def test_get_os_version_info_comprehensive(self, mock_registration):
         """Test that get_os_version_info() returns comprehensive OS data."""
@@ -297,8 +304,12 @@ logging:
             assert hardware_call_data["data"]["hostname"] == "test-host"
 
     @pytest.mark.asyncio
-    async def test_registration_uses_minimal_data_only(self, mock_registration):
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    async def test_registration_uses_minimal_data_only(
+        self, mock_is_privileged, mock_registration
+    ):
         """Test that registration process uses only minimal data."""
+        mock_is_privileged.return_value = False
         # Create proper async context manager mocks
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -348,6 +359,8 @@ logging:
                 "ipv6",
                 "active",
                 "script_execution_enabled",
+                "is_privileged",
+                "enabled_shells",
             }
             assert set(sent_data.keys()) == expected_fields
 

@@ -223,7 +223,9 @@ run_rc_command "$1"
 
             # Verify this is a FreeBSD root filesystem
             if not os.path.exists(os.path.join(mount_point, "etc", "rc.conf")):
-                subprocess.run(["umount", mount_point], check=False, timeout=30)
+                subprocess.run(  # nosec B603 B607
+                    ["umount", mount_point], check=False, timeout=30
+                )
                 return {
                     "success": False,
                     "error": _("Mounted filesystem is not a FreeBSD root"),
@@ -353,7 +355,7 @@ run_rc_command "$1"
 
             # Cleanup on error
             if mount_point:
-                subprocess.run(
+                subprocess.run(  # nosec B603 B607
                     ["umount", mount_point],
                     capture_output=True,
                     timeout=30,
@@ -362,7 +364,7 @@ run_rc_command "$1"
                 shutil.rmtree(mount_point, ignore_errors=True)
 
             if md_unit:
-                subprocess.run(
+                subprocess.run(  # nosec B603 B607
                     ["mdconfig", "-d", "-u", md_unit],
                     capture_output=True,
                     timeout=30,
