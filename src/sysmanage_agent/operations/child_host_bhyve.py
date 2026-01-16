@@ -22,6 +22,8 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     BHYVE_IMAGES_DIR,
     BHYVE_VM_DIR,
     BhyveCreationHelper,
+    delete_bhyve_metadata,
+    save_bhyve_metadata,
 )
 from src.sysmanage_agent.operations.child_host_bhyve_freebsd import (
     FreeBSDBhyveProvisioner,
@@ -688,6 +690,15 @@ class BhyveOperations:
                     config.vm_name
                 )
 
+                # Save metadata for VM listing (hostname, distribution, IP)
+                save_bhyve_metadata(
+                    vm_name=config.vm_name,
+                    hostname=config.hostname,
+                    distribution=config.distribution,
+                    vm_ip=vm_ip,
+                    logger=self.logger,
+                )
+
                 if not vm_ip:
                     return {
                         "success": True,
@@ -720,6 +731,14 @@ class BhyveOperations:
 
                 self.logger.info(
                     _("bhyve VM '%s' created successfully at %s"), config.vm_name, vm_ip
+                )
+                # Update metadata with confirmed IP address
+                save_bhyve_metadata(
+                    vm_name=config.vm_name,
+                    hostname=config.hostname,
+                    distribution=config.distribution,
+                    vm_ip=vm_ip,
+                    logger=self.logger,
                 )
                 return {
                     "success": True,

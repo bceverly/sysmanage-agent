@@ -221,7 +221,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             # Call appropriate system update detection
             if distro in ["ubuntu", "debian", "linuxmint"]:
                 self._detect_debian_system_updates()
-            elif distro in ["fedora", "rhel", "centos", "rocky", "almalinux"]:
+            elif distro in ["fedora", "rhel", "centos", "rocky", "almalinux", "ol"]:
                 self._detect_redhat_system_updates()
             elif distro == "arch":
                 self._detect_arch_system_updates()

@@ -60,6 +60,7 @@ class WslSetupOperations:
             "fedora": "fedora.exe",
             "almalinux-9": "almalinux-9.exe",
             "rockylinux-9": "rockylinux-9.exe",
+            "oraclelinux-9": "oraclelinux-9.exe",
         }
 
         # Check for exact match first
