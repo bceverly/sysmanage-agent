@@ -130,7 +130,11 @@ AGENT_CONFIG_EOF
 
     ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
 
-    # Step 6: Enable and start the agent service
+    # Step 6: Sync time before starting agent (prevents message timestamp errors)
+    echo "Syncing system time..."
+    ntpdate -u pool.ntp.org || ntpdate -u time.nist.gov || true
+
+    # Step 7: Enable and start the agent service
     echo "Enabling sysmanage-agent service..."
     sysrc sysmanage_agent_enable=YES
     sysrc sysmanage_agent_user=root
@@ -330,6 +334,9 @@ run_rc_command "$1"
                 rc_file.write('sysmanage_firstboot_enable="YES"\n')
                 # Also enable sshd for remote access
                 rc_file.write('sshd_enable="YES"\n')
+                # Enable NTP with sync-on-start to fix time drift issues
+                rc_file.write('ntpd_enable="YES"\n')
+                rc_file.write('ntpd_sync_on_start="YES"\n')
 
             self.logger.info(_("Firstboot injection complete"))
 
@@ -562,7 +569,11 @@ cat > /etc/sysmanage-agent.yaml << 'AGENT_CONFIG_EOF'
 
 ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
 
-# Step 6: Enable and start the agent service
+# Step 6: Sync time before starting agent (prevents message timestamp errors)
+echo "Syncing system time..."
+ntpdate -u pool.ntp.org || ntpdate -u time.nist.gov || true
+
+# Step 7: Enable and start the agent service
 echo "Enabling and starting sysmanage-agent service..."
 sysrc sysmanage_agent_enable=YES
 sysrc sysmanage_agent_user=root

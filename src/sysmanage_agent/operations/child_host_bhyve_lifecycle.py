@@ -145,7 +145,9 @@ class BhyveLifecycleHelper:
             daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{child_name}.pid"]
             daemon_cmd.extend(cmd)
 
-            result = await self._run_subprocess(daemon_cmd, timeout=60)
+            result = await self._run_subprocess(
+                daemon_cmd, timeout=180
+            )  # 3 min for UEFI init
             if result.returncode != 0:
                 return {
                     "success": False,

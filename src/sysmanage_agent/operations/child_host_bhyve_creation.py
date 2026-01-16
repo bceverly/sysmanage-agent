@@ -894,7 +894,7 @@ runcmd:
                 daemon_cmd,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=180,  # 3 minutes for UEFI firmware initialization
                 check=False,
             )
 
@@ -935,7 +935,7 @@ runcmd:
                 daemon_cmd,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=180,  # 3 minutes for UEFI firmware initialization
                 check=False,
             )
 
