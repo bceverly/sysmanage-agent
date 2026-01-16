@@ -28,14 +28,14 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: python
         # Don't use default queries, use security-extended for better coverage
         queries: security-extended
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         output: codeql-raw.sarif
         upload: false  # Don't auto-upload, we'll filter first
@@ -50,7 +50,7 @@ jobs:
             .runs[].results |= map(
               select(
                 # Keep results that are NOT false positives
-                not (
+                ((
                   # Filter: clear-text-storage in bhyve/kvm child host provisioning
                   # These files write cloud-init configs with pre-hashed passwords to temp dirs
                   (.ruleId == "py/clear-text-storage-sensitive-data") and
@@ -58,7 +58,7 @@ jobs:
                     (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_bhyve_freebsd.py")) or
                     (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_kvm_freebsd.py"))
                   )
-                )
+                ) | not)
               )
             )
           ' codeql-raw.sarif > codeql.sarif
@@ -78,7 +78,7 @@ jobs:
         fi
 
     - name: Upload CodeQL SARIF to GitHub Security
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: steps.check_codeql_sarif.outputs.exists == 'true'
       with:
         sarif_file: codeql.sarif
@@ -119,12 +119,12 @@ jobs:
                   # Remove results with suppressions (nosemgrep comments)
                   (.suppressions | length == 0 or . == null) and
                   # Also filter known false positives by rule and file
-                  not (
+                  ((
                     # Filter: dangerous-subprocess-use in VirtualBox version check
                     # vboxmanage path comes from shutil.which(), not user input
                     (.ruleId | contains("dangerous-subprocess-use-tainted-env-args")) and
                     (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_virtualization_checks.py"))
-                  )
+                  ) | not)
                 )
               )
             ' semgrep-raw.sarif > semgrep.sarif
