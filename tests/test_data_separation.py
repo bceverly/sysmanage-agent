@@ -68,7 +68,7 @@ logging:
 
             basic_info = mock_registration.get_basic_registration_info()
 
-            # Should contain only minimal registration fields
+            # Should contain minimal registration fields plus required message fields
             expected_fields = {
                 "hostname",
                 "fqdn",
@@ -78,9 +78,18 @@ logging:
                 "script_execution_enabled",
                 "is_privileged",
                 "enabled_shells",
+                "message_type",
+                "message_id",
+                "timestamp",
             }
             assert set(basic_info.keys()) == expected_fields
 
+            # Check message fields
+            assert basic_info["message_type"] == "registration_request"
+            assert "message_id" in basic_info
+            assert "timestamp" in basic_info
+
+            # Check host data fields
             assert basic_info["hostname"] == "test-host.example.com"
             assert basic_info["fqdn"] == "test-host.example.com"
             assert basic_info["ipv4"] == "192.168.1.100"
@@ -205,10 +214,15 @@ logging:
             basic_info = mock_registration.get_basic_registration_info()
             os_info = mock_registration.get_os_version_info()
 
+            # Fields that are dynamically generated per call (expected to differ)
+            dynamic_fields = {"message_id", "timestamp"}
+
             # System info should contain all fields from both
             for field in basic_info:
                 assert field in system_info
-                assert system_info[field] == basic_info[field]
+                # Skip dynamic fields that change with each call
+                if field not in dynamic_fields:
+                    assert system_info[field] == basic_info[field]
 
             for field in os_info:
                 assert field in system_info
@@ -361,8 +375,12 @@ logging:
                 "script_execution_enabled",
                 "is_privileged",
                 "enabled_shells",
+                "message_type",
+                "message_id",
+                "timestamp",
             }
             assert set(sent_data.keys()) == expected_fields
+            assert sent_data["message_type"] == "registration_request"
 
             # Should NOT contain OS version fields
             os_fields = {

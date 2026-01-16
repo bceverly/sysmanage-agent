@@ -79,14 +79,17 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
             "test-host", "192.168.1.100", "2001:db8::1"
         )
 
-        expected = {
-            "hostname": "test-host",
-            "fqdn": "test-host",
-            "ipv4": "192.168.1.100",
-            "ipv6": "2001:db8::1",
-            "active": True,
-        }
-        assert result == expected
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
+
+        # Check host data fields
+        assert result["hostname"] == "test-host"
+        assert result["fqdn"] == "test-host"
+        assert result["ipv4"] == "192.168.1.100"
+        assert result["ipv6"] == "2001:db8::1"
+        assert result["active"] is True
 
     @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
     def test_get_basic_registration_info(self, mock_is_privileged):
@@ -101,17 +104,21 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         result = self.client_reg.get_basic_registration_info()
 
-        expected = {
-            "hostname": "test-hostname",
-            "fqdn": "test-hostname",
-            "ipv4": "192.168.1.50",
-            "ipv6": "fe80::1",
-            "active": True,
-            "script_execution_enabled": True,
-            "is_privileged": False,
-            "enabled_shells": ["sh", "bash"],
-        }
-        assert result == expected
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
+
+        # Check host data fields
+        assert result["hostname"] == "test-hostname"
+        assert result["fqdn"] == "test-hostname"
+        assert result["ipv4"] == "192.168.1.50"
+        assert result["ipv6"] == "fe80::1"
+        assert result["active"] is True
+        assert result["script_execution_enabled"] is True
+        assert result["is_privileged"] is False
+        assert result["enabled_shells"] == ["sh", "bash"]
+
         self.client_reg.network_utils.get_hostname.assert_called_once()
         self.client_reg.network_utils.get_ip_addresses.assert_called_once()
 
@@ -177,19 +184,22 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         result = self.client_reg.get_system_info()
 
-        expected = {
-            "hostname": "legacy-host",
-            "fqdn": "legacy-host",
-            "ipv4": "10.0.0.1",
-            "ipv6": None,
-            "active": True,
-            "script_execution_enabled": True,
-            "is_privileged": False,
-            "enabled_shells": ["sh", "bash"],
-            "os": "Ubuntu",
-            "version": "20.04",
-        }
-        assert result == expected
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
+
+        # Check host data fields
+        assert result["hostname"] == "legacy-host"
+        assert result["fqdn"] == "legacy-host"
+        assert result["ipv4"] == "10.0.0.1"
+        assert result["ipv6"] is None
+        assert result["active"] is True
+        assert result["script_execution_enabled"] is True
+        assert result["is_privileged"] is False
+        assert result["enabled_shells"] == ["sh", "bash"]
+        assert result["os"] == "Ubuntu"
+        assert result["version"] == "20.04"
 
     @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
     def test_get_system_info_with_auto_approve_token(self, mock_is_privileged):
@@ -209,20 +219,23 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         result = self.client_reg.get_system_info()
 
-        expected = {
-            "hostname": "child-host",
-            "fqdn": "child-host",
-            "ipv4": "10.0.0.5",
-            "ipv6": None,
-            "active": True,
-            "script_execution_enabled": True,
-            "is_privileged": False,
-            "enabled_shells": ["sh", "bash"],
-            "os": "OpenBSD",
-            "version": "7.7",
-            "auto_approve_token": "550e8400-e29b-41d4-a716-446655440000",
-        }
-        assert result == expected
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
+
+        # Check host data fields
+        assert result["hostname"] == "child-host"
+        assert result["fqdn"] == "child-host"
+        assert result["ipv4"] == "10.0.0.5"
+        assert result["ipv6"] is None
+        assert result["active"] is True
+        assert result["script_execution_enabled"] is True
+        assert result["is_privileged"] is False
+        assert result["enabled_shells"] == ["sh", "bash"]
+        assert result["os"] == "OpenBSD"
+        assert result["version"] == "7.7"
+        assert result["auto_approve_token"] == "550e8400-e29b-41d4-a716-446655440000"
 
     @pytest.mark.asyncio
     @patch(
@@ -259,17 +272,20 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         # Get the basic registration info
         result = self.client_reg.get_basic_registration_info()
 
-        expected_data = {
-            "hostname": "test-host",
-            "fqdn": "test-host",
-            "ipv4": "192.168.1.100",
-            "ipv6": "fe80::1",
-            "active": True,
-            "script_execution_enabled": True,
-            "is_privileged": False,
-            "enabled_shells": ["sh", "bash"],
-        }
-        assert result == expected_data
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
+
+        # Check host data fields
+        assert result["hostname"] == "test-host"
+        assert result["fqdn"] == "test-host"
+        assert result["ipv4"] == "192.168.1.100"
+        assert result["ipv6"] == "fe80::1"
+        assert result["active"] is True
+        assert result["script_execution_enabled"] is True
+        assert result["is_privileged"] is False
+        assert result["enabled_shells"] == ["sh", "bash"]
 
     def test_registration_url_construction_logic(self):
         """Test the URL construction logic used in registration."""

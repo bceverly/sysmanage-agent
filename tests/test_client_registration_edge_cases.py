@@ -49,15 +49,17 @@ class TestClientRegistrationEdgeCases:
             "test-host", "192.168.1.100", "2001:db8::1"
         )
 
-        expected = {
-            "hostname": "test-host",
-            "fqdn": "test-host",
-            "ipv4": "192.168.1.100",
-            "ipv6": "2001:db8::1",
-            "active": True,
-        }
+        # Check required message fields
+        assert result["message_type"] == "registration_request"
+        assert "message_id" in result
+        assert "timestamp" in result
 
-        assert result == expected
+        # Check host data fields
+        assert result["hostname"] == "test-host"
+        assert result["fqdn"] == "test-host"
+        assert result["ipv4"] == "192.168.1.100"
+        assert result["ipv6"] == "2001:db8::1"
+        assert result["active"] is True
 
     def test_get_basic_registration_info_script_execution_enabled(self):
         """Test basic registration info with script execution enabled."""
