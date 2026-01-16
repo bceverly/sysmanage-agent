@@ -618,6 +618,7 @@ local-hostname: {config.hostname.split('.')[0]}
                 # CodeQL: This is intentional - cloud-init requires these files to provision VMs.
                 # The password is already hashed and the temp directory is cleaned up after use.
                 with open(user_data_path, "w", encoding="utf-8") as udf:  # noqa: S324
+                    # codeql[py/clear-text-storage-sensitive-data] - Intentional: cloud-init requires this file, password is pre-hashed, temp dir cleaned after use
                     udf.write(user_data)  # nosec B105
                 with open(meta_data_path, "w", encoding="utf-8") as mdf:
                     mdf.write(meta_data)

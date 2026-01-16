@@ -6,6 +6,8 @@ Handles initial registration and periodic re-registration with the server.
 import asyncio
 import logging
 import ssl
+import uuid
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from sqlalchemy import text
@@ -55,6 +57,9 @@ class ClientRegistration:
     ) -> Dict[str, Any]:
         """Create basic registration dictionary structure."""
         return {
+            "message_type": "registration_request",
+            "message_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "hostname": hostname,
             "fqdn": hostname,  # For compatibility with server's Host model
             "ipv4": ipv4,
