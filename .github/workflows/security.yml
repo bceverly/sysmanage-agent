@@ -8,6 +8,8 @@ on:
   schedule:
     # Run weekly on Sundays at 2 AM UTC
     - cron: '0 2 * * 0'
+  workflow_dispatch:
+    # Allow manual triggering from GitHub Actions UI
 
 permissions:
   contents: read
@@ -15,6 +17,72 @@ permissions:
   actions: read
 
 jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        # Don't use default queries, use security-extended for better coverage
+        queries: security-extended
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        output: codeql-raw.sarif
+        upload: false  # Don't auto-upload, we'll filter first
+
+    - name: Filter false positives from CodeQL SARIF
+      run: |
+        # Filter out known false positives from CodeQL results
+        # - py/clear-text-storage-sensitive-data in cloud-init provisioning files
+        #   (these write pre-hashed passwords to temp files for VM provisioning)
+        if [ -f "codeql-raw.sarif" ]; then
+          jq '
+            .runs[].results |= map(
+              select(
+                # Keep results that are NOT false positives
+                not (
+                  # Filter: clear-text-storage in bhyve/kvm child host provisioning
+                  # These files write cloud-init configs with pre-hashed passwords to temp dirs
+                  (.ruleId == "py/clear-text-storage-sensitive-data") and
+                  (
+                    (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_bhyve_freebsd.py")) or
+                    (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_kvm_freebsd.py"))
+                  )
+                )
+              )
+            )
+          ' codeql-raw.sarif > codeql.sarif
+          echo "Filtered known false positives from CodeQL SARIF output"
+        else
+          echo "Warning: codeql-raw.sarif not found"
+        fi
+
+    - name: Check if CodeQL SARIF file exists
+      id: check_codeql_sarif
+      run: |
+        if [ -f "codeql.sarif" ] && [ -s "codeql.sarif" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Warning: codeql.sarif file was not generated or is empty"
+        fi
+
+    - name: Upload CodeQL SARIF to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      if: steps.check_codeql_sarif.outputs.exists == 'true'
+      with:
+        sarif_file: codeql.sarif
+
   semgrep:
     name: Semgrep PRO Security Scan
     runs-on: ubuntu-latest
@@ -43,9 +111,23 @@ jobs:
         if [ -f "semgrep-raw.sarif" ]; then
           # Install jq if not available (semgrep container may not have it)
           which jq || apk add --no-cache jq 2>/dev/null || true
-          # Filter out results that have suppressions
+          # Filter out results that have suppressions AND known false positives
           if which jq >/dev/null 2>&1; then
-            jq 'del(.runs[].results[] | select(.suppressions))' semgrep-raw.sarif > semgrep.sarif
+            jq '
+              .runs[].results |= map(
+                select(
+                  # Remove results with suppressions (nosemgrep comments)
+                  (.suppressions | length == 0 or . == null) and
+                  # Also filter known false positives by rule and file
+                  not (
+                    # Filter: dangerous-subprocess-use in VirtualBox version check
+                    # vboxmanage path comes from shutil.which(), not user input
+                    (.ruleId | contains("dangerous-subprocess-use-tainted-env-args")) and
+                    (.locations[].physicalLocation.artifactLocation.uri | contains("child_host_virtualization_checks.py"))
+                  )
+                )
+              )
+            ' semgrep-raw.sarif > semgrep.sarif
             echo "Filtered suppressed findings from SARIF output"
           else
             # Fallback: use raw file if jq is not available
