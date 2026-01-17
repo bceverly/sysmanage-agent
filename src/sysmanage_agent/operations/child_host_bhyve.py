@@ -24,7 +24,6 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     BHYVE_IMAGES_DIR,
     BHYVE_VM_DIR,
     BhyveCreationHelper,
-    delete_bhyve_metadata,
     save_bhyve_metadata,
 )
 from src.sysmanage_agent.operations.child_host_bhyve_freebsd import (

@@ -16,7 +16,6 @@ from .child_host_listing_wsl import WSLListing
 
 # Import bhyve metadata functions
 from .child_host_bhyve_creation import (
-    BHYVE_METADATA_DIR,
     load_bhyve_metadata,
 )
 
@@ -773,7 +772,9 @@ class ChildHostListing:
                         # Get stored metadata (hostname, distribution) if available
                         metadata = load_bhyve_metadata(vm_name, self.logger)
                         hostname = metadata.get("hostname") if metadata else None
-                        distribution = metadata.get("distribution") if metadata else None
+                        distribution = (
+                            metadata.get("distribution") if metadata else None
+                        )
                         vms.append(
                             {
                                 "child_type": "bhyve",

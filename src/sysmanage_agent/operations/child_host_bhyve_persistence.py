@@ -360,8 +360,8 @@ run_rc_command "$1"
             ) as script_file:
                 await script_file.write(script_content)
 
-            # Make executable
-            os.chmod(BHYVE_RC_SCRIPT, 0o755)
+            # Make executable - rc.d scripts must be 0o755 to run as services
+            os.chmod(BHYVE_RC_SCRIPT, 0o755)  # nosec B103
 
             self.logger.info(_("Installed bhyve autostart script: %s"), BHYVE_RC_SCRIPT)
             return {"success": True, "script_path": BHYVE_RC_SCRIPT}
