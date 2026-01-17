@@ -16,6 +16,8 @@ import os
 import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict
 
+import aiofiles
+
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     BHYVE_CLOUDINIT_DIR,
@@ -31,6 +33,10 @@ from src.sysmanage_agent.operations.child_host_bhyve_lifecycle import (
 )
 from src.sysmanage_agent.operations.child_host_bhyve_networking import (
     BhyveNetworking,
+)
+from src.sysmanage_agent.operations.child_host_bhyve_persistence import (
+    BhyvePersistenceHelper,
+    BhyveVmPersistentConfig,
 )
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
@@ -60,6 +66,7 @@ class BhyveOperations:
         # Initialize helper classes
         self._creation_helper = BhyveCreationHelper(logger)
         self._lifecycle_helper = BhyveLifecycleHelper(logger, self._creation_helper)
+        self._persistence_helper = BhyvePersistenceHelper(logger)
 
     async def _send_virtualization_status_update(self):
         """Send updated virtualization status back to server via queue.
@@ -216,8 +223,10 @@ class BhyveOperations:
                 needs_vmm_update = True
                 needs_nmdm_update = True
                 if os.path.exists(loader_conf):
-                    with open(loader_conf, "r", encoding="utf-8") as loader_file:
-                        content = loader_file.read()
+                    async with aiofiles.open(
+                        loader_conf, "r", encoding="utf-8"
+                    ) as loader_file:
+                        content = await loader_file.read()
                         if vmm_load_line in content:
                             needs_vmm_update = False
                             self.logger.info(
@@ -230,17 +239,21 @@ class BhyveOperations:
                             )
 
                 if needs_vmm_update or needs_nmdm_update:
-                    with open(loader_conf, "a", encoding="utf-8") as loader_file:
+                    async with aiofiles.open(
+                        loader_conf, "a", encoding="utf-8"
+                    ) as loader_file:
                         if needs_vmm_update:
                             self.logger.info(_("Adding vmm.ko to %s"), loader_conf)
-                            loader_file.write(
+                            await loader_file.write(
                                 "\n# bhyve VMM support - added by sysmanage\n"
                             )
-                            loader_file.write(f"{vmm_load_line}\n")
+                            await loader_file.write(f"{vmm_load_line}\n")
                         if needs_nmdm_update:
                             self.logger.info(_("Adding nmdm.ko to %s"), loader_conf)
-                            loader_file.write("# nmdm console support for bhyve VMs\n")
-                            loader_file.write(f"{nmdm_load_line}\n")
+                            await loader_file.write(
+                                "# nmdm console support for bhyve VMs\n"
+                            )
+                            await loader_file.write(f"{nmdm_load_line}\n")
 
             except PermissionError:
                 return {
@@ -290,6 +303,17 @@ class BhyveOperations:
                     "nat_configured": nat_configured,
                 }
 
+            # Install and enable VM autostart service
+            autostart_result = await self._persistence_helper.enable_autostart_service(
+                self._run_subprocess
+            )
+            autostart_enabled = autostart_result.get("success", False)
+            if not autostart_enabled:
+                self.logger.warning(
+                    _("VM autostart service setup warning: %s"),
+                    autostart_result.get("error"),
+                )
+
             self.logger.info(_("bhyve initialized successfully"))
             # Send virtualization status update to server
             await self._send_virtualization_status_update()
@@ -304,6 +328,7 @@ class BhyveOperations:
                 "nat_bridge": nat_result.get("bridge"),
                 "nat_gateway": nat_result.get("gateway"),
                 "nat_subnet": nat_result.get("subnet"),
+                "autostart_enabled": autostart_enabled,
             }
 
         except subprocess.TimeoutExpired:
@@ -359,8 +384,11 @@ class BhyveOperations:
 
             try:
                 if os.path.exists(loader_conf):
-                    with open(loader_conf, "r", encoding="utf-8") as loader_file:
-                        lines = loader_file.readlines()
+                    async with aiofiles.open(
+                        loader_conf, "r", encoding="utf-8"
+                    ) as loader_file:
+                        content = await loader_file.read()
+                        lines = content.splitlines(keepends=True)
 
                     # Filter out vmm_load and its comment
                     new_lines = []
@@ -376,8 +404,10 @@ class BhyveOperations:
                             continue
                         new_lines.append(line)
 
-                    with open(loader_conf, "w", encoding="utf-8") as loader_file:
-                        loader_file.writelines(new_lines)
+                    async with aiofiles.open(
+                        loader_conf, "w", encoding="utf-8"
+                    ) as loader_file:
+                        await loader_file.writelines(new_lines)
 
                     self.logger.info(_("Removed vmm.ko from %s"), loader_conf)
 
@@ -678,6 +708,27 @@ class BhyveOperations:
 
                 if not start_result.get("success"):
                     return start_result
+
+                # Save VM configuration for persistence/autostart
+                persistent_config = BhyveVmPersistentConfig(
+                    vm_name=config.vm_name,
+                    hostname=config.hostname,
+                    distribution=config.distribution,
+                    memory=config.memory,
+                    cpus=config.cpus,
+                    disk_path=config.disk_path,
+                    cloud_init_iso_path=config.cloud_init_iso_path or "",
+                    use_uefi=config.use_uefi,
+                    autostart=True,  # Enable autostart by default
+                    tap_interface=tap_interface,
+                )
+                save_result = await self._persistence_helper.save_vm_config(
+                    persistent_config
+                )
+                if not save_result.get("success"):
+                    self.logger.warning(
+                        _("Failed to save VM config: %s"), save_result.get("error")
+                    )
 
                 # Wait for VM to get IP
                 vm_ip = await self._creation_helper.wait_for_vm_ip(

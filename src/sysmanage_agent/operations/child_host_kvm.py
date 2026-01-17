@@ -4,15 +4,17 @@ KVM/libvirt-specific child host operations for Linux hosts.
 This module handles KVM/QEMU virtual machine management via libvirt/virsh.
 """
 
+import asyncio
 import os
 import platform
 import pwd
 import shutil
-import subprocess  # nosec B404 # Required for system command execution
+import subprocess  # nosec B404 # Required for sync functions
 import time
 from typing import Any, Dict
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_kvm_creation import KvmCreation
 from src.sysmanage_agent.operations.child_host_kvm_lifecycle import KvmLifecycle
 from src.sysmanage_agent.operations.child_host_kvm_networking import KvmNetworking
@@ -319,12 +321,9 @@ class KvmOperations:
                 # Try to check for running VMs via virsh if available
                 virsh_path = shutil.which("virsh")
                 if virsh_path:
-                    result = subprocess.run(  # nosec B603 B607
+                    result = await run_command_async(
                         ["virsh", "list", "--state-running", "--name"],
-                        capture_output=True,
-                        text=True,
                         timeout=10,
-                        check=False,
                     )
                     if result.returncode == 0:
                         running_vms = [
@@ -343,12 +342,9 @@ class KvmOperations:
 
             # Determine which vendor module to unload first
             vendor_module = None
-            lsmod_result = subprocess.run(  # nosec B603 B607
+            lsmod_result = await run_command_async(
                 ["lsmod"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             if lsmod_result.returncode == 0:
                 if "kvm_intel" in lsmod_result.stdout:
@@ -359,12 +355,9 @@ class KvmOperations:
             # Unload vendor-specific module first (kvm_intel or kvm_amd)
             if vendor_module:
                 self.logger.info(_("Unloading %s module"), vendor_module)
-                result = subprocess.run(  # nosec B603 B607
+                result = await run_command_async(
                     ["modprobe", "-r", vendor_module],
-                    capture_output=True,
-                    text=True,
                     timeout=30,
-                    check=False,
                 )
                 if result.returncode != 0:
                     error_msg = result.stderr.strip() or result.stdout.strip()
@@ -375,12 +368,9 @@ class KvmOperations:
 
             # Unload base kvm module
             self.logger.info(_("Unloading kvm module"))
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["modprobe", "-r", "kvm"],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
             if result.returncode != 0:
                 error_msg = result.stderr.strip() or result.stdout.strip()
@@ -388,7 +378,7 @@ class KvmOperations:
                 return {"success": False, "error": error_msg}
 
             # Verify /dev/kvm is gone
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             if os.path.exists("/dev/kvm"):
                 return {
                     "success": False,
@@ -401,7 +391,7 @@ class KvmOperations:
                 "message": _("KVM kernel modules unloaded successfully"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             self.logger.error(_("Timeout unloading KVM modules"))
             return {"success": False, "error": _("Timeout unloading KVM modules")}
         except Exception as error:

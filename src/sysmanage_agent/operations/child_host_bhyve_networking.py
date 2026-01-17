@@ -6,10 +6,12 @@ pf firewall rules, and dhcpd configuration for VM DHCP.
 """
 
 import os
-import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict, Optional
 
+import aiofiles
+
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 
 # Default bhyve network configuration
 # Note: On FreeBSD, bridge interfaces must be named bridgeN (e.g., bridge0)
@@ -34,7 +36,7 @@ class BhyveNetworking:
         """
         self.logger = logger
 
-    def get_host_dns_server(self) -> Optional[str]:
+    async def get_host_dns_server(self) -> Optional[str]:
         """
         Get the DNS server from the host's /etc/resolv.conf.
 
@@ -42,8 +44,11 @@ class BhyveNetworking:
             First nameserver IP address or None if not found
         """
         try:
-            with open("/etc/resolv.conf", "r", encoding="utf-8") as resolv_file:
-                for line in resolv_file:
+            async with aiofiles.open(
+                "/etc/resolv.conf", "r", encoding="utf-8"
+            ) as resolv_file:
+                content = await resolv_file.read()
+                for line in content.splitlines():
                     line = line.strip()
                     if not line or line.startswith("#"):
                         continue
@@ -62,7 +67,7 @@ class BhyveNetworking:
             self.logger.warning(_("Error reading /etc/resolv.conf: %s"), error)
             return None
 
-    def get_egress_interface(self) -> Optional[str]:
+    async def get_egress_interface(self) -> Optional[str]:
         """
         Get the primary egress interface (interface with default route).
 
@@ -71,12 +76,9 @@ class BhyveNetworking:
         """
         try:
             # Get default route
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["route", "-n", "get", "default"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             if result.returncode == 0:
                 for line in result.stdout.split("\n"):
@@ -157,8 +159,8 @@ class BhyveNetworking:
             rc_conf = "/etc/rc.conf"
             rc_content = ""
             if os.path.exists(rc_conf):
-                with open(rc_conf, "r", encoding="utf-8") as conf_file:
-                    rc_content = conf_file.read()
+                async with aiofiles.open(rc_conf, "r", encoding="utf-8") as conf_file:
+                    rc_content = await conf_file.read()
 
             # Add cloned_interfaces if bridge1 not already there
             if BHYVE_BRIDGE_NAME not in rc_content:
@@ -213,12 +215,16 @@ class BhyveNetworking:
             try:
                 content = ""
                 if os.path.exists(sysctl_conf):
-                    with open(sysctl_conf, "r", encoding="utf-8") as conf_file:
-                        content = conf_file.read()
+                    async with aiofiles.open(
+                        sysctl_conf, "r", encoding="utf-8"
+                    ) as conf_file:
+                        content = await conf_file.read()
 
                 if sysctl_line not in content:
-                    with open(sysctl_conf, "a", encoding="utf-8") as conf_file:
-                        conf_file.write(
+                    async with aiofiles.open(
+                        sysctl_conf, "a", encoding="utf-8"
+                    ) as conf_file:
+                        await conf_file.write(
                             f"\n# bhyve NAT - added by sysmanage\n{sysctl_line}\n"
                         )
                     self.logger.info(_("Added IP forwarding to %s"), sysctl_conf)
@@ -245,7 +251,7 @@ class BhyveNetworking:
             Dict with success status
         """
         try:
-            egress_iface = self.get_egress_interface()
+            egress_iface = await self.get_egress_interface()
             if not egress_iface:
                 egress_iface = "egress"  # pf macro for default route interface
 
@@ -257,8 +263,8 @@ class BhyveNetworking:
             # Check if pf.conf exists and read it
             pf_content = ""
             if os.path.exists(pf_conf):
-                with open(pf_conf, "r", encoding="utf-8") as conf_file:
-                    pf_content = conf_file.read()
+                async with aiofiles.open(pf_conf, "r", encoding="utf-8") as conf_file:
+                    pf_content = await conf_file.read()
 
             # Check if our NAT rule already exists
             if "bhyve NAT" in pf_content or nat_rule in pf_content:
@@ -312,8 +318,8 @@ pass out all
 
             # Write updated pf.conf
             try:
-                with open(pf_conf, "w", encoding="utf-8") as conf_file:
-                    conf_file.write(new_content)
+                async with aiofiles.open(pf_conf, "w", encoding="utf-8") as conf_file:
+                    await conf_file.write(new_content)
             except PermissionError:
                 return {
                     "success": False,
@@ -367,7 +373,7 @@ pass out all
         """
         try:
             # Get host DNS server
-            dns_server = self.get_host_dns_server()
+            dns_server = await self.get_host_dns_server()
             if not dns_server:
                 dns_server = "8.8.8.8"  # Fallback to Google DNS
                 self.logger.warning(
@@ -412,8 +418,10 @@ subnet {BHYVE_SUBNET}.0 netmask {BHYVE_NETMASK} {{
 
             self.logger.info(_("Creating dhcpd configuration"))
             try:
-                with open(dhcpd_conf, "w", encoding="utf-8") as conf_file:
-                    conf_file.write(dhcpd_config)
+                async with aiofiles.open(
+                    dhcpd_conf, "w", encoding="utf-8"
+                ) as conf_file:
+                    await conf_file.write(dhcpd_config)
             except PermissionError:
                 return {
                     "success": False,
@@ -540,8 +548,8 @@ subnet {BHYVE_SUBNET}.0 netmask {BHYVE_NETMASK} {{
             rc_conf = "/etc/rc.conf"
             content = ""
             if os.path.exists(rc_conf):
-                with open(rc_conf, "r", encoding="utf-8") as conf_file:
-                    content = conf_file.read()
+                async with aiofiles.open(rc_conf, "r", encoding="utf-8") as conf_file:
+                    content = await conf_file.read()
 
             if key in content:
                 self.logger.info(_("%s already in rc.conf"), key)

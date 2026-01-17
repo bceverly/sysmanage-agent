@@ -21,6 +21,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import aiofiles
+
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_vmm_disk import VmmDiskOperations
@@ -632,7 +634,10 @@ class VmmVmCreator:
         index_txt_path = sets_dir / "index.txt"
         if index_txt_path.exists():
             # Check if site tarball is already in index.txt
-            index_content = index_txt_path.read_text()
+            async with aiofiles.open(
+                index_txt_path, "r", encoding="utf-8"
+            ) as index_file:
+                index_content = await index_file.read()
             if site_filename not in index_content:
                 # Get file stats for the site tarball
                 site_stat = site_dest.stat()
@@ -642,8 +647,10 @@ class VmmVmCreator:
                 mtime = datetime.fromtimestamp(site_stat.st_mtime)
                 date_str = mtime.strftime("%b %d %H:%M:%S %Y")
                 site_entry = f"-rw-r--r--  1 1001  0  {site_size:>10} {date_str} {site_filename}\n"
-                with open(index_txt_path, "a", encoding="utf-8") as index_file:
-                    index_file.write(site_entry)
+                async with aiofiles.open(
+                    index_txt_path, "a", encoding="utf-8"
+                ) as index_file:
+                    await index_file.write(site_entry)
                 self.logger.info("Updated index.txt with %s", site_filename)
 
         # Update SHA256.sig to include the site tarball checksum
@@ -653,8 +660,11 @@ class VmmVmCreator:
 
         # Calculate SHA256 checksum
         sha256_hash = hashlib.sha256()
-        with open(site_dest, "rb") as site_file:
-            for chunk in iter(lambda: site_file.read(8192), b""):
+        async with aiofiles.open(site_dest, "rb") as site_file:
+            while True:
+                chunk = await site_file.read(8192)
+                if not chunk:
+                    break
                 sha256_hash.update(chunk)
         checksum = sha256_hash.hexdigest()
         # OpenBSD SHA256 format: SHA256 (filename) = checksum
@@ -664,10 +674,15 @@ class VmmVmCreator:
         for sha_file in ["SHA256", "SHA256.sig"]:
             sha_path = sets_dir / sha_file
             if sha_path.exists():
-                sha_content = sha_path.read_text()
+                async with aiofiles.open(
+                    sha_path, "r", encoding="utf-8"
+                ) as sha_read_handle:
+                    sha_content = await sha_read_handle.read()
                 if site_filename not in sha_content:
-                    with open(sha_path, "a", encoding="utf-8") as sha_handle:
-                        sha_handle.write(sha256_entry)
+                    async with aiofiles.open(
+                        sha_path, "a", encoding="utf-8"
+                    ) as sha_handle:
+                        await sha_handle.write(sha256_entry)
                     self.logger.info(
                         "Updated %s with %s checksum", sha_file, site_filename
                     )

@@ -9,10 +9,11 @@ This module contains operations for managing bhyve VM lifecycle:
 """
 
 import asyncio
+import json
 import os
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_bhyve_creation import (
@@ -35,6 +36,29 @@ class BhyveLifecycleHelper:
         """
         self.logger = logger
         self.creation_helper = creation_helper
+
+    def _load_vm_config(self, vm_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Load VM configuration from the persistent config file.
+
+        Args:
+            vm_name: Name of the VM
+
+        Returns:
+            Dict with VM config or None if not found
+        """
+        config_path = os.path.join(BHYVE_VM_DIR, vm_name, "vm-config.json")
+        if not os.path.exists(config_path):
+            return None
+
+        try:
+            with open(config_path, "r", encoding="utf-8") as config_file:
+                return json.load(config_file)
+        except Exception as error:
+            self.logger.warning(
+                _("Failed to load VM config for %s: %s"), vm_name, error
+            )
+            return None
 
     async def _run_subprocess(
         self,
@@ -96,17 +120,35 @@ class BhyveLifecycleHelper:
                     "error": _("VM disk not found: %s") % disk_path,
                 }
 
+            # Load persisted config if available
+            vm_config = self._load_vm_config(child_name)
+            memory_mb = 1024  # default
+            cpus = 1  # default
+            use_uefi = True  # default
+            cloudinit_iso = os.path.join(BHYVE_CLOUDINIT_DIR, f"{child_name}.iso")
+
+            if vm_config:
+                # Parse memory from config (e.g., "1G" -> 1024 MB)
+                memory_str = vm_config.get("memory", "1G").upper()
+                if memory_str.endswith("G"):
+                    memory_mb = int(float(memory_str[:-1]) * 1024)
+                elif memory_str.endswith("M"):
+                    memory_mb = int(memory_str[:-1])
+                else:
+                    memory_mb = 1024
+
+                cpus = vm_config.get("cpus", 1)
+                use_uefi = vm_config.get("use_uefi", True)
+                if vm_config.get("disk_path"):
+                    disk_path = vm_config["disk_path"]
+                if vm_config.get("cloud_init_iso_path"):
+                    cloudinit_iso = vm_config["cloud_init_iso_path"]
+
             # Create tap interface
             tap_result = self.creation_helper.create_tap_interface(child_name)
             if not tap_result.get("success"):
                 return tap_result
             tap_interface = tap_result["tap"]
-
-            # Check for cloud-init ISO
-            cloudinit_iso = os.path.join(BHYVE_CLOUDINIT_DIR, f"{child_name}.iso")
-
-            # Determine memory (default 1G)
-            memory_mb = 1024
 
             # Build bhyve command
             cmd = [
@@ -125,7 +167,7 @@ class BhyveLifecycleHelper:
                 "-l",
                 "com1,stdio",
                 "-c",
-                "1",
+                str(cpus),
                 "-m",
                 f"{memory_mb}M",
             ]
@@ -135,7 +177,7 @@ class BhyveLifecycleHelper:
 
             # Check for UEFI firmware
             uefi_firmware = "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd"
-            if os.path.exists(uefi_firmware):
+            if use_uefi and os.path.exists(uefi_firmware):
                 cmd.extend(["-l", f"bootrom,{uefi_firmware}"])
 
             cmd.append(child_name)

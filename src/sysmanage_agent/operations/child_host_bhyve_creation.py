@@ -13,11 +13,12 @@ import hashlib
 import os
 import shutil
 import socket
-import subprocess  # nosec B404 # Required for system command execution
+import subprocess  # nosec B404 - needed for sync disk/network operations
 import time
 from typing import Any, Dict, List, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 from src.sysmanage_agent.operations.child_host_config_generator import (
     generate_agent_config,
@@ -900,13 +901,7 @@ runcmd:
         while time.time() - start_time < timeout:
             # Try to get IP from ARP table (VM should respond to DHCP)
             try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["arp", "-an"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
+                result = await run_command_async(["arp", "-an"], timeout=10)
                 if result.returncode == 0:
                     ip_addr = self.find_ip_in_arp_output(
                         result.stdout, tap_interface, vm_name

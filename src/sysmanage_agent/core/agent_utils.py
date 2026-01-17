@@ -8,7 +8,7 @@ import os
 import shutil
 import socket
 import ssl
-import subprocess  # nosec B404 # Required for system command execution
+import subprocess  # nosec B404 # Required for sync shell execution
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -20,6 +20,17 @@ from src.database.base import get_database_manager
 from src.database.models import Priority, ScriptExecution
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collection import PackageCollector
+
+# Re-export async utilities for backwards compatibility
+# pylint: disable=unused-import
+from src.sysmanage_agent.core.async_utils import (  # noqa: F401
+    AsyncProcessResult,
+    read_file_async,
+    run_command_async,
+    write_file_async,
+)
+
+# pylint: enable=unused-import
 
 
 class UpdateChecker:

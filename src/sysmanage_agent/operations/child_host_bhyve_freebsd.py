@@ -13,11 +13,12 @@ import asyncio
 import os
 import secrets
 import shutil
-import subprocess  # nosec B404 # Required for system commands
+import subprocess  # nosec B404 - needed for sync disk operations
 import tempfile
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 from src.sysmanage_agent.operations.child_host_config_generator import (
     generate_agent_config,
@@ -771,7 +772,7 @@ local-hostname: {config.hostname.split('.')[0]}
             )
 
             for attempt in range(3):
-                test_result = subprocess.run(  # nosec B603 B607
+                test_result = await run_command_async(
                     [
                         "ssh",
                         "-i",
@@ -787,10 +788,7 @@ local-hostname: {config.hostname.split('.')[0]}
                         f"{self._bootstrap_username}@{ip_address}",
                         "echo 'SSH key auth works'",
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=30,
-                    check=False,
                 )
 
                 if test_result.returncode == 0:
@@ -829,7 +827,7 @@ fi
             if not shutil.which("sshpass"):
                 # Try password-based SSH directly to root if PermitRootLogin is enabled
                 self.logger.info(_("Trying SSH as root with password..."))
-                bootstrap_result = subprocess.run(  # nosec B603 B607
+                bootstrap_result = await run_command_async(
                     [
                         "ssh",
                         "-o",
@@ -841,17 +839,14 @@ fi
                         f"root@{ip_address}",
                         root_commands,
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=timeout,
-                    check=False,
-                    input=self._temp_root_password + "\n",
+                    input_data=self._temp_root_password + "\n",
                 )
             else:
                 # Use sshpass with su
                 self.logger.info(_("Running bootstrap via sshpass + su..."))
                 su_command = f"echo '{self._temp_root_password}' | su -m root -c '{root_commands}'"
-                bootstrap_result = subprocess.run(  # nosec B603 B607
+                bootstrap_result = await run_command_async(
                     [
                         "ssh",
                         "-i",
@@ -867,10 +862,7 @@ fi
                         f"{self._bootstrap_username}@{ip_address}",
                         su_command,
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=timeout,
-                    check=False,
                 )
 
             if bootstrap_result.returncode != 0:

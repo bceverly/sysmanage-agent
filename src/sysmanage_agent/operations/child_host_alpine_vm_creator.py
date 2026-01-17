@@ -14,12 +14,13 @@ import asyncio
 import json
 import os
 import re
-import subprocess  # nosec B404
+import subprocess  # nosec B404 - needed for sync network operations
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async, write_file_async
 from src.sysmanage_agent.operations.child_host_alpine_autoinstall import (
     AlpineAutoinstallSetup,
 )
@@ -621,13 +622,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
 
             self.logger.info(_("Launching Alpine VM: %s"), " ".join(cmd))
 
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            result = await run_command_async(cmd, timeout=30)
 
             if result.returncode != 0:
                 return {
@@ -693,8 +688,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
 
             # Write script to temp file for reference/debugging
             script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108
-            with open(script_path, "w", encoding="utf-8") as script_file:
-                script_file.write(setup_script)
+            await write_file_async(script_path, setup_script)
 
             self.logger.info(
                 _("Alpine setup script written to %s. Starting console automation..."),
@@ -737,13 +731,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
             try:
                 # Run vmctl status (all VMs) and check if our VM has stopped
                 # When a VM shuts down, it disappears from vmctl status entirely
-                result = subprocess.run(  # nosec B603 B607
-                    ["vmctl", "status"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
+                result = await run_command_async(["vmctl", "status"], timeout=10)
 
                 # Check for any indication VM has stopped:
                 # 1. VM name not in output (disappeared from list)

@@ -12,12 +12,13 @@ import logging
 import os
 import pty
 import select
-import subprocess  # nosec B404
+import subprocess  # nosec B404 - still needed for sync functions
 import time
 import traceback
 from typing import Any, Dict, List, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 
 
 class DebianConsoleAutomation:
@@ -633,12 +634,9 @@ class DebianConsoleAutomation:
 
             while time.time() - start_time < timeout:
                 # Check VM status
-                result = subprocess.run(  # nosec B603 B607
+                result = await run_command_async(
                     ["vmctl", "status", vm_name],
-                    capture_output=True,
-                    text=True,
                     timeout=10,
-                    check=False,
                 )
 
                 if result.returncode == 0:

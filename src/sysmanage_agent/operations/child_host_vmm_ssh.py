@@ -6,11 +6,11 @@ VMM virtual machines during setup and agent installation.
 """
 
 import asyncio
-import subprocess  # nosec B404 # Required for system command execution
 import time
 from typing import Any, Dict, List
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 
 
 class VmmSshOperations:
@@ -41,7 +41,7 @@ class VmmSshOperations:
         while time.time() - start_time < timeout:
             try:
                 # Try to connect to SSH port
-                result = subprocess.run(  # nosec B603 B607
+                result = await run_command_async(
                     [
                         "nc",
                         "-z",
@@ -50,10 +50,7 @@ class VmmSshOperations:
                         ip_address,
                         "22",
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=10,
-                    check=False,
                 )
 
                 if result.returncode == 0:
@@ -96,7 +93,7 @@ class VmmSshOperations:
         try:
             # Use sshpass for password authentication
             # Note: For production, consider using SSH keys
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 [
                     "sshpass",
                     "-p",
@@ -111,10 +108,7 @@ class VmmSshOperations:
                     f"{username}@{ip_address}",
                     command,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=300,
-                check=False,
             )
 
             return {
@@ -125,7 +119,7 @@ class VmmSshOperations:
                 "error": result.stderr if result.returncode != 0 else None,
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "error": _("SSH command timed out"),

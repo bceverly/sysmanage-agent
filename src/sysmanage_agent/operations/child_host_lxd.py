@@ -2,11 +2,12 @@
 LXD-specific child host operations for Ubuntu hosts.
 """
 
+import asyncio
 import os
 import pwd
-import subprocess  # nosec B404 # Required for system command execution
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_lxd_container_creator import (
     LxdContainerCreator,
 )
@@ -55,12 +56,9 @@ class LxdOperations:
                     }
 
                 self.logger.info(_("Installing LXD via snap"))
-                install_result = subprocess.run(  # nosec B603 B607
+                install_result = await run_command_async(
                     ["sudo", "snap", "install", "lxd"],
-                    capture_output=True,
-                    text=True,
                     timeout=300,  # 5 minutes for download/install
-                    check=False,
                 )
 
                 if install_result.returncode != 0:
@@ -82,12 +80,9 @@ class LxdOperations:
                 self.logger.info(_("Adding current user to lxd group"))
                 username = pwd.getpwuid(os.getuid()).pw_name
 
-                usermod_result = subprocess.run(  # nosec B603 B607
+                usermod_result = await run_command_async(
                     ["sudo", "usermod", "-aG", "lxd", username],
-                    capture_output=True,
-                    text=True,
                     timeout=30,
-                    check=False,
                 )
 
                 if usermod_result.returncode != 0:
@@ -100,12 +95,9 @@ class LxdOperations:
             # Step 3: Initialize LXD if not already initialized
             if not lxd_check.get("initialized"):
                 self.logger.info(_("Initializing LXD with default settings"))
-                init_result = subprocess.run(  # nosec B603 B607
+                init_result = await run_command_async(
                     ["sudo", "lxd", "init", "--auto"],
-                    capture_output=True,
-                    text=True,
                     timeout=120,  # 2 minutes for init
-                    check=False,
                 )
 
                 if init_result.returncode != 0:
@@ -145,7 +137,7 @@ class LxdOperations:
                 "error": _("LXD initialization completed but verification failed"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             self.logger.error(_("LXD initialization timed out"))
             return {
                 "success": False,
@@ -224,12 +216,9 @@ class LxdOperations:
         try:
             self.logger.info("Starting LXD container: %s", container_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["lxc", "start", container_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -249,7 +238,7 @@ class LxdOperations:
                 or _("Failed to start container"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": container_name,
@@ -273,12 +262,9 @@ class LxdOperations:
         try:
             self.logger.info("Stopping LXD container: %s", container_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["lxc", "stop", container_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -298,7 +284,7 @@ class LxdOperations:
                 or _("Failed to stop container"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": container_name,
@@ -322,12 +308,9 @@ class LxdOperations:
         try:
             self.logger.info("Restarting LXD container: %s", container_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["lxc", "restart", container_name],
-                capture_output=True,
-                text=True,
                 timeout=120,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -347,7 +330,7 @@ class LxdOperations:
                 or _("Failed to restart container"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": container_name,
@@ -372,12 +355,9 @@ class LxdOperations:
             self.logger.info("Deleting LXD container: %s", container_name)
 
             # Use --force to stop and delete in one step
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["lxc", "delete", container_name, "--force"],
-                capture_output=True,
-                text=True,
                 timeout=120,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -397,7 +377,7 @@ class LxdOperations:
                 or _("Failed to delete container"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": container_name,

@@ -20,6 +20,7 @@ import time
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_kvm_dns import get_host_dns_servers
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
@@ -637,7 +638,7 @@ local-hostname: {config.hostname.split('.')[0]}
             self.logger.info(
                 _("Testing SSH key authentication as %s..."), self._bootstrap_username
             )
-            test_result = subprocess.run(  # nosec B603 B607
+            test_result = await run_command_async(
                 [
                     "ssh",
                     "-i",
@@ -653,10 +654,7 @@ local-hostname: {config.hostname.split('.')[0]}
                     f"{self._bootstrap_username}@{ip_address}",
                     "echo 'SSH key auth works'",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if test_result.returncode != 0:
@@ -669,7 +667,7 @@ local-hostname: {config.hostname.split('.')[0]}
                 )
                 await asyncio.sleep(30)
                 # Try again
-                test_result = subprocess.run(  # nosec B603 B607
+                test_result = await run_command_async(
                     [
                         "ssh",
                         "-i",
@@ -685,10 +683,7 @@ local-hostname: {config.hostname.split('.')[0]}
                         f"{self._bootstrap_username}@{ip_address}",
                         "echo 'SSH key auth works'",
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=30,
-                    check=False,
                 )
                 if test_result.returncode != 0:
                     return {
@@ -727,7 +722,7 @@ local-hostname: {config.hostname.split('.')[0]}
             self.logger.info(_("FreeBSD bootstrap completed successfully"))
             return {"success": True}
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             self.logger.error(_("SSH bootstrap timed out"))
             return {"success": False, "error": _("SSH bootstrap timed out")}
         except Exception as err:

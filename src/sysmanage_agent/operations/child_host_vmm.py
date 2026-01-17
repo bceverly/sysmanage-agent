@@ -13,6 +13,8 @@ import os
 import subprocess  # nosec B404 # Required for system command execution
 from pathlib import Path
 
+import aiofiles
+
 from src.database.base import get_database_manager
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_alpine_vm_creator import (
@@ -188,10 +190,10 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             # Step 2: Create /etc/hostname.vether0 for persistence
             self.logger.info(_("Creating /etc/hostname.vether0 for gateway"))
             try:
-                with open(
+                async with aiofiles.open(
                     "/etc/hostname.vether0", "w", encoding="utf-8"
                 ) as vether_file:
-                    vether_file.write(f"inet {gateway_ip} 255.255.255.0\n")
+                    await vether_file.write(f"inet {gateway_ip} 255.255.255.0\n")
                 os.chmod("/etc/hostname.vether0", 0o640)
                 self.logger.info(_("Created /etc/hostname.vether0"))
             except Exception as vether_error:
@@ -207,10 +209,10 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             # Step 3: Create /etc/hostname.bridge0 with vether0 added
             self.logger.info(_("Creating /etc/hostname.bridge0 for persistence"))
             try:
-                with open(
+                async with aiofiles.open(
                     "/etc/hostname.bridge0", "w", encoding="utf-8"
                 ) as bridge_file:
-                    bridge_file.write("up\nadd vether0\n")
+                    await bridge_file.write("up\nadd vether0\n")
                 os.chmod("/etc/hostname.bridge0", 0o640)
                 self.logger.info(_("Created /etc/hostname.bridge0"))
             except Exception as bridge_file_error:
@@ -229,10 +231,15 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
                 sysctl_conf = Path("/etc/sysctl.conf")
                 sysctl_content = ""
                 if sysctl_conf.exists():
-                    sysctl_content = sysctl_conf.read_text(encoding="utf-8")
+                    async with aiofiles.open(
+                        sysctl_conf, "r", encoding="utf-8"
+                    ) as sysctl_read:
+                        sysctl_content = await sysctl_read.read()
                 if "net.inet.ip.forwarding=1" not in sysctl_content:
-                    with open(sysctl_conf, "a", encoding="utf-8") as sysctl_file:
-                        sysctl_file.write("net.inet.ip.forwarding=1\n")
+                    async with aiofiles.open(
+                        sysctl_conf, "a", encoding="utf-8"
+                    ) as sysctl_file:
+                        await sysctl_file.write("net.inet.ip.forwarding=1\n")
                     self.logger.info(_("Added IP forwarding to /etc/sysctl.conf"))
 
                 # Enable immediately (use async helper to avoid blocking)
@@ -283,8 +290,10 @@ switch "local" {
 }
 """
             try:
-                with open("/etc/vm.conf", "w", encoding="utf-8") as vm_conf_file:
-                    vm_conf_file.write(vm_conf_content)
+                async with aiofiles.open(
+                    "/etc/vm.conf", "w", encoding="utf-8"
+                ) as vm_conf_file:
+                    await vm_conf_file.write(vm_conf_content)
                 self.logger.info(_("Created /etc/vm.conf"))
             except Exception as vm_conf_error:
                 self.logger.error(_("Failed to create /etc/vm.conf: %s"), vm_conf_error)

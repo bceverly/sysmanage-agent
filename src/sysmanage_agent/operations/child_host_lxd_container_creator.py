@@ -9,6 +9,7 @@ This module handles the complete LXD container creation workflow including:
 - Service management
 """
 
+import asyncio
 import json
 import subprocess  # nosec B404
 import time
@@ -16,6 +17,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_config_generator import (
     generate_agent_config,
 )
@@ -276,12 +278,9 @@ class LxdContainerCreator:
             )
 
             # Verify lxdbr0 (LXD's default bridge) exists
-            bridge_check = subprocess.run(  # nosec B603 B607
+            bridge_check = await run_command_async(
                 ["ip", "link", "show", "lxdbr0"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             if bridge_check.returncode != 0:
                 return {
@@ -292,12 +291,9 @@ class LxdContainerCreator:
                 }
 
             # Launch container (uses default profile with lxdbr0)
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["lxc", "launch", distribution, container_name],
-                capture_output=True,
-                text=True,
                 timeout=600,  # 10 minutes for image download
-                check=False,
             )
 
             if result.returncode != 0:
@@ -306,12 +302,9 @@ class LxdContainerCreator:
                 return {"success": False, "error": error_msg}
 
             # Make the container privileged
-            priv_result = subprocess.run(  # nosec B603 B607
+            priv_result = await run_command_async(
                 ["lxc", "config", "set", container_name, "security.privileged", "true"],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if priv_result.returncode != 0:
@@ -321,12 +314,9 @@ class LxdContainerCreator:
                 )
 
             # Restart container to apply privileged mode
-            restart_result = subprocess.run(  # nosec B603 B607
+            restart_result = await run_command_async(
                 ["lxc", "restart", container_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if restart_result.returncode == 0:
@@ -343,7 +333,7 @@ class LxdContainerCreator:
             )
             return {"success": True}
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {"success": False, "error": _("Container launch timed out")}
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -421,7 +411,7 @@ class LxdContainerCreator:
             short_hostname = hostname.split(".")[0] if "." in hostname else hostname
 
             # Write FQDN to /etc/hostname
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -431,15 +421,12 @@ class LxdContainerCreator:
                     "-c",
                     f"echo '{hostname}' > /etc/hostname",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             # Update /etc/hosts with both FQDN and short name
             hosts_entry = f"127.0.1.1\\t{hostname}\\t{short_hostname}"
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -450,14 +437,11 @@ class LxdContainerCreator:
                     f"sed -i '/^127.0.1.1/d' /etc/hosts && "
                     f"echo -e '{hosts_entry}' >> /etc/hosts",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             # Set the hostname using the hostname command
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -466,10 +450,7 @@ class LxdContainerCreator:
                     "hostname",
                     hostname,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             return {"success": True}
@@ -483,7 +464,7 @@ class LxdContainerCreator:
         """Create a user inside the container with sudo access."""
         try:
             # Create user with home directory
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -495,10 +476,7 @@ class LxdContainerCreator:
                     "/bin/bash",
                     username,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode != 0 and "already exists" not in result.stderr:
@@ -508,7 +486,7 @@ class LxdContainerCreator:
                 }
 
             # Set password
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -518,10 +496,7 @@ class LxdContainerCreator:
                     "-c",
                     f"echo '{username}:{password}' | chpasswd",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode != 0:
@@ -531,7 +506,7 @@ class LxdContainerCreator:
                 }
 
             # Add to sudo group (try both sudo and wheel for different distros)
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -542,13 +517,10 @@ class LxdContainerCreator:
                     "sudo",
                     username,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -559,10 +531,7 @@ class LxdContainerCreator:
                     "wheel",
                     username,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             return {"success": True}
@@ -581,12 +550,9 @@ class LxdContainerCreator:
         try:
             for cmd in commands:
                 self.logger.info("Running install command: %s", cmd)
-                result = subprocess.run(  # nosec B603 B607
+                result = await run_command_async(
                     ["lxc", "exec", container_name, "--", "sh", "-c", cmd],
-                    capture_output=True,
-                    text=True,
                     timeout=300,  # 5 minutes per command
-                    check=False,
                 )
 
                 if result.returncode != 0:
@@ -599,7 +565,7 @@ class LxdContainerCreator:
 
             return {"success": True}
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {"success": False, "error": _("Agent installation timed out")}
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -627,7 +593,7 @@ class LxdContainerCreator:
             )
 
             # Write config file
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -638,10 +604,7 @@ class LxdContainerCreator:
                     f"mkdir -p /etc && "
                     f"cat > /etc/sysmanage-agent.yaml << 'EOF'\n{config_yaml}EOF",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode != 0:
@@ -658,7 +621,7 @@ class LxdContainerCreator:
     async def _start_agent_service(self, container_name: str) -> Dict[str, Any]:
         """Start the sysmanage-agent service inside the container."""
         try:
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 [
                     "lxc",
                     "exec",
@@ -669,10 +632,7 @@ class LxdContainerCreator:
                     "--now",
                     "sysmanage-agent",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if result.returncode != 0:

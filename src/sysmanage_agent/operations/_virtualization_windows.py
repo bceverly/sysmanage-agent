@@ -153,8 +153,12 @@ class WindowsVirtualizationMixin:
                         if "WSL 2" in output:
                             result["version"] = "2"
                             result["default_version"] = 2
+                        elif "WSL 1" in output:
+                            result["version"] = "1"
+                            result["default_version"] = 1
                         else:
-                            result["version"] = "2"  # Assume WSL 2 for modern Windows
+                            # Default to WSL 2 for modern Windows when version unclear
+                            result["version"] = "2"
                             result["default_version"] = 2
 
                     self.logger.info(

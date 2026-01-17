@@ -4,11 +4,12 @@ KVM/libvirt VM lifecycle operations for Linux hosts.
 This module handles KVM virtual machine start, stop, restart, and delete operations.
 """
 
+import asyncio
 import os
-import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 
 # Cloud-init ISO directory
 KVM_CLOUDINIT_DIR = "/var/lib/libvirt/cloud-init"
@@ -35,12 +36,9 @@ class KvmLifecycle:
         try:
             self.logger.info("Starting KVM VM: %s", vm_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["sudo", "virsh", "start", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=120,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -58,7 +56,7 @@ class KvmLifecycle:
                 "error": result.stderr or result.stdout or _("Failed to start VM"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": vm_name,
@@ -82,12 +80,9 @@ class KvmLifecycle:
         try:
             self.logger.info("Stopping KVM VM: %s", vm_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["sudo", "virsh", "shutdown", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -105,7 +100,7 @@ class KvmLifecycle:
                 "error": result.stderr or result.stdout or _("Failed to stop VM"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": vm_name,
@@ -129,12 +124,9 @@ class KvmLifecycle:
         try:
             self.logger.info("Restarting KVM VM: %s", vm_name)
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["sudo", "virsh", "reboot", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=120,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -152,7 +144,7 @@ class KvmLifecycle:
                 "error": result.stderr or result.stdout or _("Failed to restart VM"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": vm_name,
@@ -190,31 +182,22 @@ class KvmLifecycle:
 
             # First, try to destroy (force stop) the VM
             # Ignore destroy errors - VM might already be stopped
-            subprocess.run(  # nosec B603 B607
+            await run_command_async(
                 ["sudo", "virsh", "destroy", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=60,
-                check=False,
             )
 
             # Undefine the VM (optionally with --remove-all-storage)
-            undefine_result = subprocess.run(  # nosec B603 B607
+            undefine_result = await run_command_async(
                 ["sudo", "virsh", "undefine", vm_name, "--remove-all-storage"],
-                capture_output=True,
-                text=True,
                 timeout=120,
-                check=False,
             )
 
             if undefine_result.returncode != 0:
                 # Try without --remove-all-storage
-                undefine_result = subprocess.run(  # nosec B603 B607
+                undefine_result = await run_command_async(
                     ["sudo", "virsh", "undefine", vm_name],
-                    capture_output=True,
-                    text=True,
                     timeout=60,
-                    check=False,
                 )
 
             if undefine_result.returncode == 0:
@@ -236,7 +219,7 @@ class KvmLifecycle:
                 or _("Failed to delete VM"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
                 "child_name": vm_name,

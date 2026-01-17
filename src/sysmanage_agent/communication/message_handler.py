@@ -383,7 +383,9 @@ class MessageHandler:
 
         # Trigger inbound queue processing if not already running
         if not self.inbound_queue_processor_running:
-            asyncio.create_task(self.process_inbound_queue())
+            self.inbound_processing_task = asyncio.create_task(
+                self.process_inbound_queue()
+            )
 
         return True
 

@@ -10,10 +10,13 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 
 # pylint: disable=protected-access
 
-import subprocess  # nosec B404
+import asyncio
 from typing import Dict, List
 
+import aiofiles
+
 from src.i18n import _  # pylint: disable=not-callable
+from src.sysmanage_agent.core.agent_utils import run_command_async
 
 
 class IPFWFirewallOperations:
@@ -45,12 +48,9 @@ class IPFWFirewallOperations:
 
             # Load IPFW kernel module if not already loaded
             self.logger.info("Loading IPFW kernel module with kldload")
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 self.parent._build_command(["kldload", "ipfw"]),
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             self.logger.info(
                 "kldload result: returncode=%d, stdout='%s', stderr='%s'",
@@ -67,34 +67,27 @@ class IPFWFirewallOperations:
             # Enable IPFW (requires rc.conf modification)
             # Check if firewall_enable is already set
             try:
-                with open("/etc/rc.conf", "r", encoding="utf-8") as file_handle:
-                    rc_conf = file_handle.read()
+                async with aiofiles.open(
+                    "/etc/rc.conf", "r", encoding="utf-8"
+                ) as file_handle:
+                    rc_conf = await file_handle.read()
 
                 if 'firewall_enable="YES"' not in rc_conf:
-                    subprocess.run(  # nosec B603 B607
+                    await run_command_async(
                         self.parent._build_command(["sysrc", "firewall_enable=YES"]),
-                        capture_output=True,
-                        text=True,
                         timeout=10,
-                        check=False,
                     )
-                    subprocess.run(  # nosec B603 B607
+                    await run_command_async(
                         self.parent._build_command(["sysrc", "firewall_type=open"]),
-                        capture_output=True,
-                        text=True,
                         timeout=10,
-                        check=False,
                     )
             except Exception as exc:
                 self.logger.warning("Error modifying rc.conf: %s", exc)
 
             # Start IPFW service (this will load default rules from rc.firewall)
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 self.parent._build_command(["service", "ipfw", "start"]),
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
 
             if result.returncode != 0:
@@ -106,7 +99,7 @@ class IPFWFirewallOperations:
             # Now add our custom rules (after service started to avoid them being flushed)
             # Always allow SSH (port 22)
             self.logger.info("Adding IPFW rule: allow 22/tcp (SSH)")
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 self.parent._build_command(
                     [
                         "ipfw",
@@ -120,10 +113,7 @@ class IPFWFirewallOperations:
                         "22",
                     ]
                 ),
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
 
             if result.returncode != 0:
@@ -134,7 +124,7 @@ class IPFWFirewallOperations:
             # Add agent/server ports
             for port in ports:
                 self.logger.info("Adding IPFW rule: allow %d/%s", port, protocol)
-                result = subprocess.run(  # nosec B603 B607
+                result = await run_command_async(
                     self.parent._build_command(
                         [
                             "ipfw",
@@ -148,10 +138,7 @@ class IPFWFirewallOperations:
                             str(port),
                         ]
                     ),
-                    capture_output=True,
-                    text=True,
                     timeout=10,
-                    check=False,
                 )
 
                 if result.returncode != 0:
@@ -176,12 +163,9 @@ class IPFWFirewallOperations:
         """Apply firewall roles using IPFW (synchronize - add and remove rules)."""
         try:
             # Check if IPFW is available
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["ipfw", "list"],
-                capture_output=True,
-                text=True,
                 timeout=5,
-                check=False,
             )
             if result.returncode != 0:
                 return None  # IPFW not available
@@ -196,12 +180,9 @@ class IPFWFirewallOperations:
             self.logger.info("Deleting existing SysManage IPFW rules (10000-19999)")
             for rule_num in range(10000, 20000):
                 # Try to delete the rule; it will fail silently if it doesn't exist
-                subprocess.run(  # nosec B603 B607
+                await run_command_async(
                     ["ipfw", "-q", "delete", str(rule_num)],
-                    capture_output=True,
-                    text=True,
                     timeout=5,
-                    check=False,
                 )
 
             # Add rules for requested ports
@@ -215,7 +196,7 @@ class IPFWFirewallOperations:
                     self.logger.info(
                         "Adding IPFW rule %d: allow tcp port %d", rule_num, port
                     )
-                    result = subprocess.run(  # nosec B603 B607
+                    result = await run_command_async(
                         [
                             "ipfw",
                             "add",
@@ -228,10 +209,7 @@ class IPFWFirewallOperations:
                             "any",
                             str(port),
                         ],
-                        capture_output=True,
-                        text=True,
                         timeout=10,
-                        check=False,
                     )
                     if result.returncode != 0:
                         errors.append(
@@ -243,7 +221,7 @@ class IPFWFirewallOperations:
                     self.logger.info(
                         "Adding IPFW rule %d: allow udp port %d", rule_num, port
                     )
-                    result = subprocess.run(  # nosec B603 B607
+                    result = await run_command_async(
                         [
                             "ipfw",
                             "add",
@@ -256,10 +234,7 @@ class IPFWFirewallOperations:
                             "any",
                             str(port),
                         ],
-                        capture_output=True,
-                        text=True,
                         timeout=10,
-                        check=False,
                     )
                     if result.returncode != 0:
                         errors.append(
@@ -281,7 +256,7 @@ class IPFWFirewallOperations:
                 "message": _("Firewall roles synchronized successfully via IPFW"),
             }
 
-        except (FileNotFoundError, subprocess.TimeoutExpired):
+        except (FileNotFoundError, asyncio.TimeoutError):
             return None  # IPFW not available
 
     async def remove_firewall_ports_ipfw(  # pylint: disable=unused-argument
@@ -290,12 +265,9 @@ class IPFWFirewallOperations:
         """Remove specific firewall ports using IPFW."""
         try:
             # Check if IPFW is available
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["ipfw", "list"],
-                capture_output=True,
-                text=True,
                 timeout=5,
-                check=False,
             )
             if result.returncode != 0:
                 return None  # IPFW not available
@@ -336,5 +308,5 @@ class IPFWFirewallOperations:
                 ),
             }
 
-        except (FileNotFoundError, subprocess.TimeoutExpired):
+        except (FileNotFoundError, asyncio.TimeoutError):
             return None  # IPFW not available

@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_types import VmmVmConfig
 from src.sysmanage_agent.operations.child_host_ubuntu_autoinstall import (
     UbuntuAutoinstallSetup,
@@ -524,12 +525,9 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
         try:
             # First try graceful stop
             self.logger.info(_("Stopping VM '%s' for restart..."), vm_name)
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["vmctl", "stop", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -541,12 +539,9 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
                 _("Graceful stop failed, trying force stop: %s"),
                 result.stderr or result.stdout,
             )
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["vmctl", "stop", "-f", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -554,12 +549,9 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
                 return {"success": True}
 
             # Check if VM is already stopped
-            status_result = subprocess.run(  # nosec B603 B607
+            status_result = await run_command_async(
                 ["vmctl", "status"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             if vm_name not in status_result.stdout or "stopped" in status_result.stdout:
                 self.logger.info(_("VM '%s' is already stopped"), vm_name)
@@ -570,7 +562,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
                 "error": result.stderr or result.stdout or "Unknown error",
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {"success": False, "error": _("Timeout stopping VM")}
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -605,12 +597,9 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
             # Check if VM is still running
             # Note: vmctl status returns exit code 1 when no VMs are running
             # (it still outputs the header row), so we check the output regardless
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["vmctl", "status"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
 
             # Look for the VM in the output (check regardless of return code)
@@ -900,12 +889,9 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
             self.logger.info(_("Launching Ubuntu VM: %s"), " ".join(cmd))
 
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 cmd,
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode != 0:

@@ -11,6 +11,7 @@ import time
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_kvm_cloudinit import KvmCloudInit
 from src.sysmanage_agent.operations.child_host_kvm_freebsd import FreeBSDProvisioner
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
@@ -706,13 +707,11 @@ class KvmCreation:
             # Try to clean up on failure
             try:
                 if self._vm_exists(config.vm_name):
-                    subprocess.run(  # nosec B603 B607
+                    await run_command_async(
                         ["sudo", "virsh", "destroy", config.vm_name],
-                        capture_output=True,
                         timeout=30,
-                        check=False,
                     )
-                    subprocess.run(  # nosec B603 B607
+                    await run_command_async(
                         [
                             "sudo",
                             "virsh",
@@ -720,9 +719,7 @@ class KvmCreation:
                             config.vm_name,
                             "--remove-all-storage",
                         ],
-                        capture_output=True,
                         timeout=30,
-                        check=False,
                     )
             except Exception:  # nosec B110 # Expected: cleanup is best-effort
                 pass

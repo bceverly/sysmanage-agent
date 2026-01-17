@@ -15,12 +15,13 @@ import asyncio
 import json
 import os
 import re
-import subprocess  # nosec B404
+import subprocess  # nosec B404 - still needed for sync functions
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_debian_autoinstall import (
     DebianAutoinstallSetup,
 )
@@ -544,12 +545,9 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
         try:
             # First try graceful stop
             self.logger.info(_("Stopping VM '%s' for restart..."), vm_name)
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["vmctl", "stop", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -561,12 +559,9 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
                 _("Graceful stop failed, trying force stop: %s"),
                 result.stderr or result.stdout,
             )
-            result = subprocess.run(  # nosec B603 B607
+            result = await run_command_async(
                 ["vmctl", "stop", "-f", vm_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
-                check=False,
             )
 
             if result.returncode == 0:
@@ -574,12 +569,9 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
                 return {"success": True}
 
             # Check if VM is already stopped
-            status_result = subprocess.run(  # nosec B603 B607
+            status_result = await run_command_async(
                 ["vmctl", "status"],
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             )
             if vm_name not in status_result.stdout or "stopped" in status_result.stdout:
                 self.logger.info(_("VM '%s' is already stopped"), vm_name)
@@ -590,7 +582,7 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
                 "error": result.stderr or result.stdout or "Unknown error",
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {"success": False, "error": _("Timeout stopping VM")}
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -745,13 +737,7 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
 
             self.logger.info(_("Launching Debian VM: %s"), " ".join(cmd))
 
-            result = subprocess.run(  # nosec B603 B607
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            result = await run_command_async(cmd, timeout=30)
 
             if result.returncode != 0:
                 return {
