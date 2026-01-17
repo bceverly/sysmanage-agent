@@ -14,6 +14,12 @@ from typing import Any, Dict, List, Optional
 # Import WSL listing functionality from extracted module
 from .child_host_listing_wsl import WSLListing
 
+# Import bhyve metadata functions
+from .child_host_bhyve_creation import (
+    BHYVE_METADATA_DIR,
+    load_bhyve_metadata,
+)
+
 # VMM metadata directory for storing hostname/distribution info
 VMM_METADATA_DIR = "/var/vmm/metadata"
 
@@ -361,6 +367,9 @@ class ChildHostListing:
             "alma": "AlmaLinux",
             "centos": "CentOS",
             "opensuse": "openSUSE",
+            "oraclelinux": "Oracle Linux",
+            "oracle": "Oracle Linux",
+            "ol": "Oracle Linux",
         }
 
         # Ubuntu codename to version mapping
@@ -740,12 +749,15 @@ class ChildHostListing:
         Enumerates VMs by:
         1. Checking /dev/vmm directory for running VMs
         2. Checking /vm directory for VM disk images (to find stopped VMs)
+        3. Reading metadata files for hostname and distribution info
 
         Returns:
             List of bhyve VM information dicts with:
             - child_type: 'bhyve'
             - child_name: VM name
             - status: running/stopped
+            - hostname: FQDN (from metadata, if available)
+            - distribution: dict with distribution_name and distribution_version
         """
         vms = []
         running_vms = set()
@@ -758,11 +770,17 @@ class ChildHostListing:
                     vm_names = os.listdir(vmm_dir)
                     for vm_name in vm_names:
                         running_vms.add(vm_name)
+                        # Get stored metadata (hostname, distribution) if available
+                        metadata = load_bhyve_metadata(vm_name, self.logger)
+                        hostname = metadata.get("hostname") if metadata else None
+                        distribution = metadata.get("distribution") if metadata else None
                         vms.append(
                             {
                                 "child_type": "bhyve",
                                 "child_name": vm_name,
                                 "status": "running",
+                                "hostname": hostname,
+                                "distribution": distribution,
                             }
                         )
                 except PermissionError:
@@ -774,7 +792,11 @@ class ChildHostListing:
                 try:
                     for entry in os.listdir(vm_base_dir):
                         # Skip hidden directories and special directories
-                        if entry.startswith(".") or entry in ("images", "cloud-init"):
+                        if entry.startswith(".") or entry in (
+                            "images",
+                            "cloud-init",
+                            "metadata",
+                        ):
                             continue
                         vm_dir = os.path.join(vm_base_dir, entry)
                         if not os.path.isdir(vm_dir):
@@ -785,11 +807,19 @@ class ChildHostListing:
                             continue
                         # This is a valid VM - check if it's already listed as running
                         if entry not in running_vms:
+                            # Get stored metadata (hostname, distribution) if available
+                            metadata = load_bhyve_metadata(entry, self.logger)
+                            hostname = metadata.get("hostname") if metadata else None
+                            distribution = (
+                                metadata.get("distribution") if metadata else None
+                            )
                             vms.append(
                                 {
                                     "child_type": "bhyve",
                                     "child_name": entry,
                                     "status": "stopped",
+                                    "hostname": hostname,
+                                    "distribution": distribution,
                                 }
                             )
                 except PermissionError:

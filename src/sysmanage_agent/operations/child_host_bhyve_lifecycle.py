@@ -20,6 +20,7 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     BHYVE_CLOUDINIT_DIR,
     BHYVE_VM_DIR,
     BhyveCreationHelper,
+    delete_bhyve_metadata,
 )
 
 
@@ -308,6 +309,9 @@ class BhyveLifecycleHelper:
             cloudinit_dir = os.path.join(BHYVE_CLOUDINIT_DIR, child_name)
             if os.path.isdir(cloudinit_dir):
                 shutil.rmtree(cloudinit_dir)
+
+            # Delete VM metadata file
+            delete_bhyve_metadata(child_name, self.logger)
 
             return {
                 "success": True,
