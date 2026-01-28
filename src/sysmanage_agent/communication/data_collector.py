@@ -20,6 +20,9 @@ from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 from src.sysmanage_agent.communication.child_host_collector import ChildHostCollector
 
 
+_UNKNOWN_ERROR = "Unknown error"
+
+
 class DataCollector:
     """Handles data collection and periodic updates for the SysManage agent."""
 
@@ -41,162 +44,152 @@ class DataCollector:
     ):  # pylint: disable=too-many-branches,too-many-statements
         """Send initial data updates after WebSocket connection."""
         try:
-            self.logger.info(_("Sending initial OS version data..."))
-
-            # Send OS version data
-            os_info = self.agent.registration.get_os_version_info()
-            system_info = self.agent.registration.get_system_info()
-            os_info["hostname"] = system_info["hostname"]
-            os_message = self.agent.create_message("os_version_update", os_info)
-            await self.agent.send_message(os_message)
-            self.logger.debug("AGENT_DEBUG: OS version message sent")
-
-            # Allow queue processing tasks to run
-            await asyncio.sleep(0)
-
-            self.logger.info(_("Sending initial hardware data..."))
-
-            # Send hardware data
-            hardware_info = self.agent.registration.get_hardware_info()
-            system_info = self.agent.registration.get_system_info()
-            hardware_info["hostname"] = system_info["hostname"]
-            hardware_message = self.agent.create_message(
-                "hardware_update", hardware_info
-            )
-            await self.agent.send_message(hardware_message)
-            self.logger.debug("AGENT_DEBUG: Hardware message sent")
-
-            # Allow time for the large hardware message to be sent before sending more data
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Sending initial user access data..."))
-
-            # Send user access data
-            user_access_info = self.agent.registration.get_user_access_info()
-            system_info = self.agent.registration.get_system_info()
-            user_access_info["hostname"] = system_info["hostname"]
-            user_access_message = self.agent.create_message(
-                "user_access_update", user_access_info
-            )
-            await self.agent.send_message(user_access_message)
-            self.logger.debug("AGENT_DEBUG: User access message sent")
-
-            # Allow time for the large user access message to be sent before sending more data
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Sending initial software inventory data..."))
-
-            # Send software inventory data
-            software_info = self.agent.registration.get_software_inventory_info()
-            system_info = self.agent.registration.get_system_info()
-            software_info["hostname"] = system_info["hostname"]
-            software_message = self.agent.create_message(
-                "software_inventory_update", software_info
-            )
-            await self.agent.send_message(software_message)
-            self.logger.debug("AGENT_DEBUG: Software inventory message sent")
-
-            self.logger.info(_("Sending initial update check..."))
-
-            # Send initial update check
-            try:
-                update_result = await self.agent.check_updates()
-                if update_result.get("total_updates", 0) > 0:
-                    self.logger.info(
-                        "Found %d available updates during initial check",
-                        update_result["total_updates"],
-                    )
-                else:
-                    self.logger.info("No updates found during initial check")
-            except Exception as error:
-                self.logger.error("Failed to perform initial update check: %s", error)
-
-            # Allow time for update check to complete before collecting certificates
-            await asyncio.sleep(2)
-
-            self.logger.info(_("Collecting initial certificate data..."))
-
-            # Collect and send certificate data
-            try:
-                certificate_result = await self.collect_certificates()
-                if certificate_result.get("success", False):
-                    cert_count = certificate_result.get("certificate_count", 0)
-                    if cert_count > 0:
-                        self.logger.info(
-                            "Found and sent %d certificates during initial collection",
-                            cert_count,
-                        )
-                    else:
-                        self.logger.info(
-                            "No certificates found during initial collection"
-                        )
-                else:
-                    error_msg = certificate_result.get("error", "Unknown error")
-                    self.logger.warning("Certificate collection failed: %s", error_msg)
-            except Exception as error:
-                self.logger.error(
-                    "Failed to perform initial certificate collection: %s", error
-                )
-
-            # Collect and send role data
-            try:
-                role_result = await self.collect_roles()
-                if role_result.get("success", False):
-                    role_count = role_result.get("role_count", 0)
-                    if role_count > 0:
-                        self.logger.info(
-                            "Found and sent %d server roles during initial collection",
-                            role_count,
-                        )
-                    else:
-                        self.logger.info(
-                            "No server roles found during initial collection"
-                        )
-                else:
-                    error_msg = role_result.get("error", "Unknown error")
-                    self.logger.warning("Role collection failed: %s", error_msg)
-            except Exception as error:
-                self.logger.error(
-                    "Failed to perform initial role collection: %s", error
-                )
-
-            # Send third-party repository data
-            try:
-                self.logger.info(_("Collecting initial third-party repository data..."))
-                await self._send_third_party_repository_update()
-            except Exception as error:
-                self.logger.error(
-                    "Failed to send initial third-party repository data: %s", error
-                )
-
-            # Send firewall status data
-            try:
-                self.logger.info(_("Collecting initial firewall status data..."))
-                await self._send_firewall_status_update()
-            except Exception as error:
-                self.logger.error(
-                    "Failed to send initial firewall status data: %s", error
-                )
-
-            # Send Graylog status data
-            try:
-                self.logger.info(_("Collecting initial Graylog status data..."))
-                await self._send_graylog_status_update()
-            except Exception as error:
-                self.logger.error(
-                    "Failed to send initial Graylog status data: %s", error
-                )
-
-            # Send child hosts (WSL/VM/container) data
-            try:
-                self.logger.info(_("Collecting initial child hosts data..."))
-                await self.child_host_collector.send_child_hosts_update()
-            except Exception as error:
-                self.logger.error("Failed to send initial child hosts data: %s", error)
-
+            await self._send_initial_core_data()
+            await self._send_initial_update_check()
+            await self._send_initial_supplementary_data()
             self.logger.info(_("Initial data updates sent successfully"))
         except Exception as error:
             self.logger.error(_("Failed to send initial data updates: %s"), error)
+
+    async def _send_initial_core_data(self):
+        """Send initial OS version, hardware, user access, and software data."""
+        self.logger.info(_("Sending initial OS version data..."))
+
+        # Send OS version data
+        os_info = self.agent.registration.get_os_version_info()
+        system_info = self.agent.registration.get_system_info()
+        os_info["hostname"] = system_info["hostname"]
+        os_message = self.agent.create_message("os_version_update", os_info)
+        await self.agent.send_message(os_message)
+        self.logger.debug("AGENT_DEBUG: OS version message sent")
+
+        # Allow queue processing tasks to run
+        await asyncio.sleep(0)
+
+        self.logger.info(_("Sending initial hardware data..."))
+
+        # Send hardware data
+        hardware_info = self.agent.registration.get_hardware_info()
+        system_info = self.agent.registration.get_system_info()
+        hardware_info["hostname"] = system_info["hostname"]
+        hardware_message = self.agent.create_message("hardware_update", hardware_info)
+        await self.agent.send_message(hardware_message)
+        self.logger.debug("AGENT_DEBUG: Hardware message sent")
+
+        # Allow time for the large hardware message to be sent before sending more data
+        await asyncio.sleep(2)
+
+        self.logger.info(_("Sending initial user access data..."))
+
+        # Send user access data
+        user_access_info = self.agent.registration.get_user_access_info()
+        system_info = self.agent.registration.get_system_info()
+        user_access_info["hostname"] = system_info["hostname"]
+        user_access_message = self.agent.create_message(
+            "user_access_update", user_access_info
+        )
+        await self.agent.send_message(user_access_message)
+        self.logger.debug("AGENT_DEBUG: User access message sent")
+
+        # Allow time for the large user access message to be sent before sending more data
+        await asyncio.sleep(2)
+
+        self.logger.info(_("Sending initial software inventory data..."))
+
+        # Send software inventory data
+        software_info = self.agent.registration.get_software_inventory_info()
+        system_info = self.agent.registration.get_system_info()
+        software_info["hostname"] = system_info["hostname"]
+        software_message = self.agent.create_message(
+            "software_inventory_update", software_info
+        )
+        await self.agent.send_message(software_message)
+        self.logger.debug("AGENT_DEBUG: Software inventory message sent")
+
+    async def _send_initial_update_check(self):
+        """Send initial update check and collect certificates and roles."""
+        self.logger.info(_("Sending initial update check..."))
+
+        try:
+            update_result = await self.agent.check_updates()
+            if update_result.get("total_updates", 0) > 0:
+                self.logger.info(
+                    "Found %d available updates during initial check",
+                    update_result["total_updates"],
+                )
+            else:
+                self.logger.info("No updates found during initial check")
+        except Exception as error:
+            self.logger.error("Failed to perform initial update check: %s", error)
+
+        # Allow time for update check to complete before collecting certificates
+        await asyncio.sleep(2)
+
+        self.logger.info(_("Collecting initial certificate data..."))
+
+        try:
+            certificate_result = await self.collect_certificates()
+            if certificate_result.get("success", False):
+                cert_count = certificate_result.get("certificate_count", 0)
+                if cert_count > 0:
+                    self.logger.info(
+                        "Found and sent %d certificates during initial collection",
+                        cert_count,
+                    )
+                else:
+                    self.logger.info("No certificates found during initial collection")
+            else:
+                error_msg = certificate_result.get("error", _UNKNOWN_ERROR)
+                self.logger.warning("Certificate collection failed: %s", error_msg)
+        except Exception as error:
+            self.logger.error(
+                "Failed to perform initial certificate collection: %s", error
+            )
+
+        try:
+            role_result = await self.collect_roles()
+            if role_result.get("success", False):
+                role_count = role_result.get("role_count", 0)
+                if role_count > 0:
+                    self.logger.info(
+                        "Found and sent %d server roles during initial collection",
+                        role_count,
+                    )
+                else:
+                    self.logger.info("No server roles found during initial collection")
+            else:
+                error_msg = role_result.get("error", _UNKNOWN_ERROR)
+                self.logger.warning("Role collection failed: %s", error_msg)
+        except Exception as error:
+            self.logger.error("Failed to perform initial role collection: %s", error)
+
+    async def _send_initial_supplementary_data(self):
+        """Send initial third-party repos, firewall, Graylog, and child host data."""
+        try:
+            self.logger.info(_("Collecting initial third-party repository data..."))
+            await self._send_third_party_repository_update()
+        except Exception as error:
+            self.logger.error(
+                "Failed to send initial third-party repository data: %s", error
+            )
+
+        try:
+            self.logger.info(_("Collecting initial firewall status data..."))
+            await self._send_firewall_status_update()
+        except Exception as error:
+            self.logger.error("Failed to send initial firewall status data: %s", error)
+
+        try:
+            self.logger.info(_("Collecting initial Graylog status data..."))
+            await self._send_graylog_status_update()
+        except Exception as error:
+            self.logger.error("Failed to send initial Graylog status data: %s", error)
+
+        try:
+            self.logger.info(_("Collecting initial child hosts data..."))
+            await self.child_host_collector.send_child_hosts_update()
+        except Exception as error:
+            self.logger.error("Failed to send initial child hosts data: %s", error)
 
     async def update_os_version(self) -> Dict[str, Any]:
         """Gather and send updated OS version information to the server."""
@@ -354,7 +347,7 @@ class DataCollector:
                     "AGENT_DEBUG: No certificates found during periodic collection"
                 )
         else:
-            error_msg = certificate_result.get("error", "Unknown error")
+            error_msg = certificate_result.get("error", _UNKNOWN_ERROR)
             self.logger.warning("Periodic certificate collection failed: %s", error_msg)
 
     async def _send_role_update(self):
@@ -373,7 +366,7 @@ class DataCollector:
                     "AGENT_DEBUG: No server roles found during periodic collection"
                 )
         else:
-            error_msg = role_result.get("error", "Unknown error")
+            error_msg = role_result.get("error", _UNKNOWN_ERROR)
             self.logger.warning("Periodic role collection failed: %s", error_msg)
 
     async def _send_os_version_update(self):
@@ -417,7 +410,7 @@ class DataCollector:
         repo_result = await self.agent.system_ops.list_third_party_repositories({})
 
         if not repo_result.get("success", False):
-            error_msg = repo_result.get("error", "Unknown error")
+            error_msg = repo_result.get("error", _UNKNOWN_ERROR)
             self.logger.warning(
                 "Failed to collect third-party repositories: %s", error_msg
             )

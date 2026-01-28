@@ -133,6 +133,57 @@ def is_private_ip(ip: str) -> bool:
         return False
 
 
+def _get_used_subnets_ifconfig(ifconfig_output: str) -> set:
+    """
+    Extract used /24 subnets from ifconfig output.
+
+    Args:
+        ifconfig_output: stdout from ifconfig command
+
+    Returns:
+        Set of subnet strings (e.g., {"192.168.1.0", "10.0.0.0"})
+    """
+    used_subnets = set()
+    for line in ifconfig_output.split("\n"):
+        if "inet " not in line:
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        ip_addr = parts[1]
+        ip_parts = ip_addr.split(".")
+        if len(ip_parts) == 4:
+            subnet = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0"
+            used_subnets.add(subnet)
+    return used_subnets
+
+
+def _find_unused_subnet(used_subnets: set, candidate_subnets: list) -> str:
+    """
+    Find the first unused subnet from candidates or generate one.
+
+    Args:
+        used_subnets: Set of already used subnet strings
+        candidate_subnets: List of preferred subnets to try
+
+    Returns:
+        An unused subnet string
+    """
+    # Try preferred candidates first
+    for subnet in candidate_subnets:
+        if subnet not in used_subnets:
+            return subnet
+
+    # If all candidates are in use, try higher 10.x.0.0 range
+    for i in range(3, 255):
+        subnet = f"10.{i}.0.0"
+        if subnet not in used_subnets:
+            return subnet
+
+    # Fallback
+    return "10.0.0.0"
+
+
 def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
     """
     Dynamically select an unused private subnet for VM network.
@@ -145,6 +196,7 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
         or None if no suitable subnet found
     """
     # Common private subnets to try
+    # NOSONAR - private subnets for VM networking
     candidate_subnets = [
         "100.64.0.0",  # CGNAT range - won't conflict with typical networks
         "10.0.0.0",
@@ -166,34 +218,11 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
         )
 
         if result.returncode != 0:
-            # Fallback to default if we can't detect
             return format_subnet_info("10.0.0.0")
 
-        used_subnets = set()
-        for line in result.stdout.split("\n"):
-            if "inet " in line:
-                parts = line.split()
-                if len(parts) >= 2:
-                    ip_addr = parts[1]
-                    # Extract /24 subnet from IP
-                    ip_parts = ip_addr.split(".")
-                    if len(ip_parts) == 4:
-                        subnet = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0"
-                        used_subnets.add(subnet)
-
-        # Find first unused subnet
-        for subnet in candidate_subnets:
-            if subnet not in used_subnets:
-                return format_subnet_info(subnet)
-
-        # If all candidates are in use, try a higher 10.x.0.0 range
-        for i in range(3, 255):
-            subnet = f"10.{i}.0.0"
-            if subnet not in used_subnets:
-                return format_subnet_info(subnet)
-
-        # Fallback
-        return format_subnet_info("10.0.0.0")
+        used_subnets = _get_used_subnets_ifconfig(result.stdout)
+        subnet = _find_unused_subnet(used_subnets, candidate_subnets)
+        return format_subnet_info(subnet)
 
     except Exception as error:
         logger.warning(_("Error selecting unused subnet: %s"), error)
@@ -202,6 +231,7 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
 
 def format_subnet_info(network: str) -> Dict[str, str]:
     """Format subnet information for use in dhcpd and bridge config."""
+    # NOSONAR - private subnet IPs and netmask for VM networking
     parts = network.split(".")
     return {
         "network": network,

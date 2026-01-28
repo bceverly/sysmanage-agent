@@ -70,8 +70,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
             if result.returncode == 0 and result.stdout.strip():
                 for line in result.stdout.strip().split("\n"):
                     # Parse format: package-version < needs updating (remote has version)
-                    match = re.match(
-                        r"^([^-]+(?:-[^0-9][^-]*)*)-([^\s]+)\s+<\s+.*remote has ([^\)]+)",
+                    match = re.match(  # NOSONAR - regex operates on trusted internal data
+                        r"^([^-]+(?:-\D[^-]*)*)-([^\s]+)\s+<\s+.*remote has ([^\)]+)",
                         line,
                     )
                     if match:
@@ -88,44 +88,81 @@ class BSDUpdateDetector(UpdateDetectorBase):
         except Exception as error:
             logger.error(_("Failed to detect pkg updates: %s"), str(error))
 
+    def _collect_pkgin_update_command(self):
+        """Determine the correct pkgin update command based on privilege level.
+
+        Returns:
+            list: The command to run for pkgin update.
+        """
+        is_root = os.geteuid() == 0
+
+        if is_root:
+            return ["pkgin", "update"]
+        if self._command_exists("doas"):
+            return ["doas", "pkgin", "update"]
+        if self._command_exists("sudo"):
+            return ["sudo", "-n", "pkgin", "update"]  # -n = non-interactive
+        return ["pkgin", "update"]  # Try anyway
+
+    def _process_pkgin_update_repo(self):
+        """Run pkgin update to refresh the package repository.
+
+        Logs warnings on failure but does not raise, allowing stale data checks.
+        """
+        update_cmd = self._collect_pkgin_update_command()
+
+        update_result = subprocess.run(  # nosec B603, B607
+            update_cmd, capture_output=True, text=True, timeout=60, check=False
+        )
+
+        if update_result.returncode != 0:
+            logger.warning(
+                _("pkgin update failed (code %d): %s"),
+                update_result.returncode,
+                (
+                    update_result.stderr.strip()
+                    if update_result.stderr
+                    else "No error message"
+                ),
+            )
+        else:
+            logger.debug(_("pkgin update completed successfully"))
+
+    def _parse_pkgin_update_line(self, line):
+        """Parse a single line of pkgin list -u output into an update dict.
+
+        Args:
+            line: A single output line from pkgin list -u.
+
+        Returns:
+            dict or None: An update dict if the line was parsed, None otherwise.
+        """
+        if not line.strip() or line.startswith("pkg_summary"):
+            return None
+
+        match = re.match(  # NOSONAR - regex operates on trusted internal data
+            r"^(\w[\w+.-]*)-(\d[^\s]*)\s+",
+            line,
+        )
+        if match:
+            return {
+                "package_name": match.group(1),
+                "current_version": match.group(2),
+                "available_version": "available",  # pkgin list -u doesn't show target version
+                "package_manager": "pkgin",
+                "is_security_update": False,
+                "is_system_update": False,
+            }
+        return None
+
     def _detect_pkgin_updates(self):
         """Detect updates from NetBSD pkgin."""
         logger.debug("=== PKGIN DETECTION START ===")
         try:
             logger.debug(_("Detecting pkgin updates"))
-            # Update the package repository
-            # Note: pkgin update requires root, but subprocess doesn't inherit sudo
-            # Try to detect if we're running under sudo and use pkgin directly,
-            # otherwise try with sudo/doas prefix
-            is_root = os.geteuid() == 0
 
-            if is_root:
-                update_cmd = ["pkgin", "update"]
-            elif self._command_exists("doas"):
-                update_cmd = ["doas", "pkgin", "update"]
-            elif self._command_exists("sudo"):
-                update_cmd = ["sudo", "-n", "pkgin", "update"]  # -n = non-interactive
-            else:
-                update_cmd = ["pkgin", "update"]  # Try anyway
+            self._process_pkgin_update_repo()
 
-            update_result = subprocess.run(  # nosec B603, B607
-                update_cmd, capture_output=True, text=True, timeout=60, check=False
-            )
-
-            # Log if pkgin update failed
-            if update_result.returncode != 0:
-                logger.warning(
-                    _("pkgin update failed (code %d): %s"),
-                    update_result.returncode,
-                    (
-                        update_result.stderr.strip()
-                        if update_result.stderr
-                        else "No error message"
-                    ),
-                )
-                # Continue anyway - we can still check for updates with stale data
-            else:
-                logger.debug(_("pkgin update completed successfully"))
             result = subprocess.run(  # nosec B603, B607
                 ["pkgin", "list", "-u"],
                 capture_output=True,
@@ -144,30 +181,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
             if result.stdout.strip():
                 update_count = 0
-                line_count = 0
                 for line in result.stdout.strip().split("\n"):
-                    line_count += 1
-                    # Skip header lines and empty lines
-                    if not line.strip() or line.startswith("pkg_summary"):
-                        continue
-
-                    # Parse format: package-version description
-                    # pkgin list -u outputs: "package-name-version description text here"
-                    # We need to extract package name and current version
-                    # The available version is not shown, so we'll mark it as "available"
-                    match = re.match(
-                        r"^([a-zA-Z0-9_][a-zA-Z0-9_+.-]*)-([0-9][^\s]*)\s+",
-                        line,
-                    )
-                    if match:
-                        update = {
-                            "package_name": match.group(1),
-                            "current_version": match.group(2),
-                            "available_version": "available",  # pkgin list -u doesn't show target version
-                            "package_manager": "pkgin",
-                            "is_security_update": False,
-                            "is_system_update": False,
-                        }
+                    update = self._parse_pkgin_update_line(line)
+                    if update:
                         self.available_updates.append(update)
                         update_count += 1
 
@@ -729,7 +745,120 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     }
                 )
 
-    def apply_updates(  # pylint: disable=too-many-nested-blocks
+    def _collect_packages_to_update(
+        self,
+        package_names: List[str] = None,
+        package_managers: List[str] = None,
+        packages: List[Dict] = None,
+    ) -> List[Dict]:
+        """Normalize package input from old or new calling conventions.
+
+        Args:
+            package_names: (deprecated) List of package names to update.
+            package_managers: (deprecated) List of package managers for each package.
+            packages: List of package dicts with 'name' and 'package_manager'.
+
+        Returns:
+            List of normalized package dicts, or empty list if no input provided.
+        """
+        if packages:
+            logger.info(
+                _("Applying updates for %d packages: %s"),
+                len(packages),
+                ", ".join([pkg.get("name", "unknown") for pkg in packages]),
+            )
+            return packages
+
+        if package_names:
+            logger.info(
+                _("Applying updates for %d packages: %s"),
+                len(package_names),
+                ", ".join(package_names),
+            )
+            packages_to_update = []
+            for i, package_name in enumerate(package_names):
+                pkg_manager = (
+                    package_managers[i]
+                    if package_managers and i < len(package_managers)
+                    else "unknown"
+                )
+                packages_to_update.append(
+                    {
+                        "name": package_name,
+                        "package_manager": pkg_manager,
+                    }
+                )
+            return packages_to_update
+
+        return []
+
+    def _collect_packages_by_manager(
+        self, packages_to_update: List[Dict]
+    ) -> Dict[str, List[Dict]]:
+        """Group packages by their package manager and merge with available update info.
+
+        Args:
+            packages_to_update: List of normalized package dicts.
+
+        Returns:
+            Dict mapping package manager names to lists of enriched package dicts.
+        """
+        packages_by_manager: Dict[str, List[Dict]] = {}
+        for pkg in packages_to_update:
+            pkg_manager = pkg.get("package_manager", "unknown")
+            if pkg_manager not in packages_by_manager:
+                packages_by_manager[pkg_manager] = []
+
+            package_info = pkg.copy()
+            package_name = pkg.get("name")
+
+            for update in self.available_updates:
+                if (
+                    update.get("package_name") == package_name
+                    and update.get("package_manager") == pkg_manager
+                ):
+                    for key, value in update.items():
+                        if key not in package_info:
+                            package_info[key] = value
+                    break
+
+            if "package_name" not in package_info and "name" in package_info:
+                package_info["package_name"] = package_info["name"]
+
+            packages_by_manager[pkg_manager].append(package_info)
+
+        return packages_by_manager
+
+    def _process_bsd_manager_updates(
+        self, pkg_manager: str, pkg_list: List[Dict], results: Dict
+    ):
+        """Dispatch update application to the correct BSD package manager handler.
+
+        Args:
+            pkg_manager: The name of the package manager.
+            pkg_list: List of packages to update via this manager.
+            results: The results dict to populate with outcomes.
+        """
+        if pkg_manager == "pkg":
+            self._apply_pkg_updates(pkg_list, results)
+        elif pkg_manager == "syspatch":
+            self._apply_syspatch_updates(pkg_list, results)
+        elif pkg_manager == "openbsd-upgrade":
+            self._apply_openbsd_upgrade_updates(pkg_list, results)
+        elif pkg_manager == "freebsd-upgrade":
+            self._apply_freebsd_upgrade_updates(pkg_list, results)
+        else:
+            logger.warning(_("Unsupported package manager: %s"), pkg_manager)
+            for package in pkg_list:
+                results["failed_packages"].append(
+                    {
+                        "package_name": package["package_name"],
+                        "package_manager": pkg_manager,
+                        "error": f"Unsupported package manager: {pkg_manager}",
+                    }
+                )
+
+    def apply_updates(
         self,
         package_names: List[str] = None,
         package_managers: List[str] = None,
@@ -746,7 +875,6 @@ class BSDUpdateDetector(UpdateDetectorBase):
         Returns:
             Dict containing update results with updated and failed packages
         """
-        # Initialize results dictionary
         results = {
             "updated_packages": [],
             "failed_packages": [],
@@ -755,98 +883,20 @@ class BSDUpdateDetector(UpdateDetectorBase):
         }
 
         try:
-            # Support both old and new calling conventions
-            if packages:
-                # New format: direct package objects
-                logger.info(
-                    _("Applying updates for %d packages: %s"),
-                    len(packages),
-                    ", ".join([pkg.get("name", "unknown") for pkg in packages]),
-                )
-                packages_to_update = packages
-            elif package_names:
-                # Old format: separate lists
-                logger.info(
-                    _("Applying updates for %d packages: %s"),
-                    len(package_names),
-                    ", ".join(package_names),
-                )
-                # Convert to package objects
-                packages_to_update = []
-                for i, package_name in enumerate(package_names):
-                    pkg_manager = (
-                        package_managers[i]
-                        if package_managers and i < len(package_managers)
-                        else "unknown"
-                    )
-                    packages_to_update.append(
-                        {
-                            "name": package_name,
-                            "package_manager": pkg_manager,
-                        }
-                    )
-            else:
-                return {
-                    "updated_packages": [],
-                    "failed_packages": [],
-                    "requires_reboot": False,
-                    "timestamp": "",
-                }
+            packages_to_update = self._collect_packages_to_update(
+                package_names, package_managers, packages
+            )
+            if not packages_to_update:
+                return results
 
-            # Group packages by package manager
-            packages_by_manager = {}
-            for pkg in packages_to_update:
-                pkg_manager = pkg.get("package_manager", "unknown")
-                if pkg_manager not in packages_by_manager:
-                    packages_by_manager[pkg_manager] = []
+            packages_by_manager = self._collect_packages_by_manager(packages_to_update)
 
-                # Find package info from available updates and merge with provided info
-                package_info = pkg.copy()
-                package_name = pkg.get("name")
-
-                for update in self.available_updates:
-                    if (
-                        update.get("package_name") == package_name
-                        and update.get("package_manager") == pkg_manager
-                    ):
-                        # Merge with available update info
-                        for key, value in update.items():
-                            if key not in package_info:
-                                package_info[key] = value
-                        break
-
-                # Ensure package_name field exists for compatibility
-                if "package_name" not in package_info and "name" in package_info:
-                    package_info["package_name"] = package_info["name"]
-
-                packages_by_manager[pkg_manager].append(package_info)
-
-            # Apply updates for each package manager
             for pkg_manager, pkg_list in packages_by_manager.items():
                 logger.info(
                     _("Applying %d updates using %s"), len(pkg_list), pkg_manager
                 )
+                self._process_bsd_manager_updates(pkg_manager, pkg_list, results)
 
-                if pkg_manager == "pkg":
-                    self._apply_pkg_updates(pkg_list, results)
-                elif pkg_manager == "syspatch":
-                    self._apply_syspatch_updates(pkg_list, results)
-                elif pkg_manager == "openbsd-upgrade":
-                    self._apply_openbsd_upgrade_updates(pkg_list, results)
-                elif pkg_manager == "freebsd-upgrade":
-                    self._apply_freebsd_upgrade_updates(pkg_list, results)
-                else:
-                    logger.warning(_("Unsupported package manager: %s"), pkg_manager)
-                    for package in pkg_list:
-                        results["failed_packages"].append(
-                            {
-                                "package_name": package["package_name"],
-                                "package_manager": pkg_manager,
-                                "error": f"Unsupported package manager: {pkg_manager}",
-                            }
-                        )
-
-            # Log summary
             logger.info(
                 _("Update process completed: %d updated, %d failed"),
                 len(results["updated_packages"]),

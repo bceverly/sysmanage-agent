@@ -2,6 +2,7 @@
 WSL child host setup operations (user creation, systemd, agent installation).
 """
 
+import asyncio
 import configparser
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
@@ -77,7 +78,7 @@ class WslSetupOperations:
 
         return None
 
-    async def configure_default_user(
+    async def configure_default_user(  # NOSONAR - async required for interface compatibility
         self, distribution: str, exe_name: Optional[str], username: str
     ) -> Dict[str, Any]:
         """
@@ -96,15 +97,23 @@ class WslSetupOperations:
                 # Use distribution-specific executable
                 exe_path = shutil.which(exe_name)
                 if exe_path:
-                    result = subprocess.run(  # nosec B603 B607
-                        [exe_path, "config", "--default-user", username],
-                        capture_output=True,
-                        text=True,
-                        timeout=30,
-                        check=False,
-                        creationflags=self._get_creationflags(),
+                    proc = await asyncio.create_subprocess_exec(
+                        exe_path,
+                        "config",
+                        "--default-user",
+                        username,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
                     )
-                    if result.returncode == 0:
+                    try:
+                        await asyncio.wait_for(proc.communicate(), timeout=30)
+                    except asyncio.TimeoutError:
+                        proc.kill()
+                        return {
+                            "success": False,
+                            "error": _("Configure user timed out"),
+                        }
+                    if proc.returncode == 0:
                         return {"success": True}
 
             # Fallback: Use wsl.exe to run passwd command for user config
@@ -123,7 +132,7 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def create_user(
+    async def create_user(  # NOSONAR - async required for interface compatibility
         self, distribution: str, username: str, password_hash: str
     ) -> Dict[str, Any]:
         """
@@ -138,60 +147,45 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             # Create user with home directory and bash shell
             create_cmd = f"useradd -m -s /bin/bash {username}"
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", create_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
+            create_result = await self._run_wsl_command(
+                distribution, create_cmd, timeout=30
             )
 
-            if result.returncode != 0:
+            if create_result.get("returncode") != 0:
+                stderr = create_result.get("stderr", "")
+                stdout = create_result.get("stdout", "")
                 # User might already exist
-                if "already exists" not in result.stderr.lower():
+                if "already exists" not in stderr.lower():
                     return {
                         "success": False,
-                        "error": _("Failed to create user: %s")
-                        % (result.stderr or result.stdout),
+                        "error": _("Failed to create user: %s") % (stderr or stdout),
                     }
 
             # Set password using pre-hashed value
             # Use chpasswd -e which accepts encrypted (hashed) passwords
             passwd_cmd = f"echo '{username}:{password_hash}' | chpasswd -e"
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", passwd_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
+            passwd_result = await self._run_wsl_command(
+                distribution, passwd_cmd, timeout=30
             )
 
-            if result.returncode != 0:
+            if passwd_result.get("returncode") != 0:
+                stderr = passwd_result.get("stderr", "")
+                stdout = passwd_result.get("stdout", "")
                 return {
                     "success": False,
-                    "error": _("Failed to set password: %s")
-                    % (result.stderr or result.stdout),
+                    "error": _("Failed to set password: %s") % (stderr or stdout),
                 }
 
             # Add user to sudo/wheel group
             # Try sudo first (Debian/Ubuntu), then wheel (Fedora/RHEL)
             for sudo_group in ["sudo", "wheel"]:
                 add_group_cmd = f"usermod -aG {sudo_group} {username}"
-                result = subprocess.run(  # nosec B603 B607
-                    ["wsl", "-d", distribution, "--", "sh", "-c", add_group_cmd],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,
-                    creationflags=creationflags,
+                group_result = await self._run_wsl_command(
+                    distribution, add_group_cmd, timeout=30
                 )
-                if result.returncode == 0:
+                if group_result.get("returncode") == 0:
                     break
 
             self.logger.info("User %s created successfully", username)
@@ -200,7 +194,35 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def enable_systemd(self, distribution: str) -> Dict[str, Any]:
+    async def _run_wsl_command(
+        self, distribution: str, command: str, timeout: int = 30
+    ) -> Dict[str, Any]:
+        """Run a command in a WSL distribution asynchronously."""
+        proc = await asyncio.create_subprocess_exec(
+            "wsl",
+            "-d",
+            distribution,
+            "--",
+            "sh",
+            "-c",
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return {
+                "returncode": proc.returncode,
+                "stdout": stdout.decode() if stdout else "",
+                "stderr": stderr.decode() if stderr else "",
+            }
+        except asyncio.TimeoutError:
+            proc.kill()
+            return {"returncode": -1, "stdout": "", "stderr": "Command timed out"}
+
+    async def enable_systemd(  # NOSONAR - async required for interface compatibility
+        self, distribution: str
+    ) -> Dict[str, Any]:
         """
         Enable systemd in a WSL distribution.
 
@@ -211,8 +233,6 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             # Write systemd=true to /etc/wsl.conf
             # Use printf instead of echo -e for portability (dash doesn't support echo -e)
             wsl_conf_cmd = (
@@ -222,20 +242,14 @@ class WslSetupOperations:
                 "printf '[boot]\\nsystemd=true\\n' >> /etc/wsl.conf)"
             )
 
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", wsl_conf_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
-            )
+            result = await self._run_wsl_command(distribution, wsl_conf_cmd, timeout=30)
 
-            if result.returncode != 0:
+            if result.get("returncode") != 0:
+                stderr = result.get("stderr", "")
+                stdout = result.get("stdout", "")
                 return {
                     "success": False,
-                    "error": _("Failed to enable systemd: %s")
-                    % (result.stderr or result.stdout),
+                    "error": _("Failed to enable systemd: %s") % (stderr or stdout),
                 }
 
             self.logger.info("Systemd enabled for distribution %s", distribution)
@@ -244,7 +258,9 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def set_hostname(self, distribution: str, hostname: str) -> Dict[str, Any]:
+    async def set_hostname(  # NOSONAR - async required for interface compatibility
+        self, distribution: str, hostname: str
+    ) -> Dict[str, Any]:
         """
         Set the hostname in a WSL distribution.
 
@@ -259,25 +275,17 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             # Write hostname to /etc/hostname
             # Use double quotes to prevent any shell interpretation of special chars
             hostname_cmd = f'printf "%s\\n" "{hostname}" > /etc/hostname'
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", hostname_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
-            )
+            result = await self._run_wsl_command(distribution, hostname_cmd, timeout=30)
 
-            if result.returncode != 0:
+            if result.get("returncode") != 0:
+                stderr = result.get("stderr", "")
+                stdout = result.get("stdout", "")
                 return {
                     "success": False,
-                    "error": _("Failed to set hostname: %s")
-                    % (result.stderr or result.stdout),
+                    "error": _("Failed to set hostname: %s") % (stderr or stdout),
                 }
 
             # Set up /etc/hosts with proper FQDN resolution
@@ -296,20 +304,14 @@ class WslSetupOperations:
                 f"ff02::1\\tip6-allnodes\\n"
                 f'ff02::2\\tip6-allrouters\\n" > /etc/hosts'
             )
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", hosts_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
+            hosts_result = await self._run_wsl_command(
+                distribution, hosts_cmd, timeout=30
             )
 
-            if result.returncode != 0:
-                self.logger.warning(
-                    "Failed to update /etc/hosts: %s",
-                    result.stderr or result.stdout,
-                )
+            if hosts_result.get("returncode") != 0:
+                stderr = hosts_result.get("stderr", "")
+                stdout = hosts_result.get("stdout", "")
+                self.logger.warning("Failed to update /etc/hosts: %s", stderr or stdout)
                 # Continue anyway - this is not critical
 
             # Also set hostname and disable auto-generation of /etc/hosts in wsl.conf
@@ -331,19 +333,15 @@ class WslSetupOperations:
                 f'sed -i "/\\[network\\]/a generateHosts=false" /etc/wsl.conf; '
                 f"fi"
             )
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", wsl_conf_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
+            wsl_conf_result = await self._run_wsl_command(
+                distribution, wsl_conf_cmd, timeout=30
             )
 
-            if result.returncode != 0:
+            if wsl_conf_result.get("returncode") != 0:
+                stderr = wsl_conf_result.get("stderr", "")
+                stdout = wsl_conf_result.get("stdout", "")
                 self.logger.warning(
-                    "Failed to set hostname in wsl.conf: %s",
-                    result.stderr or result.stdout,
+                    "Failed to set hostname in wsl.conf: %s", stderr or stdout
                 )
                 # Continue anyway - /etc/hostname should still work
 
@@ -366,42 +364,59 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            import asyncio  # pylint: disable=import-outside-toplevel
-
-            creationflags = self._get_creationflags()
-
             # Terminate the distribution
             # Note: wsl.exe outputs UTF-16LE, so we read as bytes and decode manually
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "--terminate", distribution],
-                capture_output=True,
-                timeout=60,
-                check=False,
-                creationflags=creationflags,
+            term_proc = await asyncio.create_subprocess_exec(
+                "wsl",
+                "--terminate",
+                distribution,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            try:
+                term_stdout, term_stderr = await asyncio.wait_for(
+                    term_proc.communicate(), timeout=60
+                )
+            except asyncio.TimeoutError:
+                term_proc.kill()
+                self.logger.warning("WSL terminate timed out")
 
-            if result.returncode != 0:
-                output = self._decode_wsl_output(result.stdout, result.stderr)
+            if term_proc.returncode != 0:
+                output = self._decode_wsl_output(term_stdout, term_stderr)
                 self.logger.warning("WSL terminate returned non-zero: %s", output)
 
             # Wait a moment for termination to complete
             await asyncio.sleep(2)
 
             # Start the distribution again
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "echo", "Started"],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-                creationflags=creationflags,
+            start_proc = await asyncio.create_subprocess_exec(
+                "wsl",
+                "-d",
+                distribution,
+                "--",
+                "echo",
+                "Started",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            try:
+                start_stdout, start_stderr = await asyncio.wait_for(
+                    start_proc.communicate(), timeout=120
+                )
+            except asyncio.TimeoutError:
+                start_proc.kill()
+                return {
+                    "success": False,
+                    "error": _("Failed to restart WSL instance: timed out"),
+                }
 
-            if result.returncode != 0:
+            if start_proc.returncode != 0:
+                stderr = start_stderr.decode() if start_stderr else ""
+                stdout = start_stdout.decode() if start_stdout else ""
                 return {
                     "success": False,
                     "error": _("Failed to restart WSL instance: %s")
-                    % (result.stderr or result.stdout),
+                    % (stderr or stdout),
                 }
 
             self.logger.info("WSL instance %s restarted successfully", distribution)
@@ -410,7 +425,7 @@ class WslSetupOperations:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def install_agent(
+    async def install_agent(  # NOSONAR - async required for interface compatibility
         self, distribution: str, install_commands: List[str]
     ) -> Dict[str, Any]:
         """
@@ -424,25 +439,20 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             for cmd in install_commands:
                 self.logger.debug("Running agent install command: %s", cmd)
 
-                result = subprocess.run(  # nosec B603 B607
-                    ["wsl", "-d", distribution, "--", "sh", "-c", cmd],
-                    capture_output=True,
-                    text=True,
-                    timeout=600,  # 10 minutes per command
-                    check=False,
-                    creationflags=creationflags,
-                )
+                result = await self._run_wsl_command(
+                    distribution, cmd, timeout=600
+                )  # 10 minutes per command
 
-                if result.returncode != 0:
+                if result.get("returncode") != 0:
+                    stderr = result.get("stderr", "")
+                    stdout = result.get("stdout", "")
                     self.logger.warning(
                         "Agent install command failed: %s - %s",
                         cmd,
-                        result.stderr or result.stdout,
+                        stderr or stdout,
                     )
                     # Continue with remaining commands
 
@@ -515,7 +525,7 @@ class WslSetupOperations:
 
         return shells
 
-    async def configure_agent(
+    async def configure_agent(  # NOSONAR - async required for interface compatibility
         self,
         distribution: str,
         server_url: str,
@@ -539,8 +549,6 @@ class WslSetupOperations:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             # Derive FQDN if hostname doesn't have a domain
             fqdn_hostname = self.get_fqdn_hostname(hostname, server_url)
 
@@ -604,20 +612,14 @@ logging:
             escaped_content = config_content.replace("'", "'\"'\"'")
             config_cmd = f"echo '{escaped_content}' > /etc/sysmanage-agent.yaml"
 
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", config_cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                creationflags=creationflags,
-            )
+            result = await self._run_wsl_command(distribution, config_cmd, timeout=30)
 
-            if result.returncode != 0:
+            if result.get("returncode") != 0:
+                stderr = result.get("stderr", "")
+                stdout = result.get("stdout", "")
                 return {
                     "success": False,
-                    "error": _("Failed to write agent config: %s")
-                    % (result.stderr or result.stdout),
+                    "error": _("Failed to write agent config: %s") % (stderr or stdout),
                 }
 
             self.logger.info(
@@ -630,7 +632,9 @@ logging:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def start_agent_service(self, distribution: str) -> Dict[str, Any]:
+    async def start_agent_service(  # NOSONAR - async required for interface compatibility
+        self, distribution: str
+    ) -> Dict[str, Any]:
         """
         Start the sysmanage-agent service in a WSL distribution.
 
@@ -641,24 +645,16 @@ logging:
             Dict with success status
         """
         try:
-            creationflags = self._get_creationflags()
-
             # Enable and start the service
             start_cmd = "systemctl enable --now sysmanage-agent || true"
 
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "sh", "-c", start_cmd],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-                creationflags=creationflags,
-            )
+            result = await self._run_wsl_command(distribution, start_cmd, timeout=60)
 
-            if result.returncode != 0:
+            if result.get("returncode") != 0:
+                stderr = result.get("stderr", "")
+                stdout = result.get("stdout", "")
                 self.logger.warning(
-                    "Agent service start may have failed: %s",
-                    result.stderr or result.stdout,
+                    "Agent service start may have failed: %s", stderr or stdout
                 )
 
             return {"success": True}

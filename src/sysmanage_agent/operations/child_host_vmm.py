@@ -43,6 +43,9 @@ from src.sysmanage_agent.operations.child_host_vmm_site_builder import (
 from src.sysmanage_agent.operations.child_host_vmm_ssh import VmmSshOperations
 from src.sysmanage_agent.operations.child_host_vmm_vm_creator import VmmVmCreator
 
+# Module-level constants for duplicate strings
+_VM_NAME_REQUIRED = "VM name is required"
+
 
 class VmmOperations:  # pylint: disable=too-many-instance-attributes
     """VMM/vmd-specific operations for child host management on OpenBSD."""
@@ -109,7 +112,7 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
     async def _run_subprocess(
         self,
         cmd: list,
-        timeout: int = 60,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of established API
     ) -> subprocess.CompletedProcess:
         """
         Run a subprocess command asynchronously.
@@ -133,6 +136,243 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             check=False,
         )
 
+    def _check_vmm_preconditions(self, vmm_check: dict) -> dict | None:
+        """
+        Check VMM preconditions before initialization.
+
+        Args:
+            vmm_check: Result from check_vmm_support()
+
+        Returns:
+            Error dict if preconditions fail, None if OK to proceed
+        """
+        if not vmm_check.get("available"):
+            return {
+                "success": False,
+                "error": _("VMM is not available on this system (requires OpenBSD)"),
+            }
+
+        if not vmm_check.get("kernel_supported"):
+            return {
+                "success": False,
+                "error": _(
+                    "VMM kernel support is not enabled. "
+                    "Ensure your CPU supports hardware virtualization (VMX/SVM) "
+                    "and the kernel has VMM support compiled in."
+                ),
+                "needs_reboot": True,
+            }
+
+        if vmm_check.get("running"):
+            self.logger.info(_("vmd is already running"))
+            return {
+                "success": True,
+                "message": _("VMM/vmd is already enabled and running"),
+                "already_enabled": True,
+            }
+
+        return None
+
+    async def _create_hostname_files(self, gateway_ip: str) -> dict | None:
+        """
+        Create /etc/hostname.vether0 and /etc/hostname.bridge0 files.
+
+        Args:
+            gateway_ip: IP address for the vether0 interface
+
+        Returns:
+            Error dict if creation fails, None if successful
+        """
+        # Create /etc/hostname.vether0 for persistence
+        self.logger.info(_("Creating /etc/hostname.vether0 for gateway"))
+        try:
+            async with aiofiles.open(
+                "/etc/hostname.vether0", "w", encoding="utf-8"
+            ) as vether_file:
+                await vether_file.write(f"inet {gateway_ip} 255.255.255.0\n")
+            os.chmod("/etc/hostname.vether0", 0o640)
+            self.logger.info(_("Created /etc/hostname.vether0"))
+        except Exception as vether_error:
+            self.logger.error(
+                _("Failed to create /etc/hostname.vether0: %s"), vether_error
+            )
+            return {
+                "success": False,
+                "error": _("Failed to create /etc/hostname.vether0: %s")
+                % str(vether_error),
+            }
+
+        # Create /etc/hostname.bridge0 with vether0 added
+        self.logger.info(_("Creating /etc/hostname.bridge0 for persistence"))
+        try:
+            async with aiofiles.open(
+                "/etc/hostname.bridge0", "w", encoding="utf-8"
+            ) as bridge_file:
+                await bridge_file.write("up\nadd vether0\n")
+            os.chmod("/etc/hostname.bridge0", 0o640)
+            self.logger.info(_("Created /etc/hostname.bridge0"))
+        except Exception as bridge_file_error:
+            self.logger.error(
+                _("Failed to create /etc/hostname.bridge0: %s"), bridge_file_error
+            )
+            return {
+                "success": False,
+                "error": _("Failed to create /etc/hostname.bridge0: %s")
+                % str(bridge_file_error),
+            }
+
+        return None
+
+    async def _configure_ip_forwarding(self) -> None:
+        """Enable IP forwarding persistently and immediately."""
+        self.logger.info(_("Enabling IP forwarding"))
+        try:
+            sysctl_conf = Path("/etc/sysctl.conf")
+            sysctl_content = ""
+            if sysctl_conf.exists():
+                async with aiofiles.open(
+                    sysctl_conf, "r", encoding="utf-8"
+                ) as sysctl_read:
+                    sysctl_content = await sysctl_read.read()
+            if "net.inet.ip.forwarding=1" not in sysctl_content:
+                async with aiofiles.open(
+                    sysctl_conf, "a", encoding="utf-8"
+                ) as sysctl_file:
+                    await sysctl_file.write("net.inet.ip.forwarding=1\n")
+                self.logger.info(_("Added IP forwarding to /etc/sysctl.conf"))
+
+            # Enable immediately (use async helper to avoid blocking)
+            await self._run_subprocess(
+                ["sysctl", "net.inet.ip.forwarding=1"],
+                timeout=10,
+            )
+        except Exception as sysctl_error:
+            self.logger.warning(
+                _("Failed to configure IP forwarding: %s"), sysctl_error
+            )
+
+    async def _setup_network_interfaces(self) -> None:
+        """Create and configure vether0 and bridge0 interfaces."""
+        # Create vether0 interface
+        self.logger.info(_("Creating vether0 interface"))
+        await self._run_subprocess(
+            ["ifconfig", "vether0", "create"],
+            timeout=10,
+        )
+        await self._run_subprocess(
+            ["sh", "/etc/netstart", "vether0"],
+            timeout=30,
+        )
+
+        # Create bridge0 interface
+        self.logger.info(_("Creating bridge0 interface"))
+        bridge_result = await self._run_subprocess(
+            ["sh", "/etc/netstart", "bridge0"],
+            timeout=30,
+        )
+
+        if bridge_result.returncode != 0:
+            self.logger.warning(
+                _("netstart bridge0 returned non-zero (may already exist): %s"),
+                bridge_result.stderr or bridge_result.stdout,
+            )
+
+        # Ensure vether0 is added to bridge0
+        await self._run_subprocess(
+            ["ifconfig", "bridge0", "add", "vether0"],
+            timeout=10,
+        )
+
+    async def _create_vm_conf(self) -> dict | None:
+        """
+        Create /etc/vm.conf with local switch configuration.
+
+        Returns:
+            Error dict if creation fails, None if successful
+        """
+        self.logger.info(_("Creating /etc/vm.conf"))
+        vm_conf_content = """# SysManage vmd config for autoinstall
+switch "local" {
+    interface bridge0
+}
+"""
+        try:
+            async with aiofiles.open(
+                "/etc/vm.conf", "w", encoding="utf-8"
+            ) as vm_conf_file:
+                await vm_conf_file.write(vm_conf_content)
+            self.logger.info(_("Created /etc/vm.conf"))
+        except Exception as vm_conf_error:
+            self.logger.error(_("Failed to create /etc/vm.conf: %s"), vm_conf_error)
+            return {
+                "success": False,
+                "error": _("Failed to create /etc/vm.conf: %s") % str(vm_conf_error),
+            }
+        return None
+
+    async def _enable_and_start_vmd(self, vmm_check: dict) -> dict:
+        """
+        Enable and start the vmd service.
+
+        Args:
+            vmm_check: Result from check_vmm_support()
+
+        Returns:
+            Dict with success status
+        """
+        # Enable vmd service using rcctl if not already enabled
+        if not vmm_check.get("enabled"):
+            self.logger.info(_("Enabling vmd service"))
+            enable_result = await self._run_subprocess(
+                ["rcctl", "enable", "vmd"],
+                timeout=30,
+            )
+
+            if enable_result.returncode != 0:
+                error_msg = (
+                    enable_result.stderr or enable_result.stdout or "Unknown error"
+                )
+                self.logger.error(_("Failed to enable vmd: %s"), error_msg)
+                return {
+                    "success": False,
+                    "error": _("Failed to enable vmd service: %s") % error_msg,
+                }
+
+            self.logger.info(_("vmd service enabled"))
+
+        # Start vmd service using rcctl
+        self.logger.info(_("Starting vmd service"))
+        start_result = await self._run_subprocess(
+            ["rcctl", "start", "vmd"],
+            timeout=60,
+        )
+
+        if start_result.returncode != 0:
+            error_msg = start_result.stderr or start_result.stdout or "Unknown error"
+            self.logger.error(_("Failed to start vmd: %s"), error_msg)
+            return {
+                "success": False,
+                "error": _("Failed to start vmd service: %s") % error_msg,
+            }
+
+        self.logger.info(_("vmd service started"))
+
+        # Verify vmd is now running
+        verify_result = self.virtualization_checks.check_vmm_support()
+
+        if verify_result.get("running"):
+            self.logger.info(_("VMM/vmd is ready for use"))
+            return {
+                "success": True,
+                "message": _("VMM/vmd has been enabled and started"),
+                "needs_reboot": False,
+            }
+
+        return {
+            "success": False,
+            "error": _("vmd was started but verification failed"),
+        }
+
     async def initialize_vmd(self, _parameters: dict) -> dict:
         """
         Initialize VMM/vmd on OpenBSD: enable and start the vmd daemon.
@@ -149,214 +389,36 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
         try:
             self.logger.info(_("Initializing VMM/vmd"))
 
-            # Check current VMM status
+            # Check current VMM status and preconditions
             vmm_check = self.virtualization_checks.check_vmm_support()
+            precondition_result = self._check_vmm_preconditions(vmm_check)
+            if precondition_result is not None:
+                return precondition_result
 
-            if not vmm_check.get("available"):
-                return {
-                    "success": False,
-                    "error": _(
-                        "VMM is not available on this system (requires OpenBSD)"
-                    ),
-                }
-
-            # Check if kernel supports VMM
-            if not vmm_check.get("kernel_supported"):
-                return {
-                    "success": False,
-                    "error": _(
-                        "VMM kernel support is not enabled. "
-                        "Ensure your CPU supports hardware virtualization (VMX/SVM) "
-                        "and the kernel has VMM support compiled in."
-                    ),
-                    "needs_reboot": True,
-                }
-
-            # If already running, nothing to do
-            if vmm_check.get("running"):
-                self.logger.info(_("vmd is already running"))
-                return {
-                    "success": True,
-                    "message": _("VMM/vmd is already enabled and running"),
-                    "already_enabled": True,
-                }
-
-            # Step 1: Select subnet for VM network
+            # Select subnet for VM network
             self.logger.info(_("Selecting subnet for VM network"))
             subnet_info = select_unused_subnet(self.logger)
             gateway_ip = subnet_info["gateway_ip"]
             self.logger.info(_("Using gateway IP: %s"), gateway_ip)
 
-            # Step 2: Create /etc/hostname.vether0 for persistence
-            self.logger.info(_("Creating /etc/hostname.vether0 for gateway"))
-            try:
-                async with aiofiles.open(
-                    "/etc/hostname.vether0", "w", encoding="utf-8"
-                ) as vether_file:
-                    await vether_file.write(f"inet {gateway_ip} 255.255.255.0\n")
-                os.chmod("/etc/hostname.vether0", 0o640)
-                self.logger.info(_("Created /etc/hostname.vether0"))
-            except Exception as vether_error:
-                self.logger.error(
-                    _("Failed to create /etc/hostname.vether0: %s"), vether_error
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to create /etc/hostname.vether0: %s")
-                    % str(vether_error),
-                }
+            # Create hostname files
+            hostname_result = await self._create_hostname_files(gateway_ip)
+            if hostname_result is not None:
+                return hostname_result
 
-            # Step 3: Create /etc/hostname.bridge0 with vether0 added
-            self.logger.info(_("Creating /etc/hostname.bridge0 for persistence"))
-            try:
-                async with aiofiles.open(
-                    "/etc/hostname.bridge0", "w", encoding="utf-8"
-                ) as bridge_file:
-                    await bridge_file.write("up\nadd vether0\n")
-                os.chmod("/etc/hostname.bridge0", 0o640)
-                self.logger.info(_("Created /etc/hostname.bridge0"))
-            except Exception as bridge_file_error:
-                self.logger.error(
-                    _("Failed to create /etc/hostname.bridge0: %s"), bridge_file_error
-                )
-                return {
-                    "success": False,
-                    "error": _("Failed to create /etc/hostname.bridge0: %s")
-                    % str(bridge_file_error),
-                }
+            # Configure IP forwarding
+            await self._configure_ip_forwarding()
 
-            # Step 4: Enable IP forwarding persistently
-            self.logger.info(_("Enabling IP forwarding"))
-            try:
-                sysctl_conf = Path("/etc/sysctl.conf")
-                sysctl_content = ""
-                if sysctl_conf.exists():
-                    async with aiofiles.open(
-                        sysctl_conf, "r", encoding="utf-8"
-                    ) as sysctl_read:
-                        sysctl_content = await sysctl_read.read()
-                if "net.inet.ip.forwarding=1" not in sysctl_content:
-                    async with aiofiles.open(
-                        sysctl_conf, "a", encoding="utf-8"
-                    ) as sysctl_file:
-                        await sysctl_file.write("net.inet.ip.forwarding=1\n")
-                    self.logger.info(_("Added IP forwarding to /etc/sysctl.conf"))
+            # Setup network interfaces
+            await self._setup_network_interfaces()
 
-                # Enable immediately (use async helper to avoid blocking)
-                await self._run_subprocess(
-                    ["sysctl", "net.inet.ip.forwarding=1"],
-                    timeout=10,
-                )
-            except Exception as sysctl_error:
-                self.logger.warning(
-                    _("Failed to configure IP forwarding: %s"), sysctl_error
-                )
+            # Create vm.conf
+            vm_conf_result = await self._create_vm_conf()
+            if vm_conf_result is not None:
+                return vm_conf_result
 
-            # Step 5: Create vether0 interface now
-            self.logger.info(_("Creating vether0 interface"))
-            await self._run_subprocess(
-                ["ifconfig", "vether0", "create"],
-                timeout=10,
-            )
-            await self._run_subprocess(
-                ["sh", "/etc/netstart", "vether0"],
-                timeout=30,
-            )
-
-            # Step 6: Create bridge0 interface
-            self.logger.info(_("Creating bridge0 interface"))
-            bridge_result = await self._run_subprocess(
-                ["sh", "/etc/netstart", "bridge0"],
-                timeout=30,
-            )
-
-            if bridge_result.returncode != 0:
-                self.logger.warning(
-                    _("netstart bridge0 returned non-zero (may already exist): %s"),
-                    bridge_result.stderr or bridge_result.stdout,
-                )
-
-            # Step 7: Ensure vether0 is added to bridge0
-            await self._run_subprocess(
-                ["ifconfig", "bridge0", "add", "vether0"],
-                timeout=10,
-            )
-
-            # Step 8: Create /etc/vm.conf with local switch configuration
-            self.logger.info(_("Creating /etc/vm.conf"))
-            vm_conf_content = """# SysManage vmd config for autoinstall
-switch "local" {
-    interface bridge0
-}
-"""
-            try:
-                async with aiofiles.open(
-                    "/etc/vm.conf", "w", encoding="utf-8"
-                ) as vm_conf_file:
-                    await vm_conf_file.write(vm_conf_content)
-                self.logger.info(_("Created /etc/vm.conf"))
-            except Exception as vm_conf_error:
-                self.logger.error(_("Failed to create /etc/vm.conf: %s"), vm_conf_error)
-                return {
-                    "success": False,
-                    "error": _("Failed to create /etc/vm.conf: %s")
-                    % str(vm_conf_error),
-                }
-
-            # Step 9: Enable vmd service using rcctl
-            if not vmm_check.get("enabled"):
-                self.logger.info(_("Enabling vmd service"))
-                enable_result = await self._run_subprocess(
-                    ["rcctl", "enable", "vmd"],
-                    timeout=30,
-                )
-
-                if enable_result.returncode != 0:
-                    error_msg = (
-                        enable_result.stderr or enable_result.stdout or "Unknown error"
-                    )
-                    self.logger.error(_("Failed to enable vmd: %s"), error_msg)
-                    return {
-                        "success": False,
-                        "error": _("Failed to enable vmd service: %s") % error_msg,
-                    }
-
-                self.logger.info(_("vmd service enabled"))
-
-            # Step 10: Start vmd service using rcctl
-            self.logger.info(_("Starting vmd service"))
-            start_result = await self._run_subprocess(
-                ["rcctl", "start", "vmd"],
-                timeout=60,
-            )
-
-            if start_result.returncode != 0:
-                error_msg = (
-                    start_result.stderr or start_result.stdout or "Unknown error"
-                )
-                self.logger.error(_("Failed to start vmd: %s"), error_msg)
-                return {
-                    "success": False,
-                    "error": _("Failed to start vmd service: %s") % error_msg,
-                }
-
-            self.logger.info(_("vmd service started"))
-
-            # Verify vmd is now running
-            verify_result = self.virtualization_checks.check_vmm_support()
-
-            if verify_result.get("running"):
-                self.logger.info(_("VMM/vmd is ready for use"))
-                return {
-                    "success": True,
-                    "message": _("VMM/vmd has been enabled and started"),
-                    "needs_reboot": False,
-                }
-
-            return {
-                "success": False,
-                "error": _("vmd was started but verification failed"),
-            }
+            # Enable and start vmd
+            return await self._enable_and_start_vmd(vmm_check)
 
         except subprocess.TimeoutExpired:
             self.logger.error(_("Timeout while initializing vmd"))
@@ -407,7 +469,7 @@ switch "local" {
         if not child_name:
             return {
                 "success": False,
-                "error": _("VM name is required"),
+                "error": _(_VM_NAME_REQUIRED),
             }
 
         return await self.lifecycle.start_vm(child_name, wait=wait)
@@ -429,7 +491,7 @@ switch "local" {
         if not child_name:
             return {
                 "success": False,
-                "error": _("VM name is required"),
+                "error": _(_VM_NAME_REQUIRED),
             }
 
         return await self.lifecycle.stop_vm(child_name, force=force, wait=wait)
@@ -448,7 +510,7 @@ switch "local" {
         if not child_name:
             return {
                 "success": False,
-                "error": _("VM name is required"),
+                "error": _(_VM_NAME_REQUIRED),
             }
 
         return await self.lifecycle.restart_vm(child_name)
@@ -468,7 +530,7 @@ switch "local" {
         if not child_name:
             return {
                 "success": False,
-                "error": _("VM name is required"),
+                "error": _(_VM_NAME_REQUIRED),
             }
 
         return await self.lifecycle.delete_vm(child_name, delete_disk=delete_disk)

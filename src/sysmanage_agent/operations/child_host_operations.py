@@ -29,6 +29,12 @@ from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 from src.i18n import _
+
+# Module-level constants for repeated error messages
+_UNSUPPORTED_CHILD_TYPE = _("Unsupported child host type: %s")
+
+# pylint: disable=wrong-import-position
+# These imports are placed after constants to avoid circular imports
 from src.sysmanage_agent.operations.child_host_kvm import KvmOperations
 from src.sysmanage_agent.operations.child_host_listing import ChildHostListing
 from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
@@ -38,6 +44,8 @@ from src.sysmanage_agent.operations.child_host_virtualization_checks import (
 from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
 from src.sysmanage_agent.operations.child_host_bhyve import BhyveOperations
 from src.sysmanage_agent.operations.child_host_wsl import WslOperations
+
+# pylint: enable=wrong-import-position
 
 
 class ChildHostOperations:
@@ -76,7 +84,7 @@ class ChildHostOperations:
             self.agent, self.logger, self.virtualization_checks
         )
 
-    async def check_virtualization_support(
+    async def check_virtualization_support(  # NOSONAR - async required by interface
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
@@ -106,51 +114,13 @@ class ChildHostOperations:
             capabilities = {}
             reboot_required = False
 
-            if os_type == "windows":
-                # Check Windows virtualization options
-                wsl_info = self.virtualization_checks.check_wsl_support()
-                if wsl_info["available"]:
-                    supported_types.append("wsl")
-                    capabilities["wsl"] = wsl_info
-                    if wsl_info.get("needs_enable"):
-                        reboot_required = True
-
-                hyperv_info = self.virtualization_checks.check_hyperv_support()
-                if hyperv_info["available"]:
-                    supported_types.append("hyperv")
-                    capabilities["hyperv"] = hyperv_info
-
-            elif os_type == "linux":
-                # Check Linux virtualization options
-                lxd_info = self.virtualization_checks.check_lxd_support()
-                if lxd_info["available"]:
-                    supported_types.append("lxd")
-                    capabilities["lxd"] = lxd_info
-
-                kvm_info = self.virtualization_checks.check_kvm_support()
-                if kvm_info["available"]:
-                    supported_types.append("kvm")
-                    capabilities["kvm"] = kvm_info
-
-            elif os_type == "freebsd":
-                # Check FreeBSD virtualization options
-                bhyve_info = self.virtualization_checks.check_bhyve_support()
-                if bhyve_info["available"]:
-                    supported_types.append("bhyve")
-                    capabilities["bhyve"] = bhyve_info
-
-            elif os_type == "openbsd":
-                # Check OpenBSD virtualization options
-                vmm_info = self.virtualization_checks.check_vmm_support()
-                if vmm_info["available"]:
-                    supported_types.append("vmm")
-                    capabilities["vmm"] = vmm_info
+            # Check platform-specific virtualization
+            reboot_required = self._check_platform_virtualization(
+                os_type, supported_types, capabilities
+            )
 
             # VirtualBox can be on any platform
-            vbox_info = self.virtualization_checks.check_virtualbox_support()
-            if vbox_info["available"]:
-                supported_types.append("virtualbox")
-                capabilities["virtualbox"] = vbox_info
+            self._check_virtualbox(supported_types, capabilities)
 
             return {
                 "success": True,
@@ -169,6 +139,84 @@ class ChildHostOperations:
                 "capabilities": {},
             }
 
+    def _check_platform_virtualization(
+        self, os_type: str, supported_types: list, capabilities: dict
+    ) -> bool:
+        """Check platform-specific virtualization support."""
+        reboot_required = False
+
+        if os_type == "windows":
+            reboot_required = self._check_windows_virtualization(
+                supported_types, capabilities
+            )
+        elif os_type == "linux":
+            self._check_linux_virtualization(supported_types, capabilities)
+        elif os_type == "freebsd":
+            self._check_freebsd_virtualization(supported_types, capabilities)
+        elif os_type == "openbsd":
+            self._check_openbsd_virtualization(supported_types, capabilities)
+
+        return reboot_required
+
+    def _check_windows_virtualization(
+        self, supported_types: list, capabilities: dict
+    ) -> bool:
+        """Check Windows virtualization options (WSL, Hyper-V)."""
+        reboot_required = False
+
+        wsl_info = self.virtualization_checks.check_wsl_support()
+        if wsl_info["available"]:
+            supported_types.append("wsl")
+            capabilities["wsl"] = wsl_info
+            if wsl_info.get("needs_enable"):
+                reboot_required = True
+
+        hyperv_info = self.virtualization_checks.check_hyperv_support()
+        if hyperv_info["available"]:
+            supported_types.append("hyperv")
+            capabilities["hyperv"] = hyperv_info
+
+        return reboot_required
+
+    def _check_linux_virtualization(
+        self, supported_types: list, capabilities: dict
+    ) -> None:
+        """Check Linux virtualization options (LXD, KVM)."""
+        lxd_info = self.virtualization_checks.check_lxd_support()
+        if lxd_info["available"]:
+            supported_types.append("lxd")
+            capabilities["lxd"] = lxd_info
+
+        kvm_info = self.virtualization_checks.check_kvm_support()
+        if kvm_info["available"]:
+            supported_types.append("kvm")
+            capabilities["kvm"] = kvm_info
+
+    def _check_freebsd_virtualization(
+        self, supported_types: list, capabilities: dict
+    ) -> None:
+        """Check FreeBSD virtualization options (bhyve)."""
+        bhyve_info = self.virtualization_checks.check_bhyve_support()
+        if bhyve_info["available"]:
+            supported_types.append("bhyve")
+            capabilities["bhyve"] = bhyve_info
+
+    def _check_openbsd_virtualization(
+        self, supported_types: list, capabilities: dict
+    ) -> None:
+        """Check OpenBSD virtualization options (VMM/vmd)."""
+        vmm_info = self.virtualization_checks.check_vmm_support()
+        if vmm_info["available"]:
+            supported_types.append("vmm")
+            capabilities["vmm"] = vmm_info
+
+    def _check_virtualbox(self, supported_types: list, capabilities: dict) -> None:
+        """Check VirtualBox support (cross-platform)."""
+        vbox_info = self.virtualization_checks.check_virtualbox_support()
+        if vbox_info["available"]:
+            supported_types.append("virtualbox")
+            capabilities["virtualbox"] = vbox_info
+
     async def list_child_hosts(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         List all child hosts (VMs, containers, WSL instances) on this system.
@@ -186,57 +234,16 @@ class ChildHostOperations:
 
         try:
             child_type_filter = parameters.get("child_type")
-            child_hosts = []
             os_type = platform.system().lower()
 
-            if os_type == "windows":
-                # Get WSL instances
-                if not child_type_filter or child_type_filter == "wsl":
-                    wsl_instances = self.listing_helper.list_wsl_instances()
-                    child_hosts.extend(wsl_instances)
-
-                # Get Hyper-V VMs (if enabled)
-                if not child_type_filter or child_type_filter == "hyperv":
-                    hyperv_vms = self.listing_helper.list_hyperv_vms()
-                    child_hosts.extend(hyperv_vms)
-
-            elif os_type == "linux":
-                # Get LXD containers
-                if not child_type_filter or child_type_filter == "lxd":
-                    lxd_containers = self.listing_helper.list_lxd_containers()
-                    child_hosts.extend(lxd_containers)
-
-                # Get KVM/QEMU VMs
-                if not child_type_filter or child_type_filter == "kvm":
-                    kvm_vms = self.listing_helper.list_kvm_vms()
-                    child_hosts.extend(kvm_vms)
-
-            elif os_type == "openbsd":
-                # Get VMM VMs
-                if not child_type_filter or child_type_filter == "vmm":
-                    vmm_vms = self.listing_helper.list_vmm_vms()
-                    child_hosts.extend(vmm_vms)
-
-            elif os_type == "freebsd":
-                # Get bhyve VMs
-                if not child_type_filter or child_type_filter == "bhyve":
-                    bhyve_vms = self.listing_helper.list_bhyve_vms()
-                    child_hosts.extend(bhyve_vms)
+            # Collect child hosts from platform-specific sources
+            child_hosts = self._collect_platform_child_hosts(os_type, child_type_filter)
 
             # VirtualBox VMs (cross-platform)
-            if not child_type_filter or child_type_filter == "virtualbox":
-                vbox_vms = self.listing_helper.list_virtualbox_vms()
-                child_hosts.extend(vbox_vms)
+            self._collect_virtualbox_vms(child_hosts, child_type_filter)
 
-            # Also send a proactive child host list update to the server
-            try:
-                if hasattr(self.agent, "child_host_collector"):
-                    await self.agent.child_host_collector.send_child_hosts_update()
-                    self.logger.info(_("Sent child host list update to server"))
-            except Exception as error:
-                self.logger.warning(
-                    _("Failed to send child host list update: %s"), error
-                )
+            # Send proactive update to server
+            await self._send_child_hosts_update()
 
             return {
                 "success": True,
@@ -251,6 +258,71 @@ class ChildHostOperations:
                 "error": str(error),
                 "child_hosts": [],
             }
+
+    def _collect_platform_child_hosts(
+        self, os_type: str, child_type_filter: str | None
+    ) -> list:
+        """Collect child hosts based on platform."""
+        child_hosts = []
+
+        if os_type == "windows":
+            self._collect_windows_child_hosts(child_hosts, child_type_filter)
+        elif os_type == "linux":
+            self._collect_linux_child_hosts(child_hosts, child_type_filter)
+        elif os_type == "openbsd":
+            self._collect_openbsd_child_hosts(child_hosts, child_type_filter)
+        elif os_type == "freebsd":
+            self._collect_freebsd_child_hosts(child_hosts, child_type_filter)
+
+        return child_hosts
+
+    def _collect_windows_child_hosts(
+        self, child_hosts: list, child_type_filter: str | None
+    ) -> None:
+        """Collect Windows child hosts (WSL, Hyper-V)."""
+        if not child_type_filter or child_type_filter == "wsl":
+            child_hosts.extend(self.listing_helper.list_wsl_instances())
+        if not child_type_filter or child_type_filter == "hyperv":
+            child_hosts.extend(self.listing_helper.list_hyperv_vms())
+
+    def _collect_linux_child_hosts(
+        self, child_hosts: list, child_type_filter: str | None
+    ) -> None:
+        """Collect Linux child hosts (LXD, KVM)."""
+        if not child_type_filter or child_type_filter == "lxd":
+            child_hosts.extend(self.listing_helper.list_lxd_containers())
+        if not child_type_filter or child_type_filter == "kvm":
+            child_hosts.extend(self.listing_helper.list_kvm_vms())
+
+    def _collect_openbsd_child_hosts(
+        self, child_hosts: list, child_type_filter: str | None
+    ) -> None:
+        """Collect OpenBSD child hosts (VMM)."""
+        if not child_type_filter or child_type_filter == "vmm":
+            child_hosts.extend(self.listing_helper.list_vmm_vms())
+
+    def _collect_freebsd_child_hosts(
+        self, child_hosts: list, child_type_filter: str | None
+    ) -> None:
+        """Collect FreeBSD child hosts (bhyve)."""
+        if not child_type_filter or child_type_filter == "bhyve":
+            child_hosts.extend(self.listing_helper.list_bhyve_vms())
+
+    def _collect_virtualbox_vms(
+        self, child_hosts: list, child_type_filter: str | None
+    ) -> None:
+        """Collect VirtualBox VMs (cross-platform)."""
+        if not child_type_filter or child_type_filter == "virtualbox":
+            child_hosts.extend(self.listing_helper.list_virtualbox_vms())
+
+    async def _send_child_hosts_update(self) -> None:
+        """Send proactive child host list update to server."""
+        try:
+            if hasattr(self.agent, "child_host_collector"):
+                await self.agent.child_host_collector.send_child_hosts_update()
+                self.logger.info(_("Sent child host list update to server"))
+        except Exception as error:
+            self.logger.warning(_("Failed to send child host list update: %s"), error)
 
     async def create_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -415,7 +487,7 @@ class ChildHostOperations:
 
         return {
             "success": False,
-            "error": _("Unsupported child host type: %s") % child_type,
+            "error": _UNSUPPORTED_CHILD_TYPE % child_type,
         }
 
     async def enable_wsl(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -610,7 +682,7 @@ class ChildHostOperations:
 
         return {
             "success": False,
-            "error": _("Unsupported child host type: %s") % child_type,
+            "error": _UNSUPPORTED_CHILD_TYPE % child_type,
         }
 
     async def stop_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -650,7 +722,7 @@ class ChildHostOperations:
 
         return {
             "success": False,
-            "error": _("Unsupported child host type: %s") % child_type,
+            "error": _UNSUPPORTED_CHILD_TYPE % child_type,
         }
 
     async def restart_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -690,7 +762,7 @@ class ChildHostOperations:
 
         return {
             "success": False,
-            "error": _("Unsupported child host type: %s") % child_type,
+            "error": _UNSUPPORTED_CHILD_TYPE % child_type,
         }
 
     async def delete_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -727,7 +799,7 @@ class ChildHostOperations:
         else:
             return {
                 "success": False,
-                "error": _("Unsupported child host type: %s") % child_type,
+                "error": _UNSUPPORTED_CHILD_TYPE % child_type,
             }
 
         # Send updated child host list to server after successful delete

@@ -124,14 +124,14 @@ class ScriptOperations:
             mode="w", suffix=suffix, delete=False
         ) as script_file:
             # Add shebang for Unix shells
-            if not platform.system().lower() == "windows" and suffix == ".sh":
+            if platform.system().lower() != "windows" and suffix == ".sh":
                 script_file.write(f"#!{shell_path}\n")
 
             script_file.write(script_content)
             script_path = script_file.name
 
         # Set execute permissions on Unix-like systems
-        if not platform.system().lower() == "windows":
+        if platform.system().lower() != "windows":
             os.chmod(script_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         return script_path
@@ -168,7 +168,7 @@ class ScriptOperations:
 
         return {"success": True}
 
-    async def _execute_script_file(
+    async def _execute_script_file(  # NOSONAR
         self, script_content: str, shell_path: str, timeout: int, working_directory: str
     ) -> Dict[str, Any]:
         """Execute script file and return results."""

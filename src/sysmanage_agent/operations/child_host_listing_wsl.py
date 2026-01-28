@@ -49,17 +49,7 @@ class WSLListing:
                 self.logger.warning("WSL list command failed: %s", result.stderr)
                 return instances
 
-            # Parse the output - WSL outputs UTF-16 with BOM on Windows
-            try:
-                output = result.stdout.decode("utf-16-le").strip()
-            except UnicodeDecodeError:
-                try:
-                    output = result.stdout.decode("utf-8").strip()
-                except UnicodeDecodeError:
-                    output = result.stdout.decode("latin-1").strip()
-
-            # Remove null characters that Windows sometimes adds
-            output = output.replace("\x00", "")
+            output = self._decode_wsl_output(result.stdout)
 
             # Check for "no distributions" message
             if "no installed distributions" in output.lower():
@@ -71,52 +61,7 @@ class WSLListing:
             if len(lines) < 2:
                 return instances
 
-            # Skip header line
-            for line in lines[1:]:
-                line = line.strip()
-                if not line:
-                    continue
-
-                # Parse line: "* Ubuntu    Running  2" or "  Debian   Stopped  2"
-                # The asterisk indicates the default distribution
-                is_default = line.startswith("*")
-                if is_default:
-                    line = line[1:].strip()
-
-                # Split by whitespace
-                parts = line.split()
-                if len(parts) >= 2:
-                    name = parts[0]
-                    status = parts[1].lower() if len(parts) > 1 else "unknown"
-                    version = parts[2] if len(parts) > 2 else "2"
-
-                    # Map WSL status to our status values
-                    if status == "running":
-                        mapped_status = "running"
-                    elif status == "stopped":
-                        mapped_status = "stopped"
-                    else:
-                        mapped_status = status
-
-                    # Get hostname from inside the WSL instance if it's running
-                    hostname = None
-                    if mapped_status == "running":
-                        hostname = self._get_wsl_hostname(name)
-
-                    # Get unique GUID for this WSL instance from registry
-                    wsl_guid = self._get_wsl_guid(name)
-
-                    instance = {
-                        "child_type": "wsl",
-                        "child_name": name,
-                        "status": mapped_status,
-                        "is_default": is_default,
-                        "wsl_version": version,
-                        "distribution": self._parse_wsl_distribution(name),
-                        "hostname": hostname,
-                        "wsl_guid": wsl_guid,
-                    }
-                    instances.append(instance)
+            instances = self._parse_wsl_output_lines(lines[1:])
 
             self.logger.info("Found %d WSL instances", len(instances))
 
@@ -128,6 +73,80 @@ class WSLListing:
             self.logger.error("Error listing WSL instances: %s", error)
 
         return instances
+
+    def _decode_wsl_output(self, stdout: bytes) -> str:
+        """Decode WSL command output, trying multiple encodings."""
+        # Parse the output - WSL outputs UTF-16 with BOM on Windows
+        try:
+            output = stdout.decode("utf-16-le").strip()
+        except UnicodeDecodeError:
+            try:
+                output = stdout.decode("utf-8").strip()
+            except UnicodeDecodeError:
+                output = stdout.decode("latin-1").strip()
+
+        # Remove null characters that Windows sometimes adds
+        return output.replace("\x00", "")
+
+    def _parse_wsl_output_lines(self, lines: List[str]) -> List[Dict[str, Any]]:
+        """Parse WSL output lines into instance dicts."""
+        instances = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            instance = self._parse_single_wsl_line(line)
+            if instance:
+                instances.append(instance)
+
+        return instances
+
+    def _parse_single_wsl_line(self, line: str) -> Optional[Dict[str, Any]]:
+        """Parse a single WSL output line into an instance dict."""
+        # Parse line: "* Ubuntu    Running  2" or "  Debian   Stopped  2"
+        # The asterisk indicates the default distribution
+        is_default = line.startswith("*")
+        if is_default:
+            line = line[1:].strip()
+
+        # Split by whitespace
+        parts = line.split()
+        if len(parts) < 2:
+            return None
+
+        name = parts[0]
+        status = parts[1].lower() if len(parts) > 1 else "unknown"
+        version = parts[2] if len(parts) > 2 else "2"
+
+        mapped_status = self._map_wsl_status(status)
+
+        # Get hostname from inside the WSL instance if it's running
+        hostname = None
+        if mapped_status == "running":
+            hostname = self._get_wsl_hostname(name)
+
+        # Get unique GUID for this WSL instance from registry
+        wsl_guid = self._get_wsl_guid(name)
+
+        return {
+            "child_type": "wsl",
+            "child_name": name,
+            "status": mapped_status,
+            "is_default": is_default,
+            "wsl_version": version,
+            "distribution": self._parse_wsl_distribution(name),
+            "hostname": hostname,
+            "wsl_guid": wsl_guid,
+        }
+
+    def _map_wsl_status(self, status: str) -> str:
+        """Map WSL status string to our status values."""
+        if status == "running":
+            return "running"
+        if status == "stopped":
+            return "stopped"
+        return status
 
     def _get_wsl_guid(self, distribution_name: str) -> Optional[str]:
         """
@@ -183,9 +202,10 @@ class WSLListing:
 
         Tries multiple methods in order:
         1. Read hostname from /etc/wsl.conf [network] section (most reliable for our setup)
-        2. Read from /etc/hostname file
+        2. Read from /etc/hostname file (requires FQDN with '.')
         3. Run hostname -f command
         4. Fall back to hostname command
+        5. Fall back to /etc/hostname (any hostname)
 
         Args:
             distribution: WSL distribution name
@@ -193,101 +213,127 @@ class WSLListing:
         Returns:
             FQDN hostname string or None if unable to retrieve
         """
-        creationflags = (
+        try:
+            # Try methods in order of preference
+            hostname = self._try_wsl_conf_hostname(distribution)
+            if hostname:
+                return hostname
+
+            hostname = self._try_etc_hostname_fqdn(distribution)
+            if hostname:
+                return hostname
+
+            hostname = self._try_hostname_fqdn_command(distribution)
+            if hostname:
+                return hostname
+
+            hostname = self._try_hostname_command(distribution)
+            if hostname:
+                return hostname
+
+            hostname = self._try_etc_hostname_any(distribution)
+            if hostname:
+                return hostname
+
+        except Exception as error:
+            self.logger.debug("Error getting hostname for %s: %s", distribution, error)
+
+        return None
+
+    def _get_wsl_creationflags(self) -> int:
+        """Get creationflags for WSL subprocess calls."""
+        return (
             subprocess.CREATE_NO_WINDOW
             if hasattr(subprocess, "CREATE_NO_WINDOW")
             else 0
         )
 
-        try:
-            # Method 1: Try reading from wsl.conf where we set the hostname
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "wsl",
-                    "-d",
-                    distribution,
-                    "--",
-                    "sh",
-                    "-c",
-                    "grep -E '^hostname=' /etc/wsl.conf 2>/dev/null | cut -d= -f2",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-                creationflags=creationflags,
-            )
-            if result.returncode == 0:
-                hostname = result.stdout.strip()
-                if hostname and hostname != "localhost" and "." in hostname:
-                    return hostname
+    def _try_wsl_conf_hostname(self, distribution: str) -> Optional[str]:
+        """Try reading hostname from /etc/wsl.conf."""
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "wsl",
+                "-d",
+                distribution,
+                "--",
+                "sh",
+                "-c",
+                "grep -E '^hostname=' /etc/wsl.conf 2>/dev/null | cut -d= -f2",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            creationflags=self._get_wsl_creationflags(),
+        )
+        if result.returncode == 0:
+            hostname = result.stdout.strip()
+            if hostname and hostname != "localhost" and "." in hostname:
+                return hostname
+        return None
 
-            # Method 2: Try reading from /etc/hostname
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-                creationflags=creationflags,
-            )
-            if result.returncode == 0:
-                hostname = result.stdout.strip()
-                if hostname and hostname != "localhost" and "." in hostname:
-                    return hostname
+    def _try_etc_hostname_fqdn(self, distribution: str) -> Optional[str]:
+        """Try reading FQDN from /etc/hostname."""
+        result = subprocess.run(  # nosec B603 B607
+            ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            creationflags=self._get_wsl_creationflags(),
+        )
+        if result.returncode == 0:
+            hostname = result.stdout.strip()
+            if hostname and hostname != "localhost" and "." in hostname:
+                return hostname
+        return None
 
-            # Method 3: Try to get FQDN using hostname -f
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "hostname", "-f"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-                creationflags=creationflags,
-            )
+    def _try_hostname_fqdn_command(self, distribution: str) -> Optional[str]:
+        """Try getting FQDN using hostname -f command."""
+        result = subprocess.run(  # nosec B603 B607
+            ["wsl", "-d", distribution, "--", "hostname", "-f"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            creationflags=self._get_wsl_creationflags(),
+        )
+        if result.returncode == 0:
+            hostname = result.stdout.strip()
+            if hostname and hostname != "localhost":
+                return hostname
+        return None
 
-            if result.returncode == 0:
-                hostname = result.stdout.strip()
-                if hostname and hostname != "localhost":
-                    return hostname
+    def _try_hostname_command(self, distribution: str) -> Optional[str]:
+        """Try getting hostname using hostname command."""
+        result = subprocess.run(  # nosec B603 B607
+            ["wsl", "-d", distribution, "--", "hostname"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            creationflags=self._get_wsl_creationflags(),
+        )
+        if result.returncode == 0:
+            hostname = result.stdout.strip()
+            if hostname:
+                return hostname
+        return None
 
-            # Method 4: Fall back to short hostname if FQDN not available
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "hostname"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-                creationflags=creationflags,
-            )
-
-            if result.returncode == 0:
-                hostname = result.stdout.strip()
-                if hostname:
-                    return hostname
-
-            # Fall back to reading /etc/hostname if hostname command not available
-            # (e.g., openSUSE Tumbleweed minimal install doesn't have hostname command)
-            result = subprocess.run(  # nosec B603 B607
-                ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW
-                    if hasattr(subprocess, "CREATE_NO_WINDOW")
-                    else 0
-                ),
-            )
-
-            if result.returncode == 0:
-                hostname = result.stdout.strip()
-                if hostname:
-                    return hostname
-        except Exception as error:
-            self.logger.debug("Error getting hostname for %s: %s", distribution, error)
-
+    def _try_etc_hostname_any(self, distribution: str) -> Optional[str]:
+        """Try reading any hostname from /etc/hostname (fallback)."""
+        result = subprocess.run(  # nosec B603 B607
+            ["wsl", "-d", distribution, "--", "cat", "/etc/hostname"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            creationflags=self._get_wsl_creationflags(),
+        )
+        if result.returncode == 0:
+            hostname = result.stdout.strip()
+            if hostname:
+                return hostname
         return None
 
     def _parse_wsl_distribution(self, name: str) -> Dict[str, Optional[str]]:

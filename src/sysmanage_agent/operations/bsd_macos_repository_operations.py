@@ -10,6 +10,8 @@ import os
 import re
 from typing import Any, Dict
 
+import aiofiles
+
 from src.i18n import _
 
 
@@ -112,7 +114,9 @@ class BSDMacOSRepositoryOperations:
 
     # ========== FreeBSD Operations ==========
 
-    async def list_freebsd_repositories(self) -> list:
+    async def list_freebsd_repositories(
+        self,
+    ) -> list:  # NOSONAR - async required by caller interface
         """List pkg repositories on FreeBSD."""
         repositories = []
 
@@ -123,39 +127,44 @@ class BSDMacOSRepositoryOperations:
                 for filename in os.listdir(repos_dir):
                     if filename.endswith(".conf"):
                         filepath = os.path.join(repos_dir, filename)
-                        try:
-                            with open(filepath, "r", encoding="utf-8") as file_handle:
-                                content = file_handle.read()
-                                name = filename.replace(".conf", "")
-                                url = ""
-                                enabled = True
-
-                                # Extract URL
-                                url_match = re.search(r'url:\s*"([^"]+)"', content)
-                                if url_match:
-                                    url = url_match.group(1)
-
-                                # Check if enabled
-                                if "enabled: no" in content.lower():
-                                    enabled = False
-
-                                repositories.append(
-                                    {
-                                        "name": name,
-                                        "type": "FreeBSD pkg",
-                                        "url": url,
-                                        "enabled": enabled,
-                                        "file_path": filepath,
-                                    }
-                                )
-                        except Exception as error:
-                            self.logger.warning(
-                                _("Error reading %s: %s"), filepath, error
-                            )
+                        self._parse_freebsd_repo_file(filepath, filename, repositories)
         except Exception as error:
             self.logger.error(_("Error listing FreeBSD repositories: %s"), error)
 
         return repositories
+
+    def _parse_freebsd_repo_file(
+        self, filepath: str, filename: str, repositories: list
+    ):
+        """Parse a single FreeBSD pkg repository configuration file."""
+        try:
+            with open(filepath, "r", encoding="utf-8") as file_handle:
+                content = file_handle.read()
+
+            name = filename.replace(".conf", "")
+            url = ""
+            enabled = True
+
+            # Extract URL
+            url_match = re.search(r'url:\s*"([^"]+)"', content)
+            if url_match:
+                url = url_match.group(1)
+
+            # Check if enabled
+            if "enabled: no" in content.lower():
+                enabled = False
+
+            repositories.append(
+                {
+                    "name": name,
+                    "type": "FreeBSD pkg",
+                    "url": url,
+                    "enabled": enabled,
+                    "file_path": filepath,
+                }
+            )
+        except Exception as error:
+            self.logger.warning(_("Error reading %s: %s"), filepath, error)
 
     async def add_freebsd_repository(self, repo_name: str, url: str) -> Dict[str, Any]:
         """Add a pkg repository on FreeBSD."""
@@ -176,8 +185,8 @@ class BSDMacOSRepositoryOperations:
             # Write repository configuration
             config_content = f'{repo_name}: {{\n  url: "{url}",\n  enabled: yes\n}}\n'
 
-            with open(repo_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(repo_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             # Update pkg database
             update_result = await self.agent_instance.system_ops.execute_shell_command(
@@ -202,7 +211,9 @@ class BSDMacOSRepositoryOperations:
 
     # ========== NetBSD Operations ==========
 
-    async def list_netbsd_repositories(self) -> list:
+    async def list_netbsd_repositories(
+        self,
+    ) -> list:  # NOSONAR - async required by caller interface
         """List pkgsrc repositories on NetBSD."""
         repositories = []
 

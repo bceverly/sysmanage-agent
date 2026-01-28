@@ -18,6 +18,10 @@ from urllib.parse import urlparse
 from src.i18n import _
 from .otel_deployment_helper import OtelDeploymentHelper
 
+# Module-level constants for SonarQube compliance
+_UNSUPPORTED_PLATFORM = "Unsupported platform for OpenTelemetry service control"
+_UNKNOWN_ERROR = "Unknown error"
+
 
 class OpenTelemetryOperations:
     """Handles OpenTelemetry collector deployment, management, and removal operations."""
@@ -199,10 +203,9 @@ otelcol.exporter.otlp "grafana" {{
 """
 
     async def start_opentelemetry_service(
-        self, parameters: Dict[str, Any]
+        self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Start OpenTelemetry service."""
-        # pylint: disable=unused-argument
         try:
             self.logger.info(_("Starting OpenTelemetry service..."))
 
@@ -217,9 +220,7 @@ otelcol.exporter.otlp "grafana" {{
             else:
                 return {
                     "success": False,
-                    "error": _(
-                        "Unsupported platform for OpenTelemetry service control"
-                    ),
+                    "error": _(_UNSUPPORTED_PLATFORM),
                 }
 
             result = await self._execute_shell_command({"command": command})
@@ -233,22 +234,21 @@ otelcol.exporter.otlp "grafana" {{
 
             self.logger.error(
                 _("Failed to start OpenTelemetry service: %s"),
-                result.get("error", "Unknown error"),
+                result.get("error", _UNKNOWN_ERROR),
             )
             return {
                 "success": False,
                 "error": _("Failed to start OpenTelemetry service: %s")
-                % result.get("error", "Unknown error"),
+                % result.get("error", _UNKNOWN_ERROR),
             }
         except Exception as error:
             self.logger.error(_("Error starting OpenTelemetry service: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def stop_opentelemetry_service(
-        self, parameters: Dict[str, Any]
+        self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Stop OpenTelemetry service."""
-        # pylint: disable=unused-argument
         try:
             self.logger.info(_("Stopping OpenTelemetry service..."))
 
@@ -263,9 +263,7 @@ otelcol.exporter.otlp "grafana" {{
             else:
                 return {
                     "success": False,
-                    "error": _(
-                        "Unsupported platform for OpenTelemetry service control"
-                    ),
+                    "error": _(_UNSUPPORTED_PLATFORM),
                 }
 
             result = await self._execute_shell_command({"command": command})
@@ -279,22 +277,21 @@ otelcol.exporter.otlp "grafana" {{
 
             self.logger.error(
                 _("Failed to stop OpenTelemetry service: %s"),
-                result.get("error", "Unknown error"),
+                result.get("error", _UNKNOWN_ERROR),
             )
             return {
                 "success": False,
                 "error": _("Failed to stop OpenTelemetry service: %s")
-                % result.get("error", "Unknown error"),
+                % result.get("error", _UNKNOWN_ERROR),
             }
         except Exception as error:
             self.logger.error(_("Error stopping OpenTelemetry service: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def restart_opentelemetry_service(
-        self, parameters: Dict[str, Any]
+        self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Restart OpenTelemetry service."""
-        # pylint: disable=unused-argument
         try:
             self.logger.info(_("Restarting OpenTelemetry service..."))
 
@@ -309,9 +306,7 @@ otelcol.exporter.otlp "grafana" {{
             else:
                 return {
                     "success": False,
-                    "error": _(
-                        "Unsupported platform for OpenTelemetry service control"
-                    ),
+                    "error": _(_UNSUPPORTED_PLATFORM),
                 }
 
             result = await self._execute_shell_command({"command": command})
@@ -325,12 +320,12 @@ otelcol.exporter.otlp "grafana" {{
 
             self.logger.error(
                 _("Failed to restart OpenTelemetry service: %s"),
-                result.get("error", "Unknown error"),
+                result.get("error", _UNKNOWN_ERROR),
             )
             return {
                 "success": False,
                 "error": _("Failed to restart OpenTelemetry service: %s")
-                % result.get("error", "Unknown error"),
+                % result.get("error", _UNKNOWN_ERROR),
             }
         except Exception as error:
             self.logger.error(_("Error restarting OpenTelemetry service: %s"), error)

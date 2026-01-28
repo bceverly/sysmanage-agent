@@ -14,6 +14,10 @@ from typing import Any, Dict
 
 from src.i18n import _
 
+# Module-level constants for duplicate strings
+_PBUILD_USER_GROUP = "_pbuild:_pbuild"
+_NO_OUTPUT = "(no output)"
+
 
 class PackageBuilder:
     """Builds OpenBSD packages for sysmanage-agent."""
@@ -86,7 +90,7 @@ class PackageBuilder:
             # Set ownership of port directory for _pbuild user
             self.logger.info(_("Setting port directory ownership to _pbuild"))
             subprocess.run(  # nosec B603 B607
-                ["chown", "-R", "_pbuild:_pbuild", str(ports_dir)],
+                ["chown", "-R", _PBUILD_USER_GROUP, str(ports_dir)],
                 check=True,
                 capture_output=True,
                 timeout=30,
@@ -159,7 +163,7 @@ SIZE ({agent_version}.tar.gz) = 0
         )
 
         subprocess.run(  # nosec B603 B607
-            ["chown", "-R", "_pbuild:_pbuild", str(obj_ports)],
+            ["chown", "-R", _PBUILD_USER_GROUP, str(obj_ports)],
             check=True,
             capture_output=True,
             timeout=30,
@@ -175,7 +179,7 @@ SIZE ({agent_version}.tar.gz) = 0
             Path(pkg_dir).mkdir(parents=True, exist_ok=True)
 
         subprocess.run(  # nosec B603 B607
-            ["chown", "-R", "_pbuild:_pbuild", "/usr/packages"],
+            ["chown", "-R", _PBUILD_USER_GROUP, "/usr/packages"],
             check=True,
             capture_output=True,
             timeout=30,
@@ -186,7 +190,7 @@ SIZE ({agent_version}.tar.gz) = 0
         plist_dir.mkdir(parents=True, exist_ok=True)
 
         subprocess.run(  # nosec B603 B607
-            ["chown", "-R", "_pbuild:_pbuild", "/usr/ports/plist"],
+            ["chown", "-R", _PBUILD_USER_GROUP, "/usr/ports/plist"],
             check=True,
             capture_output=True,
             timeout=30,
@@ -194,7 +198,7 @@ SIZE ({agent_version}.tar.gz) = 0
 
         # Set ownership of port directory
         subprocess.run(  # nosec B603 B607
-            ["chown", "-R", "_pbuild:_pbuild", str(ports_dir)],
+            ["chown", "-R", _PBUILD_USER_GROUP, str(ports_dir)],
             check=True,
             capture_output=True,
             timeout=30,
@@ -243,7 +247,7 @@ SIZE ({agent_version}.tar.gz) = 0
         )
         self.logger.info(
             _("make clean output: %s"),
-            result.stdout if result.stdout else "(no output)",
+            result.stdout if result.stdout else _NO_OUTPUT,
         )
         if result.stderr:
             self.logger.warning(_("make clean stderr: %s"), result.stderr)
@@ -259,7 +263,7 @@ SIZE ({agent_version}.tar.gz) = 0
         )
         self.logger.info(
             _("make makesum output: %s"),
-            result.stdout if result.stdout else "(no output)",
+            result.stdout if result.stdout else _NO_OUTPUT,
         )
         if result.stderr:
             self.logger.warning(_("make makesum stderr: %s"), result.stderr)
@@ -276,7 +280,7 @@ SIZE ({agent_version}.tar.gz) = 0
         )
         self.logger.info(
             _("make fetch output: %s"),
-            result.stdout if result.stdout else "(no output)",
+            result.stdout if result.stdout else _NO_OUTPUT,
         )
         self.logger.info(_("make fetch return code: %d"), result.returncode)
         if result.stderr:
@@ -294,7 +298,7 @@ SIZE ({agent_version}.tar.gz) = 0
         )
         self.logger.info(
             _("make package output: %s"),
-            result.stdout if result.stdout else "(no output)",
+            result.stdout if result.stdout else _NO_OUTPUT,
         )
         self.logger.info(_("make package return code: %d"), result.returncode)
         if result.stderr:

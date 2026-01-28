@@ -5,13 +5,30 @@ Tests for LinuxRepositoryOperations class.
 
 # pylint: disable=redefined-outer-name,protected-access
 
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.sysmanage_agent.operations.linux_repository_operations import (
     LinuxRepositoryOperations,
 )
+
+# Path to patch aiofiles.open in the module under test
+_LINUX_REPO_AIOFILES_OPEN = (
+    "src.sysmanage_agent.operations.linux_repository_operations.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open(read_data=""):
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    mock_file.read = AsyncMock(return_value=read_data)
+    lines = [line + "\n" for line in read_data.split("\n") if line]
+    mock_file.readlines = AsyncMock(return_value=lines)
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
 
 
 @pytest.fixture
@@ -49,7 +66,10 @@ class TestAPTOperations:
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["user-ppa.list"]),
-            patch("builtins.open", mock_open(read_data=sources_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(sources_content),
+            ),
         ):
             repos = await linux_ops.list_apt_repositories()
             assert len(repos) == 1
@@ -65,7 +85,10 @@ class TestAPTOperations:
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["test.list"]),
-            patch("builtins.open", mock_open(read_data=sources_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(sources_content),
+            ),
         ):
             repos = await linux_ops.list_apt_repositories()
             # The code now includes commented lines as disabled repositories
@@ -91,7 +114,10 @@ Components: main
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["test.sources"]),
-            patch("builtins.open", mock_open(read_data=sources_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(sources_content),
+            ),
         ):
             repos = await linux_ops.list_apt_repositories()
             assert len(repos) == 1
@@ -274,7 +300,10 @@ class TestYUMOperations:
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["test.repo"]),
-            patch("builtins.open", mock_open(read_data=repo_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(repo_content),
+            ),
         ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1
@@ -288,7 +317,10 @@ class TestYUMOperations:
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["_copr:user:project.repo"]),
-            patch("builtins.open", mock_open(read_data=repo_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(repo_content),
+            ),
         ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1
@@ -301,7 +333,10 @@ class TestYUMOperations:
         with (
             patch("os.path.exists", return_value=True),
             patch("os.listdir", return_value=["test.repo"]),
-            patch("builtins.open", mock_open(read_data=repo_content)),
+            patch(
+                _LINUX_REPO_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(repo_content),
+            ),
         ):
             repos = await linux_ops.list_yum_repositories()
             assert len(repos) == 1

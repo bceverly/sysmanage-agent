@@ -3,6 +3,8 @@ Message Handler with Persistent Queue Integration.
 Provides reliable message delivery with queue-based persistence and message processing.
 """
 
+# pylint: disable=too-many-lines
+
 import asyncio
 import json
 import logging
@@ -215,8 +217,8 @@ class MessageHandler:
             if http_url.startswith("https://"):
                 ssl_context = ssl.create_default_context()
                 if not self.agent.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
+                    ssl_context.check_hostname = False  # NOSONAR
+                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
 
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
@@ -237,6 +239,20 @@ class MessageHandler:
         error_message = data.get("message", "No error message provided")
 
         # Check if this is a stale error message
+        if self._is_stale_error_message(data, error_code):
+            return
+
+        self.logger.error("Server error [%s]: %s", error_code, error_message)
+
+        # Handle specific error codes from server
+        await self._dispatch_server_error(error_code, error_message)
+
+    def _is_stale_error_message(self, data: Dict[str, Any], error_code: str) -> bool:
+        """Check if an error message is stale (older than our last registration).
+
+        Returns:
+            True if the message is stale and should be ignored, False otherwise.
+        """
         message_timestamp = data.get("timestamp")
         self.logger.debug(
             "Error message timestamp validation - timestamp: %s, last_registration_time: %s",
@@ -244,63 +260,74 @@ class MessageHandler:
             self.agent.last_registration_time,
         )
 
-        if message_timestamp and self.agent.last_registration_time:
-            try:
-                # Parse the message timestamp
-                if isinstance(message_timestamp, str):
-                    # Handle ISO format timestamps
-                    if message_timestamp.endswith("+00:00"):
-                        message_timestamp = message_timestamp[:-6] + "Z"
-                    msg_time = datetime.fromisoformat(
-                        message_timestamp.replace("Z", "+00:00")
-                    )
-                else:
-                    msg_time = message_timestamp
-
-                # Ensure both timestamps are timezone-aware
-                if msg_time.tzinfo is None:
-                    msg_time = msg_time.replace(tzinfo=timezone.utc)
-                if self.agent.last_registration_time.tzinfo is None:
-                    self.agent.last_registration_time = (
-                        self.agent.last_registration_time.replace(tzinfo=timezone.utc)
-                    )
-
-                self.logger.debug(
-                    "Timestamp comparison - msg_time: %s, last_registration: %s",
-                    msg_time,
-                    self.agent.last_registration_time,
-                )
-
-                # If the error message is older than our last registration, ignore it
-                if msg_time < self.agent.last_registration_time:
-                    self.logger.info(
-                        "Ignoring stale error message [%s] from %s (registration at %s)",
-                        error_code,
-                        msg_time,
-                        self.agent.last_registration_time,
-                    )
-                    return
-
-                self.logger.debug(
-                    "Error message is NOT stale - msg_time: %s >= last_registration: %s",
-                    msg_time,
-                    self.agent.last_registration_time,
-                )
-            except (ValueError, TypeError) as error:
-                self.logger.warning(
-                    "Could not parse message timestamp for stale check: %s", error
-                )
-        else:
+        if not message_timestamp or not self.agent.last_registration_time:
             if not message_timestamp:
                 self.logger.debug("No timestamp in error message, processing normally")
             if not self.agent.last_registration_time:
                 self.logger.debug(
                     "No last_registration_time set, processing error normally"
                 )
+            return False
 
-        self.logger.error("Server error [%s]: %s", error_code, error_message)
+        try:
+            msg_time = self._parse_message_timestamp(message_timestamp)
 
-        # Handle specific error codes from server
+            self.logger.debug(
+                "Timestamp comparison - msg_time: %s, last_registration: %s",
+                msg_time,
+                self.agent.last_registration_time,
+            )
+
+            # If the error message is older than our last registration, ignore it
+            if msg_time < self.agent.last_registration_time:
+                self.logger.info(
+                    "Ignoring stale error message [%s] from %s (registration at %s)",
+                    error_code,
+                    msg_time,
+                    self.agent.last_registration_time,
+                )
+                return True
+
+            self.logger.debug(
+                "Error message is NOT stale - msg_time: %s >= last_registration: %s",
+                msg_time,
+                self.agent.last_registration_time,
+            )
+        except (ValueError, TypeError) as error:
+            self.logger.warning(
+                "Could not parse message timestamp for stale check: %s", error
+            )
+
+        return False
+
+    def _parse_message_timestamp(self, message_timestamp) -> datetime:
+        """Parse a message timestamp string into a timezone-aware datetime.
+
+        Also ensures self.agent.last_registration_time is timezone-aware as a side effect.
+
+        Returns:
+            A timezone-aware datetime object.
+        """
+        if isinstance(message_timestamp, str):
+            # Handle ISO format timestamps
+            if message_timestamp.endswith("+00:00"):
+                message_timestamp = message_timestamp[:-6] + "Z"
+            msg_time = datetime.fromisoformat(message_timestamp.replace("Z", "+00:00"))
+        else:
+            msg_time = message_timestamp
+
+        # Ensure both timestamps are timezone-aware
+        if msg_time.tzinfo is None:
+            msg_time = msg_time.replace(tzinfo=timezone.utc)
+        if self.agent.last_registration_time.tzinfo is None:
+            self.agent.last_registration_time = (
+                self.agent.last_registration_time.replace(tzinfo=timezone.utc)
+            )
+
+        return msg_time
+
+    async def _dispatch_server_error(self, error_code: str, error_message: str) -> None:
+        """Dispatch handling for specific server error codes."""
         if error_code == "host_not_registered":
             await self._handle_host_not_registered()
         elif error_code == "host_not_approved":
@@ -337,15 +364,15 @@ class MessageHandler:
         self.logger.info("Disconnecting to trigger re-registration...")
         self.agent.running = False
 
-    async def _handle_command_message(self, data: Dict[str, Any]) -> bool:
+    async def _handle_command_message(self, data: Dict[str, Any]) -> None:
         """
         Handle a command message from the server.
 
+        Processes the command (or acknowledges a duplicate) and triggers
+        inbound queue processing if needed.
+
         Args:
             data: Parsed message data
-
-        Returns:
-            True if message was processed (including duplicates), False otherwise
         """
         # Get the queue_message_id for acknowledgment (this is what the server tracks)
         queue_message_id = data.get("queue_message_id") or data.get("message_id")
@@ -365,7 +392,7 @@ class MessageHandler:
         ):
             self._log_duplicate_message(command_type, params, queue_message_id)
             await self._send_command_acknowledgment(queue_message_id)
-            return True  # Duplicate handled
+            return  # Duplicate handled
 
         # Queue command for reliable processing
         await self.queue_inbound_message(data)
@@ -386,8 +413,6 @@ class MessageHandler:
             self.inbound_processing_task = asyncio.create_task(
                 self.process_inbound_queue()
             )
-
-        return True
 
     def _log_child_host_received(
         self, data: Dict[str, Any], queue_message_id: str, params: Dict[str, Any]
@@ -428,70 +453,9 @@ class MessageHandler:
 
                 try:
                     data = json.loads(message)
-                    message_type = data.get("message_type")
-
-                    if message_type == "command":
-                        if await self._handle_command_message(data):
-                            continue
-                    elif message_type == "ping":
-                        # Respond to ping
-                        pong = self.create_message(
-                            "pong", {"ping_id": data.get("message_id")}
-                        )
-                        await self.send_message(pong)
-                    elif message_type == "ack":
-                        ack_data = data.get("data", {})
-                        # Try to get the queue_id or message_id that was acknowledged
-                        queue_id = data.get("queue_id")
-                        acked_msg_id = (
-                            ack_data.get("acked_message_id")
-                            or ack_data.get("message_id")
-                            or data.get("message_id", "unknown")
-                        )
-                        status = data.get("status", "unknown")
-
-                        if queue_id:
-                            self.logger.debug(
-                                "Server acknowledged message queue_id: %s (status: %s)",
-                                queue_id,
-                                status,
-                            )
-                        else:
-                            self.logger.debug(
-                                "Server acknowledged message: %s (status: %s)",
-                                acked_msg_id,
-                                status,
-                            )
-                    elif message_type == "error":
-                        await self._handle_server_error(data)
-                        if self.agent.needs_registration:
-                            return
-                    elif message_type == "host_approved":
-                        await self.agent.handle_host_approval(data)
-                    elif message_type == "registration_success":
-                        await self.agent.handle_registration_success(data)
-                    elif message_type == "diagnostic_result_ack":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed diagnostic processing: %s", status
-                        )
-                    elif message_type == "available_packages_batch_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch queued: %s", status
-                        )
-                    elif message_type == "available_packages_batch_start_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch start queued: %s", status
-                        )
-                    elif message_type == "available_packages_batch_end_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch end queued: %s", status
-                        )
-                    else:
-                        self.logger.warning("Unknown message type: %s", message_type)
+                    should_exit = await self._dispatch_received_message(data)
+                    if should_exit:
+                        return
 
                 except json.JSONDecodeError:
                     self.logger.error("Invalid JSON received: %s", message)
@@ -510,6 +474,77 @@ class MessageHandler:
             )
             self.agent.connected = False
             self.agent.websocket = None
+
+    async def _dispatch_received_message(self, data: Dict[str, Any]) -> bool:
+        """Dispatch a received message to the appropriate handler.
+
+        Returns:
+            True if the message receiver loop should exit, False otherwise.
+        """
+        message_type = data.get("message_type")
+
+        if message_type == "command":
+            await self._handle_command_message(data)
+        elif message_type == "ping":
+            pong = self.create_message("pong", {"ping_id": data.get("message_id")})
+            await self.send_message(pong)
+        elif message_type == "ack":
+            self._handle_ack_message(data)
+        elif message_type == "error":
+            await self._handle_server_error(data)
+            if self.agent.needs_registration:
+                return True
+        elif message_type == "host_approved":
+            await self.agent.handle_host_approval(data)
+        elif message_type == "registration_success":
+            await self.agent.handle_registration_success(data)
+        elif message_type in self._get_status_confirmation_types():
+            self._handle_status_confirmation(message_type, data)
+        else:
+            self.logger.warning("Unknown message type: %s", message_type)
+
+        return False
+
+    def _get_status_confirmation_types(self) -> dict:
+        """Return mapping of status confirmation message types to log descriptions."""
+        return {
+            "diagnostic_result_ack": "diagnostic processing",
+            "available_packages_batch_queued": "packages batch queued",
+            "available_packages_batch_start_queued": "packages batch start queued",
+            "available_packages_batch_end_queued": "packages batch end queued",
+        }
+
+    def _handle_status_confirmation(
+        self, message_type: str, data: Dict[str, Any]
+    ) -> None:
+        """Handle status confirmation messages from the server."""
+        status = data.get("status", "unknown")
+        description = self._get_status_confirmation_types()[message_type]
+        self.logger.debug("Server confirmed %s: %s", description, status)
+
+    def _handle_ack_message(self, data: Dict[str, Any]) -> None:
+        """Handle an acknowledgment message from the server."""
+        ack_data = data.get("data", {})
+        queue_id = data.get("queue_id")
+        acked_msg_id = (
+            ack_data.get("acked_message_id")
+            or ack_data.get("message_id")
+            or data.get("message_id", "unknown")
+        )
+        status = data.get("status", "unknown")
+
+        if queue_id:
+            self.logger.debug(
+                "Server acknowledged message queue_id: %s (status: %s)",
+                queue_id,
+                status,
+            )
+        else:
+            self.logger.debug(
+                "Server acknowledged message: %s (status: %s)",
+                acked_msg_id,
+                status,
+            )
 
     async def message_sender(self):
         """Handle periodic outgoing messages to server."""
@@ -657,50 +692,7 @@ class MessageHandler:
                 for message in messages:
                     if not self.agent.running:
                         break  # Agent shutting down
-
-                    # Mark message as being processed
-                    if not self.queue_manager.mark_processing(message.message_id):
-                        self.logger.warning(
-                            "Could not mark inbound message %s as processing",
-                            message.message_id,
-                        )
-                        continue  # Already processed or failed to mark
-
-                    try:
-                        # Deserialize message data
-                        message_data = self.queue_manager.deserialize_message_data(
-                            message
-                        )
-
-                        self.logger.info(
-                            "Processing queued inbound command: %s (queue_id: %s)",
-                            message_data.get("data", {}).get("command_type", "unknown"),
-                            message.message_id,
-                        )
-
-                        # Process the command
-                        await self.handle_command(message_data)
-
-                        # Mark message as completed
-                        self.queue_manager.mark_completed(message.message_id)
-                        self.logger.info(
-                            "Successfully processed inbound message: %s",
-                            message.message_id,
-                        )
-
-                    except Exception as error:
-                        # Mark message as failed with retry
-                        error_msg = (
-                            f"Exception processing inbound message: {str(error)}"
-                        )
-                        self.queue_manager.mark_failed(
-                            message.message_id, error_msg, retry=True
-                        )
-                        self.logger.error(
-                            "Error processing inbound message %s: %s",
-                            message.message_id,
-                            error,
-                        )
+                    await self._process_single_inbound_message(message)
 
                 # Small delay between processing messages to prevent CPU spinning
                 await asyncio.sleep(0.1)
@@ -710,6 +702,46 @@ class MessageHandler:
         finally:
             self.inbound_queue_processor_running = False
             self.logger.debug("Inbound queue processing stopped")
+
+    async def _process_single_inbound_message(self, message) -> None:
+        """Process a single inbound message from the queue."""
+        # Mark message as being processed
+        if not self.queue_manager.mark_processing(message.message_id):
+            self.logger.warning(
+                "Could not mark inbound message %s as processing",
+                message.message_id,
+            )
+            return  # Already processed or failed to mark
+
+        try:
+            # Deserialize message data
+            message_data = self.queue_manager.deserialize_message_data(message)
+
+            self.logger.info(
+                "Processing queued inbound command: %s (queue_id: %s)",
+                message_data.get("data", {}).get("command_type", "unknown"),
+                message.message_id,
+            )
+
+            # Process the command
+            await self.handle_command(message_data)
+
+            # Mark message as completed
+            self.queue_manager.mark_completed(message.message_id)
+            self.logger.info(
+                "Successfully processed inbound message: %s",
+                message.message_id,
+            )
+
+        except Exception as error:
+            # Mark message as failed with retry
+            error_msg = f"Exception processing inbound message: {str(error)}"
+            self.queue_manager.mark_failed(message.message_id, error_msg, retry=True)
+            self.logger.error(
+                "Error processing inbound message %s: %s",
+                message.message_id,
+                error,
+            )
 
     async def send_message_direct(self, message: Dict[str, Any]) -> bool:
         """
@@ -769,47 +801,9 @@ class MessageHandler:
                     if not self.agent.connected:
                         break  # Connection lost during processing
 
-                    # Mark message as being processed
-                    if not self.queue_manager.mark_processing(message.message_id):
-                        continue  # Already processed or failed to mark
-
-                    try:
-                        # Deserialize message data
-                        message_data = self.queue_manager.deserialize_message_data(
-                            message
-                        )
-
-                        # Send message
-                        success = await self.send_message_direct(message_data)
-
-                        if success:
-                            # Mark message as completed
-                            self.queue_manager.mark_completed(message.message_id)
-                            self.logger.info(
-                                "Successfully sent queued message: %s",
-                                message.message_id,
-                            )
-                        else:
-                            # Mark message as failed, will retry according to retry policy
-                            self.queue_manager.mark_failed(
-                                message.message_id,
-                                "Failed to send over WebSocket",
-                                retry=True,
-                            )
-                            # Connection is likely broken, exit processing loop
-                            break
-
-                    except Exception as error:
-                        # Mark message as failed
-                        error_msg = f"Exception processing message: {str(error)}"
-                        self.queue_manager.mark_failed(
-                            message.message_id, error_msg, retry=True
-                        )
-                        self.logger.error(
-                            _("Error processing queued message %s: %s"),
-                            message.message_id,
-                            error,
-                        )
+                    send_failed = await self._process_single_outbound_message(message)
+                    if send_failed:
+                        break  # Connection is likely broken
 
                 # Delay between message sends to prevent WebSocket buffer overflow
                 await asyncio.sleep(1.0)
@@ -820,10 +814,57 @@ class MessageHandler:
             self.queue_processor_running = False
             self.logger.debug("Outbound queue processing stopped")
 
-    async def on_connection_established(self):
+    async def _process_single_outbound_message(self, message) -> bool:
+        """Process a single outbound message from the queue.
+
+        Returns:
+            True if the send failed (connection likely broken), False otherwise.
+        """
+        # Mark message as being processed
+        if not self.queue_manager.mark_processing(message.message_id):
+            return False  # Already processed or failed to mark
+
+        try:
+            # Deserialize message data
+            message_data = self.queue_manager.deserialize_message_data(message)
+
+            # Send message
+            success = await self.send_message_direct(message_data)
+
+            if success:
+                self.queue_manager.mark_completed(message.message_id)
+                self.logger.info(
+                    "Successfully sent queued message: %s",
+                    message.message_id,
+                )
+                return False
+
+            # Mark message as failed, will retry according to retry policy
+            self.queue_manager.mark_failed(
+                message.message_id,
+                "Failed to send over WebSocket",
+                retry=True,
+            )
+            return True  # Connection is likely broken
+
+        except Exception as error:
+            error_msg = f"Exception processing message: {str(error)}"
+            self.queue_manager.mark_failed(message.message_id, error_msg, retry=True)
+            self.logger.error(
+                _("Error processing queued message %s: %s"),
+                message.message_id,
+                error,
+            )
+            return False
+
+    async def on_connection_established(
+        self,
+    ):  # noqa: async required by caller interface
         """
         Called when WebSocket connection is established.
         Recovers stuck messages and starts processing queued messages.
+
+        Note: async is required because callers await this method.
         """
         self.logger.info(_("Connection established, starting queue processing"))
 
@@ -897,7 +938,9 @@ class MessageHandler:
             self.processing_task.cancel()
             try:
                 await self.processing_task
-            except asyncio.CancelledError:
+            except (
+                asyncio.CancelledError
+            ):  # NOSONAR - expected: we just cancelled this task ourselves
                 pass
 
         # Reset the outbound queue processor flag so it can start again on reconnection
@@ -929,9 +972,13 @@ class MessageHandler:
             },
         }
 
-    async def cleanup_old_messages(self, older_than_days: int = 7) -> int:
+    async def cleanup_old_messages(
+        self, older_than_days: int = 7
+    ) -> int:  # noqa: async required by caller interface
         """
         Clean up old completed messages.
+
+        Note: async is required because callers await this method.
 
         Args:
             older_than_days: Remove messages older than this many days

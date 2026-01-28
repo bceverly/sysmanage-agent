@@ -45,40 +45,51 @@ class PackageManagerDetector:
 
         try:
             if self.system == "linux":
-                # Try different package managers
-                if self._command_exists("dpkg"):
-                    packages.update(self._get_dpkg_packages())
-                elif self._command_exists("rpm"):
-                    packages.update(self._get_rpm_packages())
-                elif self._command_exists("pacman"):
-                    packages.update(self._get_pacman_packages())
-
-                # Also check snap packages (can coexist with other package managers)
-                if self._command_exists("snap"):
-                    packages.update(self._get_snap_packages())
-
-            elif self.system == "darwin":  # macOS
-                # macOS package managers
-                if self._command_exists("brew"):
-                    packages.update(self._get_homebrew_packages())
-                # Could also add MacPorts support here in the future
-                # if self._command_exists("port"):
-                #     packages.update(self._get_macports_packages())
-
+                packages.update(self._collect_linux_packages())
+            elif self.system == "darwin":
+                packages.update(self._collect_darwin_packages())
             elif self.system in ["netbsd", "freebsd", "openbsd"]:
-                # BSD package managers
-                if self._command_exists("pkgin"):  # NetBSD
-                    packages.update(self._get_pkgin_packages())
-                elif self._command_exists("pkg"):  # FreeBSD/OpenBSD
-                    packages.update(self._get_pkg_packages())
-
+                packages.update(self._collect_bsd_packages())
             elif self.system == "windows":
-                # Windows package managers and direct detection
                 packages.update(self._get_windows_packages())
 
         except Exception as error:
             self.logger.error("Error getting installed packages: %s", error)
 
+        return packages
+
+    def _collect_linux_packages(self) -> Dict[str, str]:
+        """Collect packages from Linux package managers."""
+        packages = {}
+
+        # Try different package managers
+        if self._command_exists("dpkg"):
+            packages.update(self._get_dpkg_packages())
+        elif self._command_exists("rpm"):
+            packages.update(self._get_rpm_packages())
+        elif self._command_exists("pacman"):
+            packages.update(self._get_pacman_packages())
+
+        # Also check snap packages (can coexist with other package managers)
+        if self._command_exists("snap"):
+            packages.update(self._get_snap_packages())
+
+        return packages
+
+    def _collect_darwin_packages(self) -> Dict[str, str]:
+        """Collect packages from macOS package managers."""
+        packages = {}
+        if self._command_exists("brew"):
+            packages.update(self._get_homebrew_packages())
+        return packages
+
+    def _collect_bsd_packages(self) -> Dict[str, str]:
+        """Collect packages from BSD package managers."""
+        packages = {}
+        if self._command_exists("pkgin"):  # NetBSD
+            packages.update(self._get_pkgin_packages())
+        elif self._command_exists("pkg"):  # FreeBSD/OpenBSD
+            packages.update(self._get_pkg_packages())
         return packages
 
     def _get_dpkg_packages(self) -> Dict[str, str]:
@@ -204,15 +215,7 @@ class PackageManagerDetector:
             return packages
 
         try:
-            # If running as root (like via sudo), we need to run brew as the original user
-            # because Homebrew refuses to run as root for security reasons
-            cmd = [brew_path, "list", "--formula", "--versions"]
-            if os.getuid() == 0:  # Running as root
-                # Get the original user from SUDO_USER environment variable
-                # and validate it to prevent command injection
-                original_user = os.environ.get("SUDO_USER")
-                if original_user and is_valid_unix_username(original_user):
-                    cmd = ["sudo", "-u", original_user] + cmd
+            cmd = self._build_homebrew_command(brew_path)
 
             # Get formula packages (command-line tools and libraries)
             result = subprocess.run(  # nosec B603 B607
@@ -224,18 +227,32 @@ class PackageManagerDetector:
             )
 
             if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line.strip():
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            package_name = parts[0]
-                            # Take the first version if multiple versions are listed
-                            version = parts[1]
-                            packages[package_name] = version
+                packages = self._parse_homebrew_output(result.stdout)
 
         except Exception as error:
             self.logger.debug("Error getting Homebrew packages: %s", error)
 
+        return packages
+
+    def _build_homebrew_command(self, brew_path: str) -> list:
+        """Build the Homebrew list command, handling root user case."""
+        cmd = [brew_path, "list", "--formula", "--versions"]
+        if os.getuid() == 0:  # Running as root
+            original_user = os.environ.get("SUDO_USER")
+            if original_user and is_valid_unix_username(original_user):
+                cmd = ["sudo", "-u", original_user] + cmd
+        return cmd
+
+    @staticmethod
+    def _parse_homebrew_output(stdout: str) -> Dict[str, str]:
+        """Parse Homebrew list output into a package name-version dict."""
+        packages = {}
+        for line in stdout.strip().split("\n"):
+            if not line.strip():
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                packages[parts[0]] = parts[1]
         return packages
 
     def _get_pkgin_packages(self) -> Dict[str, str]:
@@ -332,50 +349,53 @@ class PackageManagerDetector:
         """Check for databases installed in standard Windows locations."""
         packages = {}
 
-        # Check for PostgreSQL in Program Files
+        self._detect_windows_postgresql(packages)
+        self._detect_windows_mysql(packages)
+
+        return packages
+
+    def _detect_windows_postgresql(self, packages: Dict[str, str]) -> None:
+        """Detect PostgreSQL installations in standard Windows paths."""
         postgres_paths = [
             r"C:\Program Files\PostgreSQL",
             r"C:\Program Files (x86)\PostgreSQL",
         ]
 
         for base_path in postgres_paths:
-            if os.path.exists(base_path):
-                # Check for version subdirectories
-                try:
-                    for version_dir in os.listdir(base_path):
-                        version_path = os.path.join(base_path, version_dir)
-                        if os.path.isdir(version_path):
-                            # Found PostgreSQL installation
-                            packages["postgresql"] = version_dir
-                            self.logger.info(
-                                "Found PostgreSQL %s in %s", version_dir, base_path
-                            )
-                            break  # Take first version found
-                except Exception as error:
-                    self.logger.debug(
-                        "Error checking PostgreSQL path %s: %s", base_path, error
-                    )
+            if not os.path.exists(base_path):
+                continue
+            try:
+                for version_dir in os.listdir(base_path):
+                    version_path = os.path.join(base_path, version_dir)
+                    if os.path.isdir(version_path):
+                        packages["postgresql"] = version_dir
+                        self.logger.info(
+                            "Found PostgreSQL %s in %s", version_dir, base_path
+                        )
+                        return  # Take first version found
+            except Exception as error:
+                self.logger.debug(
+                    "Error checking PostgreSQL path %s: %s", base_path, error
+                )
 
-        # Check for MySQL in Program Files
+    def _detect_windows_mysql(self, packages: Dict[str, str]) -> None:
+        """Detect MySQL installations in standard Windows paths."""
         mysql_paths = [r"C:\Program Files\MySQL", r"C:\Program Files (x86)\MySQL"]
 
         for base_path in mysql_paths:
-            if os.path.exists(base_path):
-                try:
-                    for server_dir in os.listdir(base_path):
-                        if "Server" in server_dir:
-                            version = server_dir.replace("MySQL Server ", "")
-                            packages["mysql-server"] = version
-                            self.logger.info(
-                                "Found MySQL Server %s in %s", version, base_path
-                            )
-                            break
-                except Exception as error:
-                    self.logger.debug(
-                        "Error checking MySQL path %s: %s", base_path, error
-                    )
-
-        return packages
+            if not os.path.exists(base_path):
+                continue
+            try:
+                for server_dir in os.listdir(base_path):
+                    if "Server" in server_dir:
+                        version = server_dir.replace("MySQL Server ", "")
+                        packages["mysql-server"] = version
+                        self.logger.info(
+                            "Found MySQL Server %s in %s", version, base_path
+                        )
+                        return  # Take first version found
+            except Exception as error:
+                self.logger.debug("Error checking MySQL path %s: %s", base_path, error)
 
     def _get_python_packages(self) -> Dict[str, str]:
         """Check for Python's built-in SQLite."""
@@ -425,38 +445,40 @@ class PackageManagerDetector:
             )
 
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
-                # Skip header lines
-                for line in lines:
-                    line = line.strip()
-                    if not line or "-" * 5 in line or line.startswith("Name"):
-                        continue
-
-                    # Parse winget output (Name, Id, Version, Available, Source)
-                    parts = line.split()
-                    if len(parts) >= 3:
-                        # Look for database-related packages
-                        name_lower = line.lower()
-                        if any(
-                            db in name_lower
-                            for db in [
-                                "postgresql",
-                                "mysql",
-                                "mariadb",
-                                "sqlite",
-                                "mongodb",
-                                "redis",
-                            ]
-                        ):
-                            # Extract package name and version
-                            # This is approximate due to winget's variable output format
-                            name = parts[0]
-                            # Version is typically 3rd column
-                            version = parts[2] if len(parts) > 2 else "unknown"
-                            packages[name.lower()] = version
+                packages = self._parse_winget_output(result.stdout)
 
         except Exception as error:
             self.logger.debug("Error getting winget packages: %s", error)
+
+        return packages
+
+    def _parse_winget_output(self, stdout: str) -> Dict[str, str]:
+        """Parse winget list output for database-related packages."""
+        packages = {}
+        db_keywords = [
+            "postgresql",
+            "mysql",
+            "mariadb",
+            "sqlite",
+            "mongodb",
+            "redis",
+        ]
+
+        lines = stdout.strip().split("\n")
+        for line in lines:
+            line = line.strip()
+            if not line or "-" * 5 in line or line.startswith("Name"):
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            name_lower = line.lower()
+            if any(db in name_lower for db in db_keywords):
+                name = parts[0]
+                version = parts[2] if len(parts) > 2 else "unknown"
+                packages[name.lower()] = version
 
         return packages
 

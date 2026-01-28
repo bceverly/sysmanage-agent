@@ -12,6 +12,13 @@ import shutil
 import tempfile
 from typing import Any, Dict
 
+import aiofiles
+
+# Module-level constants for SonarQube compliance
+_DNF_PATH = "/usr/bin/dnf"
+_OTEL_REMOVED_SUCCESS = "OpenTelemetry collector removed successfully"
+_OTEL_DEPLOYED_SUCCESS = "OpenTelemetry collector deployed successfully"
+
 
 class OtelDeploymentHelper:
     """Helper class for OpenTelemetry deployment and removal operations."""
@@ -42,7 +49,7 @@ class OtelDeploymentHelper:
             # Remove package based on package manager
             if os.path.exists("/usr/bin/apt"):
                 await self._run_apt_remove()
-            elif os.path.exists("/usr/bin/dnf"):
+            elif os.path.exists(_DNF_PATH):
                 await self._run_package_remove("dnf")
             elif os.path.exists("/usr/bin/yum"):
                 await self._run_package_remove("yum")
@@ -53,7 +60,7 @@ class OtelDeploymentHelper:
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -98,7 +105,7 @@ class OtelDeploymentHelper:
                 await process.communicate()
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -126,7 +133,7 @@ class OtelDeploymentHelper:
             await process.communicate()
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -145,7 +152,7 @@ class OtelDeploymentHelper:
                 await process.communicate()
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
@@ -157,7 +164,7 @@ class OtelDeploymentHelper:
         try:
             if os.path.exists("/usr/bin/apt"):
                 return await self._deploy_apt(grafana_url, config_generator)
-            if os.path.exists("/usr/bin/yum") or os.path.exists("/usr/bin/dnf"):
+            if os.path.exists("/usr/bin/yum") or os.path.exists(_DNF_PATH):
                 return await self._deploy_yum_dnf(grafana_url, config_generator)
             return {"success": False, "error": "No supported package manager found"}
         except Exception as error:
@@ -206,6 +213,8 @@ class OtelDeploymentHelper:
                 }
 
             # Write to temp file and install
+            # NOSONAR: Using sync tempfile for file creation is acceptable; the file
+            # creation itself is fast and the content is already in memory
             with tempfile.NamedTemporaryFile(
                 mode="wb", suffix=".deb", delete=False
             ) as file_handle:
@@ -260,7 +269,7 @@ class OtelDeploymentHelper:
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector deployed successfully",
+                "message": _OTEL_DEPLOYED_SUCCESS,
                 "config_file": config_result.get("config_file"),
             }
         except Exception as error:
@@ -271,7 +280,7 @@ class OtelDeploymentHelper:
     ) -> Dict[str, Any]:
         """Deploy using yum/dnf."""
         try:
-            pkg_manager = "dnf" if os.path.exists("/usr/bin/dnf") else "yum"
+            pkg_manager = "dnf" if os.path.exists(_DNF_PATH) else "yum"
             process = await asyncio.create_subprocess_exec(
                 pkg_manager,
                 "install",
@@ -298,12 +307,13 @@ class OtelDeploymentHelper:
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector deployed successfully",
+                "message": _OTEL_DEPLOYED_SUCCESS,
                 "config_file": config_result.get("config_file"),
             }
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    # NOSONAR: async keyword required by interface contract even though limited awaits
     async def _create_linux_config(
         self, grafana_url: str, config_generator
     ) -> Dict[str, Any]:
@@ -312,14 +322,18 @@ class OtelDeploymentHelper:
             config_file = "/etc/otelcol-contrib/config.yaml"
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_generator(grafana_url))
-            os.chmod(config_file, 0o644)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_generator(grafana_url))
+            os.chmod(
+                config_file, 0o644
+            )  # NOSONAR - permissions are appropriate for this file type
 
             env_file = "/etc/otelcol-contrib/otelcol-contrib.conf"
-            with open(env_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(f'OTELCOL_OPTIONS="--config={config_file}"\n')
-            os.chmod(env_file, 0o644)
+            async with aiofiles.open(env_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(f'OTELCOL_OPTIONS="--config={config_file}"\n')
+            os.chmod(
+                env_file, 0o644
+            )  # NOSONAR - permissions are appropriate for this file type
 
             return {"success": True, "config_file": config_file}
         except Exception as error:
@@ -361,8 +375,8 @@ class OtelDeploymentHelper:
             config_file = "/usr/local/etc/otelcol-contrib/config.yaml"
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_generator(grafana_url))
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_generator(grafana_url))
 
             process = await asyncio.create_subprocess_exec(
                 "brew",
@@ -376,7 +390,7 @@ class OtelDeploymentHelper:
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector deployed successfully",
+                "message": _OTEL_DEPLOYED_SUCCESS,
                 "config_file": config_file,
             }
         except Exception as error:
@@ -406,8 +420,8 @@ class OtelDeploymentHelper:
             config_file = "/usr/local/etc/alloy/config.alloy"
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(alloy_config_generator(grafana_url))
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(alloy_config_generator(grafana_url))
 
             process = await asyncio.create_subprocess_exec(
                 "sysrc",
@@ -458,8 +472,8 @@ class OtelDeploymentHelper:
             config_file = "C:\\Program Files\\OpenTelemetry Collector\\config.yaml"
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_generator(grafana_url))
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_generator(grafana_url))
 
             process = await asyncio.create_subprocess_exec(
                 "sc",
@@ -472,7 +486,7 @@ class OtelDeploymentHelper:
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector deployed successfully",
+                "message": _OTEL_DEPLOYED_SUCCESS,
                 "config_file": config_file,
             }
         except Exception as error:

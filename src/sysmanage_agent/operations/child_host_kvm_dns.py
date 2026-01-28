@@ -169,7 +169,7 @@ def get_host_dns_servers(logger) -> List[str]:
     # Fallback to common public DNS
     if not dns_servers:
         logger.warning(_("Could not detect host DNS, using fallback"))
-        dns_servers = ["8.8.8.8", "8.8.4.4"]
+        dns_servers = ["8.8.8.8", "8.8.4.4"]  # NOSONAR - standard DNS fallback
 
     logger.info(_("Detected DNS servers: %s"), dns_servers)
     return dns_servers[:3]  # Limit to 3 DNS servers

@@ -8,6 +8,8 @@ import shutil
 import subprocess  # nosec B404 # Required for virtualization host detection
 from typing import Dict, Any, Optional
 
+DEV_VMM_PATH = "/dev/vmm"
+
 
 class VirtualizationHostDetector:
     """Handles detection of virtualization host roles (LXD, WSL, VMM, KVM, bhyve)."""
@@ -158,7 +160,7 @@ class VirtualizationHostDetector:
                 return None
 
             # Check if /dev/vmm exists (kernel VMM support)
-            if not os.path.exists("/dev/vmm"):
+            if not os.path.exists(DEV_VMM_PATH):
                 self.logger.debug("VMM kernel support not enabled (/dev/vmm missing)")
                 return None
 
@@ -327,7 +329,7 @@ class VirtualizationHostDetector:
                 return None
 
             # Check if vmm.ko is loaded by checking /dev/vmm directory
-            if not os.path.isdir("/dev/vmm"):
+            if not os.path.isdir(DEV_VMM_PATH):
                 self.logger.debug("bhyve vmm.ko not loaded (/dev/vmm missing)")
                 return None
 
@@ -349,8 +351,8 @@ class VirtualizationHostDetector:
             # Get count of running VMs by listing /dev/vmm entries
             vm_count = 0
             try:
-                if os.path.isdir("/dev/vmm"):
-                    vms = os.listdir("/dev/vmm")
+                if os.path.isdir(DEV_VMM_PATH):
+                    vms = os.listdir(DEV_VMM_PATH)
                     vm_count = len(vms)
             except Exception:  # nosec B110 - VM count is optional
                 pass

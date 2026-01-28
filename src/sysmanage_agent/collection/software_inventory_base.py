@@ -46,7 +46,7 @@ class SoftwareInventoryCollectorBase:
                 check=False,  # nosec B603, B607
             )
             return True
-        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        except (subprocess.TimeoutExpired, OSError):
             return False
 
     def _parse_size_string(self, size_str: str) -> Optional[int]:

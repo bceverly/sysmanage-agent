@@ -40,6 +40,9 @@ from src.sysmanage_agent.operations.child_host_ubuntu_scripts import (
     generate_kernel_boot_params,
 )
 
+# Module-level constants for duplicate string literals
+_UNSUPPORTED_UBUNTU_VERSION = "Unsupported Ubuntu version: %s"
+
 
 class UbuntuAutoinstallSetup:
     """Ubuntu automated installation setup for VMM VMs."""
@@ -52,6 +55,112 @@ class UbuntuAutoinstallSetup:
     def __init__(self, logger: logging.Logger):
         """Initialize Ubuntu autoinstall setup."""
         self.logger = logger
+
+    def _check_cached_iso(self, iso_path: Path) -> Dict[str, Any]:
+        """
+        Check if a valid cached ISO exists.
+
+        Args:
+            iso_path: Path to the ISO file
+
+        Returns:
+            Dict with 'found' bool and optional 'iso_path' if valid cache exists
+        """
+        if not iso_path.exists():
+            return {"found": False}
+
+        file_size = iso_path.stat().st_size
+        if file_size > 2 * 1024 * 1024 * 1024:  # > 2GB
+            self.logger.info(
+                _("Using cached Ubuntu ISO: %s (%d MB)"),
+                iso_path,
+                file_size // (1024 * 1024),
+            )
+            return {"found": True, "iso_path": str(iso_path)}
+
+        # File is too small, likely corrupted - remove it
+        self.logger.warning(
+            _("Cached ISO is incomplete (%d bytes), re-downloading"),
+            file_size,
+        )
+        iso_path.unlink()
+        return {"found": False}
+
+    def _download_iso_with_progress(
+        self, iso_url: str, temp_path: Path
+    ) -> Dict[str, Any]:
+        """
+        Download ISO file with progress logging.
+
+        Args:
+            iso_url: URL to download from
+            temp_path: Temporary path to save the download
+
+        Returns:
+            Dict with 'success' bool, 'total_size' int, and optional 'error'
+        """
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(iso_url, timeout=3600) as response:  # nosec B310
+            total_size = int(response.headers.get("content-length", 0))
+            downloaded = 0
+            chunk_size = 1024 * 1024  # 1MB chunks
+            last_logged_mb = 0  # Track last logged MB for progress
+
+            # Download to temp file first
+            with open(temp_path, "wb") as iso_file:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    iso_file.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        # Log progress every 100MB (larger file)
+                        current_mb = downloaded // (1024 * 1024)
+                        if current_mb >= last_logged_mb + 100:
+                            last_logged_mb = current_mb
+                            self.logger.info(
+                                _("Download progress: %.1f%% (%d MB)"),
+                                progress,
+                                current_mb,
+                            )
+
+        return {"success": True, "total_size": total_size}
+
+    def _validate_and_finalize_download(
+        self, temp_path: Path, iso_path: Path, total_size: int
+    ) -> Dict[str, Any]:
+        """
+        Validate downloaded file size and move to final location.
+
+        Args:
+            temp_path: Temporary download path
+            iso_path: Final ISO path
+            total_size: Expected file size (0 if unknown)
+
+        Returns:
+            Dict with 'success' bool and optional 'error'
+        """
+        if total_size > 0:
+            actual_size = temp_path.stat().st_size
+            if actual_size != total_size:
+                temp_path.unlink()
+                return {
+                    "success": False,
+                    "error": _("Download incomplete: expected %d bytes, got %d bytes")
+                    % (total_size, actual_size),
+                }
+
+        # Atomically rename temp file to final path
+        temp_path.rename(iso_path)
+
+        self.logger.info(
+            _("Downloaded Ubuntu ISO: %s (%d MB)"),
+            iso_path,
+            iso_path.stat().st_size // (1024 * 1024),
+        )
+        return {"success": True, "iso_path": str(iso_path)}
 
     def download_ubuntu_iso(self, version: str) -> Dict[str, Any]:
         """
@@ -73,7 +182,7 @@ class UbuntuAutoinstallSetup:
                 return {
                     "success": False,
                     "iso_path": None,
-                    "error": _("Unsupported Ubuntu version: %s") % version,
+                    "error": _(_UNSUPPORTED_UBUNTU_VERSION) % version,
                 }
 
             iso_url = UBUNTU_ISO_URLS[version]
@@ -87,80 +196,35 @@ class UbuntuAutoinstallSetup:
                 temp_path.unlink()
 
             # Check if already downloaded and validate size
-            # Ubuntu live server ISO is ~2.6-3.1GB
-            if iso_path.exists():
-                file_size = iso_path.stat().st_size
-                if file_size > 2 * 1024 * 1024 * 1024:  # > 2GB
-                    self.logger.info(
-                        _("Using cached Ubuntu ISO: %s (%d MB)"),
-                        iso_path,
-                        file_size // (1024 * 1024),
-                    )
-                    return {"success": True, "iso_path": str(iso_path)}
-                # File is too small, likely corrupted - remove it
-                self.logger.warning(
-                    _("Cached ISO is incomplete (%d bytes), re-downloading"),
-                    file_size,
-                )
-                iso_path.unlink()
+            cache_result = self._check_cached_iso(iso_path)
+            if cache_result.get("found"):
+                return {"success": True, "iso_path": cache_result["iso_path"]}
 
             # Download ISO (Ubuntu Server is ~3.1GB, will take a while)
             self.logger.info(_("Downloading Ubuntu %s ISO from %s"), version, iso_url)
             self.logger.info(_("This may take several minutes (ISO is ~3.1GB)..."))
 
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            with urllib.request.urlopen(
-                iso_url, timeout=3600
-            ) as response:  # nosec B310
-                total_size = int(response.headers.get("content-length", 0))
-                downloaded = 0
-                chunk_size = 1024 * 1024  # 1MB chunks
-                last_logged_mb = 0  # Track last logged MB for progress
+            download_result = self._download_iso_with_progress(iso_url, temp_path)
+            if not download_result.get("success"):
+                return {
+                    "success": False,
+                    "iso_path": None,
+                    "error": download_result.get("error", "Download failed"),
+                }
 
-                # Download to temp file first
-                with open(temp_path, "wb") as iso_file:
-                    while True:
-                        chunk = response.read(chunk_size)
-                        if not chunk:
-                            break
-                        iso_file.write(chunk)
-                        downloaded += len(chunk)
-                        if total_size > 0:
-                            progress = (downloaded / total_size) * 100
-                            # Log progress every 100MB (larger file)
-                            current_mb = downloaded // (1024 * 1024)
-                            if current_mb >= last_logged_mb + 100:
-                                last_logged_mb = current_mb
-                                self.logger.info(
-                                    _("Download progress: %.1f%% (%d MB)"),
-                                    progress,
-                                    current_mb,
-                                )
-
-            # Validate downloaded size
-            if total_size > 0:
-                actual_size = temp_path.stat().st_size
-                if actual_size != total_size:
-                    temp_path.unlink()
-                    return {
-                        "success": False,
-                        "iso_path": None,
-                        "error": _(
-                            "Download incomplete: expected %d bytes, got %d bytes"
-                        )
-                        % (total_size, actual_size),
-                    }
-
-            # Atomically rename temp file to final path
-            temp_path.rename(iso_path)
-            temp_path = None  # Clear so we don't try to delete in finally
-
-            self.logger.info(
-                _("Downloaded Ubuntu ISO: %s (%d MB)"),
-                iso_path,
-                iso_path.stat().st_size // (1024 * 1024),
+            # Validate and finalize download
+            finalize_result = self._validate_and_finalize_download(
+                temp_path, iso_path, download_result["total_size"]
             )
-            return {"success": True, "iso_path": str(iso_path)}
+            if not finalize_result.get("success"):
+                return {
+                    "success": False,
+                    "iso_path": None,
+                    "error": finalize_result.get("error"),
+                }
+
+            temp_path = None  # Clear so we don't try to delete in finally
+            return {"success": True, "iso_path": finalize_result["iso_path"]}
 
         except Exception as error:  # pylint: disable=broad-except
             # Clean up partial download on failure
@@ -446,7 +510,7 @@ menuentry "Install Ubuntu Server (autoinstall)" {{
                 return {
                     "success": False,
                     "autoinstall": None,
-                    "error": _("Unsupported Ubuntu version: %s") % ubuntu_version,
+                    "error": _(_UNSUPPORTED_UBUNTU_VERSION) % ubuntu_version,
                 }
 
             autoinstall_content = generate_autoinstall_file(
@@ -567,7 +631,9 @@ menuentry "Install Ubuntu Server (autoinstall)" {{
 
             # Build the autoinstall URL (served by httpd on VMM network)
             # Note: trailing slash is important for cloud-init
-            autoinstall_url = f"http://100.64.0.1/ubuntu/{vm_name}/"
+            autoinstall_url = (
+                f"http://100.64.0.1/ubuntu/{vm_name}/"  # NOSONAR - internal VM network
+            )
 
             self.logger.info(_("Created Ubuntu setup data in %s"), vm_data_dir)
 
@@ -627,7 +693,7 @@ menuentry "Install Ubuntu Server (autoinstall)" {{
                 return {
                     "success": False,
                     "autoinstall": None,
-                    "error": _("Unsupported Ubuntu version: %s") % ubuntu_version,
+                    "error": _(_UNSUPPORTED_UBUNTU_VERSION) % ubuntu_version,
                 }
 
             # DNS server is critical - must be actual DNS, not gateway

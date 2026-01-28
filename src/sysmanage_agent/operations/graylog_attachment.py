@@ -2,6 +2,7 @@
 Graylog attachment operations for configuring log forwarding to Graylog.
 """
 
+import asyncio
 import logging
 import os
 import platform
@@ -11,6 +12,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict
 
+import aiofiles
 import yaml
 
 
@@ -115,7 +117,7 @@ class GraylogAttachmentOperations:
             "message": "No supported syslog daemon found (rsyslog, syslog-ng, or BSD syslog)",
         }
 
-    async def _configure_rsyslog(
+    async def _configure_rsyslog(  # NOSONAR - async required by interface
         self, graylog_server: str, port: int, mechanism: str
     ) -> Dict[str, Any]:
         """Configure rsyslog for Graylog."""
@@ -162,39 +164,42 @@ template(name="gelf" type="list") {{
                 return {"status": "error", "message": f"Unknown mechanism: {mechanism}"}
 
             # Write configuration
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_line)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_line)
 
             self.logger.info("Wrote rsyslog configuration to %s", config_file)
 
             # Restart rsyslog
-            restart_result = (
-                subprocess.run(  # nosec B603, B607 - safe: hardcoded systemctl command
-                    ["systemctl", "restart", "rsyslog"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
+            # nosec B603, B607 - safe: hardcoded systemctl command
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "restart",
+                "rsyslog",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            _, stderr = await process.communicate()
+            restart_returncode = process.returncode
+            restart_stderr = stderr.decode() if stderr else ""
 
-            if restart_result.returncode == 0:
+            if restart_returncode == 0:
                 self.logger.info("Successfully restarted rsyslog")
                 return {
                     "status": "success",
                     "message": f"Configured rsyslog for Graylog ({mechanism})",
                 }
 
-            self.logger.error("Failed to restart rsyslog: %s", restart_result.stderr)
+            self.logger.error("Failed to restart rsyslog: %s", restart_stderr)
             return {
                 "status": "error",
-                "message": f"Failed to restart rsyslog: {restart_result.stderr}",
+                "message": f"Failed to restart rsyslog: {restart_stderr}",
             }
 
         except Exception as error:
             self.logger.error("Error configuring rsyslog: %s", error)
             return {"status": "error", "message": str(error)}
 
-    async def _configure_syslog_ng(
+    async def _configure_syslog_ng(  # NOSONAR - async required by interface
         self, graylog_server: str, port: int, mechanism: str
     ) -> Dict[str, Any]:
         """Configure syslog-ng for Graylog."""
@@ -245,37 +250,67 @@ log {{
             os.makedirs("/etc/syslog-ng/conf.d", exist_ok=True)
 
             # Write configuration
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             self.logger.info("Wrote syslog-ng configuration to %s", config_file)
 
             # Restart syslog-ng
-            restart_result = (
-                subprocess.run(  # nosec B603, B607 - safe: hardcoded systemctl command
-                    ["systemctl", "restart", "syslog-ng"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
+            # nosec B603, B607 - safe: hardcoded systemctl command
+            process = await asyncio.create_subprocess_exec(
+                "systemctl",
+                "restart",
+                "syslog-ng",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            _, stderr = await process.communicate()
+            restart_returncode = process.returncode
+            restart_stderr = stderr.decode() if stderr else ""
 
-            if restart_result.returncode == 0:
+            if restart_returncode == 0:
                 self.logger.info("Successfully restarted syslog-ng")
                 return {
                     "status": "success",
                     "message": f"Configured syslog-ng for Graylog ({mechanism})",
                 }
 
-            self.logger.error("Failed to restart syslog-ng: %s", restart_result.stderr)
+            self.logger.error("Failed to restart syslog-ng: %s", restart_stderr)
             return {
                 "status": "error",
-                "message": f"Failed to restart syslog-ng: {restart_result.stderr}",
+                "message": f"Failed to restart syslog-ng: {restart_stderr}",
             }
 
         except Exception as error:
             self.logger.error("Error configuring syslog-ng: %s", error)
             return {"status": "error", "message": str(error)}
+
+    def _get_bsd_forward_line(
+        self, graylog_server: str, port: int, mechanism: str
+    ) -> str | None:
+        """Generate BSD syslog forwarding line based on mechanism."""
+        if mechanism == "syslog_tcp":
+            return f"*.*\t@@{graylog_server}:{port}\n"
+        if mechanism == "syslog_udp":
+            return f"*.*\t@{graylog_server}:{port}\n"
+        return None
+
+    def _update_bsd_config(
+        self, existing_config: str, graylog_server: str, forward_line: str
+    ) -> str:
+        """Update BSD syslog config with new forwarding rule."""
+        if graylog_server in existing_config:
+            self.logger.info("Graylog forwarding already configured in syslog.conf")
+            lines = existing_config.split("\n")
+            new_lines = []
+            for line in lines:
+                if graylog_server in line and not line.strip().startswith("#"):
+                    new_lines.append(forward_line.strip())
+                else:
+                    new_lines.append(line)
+            return "\n".join(new_lines)
+        # Append new forwarding rule
+        return existing_config.rstrip() + "\n\n# Graylog forwarding\n" + forward_line
 
     async def _configure_bsd_syslog(
         self, graylog_server: str, port: int, mechanism: str
@@ -286,45 +321,29 @@ log {{
         try:
             # Read existing configuration
             if os.path.exists(config_file):
-                with open(config_file, "r", encoding="utf-8") as file_handle:
-                    existing_config = file_handle.read()
+                async with aiofiles.open(
+                    config_file, "r", encoding="utf-8"
+                ) as file_handle:
+                    existing_config = await file_handle.read()
             else:
                 existing_config = ""
 
             # Generate forwarding line based on mechanism
-            if mechanism == "syslog_tcp":
-                forward_line = f"*.*\t@@{graylog_server}:{port}\n"
-            elif mechanism == "syslog_udp":
-                forward_line = f"*.*\t@{graylog_server}:{port}\n"
-            else:
+            forward_line = self._get_bsd_forward_line(graylog_server, port, mechanism)
+            if forward_line is None:
                 return {
                     "status": "error",
                     "message": f"Mechanism {mechanism} not supported on BSD",
                 }
 
-            # Check if already configured
-            if graylog_server in existing_config:
-                self.logger.info("Graylog forwarding already configured in syslog.conf")
-                # Update existing line
-                lines = existing_config.split("\n")
-                new_lines = []
-                for line in lines:
-                    if graylog_server in line and not line.strip().startswith("#"):
-                        new_lines.append(forward_line.strip())
-                    else:
-                        new_lines.append(line)
-                new_config = "\n".join(new_lines)
-            else:
-                # Append new forwarding rule
-                new_config = (
-                    existing_config.rstrip()
-                    + "\n\n# Graylog forwarding\n"
-                    + forward_line
-                )
+            # Update config
+            new_config = self._update_bsd_config(
+                existing_config, graylog_server, forward_line
+            )
 
             # Write updated configuration
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(new_config)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(new_config)
 
             self.logger.info("Updated BSD syslog configuration")
 
@@ -335,23 +354,27 @@ log {{
             else:  # OpenBSD, NetBSD
                 restart_cmd = ["rcctl", "restart", service_name]
 
-            restart_result = (
-                subprocess.run(  # nosec B603 - safe: hardcoded BSD service commands
-                    restart_cmd, capture_output=True, text=True, check=False
-                )
+            # nosec B603 - safe: hardcoded BSD service commands
+            process = await asyncio.create_subprocess_exec(
+                *restart_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            _, stderr = await process.communicate()
+            restart_returncode = process.returncode
+            restart_stderr = stderr.decode() if stderr else ""
 
-            if restart_result.returncode == 0:
+            if restart_returncode == 0:
                 self.logger.info("Successfully restarted BSD syslog")
                 return {
                     "status": "success",
                     "message": f"Configured BSD syslog for Graylog ({mechanism})",
                 }
 
-            self.logger.error("Failed to restart BSD syslog: %s", restart_result.stderr)
+            self.logger.error("Failed to restart BSD syslog: %s", restart_stderr)
             return {
                 "status": "error",
-                "message": f"Failed to restart BSD syslog: {restart_result.stderr}",
+                "message": f"Failed to restart BSD syslog: {restart_stderr}",
             }
 
         except Exception as error:
@@ -382,13 +405,18 @@ log {{
 
             # Read existing config or create new one
             if os.path.exists(config_path):
-                with open(config_path, "r", encoding="utf-8") as file_handle:
-                    config = yaml.safe_load(file_handle) or {}
+                async with aiofiles.open(
+                    config_path, "r", encoding="utf-8"
+                ) as file_handle:
+                    content = await file_handle.read()
+                    config = yaml.safe_load(content) or {}
             else:
                 config = {}
 
             # Update configuration
-            config["server_url"] = f"http://{graylog_server}:{port}/api/"
+            config["server_url"] = (
+                f"http://{graylog_server}:{port}/api/"  # NOSONAR - Graylog may use http
+            )
             # Placeholder token - must be set manually or via API
             config["server_api_token"] = ""  # nosec B105  # Placeholder value
             config["update_interval"] = 10
@@ -397,46 +425,54 @@ log {{
             config["list_log_files"] = []
 
             # Write updated configuration
-            with open(config_path, "w", encoding="utf-8") as file_handle:
-                yaml.dump(config, file_handle, default_flow_style=False)
+            async with aiofiles.open(config_path, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(yaml.dump(config, default_flow_style=False))
 
             self.logger.info("Updated Graylog Sidecar configuration")
 
             # Install and start service
-            install_service_result = subprocess.run(  # nosec B603 - safe: sidecar_path validated, hardcoded args
-                [sidecar_path, "-service", "install"],
-                capture_output=True,
-                text=True,
-                check=False,
+            # nosec B603 - safe: sidecar_path validated, hardcoded args
+            install_process = await asyncio.create_subprocess_exec(
+                sidecar_path,
+                "-service",
+                "install",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            _, install_stderr = await install_process.communicate()
+            install_returncode = install_process.returncode
+            install_stderr_str = install_stderr.decode() if install_stderr else ""
 
-            if install_service_result.returncode != 0:
+            if install_returncode != 0:
                 self.logger.warning(
                     "Service install returned non-zero: %s",
-                    install_service_result.stderr,
+                    install_stderr_str,
                 )
 
             # Start service
-            start_service_result = subprocess.run(  # nosec B603 - safe: sidecar_path validated, hardcoded args
-                [sidecar_path, "-service", "start"],
-                capture_output=True,
-                text=True,
-                check=False,
+            # nosec B603 - safe: sidecar_path validated, hardcoded args
+            start_process = await asyncio.create_subprocess_exec(
+                sidecar_path,
+                "-service",
+                "start",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            _, start_stderr = await start_process.communicate()
+            start_returncode = start_process.returncode
+            start_stderr_str = start_stderr.decode() if start_stderr else ""
 
-            if start_service_result.returncode == 0:
+            if start_returncode == 0:
                 self.logger.info("Successfully started Graylog Sidecar service")
                 return {
                     "status": "success",
                     "message": "Configured Graylog Sidecar for Windows",
                 }
 
-            self.logger.error(
-                "Failed to start Graylog Sidecar: %s", start_service_result.stderr
-            )
+            self.logger.error("Failed to start Graylog Sidecar: %s", start_stderr_str)
             return {
                 "status": "error",
-                "message": f"Failed to start Graylog Sidecar: {start_service_result.stderr}",
+                "message": f"Failed to start Graylog Sidecar: {start_stderr_str}",
             }
 
         except Exception as error:
@@ -472,7 +508,9 @@ log {{
             self.logger.error("Error validating URL: %s", error)
             return False
 
-    async def _install_windows_sidecar(self) -> Dict[str, Any]:
+    async def _install_windows_sidecar(  # NOSONAR - async required by interface
+        self,
+    ) -> Dict[str, Any]:
         """Download and install Graylog Sidecar on Windows."""
         try:
             # Determine architecture
@@ -506,21 +544,33 @@ log {{
             with urllib.request.urlopen(
                 req, timeout=300
             ) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
-                with open(installer_path, "wb") as out_file:
-                    out_file.write(response.read())
+                async with aiofiles.open(installer_path, "wb") as out_file:
+                    await out_file.write(response.read())
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
 
             # Run installer silently
-            install_result = subprocess.run(  # nosec B603 - safe: installer_path is temp file, /S is hardcoded
-                [installer_path, "/S"],  # Silent install
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=300,  # 5 minute timeout
+            # nosec B603 - safe: installer_path is temp file, /S is hardcoded
+            process = await asyncio.create_subprocess_exec(
+                installer_path,
+                "/S",  # Silent install
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            try:
+                _, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )  # 5 minute timeout
+            except asyncio.TimeoutError:
+                process.kill()
+                return {
+                    "status": "error",
+                    "message": "Graylog Sidecar installation timed out",
+                }
+            install_returncode = process.returncode
+            install_stderr = stderr.decode() if stderr else ""
 
-            if install_result.returncode == 0:
+            if install_returncode == 0:
                 self.logger.info("Successfully installed Graylog Sidecar")
                 # Clean up installer
                 try:
@@ -532,10 +582,10 @@ log {{
                     "message": "Installed Graylog Sidecar successfully",
                 }
 
-            self.logger.error("Sidecar installation failed: %s", install_result.stderr)
+            self.logger.error("Sidecar installation failed: %s", install_stderr)
             return {
                 "status": "error",
-                "message": f"Failed to install Graylog Sidecar: {install_result.stderr}",
+                "message": f"Failed to install Graylog Sidecar: {install_stderr}",
             }
 
         except Exception as error:

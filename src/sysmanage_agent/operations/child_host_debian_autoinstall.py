@@ -88,69 +88,20 @@ class DebianAutoinstallSetup:
                 temp_path.unlink()
 
             # Check if already downloaded and validate size
-            if iso_path.exists():
-                # Verify the file isn't a partial download (should be > 500MB)
-                file_size = iso_path.stat().st_size
-                if file_size > 500 * 1024 * 1024:  # > 500MB
-                    self.logger.info(
-                        _("Using cached Debian ISO: %s (%d MB)"),
-                        iso_path,
-                        file_size // (1024 * 1024),
-                    )
-                    return {"success": True, "iso_path": str(iso_path)}
-                # File is too small, likely corrupted - remove it
-                self.logger.warning(
-                    _("Cached ISO is incomplete (%d bytes), re-downloading"),
-                    file_size,
-                )
-                iso_path.unlink()
+            cached_result = self._check_cached_iso(iso_path)
+            if cached_result is not None:
+                return cached_result
 
             # Download ISO (Debian netinst is ~600MB, may take a while)
             self.logger.info(_("Downloading Debian %s ISO from %s"), version, iso_url)
             self.logger.info(_("This may take several minutes (ISO is ~600MB)..."))
 
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            with urllib.request.urlopen(
-                iso_url, timeout=1800
-            ) as response:  # nosec B310
-                total_size = int(response.headers.get("content-length", 0))
-                downloaded = 0
-                chunk_size = 1024 * 1024  # 1MB chunks
-                last_logged_mb = 0  # Track last logged MB for progress
-
-                # Download to temp file first
-                with open(temp_path, "wb") as iso_file:
-                    while True:
-                        chunk = response.read(chunk_size)
-                        if not chunk:
-                            break
-                        iso_file.write(chunk)
-                        downloaded += len(chunk)
-                        if total_size > 0:
-                            progress = (downloaded / total_size) * 100
-                            # Log progress every 50MB
-                            current_mb = downloaded // (1024 * 1024)
-                            if current_mb >= last_logged_mb + 50:
-                                last_logged_mb = current_mb
-                                self.logger.info(
-                                    _("Download progress: %.1f%% (%d MB)"),
-                                    progress,
-                                    current_mb,
-                                )
+            total_size = self._download_iso_to_temp(iso_url, temp_path)
 
             # Validate downloaded size
-            if total_size > 0:
-                actual_size = temp_path.stat().st_size
-                if actual_size != total_size:
-                    temp_path.unlink()
-                    return {
-                        "success": False,
-                        "iso_path": None,
-                        "error": _(
-                            "Download incomplete: expected %d bytes, got %d bytes"
-                        )
-                        % (total_size, actual_size),
-                    }
+            validation_error = self._validate_downloaded_iso(temp_path, total_size)
+            if validation_error is not None:
+                return validation_error
 
             # Atomically rename temp file to final path
             temp_path.rename(iso_path)
@@ -172,6 +123,90 @@ class DebianAutoinstallSetup:
                 except OSError:
                     pass
             return {"success": False, "iso_path": None, "error": str(error)}
+
+    def _check_cached_iso(self, iso_path: Path) -> Dict[str, Any] | None:
+        """Check if a cached ISO exists and is valid.
+
+        Returns:
+            Success dict if cached ISO is valid, None if download is needed.
+        """
+        if not iso_path.exists():
+            return None
+
+        file_size = iso_path.stat().st_size
+        if file_size > 500 * 1024 * 1024:  # > 500MB
+            self.logger.info(
+                _("Using cached Debian ISO: %s (%d MB)"),
+                iso_path,
+                file_size // (1024 * 1024),
+            )
+            return {"success": True, "iso_path": str(iso_path)}
+
+        # File is too small, likely corrupted - remove it
+        self.logger.warning(
+            _("Cached ISO is incomplete (%d bytes), re-downloading"),
+            file_size,
+        )
+        iso_path.unlink()
+        return None
+
+    def _download_iso_to_temp(self, iso_url: str, temp_path: Path) -> int:
+        """Download ISO from URL to a temporary file.
+
+        Returns:
+            Total expected size from content-length header (0 if unknown).
+        """
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(iso_url, timeout=1800) as response:  # nosec B310
+            total_size = int(response.headers.get("content-length", 0))
+            downloaded = 0
+            chunk_size = 1024 * 1024  # 1MB chunks
+            last_logged_mb = 0  # Track last logged MB for progress
+
+            # Download to temp file first
+            with open(temp_path, "wb") as iso_file:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    iso_file.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        # Log progress every 50MB
+                        current_mb = downloaded // (1024 * 1024)
+                        if current_mb >= last_logged_mb + 50:
+                            last_logged_mb = current_mb
+                            self.logger.info(
+                                _("Download progress: %.1f%% (%d MB)"),
+                                progress,
+                                current_mb,
+                            )
+
+        return total_size
+
+    def _validate_downloaded_iso(
+        self, temp_path: Path, total_size: int
+    ) -> Dict[str, Any] | None:
+        """Validate downloaded ISO size matches expected.
+
+        Returns:
+            Error dict if validation fails, None if valid.
+        """
+        if total_size <= 0:
+            return None
+
+        actual_size = temp_path.stat().st_size
+        if actual_size == total_size:
+            return None
+
+        temp_path.unlink()
+        return {
+            "success": False,
+            "iso_path": None,
+            "error": _("Download incomplete: expected %d bytes, got %d bytes")
+            % (total_size, actual_size),
+        }
 
     def create_serial_console_iso(
         self,
@@ -484,7 +519,7 @@ label install
             # Extract just the hostname from the URL if it's a full URL
             if mirror_url.startswith("https://"):
                 mirror_url = mirror_url.replace("https://", "").split("/")[0]
-            elif mirror_url.startswith("http://"):
+            elif mirror_url.startswith("http://"):  # NOSONAR - mirrors may use http
                 mirror_url = mirror_url.replace("http://", "").split("/")[0]
 
             preseed_content = generate_preseed_file(
@@ -589,7 +624,7 @@ label install
             self.logger.info(_("Created httpd preseed file: %s"), httpd_preseed_path)
 
             # Build the preseed URL (served by httpd on VMM network)
-            preseed_url = f"http://100.64.0.1/debian/{vm_name}/preseed.cfg"
+            preseed_url = f"http://100.64.0.1/debian/{vm_name}/preseed.cfg"  # NOSONAR - internal VM network
 
             self.logger.info(_("Created Debian setup data in %s"), vm_data_dir)
 
@@ -704,7 +739,7 @@ ln -sf /etc/systemd/system/sysmanage-firstboot.service /target/etc/systemd/syste
 """
         return late_command.strip()
 
-    def generate_enhanced_preseed(  # pylint: disable=too-many-arguments,too-many-locals
+    def generate_enhanced_preseed(  # NOSONAR - 15 params required: each param maps to a distinct preseed/late_command field; grouping would obscure the 1:1 mapping to Debian installer config  # pylint: disable=too-many-arguments,too-many-locals
         self,
         hostname: str,
         username: str,

@@ -121,7 +121,7 @@ class AlpineAutoinstallSetup:
         """
         if dns_server is None:
             # Use public DNS (Google) since the gateway may not run a DNS resolver
-            dns_server = "8.8.8.8"
+            dns_server = "8.8.8.8"  # NOSONAR - standard DNS fallback
 
         # Get repo URL for this version
         repo_url = ALPINE_REPO_URLS.get(alpine_version, ALPINE_REPO_URLS["3.21"])
@@ -299,10 +299,10 @@ poweroff
 
     def create_firstboot_setup(
         self,
-        server_hostname: str,  # pylint: disable=unused-argument
-        server_port: int,  # pylint: disable=unused-argument
-        use_https: bool,  # pylint: disable=unused-argument
-        auto_approve_token: str = None,  # pylint: disable=unused-argument
+        _server_hostname: str,  # pylint: disable=unused-argument
+        _server_port: int,  # pylint: disable=unused-argument
+        _use_https: bool,  # pylint: disable=unused-argument
+        _auto_approve_token: str = None,  # pylint: disable=unused-argument
     ) -> str:
         """
         Create first-boot setup script for sysmanage-agent installation.
@@ -380,6 +380,7 @@ poweroff
             )
 
             # Write setup script to temporary file
+            # NOSONAR - temp file for VM setup
             script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108
             with open(script_path, "w", encoding="utf-8") as script_file:
                 script_file.write(setup_script)

@@ -12,6 +12,8 @@ from typing import Dict, Optional
 
 from src.i18n import _
 
+POWERSHELL_EXE = "powershell.exe"
+
 
 class CommercialAntivirusCollector:
     """Collects commercial antivirus software information across different platforms."""
@@ -20,7 +22,7 @@ class CommercialAntivirusCollector:
         self.logger = logging.getLogger(__name__)
         self.system = platform.system()
 
-    def collect_commercial_antivirus_status(self) -> Dict[str, Optional[str]]:
+    def collect_commercial_antivirus_status(self) -> Optional[Dict[str, Optional[str]]]:
         """
         Collect commercial antivirus status information for the current system.
 
@@ -57,7 +59,7 @@ class CommercialAntivirusCollector:
         try:
             # Check if Windows Defender service exists and is running
             service_check_cmd = [
-                "powershell.exe",
+                POWERSHELL_EXE,
                 "-NoProfile",
                 "-NonInteractive",
                 "-Command",
@@ -81,7 +83,7 @@ class CommercialAntivirusCollector:
 
             # Get detailed status from Get-MpComputerStatus
             status_cmd = [
-                "powershell.exe",
+                POWERSHELL_EXE,
                 "-NoProfile",
                 "-NonInteractive",
                 "-Command",
@@ -104,7 +106,7 @@ class CommercialAntivirusCollector:
 
             # Get product version
             version_cmd = [
-                "powershell.exe",
+                POWERSHELL_EXE,
                 "-NoProfile",
                 "-NonInteractive",
                 "-Command",

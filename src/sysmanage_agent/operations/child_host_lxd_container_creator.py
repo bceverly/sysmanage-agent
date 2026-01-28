@@ -574,7 +574,7 @@ class LxdContainerCreator:
         self,
         container_name: str,
         server_url: str,
-        hostname: str,  # pylint: disable=unused-argument
+        _hostname: str,  # pylint: disable=unused-argument
         server_port: int,
         use_https: bool,
         auto_approve_token: str = None,

@@ -5,11 +5,38 @@ Tests the DiagnosticCollector class for diagnostic data collection.
 
 # pylint: disable=protected-access,too-many-lines,unused-argument,attribute-defined-outside-init
 
-from unittest.mock import AsyncMock, Mock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
+
+_DIAG_AIOFILES_OPEN = (
+    "src.sysmanage_agent.diagnostics.diagnostic_collector.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open(read_data=""):
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    mock_file.read = AsyncMock(return_value=read_data)
+    lines = [line + "\n" for line in read_data.split("\n")] if read_data else []
+    mock_file.readlines = AsyncMock(return_value=lines)
+    mock_file.write = AsyncMock()
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
+
+
+def _mock_aiofiles_open_error(error=None):
+    """Create a mock for aiofiles.open that raises on enter."""
+    if error is None:
+        error = IOError("File not found")
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(side_effect=error)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
 
 
 class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
@@ -543,7 +570,9 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
             return_value={"success": True, "result": {"stdout": "config data"}}
         )
 
-        with patch("builtins.open", mock_open(read_data="agent config")):
+        with patch(
+            _DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open("agent config")
+        ):
             result = await self.collector._collect_configuration_files()
 
             assert "network_config" in result
@@ -559,7 +588,9 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
             return_value={"success": True, "result": {"stdout": "config data"}}
         )
 
-        with patch("builtins.open", mock_open(read_data="agent config")):
+        with patch(
+            _DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open("agent config")
+        ):
             result = await self.collector._collect_configuration_files()
 
             assert "network_config" in result
@@ -576,7 +607,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
             return_value={"success": True, "result": {"stdout": "config data"}}
         )
 
-        with patch("builtins.open", side_effect=IOError("File not found")):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open_error()):
             result = await self.collector._collect_configuration_files()
 
             assert "agent_config" in result
@@ -857,7 +888,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
         """Test collecting agent logs successfully."""
         log_content = "\n".join([f"Log line {i}" for i in range(150)])
 
-        with patch("builtins.open", mock_open(read_data=log_content)):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open(log_content)):
             result = await self.collector._collect_agent_logs()
 
             assert "recent_logs" in result
@@ -868,7 +899,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
     @pytest.mark.asyncio
     async def test_collect_agent_logs_file_not_accessible(self):
         """Test collecting agent logs when file is not accessible."""
-        with patch("builtins.open", side_effect=IOError("File not found")):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open_error()):
             result = await self.collector._collect_agent_logs()
 
             assert "recent_logs" in result
@@ -884,7 +915,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
 
         log_content = "Log line 1\nLog line 2"
 
-        with patch("builtins.open", mock_open(read_data=log_content)):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open(log_content)):
             result = await self.collector._collect_agent_logs()
 
             assert "agent_status" in result
@@ -895,7 +926,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
     async def test_collect_agent_logs_exception(self):
         """Test collecting agent logs with exception in outer try block."""
         # Patch datetime.now to raise an exception in the outer try block
-        with patch("builtins.open", mock_open(read_data="test log")):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open("test log")):
             with patch(
                 "src.sysmanage_agent.diagnostics.diagnostic_collector.datetime"
             ) as mock_datetime:
@@ -918,7 +949,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
             "INFO: line 1\nERROR: error line\nDEBUG: line 2\nERROR: another error"
         )
 
-        with patch("builtins.open", mock_open(read_data=log_content)):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open(log_content)):
             result = await self.collector._collect_error_logs()
 
             assert "system_errors" in result
@@ -935,7 +966,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
             return_value={"success": True, "result": {"stdout": "error data"}}
         )
 
-        with patch("builtins.open", side_effect=IOError("File not found")):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open_error()):
             result = await self.collector._collect_error_logs()
 
             assert "agent_errors" in result
@@ -950,7 +981,7 @@ class TestDiagnosticCollector:  # pylint: disable=too-many-public-methods
 
         log_content = "ERROR: test error"
 
-        with patch("builtins.open", mock_open(read_data=log_content)):
+        with patch(_DIAG_AIOFILES_OPEN, return_value=_mock_aiofiles_open(log_content)):
             result = await self.collector._collect_error_logs()
 
             # Should still have agent_errors

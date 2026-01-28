@@ -30,7 +30,7 @@ class VmmLauncher:
     async def run_subprocess(
         self,
         cmd: list,
-        timeout: int = 60,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of established API
     ) -> subprocess.CompletedProcess:
         """
         Run a subprocess command asynchronously.
@@ -53,6 +53,36 @@ class VmmLauncher:
             timeout=timeout,
             check=False,
         )
+
+    async def _create_tap_device(self, tap_name: str) -> Dict[str, Any]:
+        """
+        Create a new tap device.
+
+        Args:
+            tap_name: Name of the tap device to create (e.g., "tap0")
+
+        Returns:
+            Dict with success status and tap_device name
+        """
+        self.logger.info(_("Creating new tap device: %s"), tap_name)
+        create_result = await self.run_subprocess(
+            ["ifconfig", tap_name, "create"],
+            timeout=10,
+        )
+        if create_result.returncode != 0:
+            error_msg = create_result.stderr or create_result.stdout or ""
+            if "exists" in error_msg.lower():
+                self.logger.info(
+                    _("Tap device %s already exists, continuing"), tap_name
+                )
+                return {"success": True, "tap_device": tap_name}
+            self.logger.error(_("Failed to create %s: %s"), tap_name, error_msg)
+            return {
+                "success": False,
+                "error": _("Failed to create tap device: %s") % error_msg,
+            }
+        self.logger.info(_("Created tap device: %s"), tap_name)
+        return {"success": True, "tap_device": tap_name}
 
     async def ensure_tap_device_available(self) -> Dict[str, Any]:
         """
@@ -91,25 +121,7 @@ class VmmLauncher:
 
             if running_vms >= existing_count:
                 new_tap = f"tap{existing_count}"
-                self.logger.info(_("Creating new tap device: %s"), new_tap)
-                create_result = await self.run_subprocess(
-                    ["ifconfig", new_tap, "create"],
-                    timeout=10,
-                )
-                if create_result.returncode != 0:
-                    error_msg = create_result.stderr or create_result.stdout or ""
-                    if "exists" in error_msg.lower():
-                        self.logger.info(
-                            _("Tap device %s already exists, continuing"), new_tap
-                        )
-                        return {"success": True, "tap_device": new_tap}
-                    self.logger.error(_("Failed to create %s: %s"), new_tap, error_msg)
-                    return {
-                        "success": False,
-                        "error": _("Failed to create tap device: %s") % error_msg,
-                    }
-                self.logger.info(_("Created tap device: %s"), new_tap)
-                return {"success": True, "tap_device": new_tap}
+                return await self._create_tap_device(new_tap)
 
             return {"success": True, "tap_device": None}
 
@@ -253,7 +265,9 @@ class VmmLauncher:
             return {"success": False, "error": str(error)}
 
     async def wait_for_vm_shutdown(
-        self, vm_name: str, timeout: int = 1800
+        self,
+        vm_name: str,
+        timeout: int = 1800,  # NOSONAR - timeout parameter is part of established API
     ) -> Dict[str, Any]:
         """Wait for VM to shutdown by polling vmctl status."""
         start_time = time.time()

@@ -10,7 +10,23 @@ import logging
 import os
 from typing import Optional, Tuple
 
+import aiofiles
+
 logger = logging.getLogger(__name__)
+
+# Module-level constants for repeated strings
+_MSG_CLAMAV_INSTALL_RESULT = "clamav installation result: %s"
+_SED_COMMENT_EXAMPLE = "s/^Example/#Example/"
+_MSG_UPDATING_VIRUS_DEFS = "Updating virus definitions with freshclam"
+_MSG_VIRUS_DEFS_UPDATED = "Virus definitions updated successfully"
+_MSG_FAILED_UPDATE_VIRUS_DEFS = "Failed to update virus definitions: %s"
+_MSG_UNKNOWN_ERROR = "unknown error"
+_SED_UNCOMMENT_LOCAL_SOCKET = "s/^#LocalSocket /LocalSocket /"
+_MSG_INSTALLING = "Installing %s"
+_MSG_INSTALLATION_RESULT = "%s installation result: %s"
+_MSG_ENABLING_SERVICE = "Enabling and starting service: %s"
+_MSG_SERVICE_ENABLED = "Service %s enabled and started successfully"
+_MSG_FAILED_ENABLE_SERVICE = "Failed to enable/start service %s: %s"
 
 
 def _get_brew_user():
@@ -68,7 +84,9 @@ async def configure_config_file(sample_path: str, target_path: str, sed_patterns
     logger.info("%s configured", target_path)
 
 
-async def wait_for_virus_database(db_paths: list, timeout: int = 30):
+async def wait_for_virus_database(
+    db_paths: list, timeout: int = 30
+):  # NOSONAR - timeout parameter is intentional for polling loop control
     """Wait for virus database to be downloaded."""
     logger.info("Waiting for virus database download")
     database_ready = False
@@ -94,7 +112,7 @@ async def deploy_clamav_macos(
     # Install ClamAV via Homebrew
     logger.info("Installing clamav")
     result = update_detector.install_package("clamav", "auto")
-    logger.info("clamav installation result: %s", result)
+    logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
     # Determine the correct config path based on architecture
     is_arm = os.path.exists("/opt/homebrew")
@@ -112,49 +130,67 @@ async def deploy_clamav_macos(
     await configure_config_file(
         f"{config_base}/freshclam.conf.sample",
         f"{config_base}/freshclam.conf",
-        [("s/^Example/#Example/", "")],
+        [(_SED_COMMENT_EXAMPLE, "")],
     )
 
     # Configure clamd.conf
+    await _configure_macos_clamd(config_base, log_dir, db_dir)
+
+    # Update virus definitions
+    await _run_freshclam_macos(is_arm)
+
+    # Start service
+    await _start_brew_service(is_arm)
+
+    await asyncio.sleep(2)
+    return True, None, None, "ClamAV installed successfully on macOS"
+
+
+async def _configure_macos_clamd(config_base: str, log_dir: str, db_dir: str):
+    """Configure clamd.conf from sample on macOS with platform-specific paths."""
     clamd_conf = f"{config_base}/clamd.conf"
     clamd_sample = f"{config_base}/clamd.conf.sample"
-    if os.path.exists(clamd_sample):
-        logger.info("Creating clamd.conf from sample")
+    if not os.path.exists(clamd_sample):
+        return
+
+    logger.info("Creating clamd.conf from sample")
+    process = await asyncio.create_subprocess_exec(
+        "cp",
+        clamd_sample,
+        clamd_conf,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    await process.communicate()
+
+    # Apply multiple sed commands
+    sed_commands = [
+        _SED_COMMENT_EXAMPLE,
+        f"s|^#LogFile.*|LogFile {log_dir}/clamd.log|",
+        f"s|^#PidFile.*|PidFile {log_dir}/clamd.pid|",
+        f"s|^#DatabaseDirectory.*|DatabaseDirectory {db_dir}|",
+        f"s|^#LocalSocket.*|LocalSocket {log_dir}/clamd.sock|",
+    ]
+
+    for sed_cmd in sed_commands:
         process = await asyncio.create_subprocess_exec(
-            "cp",
-            clamd_sample,
+            "sed",
+            "-i",
+            "",
+            "-e",
+            sed_cmd,
             clamd_conf,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         await process.communicate()
 
-        # Apply multiple sed commands
-        sed_commands = [
-            "s/^Example/#Example/",
-            f"s|^#LogFile.*|LogFile {log_dir}/clamd.log|",
-            f"s|^#PidFile.*|PidFile {log_dir}/clamd.pid|",
-            f"s|^#DatabaseDirectory.*|DatabaseDirectory {db_dir}|",
-            f"s|^#LocalSocket.*|LocalSocket {log_dir}/clamd.sock|",
-        ]
+    logger.info("clamd.conf configured")
 
-        for sed_cmd in sed_commands:
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                sed_cmd,
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
 
-        logger.info("clamd.conf configured")
-
-    # Update virus definitions
-    logger.info("Updating virus definitions with freshclam")
+async def _run_freshclam_macos(is_arm: bool):
+    """Run freshclam to update virus definitions on macOS."""
+    logger.info(_MSG_UPDATING_VIRUS_DEFS)
     freshclam_cmd = (
         "/opt/homebrew/bin/freshclam" if is_arm else "/usr/local/bin/freshclam"
     )
@@ -179,14 +215,16 @@ async def deploy_clamav_macos(
         )
     _, stderr = await process.communicate()
     if process.returncode == 0:
-        logger.info("Virus definitions updated successfully")
+        logger.info(_MSG_VIRUS_DEFS_UPDATED)
     else:
         logger.warning(
-            "Failed to update virus definitions: %s",
-            stderr.decode() if stderr else "unknown error",
+            _MSG_FAILED_UPDATE_VIRUS_DEFS,
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
-    # Start service
+
+async def _start_brew_service(is_arm: bool):
+    """Start ClamAV service via brew services on macOS."""
     logger.info("Starting ClamAV service via brew services")
     brew_cmd = "/opt/homebrew/bin/brew" if is_arm else "/usr/local/bin/brew"
 
@@ -205,11 +243,8 @@ async def deploy_clamav_macos(
     else:
         logger.warning(
             "Failed to start ClamAV service: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
-
-    await asyncio.sleep(2)
-    return True, None, None, "ClamAV installed successfully on macOS"
 
 
 async def deploy_clamav_netbsd(
@@ -219,7 +254,7 @@ async def deploy_clamav_netbsd(
     logger.info("Detected NetBSD system, installing ClamAV package")
 
     result = update_detector.install_package("clamav", "auto")
-    logger.info("clamav installation result: %s", result)
+    logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
     logger.info("Configuring ClamAV on NetBSD")
 
@@ -227,14 +262,14 @@ async def deploy_clamav_netbsd(
     await configure_config_file(
         "/usr/pkg/etc/freshclam.conf.sample",
         "/usr/pkg/etc/freshclam.conf",
-        [("s/^Example/#Example/", "")],
+        [(_SED_COMMENT_EXAMPLE, "")],
     )
 
     # Configure clamd.conf
     await configure_config_file(
         "/usr/pkg/etc/clamd.conf.sample",
         "/usr/pkg/etc/clamd.conf",
-        [("s/^Example/#Example/", ""), ("s/^#LocalSocket /LocalSocket /", "")],
+        [(_SED_COMMENT_EXAMPLE, ""), (_SED_UNCOMMENT_LOCAL_SOCKET, "")],
     )
 
     # Copy rc.d scripts
@@ -278,7 +313,7 @@ async def deploy_clamav_netbsd(
     else:
         logger.warning(
             "Failed to start freshclamd: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     # Wait for database
@@ -300,7 +335,7 @@ async def deploy_clamav_netbsd(
     else:
         logger.warning(
             "Failed to start clamd: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     await asyncio.sleep(2)
@@ -314,7 +349,7 @@ async def deploy_clamav_freebsd(
     logger.info("Detected FreeBSD system, installing ClamAV package")
 
     result = update_detector.install_package("clamav", "auto")
-    logger.info("clamav installation result: %s", result)
+    logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
     logger.info("Configuring ClamAV on FreeBSD")
 
@@ -322,14 +357,14 @@ async def deploy_clamav_freebsd(
     await configure_config_file(
         "/usr/local/etc/freshclam.conf.sample",
         "/usr/local/etc/freshclam.conf",
-        [("s/^Example/#Example/", "")],
+        [(_SED_COMMENT_EXAMPLE, "")],
     )
 
     # Configure clamd.conf
     await configure_config_file(
         "/usr/local/etc/clamd.conf.sample",
         "/usr/local/etc/clamd.conf",
-        [("s/^Example/#Example/", ""), ("s/^#LocalSocket /LocalSocket /", "")],
+        [(_SED_COMMENT_EXAMPLE, ""), (_SED_UNCOMMENT_LOCAL_SOCKET, "")],
     )
 
     # Enable services
@@ -358,7 +393,7 @@ async def deploy_clamav_freebsd(
     else:
         logger.warning(
             "Failed to start clamav_freshclam: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     # Wait for database
@@ -381,7 +416,7 @@ async def deploy_clamav_freebsd(
     else:
         logger.warning(
             "Failed to start clamav_clamd: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     await asyncio.sleep(2)
@@ -395,7 +430,7 @@ async def deploy_clamav_openbsd(
     logger.info("Detected OpenBSD system, installing ClamAV package")
 
     result = update_detector.install_package("clamav", "auto")
-    logger.info("clamav installation result: %s", result)
+    logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
     logger.info("Configuring ClamAV on OpenBSD")
 
@@ -403,41 +438,67 @@ async def deploy_clamav_openbsd(
     await configure_config_file(
         "/usr/local/share/examples/clamav/freshclam.conf.sample",
         "/etc/freshclam.conf",
-        [("s/^Example/#Example/",)],
+        [(_SED_COMMENT_EXAMPLE,)],
     )
 
     # Configure clamd.conf
-    clamd_sample = "/usr/local/share/examples/clamav/clamd.conf.sample"
-    clamd_conf = "/etc/clamd.conf"
-    if os.path.exists(clamd_sample):
-        logger.info("Creating clamd.conf from sample")
-        process = await asyncio.create_subprocess_exec(
-            "cp",
-            clamd_sample,
-            clamd_conf,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        await process.communicate()
-
-        # Multiple sed edits
-        process = await asyncio.create_subprocess_exec(
-            "sed",
-            "-i",
-            "-e",
-            "s/^Example/#Example/",
-            "-e",
-            "s/^#LocalSocket /LocalSocket /",
-            "-e",
-            "s|/run/clamav/|/var/run/clamav/|g",
-            clamd_conf,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        await process.communicate()
-        logger.info("clamd.conf configured")
+    await _configure_openbsd_clamd()
 
     # Create runtime directory
+    await _create_openbsd_runtime_dir()
+
+    # Enable and start freshclam
+    await _enable_and_start_rcctl_service("freshclam")
+
+    # Wait for database
+    await wait_for_virus_database(
+        ["/var/db/clamav/main.cvd", "/var/db/clamav/main.cld"]
+    )
+
+    # Enable and start clamd
+    await _enable_and_start_rcctl_service("clamd")
+
+    await asyncio.sleep(2)
+    return True, None, None, "ClamAV installed successfully on OpenBSD"
+
+
+async def _configure_openbsd_clamd():
+    """Configure clamd.conf from sample on OpenBSD with platform-specific paths."""
+    clamd_sample = "/usr/local/share/examples/clamav/clamd.conf.sample"
+    clamd_conf = "/etc/clamd.conf"
+    if not os.path.exists(clamd_sample):
+        return
+
+    logger.info("Creating clamd.conf from sample")
+    process = await asyncio.create_subprocess_exec(
+        "cp",
+        clamd_sample,
+        clamd_conf,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    await process.communicate()
+
+    # Multiple sed edits
+    process = await asyncio.create_subprocess_exec(
+        "sed",
+        "-i",
+        "-e",
+        _SED_COMMENT_EXAMPLE,
+        "-e",
+        _SED_UNCOMMENT_LOCAL_SOCKET,
+        "-e",
+        "s|/run/clamav/|/var/run/clamav/|g",
+        clamd_conf,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    await process.communicate()
+    logger.info("clamd.conf configured")
+
+
+async def _create_openbsd_runtime_dir():
+    """Create required runtime directories for ClamAV on OpenBSD."""
     logger.info("Creating runtime directories for ClamAV")
     clamav_run_dir = "/var/run/clamav"
     if not os.path.exists(clamav_run_dir):
@@ -460,12 +521,14 @@ async def deploy_clamav_openbsd(
         await process.communicate()
         logger.info("Created and configured /var/run/clamav directory")
 
-    # Enable and start freshclam
-    logger.info("Enabling and starting freshclam service")
+
+async def _enable_and_start_rcctl_service(service_name: str):
+    """Enable and start a service using OpenBSD rcctl."""
+    logger.info("Enabling and starting %s service", service_name)
     process = await asyncio.create_subprocess_exec(
         "rcctl",
         "enable",
-        "freshclam",
+        service_name,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -474,53 +537,19 @@ async def deploy_clamav_openbsd(
     process = await asyncio.create_subprocess_exec(
         "rcctl",
         "start",
-        "freshclam",
+        service_name,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
     _, stderr = await process.communicate()
     if process.returncode == 0:
-        logger.info("freshclam service enabled and started successfully")
+        logger.info("%s service enabled and started successfully", service_name)
     else:
         logger.warning(
-            "Failed to start freshclam: %s",
-            stderr.decode() if stderr else "unknown error",
+            "Failed to start %s: %s",
+            service_name,
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
-
-    # Wait for database
-    await wait_for_virus_database(
-        ["/var/db/clamav/main.cvd", "/var/db/clamav/main.cld"]
-    )
-
-    # Enable and start clamd
-    logger.info("Enabling and starting clamd service")
-    process = await asyncio.create_subprocess_exec(
-        "rcctl",
-        "enable",
-        "clamd",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    await process.communicate()
-
-    process = await asyncio.create_subprocess_exec(
-        "rcctl",
-        "start",
-        "clamd",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    _, stderr = await process.communicate()
-    if process.returncode == 0:
-        logger.info("clamd service enabled and started successfully")
-    else:
-        logger.warning(
-            "Failed to start clamd: %s",
-            stderr.decode() if stderr else "unknown error",
-        )
-
-    await asyncio.sleep(2)
-    return True, None, None, "ClamAV installed successfully on OpenBSD"
 
 
 async def deploy_clamav_opensuse(
@@ -531,9 +560,9 @@ async def deploy_clamav_opensuse(
 
     packages = ["clamav", "clamav_freshclam", "clamav-daemon"]
     for pkg in packages:
-        logger.info("Installing %s", pkg)
+        logger.info(_MSG_INSTALLING, pkg)
         result = update_detector.install_package(pkg, "auto")
-        logger.info("%s installation result: %s", pkg, result)
+        logger.info(_MSG_INSTALLATION_RESULT, pkg, result)
 
     # Enable and start freshclam
     logger.info("Enabling and starting freshclam service")
@@ -551,12 +580,12 @@ async def deploy_clamav_opensuse(
     else:
         logger.warning(
             "Failed to enable/start freshclam: %s",
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     # Enable and start clamd
     service_name = "clamd.service"
-    logger.info("Enabling and starting service: %s", service_name)
+    logger.info(_MSG_ENABLING_SERVICE, service_name)
     process = await asyncio.create_subprocess_exec(
         "systemctl",
         "enable",
@@ -568,13 +597,13 @@ async def deploy_clamav_opensuse(
     _, stderr = await process.communicate()
 
     if process.returncode == 0:
-        logger.info("Service %s enabled and started successfully", service_name)
+        logger.info(_MSG_SERVICE_ENABLED, service_name)
         await asyncio.sleep(2)
     else:
         logger.warning(
-            "Failed to enable/start service %s: %s",
+            _MSG_FAILED_ENABLE_SERVICE,
             service_name,
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     return True, None, None, "ClamAV installed successfully on openSUSE"
@@ -595,46 +624,19 @@ async def deploy_clamav_rhel(
     # Install ClamAV packages
     packages = ["clamav", "clamd", "clamav-update"]
     for pkg in packages:
-        logger.info("Installing %s", pkg)
+        logger.info(_MSG_INSTALLING, pkg)
         result = update_detector.install_package(pkg, "auto")
-        logger.info("%s installation result: %s", pkg, result)
+        logger.info(_MSG_INSTALLATION_RESULT, pkg, result)
 
     # Update virus definitions
-    logger.info("Updating virus definitions with freshclam")
-    process = await asyncio.create_subprocess_exec(
-        "freshclam",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    _, stderr = await process.communicate()
-    if process.returncode == 0:
-        logger.info("Virus definitions updated successfully")
-    else:
-        logger.warning(
-            "Failed to update virus definitions: %s",
-            stderr.decode() if stderr else "unknown error",
-        )
+    await _run_freshclam_system()
 
     # Configure clamd@scan
-    config_file = "/etc/clamd.d/scan.conf"
-    logger.info("Configuring %s", config_file)
-
-    with open(config_file, "r", encoding="utf-8") as file_handle:
-        config_content = file_handle.read()
-
-    config_content = config_content.replace("#Example", "# Example").replace(
-        "#LocalSocket /run/clamd.scan/clamd.sock",
-        "LocalSocket /run/clamd.scan/clamd.sock",
-    )
-
-    with open(config_file, "w", encoding="utf-8") as file_handle:
-        file_handle.write(config_content)
-
-    logger.info("Configuration updated successfully")
+    await _configure_rhel_clamd_scan()
 
     # Enable and start service
     service_name = "clamd@scan"
-    logger.info("Enabling and starting service: %s", service_name)
+    logger.info(_MSG_ENABLING_SERVICE, service_name)
     process = await asyncio.create_subprocess_exec(
         "systemctl",
         "enable",
@@ -646,16 +648,53 @@ async def deploy_clamav_rhel(
     _, stderr = await process.communicate()
 
     if process.returncode == 0:
-        logger.info("Service %s enabled and started successfully", service_name)
+        logger.info(_MSG_SERVICE_ENABLED, service_name)
         await asyncio.sleep(2)
     else:
         logger.warning(
-            "Failed to enable/start service %s: %s",
+            _MSG_FAILED_ENABLE_SERVICE,
             service_name,
-            stderr.decode() if stderr else "unknown error",
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
         )
 
     return True, None, None, "ClamAV installed successfully on RHEL/CentOS"
+
+
+async def _run_freshclam_system():
+    """Run freshclam to update virus definitions on the system."""
+    logger.info(_MSG_UPDATING_VIRUS_DEFS)
+    process = await asyncio.create_subprocess_exec(
+        "freshclam",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    _, stderr = await process.communicate()
+    if process.returncode == 0:
+        logger.info(_MSG_VIRUS_DEFS_UPDATED)
+    else:
+        logger.warning(
+            _MSG_FAILED_UPDATE_VIRUS_DEFS,
+            stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
+        )
+
+
+async def _configure_rhel_clamd_scan():
+    """Configure the clamd@scan config file on RHEL/CentOS."""
+    config_file = "/etc/clamd.d/scan.conf"
+    logger.info("Configuring %s", config_file)
+
+    async with aiofiles.open(config_file, "r", encoding="utf-8") as file_handle:
+        config_content = await file_handle.read()
+
+    config_content = config_content.replace("#Example", "# Example").replace(
+        "#LocalSocket /run/clamd.scan/clamd.sock",
+        "LocalSocket /run/clamd.scan/clamd.sock",
+    )
+
+    async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+        await file_handle.write(config_content)
+
+    logger.info("Configuration updated successfully")
 
 
 async def deploy_clamav_windows(
@@ -667,9 +706,9 @@ async def deploy_clamav_windows(
     # Use clamwin package which includes ClamAV engine for Windows
     package_to_install = "clamwin"
 
-    logger.info("Installing %s", package_to_install)
+    logger.info(_MSG_INSTALLING, package_to_install)
     result = update_detector.install_package(package_to_install, "auto")
-    logger.info("%s installation result: %s", package_to_install, result)
+    logger.info(_MSG_INSTALLATION_RESULT, package_to_install, result)
 
     # Determine success based on result
     success = isinstance(result, dict) and result.get("success", False)
@@ -680,22 +719,7 @@ async def deploy_clamav_windows(
 
     logger.info("Configuring ClamAV on Windows")
 
-    # Common installation paths
-    common_paths = [
-        "C:\\Program Files\\ClamWin\\bin",
-        "C:\\Program Files (x86)\\ClamWin\\bin",
-        "C:\\Program Files\\ClamAV",
-        "C:\\Program Files (x86)\\ClamAV",
-        "C:\\ProgramData\\chocolatey\\lib\\clamwin\\tools\\bin",
-        "C:\\ProgramData\\chocolatey\\lib\\clamav\\tools",
-    ]
-
-    clamav_path = None
-    for path in common_paths:
-        if os.path.exists(path):
-            clamav_path = path
-            break
-
+    clamav_path = _find_windows_clamav_path()
     if not clamav_path:
         logger.warning("Could not locate ClamAV installation directory")
         return (
@@ -706,30 +730,53 @@ async def deploy_clamav_windows(
         )
 
     # Update virus definitions
-    freshclam_exe = os.path.join(clamav_path, "freshclam.exe")
-    if not os.path.exists(freshclam_exe):
-        logger.warning("freshclam.exe not found at %s", freshclam_exe)
-    else:
-        logger.info("Updating virus definitions with freshclam")
-        try:
-            process = await asyncio.create_subprocess_exec(
-                freshclam_exe,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            _, stderr = await process.communicate()
-            if process.returncode == 0:
-                logger.info("Virus definitions updated successfully")
-            else:
-                logger.warning(
-                    "Failed to update virus definitions: %s",
-                    stderr.decode() if stderr else "unknown error",
-                )
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.warning("Error running freshclam: %s", error)
+    await _run_freshclam_windows(clamav_path)
 
     await asyncio.sleep(2)
     return True, None, None, "ClamAV installed successfully on Windows"
+
+
+def _find_windows_clamav_path() -> Optional[str]:
+    """Find the ClamAV installation directory on Windows."""
+    common_paths = [
+        "C:\\Program Files\\ClamWin\\bin",
+        "C:\\Program Files (x86)\\ClamWin\\bin",
+        "C:\\Program Files\\ClamAV",
+        "C:\\Program Files (x86)\\ClamAV",
+        "C:\\ProgramData\\chocolatey\\lib\\clamwin\\tools\\bin",
+        "C:\\ProgramData\\chocolatey\\lib\\clamav\\tools",
+    ]
+
+    for path in common_paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+
+async def _run_freshclam_windows(clamav_path: str):
+    """Run freshclam to update virus definitions on Windows."""
+    freshclam_exe = os.path.join(clamav_path, "freshclam.exe")
+    if not os.path.exists(freshclam_exe):
+        logger.warning("freshclam.exe not found at %s", freshclam_exe)
+        return
+
+    logger.info(_MSG_UPDATING_VIRUS_DEFS)
+    try:
+        process = await asyncio.create_subprocess_exec(
+            freshclam_exe,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await process.communicate()
+        if process.returncode == 0:
+            logger.info(_MSG_VIRUS_DEFS_UPDATED)
+        else:
+            logger.warning(
+                _MSG_FAILED_UPDATE_VIRUS_DEFS,
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
+            )
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        logger.warning("Error running freshclam: %s", error)
 
 
 async def deploy_clamav_debian(
@@ -759,7 +806,7 @@ async def deploy_clamav_debian(
         )
         try:
             service_name = "clamav_freshclam"
-            logger.info("Enabling and starting service: %s", service_name)
+            logger.info(_MSG_ENABLING_SERVICE, service_name)
             process = await asyncio.create_subprocess_exec(
                 "systemctl",
                 "enable",
@@ -771,13 +818,13 @@ async def deploy_clamav_debian(
             _, stderr = await process.communicate()
 
             if process.returncode == 0:
-                logger.info("Service %s enabled and started successfully", service_name)
+                logger.info(_MSG_SERVICE_ENABLED, service_name)
                 await asyncio.sleep(2)
             else:
                 logger.warning(
-                    "Failed to enable/start service %s: %s",
+                    _MSG_FAILED_ENABLE_SERVICE,
                     service_name,
-                    stderr.decode() if stderr else "unknown error",
+                    stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
                 )
         except Exception as service_error:  # pylint: disable=broad-exception-caught
             logger.warning("Failed to enable service: %s", str(service_error))

@@ -5,7 +5,7 @@ Tests deployment operations for Linux, BSD, and Windows systems.
 
 # pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init
 
-from unittest.mock import AsyncMock, Mock, patch, mock_open
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -80,12 +80,22 @@ class TestAntivirusDeployerLinux:
 
         config_content = "#Example\n#LocalSocket /run/clamd.scan/clamd.sock"
 
+        mock_file = AsyncMock()
+        mock_file.read = AsyncMock(return_value=config_content)
+        mock_file.write = AsyncMock()
+        mock_aiofiles_open = AsyncMock()
+        mock_aiofiles_open.__aenter__ = AsyncMock(return_value=mock_file)
+        mock_aiofiles_open.__aexit__ = AsyncMock(return_value=False)
+
         with patch(
             "src.sysmanage_agent.operations.antivirus_deploy_linux.UpdateDetector",
             return_value=mock_detector,
         ):
             with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-                with patch("builtins.open", mock_open(read_data=config_content)):
+                with patch(
+                    "src.sysmanage_agent.operations.antivirus_deploy_linux.aiofiles.open",
+                    return_value=mock_aiofiles_open,
+                ):
                     with patch("asyncio.sleep", return_value=None):
                         result = await self.deployer.deploy_redhat("clamav")
 
@@ -109,6 +119,13 @@ class TestAntivirusDeployerLinux:
 
         config_content = "#Example\n#LocalSocket /run/clamd.scan/clamd.sock"
 
+        mock_file = AsyncMock()
+        mock_file.read = AsyncMock(return_value=config_content)
+        mock_file.write = AsyncMock()
+        mock_aiofiles_open = AsyncMock()
+        mock_aiofiles_open.__aenter__ = AsyncMock(return_value=mock_file)
+        mock_aiofiles_open.__aexit__ = AsyncMock(return_value=False)
+
         with patch(
             "src.sysmanage_agent.operations.antivirus_deploy_linux.UpdateDetector",
             return_value=mock_detector,
@@ -117,7 +134,10 @@ class TestAntivirusDeployerLinux:
                 "asyncio.create_subprocess_exec",
                 side_effect=[mock_process_fail, mock_process_success],
             ):
-                with patch("builtins.open", mock_open(read_data=config_content)):
+                with patch(
+                    "src.sysmanage_agent.operations.antivirus_deploy_linux.aiofiles.open",
+                    return_value=mock_aiofiles_open,
+                ):
                     with patch("asyncio.sleep", return_value=None):
                         result = await self.deployer.deploy_redhat("clamav")
 

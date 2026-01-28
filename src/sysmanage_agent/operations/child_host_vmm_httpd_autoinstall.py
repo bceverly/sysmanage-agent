@@ -204,6 +204,7 @@ class HttpdAutoinstallSetup:
                 }
 
             # Step 2: Extract ramdisk
+            # NOSONAR - temp files required for ramdisk modification
             ramdisk_img = "/tmp/ramdisk.img"  # nosec B108 - /tmp required on OpenBSD
             self.logger.info(_("Extracting ramdisk from bsd.rd"))
             result = subprocess.run(  # nosec B603 B607
@@ -221,6 +222,7 @@ class HttpdAutoinstallSetup:
                 }
 
             # Step 3: Mount ramdisk
+            # NOSONAR - temp files required for ramdisk modification
             mount_point = "/tmp/ramdisk_mount"  # nosec B108 - /tmp required on OpenBSD
             Path(mount_point).mkdir(parents=True, exist_ok=True)
 
@@ -362,9 +364,9 @@ class HttpdAutoinstallSetup:
                         parent_dns = line.strip().split()[1]
                         break
                 else:
-                    parent_dns = "8.8.8.8"  # Fallback
+                    parent_dns = "8.8.8.8"  # NOSONAR - standard DNS fallback
         except Exception:
-            parent_dns = "8.8.8.8"  # Fallback
+            parent_dns = "8.8.8.8"  # NOSONAR - standard DNS fallback
 
         # Create install.conf content with static IP for networking
         # Each VM gets a unique static IP to avoid conflicts

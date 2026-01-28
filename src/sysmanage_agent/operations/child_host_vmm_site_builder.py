@@ -283,6 +283,7 @@ class SiteTarballBuilder:
 
             # Extract - the tarball extracts port files directly into build_path
             self.logger.info(_("Extracting tarball to %s"), build_path)
+            # NOSONAR - using safe filter for extraction
             # nosemgrep: trailofbits.python.tarfile-extractall-traversal.tarfile-extractall-traversal
             with tarfile.open(tarball_path, "r:gz") as tar:
                 tar.extractall(path=build_path, filter="data")  # type: ignore
@@ -336,6 +337,91 @@ class SiteTarballBuilder:
         """Build sysmanage-agent package from port."""
         package_builder = PackageBuilder(self.logger)
         return package_builder.build_agent_package(port_dir, agent_version)
+
+    def _validate_and_rename_package(
+        self,
+        pkg_path: Path,
+        pkg_filename: str,
+        agent_version: str,
+        build_path: Path,
+    ) -> Dict[str, Any]:
+        """Validate downloaded package and rename to OpenBSD format."""
+        # Verify the file was downloaded and is a valid tgz
+        if not pkg_path.exists():
+            raise FileNotFoundError(_("Downloaded file not found"))
+
+        file_size = pkg_path.stat().st_size
+        if file_size < 1000:
+            # File too small, probably an error page
+            raise ValueError(
+                _("Downloaded file too small (%d bytes), likely an error") % file_size
+            )
+
+        # Verify it's a valid gzip file by checking magic bytes
+        with open(pkg_path, "rb") as file:
+            magic = file.read(2)
+            if magic != b"\x1f\x8b":
+                raise ValueError(_("Downloaded file is not a valid gzip archive"))
+
+        self.logger.info(
+            _("Successfully downloaded pre-built package: %s (%d bytes)"),
+            pkg_filename,
+            file_size,
+        )
+
+        # Rename package to match OpenBSD naming convention
+        # The internal package name is sysmanage-agent-{version}p0
+        # (the p0 comes from REVISION=0 in the port Makefile)
+        # pkg_add requires filename to match internal package name
+        openbsd_pkg_name = f"sysmanage-agent-{agent_version}p0.tgz"
+        openbsd_pkg_path = build_path / openbsd_pkg_name
+        pkg_path.rename(openbsd_pkg_path)
+        self.logger.info(_("Renamed package to OpenBSD format: %s"), openbsd_pkg_name)
+
+        return {
+            "success": True,
+            "package_path": str(openbsd_pkg_path),
+            "error": None,
+        }
+
+    def _handle_download_error(
+        self,
+        error: Exception,
+        attempt: int,
+        openbsd_version: str,
+        agent_version: str,
+    ) -> Dict[str, Any] | None:
+        """Handle download errors, returning result dict for fatal errors or None to continue."""
+        if isinstance(error, urllib.error.HTTPError):
+            self.logger.warning(
+                _("HTTP error downloading package (attempt %d): %s"),
+                attempt,
+                error,
+            )
+            if error.code == 404:
+                # Package doesn't exist for this version
+                return {
+                    "success": False,
+                    "package_path": None,
+                    "error": _(
+                        "Pre-built package not found for OpenBSD %s agent v%s. "
+                        "Please check if this version has been released."
+                    )
+                    % (openbsd_version, agent_version),
+                }
+        elif isinstance(error, urllib.error.URLError):
+            self.logger.warning(
+                _("Network error downloading package (attempt %d): %s"),
+                attempt,
+                error,
+            )
+        else:
+            self.logger.warning(
+                _("Error downloading package (attempt %d): %s"),
+                attempt,
+                error,
+            )
+        return None
 
     def _download_prebuilt_agent_package(
         self,
@@ -398,78 +484,16 @@ class SiteTarballBuilder:
                     with open(pkg_path, "wb") as file:
                         shutil.copyfileobj(response, file)
 
-                # Verify the file was downloaded and is a valid tgz
-                if not pkg_path.exists():
-                    raise FileNotFoundError(_("Downloaded file not found"))
-
-                file_size = pkg_path.stat().st_size
-                if file_size < 1000:
-                    # File too small, probably an error page
-                    raise ValueError(
-                        _("Downloaded file too small (%d bytes), likely an error")
-                        % file_size
-                    )
-
-                # Verify it's a valid gzip file by checking magic bytes
-                with open(pkg_path, "rb") as file:
-                    magic = file.read(2)
-                    if magic != b"\x1f\x8b":
-                        raise ValueError(
-                            _("Downloaded file is not a valid gzip archive")
-                        )
-
-                self.logger.info(
-                    _("Successfully downloaded pre-built package: %s (%d bytes)"),
-                    pkg_filename,
-                    file_size,
+                return self._validate_and_rename_package(
+                    pkg_path, pkg_filename, agent_version, build_path
                 )
 
-                # Rename package to match OpenBSD naming convention
-                # The internal package name is sysmanage-agent-{version}p0
-                # (the p0 comes from REVISION=0 in the port Makefile)
-                # pkg_add requires filename to match internal package name
-                openbsd_pkg_name = f"sysmanage-agent-{agent_version}p0.tgz"
-                openbsd_pkg_path = build_path / openbsd_pkg_name
-                pkg_path.rename(openbsd_pkg_path)
-                self.logger.info(
-                    _("Renamed package to OpenBSD format: %s"), openbsd_pkg_name
-                )
-
-                return {
-                    "success": True,
-                    "package_path": str(openbsd_pkg_path),
-                    "error": None,
-                }
-
-            except urllib.error.HTTPError as error:
-                self.logger.warning(
-                    _("HTTP error downloading package (attempt %d): %s"),
-                    attempt,
-                    error,
-                )
-                if error.code == 404:
-                    # Package doesn't exist for this version
-                    return {
-                        "success": False,
-                        "package_path": None,
-                        "error": _(
-                            "Pre-built package not found for OpenBSD %s agent v%s. "
-                            "Please check if this version has been released."
-                        )
-                        % (openbsd_version, agent_version),
-                    }
-            except urllib.error.URLError as error:
-                self.logger.warning(
-                    _("Network error downloading package (attempt %d): %s"),
-                    attempt,
-                    error,
-                )
             except Exception as error:  # pylint: disable=broad-except
-                self.logger.warning(
-                    _("Error downloading package (attempt %d): %s"),
-                    attempt,
-                    error,
+                error_result = self._handle_download_error(
+                    error, attempt, openbsd_version, agent_version
                 )
+                if error_result is not None:
+                    return error_result
 
             # Wait before retry (exponential backoff, capped at 60 seconds)
             if attempt < max_retries:
@@ -647,6 +671,7 @@ class SiteTarballBuilder:
             tarball_path = output_dir / tarball_name
 
             # Create tarball
+            # NOSONAR - creating tarball, not extracting untrusted content
             with tarfile.open(tarball_path, "w:gz") as tar:
                 tar.add(site_dir, arcname=".")
 

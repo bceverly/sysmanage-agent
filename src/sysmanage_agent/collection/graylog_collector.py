@@ -16,6 +16,8 @@ from typing import Dict, Optional
 
 import yaml
 
+RSYSLOG_CONF_DIR = "/etc/rsyslog.d"
+
 
 class GraylogCollector:
     """Collects Graylog attachment status for the host."""
@@ -109,55 +111,35 @@ class GraylogCollector:
             with open(syslog_conf, "r", encoding="utf-8") as file:
                 content = file.read()
 
-            # Look for remote forwarding patterns like:
-            # *.* @192.168.1.100:514 (UDP) or *.*@192.168.1.100:514
-            # *.* @@192.168.1.100:514 (TCP) or *.*@@192.168.1.100:514
-            # *.* @graylog.example.com:514 or *.*@graylog.example.com:514
-
-            # UDP pattern (@host:port or @host, with or without space)
-            udp_pattern = r"^\s*[\*\w\.]+\s*@([^@\s]+?)(?::(\d+))?\s*$"
-            # TCP pattern (@@host:port or @@host, with or without space)
-            tcp_pattern = r"^\s*[\*\w\.]+\s*@@([^\s]+?)(?::(\d+))?\s*$"
-
-            for line in content.splitlines():
-                # Skip comments
-                if line.strip().startswith("#"):
-                    continue
-
-                # Check for TCP forwarding
-                tcp_match = re.match(tcp_pattern, line)
-                if tcp_match:
-                    target = tcp_match.group(1)
-                    port = int(tcp_match.group(2)) if tcp_match.group(2) else 514
-
-                    hostname, ip_addr = self._resolve_target(target)
-
-                    return {
-                        "is_attached": True,
-                        "target_hostname": hostname,
-                        "target_ip": ip_addr,
-                        "mechanism": "syslog_tcp",
-                        "port": port,
-                    }
-
-                # Check for UDP forwarding
-                udp_match = re.match(udp_pattern, line)
-                if udp_match:
-                    target = udp_match.group(1)
-                    port = int(udp_match.group(2)) if udp_match.group(2) else 514
-
-                    hostname, ip_addr = self._resolve_target(target)
-
-                    return {
-                        "is_attached": True,
-                        "target_hostname": hostname,
-                        "target_ip": ip_addr,
-                        "mechanism": "syslog_udp",
-                        "port": port,
-                    }
+            result = self._parse_bsd_syslog_content(content)
+            if result["is_attached"]:
+                return result
 
         except Exception as error:
             self.logger.error("Error reading BSD syslog.conf: %s", error)
+
+        return self._no_attachment()
+
+    def _parse_bsd_syslog_content(self, content: str) -> Dict:
+        """Parse BSD syslog.conf content for remote forwarding configuration."""
+        # UDP pattern (@host:port or @host, with or without space)
+        udp_pattern = r"^\s*[\*\w\.]+\s*@([^@\s]+?)(?::(\d+))?\s*$"
+        # TCP pattern (@@host:port or @@host, with or without space)
+        tcp_pattern = r"^\s*[\*\w\.]+\s*@@([^\s]+?)(?::(\d+))?\s*$"
+
+        for line in content.splitlines():
+            if line.strip().startswith("#"):
+                continue
+
+            # Check for TCP forwarding
+            result = self._match_syslog_forwarding(line, tcp_pattern, "syslog_tcp", 514)
+            if result:
+                return result
+
+            # Check for UDP forwarding
+            result = self._match_syslog_forwarding(line, udp_pattern, "syslog_udp", 514)
+            if result:
+                return result
 
         return self._no_attachment()
 
@@ -167,7 +149,13 @@ class GraylogCollector:
 
         Checks if Graylog Sidecar service is running and parses its YAML config.
         """
-        # Check if Graylog Sidecar service is running
+        if not self._is_windows_sidecar_running():
+            return self._no_attachment()
+
+        return self._parse_windows_sidecar_config()
+
+    def _is_windows_sidecar_running(self) -> bool:
+        """Check if the Graylog Sidecar Windows service is running."""
         try:
             result = subprocess.run(  # nosec B603, B607 - safe: hardcoded args, no user input
                 ["sc", "query", "graylog-sidecar"],
@@ -177,54 +165,59 @@ class GraylogCollector:
             )
 
             if result.returncode != 0:
-                return self._no_attachment()
+                return False
 
-            # Check if service is running
-            if "RUNNING" not in result.stdout:
-                return self._no_attachment()
+            return "RUNNING" in result.stdout
 
         except Exception as error:
             self.logger.error("Error checking Graylog Sidecar service: %s", error)
-            return self._no_attachment()
+            return False
 
-        # Parse Graylog Sidecar configuration
-        # Default path: C:\Program Files\graylog\sidecar\sidecar.yml
+    def _parse_windows_sidecar_config(self) -> Dict:
+        """Parse Graylog Sidecar configuration files to find the target server."""
         sidecar_config_paths = [
             r"C:\Program Files\graylog\sidecar\sidecar.yml",
             r"C:\Program Files (x86)\graylog\sidecar\sidecar.yml",
         ]
 
         for config_path in sidecar_config_paths:
-            if os.path.exists(config_path):
-                try:
-                    with open(config_path, "r", encoding="utf-8") as file:
-                        config = yaml.safe_load(file)
-
-                    # Extract server URL from configuration
-                    server_url = config.get("server_url", "")
-                    if server_url:
-                        # Parse URL to extract hostname/IP
-                        # Format: http://graylog.example.com:9000/api/
-                        # or https://192.168.1.100:9000/api/
-                        url_pattern = r"https?://([^:/]+)(?::(\d+))?"
-                        match = re.match(url_pattern, server_url)
-                        if match:
-                            target = match.group(1)
-                            hostname, ip_addr = self._resolve_target(target)
-
-                            # Windows Sidecar typically uses port 5044 for Beats input
-                            return {
-                                "is_attached": True,
-                                "target_hostname": hostname,
-                                "target_ip": ip_addr,
-                                "mechanism": "windows_sidecar",
-                                "port": 5044,
-                            }
-
-                except Exception as error:
-                    self.logger.error("Error parsing Graylog Sidecar config: %s", error)
+            result = self._parse_single_sidecar_config(config_path)
+            if result and result["is_attached"]:
+                return result
 
         return self._no_attachment()
+
+    def _parse_single_sidecar_config(self, config_path: str) -> Optional[Dict]:
+        """Parse a single Graylog Sidecar config file for server URL."""
+        if not os.path.exists(config_path):
+            return None
+
+        try:
+            with open(config_path, "r", encoding="utf-8") as file:
+                config = yaml.safe_load(file)
+
+            server_url = config.get("server_url", "")
+            if not server_url:
+                return None
+
+            url_pattern = r"https?://([^:/]+)(?::(\d+))?"
+            match = re.match(url_pattern, server_url)
+            if match:
+                target = match.group(1)
+                hostname, ip_addr = self._resolve_target(target)
+
+                return {
+                    "is_attached": True,
+                    "target_hostname": hostname,
+                    "target_ip": ip_addr,
+                    "mechanism": "windows_sidecar",
+                    "port": 5044,
+                }
+
+        except Exception as error:
+            self.logger.error("Error parsing Graylog Sidecar config: %s", error)
+
+        return None
 
     def _parse_rsyslog_config(self) -> Dict:
         """
@@ -232,13 +225,7 @@ class GraylogCollector:
 
         Checks /etc/rsyslog.conf and /etc/rsyslog.d/*.conf for remote forwarding.
         """
-        config_files = ["/etc/rsyslog.conf"]
-
-        # Add files from /etc/rsyslog.d/
-        if os.path.exists("/etc/rsyslog.d"):
-            for filename in os.listdir("/etc/rsyslog.d"):
-                if filename.endswith(".conf"):
-                    config_files.append(os.path.join("/etc/rsyslog.d", filename))
+        config_files = self._collect_rsyslog_config_files()
 
         for config_file in config_files:
             if not os.path.exists(config_file):
@@ -248,72 +235,9 @@ class GraylogCollector:
                 with open(config_file, "r", encoding="utf-8") as file:
                     content = file.read()
 
-                # Look for remote forwarding patterns:
-                # UDP: *.* @192.168.1.100:514 or *.*@192.168.1.100:514 (with or without space)
-                # TCP: *.* @@192.168.1.100:514 or *.*@@192.168.1.100:514
-                # GELF TCP: *.* @192.168.1.100:12201;GELF or *.*@192.168.1.100:12201;GELF
-
-                # GELF TCP pattern (with or without space before @)
-                gelf_pattern = r"^\s*[\*\w\.]+\s*@([^@\s]+?)(?::(\d+))?;GELF"
-                # TCP pattern (@@host:port or @@host, with or without space)
-                tcp_pattern = r"^\s*[\*\w\.]+\s*@@([^\s;]+?)(?::(\d+))?\s*(?:;|$)"
-                # UDP pattern (@host:port or @host, with or without space)
-                udp_pattern = r"^\s*[\*\w\.]+\s*@([^@\s;]+?)(?::(\d+))?\s*(?:;|$)"
-
-                for line in content.splitlines():
-                    # Skip comments
-                    if line.strip().startswith("#"):
-                        continue
-
-                    # Check for GELF TCP
-                    gelf_match = re.match(gelf_pattern, line)
-                    if gelf_match:
-                        target = gelf_match.group(1)
-                        port = (
-                            int(gelf_match.group(2)) if gelf_match.group(2) else 12201
-                        )
-
-                        hostname, ip_addr = self._resolve_target(target)
-
-                        return {
-                            "is_attached": True,
-                            "target_hostname": hostname,
-                            "target_ip": ip_addr,
-                            "mechanism": "gelf_tcp",
-                            "port": port,
-                        }
-
-                    # Check for TCP forwarding
-                    tcp_match = re.match(tcp_pattern, line)
-                    if tcp_match:
-                        target = tcp_match.group(1)
-                        port = int(tcp_match.group(2)) if tcp_match.group(2) else 514
-
-                        hostname, ip_addr = self._resolve_target(target)
-
-                        return {
-                            "is_attached": True,
-                            "target_hostname": hostname,
-                            "target_ip": ip_addr,
-                            "mechanism": "syslog_tcp",
-                            "port": port,
-                        }
-
-                    # Check for UDP forwarding
-                    udp_match = re.match(udp_pattern, line)
-                    if udp_match:
-                        target = udp_match.group(1)
-                        port = int(udp_match.group(2)) if udp_match.group(2) else 514
-
-                        hostname, ip_addr = self._resolve_target(target)
-
-                        return {
-                            "is_attached": True,
-                            "target_hostname": hostname,
-                            "target_ip": ip_addr,
-                            "mechanism": "syslog_udp",
-                            "port": port,
-                        }
+                result = self._parse_rsyslog_content(content)
+                if result["is_attached"]:
+                    return result
 
             except Exception as error:
                 self.logger.error(
@@ -321,6 +245,69 @@ class GraylogCollector:
                 )
 
         return self._no_attachment()
+
+    def _collect_rsyslog_config_files(self) -> list:
+        """Collect all rsyslog configuration file paths."""
+        config_files = ["/etc/rsyslog.conf"]
+
+        if os.path.exists(RSYSLOG_CONF_DIR):
+            for filename in os.listdir(RSYSLOG_CONF_DIR):
+                if filename.endswith(".conf"):
+                    config_files.append(os.path.join(RSYSLOG_CONF_DIR, filename))
+
+        return config_files
+
+    def _parse_rsyslog_content(self, content: str) -> Dict:
+        """Parse rsyslog config content for remote forwarding patterns."""
+        # GELF TCP pattern (with or without space before @)
+        gelf_pattern = r"^\s*[\*\w\.]+\s*@([^@\s]+?)(?::(\d+))?;GELF"
+        # TCP pattern (@@host:port or @@host, with or without space)
+        tcp_pattern = r"^\s*[\*\w\.]+\s*@@([^\s;]+)(?::(\d+))?\s*(?:;|$)"
+        # UDP pattern (@host:port or @host, with or without space)
+        udp_pattern = r"^\s*[\*\w\.]+\s*@([^@\s;]+)(?::(\d+))?\s*(?:;|$)"
+
+        for line in content.splitlines():
+            if line.strip().startswith("#"):
+                continue
+
+            # Check for GELF TCP
+            result = self._match_syslog_forwarding(
+                line, gelf_pattern, "gelf_tcp", 12201
+            )
+            if result:
+                return result
+
+            # Check for TCP forwarding
+            result = self._match_syslog_forwarding(line, tcp_pattern, "syslog_tcp", 514)
+            if result:
+                return result
+
+            # Check for UDP forwarding
+            result = self._match_syslog_forwarding(line, udp_pattern, "syslog_udp", 514)
+            if result:
+                return result
+
+        return self._no_attachment()
+
+    def _match_syslog_forwarding(
+        self, line: str, pattern: str, mechanism: str, default_port: int
+    ) -> Optional[Dict]:
+        """Match a syslog forwarding pattern in a config line and return attachment info."""
+        match = re.match(pattern, line)
+        if not match:
+            return None
+
+        target = match.group(1)
+        port = int(match.group(2)) if match.group(2) else default_port
+        hostname, ip_addr = self._resolve_target(target)
+
+        return {
+            "is_attached": True,
+            "target_hostname": hostname,
+            "target_ip": ip_addr,
+            "mechanism": mechanism,
+            "port": port,
+        }
 
     def _parse_syslog_ng_config(self) -> Dict:
         """

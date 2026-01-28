@@ -322,7 +322,9 @@ run_rc_command "$1"
                 fbf.write(firstboot_script)
             # Make firstboot script executable - must be 755 to run as rc.d script
             # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-            os.chmod(firstboot_script_path, 0o755)  # nosec B103
+            os.chmod(
+                firstboot_script_path, 0o755
+            )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
 
             # 5. Create /firstboot sentinel file to enable firstboot scripts
             firstboot_sentinel = os.path.join(mount_point, "firstboot")
@@ -638,7 +640,9 @@ local-hostname: {config.hostname.split('.')[0]}
                     bsf.write(bootstrap_script)
                 # Make bootstrap script executable - must be 755 to run as shell script
                 # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-                os.chmod(bootstrap_path, 0o755)  # nosec B103
+                os.chmod(
+                    bootstrap_path, 0o755
+                )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
 
                 self._config_disk_path = os.path.join(
                     disk_dir, f"{config.vm_name}-freebsd-config.iso"

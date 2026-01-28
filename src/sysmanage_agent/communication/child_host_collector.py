@@ -54,7 +54,6 @@ class ChildHostCollector:
         config = configparser.RawConfigParser()
         config.optionxform = str  # Preserve case for keys
 
-        needs_update = False
         creating_new_file = not wslconfig_path.exists()
 
         # Read existing config if it exists
@@ -67,7 +66,25 @@ class ChildHostCollector:
                 )
                 # Continue anyway, we'll add/update the sections
 
-        # Check and set [wsl2] vmIdleTimeout=-1
+        needs_update = self._configure_wsl2_idle_timeout(config)
+        needs_update = self._configure_wsl_autostop(config) or needs_update
+
+        if not needs_update:
+            self.logger.debug(".wslconfig already configured correctly")
+            return False
+
+        return self._write_wslconfig(config, wslconfig_path, creating_new_file)
+
+    def _configure_wsl2_idle_timeout(
+        self, config: configparser.RawConfigParser
+    ) -> bool:
+        """Configure [wsl2] vmIdleTimeout=-1 to prevent VM shutdown when idle.
+
+        Returns:
+            True if the config was modified, False otherwise.
+        """
+        needs_update = False
+
         if not config.has_section("wsl2"):
             config.add_section("wsl2")
             needs_update = True
@@ -78,7 +95,6 @@ class ChildHostCollector:
         current_timeout = config.get("wsl2", "vmIdleTimeout", fallback=None)
 
         if has_lowercase_timeout and not has_correct_timeout:
-            # Remove lowercase version, we'll add correct case
             config.remove_option("wsl2", "vmidletimeout")
             self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
             needs_update = True
@@ -87,8 +103,18 @@ class ChildHostCollector:
             config.set("wsl2", "vmIdleTimeout", "-1")
             needs_update = True
 
-        # Check and set [wsl] autoStop=false (workaround for WSL 2.6.x regression)
-        # See: https://github.com/microsoft/wsl/issues/13416
+        return needs_update
+
+    def _configure_wsl_autostop(self, config: configparser.RawConfigParser) -> bool:
+        """Configure [wsl] autoStop=false (workaround for WSL 2.6.x regression).
+
+        See: https://github.com/microsoft/wsl/issues/13416
+
+        Returns:
+            True if the config was modified, False otherwise.
+        """
+        needs_update = False
+
         if not config.has_section("wsl"):
             config.add_section("wsl")
             needs_update = True
@@ -99,7 +125,6 @@ class ChildHostCollector:
         current_autostop = config.get("wsl", "autoStop", fallback=None)
 
         if has_lowercase_autostop and not has_correct_autostop:
-            # Remove lowercase version, we'll add correct case
             config.remove_option("wsl", "autostop")
             self.logger.info("Removing lowercase autostop, will add autoStop")
             needs_update = True
@@ -108,10 +133,19 @@ class ChildHostCollector:
             config.set("wsl", "autoStop", "false")
             needs_update = True
 
-        if not needs_update:
-            self.logger.debug(".wslconfig already configured correctly")
-            return False
+        return needs_update
 
+    def _write_wslconfig(
+        self,
+        config: configparser.RawConfigParser,
+        wslconfig_path: Path,
+        creating_new_file: bool,
+    ) -> bool:
+        """Write the .wslconfig file to disk.
+
+        Returns:
+            True if the file was written successfully, False otherwise.
+        """
         try:
             if creating_new_file:
                 self.logger.info(
@@ -328,7 +362,7 @@ class ChildHostCollector:
 
     def _stop_all_keepalive_processes(self):
         """Stop all WSL keep-alive processes."""
-        for distro in list(self._wsl_keepalive_processes.keys()):
+        for distro in self._wsl_keepalive_processes.copy():
             self._stop_keepalive_process(distro)
 
     def _ensure_keepalive_processes(self):
@@ -341,7 +375,7 @@ class ChildHostCollector:
         current_distros = set(self._get_wsl_distros())
 
         # Stop processes for distributions that no longer exist
-        for distro in list(self._wsl_keepalive_processes.keys()):
+        for distro in self._wsl_keepalive_processes.copy():
             if distro not in current_distros:
                 self.logger.info(
                     "WSL distribution %s no longer exists, stopping keep-alive", distro

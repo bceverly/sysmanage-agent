@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import WSL listing functionality from extracted module
 from .child_host_listing_wsl import WSLListing
@@ -18,6 +18,9 @@ from .child_host_listing_wsl import WSLListing
 from .child_host_bhyve_creation import (
     load_bhyve_metadata,
 )
+
+# Module-level constants for repeated string literals
+_ORACLE_LINUX = "Oracle Linux"
 
 # VMM metadata directory for storing hostname/distribution info
 VMM_METADATA_DIR = "/var/vmm/metadata"
@@ -240,9 +243,33 @@ class ChildHostListing:
 
         return containers
 
+    def _extract_ips_from_interface(
+        self, iface_data: Dict[str, Any], ipv4: Optional[str], ipv6: Optional[str]
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Extract IP addresses from a single network interface.
+
+        Args:
+            iface_data: Interface data from container state
+            ipv4: Current IPv4 address (may be None)
+            ipv6: Current IPv6 address (may be None)
+
+        Returns:
+            Tuple of (ipv4_address, ipv6_address)
+        """
+        for addr in iface_data.get("addresses", []):
+            family = addr.get("family")
+            if family == "inet" and not ipv4:
+                ipv4 = addr.get("address")
+            elif family == "inet6" and not ipv6:
+                addr_val = addr.get("address", "")
+                if not addr_val.startswith("fe80:"):
+                    ipv6 = addr_val
+        return ipv4, ipv6
+
     def _extract_container_ips(
         self, container: Dict[str, Any], status: str
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Extract IPv4 and IPv6 addresses from container state.
 
@@ -253,28 +280,23 @@ class ChildHostListing:
         Returns:
             Tuple of (ipv4_address, ipv6_address), either can be None
         """
-        ipv4_address = None
-        ipv6_address = None
-
         if status != "running":
-            return ipv4_address, ipv6_address
+            return None, None
 
         state = container.get("state")
         if not state:
-            return ipv4_address, ipv6_address
+            return None, None
 
+        ipv4_address = None
+        ipv6_address = None
         network = state.get("network", {})
+
         for iface_name, iface_data in network.items():
             if iface_name == "lo":
                 continue
-            for addr in iface_data.get("addresses", []):
-                family = addr.get("family")
-                if family == "inet" and not ipv4_address:
-                    ipv4_address = addr.get("address")
-                elif family == "inet6" and not ipv6_address:
-                    addr_val = addr.get("address", "")
-                    if not addr_val.startswith("fe80:"):
-                        ipv6_address = addr_val
+            ipv4_address, ipv6_address = self._extract_ips_from_interface(
+                iface_data, ipv4_address, ipv6_address
+            )
             if ipv4_address:
                 break
 
@@ -366,9 +388,9 @@ class ChildHostListing:
             "alma": "AlmaLinux",
             "centos": "CentOS",
             "opensuse": "openSUSE",
-            "oraclelinux": "Oracle Linux",
-            "oracle": "Oracle Linux",
-            "ol": "Oracle Linux",
+            "oraclelinux": _ORACLE_LINUX,
+            "oracle": _ORACLE_LINUX,
+            "ol": _ORACLE_LINUX,
         }
 
         # Ubuntu codename to version mapping
@@ -430,6 +452,54 @@ class ChildHostListing:
             "distribution_version": distribution_version,
         }
 
+    def _parse_kvm_vm_status(self, state: str) -> str:
+        """
+        Map KVM/virsh state to normalized status.
+
+        Args:
+            state: Raw state string from virsh output
+
+        Returns:
+            Normalized status string
+        """
+        if "running" in state:
+            return "running"
+        if "shut off" in state or "stopped" in state:
+            return "stopped"
+        return state
+
+    def _parse_kvm_vm_line(self, line: str) -> Optional[Dict[str, Any]]:
+        """
+        Parse a single line from virsh list output.
+
+        Args:
+            line: A line from virsh list --all output
+
+        Returns:
+            VM dict or None if line is invalid
+        """
+        line = line.strip()
+        if not line:
+            return None
+
+        parts = line.split()
+        if len(parts) < 2:
+            return None
+
+        # Format: "ID  Name  State"
+        # ID can be "-" for stopped VMs
+        vm_id = parts[0] if parts[0] != "-" else None
+        name = parts[1]
+        state = " ".join(parts[2:]).lower() if len(parts) > 2 else "unknown"
+        status = self._parse_kvm_vm_status(state)
+
+        return {
+            "child_type": "kvm",
+            "child_name": name,
+            "status": status,
+            "vm_id": vm_id,
+        }
+
     def list_kvm_vms(self) -> List[Dict[str, Any]]:
         """
         List KVM/QEMU virtual machines on Linux.
@@ -440,7 +510,6 @@ class ChildHostListing:
         vms = []
 
         try:
-            # Use virsh to list VMs
             result = subprocess.run(  # nosec B603 B607
                 ["virsh", "list", "--all"],
                 capture_output=True,
@@ -450,39 +519,12 @@ class ChildHostListing:
             )
 
             if result.returncode == 0:
-                # Parse virsh output
                 lines = result.stdout.strip().split("\n")
-                # Skip header lines
+                # Skip header lines (first two)
                 for line in lines[2:]:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        # Format: "ID  Name  State"
-                        # ID can be "-" for stopped VMs
-                        vm_id = parts[0] if parts[0] != "-" else None
-                        name = parts[1]
-                        state = (
-                            " ".join(parts[2:]).lower() if len(parts) > 2 else "unknown"
-                        )
-
-                        if "running" in state:
-                            status = "running"
-                        elif "shut off" in state or "stopped" in state:
-                            status = "stopped"
-                        else:
-                            status = state
-
-                        vms.append(
-                            {
-                                "child_type": "kvm",
-                                "child_name": name,
-                                "status": status,
-                                "vm_id": vm_id,
-                            }
-                        )
+                    vm_info = self._parse_kvm_vm_line(line)
+                    if vm_info:
+                        vms.append(vm_info)
 
         except FileNotFoundError:
             self.logger.debug("virsh command not found")
@@ -490,6 +532,83 @@ class ChildHostListing:
             self.logger.debug("Error listing KVM VMs: %s", error)
 
         return vms
+
+    def _find_vboxmanage_path(self) -> Optional[str]:
+        """
+        Find the VBoxManage executable path.
+
+        Returns:
+            Path to VBoxManage or None if not found
+        """
+        vboxmanage = shutil.which("VBoxManage")
+        if vboxmanage:
+            return vboxmanage
+
+        if platform.system().lower() != "windows":
+            return None
+
+        common_paths = [
+            os.path.join(
+                os.environ.get("ProgramFiles", ""),
+                "Oracle",
+                "VirtualBox",
+                "VBoxManage.exe",
+            ),
+            os.path.join(
+                os.environ.get("ProgramFiles(x86)", ""),
+                "Oracle",
+                "VirtualBox",
+                "VBoxManage.exe",
+            ),
+        ]
+        for path in common_paths:
+            if os.path.exists(path):
+                return path
+        return None
+
+    def _get_subprocess_creationflags(self) -> int:
+        """Get appropriate subprocess creation flags for the current platform."""
+        if (
+            hasattr(subprocess, "CREATE_NO_WINDOW")
+            and platform.system().lower() == "windows"
+        ):
+            return subprocess.CREATE_NO_WINDOW
+        return 0
+
+    def _parse_virtualbox_vm_line(
+        self, line: str, vboxmanage: str, creationflags: int
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Parse a single line from VBoxManage list vms output.
+
+        Args:
+            line: A line from VBoxManage output
+            vboxmanage: Path to VBoxManage executable
+            creationflags: Subprocess creation flags
+
+        Returns:
+            VM dict or None if line is invalid
+        """
+        line = line.strip()
+        if not line:
+            return None
+
+        match = re.match(
+            r'"(.+)"\s+\{([^}]+)\}', line
+        )  # NOSONAR - regex operates on trusted internal data
+        if not match:
+            return None
+
+        name = match.group(1)
+        uuid = match.group(2)
+        status = self._get_virtualbox_vm_status(vboxmanage, uuid, creationflags)
+
+        return {
+            "child_type": "virtualbox",
+            "child_name": name,
+            "status": status,
+            "vm_id": uuid,
+        }
 
     def list_virtualbox_vms(self) -> List[Dict[str, Any]]:
         """
@@ -501,27 +620,7 @@ class ChildHostListing:
         vms = []
 
         try:
-            # Find VBoxManage
-            vboxmanage = shutil.which("VBoxManage")
-            if not vboxmanage and platform.system().lower() == "windows":
-                common_paths = [
-                    os.path.join(
-                        os.environ.get("ProgramFiles", ""),
-                        "Oracle",
-                        "VirtualBox",
-                        "VBoxManage.exe",
-                    ),
-                    os.path.join(
-                        os.environ.get("ProgramFiles(x86)", ""),
-                        "Oracle",
-                        "VirtualBox",
-                        "VBoxManage.exe",
-                    ),
-                ]
-                for path in common_paths:
-                    if os.path.exists(path):
-                        vboxmanage = path
-                        break
+            vboxmanage = self._find_vboxmanage_path()
 
             # Validate the path is in a safe location to prevent PATH hijacking
             if not vboxmanage or not is_safe_vbox_path(vboxmanage):
@@ -531,13 +630,7 @@ class ChildHostListing:
                     )
                 return vms
 
-            # Get list of VMs
-            creationflags = (
-                subprocess.CREATE_NO_WINDOW
-                if hasattr(subprocess, "CREATE_NO_WINDOW")
-                and platform.system().lower() == "windows"
-                else 0
-            )
+            creationflags = self._get_subprocess_creationflags()
             result = subprocess.run(  # nosec B603 B607
                 [  # nosemgrep: dangerous-subprocess-use-tainted-env-args
                     vboxmanage,
@@ -554,29 +647,12 @@ class ChildHostListing:
             if result.returncode != 0:
                 return vms
 
-            # Parse output: "VMName" {uuid}
             for line in result.stdout.strip().split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
-
-                # Extract name and UUID
-                match = re.match(r'"(.+)"\s+\{([^}]+)\}', line)
-                if not match:
-                    continue
-
-                name = match.group(1)
-                uuid = match.group(2)
-                status = self._get_virtualbox_vm_status(vboxmanage, uuid, creationflags)
-
-                vms.append(
-                    {
-                        "child_type": "virtualbox",
-                        "child_name": name,
-                        "status": status,
-                        "vm_id": uuid,
-                    }
+                vm_info = self._parse_virtualbox_vm_line(
+                    line, vboxmanage, creationflags
                 )
+                if vm_info:
+                    vms.append(vm_info)
 
         except Exception as error:
             self.logger.debug("Error listing VirtualBox VMs: %s", error)
@@ -620,6 +696,60 @@ class ChildHostListing:
 
         return "unknown"
 
+    def _parse_vmm_vm_line(self, line: str) -> Optional[Dict[str, Any]]:
+        """
+        Parse a single line from vmctl status output.
+
+        Args:
+            line: A line from vmctl status output
+
+        Returns:
+            VM dict or None if line is invalid
+        """
+        line = line.strip()
+        if not line:
+            return None
+
+        parts = line.split()
+        if len(parts) < 9:
+            return None
+
+        # 9 columns: ID, PID, VCPUS, MAXMEM, CURMEM, TTY, OWNER, STATE, NAME
+        vm_id = parts[0]
+        vcpus = parts[2]
+        max_mem = parts[3]
+        cur_mem = parts[4]
+        tty = parts[5]
+        owner = parts[6]
+        state = parts[7]
+        name = parts[8]
+
+        # Use STATE column for status
+        if state == "running":
+            status = "running"
+        else:
+            status = "stopped"
+            vm_id = None
+
+        # Get stored metadata (hostname, distribution) if available
+        metadata = self._get_vmm_metadata(name)
+        hostname = metadata.get("hostname") if metadata else None
+        distribution = metadata.get("distribution") if metadata else None
+
+        return {
+            "child_type": "vmm",
+            "child_name": name,
+            "status": status,
+            "vm_id": vm_id,
+            "vcpus": vcpus,
+            "memory": max_mem,
+            "current_memory": cur_mem,
+            "tty": tty if tty != "-" else None,
+            "owner": owner,
+            "hostname": hostname,
+            "distribution": distribution,
+        }
+
     def list_vmm_vms(self) -> List[Dict[str, Any]]:
         """
         List VMM virtual machines on OpenBSD.
@@ -638,7 +768,6 @@ class ChildHostListing:
         vms = []
 
         try:
-            # Use vmctl status to list VMs
             result = subprocess.run(  # nosec B603 B607
                 ["vmctl", "status"],
                 capture_output=True,
@@ -651,61 +780,15 @@ class ChildHostListing:
                 self.logger.debug("vmctl status failed: %s", result.stderr)
                 return vms
 
-            # Parse vmctl status output
-            # Format (9 columns):
-            #   ID   PID VCPUS  MAXMEM  CURMEM     TTY        OWNER STATE   NAME
-            #    1 85075     1    1.0G   1006M   ttyp8        root running vm1
-            #    2     -     1    1.0G       -       -        root stopped vm2
             lines = result.stdout.strip().split("\n")
             if len(lines) < 2:
                 return vms
 
             # Skip header line
             for line in lines[1:]:
-                line = line.strip()
-                if not line:
-                    continue
-
-                parts = line.split()
-                if len(parts) >= 9:
-                    # 9 columns: ID, PID, VCPUS, MAXMEM, CURMEM, TTY, OWNER, STATE, NAME
-                    vm_id = parts[0]
-                    # parts[1] is PID (unused, status comes from STATE column)
-                    vcpus = parts[2]
-                    max_mem = parts[3]
-                    cur_mem = parts[4]
-                    tty = parts[5]
-                    owner = parts[6]
-                    state = parts[7]  # STATE column: running/stopped
-                    name = parts[8]  # NAME is the 9th column
-
-                    # Use STATE column for status (more reliable than PID check)
-                    if state == "running":
-                        status = "running"
-                    else:
-                        status = "stopped"
-                        vm_id = None
-
-                    # Get stored metadata (hostname, distribution) if available
-                    metadata = self._get_vmm_metadata(name)
-                    hostname = metadata.get("hostname") if metadata else None
-                    distribution = metadata.get("distribution") if metadata else None
-
-                    vms.append(
-                        {
-                            "child_type": "vmm",
-                            "child_name": name,
-                            "status": status,
-                            "vm_id": vm_id,
-                            "vcpus": vcpus,
-                            "memory": max_mem,
-                            "current_memory": cur_mem,
-                            "tty": tty if tty != "-" else None,
-                            "owner": owner,
-                            "hostname": hostname,
-                            "distribution": distribution,
-                        }
-                    )
+                vm_info = self._parse_vmm_vm_line(line)
+                if vm_info:
+                    vms.append(vm_info)
 
             self.logger.info("Found %d VMM VMs", len(vms))
 
@@ -741,6 +824,102 @@ class ChildHostListing:
             self.logger.debug("Error reading VMM metadata for '%s': %s", vm_name, error)
             return None
 
+    def _create_bhyve_vm_dict(self, vm_name: str, status: str) -> Dict[str, Any]:
+        """
+        Create a bhyve VM dictionary with metadata.
+
+        Args:
+            vm_name: Name of the VM
+            status: VM status (running/stopped)
+
+        Returns:
+            VM information dictionary
+        """
+        metadata = load_bhyve_metadata(vm_name, self.logger)
+        hostname = metadata.get("hostname") if metadata else None
+        distribution = metadata.get("distribution") if metadata else None
+
+        return {
+            "child_type": "bhyve",
+            "child_name": vm_name,
+            "status": status,
+            "hostname": hostname,
+            "distribution": distribution,
+        }
+
+    def _list_running_bhyve_vms(self) -> Tuple[List[Dict[str, Any]], set]:
+        """
+        List running bhyve VMs from /dev/vmm directory.
+
+        Returns:
+            Tuple of (list of VM dicts, set of running VM names)
+        """
+        vms = []
+        running_vms = set()
+        vmm_dir = "/dev/vmm"
+
+        if not os.path.isdir(vmm_dir):
+            return vms, running_vms
+
+        try:
+            for vm_name in os.listdir(vmm_dir):
+                running_vms.add(vm_name)
+                vms.append(self._create_bhyve_vm_dict(vm_name, "running"))
+        except PermissionError:
+            self.logger.debug("Permission denied reading /dev/vmm")
+
+        return vms, running_vms
+
+    def _is_valid_bhyve_vm_dir(self, vm_base_dir: str, entry: str) -> bool:
+        """
+        Check if a directory entry represents a valid bhyve VM.
+
+        Args:
+            vm_base_dir: Base VM directory path
+            entry: Directory entry name
+
+        Returns:
+            True if this is a valid VM directory
+        """
+        # Skip hidden directories and special directories
+        if entry.startswith(".") or entry in ("images", "cloud-init", "metadata"):
+            return False
+
+        vm_dir = os.path.join(vm_base_dir, entry)
+        if not os.path.isdir(vm_dir):
+            return False
+
+        # Check if there's a disk image in this directory
+        disk_path = os.path.join(vm_dir, f"{entry}.img")
+        return os.path.exists(disk_path)
+
+    def _list_stopped_bhyve_vms(self, running_vms: set) -> List[Dict[str, Any]]:
+        """
+        List stopped bhyve VMs from /vm directory.
+
+        Args:
+            running_vms: Set of running VM names to exclude
+
+        Returns:
+            List of stopped VM dicts
+        """
+        vms = []
+        vm_base_dir = "/vm"
+
+        if not os.path.isdir(vm_base_dir):
+            return vms
+
+        try:
+            for entry in os.listdir(vm_base_dir):
+                if not self._is_valid_bhyve_vm_dir(vm_base_dir, entry):
+                    continue
+                if entry not in running_vms:
+                    vms.append(self._create_bhyve_vm_dict(entry, "stopped"))
+        except PermissionError:
+            self.logger.debug("Permission denied reading /vm")
+
+        return vms
+
     def list_bhyve_vms(self) -> List[Dict[str, Any]]:
         """
         List bhyve virtual machines on FreeBSD.
@@ -758,77 +937,14 @@ class ChildHostListing:
             - hostname: FQDN (from metadata, if available)
             - distribution: dict with distribution_name and distribution_version
         """
-        vms = []
-        running_vms = set()
-
         try:
-            # Check for running VMs in /dev/vmm
-            vmm_dir = "/dev/vmm"
-            if os.path.isdir(vmm_dir):
-                try:
-                    vm_names = os.listdir(vmm_dir)
-                    for vm_name in vm_names:
-                        running_vms.add(vm_name)
-                        # Get stored metadata (hostname, distribution) if available
-                        metadata = load_bhyve_metadata(vm_name, self.logger)
-                        hostname = metadata.get("hostname") if metadata else None
-                        distribution = (
-                            metadata.get("distribution") if metadata else None
-                        )
-                        vms.append(
-                            {
-                                "child_type": "bhyve",
-                                "child_name": vm_name,
-                                "status": "running",
-                                "hostname": hostname,
-                                "distribution": distribution,
-                            }
-                        )
-                except PermissionError:
-                    self.logger.debug("Permission denied reading /dev/vmm")
+            running_vms_list, running_vms_set = self._list_running_bhyve_vms()
+            stopped_vms_list = self._list_stopped_bhyve_vms(running_vms_set)
 
-            # Check for stopped VMs in /vm directory
-            vm_base_dir = "/vm"
-            if os.path.isdir(vm_base_dir):
-                try:
-                    for entry in os.listdir(vm_base_dir):
-                        # Skip hidden directories and special directories
-                        if entry.startswith(".") or entry in (
-                            "images",
-                            "cloud-init",
-                            "metadata",
-                        ):
-                            continue
-                        vm_dir = os.path.join(vm_base_dir, entry)
-                        if not os.path.isdir(vm_dir):
-                            continue
-                        # Check if there's a disk image in this directory
-                        disk_path = os.path.join(vm_dir, f"{entry}.img")
-                        if not os.path.exists(disk_path):
-                            continue
-                        # This is a valid VM - check if it's already listed as running
-                        if entry not in running_vms:
-                            # Get stored metadata (hostname, distribution) if available
-                            metadata = load_bhyve_metadata(entry, self.logger)
-                            hostname = metadata.get("hostname") if metadata else None
-                            distribution = (
-                                metadata.get("distribution") if metadata else None
-                            )
-                            vms.append(
-                                {
-                                    "child_type": "bhyve",
-                                    "child_name": entry,
-                                    "status": "stopped",
-                                    "hostname": hostname,
-                                    "distribution": distribution,
-                                }
-                            )
-                except PermissionError:
-                    self.logger.debug("Permission denied reading /vm")
-
+            vms = running_vms_list + stopped_vms_list
             self.logger.info("Found %d bhyve VMs", len(vms))
+            return vms
 
         except Exception as error:
             self.logger.debug("Error listing bhyve VMs: %s", error)
-
-        return vms
+            return []

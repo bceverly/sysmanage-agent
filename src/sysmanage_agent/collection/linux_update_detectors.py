@@ -51,30 +51,38 @@ class LinuxUpdateDetector:
             )
 
             if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if "/" in line and "[upgradable" in line.lower():
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            package_name = parts[0].split("/")[0]
-                            available_version = parts[1]
-                            current_version = (
-                                parts[5].rstrip("]") if len(parts) > 5 else "unknown"
-                            )
-
-                            update = {
-                                "package_name": package_name,
-                                "current_version": current_version,
-                                "available_version": available_version,
-                                "package_manager": "apt",
-                                "is_security_update": "-security" in line,
-                                "is_system_update": self.is_system_package_linux(
-                                    package_name
-                                ),
-                            }
-                            updates.append(update)
+                updates = self._parse_apt_upgradable_output(result.stdout)
 
         except Exception as error:
             logger.error(_("Failed to detect APT updates: %s"), str(error))
+
+        return updates
+
+    def _parse_apt_upgradable_output(self, stdout: str) -> list:
+        """Parse the output of 'apt list --upgradable' into update records."""
+        updates = []
+        for line in stdout.strip().split("\n"):
+            if "/" not in line or "[upgradable" not in line.lower():
+                continue
+
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            package_name = parts[0].split("/")[0]
+            available_version = parts[1]
+            current_version = parts[5].rstrip("]") if len(parts) > 5 else "unknown"
+
+            updates.append(
+                {
+                    "package_name": package_name,
+                    "current_version": current_version,
+                    "available_version": available_version,
+                    "package_manager": "apt",
+                    "is_security_update": "-security" in line,
+                    "is_system_update": self.is_system_package_linux(package_name),
+                }
+            )
 
         return updates
 
@@ -207,30 +215,39 @@ class LinuxUpdateDetector:
             )
 
             if result.returncode == 0 and result.stdout.strip():
-                in_packages = False
-                for line in result.stdout.strip().split("\n"):
-                    if "---" in line:
-                        in_packages = True
-                        continue
-
-                    if in_packages and line.strip():
-                        parts = line.split("|")
-                        if len(parts) >= 5:
-                            update = {
-                                "package_name": parts[2].strip(),
-                                "current_version": parts[3].strip(),
-                                "available_version": parts[4].strip(),
-                                "package_manager": "zypper",
-                                "repository": parts[1].strip(),
-                                "is_security_update": "security" in parts[0].lower(),
-                                "is_system_update": self.is_system_package_linux(
-                                    parts[2].strip()
-                                ),
-                            }
-                            updates.append(update)
+                updates = self._parse_zypper_output(result.stdout)
 
         except Exception as error:
             logger.error(_("Failed to detect Zypper updates: %s"), str(error))
+
+        return updates
+
+    def _parse_zypper_output(self, stdout: str) -> list:
+        """Parse zypper list-updates output into update records."""
+        updates = []
+        in_packages = False
+        for line in stdout.strip().split("\n"):
+            if "---" in line:
+                in_packages = True
+                continue
+
+            if not in_packages or not line.strip():
+                continue
+
+            parts = line.split("|")
+            if len(parts) >= 5:
+                package_name = parts[2].strip()
+                updates.append(
+                    {
+                        "package_name": package_name,
+                        "current_version": parts[3].strip(),
+                        "available_version": parts[4].strip(),
+                        "package_manager": "zypper",
+                        "repository": parts[1].strip(),
+                        "is_security_update": "security" in parts[0].lower(),
+                        "is_system_update": self.is_system_package_linux(package_name),
+                    }
+                )
 
         return updates
 
@@ -293,7 +310,7 @@ class LinuxUpdateDetector:
     def detect_fwupd_updates(self):
         """Detect firmware updates from fwupd."""
         updates = []
-        try:  # pylint: disable=too-many-nested-blocks
+        try:
             logger.debug(_("Detecting fwupd firmware updates"))
 
             # First, check if the daemon is running and we have permissions
@@ -301,24 +318,7 @@ class LinuxUpdateDetector:
                 logger.warning(_("fwupd daemon not running or no permissions"))
                 return updates
 
-            # Refresh metadata if allowed (requires privileges)
-            try:
-                refresh_result = subprocess.run(  # nosec B603, B607
-                    ["fwupdmgr", "refresh", "--force"],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    check=False,
-                )
-                if refresh_result.returncode != 0:
-                    logger.debug(
-                        _("fwupd refresh failed (may need privileges): %s"),
-                        refresh_result.stderr,
-                    )
-            except Exception:
-                logger.debug(
-                    _("Could not refresh fwupd metadata (may need privileges)")
-                )
+            self._refresh_fwupd_metadata()
 
             # Get updates that are available
             result = subprocess.run(  # nosec B603, B607
@@ -330,77 +330,7 @@ class LinuxUpdateDetector:
             )
 
             if result.returncode == 0 and result.stdout.strip():
-                try:
-                    updates_data = json.loads(result.stdout)
-
-                    if isinstance(updates_data, dict) and "Devices" in updates_data:
-                        devices = updates_data["Devices"]
-                    elif isinstance(updates_data, list):
-                        devices = updates_data
-                    else:
-                        devices = []
-
-                    for device in devices:
-                        device_id = device.get("DeviceId", "unknown")
-                        device_name = device.get(
-                            "Name", device.get("DeviceName", _("Unknown Device"))
-                        )
-
-                        # Check for releases (available updates)
-                        releases = device.get("Releases", [])
-                        if not releases:
-                            continue
-
-                        # Get current version
-                        current_version = device.get("Version", "unknown")
-
-                        # Process each available release
-                        for release in releases:
-                            if not release:
-                                continue
-
-                            available_version = release.get("Version", "unknown")
-
-                            # Skip if same version
-                            if available_version == current_version:
-                                continue
-
-                            # Determine if this is a security update
-                            is_security = self._is_fwupd_security_update(release)
-
-                            # Get additional metadata
-                            size = release.get("Size", 0)
-                            vendor = device.get("Vendor", "Unknown")
-
-                            # Create update record with unique package name
-                            unique_package_name = (
-                                f"{vendor} {device_name} (→ {available_version})"
-                            )
-
-                            update = {
-                                "package_name": unique_package_name,
-                                "device_id": device_id,
-                                "current_version": current_version,
-                                "available_version": available_version,
-                                "package_manager": "fwupd",
-                                "is_security_update": is_security,
-                                "is_system_update": True,
-                                "update_size": size,
-                                "vendor": vendor,
-                                "device_name": device_name,
-                                "release_description": release.get("Description", ""),
-                                "release_summary": release.get("Summary", ""),
-                                "urgency": release.get("Urgency", "unknown"),
-                                "requires_reboot": True,
-                            }
-
-                            updates.append(update)
-
-                except json.JSONDecodeError as error:
-                    logger.error(_("Failed to parse fwupd JSON output: %s"), str(error))
-                except Exception as error:
-                    logger.error(_("Error processing fwupd updates: %s"), str(error))
-
+                updates = self._parse_fwupd_updates_output(result.stdout)
             elif result.returncode == 2:
                 logger.debug(_("No firmware updates available"))
             else:
@@ -410,6 +340,108 @@ class LinuxUpdateDetector:
             logger.error(_("Failed to detect fwupd updates: %s"), str(error))
 
         return updates
+
+    def _refresh_fwupd_metadata(self):
+        """Refresh fwupd metadata if allowed (requires privileges)."""
+        try:
+            refresh_result = subprocess.run(  # nosec B603, B607
+                ["fwupdmgr", "refresh", "--force"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            if refresh_result.returncode != 0:
+                logger.debug(
+                    _("fwupd refresh failed (may need privileges): %s"),
+                    refresh_result.stderr,
+                )
+        except Exception:
+            logger.debug(_("Could not refresh fwupd metadata (may need privileges)"))
+
+    def _parse_fwupd_updates_output(self, stdout: str) -> list:
+        """Parse the JSON output from fwupdmgr get-updates."""
+        updates = []
+        try:
+            updates_data = json.loads(stdout)
+            devices = self._extract_fwupd_devices(updates_data)
+
+            for device in devices:
+                device_updates = self._process_fwupd_device(device)
+                updates.extend(device_updates)
+
+        except json.JSONDecodeError as error:
+            logger.error(_("Failed to parse fwupd JSON output: %s"), str(error))
+        except Exception as error:
+            logger.error(_("Error processing fwupd updates: %s"), str(error))
+
+        return updates
+
+    @staticmethod
+    def _extract_fwupd_devices(updates_data) -> list:
+        """Extract the devices list from fwupd JSON output."""
+        if isinstance(updates_data, dict) and "Devices" in updates_data:
+            return updates_data["Devices"]
+        if isinstance(updates_data, list):
+            return updates_data
+        return []
+
+    def _process_fwupd_device(self, device: dict) -> list:
+        """Process a single fwupd device and return its available updates."""
+        updates = []
+        device_id = device.get("DeviceId", "unknown")
+        device_name = device.get("Name", device.get("DeviceName", _("Unknown Device")))
+
+        releases = device.get("Releases", [])
+        if not releases:
+            return updates
+
+        current_version = device.get("Version", "unknown")
+
+        for release in releases:
+            update = self._process_fwupd_release(
+                release, device_id, device_name, current_version, device
+            )
+            if update:
+                updates.append(update)
+
+        return updates
+
+    def _process_fwupd_release(
+        self,
+        release: dict,
+        device_id: str,
+        device_name: str,
+        current_version: str,
+        device: dict,
+    ) -> dict:
+        """Process a single fwupd release and return an update record if applicable."""
+        if not release:
+            return None
+
+        available_version = release.get("Version", "unknown")
+        if available_version == current_version:
+            return None
+
+        vendor = device.get("Vendor", "Unknown")
+        unique_package_name = f"{vendor} {device_name} (→ {available_version})"
+
+        return {
+            "package_name": unique_package_name,
+            "device_id": device_id,
+            "current_version": current_version,
+            "available_version": available_version,
+            "package_manager": "fwupd",
+            "is_security_update": self._is_fwupd_security_update(release),
+            "is_system_update": True,
+            "update_size": release.get("Size", 0),
+            "vendor": vendor,
+            "device_name": device_name,
+            "release_description": release.get("Description", ""),
+            "release_summary": release.get("Summary", ""),
+            "urgency": release.get("Urgency", "unknown"),
+            "requires_reboot": True,
+        }
 
     @staticmethod
     def _is_fwupd_security_update(release: dict) -> bool:

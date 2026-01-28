@@ -15,6 +15,22 @@ from typing import Any, Dict
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations.antivirus_base import _get_brew_user
 
+# Module-level constants for repeated strings
+_MSG_INSTALLING_CLAMAV = "Installing clamav"
+_MSG_CLAMAV_INSTALL_RESULT = "clamav installation result: %s"
+_PATH_OPT_HOMEBREW = "/opt/homebrew"
+_MSG_CREATING_FRESHCLAM_CONF = "Creating freshclam.conf from sample"
+_SED_COMMENT_EXAMPLE = "s/^Example/#Example/"
+_MSG_FRESHCLAM_CONF_CONFIGURED = "freshclam.conf configured"
+_MSG_CREATING_CLAMD_CONF = "Creating clamd.conf from sample"
+_MSG_CLAMD_CONF_CONFIGURED = "clamd.conf configured"
+_MSG_UNKNOWN_ERROR = "unknown error"
+_SED_UNCOMMENT_LOCAL_SOCKET = "s/^#LocalSocket /LocalSocket /"
+_MSG_VIRUS_DB_DOWNLOADED = "Virus database downloaded successfully"
+_MSG_VIRUS_DB_TIMEOUT = (
+    "Virus database not downloaded after 30 seconds, proceeding anyway"
+)
+
 
 class AntivirusDeployerBSD:
     """Handles antivirus deployment for Unix systems (macOS and BSD)."""
@@ -34,19 +50,19 @@ class AntivirusDeployerBSD:
 
         # Install ClamAV via Homebrew
         update_detector = UpdateDetector()
-        self.logger.info("Installing clamav")
+        self.logger.info(_MSG_INSTALLING_CLAMAV)
         result = update_detector.install_package("clamav", "auto")
-        self.logger.info("clamav installation result: %s", result)
+        self.logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
         # Determine the correct config path based on architecture
         config_base = (
             "/opt/homebrew/etc/clamav"
-            if os.path.exists("/opt/homebrew")
+            if os.path.exists(_PATH_OPT_HOMEBREW)
             else "/usr/local/etc/clamav"
         )
         log_dir = (
             "/opt/homebrew/var/log/clamav"
-            if os.path.exists("/opt/homebrew")
+            if os.path.exists(_PATH_OPT_HOMEBREW)
             else "/usr/local/var/log/clamav"
         )
 
@@ -58,16 +74,36 @@ class AntivirusDeployerBSD:
         # Create database directory for virus definitions
         db_dir = (
             "/opt/homebrew/var/lib/clamav"
-            if os.path.exists("/opt/homebrew")
+            if os.path.exists(_PATH_OPT_HOMEBREW)
             else "/usr/local/var/lib/clamav"
         )
         os.makedirs(db_dir, exist_ok=True)
 
-        # Configure freshclam.conf
+        # Configure freshclam.conf and clamd.conf
+        await self._configure_macos_freshclam(config_base)
+        await self._configure_macos_clamd(config_base, log_dir, db_dir)
+
+        # Update virus definitions with freshclam
+        await self._run_macos_freshclam()
+
+        # Start ClamAV service via Homebrew
+        await self._start_macos_brew_service()
+
+        await asyncio.sleep(2)
+
+        return {
+            "success": True,
+            "error_message": None,
+            "installed_version": None,
+            "result": "ClamAV installed successfully on macOS",
+        }
+
+    async def _configure_macos_freshclam(self, config_base: str):
+        """Configure freshclam.conf from sample on macOS."""
         freshclam_conf = f"{config_base}/freshclam.conf"
         freshclam_sample = f"{config_base}/freshclam.conf.sample"
         if os.path.exists(freshclam_sample):
-            self.logger.info("Creating freshclam.conf from sample")
+            self.logger.info(_MSG_CREATING_FRESHCLAM_CONF)
             process = await asyncio.create_subprocess_exec(
                 "cp",
                 freshclam_sample,
@@ -77,25 +113,25 @@ class AntivirusDeployerBSD:
             )
             await process.communicate()
 
-            # Comment out Example line in freshclam.conf
             process = await asyncio.create_subprocess_exec(
                 "sed",
                 "-i",
                 "",
                 "-e",
-                "s/^Example/#Example/",
+                _SED_COMMENT_EXAMPLE,
                 freshclam_conf,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             await process.communicate()
-            self.logger.info("freshclam.conf configured")
+            self.logger.info(_MSG_FRESHCLAM_CONF_CONFIGURED)
 
-        # Configure clamd.conf
+    async def _configure_macos_clamd(self, config_base: str, log_dir: str, db_dir: str):
+        """Configure clamd.conf from sample on macOS."""
         clamd_conf = f"{config_base}/clamd.conf"
         clamd_sample = f"{config_base}/clamd.conf.sample"
         if os.path.exists(clamd_sample):
-            self.logger.info("Creating clamd.conf from sample")
+            self.logger.info(_MSG_CREATING_CLAMD_CONF)
             process = await asyncio.create_subprocess_exec(
                 "cp",
                 clamd_sample,
@@ -105,9 +141,8 @@ class AntivirusDeployerBSD:
             )
             await process.communicate()
 
-            # Comment out Example line and configure clamd
             sed_commands = [
-                "s/^Example/#Example/",
+                _SED_COMMENT_EXAMPLE,
                 f"s|^#LogFile.*|LogFile {log_dir}/clamd.log|",
                 f"s|^#PidFile.*|PidFile {log_dir}/clamd.pid|",
                 f"s|^#DatabaseDirectory.*|DatabaseDirectory {db_dir}|",
@@ -127,19 +162,17 @@ class AntivirusDeployerBSD:
                 )
                 await process.communicate()
 
-            self.logger.info("clamd.conf configured")
+            self.logger.info(_MSG_CLAMD_CONF_CONFIGURED)
 
-        # Update virus definitions with freshclam
+    async def _run_macos_freshclam(self):
+        """Run freshclam to update virus definitions on macOS."""
         self.logger.info("Updating virus definitions with freshclam")
-        # Use full path since brew link creates symlinks in /opt/homebrew/bin or /usr/local/bin
         freshclam_cmd = (
             "/opt/homebrew/bin/freshclam"
             if os.path.exists("/opt/homebrew/bin/freshclam")
             else "/usr/local/bin/freshclam"
         )
 
-        # If running as root, use sudo -u to run as the brew user
-        # This ensures freshclam has proper permissions to write to Homebrew directories
         brew_user = _get_brew_user() if os.geteuid() == 0 else None
 
         if brew_user:
@@ -164,12 +197,11 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to update virus definitions: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
-        # Start ClamAV service via Homebrew
-        # Note: ClamAV service must be started with sudo (as root) to run at system startup
-        # This is different from other brew commands which shouldn't run as root
+    async def _start_macos_brew_service(self):
+        """Start ClamAV service via Homebrew on macOS."""
         self.logger.info("Starting ClamAV service via brew services")
         brew_cmd = (
             "/opt/homebrew/bin/brew"
@@ -177,8 +209,6 @@ class AntivirusDeployerBSD:
             else "/usr/local/bin/brew"
         )
 
-        # Always use sudo for brew services start clamav
-        # ClamAV requires root to start at system startup
         process = await asyncio.create_subprocess_exec(
             "sudo",
             brew_cmd,
@@ -194,17 +224,8 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start ClamAV service: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
-
-        await asyncio.sleep(2)
-
-        return {
-            "success": True,
-            "error_message": None,
-            "installed_version": None,
-            "result": "ClamAV installed successfully on macOS",
-        }
 
     async def deploy_netbsd(self, _antivirus_package: str) -> Dict[str, Any]:
         """Deploy ClamAV on NetBSD via pkgin."""
@@ -212,72 +233,21 @@ class AntivirusDeployerBSD:
 
         # Install ClamAV package using pkgin
         update_detector = UpdateDetector()
-        self.logger.info("Installing clamav")
+        self.logger.info(_MSG_INSTALLING_CLAMAV)
         result = update_detector.install_package("clamav", "auto")
-        self.logger.info("clamav installation result: %s", result)
+        self.logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
         # Configure ClamAV on NetBSD
         self.logger.info("Configuring ClamAV on NetBSD")
 
-        # NetBSD config files are typically in /usr/pkg/etc
-        # Copy sample config files and comment out Example line
-        # freshclam.conf
-        freshclam_conf = "/usr/pkg/etc/freshclam.conf"
-        freshclam_sample = "/usr/pkg/etc/freshclam.conf.sample"
-        if os.path.exists(freshclam_sample):
-            self.logger.info("Creating freshclam.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                freshclam_sample,
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Comment out Example line in freshclam.conf
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/^Example/#Example/",
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("freshclam.conf configured")
-
-        # clamd.conf
-        clamd_conf = "/usr/pkg/etc/clamd.conf"
-        clamd_sample = "/usr/pkg/etc/clamd.conf.sample"
-        if os.path.exists(clamd_sample):
-            self.logger.info("Creating clamd.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                clamd_sample,
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Comment out Example line and configure LocalSocket in clamd.conf
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/^Example/#Example/",
-                "-e",
-                "s/^#LocalSocket /LocalSocket /",
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("clamd.conf configured")
+        await self._configure_bsd_freshclam(
+            "/usr/pkg/etc/freshclam.conf.sample",
+            "/usr/pkg/etc/freshclam.conf",
+        )
+        await self._configure_bsd_clamd(
+            "/usr/pkg/etc/clamd.conf.sample",
+            "/usr/pkg/etc/clamd.conf",
+        )
 
         # Copy rc.d scripts to /etc/rc.d/ (NetBSD requirement)
         self.logger.info("Copying rc.d scripts to /etc/rc.d/")
@@ -293,7 +263,6 @@ class AntivirusDeployerBSD:
             await process.communicate()
 
         # Enable services in rc.conf using shell commands
-        # NetBSD service name is freshclamd (with d), not freshclam
         self.logger.info("Enabling ClamAV services in rc.conf")
 
         process = await asyncio.create_subprocess_exec(
@@ -330,25 +299,13 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start freshclamd: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         # Wait for virus database download
-        self.logger.info("Waiting for freshclamd to download virus database")
-        database_ready = False
-        for _ in range(30):
-            if os.path.exists("/var/clamav/main.cvd") or os.path.exists(
-                "/var/clamav/main.cld"
-            ):
-                self.logger.info("Virus database downloaded successfully")
-                database_ready = True
-                break
-            await asyncio.sleep(1)
-
-        if not database_ready:
-            self.logger.warning(
-                "Virus database not downloaded after 30 seconds, proceeding anyway"
-            )
+        await self._wait_for_virus_database(
+            ["/var/clamav/main.cvd", "/var/clamav/main.cld"]
+        )
 
         # Start clamd service
         self.logger.info("Starting clamd service")
@@ -366,7 +323,7 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start clamd: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         await asyncio.sleep(2)
@@ -384,72 +341,21 @@ class AntivirusDeployerBSD:
 
         # Install ClamAV package
         update_detector = UpdateDetector()
-        self.logger.info("Installing clamav")
+        self.logger.info(_MSG_INSTALLING_CLAMAV)
         result = update_detector.install_package("clamav", "auto")
-        self.logger.info("clamav installation result: %s", result)
+        self.logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
         # Configure ClamAV on FreeBSD
         self.logger.info("Configuring ClamAV on FreeBSD")
 
-        # FreeBSD config files are typically in /usr/local/etc
-        # Copy sample config files and comment out Example line
-        # freshclam.conf
-        freshclam_conf = "/usr/local/etc/freshclam.conf"
-        freshclam_sample = "/usr/local/etc/freshclam.conf.sample"
-        if os.path.exists(freshclam_sample):
-            self.logger.info("Creating freshclam.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                freshclam_sample,
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Comment out Example line in freshclam.conf
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/^Example/#Example/",
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("freshclam.conf configured")
-
-        # clamd.conf
-        clamd_conf = "/usr/local/etc/clamd.conf"
-        clamd_sample = "/usr/local/etc/clamd.conf.sample"
-        if os.path.exists(clamd_sample):
-            self.logger.info("Creating clamd.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                clamd_sample,
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Comment out Example line and configure LocalSocket in clamd.conf
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/^Example/#Example/",
-                "-e",
-                "s/^#LocalSocket /LocalSocket /",
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("clamd.conf configured")
+        await self._configure_bsd_freshclam(
+            "/usr/local/etc/freshclam.conf.sample",
+            "/usr/local/etc/freshclam.conf",
+        )
+        await self._configure_bsd_clamd(
+            "/usr/local/etc/clamd.conf.sample",
+            "/usr/local/etc/clamd.conf",
+        )
 
         # Enable services in rc.conf
         self.logger.info("Enabling ClamAV services in rc.conf")
@@ -484,25 +390,13 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start clamav_freshclam: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         # Wait for virus database download
-        self.logger.info("Waiting for freshclam to download virus database")
-        database_ready = False
-        for _ in range(30):
-            if os.path.exists("/var/db/clamav/main.cvd") or os.path.exists(
-                "/var/db/clamav/main.cld"
-            ):
-                self.logger.info("Virus database downloaded successfully")
-                database_ready = True
-                break
-            await asyncio.sleep(1)
-
-        if not database_ready:
-            self.logger.warning(
-                "Virus database not downloaded after 30 seconds, proceeding anyway"
-            )
+        await self._wait_for_virus_database(
+            ["/var/db/clamav/main.cvd", "/var/db/clamav/main.cld"]
+        )
 
         # Start clamd service
         self.logger.info("Starting clamav_clamd service")
@@ -519,7 +413,7 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start clamav_clamd: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         await asyncio.sleep(2)
@@ -537,100 +431,18 @@ class AntivirusDeployerBSD:
 
         # Install ClamAV package
         update_detector = UpdateDetector()
-        self.logger.info("Installing clamav")
+        self.logger.info(_MSG_INSTALLING_CLAMAV)
         result = update_detector.install_package("clamav", "auto")
-        self.logger.info("clamav installation result: %s", result)
+        self.logger.info(_MSG_CLAMAV_INSTALL_RESULT, result)
 
         # Configure ClamAV on OpenBSD
         self.logger.info("Configuring ClamAV on OpenBSD")
 
-        # Copy sample config files and comment out Example line
-        # freshclam.conf
-        freshclam_conf = "/etc/freshclam.conf"
-        freshclam_sample = "/usr/local/share/examples/clamav/freshclam.conf.sample"
-        if os.path.exists(freshclam_sample):
-            self.logger.info("Creating freshclam.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                freshclam_sample,
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
+        await self._configure_openbsd_freshclam()
+        await self._configure_openbsd_clamd()
+        await self._create_openbsd_runtime_dirs()
 
-            # Comment out Example line in freshclam.conf
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "s/^Example/#Example/",
-                freshclam_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("freshclam.conf configured")
-
-        # clamd.conf
-        clamd_conf = "/etc/clamd.conf"
-        clamd_sample = "/usr/local/share/examples/clamav/clamd.conf.sample"
-        if os.path.exists(clamd_sample):
-            self.logger.info("Creating clamd.conf from sample")
-            process = await asyncio.create_subprocess_exec(
-                "cp",
-                clamd_sample,
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Comment out Example line and configure LocalSocket in clamd.conf
-            # On OpenBSD, use /var/run instead of /run
-            # Use sed to do multiple edits
-            process = await asyncio.create_subprocess_exec(
-                "sed",
-                "-i",
-                "-e",
-                "s/^Example/#Example/",
-                "-e",
-                "s/^#LocalSocket /LocalSocket /",
-                "-e",
-                "s|/run/clamav/|/var/run/clamav/|g",
-                clamd_conf,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("clamd.conf configured")
-
-        # Create required runtime directories for clamd
-        # On OpenBSD, runtime directory is /var/run, not /run
-        self.logger.info("Creating runtime directories for ClamAV")
-        clamav_run_dir = "/var/run/clamav"
-        if not os.path.exists(clamav_run_dir):
-            process = await asyncio.create_subprocess_exec(
-                "mkdir",
-                "-p",
-                clamav_run_dir,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-
-            # Set ownership to _clamav user
-            process = await asyncio.create_subprocess_exec(
-                "chown",
-                "_clamav:_clamav",
-                clamav_run_dir,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            self.logger.info("Created and configured /var/run/clamav directory")
-
-        # Enable and start freshclam service first (OpenBSD uses freshclam)
-        # Note: freshclam must run first to download virus database before clamd can start
+        # Enable and start freshclam service first
         self.logger.info("Enabling and starting freshclam service")
         process = await asyncio.create_subprocess_exec(
             "rcctl",
@@ -654,27 +466,15 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start freshclam: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
-        # Wait for freshclam to download the database (give it up to 30 seconds)
-        self.logger.info("Waiting for freshclam to download virus database")
-        database_ready = False
-        for _ in range(30):
-            if os.path.exists("/var/db/clamav/main.cvd") or os.path.exists(
-                "/var/db/clamav/main.cld"
-            ):
-                self.logger.info("Virus database downloaded successfully")
-                database_ready = True
-                break
-            await asyncio.sleep(1)
+        # Wait for freshclam to download the database
+        await self._wait_for_virus_database(
+            ["/var/db/clamav/main.cvd", "/var/db/clamav/main.cld"]
+        )
 
-        if not database_ready:
-            self.logger.warning(
-                "Virus database not downloaded after 30 seconds, proceeding anyway"
-            )
-
-        # Enable and start clamd service (OpenBSD uses clamd)
+        # Enable and start clamd service
         self.logger.info("Enabling and starting clamd service")
         process = await asyncio.create_subprocess_exec(
             "rcctl",
@@ -698,7 +498,7 @@ class AntivirusDeployerBSD:
         else:
             self.logger.warning(
                 "Failed to start clamd: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         await asyncio.sleep(2)
@@ -709,3 +509,152 @@ class AntivirusDeployerBSD:
             "installed_version": None,
             "result": "ClamAV installed successfully on OpenBSD",
         }
+
+    async def _configure_bsd_freshclam(self, sample_path: str, conf_path: str):
+        """Configure freshclam.conf from sample for BSD systems."""
+        if os.path.exists(sample_path):
+            self.logger.info(_MSG_CREATING_FRESHCLAM_CONF)
+            process = await asyncio.create_subprocess_exec(
+                "cp",
+                sample_path,
+                conf_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "sed",
+                "-i",
+                "",
+                "-e",
+                _SED_COMMENT_EXAMPLE,
+                conf_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            self.logger.info(_MSG_FRESHCLAM_CONF_CONFIGURED)
+
+    async def _configure_bsd_clamd(self, sample_path: str, conf_path: str):
+        """Configure clamd.conf from sample for BSD systems (NetBSD/FreeBSD)."""
+        if os.path.exists(sample_path):
+            self.logger.info(_MSG_CREATING_CLAMD_CONF)
+            process = await asyncio.create_subprocess_exec(
+                "cp",
+                sample_path,
+                conf_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "sed",
+                "-i",
+                "",
+                "-e",
+                _SED_COMMENT_EXAMPLE,
+                "-e",
+                _SED_UNCOMMENT_LOCAL_SOCKET,
+                conf_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            self.logger.info(_MSG_CLAMD_CONF_CONFIGURED)
+
+    async def _configure_openbsd_freshclam(self):
+        """Configure freshclam.conf from sample for OpenBSD."""
+        freshclam_conf = "/etc/freshclam.conf"
+        freshclam_sample = "/usr/local/share/examples/clamav/freshclam.conf.sample"
+        if os.path.exists(freshclam_sample):
+            self.logger.info(_MSG_CREATING_FRESHCLAM_CONF)
+            process = await asyncio.create_subprocess_exec(
+                "cp",
+                freshclam_sample,
+                freshclam_conf,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "sed",
+                "-i",
+                _SED_COMMENT_EXAMPLE,
+                freshclam_conf,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            self.logger.info(_MSG_FRESHCLAM_CONF_CONFIGURED)
+
+    async def _configure_openbsd_clamd(self):
+        """Configure clamd.conf from sample for OpenBSD."""
+        clamd_conf = "/etc/clamd.conf"
+        clamd_sample = "/usr/local/share/examples/clamav/clamd.conf.sample"
+        if os.path.exists(clamd_sample):
+            self.logger.info(_MSG_CREATING_CLAMD_CONF)
+            process = await asyncio.create_subprocess_exec(
+                "cp",
+                clamd_sample,
+                clamd_conf,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "sed",
+                "-i",
+                "-e",
+                _SED_COMMENT_EXAMPLE,
+                "-e",
+                _SED_UNCOMMENT_LOCAL_SOCKET,
+                "-e",
+                "s|/run/clamav/|/var/run/clamav/|g",
+                clamd_conf,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            self.logger.info(_MSG_CLAMD_CONF_CONFIGURED)
+
+    async def _create_openbsd_runtime_dirs(self):
+        """Create required runtime directories for ClamAV on OpenBSD."""
+        self.logger.info("Creating runtime directories for ClamAV")
+        clamav_run_dir = "/var/run/clamav"
+        if not os.path.exists(clamav_run_dir):
+            process = await asyncio.create_subprocess_exec(
+                "mkdir",
+                "-p",
+                clamav_run_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+
+            process = await asyncio.create_subprocess_exec(
+                "chown",
+                "_clamav:_clamav",
+                clamav_run_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await process.communicate()
+            self.logger.info("Created and configured /var/run/clamav directory")
+
+    async def _wait_for_virus_database(self, db_paths: list):
+        """Wait for virus database to be downloaded (up to 30 seconds)."""
+        self.logger.info("Waiting for freshclam to download virus database")
+        database_ready = False
+        for _ in range(30):
+            if any(os.path.exists(p) for p in db_paths):
+                self.logger.info(_MSG_VIRUS_DB_DOWNLOADED)
+                database_ready = True
+                break
+            await asyncio.sleep(1)
+
+        if not database_ready:
+            self.logger.warning(_MSG_VIRUS_DB_TIMEOUT)

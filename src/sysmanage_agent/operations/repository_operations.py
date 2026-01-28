@@ -8,10 +8,21 @@ import os
 import platform
 from typing import Any, Dict
 
+import aiofiles
+
 from src.i18n import _
+
+# Constants for error messages used in multiple places
+_UNSUPPORTED_DISTRO = "Unsupported distribution: %s"
+_UNSUPPORTED_OS = "Unsupported operating system: %s"
+
+# pylint: disable=wrong-import-position
+# These imports are placed after constants to avoid circular imports
 from .linux_repository_operations import LinuxRepositoryOperations
 from .bsd_macos_repository_operations import BSDMacOSRepositoryOperations
 from .windows_repository_operations import WindowsRepositoryOperations
+
+# pylint: enable=wrong-import-position
 
 
 class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
@@ -80,12 +91,14 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error listing third-party repositories: %s"), error)
             return {"success": False, "error": str(error)}
 
-    async def _detect_linux_distro(self) -> Dict[str, str]:
+    async def _detect_linux_distro(self) -> Dict[str, str]:  # NOSONAR
         """Detect Linux distribution."""
         try:
             if os.path.exists("/etc/os-release"):
-                with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
-                    lines = file_handle.readlines()
+                async with aiofiles.open(
+                    "/etc/os-release", "r", encoding="utf-8"
+                ) as file_handle:
+                    lines = await file_handle.readlines()
                     for line in lines:
                         if line.startswith("ID="):
                             distro = line.split("=")[1].strip().strip('"')
@@ -140,7 +153,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                 else:
                     return {
                         "success": False,
-                        "error": _("Unsupported distribution: %s") % distro,
+                        "error": _(_UNSUPPORTED_DISTRO) % distro,
                     }
             elif system == "Darwin":
                 result = await self.bsd_macos_ops.add_homebrew_tap(repo_identifier)
@@ -161,7 +174,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             else:
                 return {
                     "success": False,
-                    "error": _("Unsupported operating system: %s") % system,
+                    "error": _(_UNSUPPORTED_OS) % system,
                 }
 
             if result["success"]:
@@ -217,12 +230,12 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     else:
                         result = {
                             "success": False,
-                            "error": _("Unsupported distribution: %s") % distro,
+                            "error": _(_UNSUPPORTED_DISTRO) % distro,
                         }
                 else:
                     result = {
                         "success": False,
-                        "error": _("Unsupported operating system: %s") % system,
+                        "error": _(_UNSUPPORTED_OS) % system,
                     }
 
                 results.append(
@@ -270,7 +283,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             if system != "Linux":
                 return {
                     "success": False,
-                    "error": _("Unsupported operating system: %s") % system,
+                    "error": _(_UNSUPPORTED_OS) % system,
                 }
 
             distro_info = await self._detect_linux_distro()
@@ -296,7 +309,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                 else:
                     result = {
                         "success": False,
-                        "error": _("Unsupported distribution: %s") % distro,
+                        "error": _(_UNSUPPORTED_DISTRO) % distro,
                     }
 
                 results.append(
@@ -344,7 +357,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             if system != "Linux":
                 return {
                     "success": False,
-                    "error": _("Unsupported operating system: %s") % system,
+                    "error": _(_UNSUPPORTED_OS) % system,
                 }
 
             distro_info = await self._detect_linux_distro()
@@ -370,7 +383,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                 else:
                     result = {
                         "success": False,
-                        "error": _("Unsupported distribution: %s") % distro,
+                        "error": _(_UNSUPPORTED_DISTRO) % distro,
                     }
 
                 results.append(

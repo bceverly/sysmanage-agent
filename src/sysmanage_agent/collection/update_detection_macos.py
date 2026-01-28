@@ -209,9 +209,100 @@ class MacOSUpdateDetector(UpdateDetectorBase):
         except Exception as error:
             logger.error(_("Failed to detect Homebrew updates: %s"), str(error))
 
+    def _parse_softwareupdate_details(self, details_line):
+        """Parse the details line from softwareupdate output.
+
+        Args:
+            details_line: A line like 'Title: Name, Version: X.Y.Z, Size: XXXKIB, ...'.
+
+        Returns:
+            dict: Parsed fields with keys title, version, size_kb, is_recommended, requires_restart.
+        """
+        parsed = {
+            "title": None,
+            "version": "unknown",
+            "size_kb": None,
+            "is_recommended": False,
+            "requires_restart": False,
+        }
+
+        if not details_line:
+            return parsed
+
+        title_match = re.search(r"Title:\s*([^,]+)", details_line)
+        if title_match:
+            parsed["title"] = title_match.group(1).strip()
+
+        version_match = re.search(r"Version:\s*([^,]+)", details_line)
+        if version_match:
+            parsed["version"] = version_match.group(1).strip()
+
+        size_match = re.search(r"Size:\s*(\d+)KiB", details_line)
+        if size_match:
+            parsed["size_kb"] = int(size_match.group(1))
+
+        parsed["is_recommended"] = "Recommended: YES" in details_line
+        parsed["requires_restart"] = "Action: restart" in details_line
+
+        return parsed
+
+    def _collect_current_macos_version(self):
+        """Retrieve the current macOS product version string.
+
+        Returns:
+            str: The macOS version (e.g. '15.3') or 'unknown' on failure.
+        """
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sw_vers", "-productVersion"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except Exception:
+            pass
+        return "unknown"
+
+    def _process_softwareupdate_entry(self, label, details_line):
+        """Build an update dict from a softwareupdate label and its details line.
+
+        Args:
+            label: The label string from the '* Label:' line.
+            details_line: The subsequent details line, or empty string if absent.
+
+        Returns:
+            dict: An update dict ready to append to available_updates.
+        """
+        details = self._parse_softwareupdate_details(details_line)
+
+        title = details["title"] if details["title"] else label
+        version = details["version"]
+
+        is_major_upgrade = self._is_macos_major_upgrade(title, version)
+        current_version = self._collect_current_macos_version()
+
+        return {
+            "package_name": title,
+            "current_version": current_version,
+            "available_version": version,
+            "package_manager": (
+                "mac_app_store" if not is_major_upgrade else "macos-upgrade"
+            ),
+            "label": label,
+            "size_kb": details["size_kb"],
+            "is_security_update": "Security" in label,
+            "is_system_update": ("macOS" in title or "Safari" in title)
+            and not is_major_upgrade,
+            "is_recommended": details["is_recommended"],
+            "requires_restart": details["requires_restart"],
+        }
+
     def _detect_macos_app_store_updates(self):
         """Detect Mac App Store updates."""
-        try:  # pylint: disable=too-many-nested-blocks
+        try:
             logger.debug(_("Detecting Mac App Store updates"))
 
             result = subprocess.run(  # nosec B603, B607
@@ -222,104 +313,26 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                 check=False,
             )
 
-            if result.returncode == 0 and result.stdout.strip():
-                lines = result.stdout.strip().split("\n")
-                i = 0
-                while i < len(lines):
-                    line = lines[i]
-                    if (
-                        "*" in line and "Label:" in line
-                    ):  # Update lines start with * Label:
-                        # Parse format: * Label: Name-VersionCode
-                        label_match = re.match(r"\s*\*\s+Label:\s+(.+)", line)
-                        if label_match:
-                            label = label_match.group(1).strip()
+            if result.returncode != 0 or not result.stdout.strip():
+                return
 
-                            # Look for the next line with Title and Version info
-                            details_line = ""
-                            if i + 1 < len(lines) and lines[i + 1].strip().startswith(
-                                "Title:"
-                            ):
-                                details_line = lines[i + 1].strip()
-                                i += 1  # Skip the details line in next iteration
-
-                            # Parse details: Title: Name, Version: X.Y.Z, Size: XXXKIB, ...
-                            title = label  # Fallback to label
-                            version = "unknown"
-                            size_kb = None
-                            is_recommended = False
-                            requires_restart = False
-
-                            if details_line:
-                                # Extract Title
-                                title_match = re.search(
-                                    r"Title:\s*([^,]+)", details_line
-                                )
-                                if title_match:
-                                    title = title_match.group(1).strip()
-
-                                # Extract Version
-                                version_match = re.search(
-                                    r"Version:\s*([^,]+)", details_line
-                                )
-                                if version_match:
-                                    version = version_match.group(1).strip()
-
-                                # Extract Size
-                                size_match = re.search(
-                                    r"Size:\s*(\d+)KiB", details_line
-                                )
-                                if size_match:
-                                    size_kb = int(size_match.group(1))
-
-                                # Check if recommended
-                                is_recommended = "Recommended: YES" in details_line
-
-                                # Check if requires restart
-                                requires_restart = "Action: restart" in details_line
-
-                            # Determine if this is a patch update or major version upgrade
-                            is_major_upgrade = self._is_macos_major_upgrade(
-                                title, version
-                            )
-
-                            # Get current macOS version for current_version field
-                            current_version = "unknown"
-                            try:
-                                result = subprocess.run(  # nosec B603, B607
-                                    ["sw_vers", "-productVersion"],
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=10,
-                                    check=False,
-                                )
-                                if result.returncode == 0:
-                                    current_version = result.stdout.strip()
-                            except Exception:
-                                current_version = "unknown"
-
-                            update = {
-                                "package_name": title,
-                                "current_version": current_version,
-                                "available_version": version,
-                                "package_manager": (
-                                    "mac_app_store"
-                                    if not is_major_upgrade
-                                    else "macos-upgrade"
-                                ),
-                                "label": label,
-                                "size_kb": size_kb,
-                                "is_security_update": "Security" in label,
-                                "is_system_update": (
-                                    "macOS" in title or "Safari" in title
-                                )
-                                and not is_major_upgrade,
-                                "is_recommended": is_recommended,
-                                "requires_restart": requires_restart,
-                            }
-                            self.available_updates.append(update)
-
+            lines = result.stdout.strip().split("\n")
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+                i += 1
+                if "*" not in line or "Label:" not in line:
+                    continue
+                label_match = re.match(r"\s*\*\s+Label:\s+(.+)", line)
+                if not label_match:
+                    continue
+                label = label_match.group(1).strip()
+                details_line = ""
+                if i < len(lines) and lines[i].strip().startswith("Title:"):
+                    details_line = lines[i].strip()
                     i += 1
+                update = self._process_softwareupdate_entry(label, details_line)
+                self.available_updates.append(update)
 
         except Exception as error:
             logger.error(_("Failed to detect Mac App Store updates: %s"), str(error))

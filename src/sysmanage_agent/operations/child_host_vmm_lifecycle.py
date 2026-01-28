@@ -37,7 +37,7 @@ class VmmLifecycleOperations:
     async def _run_subprocess(
         self,
         cmd: list,
-        timeout: int = 60,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of established API
     ) -> subprocess.CompletedProcess:
         """
         Run a subprocess command asynchronously.
@@ -213,7 +213,10 @@ class VmmLifecycleOperations:
             }
 
     async def wait_for_vm_state(
-        self, vm_name: str, desired_state: str, timeout: int = 60
+        self,
+        vm_name: str,
+        desired_state: str,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of established API
     ) -> Dict[str, Any]:
         """
         Wait for a VM to reach a desired state.

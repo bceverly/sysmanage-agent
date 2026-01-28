@@ -24,6 +24,9 @@ from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
+HOMEBREW_ARM_PATH = "/opt/homebrew/bin/brew"
+HOMEBREW_INTEL_PATH = "/usr/local/bin/brew"
+
 
 class BasePackageCollector:
     """Base class for package collectors with common functionality."""
@@ -44,26 +47,28 @@ class BasePackageCollector:
                 return self._check_winget_available()
 
             # For other package managers, use which (Unix) or where (Windows)
-            system = platform.system().lower()
-            if system == "windows":
-                # Windows uses 'where' command
-                result = subprocess.run(  # nosec B603, B607
-                    ["where", manager], capture_output=True, timeout=10, check=False
-                )
-            else:
-                # Unix/Linux/BSD/macOS use 'which' command
-                result = subprocess.run(  # nosec B603, B607
-                    ["which", manager], capture_output=True, timeout=10, check=False
-                )
-            return result.returncode == 0
+            return self._detect_manager_via_which(manager)
         except Exception:
             return False
+
+    def _detect_manager_via_which(self, manager: str) -> bool:
+        """Detect whether a package manager is on PATH using 'which' or 'where'.
+
+        Uses 'where' on Windows and 'which' on Unix-like systems.
+        Returns True if the manager is found on the system PATH.
+        """
+        system = platform.system().lower()
+        lookup_cmd = "where" if system == "windows" else "which"
+        result = subprocess.run(  # nosec B603, B607
+            [lookup_cmd, manager], capture_output=True, timeout=10, check=False
+        )
+        return result.returncode == 0
 
     def _check_homebrew_available(self) -> bool:
         """Check if Homebrew is available."""
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
         ]
         for path in homebrew_paths:
             try:
@@ -86,34 +91,51 @@ class BasePackageCollector:
             r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
         ]
         for path in winget_paths:
-            # Handle wildcards in path
-            if "*" in path:
-                matching_paths = glob.glob(path)
-                if matching_paths:
-                    path = matching_paths[0]
-                else:
-                    continue
+            resolved_path = self._resolve_glob_path(path)
+            if resolved_path is None:
+                continue
 
-            if os.path.exists(path):
-                try:
-                    result = subprocess.run(  # nosec B603, B607
-                        [path, "--version"],
-                        capture_output=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode == 0:
-                        return True
-                except Exception:  # nosec B112
-                    continue
+            if os.path.exists(resolved_path) and self._detect_command_available(
+                resolved_path
+            ):
+                return True
         return False
+
+    def _resolve_glob_path(self, path: str) -> str:
+        """Resolve a path that may contain glob wildcards.
+
+        Returns the first matching path, or the original path if no wildcards.
+        Returns None if the wildcard matched nothing.
+        """
+        if "*" not in path:
+            return path
+        matching_paths = glob.glob(path)
+        if matching_paths:
+            return matching_paths[0]
+        return None
+
+    def _detect_command_available(self, command_path: str) -> bool:
+        """Detect whether a command is available by running it with --version.
+
+        Returns True if the command executes successfully, False otherwise.
+        """
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                [command_path, "--version"],
+                capture_output=True,
+                timeout=10,
+                check=False,
+            )
+            return result.returncode == 0
+        except Exception:  # nosec B112
+            return False
 
     def _get_homebrew_owner(self) -> str:
         """Get the owner of the Homebrew installation."""
 
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
         ]
 
         for path in homebrew_paths:
@@ -133,33 +155,51 @@ class BasePackageCollector:
     def _get_brew_command(self) -> str:
         """Get the correct brew command path, with sudo -u support when running privileged."""
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
             "brew",  # If in PATH
         ]
 
         for path in homebrew_paths:
-            try:
-                # Test if brew works directly first
-                result = subprocess.run(  # nosec B603, B607
-                    [path, "--version"], capture_output=True, timeout=10, check=False
-                )
-                if result.returncode == 0:
-                    # Check if running as root and Homebrew owner is different
-                    if os.geteuid() == 0:  # Running as root
-                        homebrew_owner = self._get_homebrew_owner()
-                        if homebrew_owner and homebrew_owner != "root":
-                            # Return sudo command to run as homebrew owner
-                            return f"sudo -u {homebrew_owner} {path}"
-
-                    # Normal case
-                    return path
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
-                continue
+            if self._detect_command_available(path):
+                return self._process_brew_path_for_privilege(path)
         return ""
+
+    def _process_brew_path_for_privilege(self, path: str) -> str:
+        """Process a brew path to handle privilege escalation when running as root.
+
+        If running as root and the Homebrew installation is owned by a non-root user,
+        returns a sudo -u command to run as the Homebrew owner. Otherwise returns
+        the path as-is.
+        """
+        if os.geteuid() == 0:  # Running as root
+            homebrew_owner = self._get_homebrew_owner()
+            if homebrew_owner and homebrew_owner != "root":
+                return f"sudo -u {homebrew_owner} {path}"
+        return path
 
     def _get_winget_command(self) -> str:
         """Get the correct winget command path."""
+        winget_paths = self._collect_winget_search_paths()
+
+        for path in winget_paths:
+            resolved = self._resolve_glob_path(path)
+            if resolved is None:
+                continue
+
+            found = self._detect_winget_at_path(resolved)
+            if found:
+                return resolved
+
+        logger.warning(_("winget not found in any common location"))
+        return ""
+
+    def _collect_winget_search_paths(self) -> List[str]:
+        """Collect all candidate paths where winget might be installed.
+
+        Checks the standard install location, WindowsApps wildcard path,
+        per-user profile locations, and the PATH fallback.
+        """
         winget_paths = [
             os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe"),
             r"C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe",
@@ -178,46 +218,24 @@ class BasePackageCollector:
 
         # Add PATH fallback
         winget_paths.append("winget")
+        return winget_paths
 
-        for path in winget_paths:
-            # Handle wildcards in path
-            if "*" in path:
-                matching_paths = glob.glob(path)
-                if matching_paths:
-                    path = matching_paths[0]
-                else:
-                    continue
+    def _detect_winget_at_path(self, path: str) -> bool:
+        """Detect whether winget is usable at the given path.
 
-            if path == "winget":
-                # Try using it from PATH
-                try:
-                    result = subprocess.run(  # nosec B603, B607
-                        [path, "--version"],
-                        capture_output=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode == 0:
-                        return path
-                except Exception:  # nosec B112
-                    continue
-            elif os.path.exists(path):
-                # Verify it works before returning
-                try:
-                    result = subprocess.run(  # nosec B603, B607
-                        [path, "--version"],
-                        capture_output=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode == 0:
-                        logger.info(_("Found winget at: %s"), path)
-                        return path
-                except Exception:  # nosec B112
-                    continue
+        For the bare 'winget' name, tries it directly from PATH.
+        For absolute paths, checks existence first, then verifies it runs.
+        Returns True if the command at the path is working.
+        """
+        if path == "winget":
+            return self._detect_command_available(path)
 
-        logger.warning(_("winget not found in any common location"))
-        return ""
+        if os.path.exists(path):
+            if self._detect_command_available(path):
+                logger.info(_("Found winget at: %s"), path)
+                return True
+
+        return False
 
     def _store_packages(self, manager: str, packages: List[Dict[str, str]]) -> int:
         """Store packages in the local database."""

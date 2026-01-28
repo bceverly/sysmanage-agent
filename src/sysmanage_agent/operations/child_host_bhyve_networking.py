@@ -16,6 +16,7 @@ from src.sysmanage_agent.core.agent_utils import run_command_async
 # Default bhyve network configuration
 # Note: On FreeBSD, bridge interfaces must be named bridgeN (e.g., bridge0)
 # We use bridge1 to avoid conflict with existing bridge0 (which may be for WiFi bridging)
+# NOSONAR - private subnet and netmask for VM networking
 BHYVE_BRIDGE_NAME = "bridge1"
 BHYVE_SUBNET = "10.0.100"  # Will use 10.0.100.0/24
 BHYVE_GATEWAY_IP = f"{BHYVE_SUBNET}.1"
@@ -375,7 +376,7 @@ pass out all
             # Get host DNS server
             dns_server = await self.get_host_dns_server()
             if not dns_server:
-                dns_server = "8.8.8.8"  # Fallback to Google DNS
+                dns_server = "8.8.8.8"  # NOSONAR - standard DNS fallback
                 self.logger.warning(
                     _("Could not detect host DNS, using %s"), dns_server
                 )

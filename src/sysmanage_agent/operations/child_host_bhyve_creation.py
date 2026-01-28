@@ -209,6 +209,7 @@ class BhyveCreationHelper:
 
             # Configure the bridge with NAT gateway IP
             # This matches the setup in enable_bhyve()
+            # NOSONAR - private subnet for VM networking
             gateway_ip = "10.0.100.1"
             netmask = "255.255.255.0"
             subprocess.run(  # nosec B603 B607

@@ -124,7 +124,7 @@ class BsdRdEmbedder:
     def _download_bsdrd(self, openbsd_version: str, work_path: Path) -> Dict[str, Any]:
         """Download original bsd.rd from OpenBSD mirror."""
         try:
-            url = f"{self.OPENBSD_MIRROR}/{openbsd_version}/" f"amd64/bsd.rd"
+            url = f"{self.OPENBSD_MIRROR}/{openbsd_version}/amd64/bsd.rd"
             compressed_path = work_path / "bsd.rd.gz"
             dest_path = work_path / "bsd.rd.orig"
 
@@ -235,6 +235,212 @@ class BsdRdEmbedder:
                 "error": f"Extraction failed: {error}",
             }
 
+    def _create_larger_ramdisk(
+        self, ramdisk_path: str, site_tgz_path: str
+    ) -> Dict[str, Any]:
+        """
+        Create a larger ramdisk file and format it as FFS.
+
+        Args:
+            ramdisk_path: Path to original ramdisk
+            site_tgz_path: Path to site.tgz file
+
+        Returns:
+            Dict with success status and new_ramdisk_path if successful
+        """
+        site_size = os.path.getsize(site_tgz_path)
+        new_ramdisk_size_mb = 200
+        new_ramdisk_path = f"{ramdisk_path}.large"
+
+        self.logger.info(
+            _("Creating larger ramdisk (%dMB) to fit site.tgz (%d bytes)"),
+            new_ramdisk_size_mb,
+            site_size,
+        )
+
+        # Create a new larger ramdisk filesystem using dd
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "dd",
+                "if=/dev/zero",
+                f"of={new_ramdisk_path}",
+                "bs=1m",
+                f"count={new_ramdisk_size_mb}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {"success": False, "error": f"dd failed: {result.stderr}"}
+
+        # Format the new ramdisk as FFS
+        result = subprocess.run(  # nosec B603 B607
+            ["newfs", "-m", "0", "-o", "space", new_ramdisk_path],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {"success": False, "error": f"newfs failed: {result.stderr}"}
+
+        return {"success": True, "new_ramdisk_path": new_ramdisk_path}
+
+    def _mount_ramdisk(
+        self, ramdisk_path: str, vnd_device: str, read_only: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Configure vnd device and mount a ramdisk.
+
+        Args:
+            ramdisk_path: Path to ramdisk file
+            vnd_device: vnd device name (e.g., "vnd0")
+            read_only: Whether to mount read-only
+
+        Returns:
+            Dict with success status and mount_point if successful
+        """
+        result = subprocess.run(  # nosec B603 B607
+            ["vnconfig", vnd_device, ramdisk_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {
+                "success": False,
+                "error": f"vnconfig {vnd_device} failed: {result.stderr}",
+            }
+
+        mount_point = tempfile.mkdtemp(prefix=f"ramdisk-{vnd_device}-")
+        mount_cmd = ["mount"]
+        if read_only:
+            mount_cmd.append("-r")
+        mount_cmd.extend([f"/dev/{vnd_device}a", mount_point])
+
+        result = subprocess.run(  # nosec B603 B607
+            mount_cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {
+                "success": False,
+                "error": f"mount {vnd_device} failed: {result.stderr}",
+            }
+
+        return {"success": True, "mount_point": mount_point}
+
+    def _copy_ramdisk_contents(
+        self,
+        old_mount: str,
+        new_mount: str,
+        site_tgz_path: str,
+        openbsd_version: str,
+    ) -> Dict[str, Any]:
+        """
+        Copy contents from old ramdisk to new and add site.tgz.
+
+        Args:
+            old_mount: Mount point of original ramdisk
+            new_mount: Mount point of new ramdisk
+            site_tgz_path: Path to site.tgz file
+            openbsd_version: OpenBSD version string
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Copying original ramdisk contents to larger ramdisk"))
+        result = subprocess.run(  # nosec B603 B607
+            ["sh", "-c", f"cd {old_mount} && pax -rw -pe . {new_mount}/"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {"success": False, "error": f"pax copy failed: {result.stderr}"}
+
+        # Copy site.tgz to new ramdisk
+        site_filename = f"site{openbsd_version.replace('.', '')}.tgz"
+        dest_site = os.path.join(new_mount, site_filename)
+
+        self.logger.info(_("Copying site.tgz to new ramdisk"))
+        result = subprocess.run(  # nosec B603 B607
+            ["cp", site_tgz_path, dest_site],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {"success": False, "error": f"cp site.tgz failed: {result.stderr}"}
+
+        if not os.path.exists(dest_site):
+            return {"success": False, "error": _("Failed to copy site.tgz to ramdisk")}
+
+        self.logger.info(_("Successfully embedded %s into ramdisk"), site_filename)
+        return {"success": True}
+
+    def _cleanup_mounts(
+        self,
+        old_mount: str | None,
+        new_mount: str | None,
+        vnd0_device: str | None,
+        vnd1_device: str | None,
+    ) -> None:
+        """Clean up mount points and vnd devices."""
+        if old_mount:
+            subprocess.run(  # nosec B603 B607
+                ["umount", old_mount],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            try:
+                os.rmdir(old_mount)
+            except OSError:
+                pass
+
+        if new_mount:
+            subprocess.run(  # nosec B603 B607
+                ["umount", new_mount],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            try:
+                os.rmdir(new_mount)
+            except OSError:
+                pass
+
+        if vnd0_device:
+            subprocess.run(  # nosec B603 B607
+                ["vnconfig", "-u", vnd0_device],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+
+        if vnd1_device:
+            subprocess.run(  # nosec B603 B607
+                ["vnconfig", "-u", vnd1_device],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+
     def _embed_site_tarball(
         self, ramdisk_path: str, site_tgz_path: str, openbsd_version: str
     ) -> Dict[str, Any]:
@@ -246,162 +452,32 @@ class BsdRdEmbedder:
         new_ramdisk_path = None
 
         try:
-            # Get site.tgz size to determine new ramdisk size
-            site_size = os.path.getsize(site_tgz_path)
-            # Create ramdisk with 200MB to have plenty of room (site.tgz + original contents + overhead)
-            new_ramdisk_size_mb = 200
-            new_ramdisk_path = f"{ramdisk_path}.large"
+            # Create larger ramdisk
+            create_result = self._create_larger_ramdisk(ramdisk_path, site_tgz_path)
+            if not create_result["success"]:
+                return create_result
+            new_ramdisk_path = create_result["new_ramdisk_path"]
 
-            self.logger.info(
-                _("Creating larger ramdisk (%dMB) to fit site.tgz (%d bytes)"),
-                new_ramdisk_size_mb,
-                site_size,
-            )
-
-            # Create a new larger ramdisk filesystem
-            # Using dd to create a 200MB file, then newfs to format it
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "dd",
-                    "if=/dev/zero",
-                    f"of={new_ramdisk_path}",
-                    "bs=1m",
-                    f"count={new_ramdisk_size_mb}",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"dd failed: {result.stderr}",
-                }
-
-            # Format the new ramdisk as FFS
-            result = subprocess.run(  # nosec B603 B607
-                ["newfs", "-m", "0", "-o", "space", new_ramdisk_path],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"newfs failed: {result.stderr}",
-                }
-
-            # Mount original ramdisk
-            result = subprocess.run(  # nosec B603 B607
-                ["vnconfig", "vnd0", ramdisk_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"vnconfig vnd0 failed: {result.stderr}",
-                }
-
+            # Mount original ramdisk (read-only)
+            mount_old_result = self._mount_ramdisk(ramdisk_path, "vnd0", read_only=True)
+            if not mount_old_result["success"]:
+                return mount_old_result
             vnd0_device = "vnd0"
-            old_mount = tempfile.mkdtemp(prefix="ramdisk-old-")
-
-            result = subprocess.run(  # nosec B603 B607
-                ["mount", "-r", "/dev/vnd0a", old_mount],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"mount old ramdisk failed: {result.stderr}",
-                }
+            old_mount = mount_old_result["mount_point"]
 
             # Mount new ramdisk
-            result = subprocess.run(  # nosec B603 B607
-                ["vnconfig", "vnd1", new_ramdisk_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"vnconfig vnd1 failed: {result.stderr}",
-                }
-
+            mount_new_result = self._mount_ramdisk(new_ramdisk_path, "vnd1")
+            if not mount_new_result["success"]:
+                return mount_new_result
             vnd1_device = "vnd1"
-            new_mount = tempfile.mkdtemp(prefix="ramdisk-new-")
+            new_mount = mount_new_result["mount_point"]
 
-            result = subprocess.run(  # nosec B603 B607
-                ["mount", "/dev/vnd1a", new_mount],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
+            # Copy contents and add site.tgz
+            copy_result = self._copy_ramdisk_contents(
+                old_mount, new_mount, site_tgz_path, openbsd_version
             )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"mount new ramdisk failed: {result.stderr}",
-                }
-
-            # Copy all contents from old ramdisk to new
-            self.logger.info(_("Copying original ramdisk contents to larger ramdisk"))
-            result = subprocess.run(  # nosec B603 B607
-                ["sh", "-c", f"cd {old_mount} && pax -rw -pe . {new_mount}/"],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"pax copy failed: {result.stderr}",
-                }
-
-            # Copy site.tgz to new ramdisk
-            site_filename = f"site{openbsd_version.replace('.', '')}.tgz"
-            dest_site = os.path.join(new_mount, site_filename)
-
-            self.logger.info(_("Copying site.tgz to new ramdisk"))
-            result = subprocess.run(  # nosec B603 B607
-                ["cp", site_tgz_path, dest_site],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": f"cp site.tgz failed: {result.stderr}",
-                }
-
-            # Verify copy
-            if not os.path.exists(dest_site):
-                return {
-                    "success": False,
-                    "error": _("Failed to copy site.tgz to ramdisk"),
-                }
-
-            self.logger.info(_("Successfully embedded %s into ramdisk"), site_filename)
+            if not copy_result["success"]:
+                return copy_result
 
             return {
                 "success": True,
@@ -414,46 +490,7 @@ class BsdRdEmbedder:
         except Exception as error:  # pylint: disable=broad-except
             return {"success": False, "error": f"Embed failed: {error}"}
         finally:
-            # Cleanup: unmount and unconfigure vnodes
-            if old_mount:
-                subprocess.run(  # nosec B603 B607
-                    ["umount", old_mount],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-                try:
-                    os.rmdir(old_mount)
-                except OSError:
-                    pass
-
-            if new_mount:
-                subprocess.run(  # nosec B603 B607
-                    ["umount", new_mount],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-                try:
-                    os.rmdir(new_mount)
-                except OSError:
-                    pass
-
-            if vnd0_device:
-                subprocess.run(  # nosec B603 B607
-                    ["vnconfig", "-u", vnd0_device],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-
-            if vnd1_device:
-                subprocess.run(  # nosec B603 B607
-                    ["vnconfig", "-u", vnd1_device],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
+            self._cleanup_mounts(old_mount, new_mount, vnd0_device, vnd1_device)
 
     def _repack_bsdrd(
         self, orig_bsdrd: str, ramdisk_path: str, openbsd_version: str

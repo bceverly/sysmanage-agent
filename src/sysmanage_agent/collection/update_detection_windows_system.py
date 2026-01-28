@@ -25,147 +25,155 @@ class WindowsSystemDetectorMixin:
         try:
             logger.debug(_("Detecting Windows system updates"))
 
-            # PowerShell command to get Windows Updates
-            # This is more reliable than wuauclt which is deprecated
-            powershell_cmd = [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                """
-                try {
-                    # Import the module for Windows Update
-                    if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
-                        Import-Module PSWindowsUpdate -ErrorAction SilentlyContinue
-                        $updates = Get-WUList -MicrosoftUpdate
-                    } else {
-                        # Fallback to WUApiLib COM object
-                        $session = New-Object -ComObject Microsoft.Update.Session
-                        $searcher = $session.CreateUpdateSearcher()
-                        $searchResult = $searcher.Search("IsInstalled=0")
-                        $updates = $searchResult.Updates
-                    }
+            result = self._run_windows_update_query()
 
-                    $updateList = @()
-                    foreach($update in $updates) {
-                        $categories = @()
-                        if ($update.Categories) {
-                            foreach($cat in $update.Categories) {
-                                $categories += @{ Name = $cat.Name }
-                            }
-                        }
+            if not (result.returncode == 0 and result.stdout.strip()):
+                return
 
-                        $updateInfo = @{
-                            Title = $update.Title
-                            Description = $update.Description
-                            Categories = $categories
-                            IsDownloaded = $update.IsDownloaded
-                            SizeInBytes = $update.MaxDownloadSize
-                            SeverityText = if($update.MsrcSeverity) { $update.MsrcSeverity } else { "Unknown" }
-                            UpdateID = $update.Identity.UpdateID
-                            RevisionNumber = $update.Identity.RevisionNumber
-                        }
-                        $updateList += $updateInfo
-                    }
+            output = result.stdout.strip()
 
-                    $updateList | ConvertTo-Json -Depth 3
-                } catch {
-                    Write-Output "ERROR: $($_.Exception.Message)"
-                }
-                """,
-            ]
+            if output.startswith("ERROR:"):
+                logger.warning(_("Windows Update detection failed: %s"), output[6:])
+                return
 
-            result = subprocess.run(  # nosec B603, B607
-                powershell_cmd,
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
-                ),
-            )
-
-            if result.returncode == 0 and result.stdout.strip():
-                output = result.stdout.strip()
-
-                if output.startswith("ERROR:"):
-                    logger.warning(_("Windows Update detection failed: %s"), output[6:])
-                    return
-
-                try:
-                    updates_data = json.loads(output) if output != "null" else []
-                    if not isinstance(updates_data, list):
-                        updates_data = [updates_data] if updates_data else []
-
-                    for update in updates_data:
-                        # Determine if this is a security update
-                        categories = update.get("Categories", [])
-                        severity = update.get("SeverityText", "").lower()
-                        title = update.get("Title", "").lower()
-
-                        # Handle both string and list formats for categories
-                        if isinstance(categories, list):
-                            category_text = " ".join(
-                                [
-                                    (
-                                        cat.get("Name", "")
-                                        if isinstance(cat, dict)
-                                        else str(cat)
-                                    )
-                                    for cat in categories
-                                ]
-                            ).lower()
-                        else:
-                            category_text = str(categories).lower()
-
-                        is_security = (
-                            "security" in category_text
-                            or "critical" in severity
-                            or "important" in severity
-                            or "security" in title
-                            or "cumulative" in title
-                            or "kb" in title
-                        )
-
-                        # Default to security if we can't determine (as requested)
-                        update_type = "security" if is_security else "regular"
-
-                        update_entry = {
-                            "package_name": update.get("Title", "Unknown Update"),
-                            "current_version": "installed",
-                            "available_version": f"Rev.{update.get('RevisionNumber', 'unknown')}",
-                            "package_manager": "Windows Update",
-                            "update_type": update_type,
-                            "description": update.get("Description", ""),
-                            "size": self._format_size_mb(update.get("SizeInBytes", 0)),
-                            "categories": update.get("Categories", ""),
-                            "severity": update.get("SeverityText", "Unknown"),
-                            "is_downloaded": update.get("IsDownloaded", False),
-                            "update_id": update.get("UpdateID", ""),
-                        }
-
-                        # Log the update_id for debugging
-                        logger.info(
-                            _("Windows Update detected: '%s' with UpdateID='%s'"),
-                            update_entry["package_name"],
-                            update_entry["update_id"],
-                        )
-
-                        self.available_updates.append(update_entry)
-
-                    logger.debug(
-                        _("Found %d Windows system updates"), len(updates_data)
-                    )
-
-                except json.JSONDecodeError as error:
-                    logger.warning(
-                        _("Failed to parse Windows Update output: %s"), str(error)
-                    )
+            self._parse_windows_update_output(output)
 
         except subprocess.TimeoutExpired:
             logger.warning(_("Windows Update detection timed out"))
         except Exception as error:
             logger.error(_("Failed to detect Windows system updates: %s"), str(error))
+
+    def _run_windows_update_query(self):
+        """Run the PowerShell command to query available Windows updates."""
+        powershell_cmd = [
+            "powershell",
+            "-NoProfile",
+            "-Command",
+            """
+            try {
+                # Import the module for Windows Update
+                if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
+                    Import-Module PSWindowsUpdate -ErrorAction SilentlyContinue
+                    $updates = Get-WUList -MicrosoftUpdate
+                } else {
+                    # Fallback to WUApiLib COM object
+                    $session = New-Object -ComObject Microsoft.Update.Session
+                    $searcher = $session.CreateUpdateSearcher()
+                    $searchResult = $searcher.Search("IsInstalled=0")
+                    $updates = $searchResult.Updates
+                }
+
+                $updateList = @()
+                foreach($update in $updates) {
+                    $categories = @()
+                    if ($update.Categories) {
+                        foreach($cat in $update.Categories) {
+                            $categories += @{ Name = $cat.Name }
+                        }
+                    }
+
+                    $updateInfo = @{
+                        Title = $update.Title
+                        Description = $update.Description
+                        Categories = $categories
+                        IsDownloaded = $update.IsDownloaded
+                        SizeInBytes = $update.MaxDownloadSize
+                        SeverityText = if($update.MsrcSeverity) { $update.MsrcSeverity } else { "Unknown" }
+                        UpdateID = $update.Identity.UpdateID
+                        RevisionNumber = $update.Identity.RevisionNumber
+                    }
+                    $updateList += $updateInfo
+                }
+
+                $updateList | ConvertTo-Json -Depth 3
+            } catch {
+                Write-Output "ERROR: $($_.Exception.Message)"
+            }
+            """,
+        ]
+
+        return subprocess.run(  # nosec B603, B607
+            powershell_cmd,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
+            ),
+        )
+
+    def _parse_windows_update_output(self, output):
+        """Parse the JSON output from the Windows Update PowerShell query.
+
+        Processes the raw JSON output, classifies each update, and appends
+        the results to self.available_updates.
+        """
+        try:
+            updates_data = json.loads(output) if output != "null" else []
+            if not isinstance(updates_data, list):
+                updates_data = [updates_data] if updates_data else []
+
+            for update in updates_data:
+                update_entry = self._classify_windows_update(update)
+                logger.info(
+                    _("Windows Update detected: '%s' with UpdateID='%s'"),
+                    update_entry["package_name"],
+                    update_entry["update_id"],
+                )
+                self.available_updates.append(update_entry)
+
+            logger.debug(_("Found %d Windows system updates"), len(updates_data))
+
+        except json.JSONDecodeError as error:
+            logger.warning(_("Failed to parse Windows Update output: %s"), str(error))
+
+    def _classify_windows_update(self, update):
+        """Classify a single Windows update and return a structured entry.
+
+        Determines the update type (security vs regular) based on categories,
+        severity, and title keywords.
+        """
+        categories = update.get("Categories", [])
+        severity = update.get("SeverityText", "").lower()
+        title = update.get("Title", "").lower()
+        category_text = self._extract_category_text(categories)
+
+        is_security = (
+            "security" in category_text
+            or "critical" in severity
+            or "important" in severity
+            or "security" in title
+            or "cumulative" in title
+            or "kb" in title
+        )
+
+        return {
+            "package_name": update.get("Title", "Unknown Update"),
+            "current_version": "installed",
+            "available_version": f"Rev.{update.get('RevisionNumber', 'unknown')}",
+            "package_manager": "Windows Update",
+            "update_type": "security" if is_security else "regular",
+            "description": update.get("Description", ""),
+            "size": self._format_size_mb(update.get("SizeInBytes", 0)),
+            "categories": update.get("Categories", ""),
+            "severity": update.get("SeverityText", "Unknown"),
+            "is_downloaded": update.get("IsDownloaded", False),
+            "update_id": update.get("UpdateID", ""),
+        }
+
+    @staticmethod
+    def _extract_category_text(categories):
+        """Extract a lowercase text representation from update categories.
+
+        Handles both list and string formats for the categories field.
+        """
+        if isinstance(categories, list):
+            return " ".join(
+                cat.get("Name", "") if isinstance(cat, dict) else str(cat)
+                for cat in categories
+            ).lower()
+        return str(categories).lower()
 
     def _detect_windows_version_upgrades(self):
         """Detect Windows version upgrades using Windows Update."""

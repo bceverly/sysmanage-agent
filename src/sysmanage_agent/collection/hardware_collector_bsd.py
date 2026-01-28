@@ -19,87 +19,95 @@ logger = logging.getLogger(__name__)
 class HardwareCollectorBSD(HardwareCollectorBase):
     """Collects hardware information on BSD systems."""
 
+    def _collect_cpu_model_and_vendor(self, cpu_info: Dict[str, Any]) -> None:
+        """Collect CPU model name and extract vendor from sysctl hw.model."""
+        result = subprocess.run(
+            ["sysctl", "-n", "hw.model"],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode == 0:
+            cpu_info["model"] = result.stdout.strip()
+            model_lower = result.stdout.lower()
+            if "intel" in model_lower:
+                cpu_info["vendor"] = "Intel"
+            elif "amd" in model_lower:
+                cpu_info["vendor"] = "AMD"
+            else:
+                cpu_info["vendor"] = "Unknown"
+
+    def _collect_cpu_core_counts(self, cpu_info: Dict[str, Any]) -> None:
+        """Collect thread and core counts from sysctl hw.ncpu and hw.ncpuonline."""
+        result = subprocess.run(
+            ["sysctl", "-n", "hw.ncpu"],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode == 0:
+            cpu_info["threads"] = int(result.stdout.strip())
+
+        result = subprocess.run(
+            ["sysctl", "-n", "hw.ncpuonline"],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode == 0:
+            cpu_info["cores"] = int(result.stdout.strip())
+        else:
+            cpu_info["cores"] = cpu_info.get("threads", 0)
+
+    def _collect_cpu_frequency_sysctl(self, cpu_info: Dict[str, Any]) -> None:
+        """Collect CPU frequency from sysctl keys (hw.cpuspeed, hw.clockrate, machdep.tsc_freq)."""
+        for freq_key in ["hw.cpuspeed", "hw.clockrate", "machdep.tsc_freq"]:
+            result = subprocess.run(
+                ["sysctl", "-n", freq_key],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode == 0:
+                freq_value = result.stdout.strip()
+                if freq_key == "machdep.tsc_freq":
+                    cpu_info["frequency_mhz"] = int(int(freq_value) // 1000000)
+                else:
+                    cpu_info["frequency_mhz"] = int(freq_value)
+                break
+
+    def _parse_cpu_frequency_from_model(self, cpu_info: Dict[str, Any]) -> None:
+        """Parse CPU frequency from the model name string as a fallback."""
+        if "frequency_mhz" in cpu_info or "model" not in cpu_info:
+            return
+
+        model = cpu_info["model"]
+        ghz_match = re.search(
+            r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE
+        )  # NOSONAR - regex operates on trusted internal data
+        if ghz_match:
+            freq_ghz = float(ghz_match.group(1))
+            cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
+        else:
+            mhz_match = re.search(
+                r"(\d+)\s*MHz", model, re.IGNORECASE
+            )  # NOSONAR - regex operates on trusted internal data
+            if mhz_match:
+                cpu_info["frequency_mhz"] = int(mhz_match.group(1))
+
     def get_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on OpenBSD/FreeBSD using sysctl."""
 
         cpu_info = {}
         try:
-            # Get CPU model name
-            result = subprocess.run(
-                ["sysctl", "-n", "hw.model"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
-                cpu_info["model"] = result.stdout.strip()
-                # Extract vendor from model name
-                model_lower = result.stdout.lower()
-                if "intel" in model_lower:
-                    cpu_info["vendor"] = "Intel"
-                elif "amd" in model_lower:
-                    cpu_info["vendor"] = "AMD"
-                else:
-                    cpu_info["vendor"] = "Unknown"
-
-            # Get number of CPUs
-            result = subprocess.run(
-                ["sysctl", "-n", "hw.ncpu"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
-                cpu_info["threads"] = int(result.stdout.strip())
-
-            # Try to get physical CPU cores (may not be available on all BSD systems)
-            result = subprocess.run(
-                ["sysctl", "-n", "hw.ncpuonline"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
-                cpu_info["cores"] = int(result.stdout.strip())
-            else:
-                # Fallback to logical CPUs if physical cores not available
-                cpu_info["cores"] = cpu_info.get("threads", 0)
-
-            # Try to get CPU frequency (may not be available)
-            for freq_key in ["hw.cpuspeed", "hw.clockrate", "machdep.tsc_freq"]:
-                result = subprocess.run(
-                    ["sysctl", "-n", freq_key],  # nosec B603, B607
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,
-                )
-                if result.returncode == 0:
-                    freq_value = result.stdout.strip()
-                    if freq_key == "machdep.tsc_freq":
-                        # TSC frequency is in Hz, convert to MHz
-                        cpu_info["frequency_mhz"] = int(int(freq_value) // 1000000)
-                    else:
-                        # hw.cpuspeed and hw.clockrate are typically in MHz
-                        cpu_info["frequency_mhz"] = int(freq_value)
-                    break
-
-            # If no frequency found from sysctl, try to extract from CPU model
-            if "frequency_mhz" not in cpu_info and "model" in cpu_info:
-
-                model = cpu_info["model"]
-                # Look for patterns like "@ 1.90GHz" or "1900MHz" in CPU model
-                ghz_match = re.search(r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE)
-                if ghz_match:
-                    freq_ghz = float(ghz_match.group(1))
-                    cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
-                else:
-                    mhz_match = re.search(r"(\d+)\s*MHz", model, re.IGNORECASE)
-                    if mhz_match:
-                        cpu_info["frequency_mhz"] = int(mhz_match.group(1))
+            self._collect_cpu_model_and_vendor(cpu_info)
+            self._collect_cpu_core_counts(cpu_info)
+            self._collect_cpu_frequency_sysctl(cpu_info)
+            self._parse_cpu_frequency_from_model(cpu_info)
 
         except Exception as error:
             cpu_info["error"] = _("Failed to get BSD CPU info: %s") % str(error)
@@ -129,83 +137,93 @@ class HardwareCollectorBSD(HardwareCollectorBase):
 
         return memory_info
 
+    def _parse_df_storage_devices(self) -> List[Dict[str, Any]]:
+        """Parse mounted filesystem information from df -h output."""
+        storage_devices = []
+        result = subprocess.run(
+            ["df", "-h"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,  # nosec B603, B607
+        )
+        if result.returncode != 0:
+            return storage_devices
+
+        lines = result.stdout.strip().split("\n")[1:]  # Skip header
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 6:
+                device_info = self._process_df_line(parts)
+                if device_info is not None:
+                    storage_devices.append(device_info)
+
+        return storage_devices
+
+    def _process_df_line(self, parts: List[str]) -> Optional[Dict[str, Any]]:
+        """Process a single line of df output into a device info dict."""
+        device_name = parts[0]
+        mount_point = parts[5] if len(parts) > 5 else ""
+
+        if self._should_skip_bsd_filesystem(device_name, mount_point):
+            return None
+
+        is_physical = self._is_physical_volume_bsd(device_name, mount_point)
+        capacity_bytes = self._parse_size_to_bytes(parts[1])
+        used_bytes = self._parse_size_to_bytes(parts[2])
+        available_bytes = self._parse_size_to_bytes(parts[3])
+
+        return {
+            "name": device_name,
+            "size": parts[1],
+            "used": parts[2],
+            "available": parts[3],
+            "mount_point": mount_point,
+            "type": "unknown",
+            "is_physical": is_physical,
+            "device_type": "physical" if is_physical else "logical",
+            "capacity_bytes": capacity_bytes,
+            "used_bytes": used_bytes,
+            "available_bytes": available_bytes,
+            "file_system": "unknown",
+        }
+
+    def _collect_mount_filesystem_types(
+        self, storage_devices: List[Dict[str, Any]]
+    ) -> None:
+        """Collect filesystem types from mount command and update storage devices."""
+        result = subprocess.run(
+            ["mount"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,  # nosec B603, B607
+        )
+        if result.returncode != 0:
+            return
+
+        mount_lines = result.stdout.strip().split("\n")
+        device_types = {}
+        for line in mount_lines:
+            if " on " in line and " type " in line:
+                parts = line.split()
+                device = parts[0]
+                type_idx = parts.index("type") + 1
+                if type_idx < len(parts):
+                    device_types[device] = parts[type_idx]
+
+        for device in storage_devices:
+            if device["name"] in device_types:
+                device["type"] = device_types[device["name"]]
+                device["file_system"] = device_types[device["name"]]
+
     def get_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on OpenBSD/FreeBSD using df and mount."""
 
         storage_devices = []
         try:
-            # Get mounted filesystems
-            result = subprocess.run(
-                ["df", "-h"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,  # nosec B603, B607
-            )
-            if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")[1:]  # Skip header
-                for line in lines:
-                    parts = line.split()
-                    if len(parts) >= 6:
-                        device_name = parts[0]
-                        mount_point = parts[5] if len(parts) > 5 else ""
-
-                        # Skip special filesystems that shouldn't be considered storage
-                        if self._should_skip_bsd_filesystem(device_name, mount_point):
-                            continue
-
-                        is_physical = self._is_physical_volume_bsd(
-                            device_name, mount_point
-                        )
-
-                        # Convert human-readable sizes to bytes
-                        capacity_bytes = self._parse_size_to_bytes(parts[1])
-                        used_bytes = self._parse_size_to_bytes(parts[2])
-                        available_bytes = self._parse_size_to_bytes(parts[3])
-
-                        device_info = {
-                            "name": device_name,
-                            "size": parts[1],
-                            "used": parts[2],
-                            "available": parts[3],
-                            "mount_point": mount_point,
-                            "type": "unknown",  # Will be updated from mount command
-                            "is_physical": is_physical,
-                            "device_type": "physical" if is_physical else "logical",
-                            # Add fields expected by server API
-                            "capacity_bytes": capacity_bytes,
-                            "used_bytes": used_bytes,
-                            "available_bytes": available_bytes,
-                            "file_system": "unknown",  # Will be updated from mount command
-                        }
-                        storage_devices.append(device_info)
-
-            # Try to get filesystem types from mount command
-            result = subprocess.run(
-                ["mount"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,  # nosec B603, B607
-            )
-            if result.returncode == 0:
-                mount_lines = result.stdout.strip().split("\n")
-                device_types = {}
-                for line in mount_lines:
-                    if " on " in line and " type " in line:
-                        parts = line.split()
-                        device = parts[0]
-                        type_idx = parts.index("type") + 1
-                        if type_idx < len(parts):
-                            device_types[device] = parts[type_idx]
-
-                # Update storage devices with filesystem types
-                for device in storage_devices:
-                    if device["name"] in device_types:
-                        device["type"] = device_types[device["name"]]
-                        device["file_system"] = device_types[device["name"]]
-
-            # Add physical storage devices (not shown in df but exist as block devices)
+            storage_devices = self._parse_df_storage_devices()
+            self._collect_mount_filesystem_types(storage_devices)
             self._add_physical_bsd_devices(storage_devices)
 
         except Exception as error:
@@ -220,6 +238,7 @@ class HardwareCollectorBSD(HardwareCollectorBase):
         # Skip special/virtual filesystems
         skip_devices = ["tmpfs", "kernfs", "procfs", "mfs", "fdesc"]
         # Known system mount points to skip during storage inventory
+        # NOSONAR - these are system paths to skip, not paths we write to
         skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]  # nosec B108
 
         device_lower = device_name.lower()
@@ -375,11 +394,133 @@ class HardwareCollectorBSD(HardwareCollectorBase):
             # Skip devices we can't access, log for debugging
             logger.debug("Skipping device %s: %s", base_device, error)
 
+    def _detect_interface_header(
+        self, line: str, original_line: str
+    ) -> Optional[Dict[str, Any]]:
+        """Detect and parse a new interface header line from ifconfig output.
+
+        Returns a new interface dict if the line is a header, or None otherwise.
+        Returns an empty dict (falsy check won't work, use 'is None') to signal
+        that the interface should be skipped (e.g., loopback).
+        """
+        if (
+            original_line.startswith("\t")
+            or original_line.startswith(" ")
+            or ":" not in line
+            or " flags=" not in line
+        ):
+            return None
+
+        interface_name = line.split(":")[0]
+        if interface_name == "lo0":  # Skip loopback
+            return {}
+
+        flags_str = ""
+        is_up = False
+        if "flags=" in line:
+            flags_start = line.find("flags=") + 6
+            flags_end = line.find(">", flags_start)
+            if flags_end > flags_start:
+                flags_str = line[flags_start:flags_end]
+                is_up = "UP" in flags_str
+
+        return {
+            "name": interface_name,
+            "flags": flags_str,
+            "interface_type": "ethernet",
+            "hardware_type": "ethernet",
+            "mac_address": "",
+            "ipv4_address": None,
+            "ipv6_address": None,
+            "subnet_mask": None,
+            "is_active": is_up,
+            "speed_mbps": None,
+        }
+
+    def _parse_interface_ether(
+        self, line: str, current_interface: Dict[str, Any]
+    ) -> None:
+        """Parse MAC address from an ifconfig ether line."""
+        parts = line.split()
+        if len(parts) >= 2:
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["mac_address"] = parts[1]
+
+    def _parse_interface_inet(
+        self, line: str, current_interface: Dict[str, Any]
+    ) -> None:
+        """Parse IPv4 address and subnet mask from an ifconfig inet line."""
+        parts = line.split()
+        if len(parts) >= 2:
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["ipv4_address"] = parts[1]
+        if "netmask" in parts:
+            netmask_idx = parts.index("netmask")
+            if netmask_idx + 1 < len(parts):
+                netmask_hex = parts[netmask_idx + 1]
+                if netmask_hex.startswith("0x"):
+                    try:
+                        netmask_int = int(netmask_hex, 16)
+                        subnet_mask = ".".join(
+                            [
+                                str((netmask_int >> (8 * (3 - i))) & 0xFF)
+                                for i in range(4)
+                            ]
+                        )
+                        # pylint: disable-next=unsupported-assignment-operation
+                        current_interface["subnet_mask"] = subnet_mask
+                    except ValueError:
+                        pass
+
+    def _parse_interface_inet6(
+        self, line: str, current_interface: Dict[str, Any]
+    ) -> None:
+        """Parse IPv6 address from an ifconfig inet6 line, skipping link-local."""
+        parts = line.split()
+        if len(parts) >= 2:
+            ipv6_addr = parts[1]
+            if "%" in ipv6_addr:
+                ipv6_addr = ipv6_addr.split("%")[0]
+            if (
+                not ipv6_addr.startswith("fe80:")
+                and current_interface.get("ipv6_address") is None
+            ):
+                # pylint: disable-next=unsupported-assignment-operation
+                current_interface["ipv6_address"] = ipv6_addr
+
+    def _parse_interface_media(
+        self, line: str, current_interface: Dict[str, Any]
+    ) -> None:
+        """Parse media type from an ifconfig media line."""
+        if "Ethernet" in line:
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["interface_type"] = "ethernet"
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["hardware_type"] = "ethernet"
+        elif "IEEE802.11" in line or "wireless" in line.lower():
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["interface_type"] = "wireless"
+            # pylint: disable-next=unsupported-assignment-operation
+            current_interface["hardware_type"] = "wireless"
+
+    def _parse_interface_detail_line(
+        self, line: str, current_interface: Dict[str, Any]
+    ) -> None:
+        """Parse an indented detail line for the current interface."""
+        if "ether " in line:
+            self._parse_interface_ether(line, current_interface)
+        elif "inet " in line:
+            self._parse_interface_inet(line, current_interface)
+        elif "inet6 " in line:
+            self._parse_interface_inet6(line, current_interface)
+        elif "media:" in line:
+            self._parse_interface_media(line, current_interface)
+
     def get_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""
 
         network_interfaces = []
-        try:  # pylint: disable=too-many-nested-blocks
+        try:
             result = subprocess.run(
                 ["ifconfig", "-a"],  # nosec B603, B607
                 capture_output=True,
@@ -395,113 +536,18 @@ class HardwareCollectorBSD(HardwareCollectorBase):
                     if not line:
                         continue
 
-                    # New interface (starts at beginning of line, has interface_name:)
-                    if (
-                        not original_line.startswith("\t")
-                        and not original_line.startswith(" ")
-                        and ":" in line
-                        and " flags="
-                        in line  # Must have flags to be an interface header
-                    ):
+                    header = self._detect_interface_header(line, original_line)
+                    if header is not None:
                         if current_interface:
                             network_interfaces.append(current_interface)
+                        # Empty dict means skip (e.g., loopback)
+                        current_interface = header if header else None
+                        continue
 
-                        interface_name = line.split(":")[0]
-                        if interface_name == "lo0":  # Skip loopback
-                            current_interface = None
-                            continue
-
-                        # Determine if interface is up from flags
-                        flags_str = ""
-                        is_up = False
-                        if "flags=" in line:
-                            flags_start = line.find("flags=") + 6
-                            flags_end = line.find(">", flags_start)
-                            if flags_end > flags_start:
-                                flags_str = line[flags_start:flags_end]
-                                is_up = "UP" in flags_str
-
-                        current_interface = {
-                            "name": interface_name,
-                            "flags": flags_str,
-                            "interface_type": "ethernet",  # Default type
-                            "hardware_type": "ethernet",  # Alias for compatibility
-                            "mac_address": "",
-                            "ipv4_address": None,
-                            "ipv6_address": None,
-                            "subnet_mask": None,
-                            "is_active": is_up,
-                            "speed_mbps": None,
-                        }
-
-                    # Interface details (indented lines)
-                    elif current_interface and (
+                    if current_interface and (
                         original_line.startswith("\t") or original_line.startswith(" ")
                     ):
-                        if "ether " in line:
-                            # MAC address line: "ether 08:00:27:12:34:56"
-                            parts = line.split()
-                            if len(parts) >= 2 and current_interface is not None:
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["mac_address"] = parts[1]
-                        elif "inet " in line and current_interface is not None:
-                            # IPv4 address line: "inet 192.168.4.188 netmask 0xffffff00 broadcast 192.168.4.255"
-                            parts = line.split()
-                            if len(parts) >= 2:
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["ipv4_address"] = parts[1]
-                            if "netmask" in parts:
-                                netmask_idx = parts.index("netmask")
-                                if netmask_idx + 1 < len(parts):
-                                    netmask_hex = parts[netmask_idx + 1]
-                                    # Convert hex netmask to decimal notation
-                                    if netmask_hex.startswith("0x"):
-                                        try:
-                                            netmask_int = int(netmask_hex, 16)
-                                            # Convert to dotted decimal notation
-                                            subnet_mask = ".".join(
-                                                [
-                                                    str(
-                                                        (netmask_int >> (8 * (3 - i)))
-                                                        & 0xFF
-                                                    )
-                                                    for i in range(4)
-                                                ]
-                                            )
-                                            # pylint: disable-next=unsupported-assignment-operation
-                                            current_interface["subnet_mask"] = (
-                                                subnet_mask
-                                            )
-                                        except ValueError:
-                                            pass
-                        elif "inet6 " in line and current_interface is not None:
-                            # IPv6 address line: "inet6 fe80::a00:27ff:fe12:3456%em0 prefixlen 64"
-                            parts = line.split()
-                            if len(parts) >= 2:
-                                ipv6_addr = parts[1]
-                                # Remove interface suffix if present (e.g., %em0)
-                                if "%" in ipv6_addr:
-                                    ipv6_addr = ipv6_addr.split("%")[0]
-                                # Skip link-local addresses for primary IPv6
-                                if (
-                                    not ipv6_addr.startswith("fe80:")
-                                    and current_interface is not None
-                                    and current_interface.get("ipv6_address") is None
-                                ):
-                                    # pylint: disable-next=unsupported-assignment-operation
-                                    current_interface["ipv6_address"] = ipv6_addr
-                        elif "media:" in line and current_interface is not None:
-                            # Media type information
-                            if "Ethernet" in line:
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["interface_type"] = "ethernet"
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["hardware_type"] = "ethernet"
-                            elif "IEEE802.11" in line or "wireless" in line.lower():
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["interface_type"] = "wireless"
-                                # pylint: disable-next=unsupported-assignment-operation
-                                current_interface["hardware_type"] = "wireless"
+                        self._parse_interface_detail_line(line, current_interface)
 
                 # Add the last interface
                 if current_interface:

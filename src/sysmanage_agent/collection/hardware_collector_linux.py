@@ -16,110 +16,130 @@ from .hardware_collector_base import HardwareCollectorBase
 class HardwareCollectorLinux(HardwareCollectorBase):
     """Collects hardware information on Linux systems."""
 
+    def _parse_lscpu_output(self, cpu_info: Dict[str, Any]) -> bool:
+        """Parse lscpu output to populate cpu_info.
+
+        Returns True if lscpu was available and produced output, False otherwise.
+        """
+        try:
+            result = subprocess.run(
+                ["lscpu"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,  # nosec B603, B607
+            )
+            lscpu_success = result.returncode == 0
+        except FileNotFoundError:
+            return False
+
+        if not lscpu_success:
+            return False
+
+        for line in result.stdout.split("\n"):
+            if ":" in line:
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+                self._process_lscpu_field(cpu_info, key, value)
+
+        return bool(cpu_info)
+
+    def _process_lscpu_field(
+        self, cpu_info: Dict[str, Any], key: str, value: str
+    ) -> None:
+        """Process a single key-value field from lscpu output."""
+        if key == "Vendor ID":
+            cpu_info["vendor"] = value
+        elif key == "Model name":
+            cpu_info["model"] = value
+        elif key == "CPU(s)":
+            cpu_info["threads"] = int(value)
+        elif key == "Core(s) per socket":
+            cores_per_socket = int(value)
+            sockets = cpu_info.get("sockets", 1)
+            cpu_info["cores"] = cores_per_socket * sockets
+        elif key == "Socket(s)":
+            cpu_info["sockets"] = int(value)
+        elif key in ("CPU MHz", "CPU max MHz"):
+            if "frequency_mhz" not in cpu_info or key == "CPU max MHz":
+                try:
+                    cpu_info["frequency_mhz"] = int(float(value))
+                except ValueError:
+                    pass
+
+    def _parse_proc_cpuinfo(self, cpu_info: Dict[str, Any]) -> None:
+        """Parse /proc/cpuinfo as a fallback when lscpu is unavailable."""
+        with open("/proc/cpuinfo", "r", encoding="utf-8") as file_handle:
+            lines = file_handle.readlines()
+
+        processor_count = 0
+        for line in lines:
+            if ":" in line:
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+
+                if key == "vendor_id" and "vendor" not in cpu_info:
+                    cpu_info["vendor"] = value
+                elif key == "model name" and "model" not in cpu_info:
+                    cpu_info["model"] = value
+                elif key == "cpu MHz":
+                    try:
+                        freq = int(float(value))
+                        if "frequency_mhz" not in cpu_info or freq > 0:
+                            cpu_info["frequency_mhz"] = freq
+                    except ValueError:
+                        pass
+                elif key == "processor":
+                    processor_count = max(processor_count, int(value) + 1)
+
+        if processor_count > 0:
+            cpu_info["threads"] = processor_count
+
+    def _detect_cpu_frequency_fallback(self, cpu_info: Dict[str, Any]) -> None:
+        """Detect CPU frequency from cpufreq sysfs or model name as a last resort."""
+        if cpu_info.get("frequency_mhz", 0) != 0:
+            return
+
+        try:
+            with open(
+                "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
+                "r",
+                encoding="utf-8",
+            ) as file_handle:
+                freq_khz = int(file_handle.read().strip())
+                cpu_info["frequency_mhz"] = freq_khz // 1000
+        except (FileNotFoundError, ValueError, IOError):
+            self._parse_cpu_frequency_from_model(cpu_info)
+
+    def _parse_cpu_frequency_from_model(self, cpu_info: Dict[str, Any]) -> None:
+        """Extract CPU frequency from the model name string."""
+        if "model" not in cpu_info:
+            return
+
+        model = cpu_info["model"]
+        ghz_match = re.search(
+            r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE
+        )  # NOSONAR - regex operates on trusted internal data
+        if ghz_match:
+            freq_ghz = float(ghz_match.group(1))
+            cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
+        else:
+            mhz_match = re.search(
+                r"(\d+)\s*MHz", model, re.IGNORECASE
+            )  # NOSONAR - regex operates on trusted internal data
+            if mhz_match:
+                cpu_info["frequency_mhz"] = int(mhz_match.group(1))
+
     def get_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on Linux using /proc/cpuinfo and lscpu."""
         cpu_info = {}
-        try:  # pylint: disable=too-many-nested-blocks
-            # First try lscpu for structured info (may not exist on Alpine/BusyBox)
-            try:
-                result = subprocess.run(
-                    ["lscpu"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,  # nosec B603, B607
-                )
-                lscpu_success = result.returncode == 0
-            except FileNotFoundError:
-                # lscpu not available (e.g., Alpine Linux with BusyBox)
-                lscpu_success = False
-                result = None
+        try:
+            if not self._parse_lscpu_output(cpu_info):
+                self._parse_proc_cpuinfo(cpu_info)
 
-            if lscpu_success and result:
-                for line in result.stdout.split("\n"):
-                    if ":" in line:
-                        key, value = line.split(":", 1)
-                        key = key.strip()
-                        value = value.strip()
-
-                        if key == "Vendor ID":
-                            cpu_info["vendor"] = value
-                        elif key == "Model name":
-                            cpu_info["model"] = value
-                        elif key == "CPU(s)":
-                            cpu_info["threads"] = int(value)
-                        elif key == "Core(s) per socket":
-                            cores_per_socket = int(value)
-                            sockets = cpu_info.get("sockets", 1)
-                            cpu_info["cores"] = cores_per_socket * sockets
-                        elif key == "Socket(s)":
-                            cpu_info["sockets"] = int(value)
-                        elif key in ("CPU MHz", "CPU max MHz"):
-                            # Use max frequency if current frequency not already set
-                            if "frequency_mhz" not in cpu_info or key == "CPU max MHz":
-                                try:
-                                    cpu_info["frequency_mhz"] = int(float(value))
-                                except ValueError:
-                                    pass
-
-            # Fallback to /proc/cpuinfo if lscpu not available
-            if not cpu_info:
-                with open("/proc/cpuinfo", "r", encoding="utf-8") as file_handle:
-                    lines = file_handle.readlines()
-
-                processor_count = 0
-                for line in lines:
-                    if ":" in line:
-                        key, value = line.split(":", 1)
-                        key = key.strip()
-                        value = value.strip()
-
-                        if key == "vendor_id" and "vendor" not in cpu_info:
-                            cpu_info["vendor"] = value
-                        elif key == "model name" and "model" not in cpu_info:
-                            cpu_info["model"] = value
-                        elif key == "cpu MHz":
-                            try:
-                                freq = int(float(value))
-                                # Only set if we don't already have a frequency or if this is non-zero
-                                if "frequency_mhz" not in cpu_info or freq > 0:
-                                    cpu_info["frequency_mhz"] = freq
-                            except ValueError:
-                                pass
-                        elif key == "processor":
-                            processor_count = max(processor_count, int(value) + 1)
-
-                if processor_count > 0:
-                    cpu_info["threads"] = processor_count
-
-            # If still no frequency, try additional methods
-            if "frequency_mhz" not in cpu_info or cpu_info.get("frequency_mhz", 0) == 0:
-                # Try to read from cpufreq scaling
-                try:
-                    with open(
-                        "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
-                        "r",
-                        encoding="utf-8",
-                    ) as file_handle:
-                        # This value is in KHz, convert to MHz
-                        freq_khz = int(file_handle.read().strip())
-                        cpu_info["frequency_mhz"] = freq_khz // 1000
-                except (FileNotFoundError, ValueError, IOError):
-                    # Try to extract from model name as last resort
-                    if "model" in cpu_info:
-
-                        model = cpu_info["model"]
-                        # Look for patterns like "@ 2.60GHz" or "2600MHz" in CPU model
-                        ghz_match = re.search(
-                            r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE
-                        )
-                        if ghz_match:
-                            freq_ghz = float(ghz_match.group(1))
-                            cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
-                        else:
-                            mhz_match = re.search(r"(\d+)\s*MHz", model, re.IGNORECASE)
-                            if mhz_match:
-                                cpu_info["frequency_mhz"] = int(mhz_match.group(1))
+            self._detect_cpu_frequency_fallback(cpu_info)
 
         except Exception as error:
             cpu_info["error"] = _("Failed to get Linux CPU info: %s") % str(error)
@@ -277,6 +297,36 @@ class HardwareCollectorLinux(HardwareCollectorBase):
             or not is_child  # Default: top-level devices are physical
         )
 
+    def _collect_interface_sysfs_attr(self, interface_path: str, attr_name: str) -> str:
+        """Read a single sysfs attribute file for a network interface.
+
+        Returns the attribute value as a stripped string, or empty string if unavailable.
+        """
+        attr_file = os.path.join(interface_path, attr_name)
+        if os.path.exists(attr_file):
+            with open(attr_file, "r", encoding="utf-8") as file_handle:
+                return file_handle.read().strip()
+        return ""
+
+    def _collect_single_interface_info(self, interface: str) -> Dict[str, Any]:
+        """Collect type, operational state, and MAC address for one network interface."""
+        interface_path = os.path.join("/sys/class/net", interface)
+        interface_info: Dict[str, Any] = {"name": interface}
+
+        iface_type = self._collect_interface_sysfs_attr(interface_path, "type")
+        if iface_type:
+            interface_info["type"] = iface_type
+
+        state = self._collect_interface_sysfs_attr(interface_path, "operstate")
+        if state:
+            interface_info["state"] = state
+
+        mac = self._collect_interface_sysfs_attr(interface_path, "address")
+        if mac:
+            interface_info["mac_address"] = mac
+
+        return interface_info
+
     def get_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Linux using /sys/class/net."""
 
@@ -287,28 +337,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                 for interface in os.listdir(net_dir):
                     if interface == "lo":  # Skip loopback
                         continue
-
-                    interface_path = os.path.join(net_dir, interface)
-                    interface_info = {"name": interface}
-
-                    # Get interface type
-                    type_file = os.path.join(interface_path, "type")
-                    if os.path.exists(type_file):
-                        with open(type_file, "r", encoding="utf-8") as file_handle:
-                            interface_info["type"] = file_handle.read().strip()
-
-                    # Get operational state
-                    operstate_file = os.path.join(interface_path, "operstate")
-                    if os.path.exists(operstate_file):
-                        with open(operstate_file, "r", encoding="utf-8") as file_handle:
-                            interface_info["state"] = file_handle.read().strip()
-
-                    # Get MAC address
-                    address_file = os.path.join(interface_path, "address")
-                    if os.path.exists(address_file):
-                        with open(address_file, "r", encoding="utf-8") as file_handle:
-                            interface_info["mac_address"] = file_handle.read().strip()
-
+                    interface_info = self._collect_single_interface_info(interface)
                     network_interfaces.append(interface_info)
 
         except Exception as error:

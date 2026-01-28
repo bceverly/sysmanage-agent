@@ -38,6 +38,56 @@ class FirewallBase:
             # Default to port 8080/tcp if detection fails
             return ([8080], "tcp")
 
+    def _is_sysmanage_server_process(self, proc) -> bool:
+        """
+        Check if a process is a SysManage server process.
+
+        Args:
+            proc: psutil.Process object to check
+
+        Returns:
+            True if this appears to be a SysManage server process
+        """
+        cmdline = " ".join(proc.cmdline())
+        cmdline_lower = cmdline.lower()
+        if "python" not in cmdline_lower:
+            return False
+        return (
+            "uvicorn" in cmdline_lower
+            or "sysmanage" in cmdline_lower
+            or "node" in proc.name().lower()
+        )
+
+    def _check_connection_for_server_port(self, conn, server_ports: List[int]) -> None:
+        """
+        Check if a network connection is a SysManage server and add its port.
+
+        Args:
+            conn: psutil network connection object
+            server_ports: List to append detected ports to (modified in place)
+        """
+        # pylint: disable=import-outside-toplevel
+        import psutil
+
+        if conn.status != "LISTEN":
+            return
+        if conn.laddr.port not in [8080, 3000]:
+            return
+        if conn.laddr.port in server_ports:
+            return
+
+        try:
+            proc = psutil.Process(conn.pid)
+            if self._is_sysmanage_server_process(proc):
+                server_ports.append(conn.laddr.port)
+                self.logger.info(
+                    "Detected SysManage server running on port %d (process: %s)",
+                    conn.laddr.port,
+                    proc.name(),
+                )
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
     def _get_local_server_ports(self) -> List[int]:
         """
         Detect if the SysManage server is running on this host and return its ports.
@@ -45,7 +95,7 @@ class FirewallBase:
         Returns:
             List of ports the server is using (e.g., [8080, 3000])
         """
-        # pylint: disable=import-outside-toplevel,too-many-nested-blocks
+        # pylint: disable=import-outside-toplevel
         import psutil
 
         server_ports = []
@@ -55,28 +105,7 @@ class FirewallBase:
             # Port 8080: API server
             # Port 3000: WebUI server
             for conn in psutil.net_connections(kind="inet"):
-                if conn.status == "LISTEN":
-                    # Check if this is likely a SysManage server process
-                    # Look for python processes on ports 8080 or 3000
-                    if conn.laddr.port in [8080, 3000]:
-                        try:
-                            proc = psutil.Process(conn.pid)
-                            cmdline = " ".join(proc.cmdline())
-                            # Check if it's a Python process that might be the SysManage server
-                            if "python" in cmdline.lower() and (
-                                "uvicorn" in cmdline.lower()
-                                or "sysmanage" in cmdline.lower()
-                                or "node" in proc.name().lower()
-                            ):
-                                if conn.laddr.port not in server_ports:
-                                    server_ports.append(conn.laddr.port)
-                                    self.logger.info(
-                                        "Detected SysManage server running on port %d (process: %s)",
-                                        conn.laddr.port,
-                                        proc.name(),
-                                    )
-                        except (psutil.NoSuchProcess, psutil.AccessDenied):
-                            pass
+                self._check_connection_for_server_port(conn, server_ports)
         except Exception as exc:
             self.logger.warning("Error detecting local server ports: %s", exc)
 

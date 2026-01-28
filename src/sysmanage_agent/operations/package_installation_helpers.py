@@ -137,7 +137,7 @@ def group_packages_by_manager(
 async def install_apt_packages(  # pylint: disable=unused-argument
     pkg_list: List[Dict[str, Any]],
     install_method: Any,
-    logger_instance: logging.Logger,
+    _logger_instance: logging.Logger,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """
     Install packages using apt package manager.

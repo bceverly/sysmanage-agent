@@ -9,6 +9,8 @@ import asyncio
 import os
 from typing import Any, Dict
 
+import aiofiles
+
 from src.sysmanage_agent.operations.otel_base import OtelDeployerBase
 
 
@@ -42,8 +44,8 @@ class WindowsOtelDeployer(OtelDeployerBase):
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
             config_content = self._generate_otel_config(grafana_url)
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             # Start service using sc.exe
             process = await asyncio.create_subprocess_exec(

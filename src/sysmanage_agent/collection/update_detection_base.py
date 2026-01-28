@@ -25,6 +25,9 @@ from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
+HOMEBREW_ARM_PATH = "/opt/homebrew/bin/brew"
+HOMEBREW_INTEL_PATH = "/usr/local/bin/brew"
+
 
 class UpdateDetectorBase:
     """
@@ -43,7 +46,7 @@ class UpdateDetectorBase:
                 [command, "--version"], capture_output=True, timeout=5, check=False
             )
             return True
-        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        except (subprocess.TimeoutExpired, OSError):
             return False
 
     def _format_size_mb(self, size_bytes):
@@ -110,8 +113,8 @@ class UpdateDetectorBase:
     def _is_homebrew_available(self) -> bool:
         """Check if Homebrew is available on macOS with proper path detection."""
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
         ]
 
         for path in homebrew_paths:
@@ -130,8 +133,8 @@ class UpdateDetectorBase:
     def _get_homebrew_owner(self) -> str:
         """Get the owner of the Homebrew installation."""
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
         ]
 
         for path in homebrew_paths:
@@ -151,8 +154,8 @@ class UpdateDetectorBase:
     def _get_brew_command(self) -> str:
         """Get the correct brew command path, with sudo -u support when running privileged."""
         homebrew_paths = [
-            "/opt/homebrew/bin/brew",  # Apple Silicon (M1/M2)
-            "/usr/local/bin/brew",  # Intel Macs
+            HOMEBREW_ARM_PATH,  # Apple Silicon (M1/M2)
+            HOMEBREW_INTEL_PATH,  # Intel Macs
             "brew",  # If in PATH
         ]
 
@@ -176,44 +179,39 @@ class UpdateDetectorBase:
                 continue
         return "brew"  # Fallback
 
+    def _detect_linux_reboot_required(self) -> bool:
+        """Check if a Linux system reboot is required based on pending updates."""
+        if os.path.exists("/var/run/reboot-required"):
+            return True
+
+        has_kernel_updates = any(
+            "kernel" in u.get("package_name", "").lower()
+            or "linux-image" in u.get("package_name", "").lower()
+            for u in self.available_updates
+        )
+        if has_kernel_updates:
+            return True
+
+        has_firmware_updates = any(
+            u.get("package_manager") == "fwupd" for u in self.available_updates
+        )
+        return has_firmware_updates
+
+    def _detect_darwin_reboot_required(self) -> bool:
+        """Check if a macOS system reboot is required based on pending updates."""
+        return any(
+            u.get("is_system_update") or "macOS" in u.get("package_name", "")
+            for u in self.available_updates
+        )
+
     def check_reboot_required(self) -> bool:
         """Check if a system reboot is required for updates."""
         if self.platform == "linux":
-            # Check for reboot-required file (Ubuntu/Debian)
-            if os.path.exists("/var/run/reboot-required"):
-                return True
-
-            # Check for kernel updates in the pending updates
-            kernel_updates = [
-                u
-                for u in self.available_updates
-                if "kernel" in u.get("package_name", "").lower()
-                or "linux-image" in u.get("package_name", "").lower()
-            ]
-            if kernel_updates:
-                return True
-
-            # Check for firmware updates in the pending updates
-            firmware_updates = [
-                u for u in self.available_updates if u.get("package_manager") == "fwupd"
-            ]
-            if firmware_updates:
-                return True
-
-        elif self.platform == "darwin":
-            # Check for system updates that require reboot
-            system_updates = [
-                u
-                for u in self.available_updates
-                if u.get("is_system_update") or "macOS" in u.get("package_name", "")
-            ]
-            if system_updates:
-                return True
-
-        elif self.platform == "windows":
-            # Windows updates typically require reboot
+            return self._detect_linux_reboot_required()
+        if self.platform == "darwin":
+            return self._detect_darwin_reboot_required()
+        if self.platform == "windows":
             return len(self.available_updates) > 0
-
         return False
 
     def _detect_best_package_manager(  # pylint: disable=too-many-return-statements

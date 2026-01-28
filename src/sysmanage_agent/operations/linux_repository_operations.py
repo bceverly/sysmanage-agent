@@ -10,7 +10,21 @@ import os
 from typing import Any, Dict
 from urllib.parse import urlparse
 
+import aiofiles
+
 from src.i18n import _
+
+# Module-level constants for repeated strings
+_EXT_LIST = ".list"
+_EXT_SOURCES = ".sources"
+_REPO_ADDED_SUCCESS = "Repository %s added successfully"
+_REPO_ADDED_SUCCESS_SIMPLE = "Repository added successfully"
+_REPO_ADD_FAILED = "Failed to add repository %s: %s"
+_REPO_ADD_FAILED_SIMPLE = "Failed to add repository: %s"
+_REPO_FILE_NOT_FOUND = "Repository file not found"
+_REPO_REMOVED_SUCCESS = "Repository removed successfully"
+_REPO_ENABLED_SUCCESS = "Repository enabled successfully"
+_REPO_DISABLED_SUCCESS = "Repository disabled successfully"
 
 
 class LinuxRepositoryOperations:
@@ -47,6 +61,30 @@ class LinuxRepositoryOperations:
             return f"ppa:{path_parts[0]}/{path_parts[1]}"
         return ""
 
+    def _parse_deb822_line(self, line: str, current_entry: dict) -> None:
+        """Parse a single line from a DEB822 file and update current_entry."""
+        # Parse key: value
+        if ":" not in line:
+            return
+
+        key, _, value = line.partition(":")
+        key = key.strip().lower()
+        value = value.strip()
+
+        key_handlers = {
+            "types": lambda v: current_entry.__setitem__("types", v),
+            "uris": lambda v: current_entry.__setitem__("uris", v),
+            "suites": lambda v: current_entry.__setitem__("suites", v),
+            "components": lambda v: current_entry.__setitem__("components", v),
+            "enabled": lambda v: current_entry.__setitem__(
+                "enabled", v.lower() != "no"
+            ),
+        }
+
+        handler = key_handlers.get(key)
+        if handler:
+            handler(value)
+
     def _parse_deb822_sources_file(self, content: str, filepath: str) -> list:
         """Parse a DEB822 format .sources file."""
         repositories = []
@@ -64,30 +102,11 @@ class LinuxRepositoryOperations:
                 current_entry = {}
                 continue
 
-            # Skip comments
-            if line.startswith("#"):
+            # Skip comments and continuation lines
+            if line.startswith("#") or line.startswith(" ") or line.startswith("\t"):
                 continue
 
-            # Handle continuation lines (start with space)
-            if line.startswith(" ") or line.startswith("\t"):
-                continue
-
-            # Parse key: value
-            if ":" in line:
-                key, _, value = line.partition(":")
-                key = key.strip().lower()
-                value = value.strip()
-
-                if key == "types":
-                    current_entry["types"] = value
-                elif key == "uris":
-                    current_entry["uris"] = value
-                elif key == "suites":
-                    current_entry["suites"] = value
-                elif key == "components":
-                    current_entry["components"] = value
-                elif key == "enabled":
-                    current_entry["enabled"] = value.lower() != "no"
+            self._parse_deb822_line(line, current_entry)
 
         # Don't forget the last entry if file doesn't end with blank line
         if current_entry.get("uris"):
@@ -111,7 +130,9 @@ class LinuxRepositoryOperations:
         repo_type = "PPA" if is_ppa else "APT"
 
         # Extract name
-        name = os.path.basename(filepath).replace(".sources", "").replace(".list", "")
+        name = (
+            os.path.basename(filepath).replace(_EXT_SOURCES, "").replace(_EXT_LIST, "")
+        )
         if is_ppa:
             ppa_name = self._extract_ppa_name_from_url(uri)
             if ppa_name:
@@ -125,60 +146,85 @@ class LinuxRepositoryOperations:
             "file_path": filepath,
         }
 
+    def _check_line_for_ppa(self, line: str) -> bool:
+        """Check if a deb line contains a PPA URL."""
+        for part in line.split():
+            if part.startswith("http"):
+                parsed = urlparse(part)
+                if self._is_ppa_hostname(parsed.hostname):
+                    return True
+        return False
+
+    def _extract_ppa_name_from_line(self, line: str) -> str:
+        """Extract PPA name from a deb line if present."""
+        for part in line.split():
+            if part.startswith("http"):
+                ppa_name = self._extract_ppa_name_from_url(part)
+                if ppa_name:
+                    return ppa_name
+        return ""
+
+    def _parse_list_line(self, line: str, filepath: str) -> dict | None:
+        """Parse a single line from a .list file and return repo dict or None."""
+        line = line.strip()
+        if not line:
+            return None
+
+        # Check if line is commented out
+        enabled = not line.startswith("#")
+        if not enabled:
+            line = line.lstrip("#").strip()
+
+        # Must start with deb or deb-src
+        if not (line.startswith("deb ") or line.startswith("deb-src ")):
+            return None
+
+        # Check if it's a PPA
+        is_ppa = self._check_line_for_ppa(line)
+        repo_type = "PPA" if is_ppa else "APT"
+
+        # Extract name
+        name = (
+            os.path.basename(filepath).replace(_EXT_LIST, "").replace(_EXT_SOURCES, "")
+        )
+        if is_ppa:
+            ppa_name = self._extract_ppa_name_from_line(line)
+            if ppa_name:
+                name = ppa_name
+
+        return {
+            "name": name,
+            "type": repo_type,
+            "url": line,
+            "enabled": enabled,
+            "file_path": filepath,
+        }
+
     def _parse_list_sources_file(self, content: str, filepath: str) -> list:
         """Parse a traditional .list format sources file."""
         repositories = []
 
         for line in content.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-
-            # Check if line is commented out
-            enabled = not line.startswith("#")
-            if not enabled:
-                line = line.lstrip("#").strip()
-
-            # Must start with deb or deb-src
-            if not (line.startswith("deb ") or line.startswith("deb-src ")):
-                continue
-
-            # Check if it's a PPA
-            is_ppa = False
-            for part in line.split():
-                if part.startswith("http"):
-                    parsed = urlparse(part)
-                    if self._is_ppa_hostname(parsed.hostname):
-                        is_ppa = True
-                        break
-
-            repo_type = "PPA" if is_ppa else "APT"
-
-            # Extract name
-            name = (
-                os.path.basename(filepath).replace(".list", "").replace(".sources", "")
-            )
-            if is_ppa:
-                for part in line.split():
-                    if part.startswith("http"):
-                        ppa_name = self._extract_ppa_name_from_url(part)
-                        if ppa_name:
-                            name = ppa_name
-                            break
-
-            repositories.append(
-                {
-                    "name": name,
-                    "type": repo_type,
-                    "url": line,
-                    "enabled": enabled,
-                    "file_path": filepath,
-                }
-            )
+            repo = self._parse_list_line(line, filepath)
+            if repo:
+                repositories.append(repo)
 
         return repositories
 
-    async def list_apt_repositories(self) -> list:
+    async def _read_apt_source_file(self, filepath: str, filename: str) -> list:
+        """Read and parse a single APT source file."""
+        async with aiofiles.open(filepath, "r", encoding="utf-8") as file_handle:
+            content = await file_handle.read()
+
+        if filename.endswith(_EXT_SOURCES):
+            # Parse DEB822 format
+            return self._parse_deb822_sources_file(content, filepath)
+        # Parse traditional .list format
+        return self._parse_list_sources_file(content, filepath)
+
+    async def list_apt_repositories(
+        self,
+    ) -> list:  # NOSONAR - async required by interface
         """List APT repositories including PPAs.
 
         Supports both traditional .list format and modern DEB822 .sources format.
@@ -189,21 +235,12 @@ class LinuxRepositoryOperations:
         try:
             if os.path.exists(sources_dir):
                 for filename in os.listdir(sources_dir):
-                    if not filename.endswith((".list", ".sources")):
+                    if not filename.endswith((_EXT_LIST, _EXT_SOURCES)):
                         continue
 
                     filepath = os.path.join(sources_dir, filename)
                     try:
-                        with open(filepath, "r", encoding="utf-8") as file_handle:
-                            content = file_handle.read()
-
-                        if filename.endswith(".sources"):
-                            # Parse DEB822 format
-                            repos = self._parse_deb822_sources_file(content, filepath)
-                        else:
-                            # Parse traditional .list format
-                            repos = self._parse_list_sources_file(content, filepath)
-
+                        repos = await self._read_apt_source_file(filepath, filename)
                         repositories.extend(repos)
 
                     except Exception as error:
@@ -219,10 +256,8 @@ class LinuxRepositoryOperations:
             # Use sudo only if not running as root
             sudo_prefix = "" if os.geteuid() == 0 else "sudo -n "
 
-            if repo_identifier.startswith("ppa:"):
-                command = f"{sudo_prefix}add-apt-repository -y '{repo_identifier}'"
-            else:
-                command = f"{sudo_prefix}add-apt-repository -y '{repo_identifier}'"
+            # Both PPA and non-PPA use the same command format
+            command = f"{sudo_prefix}add-apt-repository -y '{repo_identifier}'"
 
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
@@ -237,21 +272,21 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info("Repository %s added successfully", repo_identifier)
+                self.logger.info(_REPO_ADDED_SUCCESS, repo_identifier)
                 return {
                     "success": True,
-                    "result": _("Repository added successfully"),
+                    "result": _(_REPO_ADDED_SUCCESS_SIMPLE),
                     "output": result["result"]["stdout"],
                 }
 
             self.logger.error(
-                "Failed to add repository %s: %s",
+                _REPO_ADD_FAILED,
                 repo_identifier,
                 result["result"].get("stderr", ""),
             )
             return {
                 "success": False,
-                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "error": _(_REPO_ADD_FAILED_SIMPLE) % result["result"]["stderr"],
                 "output": result["result"]["stderr"],
             }
         except Exception as error:
@@ -281,10 +316,10 @@ class LinuxRepositoryOperations:
                     {"command": command}
                 )
             else:
-                return {"success": False, "error": _("Repository file not found")}
+                return {"success": False, "error": _(_REPO_FILE_NOT_FOUND)}
 
             if result["success"]:
-                return {"success": True, "result": _("Repository removed successfully")}
+                return {"success": True, "result": _(_REPO_REMOVED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -295,7 +330,7 @@ class LinuxRepositoryOperations:
         """Enable APT repository by uncommenting lines in the file."""
         try:
             if not file_path or not os.path.exists(file_path):
-                return {"success": False, "error": _("Repository file not found")}
+                return {"success": False, "error": _(_REPO_FILE_NOT_FOUND)}
 
             command = f"sudo sed -i 's/^# *deb /deb /' {file_path}"
             result = await self.agent_instance.system_ops.execute_shell_command(
@@ -303,7 +338,7 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                return {"success": True, "result": _("Repository enabled successfully")}
+                return {"success": True, "result": _(_REPO_ENABLED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -314,7 +349,7 @@ class LinuxRepositoryOperations:
         """Disable APT repository by commenting out lines in the file."""
         try:
             if not file_path or not os.path.exists(file_path):
-                return {"success": False, "error": _("Repository file not found")}
+                return {"success": False, "error": _(_REPO_FILE_NOT_FOUND)}
 
             command = f"sudo sed -i 's/^deb /# deb /' {file_path}"
             result = await self.agent_instance.system_ops.execute_shell_command(
@@ -324,7 +359,7 @@ class LinuxRepositoryOperations:
             if result["success"]:
                 return {
                     "success": True,
-                    "result": _("Repository disabled successfully"),
+                    "result": _(_REPO_DISABLED_SUCCESS),
                 }
 
             return {"success": False, "error": result["result"]["stderr"]}
@@ -334,7 +369,58 @@ class LinuxRepositoryOperations:
 
     # ========== YUM/DNF Operations ==========
 
-    async def list_yum_repositories(self) -> list:
+    def _create_yum_repo_entry(self, name: str, filename: str, filepath: str) -> dict:
+        """Create a new YUM repository entry dict."""
+        return {
+            "name": name,
+            "type": "COPR" if "copr" in filename.lower() else "YUM",
+            "url": "",
+            "enabled": True,
+            "file_path": filepath,
+        }
+
+    def _update_repo_from_line(self, current_repo: dict, line: str) -> None:
+        """Update a repo dict from a key=value line."""
+        if "=" not in line:
+            return
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if key == "baseurl":
+            current_repo["url"] = value
+        elif key == "enabled":
+            current_repo["enabled"] = value == "1"
+
+    def _parse_yum_repo_file(self, content: str, filename: str, filepath: str) -> list:
+        """Parse a YUM/DNF .repo file and return list of repositories."""
+        repositories = []
+        current_repo = None
+
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("[") and line.endswith("]"):
+                if current_repo:
+                    repositories.append(current_repo)
+                current_repo = self._create_yum_repo_entry(
+                    line[1:-1], filename, filepath
+                )
+            elif current_repo is not None:
+                self._update_repo_from_line(current_repo, line)
+
+        if current_repo:
+            repositories.append(current_repo)
+
+        return repositories
+
+    async def _read_yum_repo_file(self, filepath: str, filename: str) -> list:
+        """Read and parse a single YUM repo file."""
+        async with aiofiles.open(filepath, "r", encoding="utf-8") as file_handle:
+            content = await file_handle.read()
+        return self._parse_yum_repo_file(content, filename, filepath)
+
+    async def list_yum_repositories(
+        self,
+    ) -> list:  # NOSONAR - async required by interface
         """List YUM/DNF repositories including COPR."""
         repositories = []
         repos_dir = "/etc/yum.repos.d"
@@ -345,39 +431,8 @@ class LinuxRepositoryOperations:
                     if filename.endswith(".repo"):
                         filepath = os.path.join(repos_dir, filename)
                         try:
-                            with open(filepath, "r", encoding="utf-8") as file_handle:
-                                content = file_handle.read()
-                                # Parse INI-style repo file
-                                current_repo = None
-                                for line in content.splitlines():
-                                    line = line.strip()
-                                    if line.startswith("[") and line.endswith("]"):
-                                        if current_repo:
-                                            repositories.append(current_repo)
-                                        current_repo = {
-                                            "name": line[1:-1],
-                                            "type": (
-                                                "COPR"
-                                                if "copr" in filename.lower()
-                                                else "YUM"
-                                            ),
-                                            "url": "",
-                                            "enabled": True,
-                                            "file_path": filepath,
-                                        }
-                                    elif current_repo is not None and "=" in line:
-                                        key, value = line.split("=", 1)
-                                        key = key.strip()
-                                        value = value.strip()
-                                        if key == "baseurl":
-                                            # pylint: disable=unsupported-assignment-operation
-                                            current_repo["url"] = value
-                                        elif key == "enabled":
-                                            # pylint: disable=unsupported-assignment-operation
-                                            current_repo["enabled"] = value == "1"
-
-                                if current_repo:
-                                    repositories.append(current_repo)
+                            repos = await self._read_yum_repo_file(filepath, filename)
+                            repositories.extend(repos)
                         except Exception as error:
                             self.logger.warning(
                                 _("Error reading %s: %s"), filepath, error
@@ -412,21 +467,21 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info("Repository %s added successfully", repo_identifier)
+                self.logger.info(_REPO_ADDED_SUCCESS, repo_identifier)
                 return {
                     "success": True,
-                    "result": _("Repository added successfully"),
+                    "result": _(_REPO_ADDED_SUCCESS_SIMPLE),
                     "output": result["result"]["stdout"],
                 }
 
             self.logger.error(
-                "Failed to add repository %s: %s",
+                _REPO_ADD_FAILED,
                 repo_identifier,
                 result["result"].get("stderr", ""),
             )
             return {
                 "success": False,
-                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "error": _(_REPO_ADD_FAILED_SIMPLE) % result["result"]["stderr"],
                 "output": result["result"]["stderr"],
             }
         except Exception as error:
@@ -451,10 +506,10 @@ class LinuxRepositoryOperations:
                     {"command": command}
                 )
             else:
-                return {"success": False, "error": _("Repository file not found")}
+                return {"success": False, "error": _(_REPO_FILE_NOT_FOUND)}
 
             if result["success"]:
-                return {"success": True, "result": _("Repository removed successfully")}
+                return {"success": True, "result": _(_REPO_REMOVED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -470,7 +525,7 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                return {"success": True, "result": _("Repository enabled successfully")}
+                return {"success": True, "result": _(_REPO_ENABLED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -488,7 +543,7 @@ class LinuxRepositoryOperations:
             if result["success"]:
                 return {
                     "success": True,
-                    "result": _("Repository disabled successfully"),
+                    "result": _(_REPO_DISABLED_SUCCESS),
                 }
 
             return {"success": False, "error": result["result"]["stderr"]}
@@ -514,6 +569,26 @@ class LinuxRepositoryOperations:
         except Exception:
             return False
 
+    def _parse_zypper_line(self, line: str) -> dict | None:
+        """Parse a single line from zypper lr output."""
+        if "|" not in line or line.startswith("#"):
+            return None
+
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) < 4:
+            return None
+
+        url = parts[3] if len(parts) > 3 else ""
+        is_obs = self._check_obs_url(url)
+
+        return {
+            "name": parts[1],
+            "type": "OBS" if is_obs else "Zypper",
+            "url": url,
+            "enabled": parts[2] == "Yes" if len(parts) > 2 else True,
+            "file_path": f"/etc/zypp/repos.d/{parts[1]}.repo",
+        }
+
     async def list_zypper_repositories(self) -> list:
         """List Zypper repositories including OBS."""
         repositories = []
@@ -527,24 +602,9 @@ class LinuxRepositoryOperations:
             if result["success"]:
                 output = result["result"]["stdout"]
                 for line in output.splitlines():
-                    # Parse zypper output
-                    if "|" in line and not line.startswith("#"):
-                        parts = [p.strip() for p in line.split("|")]
-                        if len(parts) >= 4:
-                            url = parts[3] if len(parts) > 3 else ""
-                            is_obs = self._check_obs_url(url)
-
-                            repositories.append(
-                                {
-                                    "name": parts[1],
-                                    "type": "OBS" if is_obs else "Zypper",
-                                    "url": url,
-                                    "enabled": (
-                                        parts[2] == "Yes" if len(parts) > 2 else True
-                                    ),
-                                    "file_path": f"/etc/zypp/repos.d/{parts[1]}.repo",
-                                }
-                            )
+                    repo = self._parse_zypper_line(line)
+                    if repo:
+                        repositories.append(repo)
         except Exception as error:
             self.logger.error(_("Error listing Zypper repositories: %s"), error)
 
@@ -573,21 +633,21 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info("Repository %s added successfully", alias)
+                self.logger.info(_REPO_ADDED_SUCCESS, alias)
                 return {
                     "success": True,
-                    "result": _("Repository added successfully"),
+                    "result": _(_REPO_ADDED_SUCCESS_SIMPLE),
                     "output": result["result"]["stdout"],
                 }
 
             self.logger.error(
-                "Failed to add repository %s: %s",
+                _REPO_ADD_FAILED,
                 alias,
                 result["result"].get("stderr", ""),
             )
             return {
                 "success": False,
-                "error": _("Failed to add repository: %s") % result["result"]["stderr"],
+                "error": _(_REPO_ADD_FAILED_SIMPLE) % result["result"]["stderr"],
                 "output": result["result"]["stderr"],
             }
         except Exception as error:
@@ -605,7 +665,7 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                return {"success": True, "result": _("Repository removed successfully")}
+                return {"success": True, "result": _(_REPO_REMOVED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -621,7 +681,7 @@ class LinuxRepositoryOperations:
             )
 
             if result["success"]:
-                return {"success": True, "result": _("Repository enabled successfully")}
+                return {"success": True, "result": _(_REPO_ENABLED_SUCCESS)}
 
             return {"success": False, "error": result["result"]["stderr"]}
         except Exception as error:
@@ -639,7 +699,7 @@ class LinuxRepositoryOperations:
             if result["success"]:
                 return {
                     "success": True,
-                    "result": _("Repository disabled successfully"),
+                    "result": _(_REPO_DISABLED_SUCCESS),
                 }
 
             return {"success": False, "error": result["result"]["stderr"]}

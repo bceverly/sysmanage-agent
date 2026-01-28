@@ -12,7 +12,9 @@ import platform
 import pwd
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+_PROC_CPUINFO = "/proc/cpuinfo"
 
 
 class LinuxVirtualizationMixin:
@@ -227,10 +229,10 @@ class LinuxVirtualizationMixin:
             True if vmx or svm flags found in /proc/cpuinfo
         """
         try:
-            if not os.path.exists("/proc/cpuinfo"):
+            if not os.path.exists(_PROC_CPUINFO):
                 return False
 
-            with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
+            with open(_PROC_CPUINFO, "r", encoding="utf-8") as cpuinfo_file:
                 content = cpuinfo_file.read().lower()
                 # Intel VT-x or AMD-V
                 return "vmx" in content or "svm" in content
@@ -239,7 +241,7 @@ class LinuxVirtualizationMixin:
             self.logger.debug("Error checking CPU virtualization flags: %s", error)
             return False
 
-    def _get_cpu_vendor(self) -> str:
+    def _get_cpu_vendor(self) -> Optional[str]:
         """
         Determine CPU vendor (Intel or AMD) for KVM module selection.
 
@@ -247,10 +249,10 @@ class LinuxVirtualizationMixin:
             "intel", "amd", or None if unknown
         """
         try:
-            if not os.path.exists("/proc/cpuinfo"):
+            if not os.path.exists(_PROC_CPUINFO):
                 return None
 
-            with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
+            with open(_PROC_CPUINFO, "r", encoding="utf-8") as cpuinfo_file:
                 content = cpuinfo_file.read().lower()
                 if "genuineintel" in content or "vmx" in content:
                     return "intel"
@@ -381,6 +383,61 @@ class LinuxVirtualizationMixin:
             self.logger.debug("Error checking default network: %s", error)
             return False
 
+    def _detect_kvm_availability(self, result: Dict[str, Any]) -> None:
+        """Detect KVM hardware availability from /dev/kvm and kernel modules.
+
+        Args:
+            result: Dict to update with availability and module status
+        """
+        if os.path.exists("/dev/kvm"):
+            result["kernel_supported"] = True
+            result["available"] = True
+        elif result["modules_available"] and result["cpu_supported"]:
+            result["available"] = True
+            result["needs_modprobe"] = True
+            self.logger.debug(
+                "KVM modules available but not loaded - can enable via modprobe"
+            )
+        else:
+            self.logger.debug(
+                "/dev/kvm not found - hardware virtualization not available, "
+                "but checking libvirt installation status"
+            )
+
+    def _detect_kvm_management(self, result: Dict[str, Any]) -> None:
+        """Detect KVM management layer (libvirt or direct QEMU).
+
+        Args:
+            result: Dict to update with management layer status
+        """
+        virsh_path = shutil.which("virsh")
+        qemu_path = shutil.which("qemu-system-x86_64")
+
+        if virsh_path:
+            result["installed"] = True
+            result["management"] = "libvirt"
+
+            libvirtd_status = self._check_libvirtd_status()
+            result["enabled"] = libvirtd_status["enabled"]
+            result["running"] = libvirtd_status["running"]
+
+            if result["running"]:
+                result["initialized"] = self._check_default_network_exists()
+                if not result["initialized"]:
+                    result["needs_init"] = True
+
+            if not result["enabled"]:
+                result["needs_enable"] = True
+
+        elif qemu_path:
+            result["installed"] = True
+            result["management"] = "qemu"
+            result["enabled"] = True
+            result["running"] = True
+            result["initialized"] = True
+        else:
+            result["needs_install"] = True
+
     def check_kvm_support(self) -> Dict[str, Any]:
         """
         Check KVM/QEMU support on Linux.
@@ -427,73 +484,16 @@ class LinuxVirtualizationMixin:
             if platform.system().lower() != "linux":
                 return result
 
-            # Check CPU virtualization support (vmx/svm flags)
             result["cpu_supported"] = self._check_cpu_virtualization_flags()
-
-            # Determine CPU vendor for kvm_intel vs kvm_amd
             result["cpu_vendor"] = self._get_cpu_vendor()
 
-            # Check if KVM kernel modules are loaded
             modules_status = self._check_kvm_modules_loaded()
             result["modules_loaded"] = modules_status["loaded"]
             result["modules_available"] = modules_status["available"]
 
-            # Check if KVM kernel module is loaded (/dev/kvm exists)
-            if os.path.exists("/dev/kvm"):
-                result["kernel_supported"] = True
-                result["available"] = True
-            elif result["modules_available"] and result["cpu_supported"]:
-                # Modules exist but not loaded - can be enabled via modprobe
-                result["available"] = True
-                result["needs_modprobe"] = True
-                self.logger.debug(
-                    "KVM modules available but not loaded - can enable via modprobe"
-                )
-            else:
-                # /dev/kvm not found - KVM hardware not available yet
-                # but we still check if libvirt is installed so user can
-                # install/configure it before enabling virtualization in BIOS
-                self.logger.debug(
-                    "/dev/kvm not found - hardware virtualization not available, "
-                    "but checking libvirt installation status"
-                )
-
-            # Check if user has access to KVM
+            self._detect_kvm_availability(result)
             result["user_in_group"] = self._is_user_in_kvm_group()
-
-            # Check if libvirt/virsh is installed
-            virsh_path = shutil.which("virsh")
-            qemu_path = shutil.which("qemu-system-x86_64")
-
-            if virsh_path:
-                result["installed"] = True
-                result["management"] = "libvirt"
-
-                # Check libvirtd service status
-                libvirtd_status = self._check_libvirtd_status()
-                result["enabled"] = libvirtd_status["enabled"]
-                result["running"] = libvirtd_status["running"]
-
-                # Check if default network is configured
-                if result["running"]:
-                    result["initialized"] = self._check_default_network_exists()
-                    if not result["initialized"]:
-                        result["needs_init"] = True
-
-                if not result["enabled"]:
-                    result["needs_enable"] = True
-
-            elif qemu_path:
-                # QEMU is installed but not libvirt - can still use direct QEMU
-                result["installed"] = True
-                result["management"] = "qemu"
-                result["enabled"] = True  # No service to enable for direct QEMU
-                result["running"] = True
-                result["initialized"] = True
-
-            else:
-                # Neither libvirt nor QEMU installed
-                result["needs_install"] = True
+            self._detect_kvm_management(result)
 
             self.logger.info(
                 "KVM support check: available=%s, installed=%s, enabled=%s, "

@@ -54,6 +54,52 @@ class WindowsVirtualizationMixin:
         # Last resort: latin-1 (never fails)
         return combined.decode("latin-1")
 
+    def _detect_wsl_blockers(self, output_lower: str, result: Dict[str, Any]) -> bool:
+        """Detect WSL blockers like BIOS virtualization or missing platform features.
+
+        Args:
+            output_lower: Lowercased WSL status output
+            result: Dict to update with blocker information
+
+        Returns:
+            True if a blocker was found and result was updated
+        """
+        if "bios" in output_lower and "virtualization" in output_lower:
+            result["enabled"] = False
+            result["needs_enable"] = False
+            result["needs_bios_virtualization"] = True
+            self.logger.warning("WSL requires BIOS virtualization to be enabled")
+            return True
+
+        if "virtual machine platform" in output_lower:
+            result["enabled"] = False
+            result["needs_enable"] = True
+            self.logger.info("WSL requires Virtual Machine Platform to be enabled")
+            return True
+
+        return False
+
+    def _parse_wsl_version(self, output: str, result: Dict[str, Any]) -> None:
+        """Parse WSL version from wsl --status output.
+
+        Args:
+            output: Raw WSL status output string
+            result: Dict to update with version information
+        """
+        if "Default Version: 2" in output or "Default Version: WSL 2" in output:
+            result["default_version"] = 2
+            result["version"] = "2"
+        elif "Default Version: 1" in output or "Default Version: WSL 1" in output:
+            result["default_version"] = 1
+            result["version"] = "1"
+        elif "WSL 1" in output:
+            result["version"] = "1"
+            result["default_version"] = 1
+        else:
+            # Default to WSL 2 for modern Windows when version unclear
+            result["version"] = "2"
+            result["default_version"] = 2
+
     def check_wsl_support(self) -> Dict[str, Any]:
         """
         Check WSL (Windows Subsystem for Linux) support.
@@ -71,24 +117,18 @@ class WindowsVirtualizationMixin:
         }
 
         try:
-            # Check if running on Windows
             if platform.system().lower() != "windows":
                 return result
 
-            # Check if wsl.exe exists
             wsl_path = os.path.join(
                 os.environ.get("SystemRoot", "C:\\Windows"), "System32", "wsl.exe"
             )
             if not os.path.exists(wsl_path):
-                # WSL not available at all
                 self.logger.debug("WSL executable not found at %s", wsl_path)
                 return result
 
-            # WSL binary exists, so WSL is potentially available
             result["available"] = True
 
-            # Check WSL status using wsl --status
-            # Note: wsl.exe outputs UTF-16LE, so we read as bytes and decode manually
             try:
                 status_result = subprocess.run(  # nosec B603 B607
                     ["wsl", "--status"],
@@ -102,70 +142,21 @@ class WindowsVirtualizationMixin:
                     ),
                 )
 
-                # Decode the UTF-16LE output from wsl.exe
                 output = self._decode_wsl_output(
                     status_result.stdout, status_result.stderr
                 )
                 output_lower = output.lower()
 
-                # Check for BIOS virtualization issues (actual hardware virtualization)
-                # This is different from "Virtual Machine Platform" Windows feature
-                if "bios" in output_lower and "virtualization" in output_lower:
-                    result["enabled"] = False
-                    result["needs_enable"] = False
-                    result["needs_bios_virtualization"] = True
-                    self.logger.warning(
-                        "WSL requires BIOS virtualization to be enabled"
-                    )
+                if self._detect_wsl_blockers(output_lower, result):
                     return result
 
-                # Check for "Virtual Machine Platform" or other Windows features
-                # that need to be enabled - these can be enabled via wsl --install
-                if "virtual machine platform" in output_lower:
-                    result["enabled"] = False
-                    result["needs_enable"] = True
-                    self.logger.info(
-                        "WSL requires Virtual Machine Platform to be enabled"
-                    )
-                    return result
-
-                # Check if WSL2 is working by looking for "Default Version:"
-                # This should come before checking for "please enable" messages
-                # because WSL1-related messages can appear even when WSL2 is working
                 if status_result.returncode == 0 and "default version:" in output_lower:
                     result["enabled"] = True
-
-                    # Parse default version from output
-                    if (
-                        "Default Version: 2" in output
-                        or "Default Version: WSL 2" in output
-                    ):
-                        result["default_version"] = 2
-                        result["version"] = "2"
-                    elif (
-                        "Default Version: 1" in output
-                        or "Default Version: WSL 1" in output
-                    ):
-                        result["default_version"] = 1
-                        result["version"] = "1"
-                    else:
-                        # Try to detect version from output
-                        if "WSL 2" in output:
-                            result["version"] = "2"
-                            result["default_version"] = 2
-                        elif "WSL 1" in output:
-                            result["version"] = "1"
-                            result["default_version"] = 1
-                        else:
-                            # Default to WSL 2 for modern Windows when version unclear
-                            result["version"] = "2"
-                            result["default_version"] = 2
-
+                    self._parse_wsl_version(output, result)
                     self.logger.info(
                         "WSL is enabled, default version: %s", result["default_version"]
                     )
                 else:
-                    # WSL exists but not enabled or needs configuration
                     result["enabled"] = False
                     result["needs_enable"] = True
                     self.logger.info("WSL is available but not fully enabled")
@@ -176,7 +167,6 @@ class WindowsVirtualizationMixin:
                 result["needs_enable"] = True
 
             except FileNotFoundError:
-                # wsl command not found in PATH
                 result["enabled"] = False
                 result["needs_enable"] = True
 

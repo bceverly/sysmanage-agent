@@ -51,10 +51,10 @@ class CertificateStore:
                     os.chmod(
                         self.config_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
                     )
-                except (PermissionError, OSError):
+                except OSError:
                     # Directory exists but we can't chmod it - that's okay if we can write to it
                     pass
-        except (PermissionError, OSError):
+        except OSError:
             # Fall back to local directory in the same location as the running script
             script_dir = Path(sys.argv[0]).parent.resolve()
             fallback_dir = script_dir / ".sysmanage-agent"
@@ -91,7 +91,7 @@ class CertificateStore:
             os.chmod(
                 self.client_cert_path,
                 stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
-            )
+            )  # NOSONAR - permissions are appropriate for this file type
 
         # Store client private key with restrictive permissions
         with open(self.client_key_path, "w", encoding="utf-8") as file_handle:
@@ -106,7 +106,7 @@ class CertificateStore:
             os.chmod(
                 self.ca_cert_path,
                 stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
-            )
+            )  # NOSONAR - permissions are appropriate for this file type
 
         # Store server fingerprint
         with open(self.server_fingerprint_path, "w", encoding="utf-8") as file_handle:
@@ -115,7 +115,7 @@ class CertificateStore:
             os.chmod(
                 self.server_fingerprint_path,
                 stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
-            )
+            )  # NOSONAR - permissions are appropriate for this file type
 
     def load_certificates(self) -> Optional[Tuple[str, str, str]]:
         """

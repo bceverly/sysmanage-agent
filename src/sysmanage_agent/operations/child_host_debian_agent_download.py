@@ -272,7 +272,7 @@ class AgentPackageDownloader:
             httpd_deb_path.chmod(0o644)
 
             # Build URL
-            deb_url = f"http://100.64.0.1/debian/{vm_name}/{deb_filename}"
+            deb_url = f"http://100.64.0.1/debian/{vm_name}/{deb_filename}"  # NOSONAR - internal VM network
 
             self.logger.info(_("Agent .deb available at: %s"), deb_url)
             return {

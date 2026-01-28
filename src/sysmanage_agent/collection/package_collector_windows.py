@@ -59,74 +59,10 @@ class WindowsPackageCollector(BasePackageCollector):
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget) via REST API."""
         try:
-            # Use winget.run REST API to get the full catalog
-            # This works from SYSTEM context without needing winget installed
             logger.info(_("Fetching winget catalog via REST API"))
 
-            # winget.run API endpoint for getting all packages
             api_url = "https://api.winget.run/v2/packages"
-
-            packages = []
-            page = 1
-
-            while True:
-                try:
-                    # Add pagination parameters
-                    url = f"{api_url}?page={page}&limit=100"
-
-                    # Validate URL scheme for security - prevents file:// and other attacks
-                    validated_url = _validate_https_url(url)
-
-                    req = urllib.request.Request(validated_url)  # nosec B310
-                    req.add_header("User-Agent", "SysManage-Agent/1.0")
-
-                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-                    with urllib.request.urlopen(
-                        req, timeout=30
-                    ) as response:  # nosec B310
-                        data = json.loads(response.read().decode("utf-8"))
-
-                        # Check if we got packages
-                        if not data or "Packages" not in data:
-                            break
-
-                        page_packages = data.get("Packages", [])
-                        if not page_packages:
-                            break
-
-                        # Convert API response to our package format
-                        for pkg in page_packages:
-                            package_id = pkg.get("Id", "")
-                            latest = pkg.get("Latest", {})
-                            package_name = latest.get("Name", "")
-                            latest_version = latest.get("PackageVersion", "unknown")
-
-                            if package_id and package_name:
-                                packages.append(
-                                    {
-                                        "name": package_name,
-                                        "version": latest_version,
-                                        "id": package_id,
-                                    }
-                                )
-
-                        # Check if there are more pages
-                        total = data.get("Total", 0)
-                        if 0 < total <= len(packages):
-                            break
-
-                        page += 1
-
-                except Exception as error:
-                    logger.error(
-                        _(
-                            "Error fetching winget page %d (collected %d packages so far): %s"
-                        ),
-                        page,
-                        len(packages),
-                        str(error),
-                    )
-                    break
+            packages = self._collect_winget_pages(api_url)
 
             if packages:
                 logger.info(
@@ -142,83 +78,95 @@ class WindowsPackageCollector(BasePackageCollector):
             logger.error(_("Error collecting winget packages via REST API: %s"), error)
             return 0
 
+    def _collect_winget_pages(self, api_url: str) -> List[Dict[str, str]]:
+        """Collect all pages of winget packages from the REST API.
+
+        Iterates through paginated API responses until all packages are fetched
+        or an error occurs.
+        """
+        packages = []
+        page = 1
+
+        while True:
+            try:
+                url = f"{api_url}?page={page}&limit=100"
+                data = self._collect_winget_api_page(url)
+
+                if not data or "Packages" not in data:
+                    break
+
+                page_packages = data.get("Packages", [])
+                if not page_packages:
+                    break
+
+                packages.extend(self._parse_winget_api_packages(page_packages))
+
+                # Check if there are more pages
+                total = data.get("Total", 0)
+                if 0 < total <= len(packages):
+                    break
+
+                page += 1
+
+            except Exception as error:
+                logger.error(
+                    _(
+                        "Error fetching winget page %d (collected %d packages so far): %s"
+                    ),
+                    page,
+                    len(packages),
+                    str(error),
+                )
+                break
+
+        return packages
+
+    def _collect_winget_api_page(self, url: str) -> dict:
+        """Fetch a single page of winget packages from the REST API.
+
+        Validates the URL scheme, makes the HTTP request, and returns the
+        parsed JSON response.
+        """
+        validated_url = _validate_https_url(url)
+        req = urllib.request.Request(validated_url)  # nosec B310
+        req.add_header("User-Agent", "SysManage-Agent/1.0")
+
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
+            return json.loads(response.read().decode("utf-8"))
+
+    def _parse_winget_api_packages(
+        self, page_packages: List[dict]
+    ) -> List[Dict[str, str]]:
+        """Parse a list of package entries from the winget API response.
+
+        Extracts the package ID, name, and version from each entry in the
+        API response format.
+        """
+        packages = []
+        for pkg in page_packages:
+            package_id = pkg.get("Id", "")
+            latest = pkg.get("Latest", {})
+            package_name = latest.get("Name", "")
+            latest_version = latest.get("PackageVersion", "unknown")
+
+            if package_id and package_name:
+                packages.append(
+                    {
+                        "name": package_name,
+                        "version": latest_version,
+                        "id": package_id,
+                    }
+                )
+        return packages
+
     def _collect_chocolatey_packages(self) -> int:
         """Collect packages from Chocolatey community repository API."""
         try:
             logger.info(_("Fetching Chocolatey catalog via community repository API"))
 
-            # Chocolatey community repository API endpoint
             api_url = "https://community.chocolatey.org/api/v2/Packages()"
-
-            packages = []
-            skip = 0
-            top = 100  # Fetch 100 packages at a time
-
-            while True:
-                try:
-                    # OData pagination parameters
-                    url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
-
-                    # Validate URL scheme for security - prevents file:// and other attacks
-                    validated_url = _validate_https_url(url)
-
-                    req = urllib.request.Request(validated_url)  # nosec B310
-                    req.add_header("User-Agent", "SysManage-Agent/1.0")
-
-                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-                    with urllib.request.urlopen(
-                        req, timeout=30
-                    ) as response:  # nosec B310
-                        # Parse XML response
-                        data = response.read().decode("utf-8")
-                        root = ET.fromstring(
-                            data
-                        )  # nosec B314 # Trusted Chocolatey API XML
-
-                        # Define namespaces
-                        namespace = {
-                            "atom": "http://www.w3.org/2005/Atom",
-                            "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
-                            "m": "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
-                        }
-
-                        # Extract packages from feed
-                        entries = root.findall("atom:entry", namespace)
-                        if not entries:
-                            break
-
-                        for entry in entries:
-                            # Get package ID from title element
-                            title_elem = entry.find("atom:title", namespace)
-                            if title_elem is None or not title_elem.text:
-                                continue
-
-                            # Get version from properties
-                            props = entry.find("m:properties", namespace)
-                            if props is None:
-                                continue
-
-                            version_elem = props.find("d:Version", namespace)
-                            if version_elem is None or not version_elem.text:
-                                continue
-
-                            packages.append(
-                                {
-                                    "name": title_elem.text,
-                                    "version": version_elem.text,
-                                    "description": "",
-                                }
-                            )
-
-                        # If we got no entries, we're done
-                        if not entries:
-                            break
-
-                        skip += len(entries)
-
-                except Exception as error:
-                    logger.warning(_("Error fetching page at skip %d: %s"), skip, error)
-                    break
+            packages = self._collect_chocolatey_pages(api_url)
 
             if packages:
                 logger.info(
@@ -237,6 +185,101 @@ class WindowsPackageCollector(BasePackageCollector):
         except Exception as error:
             logger.error(_("Error collecting Chocolatey packages via API: %s"), error)
             return 0
+
+    def _collect_chocolatey_pages(self, api_url: str) -> List[Dict[str, str]]:
+        """Collect all pages of Chocolatey packages from the OData API.
+
+        Iterates through paginated OData responses until all packages are
+        fetched or an error occurs.
+        """
+        packages = []
+        skip = 0
+        top = 100
+
+        while True:
+            try:
+                url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
+                xml_data = self._collect_chocolatey_api_page(url)
+
+                entries = self._parse_chocolatey_xml_entries(xml_data)
+                if not entries:
+                    break
+
+                packages.extend(entries)
+                skip += len(entries)
+
+            except Exception as error:
+                logger.warning(_("Error fetching page at skip %d: %s"), skip, error)
+                break
+
+        return packages
+
+    def _collect_chocolatey_api_page(self, url: str) -> str:
+        """Fetch a single page of Chocolatey packages from the OData API.
+
+        Validates the URL scheme, makes the HTTP request, and returns the
+        raw XML response as a string.
+        """
+        validated_url = _validate_https_url(url)
+        req = urllib.request.Request(validated_url)  # nosec B310
+        req.add_header("User-Agent", "SysManage-Agent/1.0")
+
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
+            return response.read().decode("utf-8")
+
+    def _parse_chocolatey_xml_entries(self, xml_data: str) -> List[Dict[str, str]]:
+        """Parse Chocolatey OData XML response into a list of package dicts.
+
+        Extracts package name and version from the Atom feed entries using
+        the OData namespace conventions.
+        """
+        root = ET.fromstring(xml_data)  # nosec B314 # Trusted Chocolatey API XML
+
+        # NOSONAR - XML namespace URIs, not network connections
+        namespace = {
+            "atom": "http://www.w3.org/2005/Atom",
+            "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
+            "m": "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+        }
+
+        entries = root.findall("atom:entry", namespace)
+        if not entries:
+            return []
+
+        packages = []
+        for entry in entries:
+            parsed = self._parse_chocolatey_entry(entry, namespace)
+            if parsed is not None:
+                packages.append(parsed)
+
+        return packages
+
+    def _parse_chocolatey_entry(
+        self, entry: ET.Element, namespace: dict
+    ) -> Dict[str, str]:
+        """Parse a single Atom entry element into a package dict.
+
+        Extracts the package title and version from the entry's XML elements.
+        Returns a package dict, or None if required fields are missing.
+        """
+        title_elem = entry.find("atom:title", namespace)
+        if title_elem is None or not title_elem.text:
+            return None
+
+        props = entry.find("m:properties", namespace)
+        if props is None:
+            return None
+
+        version_elem = props.find("d:Version", namespace)
+        if version_elem is None or not version_elem.text:
+            return None
+
+        return {
+            "name": title_elem.text,
+            "version": version_elem.text,
+            "description": "",
+        }
 
     def _parse_winget_output(self, output: str) -> List[Dict[str, str]]:
         """Parse winget package list output."""
@@ -263,32 +306,48 @@ class WindowsPackageCollector(BasePackageCollector):
             if not line:
                 continue
 
-            # Skip header/footer lines
-            if any(
-                skip in line.lower()
-                for skip in [
-                    "chocolatey",
-                    "packages found",
-                    "validating",
-                    "loading",
-                    "page",
-                    "http",
-                    "features?",
-                    "did you",
-                ]
-            ):
+            if self._detect_chocolatey_noise_line(line):
                 continue
 
-            # Chocolatey format: "name version"
-            parts = line.split()
-            if len(parts) >= 2:
-                name = parts[0]
-                version = parts[1]
-
-                # Validate package name (should not contain common HTML/text words)
-                if name.lower() in ["the", "did", "you", "page", "this"]:
-                    continue
-
-                packages.append({"name": name, "version": version, "description": ""})
+            parsed = self._parse_chocolatey_package_line(line)
+            if parsed is not None:
+                packages.append(parsed)
 
         return packages
+
+    def _detect_chocolatey_noise_line(self, line: str) -> bool:
+        """Detect whether a line is a Chocolatey header, footer, or noise line.
+
+        Returns True if the line should be skipped (contains known non-package text).
+        """
+        skip_keywords = [
+            "chocolatey",
+            "packages found",
+            "validating",
+            "loading",
+            "page",
+            "http",
+            "features?",
+            "did you",
+        ]
+        return any(skip in line.lower() for skip in skip_keywords)
+
+    def _parse_chocolatey_package_line(self, line: str) -> Dict[str, str]:
+        """Parse a single Chocolatey package line in 'name version' format.
+
+        Validates that the package name is not a common English word that
+        would indicate a non-package line. Returns a package dict, or None
+        if the line is not a valid package entry.
+        """
+        invalid_names = {"the", "did", "you", "page", "this"}
+        parts = line.split()
+        if len(parts) >= 2:
+            name = parts[0]
+            version = parts[1]
+
+            if name.lower() in invalid_names:
+                return None
+
+            return {"name": name, "version": version, "description": ""}
+
+        return None

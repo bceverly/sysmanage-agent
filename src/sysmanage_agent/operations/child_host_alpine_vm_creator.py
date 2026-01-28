@@ -17,7 +17,7 @@ import re
 import subprocess  # nosec B404 - needed for sync network operations
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async, write_file_async
@@ -95,7 +95,9 @@ def get_fqdn_hostname(hostname: str, server_url: str) -> str:
         return hostname
 
     # Extract domain from server URL
-    match = re.search(r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url)
+    match = re.search(
+        r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url
+    )  # NOSONAR - regex operates on trusted internal data
     if match:
         domain_parts = match.group(0).split(".", 1)
         if len(domain_parts) > 1:
@@ -170,26 +172,12 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
         self.logger.info("🔍 [ALPINE_CREATE_CONFIG] Hostname: %s", config.hostname)
 
         try:
-            # Step 1: Validate configuration
-            self.logger.info("📋 [STEP_1] Validating configuration...")
-            validation_result = self._validate_config(config)
-            if not validation_result.get("success"):
-                return validation_result
-            self.logger.info("✅ [STEP_1] Configuration validated")
-
-            # Step 2: Extract Alpine version
-            self.logger.info("📋 [STEP_2] Extracting Alpine version...")
-            await self.launcher.send_progress(
-                "parsing_version", _("Parsing Alpine Linux version...")
+            # Steps 1-2: Validate configuration and extract Alpine version
+            error_result, alpine_version = await self._validate_and_extract_version(
+                config
             )
-            alpine_version = extract_alpine_version(config.distribution, self.logger)
-            if not alpine_version:
-                return {
-                    "success": False,
-                    "error": _("Could not parse Alpine version from: %s")
-                    % config.distribution,
-                }
-            self.logger.info("✅ [STEP_2] Alpine version: %s", alpine_version)
+            if error_result is not None:
+                return error_result
 
             # Step 3: Derive FQDN hostname
             self.logger.info("📋 [STEP_3] Deriving FQDN hostname...")
@@ -444,6 +432,38 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
             return {"success": False, "error": _("Server URL is required")}
         return {"success": True}
 
+    async def _validate_and_extract_version(
+        self, config: VmmVmConfig
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        """Validate config and extract Alpine version.
+
+        Returns:
+            Tuple of (error_result_or_None, alpine_version_or_None).
+            If error_result is not None, return it from the caller.
+        """
+        # Step 1: Validate configuration
+        self.logger.info("📋 [STEP_1] Validating configuration...")
+        validation_result = self._validate_config(config)
+        if not validation_result.get("success"):
+            return validation_result, None
+        self.logger.info("✅ [STEP_1] Configuration validated")
+
+        # Step 2: Extract Alpine version
+        self.logger.info("📋 [STEP_2] Extracting Alpine version...")
+        await self.launcher.send_progress(
+            "parsing_version", _("Parsing Alpine Linux version...")
+        )
+        alpine_version = extract_alpine_version(config.distribution, self.logger)
+        if not alpine_version:
+            return {
+                "success": False,
+                "error": _("Could not parse Alpine version from: %s")
+                % config.distribution,
+            }, None
+        self.logger.info("✅ [STEP_2] Alpine version: %s", alpine_version)
+
+        return None, alpine_version
+
     async def _check_vmm_ready(self) -> Dict[str, Any]:
         """Check if VMM is available and running."""
         await self.launcher.send_progress("checking_vmm", _("Checking VMM status..."))
@@ -537,7 +557,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
 
         return f"{subnet_prefix}.100"
 
-    async def _create_setup_data(
+    async def _create_setup_data(  # NOSONAR - async required; called with await in create_alpine_vm
         self,
         config: VmmVmConfig,
         fqdn_hostname: str,
@@ -576,10 +596,10 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
 
             # Create firstboot script
             firstboot_script = self.autoinstall_setup.create_firstboot_setup(
-                server_hostname=config.server_config.server_url,
-                server_port=config.server_config.server_port,
-                use_https=config.server_config.use_https,
-                auto_approve_token=config.auto_approve_token,
+                _server_hostname=config.server_config.server_url,
+                _server_port=config.server_config.server_port,
+                _use_https=config.server_config.use_https,
+                _auto_approve_token=config.auto_approve_token,
             )
 
             # Save to data directory
@@ -687,6 +707,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
             )
 
             # Write script to temp file for reference/debugging
+            # NOSONAR - temp file for VM setup
             script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108
             await write_file_async(script_path, setup_script)
 
@@ -721,7 +742,9 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
             return {"success": False, "error": str(error)}
 
     async def _wait_for_vm_shutdown(
-        self, vm_name: str, timeout: int = 900
+        self,
+        vm_name: str,
+        timeout: int = 900,  # NOSONAR - timeout parameter is part of the established API contract
     ) -> Dict[str, Any]:
         """Wait for VM to shutdown after installation."""
         self.logger.info(_("Waiting for VM '%s' to shutdown..."), vm_name)

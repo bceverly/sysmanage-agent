@@ -4,11 +4,26 @@ Unit tests for OpenTelemetry Deployment Helper (otel_deployment_helper.py).
 
 # pylint: disable=protected-access,unused-argument
 
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.sysmanage_agent.operations.otel_deployment_helper import OtelDeploymentHelper
+
+# Path to patch aiofiles.open in the module under test
+_OTEL_HELPER_AIOFILES_OPEN = (
+    "src.sysmanage_agent.operations.otel_deployment_helper.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open():
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    mock_file.write = AsyncMock()
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
 
 
 class TestOtelDeploymentHelper:
@@ -248,7 +263,7 @@ class TestOtelDeploymentHelper:
             patch("os.path.exists") as mock_exists,
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("tempfile.NamedTemporaryFile") as mock_tempfile,
             patch("os.unlink"),
             patch("os.chmod"),
@@ -286,7 +301,7 @@ class TestOtelDeploymentHelper:
             patch("os.path.exists") as mock_exists,
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/yum"
@@ -381,7 +396,7 @@ class TestOtelDeploymentHelper:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -443,7 +458,7 @@ class TestOtelDeploymentHelper:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -505,7 +520,7 @@ class TestOtelDeploymentHelper:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -565,7 +580,7 @@ class TestOtelDeploymentHelper:
 
         with (
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_OTEL_HELPER_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("os.chmod"),
         ):
             result = await helper._create_linux_config(

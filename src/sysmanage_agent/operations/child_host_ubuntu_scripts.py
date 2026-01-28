@@ -108,14 +108,14 @@ script_execution:
 """
 
 
-def generate_autoinstall_file(  # pylint: disable=too-many-arguments,too-many-locals,unused-argument
+def generate_autoinstall_file(  # pylint: disable=too-many-arguments,too-many-locals
     hostname: str,
     username: str,
     password_hash: str,
     gateway_ip: str,
     vm_ip: str,
     dns_server: str,
-    ubuntu_version: str = "24.04",  # Reserved for future version-specific logic
+    ubuntu_version: str = "24.04",  # pylint: disable=unused-argument # Reserved for future
     timezone: str = "UTC",
     shutdown_action: str = "poweroff",
 ) -> str:

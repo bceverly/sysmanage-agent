@@ -108,6 +108,7 @@ UBUNTU_ISO_URLS = {
 }
 
 # Ubuntu mirror URLs for package installation
+# NOSONAR - Ubuntu mirrors may use http for compatibility
 UBUNTU_MIRROR_URLS = {
     "24.04": "http://archive.ubuntu.com/ubuntu",
     "22.04": "http://archive.ubuntu.com/ubuntu",
@@ -170,10 +171,9 @@ def extract_ubuntu_version(distribution: str, logger) -> Optional[str]:
 
     # Check for codenames first
     for codename, version in codename_map.items():
-        if codename in dist_lower:
-            if version in SUPPORTED_UBUNTU_VERSIONS:
-                logger.info(_("Extracted Ubuntu version %s from codename"), version)
-                return version
+        if codename in dist_lower and version in SUPPORTED_UBUNTU_VERSIONS:
+            logger.info(_("Extracted Ubuntu version %s from codename"), version)
+            return version
 
     # Try various patterns for version numbers
     patterns = [

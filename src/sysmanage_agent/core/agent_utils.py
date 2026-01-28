@@ -12,7 +12,7 @@ import subprocess  # nosec B404 # Required for sync shell execution
 import sys
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -31,6 +31,9 @@ from src.sysmanage_agent.core.async_utils import (  # noqa: F401
 )
 
 # pylint: enable=unused-import
+
+# Constant for duplicated error message used in service control functions
+_SYSTEMCTL_NOT_FOUND = "systemctl not found"
 
 
 class UpdateChecker:
@@ -200,8 +203,12 @@ class AuthenticationHelper:
         if use_https:
             ssl_context = ssl.create_default_context()
             if not self.agent.config.should_verify_ssl():
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
+                ssl_context.check_hostname = (
+                    False  # NOSONAR - SSL verification is configurable by admin
+                )
+                ssl_context.verify_mode = (
+                    ssl.CERT_NONE
+                )  # NOSONAR - SSL certificate validation intentionally disabled when admin configures verify_ssl=false
 
         # Get hostname to send in header
         system_hostname = socket.gethostname()
@@ -466,7 +473,9 @@ class MessageProcessor:
         except Exception as error:
             self.logger.error(_("Failed to queue script execution result: %s"), error)
 
-    async def _check_execution_uuid_processed(self, execution_uuid: str) -> bool:
+    async def _check_execution_uuid_processed(
+        self, execution_uuid: str
+    ) -> bool:  # noqa: async required - callers use await; DB ops are lightweight
         """Check if an execution UUID has already been processed."""
         try:
             db_manager = get_database_manager()
@@ -484,7 +493,9 @@ class MessageProcessor:
             self.logger.error(_("Error checking execution UUID: %s"), error)
             return False  # Allow processing if we can't check
 
-    async def _store_execution_uuid(self, parameters: Dict[str, Any]):
+    async def _store_execution_uuid(
+        self, parameters: Dict[str, Any]
+    ):  # noqa: async required - callers use await; DB ops are lightweight
         """Store execution UUID and metadata in database."""
         try:
             execution_id = parameters.get("execution_id")
@@ -567,85 +578,15 @@ class MessageProcessor:
             overall_success = True
 
             for service in services:
-                try:
-                    self.logger.info(_("Executing %s for service: %s"), action, service)
-
-                    # Get full systemctl path for security
-                    systemctl_path = shutil.which("systemctl")
-                    if not systemctl_path:
-                        self.logger.error(_("systemctl not found"))
-                        results[service] = {
-                            "success": False,
-                            "error": "systemctl not found",
-                        }
-                        overall_success = False
-                        continue
-
-                    # Construct systemctl command based on action
-                    if action == "start":
-                        cmd = [systemctl_path, "start", service]
-                    elif action == "stop":
-                        cmd = [systemctl_path, "stop", service]
-                    elif action == "restart":
-                        cmd = [systemctl_path, "restart", service]
-                    else:
-                        self.logger.error(_("Unknown action: %s"), action)
-                        results[service] = {
-                            "success": False,
-                            "error": f"Unknown action: {action}",
-                        }
-                        overall_success = False
-                        continue
-
-                    # Execute the command
-                    result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
-                        cmd, capture_output=True, text=True, timeout=30, check=False
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info(
-                            _("Successfully %s service: %s"), action, service
-                        )
-                        results[service] = {
-                            "success": True,
-                            "message": f"Service {action} successful",
-                        }
-                    else:
-                        error_msg = (
-                            result.stderr.strip()
-                            or result.stdout.strip()
-                            or "Unknown error"
-                        )
-                        self.logger.error(
-                            _("Failed to %s service %s: %s"), action, service, error_msg
-                        )
-                        results[service] = {"success": False, "error": error_msg}
-                        overall_success = False
-
-                except subprocess.TimeoutExpired:
-                    error_msg = f"Service {action} timed out after 30 seconds"
-                    self.logger.error(
-                        _("Service control timeout for %s: %s"), service, error_msg
-                    )
-                    results[service] = {"success": False, "error": error_msg}
-                    overall_success = False
-
-                except Exception as error:
-                    error_msg = str(error)
-                    self.logger.error(
-                        _("Service control error for %s: %s"), service, error_msg
-                    )
-                    results[service] = {"success": False, "error": error_msg}
+                service_result = await self._process_service_control_action(
+                    action, service
+                )
+                results[service] = service_result
+                if not service_result.get("success", False):
                     overall_success = False
 
             # Trigger role collection after service control to update status
-            try:
-                self.logger.info(_("Triggering role collection after service control"))
-                await self.agent.collect_roles()
-            except Exception as error:
-                self.logger.warning(
-                    _("Failed to update roles after service control: %s"), error
-                )
+            await self._collect_roles_after_service_change()
 
             return {
                 "success": overall_success,
@@ -658,6 +599,67 @@ class MessageProcessor:
         except Exception as error:
             self.logger.error(_("Error in service control handler: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def _process_service_control_action(
+        self, action: str, service: str
+    ) -> Dict[str, Any]:
+        """Execute a single service control action (start/stop/restart) for one service.
+
+        Args:
+            action: The systemctl action to perform (start, stop, restart)
+            service: The service name to act on
+
+        Returns:
+            Dict with success status and message or error
+        """
+        try:
+            self.logger.info(_("Executing %s for service: %s"), action, service)
+
+            systemctl_path = shutil.which("systemctl")
+            if not systemctl_path:
+                self.logger.error(_(_SYSTEMCTL_NOT_FOUND))
+                return {"success": False, "error": _SYSTEMCTL_NOT_FOUND}
+
+            cmd = [systemctl_path, action, service]
+
+            result = await run_command_async(cmd, timeout=30.0)
+
+            if result.returncode == 0:
+                self.logger.info(_("Successfully %s service: %s"), action, service)
+                return {
+                    "success": True,
+                    "message": f"Service {action} successful",
+                }
+
+            error_msg = (
+                result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            )
+            self.logger.error(
+                _("Failed to %s service %s: %s"), action, service, error_msg
+            )
+            return {"success": False, "error": error_msg}
+
+        except asyncio.TimeoutError:
+            error_msg = f"Service {action} timed out after 30 seconds"
+            self.logger.error(
+                _("Service control timeout for %s: %s"), service, error_msg
+            )
+            return {"success": False, "error": error_msg}
+
+        except Exception as error:
+            error_msg = str(error)
+            self.logger.error(_("Service control error for %s: %s"), service, error_msg)
+            return {"success": False, "error": error_msg}
+
+    async def _collect_roles_after_service_change(self) -> None:
+        """Trigger role collection after a service control operation to update status."""
+        try:
+            self.logger.info(_("Triggering role collection after service control"))
+            await self.agent.collect_roles()
+        except Exception as error:
+            self.logger.warning(
+                _("Failed to update roles after service control: %s"), error
+            )
 
     async def _handle_get_service_status(
         self, parameters: Dict[str, Any]
@@ -682,64 +684,9 @@ class MessageProcessor:
             overall_success = True
 
             for service in services:
-                try:
-                    self.logger.info(_("Checking status for service: %s"), service)
-
-                    # Get full systemctl path for security
-                    systemctl_path = shutil.which("systemctl")
-                    if not systemctl_path:
-                        self.logger.error(_("systemctl not found"))
-                        results[service] = {
-                            "success": False,
-                            "status": "unknown",
-                            "error": "systemctl not found",
-                        }
-                        overall_success = False
-                        continue
-
-                    # Check if service is running
-                    cmd = [systemctl_path, "is-active", service]
-                    result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
-                        cmd, capture_output=True, text=True, timeout=10, check=False
-                    )
-
-                    # systemctl is-active returns:
-                    # - 0 if active
-                    # - 3 if inactive/stopped
-                    # - other codes for failed, unknown, etc.
-                    status = (
-                        result.stdout.strip()
-                    )  # active, inactive, failed, unknown, etc.
-
-                    self.logger.info(_("Service %s status: %s"), service, status)
-                    results[service] = {
-                        "success": True,
-                        "status": status,
-                        "active": status == "active",
-                    }
-
-                except subprocess.TimeoutExpired:
-                    error_msg = "Service status check timed out after 10 seconds"
-                    self.logger.error(
-                        _("Service status timeout for %s: %s"), service, error_msg
-                    )
-                    results[service] = {
-                        "success": False,
-                        "status": "unknown",
-                        "error": error_msg,
-                    }
-                    overall_success = False
-
-                except Exception as error:
-                    error_msg = str(error)
-                    self.logger.error(
-                        _("Service status error for %s: %s"), service, error_msg
-                    )
-                    results[service] = {
-                        "success": False,
-                        "status": "unknown",
-                        "error": error_msg,
-                    }
+                service_result = await self._detect_single_service_status(service)
+                results[service] = service_result
+                if not service_result.get("success", False):
                     overall_success = False
 
             return {
@@ -752,6 +699,63 @@ class MessageProcessor:
         except Exception as error:
             self.logger.error(_("Error in service status handler: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def _detect_single_service_status(self, service: str) -> Dict[str, Any]:
+        """Detect the status of a single systemd service using async subprocess.
+
+        Args:
+            service: The service name to check
+
+        Returns:
+            Dict with success, status, and active fields
+        """
+        try:
+            self.logger.info(_("Checking status for service: %s"), service)
+
+            systemctl_path = shutil.which("systemctl")
+            if not systemctl_path:
+                self.logger.error(_(_SYSTEMCTL_NOT_FOUND))
+                return {
+                    "success": False,
+                    "status": "unknown",
+                    "error": _SYSTEMCTL_NOT_FOUND,
+                }
+
+            cmd = [systemctl_path, "is-active", service]
+            result = await run_command_async(cmd, timeout=10.0)
+
+            # systemctl is-active returns:
+            # - 0 if active
+            # - 3 if inactive/stopped
+            # - other codes for failed, unknown, etc.
+            status = result.stdout.strip()  # active, inactive, failed, unknown, etc.
+
+            self.logger.info(_("Service %s status: %s"), service, status)
+            return {
+                "success": True,
+                "status": status,
+                "active": status == "active",
+            }
+
+        except asyncio.TimeoutError:
+            error_msg = "Service status check timed out after 10 seconds"
+            self.logger.error(
+                _("Service status timeout for %s: %s"), service, error_msg
+            )
+            return {
+                "success": False,
+                "status": "unknown",
+                "error": error_msg,
+            }
+
+        except Exception as error:
+            error_msg = str(error)
+            self.logger.error(_("Service status error for %s: %s"), service, error_msg)
+            return {
+                "success": False,
+                "status": "unknown",
+                "error": error_msg,
+            }
 
 
 def is_running_privileged() -> bool:
@@ -838,7 +842,7 @@ def _check_sudoers_privileges(username: str) -> bool:
         return False
 
 
-def _read_sudoers_file(sudoers_path: str) -> str:
+def _read_sudoers_file(sudoers_path: str) -> Optional[str]:
     """
     Read sudoers file content.
 
@@ -846,7 +850,7 @@ def _read_sudoers_file(sudoers_path: str) -> str:
         sudoers_path: Path to sudoers file
 
     Returns:
-        str: File content or None if unable to read
+        File content as str, or None if unable to read
     """
     try:
         with open(sudoers_path, "r", encoding="utf-8") as sudoers_file:
@@ -871,29 +875,37 @@ def _parse_sudoers_content(content: str, username: str) -> set:
         "apt",  # Package management
     ]
 
-    lines = content.split("\n")
     granted_commands = set()
-
-    for line in lines:
-        line = line.strip()
-
-        # Skip comments and empty lines
-        if not line or line.startswith("#"):
-            continue
-
-        # Look for NOPASSWD grants for this username
-        if "NOPASSWD:" in line and username in line:
-            # Extract command part after NOPASSWD:
-            parts = line.split("NOPASSWD:")
-            if len(parts) > 1:
-                command_part = parts[1].strip()
-
-                # Check if any required commands are granted
-                for required_cmd in required_commands:
-                    if required_cmd in command_part:
-                        granted_commands.add(required_cmd)
+    for line in content.split("\n"):
+        line_commands = _parse_sudoers_line(line.strip(), username, required_commands)
+        granted_commands.update(line_commands)
 
     return granted_commands
+
+
+def _parse_sudoers_line(line: str, username: str, required_commands: list) -> set:
+    """Parse a single sudoers line for NOPASSWD grants matching the given username.
+
+    Args:
+        line: A single stripped line from the sudoers file
+        username: Username to match against
+        required_commands: List of command names to look for
+
+    Returns:
+        Set of matched command names found in this line
+    """
+    if not line or line.startswith("#"):
+        return set()
+
+    if "NOPASSWD:" not in line or username not in line:
+        return set()
+
+    parts = line.split("NOPASSWD:")
+    if len(parts) <= 1:
+        return set()
+
+    command_part = parts[1].strip()
+    return {cmd for cmd in required_commands if cmd in command_part}
 
 
 def _test_sudo_access() -> bool:

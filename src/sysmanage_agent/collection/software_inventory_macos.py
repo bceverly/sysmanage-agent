@@ -23,6 +23,8 @@ from src.sysmanage_agent.collection.software_inventory_base import (
 
 logger = logging.getLogger(__name__)
 
+APPLICATIONS_DIR = "/Applications"
+
 
 class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     """Collects software inventory from macOS sources."""
@@ -99,139 +101,209 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 continue
         return "brew"  # Fallback
 
+    def _collect_homebrew_list(self, brew_cmd, list_type, source):
+        """Collect packages from a specific Homebrew list type.
+
+        Args:
+            brew_cmd: Path to the brew executable.
+            list_type: Either '--formula' or '--cask'.
+            source: Source label for the packages (e.g. 'homebrew_core', 'homebrew_cask').
+        """
+        result = subprocess.run(
+            [brew_cmd, "list", list_type, "--versions"],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return
+
+        is_cask = list_type == "--cask"
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                parts = line.split()
+                if len(parts) >= 2:
+                    package = {
+                        "package_name": parts[0],
+                        "version": parts[1],
+                        "package_manager": "homebrew",
+                        "source": source,
+                        "is_system_package": False,
+                        "is_user_installed": True,
+                    }
+                    if is_cask:
+                        package["category"] = "application"
+                    self.collected_packages.append(package)
+
     def _collect_homebrew_packages(self):
         """Collect packages from Homebrew (macOS)."""
         try:
             logger.debug(_("Collecting Homebrew packages"))
 
-            # Find the correct brew path
             brew_cmd = self._get_brew_command()
 
-            # Get list of installed packages
-            result = subprocess.run(
-                [brew_cmd, "list", "--formula", "--versions"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line:
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            package = {
-                                "package_name": parts[0],
-                                "version": parts[1],
-                                "package_manager": "homebrew",
-                                "source": "homebrew_core",
-                                "is_system_package": False,
-                                "is_user_installed": True,
-                            }
-                            self.collected_packages.append(package)
-
-            # Also collect casks
-            result = subprocess.run(
-                [brew_cmd, "list", "--cask", "--versions"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line:
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            package = {
-                                "package_name": parts[0],
-                                "version": parts[1],
-                                "package_manager": "homebrew",
-                                "source": "homebrew_cask",
-                                "category": "application",
-                                "is_system_package": False,
-                                "is_user_installed": True,
-                            }
-                            self.collected_packages.append(package)
+            self._collect_homebrew_list(brew_cmd, "--formula", "homebrew_core")
+            self._collect_homebrew_list(brew_cmd, "--cask", "homebrew_cask")
 
         except Exception as error:
             logger.error(_("Failed to collect Homebrew packages: %s"), str(error))
 
+    def _parse_plist_field(self, output, field_name):
+        """Extract a single field value from plutil -p output.
+
+        Args:
+            output: The text output from 'plutil -p'.
+            field_name: The plist key to extract (e.g. 'CFBundleIdentifier').
+
+        Returns:
+            The field value as a string, or None if not found.
+        """
+        if field_name not in output:
+            return None
+        match = re.search(rf'"{field_name}" => "([^"]+)"', output)
+        return match.group(1) if match else None
+
+    def _detect_plist_metadata(self, info_plist_path):
+        """Read bundle_id and version from a macOS Info.plist file.
+
+        Args:
+            info_plist_path: Absolute path to the Info.plist file.
+
+        Returns:
+            A dict with 'bundle_id' and/or 'version' keys if found,
+            or an empty dict on failure.
+        """
+        if not os.path.exists(info_plist_path):
+            return {}
+
+        try:
+            result = subprocess.run(
+                [
+                    "plutil",
+                    "-p",
+                    info_plist_path,
+                ],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                return {}
+
+            metadata = {}
+            output = result.stdout
+
+            bundle_id = self._parse_plist_field(output, "CFBundleIdentifier")
+            if bundle_id:
+                metadata["bundle_id"] = bundle_id
+
+            version = self._parse_plist_field(output, "CFBundleShortVersionString")
+            if version:
+                metadata["version"] = version
+
+            return metadata
+
+        except subprocess.TimeoutExpired:
+            return {}
+
     def _collect_macos_applications(self):
         """Collect applications from macOS Applications folder."""
-        try:  # pylint: disable=too-many-nested-blocks
+        try:
             logger.debug(_("Collecting macOS Applications"))
 
-            apps_dirs = ["/Applications", os.path.expanduser("~/Applications")]
+            apps_dirs = [APPLICATIONS_DIR, os.path.expanduser("~/Applications")]
 
             for apps_dir in apps_dirs:
-                if os.path.exists(apps_dir):
-                    for item in os.listdir(apps_dir):
-                        if item.endswith(".app"):
-                            app_path = os.path.join(apps_dir, item)
-                            app_name = item[:-4]  # Remove .app extension
+                if not os.path.exists(apps_dir):
+                    continue
 
-                            package = {
-                                "package_name": app_name,
-                                "package_manager": "macos_applications",
-                                "source": "local_install",
-                                "category": "application",
-                                "installation_path": app_path,
-                                "is_system_package": apps_dir == "/Applications",
-                                "is_user_installed": apps_dir != "/Applications",
-                            }
+                for item in os.listdir(apps_dir):
+                    if not item.endswith(".app"):
+                        continue
 
-                            # Try to get bundle info
-                            info_plist_path = os.path.join(
-                                app_path, "Contents", "Info.plist"
-                            )
-                            if os.path.exists(info_plist_path):
-                                try:
-                                    # Use system_profiler or plutil to read plist
-                                    result = subprocess.run(
-                                        [
-                                            "plutil",
-                                            "-p",
-                                            info_plist_path,
-                                        ],  # nosec B603, B607
-                                        capture_output=True,
-                                        text=True,
-                                        timeout=5,
-                                        check=False,
-                                    )
+                    app_path = os.path.join(apps_dir, item)
+                    app_name = item[:-4]  # Remove .app extension
 
-                                    if result.returncode == 0:
-                                        # Parse basic info from plist output
-                                        output = result.stdout
-                                        if "CFBundleIdentifier" in output:
-                                            match = re.search(
-                                                r'"CFBundleIdentifier" => "([^"]+)"',
-                                                output,
-                                            )
-                                            if match:
-                                                package["bundle_id"] = match.group(1)
+                    package = {
+                        "package_name": app_name,
+                        "package_manager": "macos_applications",
+                        "source": "local_install",
+                        "category": "application",
+                        "installation_path": app_path,
+                        "is_system_package": apps_dir == APPLICATIONS_DIR,
+                        "is_user_installed": apps_dir != APPLICATIONS_DIR,
+                    }
 
-                                        if "CFBundleShortVersionString" in output:
-                                            match = re.search(
-                                                r'"CFBundleShortVersionString" => "([^"]+)"',
-                                                output,
-                                            )
-                                            if match:
-                                                package["version"] = match.group(1)
+                    # Try to get bundle info from Info.plist
+                    info_plist_path = os.path.join(app_path, "Contents", "Info.plist")
+                    plist_metadata = self._detect_plist_metadata(info_plist_path)
+                    package.update(plist_metadata)
 
-                                except subprocess.TimeoutExpired:
-                                    pass
-
-                            self.collected_packages.append(package)
+                    self.collected_packages.append(package)
 
         except Exception as error:
             logger.error(_("Failed to collect macOS applications: %s"), str(error))
 
+    def _process_app_store_entry(self, app):
+        """Process a single application entry from system_profiler output.
+
+        Args:
+            app: A dict representing one application from SPApplicationsDataType.
+
+        Returns:
+            A package dict if the app is from the Mac App Store, or None otherwise.
+        """
+        source_kind = app.get("source_kind", "")
+        if (
+            "App Store" not in source_kind
+            and app.get("obtained_from") != "mac_app_store"
+        ):
+            return None
+
+        package = {
+            "package_name": app.get("_name", "Unknown"),
+            "version": app.get("version", "Unknown"),
+            "bundle_id": app.get("info", "Unknown"),
+            "package_manager": "mac_app_store",
+            "source": "app_store",
+            "category": "application",
+            "vendor": (
+                app.get("info", {}).get("CFBundleIdentifier", "").split(".")[0]
+                if isinstance(app.get("info"), dict)
+                else ""
+            ),
+            "is_system_package": False,
+            "is_user_installed": True,
+        }
+
+        self._detect_app_store_size(app, package)
+        return package
+
+    def _detect_app_store_size(self, app, package):
+        """Detect and set size_bytes on a Mac App Store package if available.
+
+        Args:
+            app: The raw application dict from system_profiler.
+            package: The package dict to update with size_bytes.
+        """
+        if "kind" not in app or "bytes" not in str(app["kind"]):
+            return
+
+        size_match = re.search(
+            r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"])
+        )  # NOSONAR - regex operates on trusted internal data
+        if size_match:
+            package["size_bytes"] = self._parse_size_string(
+                f"{size_match.group(1)} {size_match.group(2)}"
+            )
+
     def _collect_macos_app_store(self):
         """Collect Mac App Store applications."""
-        try:  # pylint: disable=too-many-nested-blocks
+        try:
             logger.debug(_("Collecting Mac App Store applications"))
 
             result = subprocess.run(
@@ -252,40 +324,8 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     applications = data.get("SPApplicationsDataType", [])
 
                     for app in applications:
-                        # Check if it's from Mac App Store
-                        source_kind = app.get("source_kind", "")
-                        if (
-                            "App Store" in source_kind
-                            or app.get("obtained_from") == "mac_app_store"
-                        ):
-                            package = {
-                                "package_name": app.get("_name", "Unknown"),
-                                "version": app.get("version", "Unknown"),
-                                "bundle_id": app.get("info", "Unknown"),
-                                "package_manager": "mac_app_store",
-                                "source": "app_store",
-                                "category": "application",
-                                "vendor": (
-                                    app.get("info", {})
-                                    .get("CFBundleIdentifier", "")
-                                    .split(".")[0]
-                                    if isinstance(app.get("info"), dict)
-                                    else ""
-                                ),
-                                "is_system_package": False,
-                                "is_user_installed": True,
-                            }
-
-                            # Get size if available
-                            if "kind" in app and "bytes" in str(app["kind"]):
-                                size_match = re.search(
-                                    r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"])
-                                )
-                                if size_match:
-                                    package["size_bytes"] = self._parse_size_string(
-                                        f"{size_match.group(1)} {size_match.group(2)}"
-                                    )
-
+                        package = self._process_app_store_entry(app)
+                        if package:
                             self.collected_packages.append(package)
 
                 except json.JSONDecodeError:

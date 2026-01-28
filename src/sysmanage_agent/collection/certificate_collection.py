@@ -16,6 +16,14 @@ from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
+# Certificate directory path constants
+CA_CERTS_LOCAL_SHARE = "/usr/local/share/ca-certificates"
+SSL_CERTS_DIR = "/etc/ssl/certs"
+PKI_TLS_CERTS_DIR = "/etc/pki/tls/certs"
+LOCAL_SSL_CERTS_DIR = "/usr/local/etc/ssl/certs"
+NGINX_SSL_DIR = "/usr/local/etc/nginx/ssl"
+SSL_SERVER_CA_YES = "ssl server ca : yes"
+
 
 class CertificateCollector:
     """Collects SSL certificate information across different platforms."""
@@ -53,57 +61,70 @@ class CertificateCollector:
     def _get_unix_cert_paths(self) -> List[str]:
         """Get certificate directory paths for Unix/Linux systems."""
         system = platform.system()
-        paths = []
+        paths = self._collect_system_cert_paths(system)
 
+        # Add common and platform-specific application directories
+        app_paths = self._collect_app_cert_paths(system)
+
+        for app_path in app_paths:
+            paths.extend(glob.glob(app_path))
+
+        return [p for p in paths if os.path.isdir(p)]
+
+    def _collect_system_cert_paths(self, system: str) -> List[str]:
+        """Collect base system certificate directory paths for the given OS."""
         if system == "Linux":
-            # Detect distribution-specific paths
-            if os.path.exists("/etc/os-release"):
-                with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
-                    os_release = file_handle.read()
-
-                if "ubuntu" in os_release.lower() or "debian" in os_release.lower():
-                    paths = ["/etc/ssl/certs", "/usr/local/share/ca-certificates"]
-                elif any(
-                    distro in os_release.lower()
-                    for distro in ["rhel", "centos", "fedora", "red hat"]
-                ):
-                    paths = ["/etc/pki/tls/certs", "/etc/pki/ca-trust/source/anchors"]
-                elif "opensuse" in os_release.lower():
-                    paths = ["/etc/ssl/certs", "/var/lib/ca-certificates/pem"]
-                else:
-                    # Default Linux paths
-                    paths = ["/etc/ssl/certs", "/etc/pki/tls/certs"]
-            else:
-                # Fallback for systems without os-release
-                paths = ["/etc/ssl/certs", "/etc/pki/tls/certs"]
-
-        elif system == "FreeBSD":
-            paths = [
+            return self._collect_linux_cert_paths()
+        if system == "FreeBSD":
+            return [
                 "/usr/local/share/certs",
-                "/etc/ssl/certs",
-                "/usr/local/etc/ssl/certs",
+                SSL_CERTS_DIR,
+                LOCAL_SSL_CERTS_DIR,
                 "/usr/local/etc/pki/tls/certs",
-                "/etc/pki/tls/certs",
+                PKI_TLS_CERTS_DIR,
             ]
-        elif system == "OpenBSD":
-            paths = [
+        if system == "OpenBSD":
+            return [
                 "/etc/ssl",  # Include the main SSL directory for cert.pem
-                "/etc/ssl/certs",
+                SSL_CERTS_DIR,
                 "/var/www/conf/ssl",
-                "/usr/local/etc/ssl/certs",
+                LOCAL_SSL_CERTS_DIR,
                 "/usr/local/share/certs",
                 "/etc/ssl/private",  # Private keys directory
             ]
-        elif system == "NetBSD":
-            paths = [
+        if system == "NetBSD":
+            return [
                 "/etc/openssl",  # OpenSSL configuration and certificates
                 "/usr/pkg/share/mozilla-rootcerts",  # Mozilla root certificates
                 "/usr/pkg/etc/ssl/certs",  # Package-installed certificates
-                "/usr/local/etc/ssl/certs",  # Locally installed certificates
-                "/etc/ssl/certs",  # System certificates
+                LOCAL_SSL_CERTS_DIR,  # Locally installed certificates
+                SSL_CERTS_DIR,  # System certificates
             ]
+        return []
 
-        # Add common application-specific directories
+    def _collect_linux_cert_paths(self) -> List[str]:
+        """Collect certificate paths for Linux based on the distribution."""
+        if not os.path.exists("/etc/os-release"):
+            return [SSL_CERTS_DIR, PKI_TLS_CERTS_DIR]
+
+        with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
+            os_release = file_handle.read()
+
+        os_release_lower = os_release.lower()
+        if "ubuntu" in os_release_lower or "debian" in os_release_lower:
+            return [SSL_CERTS_DIR, CA_CERTS_LOCAL_SHARE]
+        if any(
+            distro in os_release_lower
+            for distro in ["rhel", "centos", "fedora", "red hat"]
+        ):
+            return [PKI_TLS_CERTS_DIR, "/etc/pki/ca-trust/source/anchors"]
+        if "opensuse" in os_release_lower:
+            return [SSL_CERTS_DIR, "/var/lib/ca-certificates/pem"]
+        # Default Linux paths
+        return [SSL_CERTS_DIR, PKI_TLS_CERTS_DIR]
+
+    def _collect_app_cert_paths(self, system: str) -> List[str]:
+        """Collect application-specific certificate directory paths."""
         app_paths = [
             "/opt/*/ssl/certs",
             "/usr/local/nginx/conf/ssl",
@@ -112,48 +133,43 @@ class CertificateCollector:
             "/etc/httpd/ssl/certs",
         ]
 
-        # Add FreeBSD-specific application directories
         if system == "FreeBSD":
-            freebsd_app_paths = [
-                "/usr/local/etc/nginx/ssl",
-                "/usr/local/etc/apache24/ssl",
-                "/usr/local/etc/ssl/certs",
-                "/usr/local/share/ca-certificates",
-            ]
-            app_paths.extend(freebsd_app_paths)
-
-        # Add OpenBSD-specific application directories
+            app_paths.extend(
+                [
+                    NGINX_SSL_DIR,
+                    "/usr/local/etc/apache24/ssl",
+                    LOCAL_SSL_CERTS_DIR,
+                    CA_CERTS_LOCAL_SHARE,
+                ]
+            )
         elif system == "OpenBSD":
-            openbsd_app_paths = [
-                "/var/www/conf/ssl",
-                "/usr/local/etc/nginx/ssl",
-                "/usr/local/share/ca-certificates",
-                "/usr/local/etc/apache2/ssl",
-                "/etc/httpd/ssl",
-            ]
-            app_paths.extend(openbsd_app_paths)
-
-        # Add NetBSD-specific application directories
+            app_paths.extend(
+                [
+                    "/var/www/conf/ssl",
+                    NGINX_SSL_DIR,
+                    CA_CERTS_LOCAL_SHARE,
+                    "/usr/local/etc/apache2/ssl",
+                    "/etc/httpd/ssl",
+                ]
+            )
         elif system == "NetBSD":
-            netbsd_app_paths = [
-                "/usr/pkg/etc/nginx/ssl",
-                "/usr/pkg/etc/apache24/ssl",
-                "/usr/pkg/etc/ssl/certs",
-                "/usr/pkg/share/ca-certificates",
-                "/usr/local/etc/nginx/ssl",
-                "/usr/local/etc/apache24/ssl",
-            ]
-            app_paths.extend(netbsd_app_paths)
+            app_paths.extend(
+                [
+                    "/usr/pkg/etc/nginx/ssl",
+                    "/usr/pkg/etc/apache24/ssl",
+                    "/usr/pkg/etc/ssl/certs",
+                    "/usr/pkg/share/ca-certificates",
+                    NGINX_SSL_DIR,
+                    "/usr/local/etc/apache24/ssl",
+                ]
+            )
 
-        for app_path in app_paths:
-            paths.extend(glob.glob(app_path))
-
-        return [p for p in paths if os.path.isdir(p)]
+        return app_paths
 
     def _get_macos_cert_paths(self) -> List[str]:
         """Get certificate directory paths for macOS."""
         paths = [
-            "/etc/ssl/certs",
+            SSL_CERTS_DIR,
             "/usr/local/etc/openssl/certs",
             "/System/Library/OpenSSL/certs",
         ]
@@ -628,63 +644,62 @@ class CertificateCollector:
 
         for line in output.strip().split("\n"):
             line = line.strip()
-
-            if line.startswith("subject="):
-                cert_info["subject"] = line[8:].strip()
-                # Extract common name for certificate_name
-                cn_match = [
-                    part for part in cert_info["subject"].split(",") if "CN=" in part
-                ]
-                if cn_match:
-                    cert_info["certificate_name"] = cn_match[0].split("CN=")[1].strip()
-
-            elif line.startswith("issuer="):
-                cert_info["issuer"] = line[7:].strip()
-
-            elif line.startswith("notBefore="):
-                try:
-                    date_str = line[10:].strip()
-                    # Remove timezone suffix (GMT) as strptime has issues with %Z
-                    if date_str.endswith(" GMT"):
-                        date_str = date_str[:-4]
-                    # Convert OpenSSL date format to ISO format
-                    date_time = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
-                    cert_info["not_before"] = date_time.replace(
-                        tzinfo=timezone.utc
-                    ).isoformat()
-                except ValueError as error:
-                    self.logger.debug(
-                        _("Failed to parse notBefore date '%s': %s"), date_str, error
-                    )
-
-            elif line.startswith("notAfter="):
-                try:
-                    date_str = line[9:].strip()
-                    # Remove timezone suffix (GMT) as strptime has issues with %Z
-                    if date_str.endswith(" GMT"):
-                        date_str = date_str[:-4]
-                    # Convert OpenSSL date format to ISO format
-                    date_time = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
-                    cert_info["not_after"] = date_time.replace(
-                        tzinfo=timezone.utc
-                    ).isoformat()
-                except ValueError as error:
-                    self.logger.debug(
-                        _("Failed to parse notAfter date '%s': %s"), date_str, error
-                    )
-
-            elif line.startswith("serial="):
-                cert_info["serial_number"] = line[7:].strip()
-
-            elif line.startswith("SHA256 Fingerprint="):
-                cert_info["fingerprint_sha256"] = (
-                    line[19:].strip().replace(":", "").lower()
-                )
+            self._parse_openssl_output_line(line, cert_info)
 
         # Parse purpose information to determine certificate type
         cert_info["key_usage"] = self._determine_certificate_type(output)
 
         # Determine if it's a CA certificate based on path, subject, or purpose
+        cert_info["is_ca"] = self._detect_ca_certificate(cert_file, cert_info, output)
+
+        return cert_info
+
+    def _parse_openssl_output_line(self, line: str, cert_info: Dict[str, Any]) -> None:
+        """Parse a single line of OpenSSL output and update cert_info accordingly."""
+        if line.startswith("subject="):
+            self._parse_subject_line(line, cert_info)
+        elif line.startswith("issuer="):
+            cert_info["issuer"] = line[7:].strip()
+        elif line.startswith("notBefore="):
+            cert_info["not_before"] = self._parse_openssl_date(
+                line[10:].strip(), "notBefore"
+            )
+        elif line.startswith("notAfter="):
+            cert_info["not_after"] = self._parse_openssl_date(
+                line[9:].strip(), "notAfter"
+            )
+        elif line.startswith("serial="):
+            cert_info["serial_number"] = line[7:].strip()
+        elif line.startswith("SHA256 Fingerprint="):
+            cert_info["fingerprint_sha256"] = line[19:].strip().replace(":", "").lower()
+
+    def _parse_subject_line(self, line: str, cert_info: Dict[str, Any]) -> None:
+        """Parse the subject line from OpenSSL output."""
+        cert_info["subject"] = line[8:].strip()
+        # Extract common name for certificate_name
+        cn_match = [part for part in cert_info["subject"].split(",") if "CN=" in part]
+        if cn_match:
+            cert_info["certificate_name"] = cn_match[0].split("CN=")[1].strip()
+
+    def _parse_openssl_date(self, date_str: str, field_name: str) -> Optional[str]:
+        """Parse an OpenSSL date string into ISO format."""
+        try:
+            # Remove timezone suffix (GMT) as strptime has issues with %Z
+            if date_str.endswith(" GMT"):
+                date_str = date_str[:-4]
+            # Convert OpenSSL date format to ISO format
+            date_time = datetime.strptime(date_str, "%b %d %H:%M:%S %Y")
+            return date_time.replace(tzinfo=timezone.utc).isoformat()
+        except ValueError as error:
+            self.logger.debug(
+                _("Failed to parse %s date '%s': %s"), field_name, date_str, error
+            )
+            return None
+
+    def _detect_ca_certificate(
+        self, cert_file: str, cert_info: Dict[str, Any], output: str
+    ) -> bool:
+        """Determine if a certificate is a CA certificate based on path, subject, or purpose."""
         cert_path_lower = cert_file.lower()
         is_ca_path = any(
             ca_indicator in cert_path_lower
@@ -698,9 +713,7 @@ class CertificateCollector:
             and "SSL client" not in output
             and "SSL server" not in output
         )
-        cert_info["is_ca"] = is_ca_path or is_ca_subject or is_ca_purpose
-
-        return cert_info
+        return is_ca_path or is_ca_subject or is_ca_purpose
 
     def _determine_certificate_type(self, openssl_output: str) -> str:
         """
@@ -712,7 +725,7 @@ class CertificateCollector:
         # Check for CA certificate indicators - enhanced detection
         ca_indicators = [
             "ssl client ca : yes",
-            "ssl server ca : yes",
+            SSL_SERVER_CA_YES,
             "certificate sign : yes",
         ]
 
@@ -763,18 +776,14 @@ class CertificateCollector:
             and "ssl server : no" in output_lower
         )
         has_explicit_ca = (
-            "ssl client ca : yes" in output_lower
-            or "ssl server ca : yes" in output_lower
+            "ssl client ca : yes" in output_lower or SSL_SERVER_CA_YES in output_lower
         )
         return has_basic_ca or has_cert_sign or has_explicit_ca
 
     def _check_ssl_purpose_indicators(self, output_lower: str) -> Optional[str]:
         """Check for SSL server/client certificate indicators."""
         # Check for server certificate indicators (only if not already identified as CA)
-        if (
-            "ssl server : yes" in output_lower
-            and "ssl server ca : yes" not in output_lower
-        ):
+        if "ssl server : yes" in output_lower and SSL_SERVER_CA_YES not in output_lower:
             return "Server"
 
         # Check for client certificate indicators

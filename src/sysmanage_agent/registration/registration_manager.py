@@ -8,7 +8,7 @@ including authentication tokens, host approval status, and certificate handling.
 import ssl
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -52,10 +52,14 @@ class RegistrationManager:
             # Set up SSL context if needed
             ssl_context = None
             if use_https:
-                ssl_context = ssl.create_default_context()
+                ssl_context = (
+                    ssl.create_default_context()
+                )  # NOSONAR - SSL verification is intentionally configurable
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
+                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.verify_mode = (
+                        ssl.CERT_NONE
+                    )  # NOSONAR - SSL verification is intentionally configurable
 
             # Get authentication token
             auth_token = await self.get_auth_token()
@@ -112,10 +116,14 @@ class RegistrationManager:
 
             ssl_context = None
             if use_https:
-                ssl_context = ssl.create_default_context()
+                ssl_context = (
+                    ssl.create_default_context()
+                )  # NOSONAR - SSL verification is intentionally configurable
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
+                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.verify_mode = (
+                        ssl.CERT_NONE
+                    )  # NOSONAR - SSL verification is intentionally configurable
 
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             async with aiohttp.ClientSession(connector=connector) as session:
@@ -235,7 +243,9 @@ class RegistrationManager:
                 _("Error processing host approval notification: %s"), error
             )
 
-    async def clear_host_approval(self) -> None:
+    async def clear_host_approval(
+        self,
+    ) -> None:  # NOSONAR - async required by interface
         """Clear all host approval records from local database."""
         try:
             db_manager = get_database_manager()
@@ -251,7 +261,7 @@ class RegistrationManager:
             self.logger.error(_("Error clearing host approval records: %s"), error)
             raise
 
-    async def store_host_approval(
+    async def store_host_approval(  # NOSONAR - async required by interface
         self,
         host_id: str,
         approval_status: str,
@@ -304,7 +314,9 @@ class RegistrationManager:
             self.logger.error(_("Error storing host approval in database: %s"), error)
             raise
 
-    async def get_stored_host_id(self) -> str:
+    async def get_stored_host_id(
+        self,
+    ) -> Optional[str]:  # NOSONAR - async required by interface
         """Get the stored host_id from local database."""
         try:
             db_manager = get_database_manager()
@@ -331,7 +343,9 @@ class RegistrationManager:
             self.logger.error(_("Error retrieving stored host_id: %s"), error)
             return None
 
-    async def get_stored_host_token(self) -> str:
+    async def get_stored_host_token(
+        self,
+    ) -> Optional[str]:  # NOSONAR - async required by interface
         """Get the stored host_token from local database."""
         try:
             db_manager = get_database_manager()
@@ -358,7 +372,7 @@ class RegistrationManager:
             self.logger.error(_("Error retrieving stored credentials"))
             return None
 
-    def get_stored_host_id_sync(self) -> str:
+    def get_stored_host_id_sync(self) -> Optional[str]:
         """Get the stored host_id from local database synchronously."""
         try:
             db_manager = get_database_manager()
@@ -388,7 +402,7 @@ class RegistrationManager:
             )
             return None
 
-    def get_stored_host_token_sync(self) -> str:
+    def get_stored_host_token_sync(self) -> Optional[str]:
         """Get the stored host_token from local database synchronously."""
         try:
             db_manager = get_database_manager()
@@ -441,7 +455,9 @@ class RegistrationManager:
             )
             return None
 
-    async def clear_stored_host_id(self) -> None:
+    async def clear_stored_host_id(
+        self,
+    ) -> None:  # NOSONAR - async required by interface
         """Clear the stored host_id from local database and related data."""
         try:
             db_manager = get_database_manager()
@@ -548,10 +564,14 @@ class RegistrationManager:
             # Create SSL context if needed
             ssl_context = None
             if use_ssl:
-                ssl_context = ssl.create_default_context()
+                ssl_context = (
+                    ssl.create_default_context()
+                )  # NOSONAR - SSL verification is intentionally configurable
                 if not config.get("server", {}).get("ssl", {}).get("verify", True):
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
+                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.verify_mode = (
+                        ssl.CERT_NONE
+                    )  # NOSONAR - SSL verification is intentionally configurable
 
             # Make the HTTP request
             async with aiohttp.ClientSession() as session:

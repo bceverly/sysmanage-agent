@@ -10,6 +10,8 @@ import os
 import platform
 from typing import Any, Dict
 
+import aiofiles
+
 
 class CertificateOperations:
     """Handles certificate-related operations for the agent."""
@@ -53,14 +55,18 @@ class CertificateOperations:
                     cert_file_path = os.path.join(ssl_dir, filename)
 
                     # Write the certificate file
-                    with open(cert_file_path, "w", encoding="utf-8") as file_handle:
-                        file_handle.write(content)
+                    async with aiofiles.open(
+                        cert_file_path, "w", encoding="utf-8"
+                    ) as file_handle:
+                        await file_handle.write(content)
                         # Ensure content ends with newline
                         if not content.endswith("\n"):
-                            file_handle.write("\n")
+                            await file_handle.write("\n")
 
                     # Set appropriate permissions for certificates (644 - readable by all)
-                    os.chmod(cert_file_path, 0o644)
+                    os.chmod(
+                        cert_file_path, 0o644
+                    )  # NOSONAR - permissions are appropriate for this file type
 
                     # Set root ownership (certificates should be owned by root)
                     os.chown(cert_file_path, 0, 0)

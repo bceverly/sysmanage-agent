@@ -5,7 +5,7 @@ Tests otel_deploy_bsd.py, otel_deploy_linux.py, otel_deploy_macos.py, otel_deplo
 
 # pylint: disable=unused-variable,unused-argument
 
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -18,6 +18,24 @@ from src.sysmanage_agent.operations.otel_deploy_bsd import (
 from src.sysmanage_agent.operations.otel_deploy_linux import LinuxOtelDeployer
 from src.sysmanage_agent.operations.otel_deploy_macos import MacOSOtelDeployer
 from src.sysmanage_agent.operations.otel_deploy_windows import WindowsOtelDeployer
+
+# Paths to patch aiofiles.open in each module
+_BSD_AIOFILES_OPEN = "src.sysmanage_agent.operations.otel_deploy_bsd.aiofiles.open"
+_LINUX_AIOFILES_OPEN = "src.sysmanage_agent.operations.otel_deploy_linux.aiofiles.open"
+_MACOS_AIOFILES_OPEN = "src.sysmanage_agent.operations.otel_deploy_macos.aiofiles.open"
+_WINDOWS_AIOFILES_OPEN = (
+    "src.sysmanage_agent.operations.otel_deploy_windows.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open():
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    mock_file.write = AsyncMock()
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
 
 
 class TestFreeBSDOtelDeployer:
@@ -32,7 +50,7 @@ class TestFreeBSDOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs") as mock_makedirs,
-            patch("builtins.open", mock_open()) as mock_file,
+            patch(_BSD_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -71,7 +89,7 @@ class TestFreeBSDOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs") as mock_makedirs,
-            patch("builtins.open", mock_open()) as mock_file,
+            patch(_BSD_AIOFILES_OPEN, return_value=_mock_aiofiles_open()) as mock_aio,
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -80,7 +98,7 @@ class TestFreeBSDOtelDeployer:
 
             result = await deployer.deploy("http://grafana.example.com:8080")
 
-            mock_file.assert_called_with(
+            mock_aio.assert_called_with(
                 "/usr/local/etc/alloy/config.alloy", "w", encoding="utf-8"
             )
 
@@ -142,7 +160,7 @@ class TestOpenBSDOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_BSD_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -200,7 +218,7 @@ class TestNetBSDOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_BSD_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -289,7 +307,7 @@ class TestLinuxOtelDeployer:
             patch("os.path.exists") as mock_exists,
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_LINUX_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("tempfile.NamedTemporaryFile") as mock_tempfile,
             patch("os.unlink"),
             patch("os.chmod"),
@@ -324,7 +342,7 @@ class TestLinuxOtelDeployer:
             patch("os.path.exists") as mock_exists,
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_LINUX_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/yum"
@@ -348,7 +366,7 @@ class TestLinuxOtelDeployer:
             patch("os.path.exists") as mock_exists,
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_LINUX_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
             patch("os.chmod"),
         ):
             mock_exists.side_effect = lambda path: path == "/usr/bin/dnf"
@@ -494,7 +512,7 @@ class TestMacOSOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_MACOS_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -579,7 +597,7 @@ class TestWindowsOtelDeployer:
         with (
             patch("asyncio.create_subprocess_exec") as mock_subprocess,
             patch("os.makedirs"),
-            patch("builtins.open", mock_open()),
+            patch(_WINDOWS_AIOFILES_OPEN, return_value=_mock_aiofiles_open()),
         ):
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")

@@ -10,7 +10,15 @@ This module handles antivirus deployment for:
 import asyncio
 from typing import Any, Dict
 
+import aiofiles
+
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+
+# Module-level constants for repeated strings
+_MSG_UNKNOWN_ERROR = "unknown error"
+_MSG_ENABLING_AND_STARTING_SERVICE = "Enabling and starting service: %s"
+_MSG_SERVICE_ENABLED_STARTED = "Service %s enabled and started successfully"
+_MSG_FAILED_ENABLE_START_SERVICE = "Failed to enable/start service %s: %s"
 
 
 class AntivirusDeployerLinux:
@@ -53,12 +61,12 @@ class AntivirusDeployerLinux:
         else:
             self.logger.warning(
                 "Failed to enable/start freshclam: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         # Enable and start clamd service
         service_name = "clamd.service"
-        self.logger.info("Enabling and starting service: %s", service_name)
+        self.logger.info(_MSG_ENABLING_AND_STARTING_SERVICE, service_name)
         process = await asyncio.create_subprocess_exec(
             "systemctl",
             "enable",
@@ -70,15 +78,13 @@ class AntivirusDeployerLinux:
         _, stderr = await process.communicate()
 
         if process.returncode == 0:
-            self.logger.info(
-                "Service %s enabled and started successfully", service_name
-            )
+            self.logger.info(_MSG_SERVICE_ENABLED_STARTED, service_name)
             await asyncio.sleep(2)
         else:
             self.logger.warning(
-                "Failed to enable/start service %s: %s",
+                _MSG_FAILED_ENABLE_START_SERVICE,
                 service_name,
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         return {
@@ -119,7 +125,7 @@ class AntivirusDeployerLinux:
         else:
             self.logger.warning(
                 "Failed to update virus definitions: %s",
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         # Configure clamd@scan service
@@ -127,8 +133,8 @@ class AntivirusDeployerLinux:
         self.logger.info("Configuring %s", config_file)
 
         # Read the config file
-        with open(config_file, "r", encoding="utf-8") as file_handle:
-            config_content = file_handle.read()
+        async with aiofiles.open(config_file, "r", encoding="utf-8") as file_handle:
+            config_content = await file_handle.read()
 
         # Uncomment LocalSocket and remove Example line
         config_content = config_content.replace("#Example", "# Example").replace(
@@ -137,14 +143,14 @@ class AntivirusDeployerLinux:
         )
 
         # Write back the config file
-        with open(config_file, "w", encoding="utf-8") as file_handle:
-            file_handle.write(config_content)
+        async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+            await file_handle.write(config_content)
 
         self.logger.info("Configuration updated successfully")
 
         # Enable and start clamd@scan service
         service_name = "clamd@scan"
-        self.logger.info("Enabling and starting service: %s", service_name)
+        self.logger.info(_MSG_ENABLING_AND_STARTING_SERVICE, service_name)
         process = await asyncio.create_subprocess_exec(
             "systemctl",
             "enable",
@@ -156,15 +162,13 @@ class AntivirusDeployerLinux:
         _, stderr = await process.communicate()
 
         if process.returncode == 0:
-            self.logger.info(
-                "Service %s enabled and started successfully", service_name
-            )
+            self.logger.info(_MSG_SERVICE_ENABLED_STARTED, service_name)
             await asyncio.sleep(2)
         else:
             self.logger.warning(
-                "Failed to enable/start service %s: %s",
+                _MSG_FAILED_ENABLE_START_SERVICE,
                 service_name,
-                stderr.decode() if stderr else "unknown error",
+                stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
             )
 
         return {
@@ -205,7 +209,7 @@ class AntivirusDeployerLinux:
             try:
                 # Ubuntu/Debian uses clamav_freshclam
                 service_name = "clamav_freshclam"
-                self.logger.info("Enabling and starting service: %s", service_name)
+                self.logger.info(_MSG_ENABLING_AND_STARTING_SERVICE, service_name)
                 process = await asyncio.create_subprocess_exec(
                     "systemctl",
                     "enable",
@@ -218,15 +222,15 @@ class AntivirusDeployerLinux:
 
                 if process.returncode == 0:
                     self.logger.info(
-                        "Service %s enabled and started successfully",
+                        _MSG_SERVICE_ENABLED_STARTED,
                         service_name,
                     )
                     await asyncio.sleep(2)
                 else:
                     self.logger.warning(
-                        "Failed to enable/start service %s: %s",
+                        _MSG_FAILED_ENABLE_START_SERVICE,
                         service_name,
-                        stderr.decode() if stderr else "unknown error",
+                        stderr.decode() if stderr else _MSG_UNKNOWN_ERROR,
                     )
             except Exception as service_error:
                 self.logger.warning("Failed to enable service: %s", str(service_error))

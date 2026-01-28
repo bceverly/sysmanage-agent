@@ -10,6 +10,8 @@ import platform
 from datetime import datetime, timezone
 from typing import Dict, Any
 
+import aiofiles
+
 from src.i18n import _
 
 
@@ -237,6 +239,86 @@ class DiagnosticCollector:
         except Exception as send_error:
             self.logger.error(_("Failed to send error message: %s"), send_error)
 
+    async def _collect_windows_event_log(
+        self, log_name: str, max_events: int, log_key: str
+    ) -> Dict[str, str]:
+        """Collect a single Windows Event Log.
+
+        Args:
+            log_name: The Windows Event Log name (e.g. System, Application, Security)
+            max_events: Maximum number of events to retrieve
+            log_key: The key to use in the returned dictionary
+
+        Returns:
+            Dict with the log_key mapped to the collected log content
+        """
+        result_data = {}
+        self.logger.info("Collecting Windows %s Event Log...", log_name)
+        start_time = datetime.now(timezone.utc)
+
+        if log_name == "Security":
+            command = (
+                'powershell -Command "try { Get-WinEvent -LogName Security '
+                f"-MaxEvents {max_events} | Select-Object TimeCreated, "
+                "LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json "
+                "} catch { 'Security logs not accessible - admin privileges required' }\""
+            )
+        else:
+            command = (
+                f'powershell -Command "Get-WinEvent -LogName {log_name} '
+                f"-MaxEvents {max_events} | Select-Object TimeCreated, "
+                'LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json"'
+            )
+
+        result = await self.system_ops.execute_shell_command({"command": command})
+        elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+        if result.get("success"):
+            result_data[log_key] = result.get("result", {}).get("stdout", "")
+            self.logger.info(
+                "Windows %s Event Log collected in %.2f seconds", log_name, elapsed
+            )
+        else:
+            self.logger.warning(
+                "Windows %s Event Log collection failed after %.2f seconds",
+                log_name,
+                elapsed,
+            )
+
+        return result_data
+
+    async def _collect_unix_system_logs(self) -> Dict[str, str]:
+        """Collect system logs on Linux/Unix systems.
+
+        Returns:
+            Dict with collected log entries
+        """
+        system_logs = {}
+
+        result = await self.system_ops.execute_shell_command(
+            {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
+        )
+        if result.get("success"):
+            system_logs["journalctl_recent"] = result.get("result", {}).get(
+                "stdout", ""
+            )
+
+        result = await self.system_ops.execute_shell_command(
+            {"command": "dmesg | tail -n 50"}
+        )
+        if result.get("success"):
+            system_logs["dmesg_recent"] = result.get("result", {}).get("stdout", "")
+
+        result = await self.system_ops.execute_shell_command(
+            {
+                "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
+            }
+        )
+        if result.get("success"):
+            system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
+
+        return system_logs
+
     async def _collect_system_logs(self) -> Dict[str, Any]:
         """Collect system log information."""
         try:
@@ -244,105 +326,29 @@ class DiagnosticCollector:
             current_platform = platform.system()
 
             if current_platform == "Windows":
-                # Get Windows Event Log entries
                 self.logger.info(
                     "Collecting Windows System Event Log (this may take 10-30 seconds)..."
                 )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": 'powershell -Command "Get-WinEvent -LogName System -MaxEvents 100 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json"'
-                    }
+                system_logs.update(
+                    await self._collect_windows_event_log(
+                        "System", 100, "windows_system_log"
+                    )
                 )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_system_log"] = result.get("result", {}).get(
-                        "stdout", ""
+                system_logs.update(
+                    await self._collect_windows_event_log(
+                        "Application", 50, "windows_application_log"
                     )
-                    self.logger.info(
-                        "Windows System Event Log collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows System Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get Application Event Log entries
-                self.logger.info("Collecting Windows Application Event Log...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": 'powershell -Command "Get-WinEvent -LogName Application -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json"'
-                    }
                 )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_application_log"] = result.get(
-                        "result", {}
-                    ).get("stdout", "")
-                    self.logger.info(
-                        "Windows Application Event Log collected in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows Application Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get Security Event Log entries (may require admin privileges)
                 self.logger.info(
                     "Collecting Windows Security Event Log (may require admin privileges)..."
                 )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"try { Get-WinEvent -LogName Security -MaxEvents 50 | Select-Object TimeCreated, LevelDisplayName, Id, TaskDisplayName, Message | ConvertTo-Json } catch { 'Security logs not accessible - admin privileges required' }\""
-                    }
+                system_logs.update(
+                    await self._collect_windows_event_log(
+                        "Security", 50, "windows_security_log"
+                    )
                 )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    system_logs["windows_security_log"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Windows Security Event Log collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows Security Event Log collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
             else:
-                # Linux/Unix systems
-                # Try to get recent system log entries
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "journalctl --since '1 hour ago' --no-pager -n 100"}
-                )
-                if result.get("success"):
-                    system_logs["journalctl_recent"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get kernel messages
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "dmesg | tail -n 50"}
-                )
-                if result.get("success"):
-                    system_logs["dmesg_recent"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get auth log if available
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "tail -n 50 /var/log/auth.log 2>/dev/null || tail -n 50 /var/log/secure 2>/dev/null || echo 'Auth logs not accessible'"
-                    }
-                )
-                if result.get("success"):
-                    system_logs["auth_log"] = result.get("result", {}).get("stdout", "")
+                system_logs = await self._collect_unix_system_logs()
 
             return system_logs
 
@@ -412,8 +418,10 @@ class DiagnosticCollector:
 
             # Get agent configuration (our own config) - works on both platforms
             try:
-                with open("config.yaml", "r", encoding="utf-8") as file_handle:
-                    config_files["agent_config"] = file_handle.read()
+                async with aiofiles.open(
+                    "config.yaml", "r", encoding="utf-8"
+                ) as file_handle:
+                    config_files["agent_config"] = await file_handle.read()
             except Exception:
                 config_files["agent_config"] = "Agent config not readable"
 
@@ -423,148 +431,119 @@ class DiagnosticCollector:
             self.logger.error(_("Error collecting configuration files: %s"), error)
             return {"error": str(error)}
 
-    async def _collect_network_info(
-        self,
-    ) -> Dict[str, Any]:  # pylint: disable=too-many-branches,too-many-statements
+    async def _collect_windows_network_command(
+        self, command: str, key: str, label: str
+    ) -> Dict[str, str]:
+        """Collect a single Windows network diagnostic command.
+
+        Args:
+            command: The shell command to execute
+            key: The key to use in the returned dictionary
+            label: Human-readable label for logging
+
+        Returns:
+            Dict with the key mapped to the collected output
+        """
+        result_data = {}
+        self.logger.info("Collecting %s...", label)
+        start_time = datetime.now(timezone.utc)
+        result = await self.system_ops.execute_shell_command({"command": command})
+        elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+        if result.get("success"):
+            result_data[key] = result.get("result", {}).get("stdout", "")
+            self.logger.info("%s collected in %.2f seconds", label, elapsed)
+        else:
+            self.logger.warning(
+                "%s collection failed after %.2f seconds", label, elapsed
+            )
+
+        return result_data
+
+    async def _collect_windows_dns_config(self) -> Dict[str, str]:
+        """Collect Windows DNS configuration with fallback.
+
+        Returns:
+            Dict with dns_config key mapped to collected DNS output
+        """
+        result_data = await self._collect_windows_network_command(
+            "ipconfig /displaydns",
+            "dns_config",
+            "DNS configuration (ipconfig /displaydns)",
+        )
+
+        if "dns_config" not in result_data:
+            self.logger.info("Trying alternative DNS configuration method...")
+            result_data = await self._collect_windows_network_command(
+                'powershell -Command "Get-DnsClientServerAddress | ConvertTo-Json"',
+                "dns_config",
+                "DNS configuration (alternative)",
+            )
+
+        if "dns_config" not in result_data:
+            result_data["dns_config"] = "DNS configuration not available"
+
+        return result_data
+
+    async def _collect_windows_network_info(self) -> Dict[str, str]:
+        """Collect network information on Windows systems.
+
+        Returns:
+            Dict with collected network information
+        """
+        network_info = {}
+        network_info.update(
+            await self._collect_windows_network_command(
+                "ipconfig /all", "interfaces", "network interfaces (ipconfig /all)"
+            )
+        )
+        network_info.update(
+            await self._collect_windows_network_command(
+                "route print", "routes", "routing table (route print)"
+            )
+        )
+        network_info.update(
+            await self._collect_windows_network_command(
+                "netstat -an", "connections", "network connections (netstat -an)"
+            )
+        )
+        network_info.update(await self._collect_windows_dns_config())
+        return network_info
+
+    async def _collect_unix_network_info(self) -> Dict[str, str]:
+        """Collect network information on Linux/Unix systems.
+
+        Returns:
+            Dict with collected network information
+        """
+        network_info = {}
+
+        commands = [
+            ("ip addr show", "interfaces"),
+            ("ip route show", "routes"),
+            ("ss -tulpn", "connections"),
+            (
+                "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'",
+                "dns_config",
+            ),
+        ]
+
+        for command, key in commands:
+            result = await self.system_ops.execute_shell_command({"command": command})
+            if result.get("success"):
+                network_info[key] = result.get("result", {}).get("stdout", "")
+
+        return network_info
+
+    async def _collect_network_info(self) -> Dict[str, Any]:
         """Collect network information."""
         try:
-            network_info = {}
             current_platform = platform.system()
 
             if current_platform == "Windows":
-                # Get network interfaces
-                self.logger.info("Collecting network interfaces (ipconfig /all)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ipconfig /all"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["interfaces"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Network interfaces collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Network interfaces collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get routing table
-                self.logger.info("Collecting routing table (route print)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "route print"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["routes"] = result.get("result", {}).get("stdout", "")
-                    self.logger.info("Routing table collected in %.2f seconds", elapsed)
-                else:
-                    self.logger.warning(
-                        "Routing table collection failed after %.2f seconds", elapsed
-                    )
-
-                # Get network connections
-                self.logger.info("Collecting network connections (netstat -an)...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "netstat -an"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["connections"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Network connections collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Network connections collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get DNS configuration (using safer command)
-                self.logger.info(
-                    "Collecting DNS configuration (ipconfig /displaydns)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ipconfig /displaydns"}
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    network_info["dns_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "DNS configuration collected in %.2f seconds", elapsed
-                    )
-                else:
-                    # Fallback to getting DNS servers from network adapters
-                    self.logger.info("Trying alternative DNS configuration method...")
-                    start_time = datetime.now(timezone.utc)
-                    result = await self.system_ops.execute_shell_command(
-                        {
-                            "command": 'powershell -Command "Get-DnsClientServerAddress | ConvertTo-Json"'
-                        }
-                    )
-                    elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                    if result.get("success"):
-                        network_info["dns_config"] = result.get("result", {}).get(
-                            "stdout", ""
-                        )
-                        self.logger.info(
-                            "DNS configuration (alternative) collected in %.2f seconds",
-                            elapsed,
-                        )
-                    else:
-                        self.logger.warning(
-                            "DNS configuration collection failed after %.2f seconds",
-                            elapsed,
-                        )
-                        network_info["dns_config"] = "DNS configuration not available"
-
+                network_info = await self._collect_windows_network_info()
             else:
-                # Linux/Unix systems
-                # Get network interfaces
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ip addr show"}
-                )
-                if result.get("success"):
-                    network_info["interfaces"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get routing table
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ip route show"}
-                )
-                if result.get("success"):
-                    network_info["routes"] = result.get("result", {}).get("stdout", "")
-
-                # Get network connections
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "ss -tulpn"}
-                )
-                if result.get("success"):
-                    network_info["connections"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get DNS configuration
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "cat /etc/resolv.conf 2>/dev/null || echo 'DNS config not accessible'"
-                    }
-                )
-                if result.get("success"):
-                    network_info["dns_config"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
+                network_info = await self._collect_unix_network_info()
 
             return network_info
 
@@ -611,111 +590,79 @@ class DiagnosticCollector:
             self.logger.error(_("Error collecting process info: %s"), error)
             return {"error": str(error)}
 
+    async def _collect_windows_disk_usage(self) -> Dict[str, str]:
+        """Collect disk usage information on Windows systems.
+
+        Returns:
+            Dict with collected disk usage data
+        """
+        disk_info = {}
+        disk_commands = [
+            (
+                "powershell -Command \"Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, Size, FreeSpace, @{Name='UsedSpace';Expression={$_.Size - $_.FreeSpace}} | ConvertTo-Json\"",
+                "filesystem_usage",
+                "Windows filesystem usage",
+            ),
+            (
+                "powershell -Command \"Get-Counter -Counter '\\LogicalDisk(*)\\% Disk Time' -MaxSamples 1 | ConvertTo-Json\"",
+                "io_stats",
+                "Windows disk performance counters",
+            ),
+            (
+                "powershell -Command \"Get-ChildItem -Path C:\\ -Directory | Get-ChildItem -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | Select-Object @{Name='Path';Expression={$_.PSPath}}, @{Name='Size';Expression={$_.Sum}} | Sort-Object Size -Descending | Select-Object -First 10 | ConvertTo-Json\"",
+                "largest_directories",
+                "largest directories (this may take 30+ seconds)",
+            ),
+        ]
+
+        for command, key, label in disk_commands:
+            self.logger.info("Collecting %s...", label)
+            start_time = datetime.now(timezone.utc)
+            result = await self.system_ops.execute_shell_command({"command": command})
+            elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+            if result.get("success"):
+                disk_info[key] = result.get("result", {}).get("stdout", "")
+                self.logger.info("%s collected in %.2f seconds", label, elapsed)
+            else:
+                self.logger.warning(
+                    "%s collection failed after %.2f seconds", label, elapsed
+                )
+
+        return disk_info
+
+    async def _collect_unix_disk_usage(self) -> Dict[str, str]:
+        """Collect disk usage information on Linux/Unix systems.
+
+        Returns:
+            Dict with collected disk usage data
+        """
+        disk_info = {}
+        commands = [
+            ("df -h", "filesystem_usage"),
+            ("iostat -x 1 1 2>/dev/null || echo 'iostat not available'", "io_stats"),
+            (
+                "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'",
+                "largest_directories",
+            ),
+        ]
+
+        for command, key in commands:
+            result = await self.system_ops.execute_shell_command({"command": command})
+            if result.get("success"):
+                disk_info[key] = result.get("result", {}).get("stdout", "")
+
+        return disk_info
+
     async def _collect_disk_usage(self) -> Dict[str, Any]:
         """Collect disk usage information."""
         try:
-            disk_info = {}
             current_platform = platform.system()
 
             if current_platform == "Windows":
-                # Get filesystem usage
-                self.logger.info("Collecting Windows filesystem usage...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, Size, FreeSpace, @{Name='UsedSpace';Expression={$_.Size - $_.FreeSpace}} | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["filesystem_usage"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Windows filesystem usage collected in %.2f seconds", elapsed
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows filesystem usage collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get disk performance counters
-                self.logger.info("Collecting Windows disk performance counters...")
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-Counter -Counter '\\LogicalDisk(*)\\% Disk Time' -MaxSamples 1 | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
-                    self.logger.info(
-                        "Windows disk performance counters collected in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Windows disk performance counters collection failed after %.2f seconds",
-                        elapsed,
-                    )
-
-                # Get largest directories using PowerShell (this can be very slow)
-                self.logger.info(
-                    "Collecting largest directories (this may take 30+ seconds)..."
-                )
-                start_time = datetime.now(timezone.utc)
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "powershell -Command \"Get-ChildItem -Path C:\\ -Directory | Get-ChildItem -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum | Select-Object @{Name='Path';Expression={$_.PSPath}}, @{Name='Size';Expression={$_.Sum}} | Sort-Object Size -Descending | Select-Object -First 10 | ConvertTo-Json\""
-                    }
-                )
-                elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                if result.get("success"):
-                    disk_info["largest_directories"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-                    self.logger.info(
-                        "Largest directories analysis completed in %.2f seconds",
-                        elapsed,
-                    )
-                else:
-                    self.logger.warning(
-                        "Largest directories analysis failed after %.2f seconds",
-                        elapsed,
-                    )
-
+                disk_info = await self._collect_windows_disk_usage()
             else:
-                # Linux/Unix systems
-                # Get filesystem usage
-                result = await self.system_ops.execute_shell_command(
-                    {"command": "df -h"}
-                )
-                if result.get("success"):
-                    disk_info["filesystem_usage"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
-
-                # Get disk I/O stats
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "iostat -x 1 1 2>/dev/null || echo 'iostat not available'"
-                    }
-                )
-                if result.get("success"):
-                    disk_info["io_stats"] = result.get("result", {}).get("stdout", "")
-
-                # Get largest files/directories
-                result = await self.system_ops.execute_shell_command(
-                    {
-                        "command": "du -h /var /tmp /home 2>/dev/null | sort -hr | head -n 10 || echo 'Disk usage analysis not available'"
-                    }
-                )
-                if result.get("success"):
-                    disk_info["largest_directories"] = result.get("result", {}).get(
-                        "stdout", ""
-                    )
+                disk_info = await self._collect_unix_disk_usage()
 
             return disk_info
 
@@ -785,9 +732,11 @@ class DiagnosticCollector:
 
             # Get recent agent logs
             try:
-                with open("logs/agent.log", "r", encoding="utf-8") as file_handle:
+                async with aiofiles.open(
+                    "logs/agent.log", "r", encoding="utf-8"
+                ) as file_handle:
                     # Get last 100 lines
-                    lines = file_handle.readlines()
+                    lines = await file_handle.readlines()
                     agent_logs["recent_logs"] = "".join(lines[-100:])
             except Exception:
                 agent_logs["recent_logs"] = "Agent logs not accessible"
@@ -828,8 +777,10 @@ class DiagnosticCollector:
 
             # Get agent error logs
             try:
-                with open("logs/agent.log", "r", encoding="utf-8") as file_handle:
-                    lines = file_handle.readlines()
+                async with aiofiles.open(
+                    "logs/agent.log", "r", encoding="utf-8"
+                ) as file_handle:
+                    lines = await file_handle.readlines()
                     error_lines = [line for line in lines if "ERROR" in line.upper()]
                     error_logs["agent_errors"] = "".join(error_lines[-50:])
             except Exception:

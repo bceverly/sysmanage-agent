@@ -5,13 +5,29 @@ Tests for ThirdPartyRepositoryOperations class.
 
 # pylint: disable=redefined-outer-name,protected-access,broad-exception-raised
 
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.sysmanage_agent.operations.repository_operations import (
     ThirdPartyRepositoryOperations,
 )
+
+# Path to patch aiofiles.open in the module under test
+_REPO_OPS_AIOFILES_OPEN = (
+    "src.sysmanage_agent.operations.repository_operations.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open(read_data=""):
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    lines = [line + "\n" for line in read_data.split("\n") if line]
+    mock_file.readlines = AsyncMock(return_value=lines)
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
 
 
 @pytest.fixture
@@ -51,10 +67,13 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_ubuntu(self, repo_ops):
         """Test detecting Ubuntu distribution."""
-        os_release_content = 'ID=ubuntu\nVERSION_ID="22.04"\n'
+        os_release_content = 'ID=ubuntu\nVERSION_ID="22.04"'
         with (
             patch("os.path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data=os_release_content)),
+            patch(
+                _REPO_OPS_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(os_release_content),
+            ),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "ubuntu"
@@ -62,10 +81,13 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_debian(self, repo_ops):
         """Test detecting Debian distribution."""
-        os_release_content = 'ID=debian\nVERSION_ID="11"\n'
+        os_release_content = 'ID=debian\nVERSION_ID="11"'
         with (
             patch("os.path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data=os_release_content)),
+            patch(
+                _REPO_OPS_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(os_release_content),
+            ),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "debian"
@@ -73,10 +95,13 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_fedora(self, repo_ops):
         """Test detecting Fedora distribution."""
-        os_release_content = 'ID=fedora\nVERSION_ID="38"\n'
+        os_release_content = 'ID=fedora\nVERSION_ID="38"'
         with (
             patch("os.path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data=os_release_content)),
+            patch(
+                _REPO_OPS_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(os_release_content),
+            ),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "fedora"
@@ -84,10 +109,13 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_opensuse(self, repo_ops):
         """Test detecting openSUSE distribution."""
-        os_release_content = 'ID="opensuse-leap"\nVERSION_ID="15.4"\n'
+        os_release_content = 'ID="opensuse-leap"\nVERSION_ID="15.4"'
         with (
             patch("os.path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data=os_release_content)),
+            patch(
+                _REPO_OPS_AIOFILES_OPEN,
+                return_value=_mock_aiofiles_open(os_release_content),
+            ),
         ):
             result = await repo_ops._detect_linux_distro()
             assert result["distro"] == "opensuse-leap"
@@ -105,16 +133,13 @@ class TestDetectLinuxDistro:
     @pytest.mark.asyncio
     async def test_detect_error(self, repo_ops):
         """Test error handling in distribution detection."""
-        # Mock open to raise exception for /etc/os-release specifically
-        original_open = open
-
-        def mock_open_func(path, *args, **kwargs):
-            if path == "/etc/os-release":
-                raise Exception("Test error")
-            return original_open(path, *args, **kwargs)
+        # Mock aiofiles.open to raise exception
+        mock_ctx = AsyncMock()
+        mock_ctx.__aenter__ = AsyncMock(side_effect=Exception("Test error"))
+        mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         with (
-            patch("builtins.open", side_effect=mock_open_func),
+            patch(_REPO_OPS_AIOFILES_OPEN, return_value=mock_ctx),
             patch("os.path.exists", return_value=True),
         ):
             result = await repo_ops._detect_linux_distro()

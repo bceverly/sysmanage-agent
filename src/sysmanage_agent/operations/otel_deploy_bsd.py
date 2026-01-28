@@ -9,7 +9,12 @@ import asyncio
 import os
 from typing import Any, Dict
 
+import aiofiles
+
 from src.sysmanage_agent.operations.otel_base import OtelDeployerBase
+
+# Module-level constants for SonarQube compliance
+_OTEL_REMOVED_SUCCESS = "OpenTelemetry collector removed successfully"
 
 
 class FreeBSDOtelDeployer(OtelDeployerBase):
@@ -44,8 +49,8 @@ class FreeBSDOtelDeployer(OtelDeployerBase):
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
             config_content = self._generate_alloy_config(grafana_url)
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             # Enable and start service
             process = await asyncio.create_subprocess_exec(
@@ -102,7 +107,7 @@ class FreeBSDOtelDeployer(OtelDeployerBase):
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
 
         except Exception as error:  # pylint: disable=broad-exception-caught
@@ -135,8 +140,8 @@ class OpenBSDOtelDeployer(OtelDeployerBase):
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
             config_content = self._generate_otel_config(grafana_url)
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             # Enable and start service
             process = await asyncio.create_subprocess_exec(
@@ -202,7 +207,7 @@ class OpenBSDOtelDeployer(OtelDeployerBase):
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
 
         except Exception as error:  # pylint: disable=broad-exception-caught
@@ -237,8 +242,8 @@ class NetBSDOtelDeployer(OtelDeployerBase):
             os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
             config_content = self._generate_otel_config(grafana_url)
-            with open(config_file, "w", encoding="utf-8") as file_handle:
-                file_handle.write(config_content)
+            async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
+                await file_handle.write(config_content)
 
             # Enable and start service (NetBSD uses rc.d)
             process = await asyncio.create_subprocess_exec(
@@ -285,7 +290,7 @@ class NetBSDOtelDeployer(OtelDeployerBase):
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
 
         except Exception as error:  # pylint: disable=broad-exception-caught
@@ -331,7 +336,7 @@ class BSDOtelDeployer(OtelDeployerBase):
 
             return {
                 "success": True,
-                "message": "OpenTelemetry collector removed successfully",
+                "message": _OTEL_REMOVED_SUCCESS,
             }
 
         except Exception as error:  # pylint: disable=broad-exception-caught

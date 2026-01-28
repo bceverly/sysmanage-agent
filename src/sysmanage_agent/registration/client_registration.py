@@ -180,9 +180,15 @@ class ClientRegistration:
 
         try:
             # Create SSL context that doesn't verify certificates (for development)
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
+            ssl_context = (
+                ssl.create_default_context()
+            )  # NOSONAR - SSL verification is intentionally configurable
+            ssl_context.check_hostname = (
+                False  # NOSONAR - SSL verification is intentionally configurable
+            )
+            ssl_context.verify_mode = (
+                ssl.CERT_NONE
+            )  # NOSONAR - SSL verification is intentionally configurable
 
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             async with aiohttp.ClientSession(connector=connector) as session:

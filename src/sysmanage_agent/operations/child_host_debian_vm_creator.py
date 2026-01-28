@@ -68,10 +68,9 @@ def extract_debian_version(distribution: str, logger) -> Optional[str]:
 
     # Check for codenames first
     for codename, version in codename_map.items():
-        if codename in dist_lower:
-            if version in SUPPORTED_DEBIAN_VERSIONS:
-                logger.info(_("Extracted Debian version %s from codename"), version)
-                return version
+        if codename in dist_lower and version in SUPPORTED_DEBIAN_VERSIONS:
+            logger.info(_("Extracted Debian version %s from codename"), version)
+            return version
 
     # Try various patterns for version numbers
     patterns = [
@@ -109,7 +108,9 @@ def get_fqdn_hostname(hostname: str, server_url: str) -> str:
         return hostname
 
     # Extract domain from server URL
-    match = re.search(r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url)
+    match = re.search(
+        r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url
+    )  # NOSONAR - regex operates on trusted internal data
     if match:
         domain_parts = match.group(0).split(".", 1)
         if len(domain_parts) > 1:
@@ -197,274 +198,39 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
         self.logger.info("🔍 [DEBIAN_CREATE_CONFIG] Hostname: %s", config.hostname)
 
         try:
-            # Step 1: Validate configuration
-            self.logger.info("📋 [STEP_1] Validating configuration...")
-            validation_result = self._validate_config(config)
-            if not validation_result.get("success"):
-                return validation_result
-            self.logger.info("✅ [STEP_1] Configuration validated")
+            # Steps 1-9: Validate and prepare environment
+            prep_result = await self._prepare_debian_vm(config)
+            if not prep_result.get("success"):
+                return prep_result
 
-            # Step 2: Extract Debian version
-            self.logger.info("📋 [STEP_2] Extracting Debian version...")
-            await self.launcher.send_progress(
-                "parsing_version", _("Parsing Debian version...")
+            debian_version = prep_result["debian_version"]
+            fqdn_hostname = prep_result["fqdn_hostname"]
+            agent_version = prep_result["agent_version"]
+            gateway_ip = prep_result["gateway_ip"]
+            vm_ip = prep_result["vm_ip"]
+
+            # Steps 10-14: Download ISO, create disk, generate preseed, build serial ISO
+            build_result = await self._build_debian_vm_artifacts(
+                config, debian_version, fqdn_hostname, gateway_ip, vm_ip
             )
-            debian_version = extract_debian_version(config.distribution, self.logger)
-            if not debian_version:
-                return {
-                    "success": False,
-                    "error": _("Could not parse Debian version from: %s")
-                    % config.distribution,
-                }
-            self.logger.info("✅ [STEP_2] Debian version: %s", debian_version)
+            if not build_result.get("success"):
+                return build_result
 
-            # Step 3: Derive FQDN hostname
-            self.logger.info("📋 [STEP_3] Deriving FQDN hostname...")
-            fqdn_hostname = get_fqdn_hostname(
-                config.hostname, config.server_config.server_url
-            )
-            self.logger.info("✅ [STEP_3] FQDN hostname: %s", fqdn_hostname)
-
-            # Step 4: Check VMM availability
-            self.logger.info("📋 [STEP_4] Checking VMM availability...")
-            vmm_result = await self._check_vmm_ready()
-            if not vmm_result.get("success"):
-                return vmm_result
-            self.logger.info("✅ [STEP_4] VMM is ready")
-
-            # Step 5: Check if VM already exists
-            self.logger.info("📋 [STEP_5] Checking if VM already exists...")
-            await self.launcher.send_progress(
-                "checking_existing", _("Checking for existing VM...")
-            )
-            if vm_exists(config.vm_name, self.logger):
-                return {
-                    "success": False,
-                    "error": _("VM '%s' already exists") % config.vm_name,
-                }
-            self.logger.info("✅ [STEP_5] VM does not exist")
-
-            # Step 6: Ensure directories exist
-            self.logger.info("📋 [STEP_6] Ensuring VMM directories exist...")
-            ensure_vmm_directories(self.logger)
-            self.logger.info("✅ [STEP_6] Directories ensured")
-
-            # Step 7: Get latest sysmanage-agent version
-            self.logger.info("📋 [STEP_7] Getting latest sysmanage-agent version...")
-            agent_version, _tag_name = await self._get_agent_version()
-            self.logger.info("✅ [STEP_7] Agent version: %s", agent_version)
-
-            # Step 8: Get gateway IP
-            self.logger.info("📋 [STEP_8] Getting gateway IP...")
-            gateway_ip = self._get_gateway_ip()
-            if not gateway_ip:
-                return {
-                    "success": False,
-                    "error": _("Could not determine gateway IP from vether0"),
-                }
-            self.logger.info("✅ [STEP_8] Gateway IP: %s", gateway_ip)
-
-            # Step 9: Get next available VM IP
-            self.logger.info("📋 [STEP_9] Getting next VM IP...")
-            vm_ip = self._get_next_vm_ip(gateway_ip)
-            self.logger.info("✅ [STEP_9] VM IP: %s", vm_ip)
-
-            # Step 10: Download Debian ISO
-            self.logger.info("📋 [STEP_10] Downloading Debian ISO...")
-            await self.launcher.send_progress(
-                "downloading_iso",
-                _("Downloading Debian %s ISO (~600MB, this may take a while)...")
-                % debian_version,
-            )
-            iso_result = await asyncio.to_thread(
-                self.autoinstall_setup.download_debian_iso, debian_version
-            )
-            if not iso_result.get("success"):
-                return {
-                    "success": False,
-                    "error": _("Failed to download Debian ISO: %s")
-                    % iso_result.get("error"),
-                }
-            iso_path = iso_result.get("iso_path")
-            self.logger.info("✅ [STEP_10] ISO ready: %s", iso_path)
-
-            # Step 11: Create disk image
-            self.logger.info("📋 [STEP_11] Creating disk image...")
-            disk_size = config.resource_config.disk_size or self.DEFAULT_DISK_SIZE
-            await self.launcher.send_progress(
-                "creating_disk",
-                _("Creating %s disk image...") % disk_size,
-            )
-            disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
-            disk_result = self.disk_ops.create_disk_image(disk_path, disk_size)
-            if not disk_result.get("success"):
-                return {
-                    "success": False,
-                    "error": _("Failed to create disk: %s") % disk_result.get("error"),
-                }
-            self.logger.info("✅ [STEP_11] Disk created: %s", disk_path)
-
-            # Step 12: Generate preseed file
-            self.logger.info("📋 [STEP_12] Generating preseed file...")
-            await self.launcher.send_progress(
-                "generating_preseed",
-                _("Generating Debian preseed configuration..."),
-            )
-            preseed_result = await self._generate_preseed(
-                config,
-                fqdn_hostname,
-                gateway_ip,
-                vm_ip,
-                debian_version,
-            )
-            if not preseed_result.get("success"):
-                return preseed_result
-            preseed_content = preseed_result.get("preseed")
-            self.logger.info("✅ [STEP_12] Preseed file generated")
-
-            # Step 13: Create data directory with setup files
-            self.logger.info("📋 [STEP_13] Creating data directory...")
-            data_result = self.autoinstall_setup.create_debian_data_dir(
-                vm_name=config.vm_name,
-                preseed_content=preseed_content,
-                server_hostname=config.server_config.server_url,
-                server_port=config.server_config.server_port,
-                use_https=config.server_config.use_https,
-                auto_approve_token=config.auto_approve_token,
-                debian_version=debian_version,
-            )
-            if not data_result.get("success"):
-                return {
-                    "success": False,
-                    "error": _("Failed to create data directory: %s")
-                    % data_result.get("error"),
-                }
-            self.logger.info(
-                "✅ [STEP_13] Data directory created: %s", data_result.get("data_dir")
-            )
-
-            # Step 14: Create modified ISO with serial console boot
-            self.logger.info("📋 [STEP_14] Creating serial console ISO...")
-            await self.launcher.send_progress(
-                "creating_serial_iso",
-                _("Creating modified ISO for serial console installation..."),
-            )
-            dns_server = get_host_dns_server(self.logger)
-            preseed_url = data_result.get("preseed_url")
-            self.logger.info("📋 [STEP_14] Preseed URL: %s", preseed_url)
-
-            serial_iso_result = await asyncio.to_thread(
-                self.autoinstall_setup.create_serial_console_iso,
-                iso_path,
-                config.vm_name,
-                preseed_url,
-                vm_ip,
-                gateway_ip,
-                dns_server,
-            )
-            if not serial_iso_result.get("success"):
-                return {
-                    "success": False,
-                    "error": _("Failed to create serial console ISO: %s")
-                    % serial_iso_result.get("error"),
-                }
-            serial_iso_path = serial_iso_result.get("iso_path")
-            self.logger.info(
-                "✅ [STEP_14] Serial console ISO created: %s", serial_iso_path
-            )
-
-            # Step 15: Launch VM from modified ISO
-            self.logger.info("📋 [STEP_15] Launching VM from ISO...")
-            await self.launcher.send_progress(
-                "launching_vm",
-                _("Launching Debian VM from ISO for installation..."),
-            )
+            disk_path = build_result["disk_path"]
+            serial_iso_path = build_result["serial_iso_path"]
             memory = config.resource_config.memory or self.DEFAULT_MEMORY
-            launch_result = await self._launch_vm_from_iso(
+
+            # Steps 15-17: Launch, install, restart from disk
+            boot_result = await self._launch_and_install_debian_vm(
                 config, disk_path, serial_iso_path, memory
             )
-            if not launch_result.get("success"):
-                return launch_result
-            self.logger.info("✅ [STEP_15] VM launched with serial console boot")
+            if not boot_result.get("success"):
+                return boot_result
 
-            # Step 16: Wait for installation to complete
-            self.logger.info("📋 [STEP_16] Waiting for installation...")
-            await self.launcher.send_progress(
-                "awaiting_installation",
-                _(
-                    "Debian installation in progress. "
-                    "This typically takes 15-20 minutes..."
-                ),
+            # Steps 18-19: Save metadata, persist vm.conf
+            self._finalize_debian_vm(
+                config, fqdn_hostname, debian_version, vm_ip, disk_path, memory
             )
-            shutdown_result = (
-                await self.console_automation.wait_for_installation_complete(
-                    config.vm_name, timeout=1200  # 20 minutes
-                )
-            )
-            if not shutdown_result.get("success"):
-                self.logger.warning(
-                    "⚠️ Installation may still be running: %s",
-                    shutdown_result.get("error"),
-                )
-            else:
-                self.logger.info("✅ [STEP_16] Installation complete")
-
-            # Step 17: Stop VM and restart from disk only (no ISO)
-            self.logger.info("📋 [STEP_17] Stopping VM to remove ISO from boot path...")
-            await self.launcher.send_progress(
-                "stopping_vm",
-                _("Stopping VM to switch from ISO boot to disk boot..."),
-            )
-
-            # Force stop the VM to remove the ISO from the boot configuration
-            stop_result = await self._stop_vm_for_restart(config.vm_name)
-            if not stop_result.get("success"):
-                self.logger.warning(
-                    "⚠️ Could not stop VM cleanly: %s", stop_result.get("error")
-                )
-
-            # Wait for VM to actually be stopped
-            await asyncio.sleep(3)
-
-            # Now start from disk only
-            self.logger.info("📋 [STEP_17b] Starting VM from disk (no ISO)...")
-            await self.launcher.send_progress(
-                "restarting_vm",
-                _("Starting Debian VM from installed system..."),
-            )
-            restart_result = await self.launcher.launch_vm_from_disk(
-                config.vm_name,
-                disk_path,
-                memory,
-            )
-            if not restart_result.get("success"):
-                return restart_result
-            self.logger.info("✅ [STEP_17] VM restarted from disk")
-
-            # Step 18: Save metadata
-            self.logger.info("📋 [STEP_18] Saving VM metadata...")
-            self._save_vm_metadata(
-                config.vm_name,
-                fqdn_hostname,
-                config.distribution,
-                debian_version,
-                vm_ip,
-            )
-            self.logger.info("✅ [STEP_18] Metadata saved")
-
-            # Step 19: Add to vm.conf for persistence
-            self.logger.info("📋 [STEP_19] Adding VM to vm.conf...")
-            persist_result = self.vmconf_manager.persist_vm(
-                config.vm_name,
-                disk_path,
-                memory,
-                enable=True,
-                boot_device=None,
-            )
-            if persist_result:
-                self.logger.info("✅ [STEP_19] VM added to vm.conf")
-            else:
-                self.logger.warning("⚠️ [STEP_19] Failed to add VM to vm.conf")
 
             await self.launcher.send_progress(
                 "complete", _("Debian VM creation complete")
@@ -495,6 +261,329 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
                 "💥 [DEBIAN_CREATE_ERROR] Exception: %s", error, exc_info=True
             )
             return {"success": False, "error": str(error)}
+
+    async def _prepare_debian_vm(self, config: VmmVmConfig) -> Dict[str, Any]:
+        """Validate config and prepare environment (steps 1-9).
+
+        Returns:
+            Dict with success status and prepared values (debian_version,
+            fqdn_hostname, agent_version, gateway_ip, vm_ip).
+        """
+        # Step 1: Validate configuration
+        self.logger.info("📋 [STEP_1] Validating configuration...")
+        validation_result = self._validate_config(config)
+        if not validation_result.get("success"):
+            return validation_result
+        self.logger.info("✅ [STEP_1] Configuration validated")
+
+        # Step 2: Extract Debian version
+        self.logger.info("📋 [STEP_2] Extracting Debian version...")
+        await self.launcher.send_progress(
+            "parsing_version", _("Parsing Debian version...")
+        )
+        debian_version = extract_debian_version(config.distribution, self.logger)
+        if not debian_version:
+            return {
+                "success": False,
+                "error": _("Could not parse Debian version from: %s")
+                % config.distribution,
+            }
+        self.logger.info("✅ [STEP_2] Debian version: %s", debian_version)
+
+        # Step 3: Derive FQDN hostname
+        self.logger.info("📋 [STEP_3] Deriving FQDN hostname...")
+        fqdn_hostname = get_fqdn_hostname(
+            config.hostname, config.server_config.server_url
+        )
+        self.logger.info("✅ [STEP_3] FQDN hostname: %s", fqdn_hostname)
+
+        # Step 4: Check VMM availability
+        self.logger.info("📋 [STEP_4] Checking VMM availability...")
+        vmm_result = await self._check_vmm_ready()
+        if not vmm_result.get("success"):
+            return vmm_result
+        self.logger.info("✅ [STEP_4] VMM is ready")
+
+        # Step 5: Check if VM already exists
+        self.logger.info("📋 [STEP_5] Checking if VM already exists...")
+        await self.launcher.send_progress(
+            "checking_existing", _("Checking for existing VM...")
+        )
+        if vm_exists(config.vm_name, self.logger):
+            return {
+                "success": False,
+                "error": _("VM '%s' already exists") % config.vm_name,
+            }
+        self.logger.info("✅ [STEP_5] VM does not exist")
+
+        # Step 6: Ensure directories exist
+        self.logger.info("📋 [STEP_6] Ensuring VMM directories exist...")
+        ensure_vmm_directories(self.logger)
+        self.logger.info("✅ [STEP_6] Directories ensured")
+
+        # Step 7: Get latest sysmanage-agent version
+        self.logger.info("📋 [STEP_7] Getting latest sysmanage-agent version...")
+        agent_version, _tag_name = await self._get_agent_version()
+        self.logger.info("✅ [STEP_7] Agent version: %s", agent_version)
+
+        # Step 8: Get gateway IP
+        self.logger.info("📋 [STEP_8] Getting gateway IP...")
+        gateway_ip = self._get_gateway_ip()
+        if not gateway_ip:
+            return {
+                "success": False,
+                "error": _("Could not determine gateway IP from vether0"),
+            }
+        self.logger.info("✅ [STEP_8] Gateway IP: %s", gateway_ip)
+
+        # Step 9: Get next available VM IP
+        self.logger.info("📋 [STEP_9] Getting next VM IP...")
+        vm_ip = self._get_next_vm_ip(gateway_ip)
+        self.logger.info("✅ [STEP_9] VM IP: %s", vm_ip)
+
+        return {
+            "success": True,
+            "debian_version": debian_version,
+            "fqdn_hostname": fqdn_hostname,
+            "agent_version": agent_version,
+            "gateway_ip": gateway_ip,
+            "vm_ip": vm_ip,
+        }
+
+    async def _build_debian_vm_artifacts(
+        self,
+        config: VmmVmConfig,
+        debian_version: str,
+        fqdn_hostname: str,
+        gateway_ip: str,
+        vm_ip: str,
+    ) -> Dict[str, Any]:
+        """Download ISO, create disk, generate preseed, build serial ISO (steps 10-14).
+
+        Returns:
+            Dict with success status, disk_path, and serial_iso_path.
+        """
+        # Step 10: Download Debian ISO
+        self.logger.info("📋 [STEP_10] Downloading Debian ISO...")
+        await self.launcher.send_progress(
+            "downloading_iso",
+            _("Downloading Debian %s ISO (~600MB, this may take a while)...")
+            % debian_version,
+        )
+        iso_result = await asyncio.to_thread(
+            self.autoinstall_setup.download_debian_iso, debian_version
+        )
+        if not iso_result.get("success"):
+            return {
+                "success": False,
+                "error": _("Failed to download Debian ISO: %s")
+                % iso_result.get("error"),
+            }
+        iso_path = iso_result.get("iso_path")
+        self.logger.info("✅ [STEP_10] ISO ready: %s", iso_path)
+
+        # Step 11: Create disk image
+        self.logger.info("📋 [STEP_11] Creating disk image...")
+        disk_size = config.resource_config.disk_size or self.DEFAULT_DISK_SIZE
+        await self.launcher.send_progress(
+            "creating_disk",
+            _("Creating %s disk image...") % disk_size,
+        )
+        disk_path = os.path.join(VMM_DISK_DIR, f"{config.vm_name}.qcow2")
+        disk_result = self.disk_ops.create_disk_image(disk_path, disk_size)
+        if not disk_result.get("success"):
+            return {
+                "success": False,
+                "error": _("Failed to create disk: %s") % disk_result.get("error"),
+            }
+        self.logger.info("✅ [STEP_11] Disk created: %s", disk_path)
+
+        # Step 12: Generate preseed file
+        self.logger.info("📋 [STEP_12] Generating preseed file...")
+        await self.launcher.send_progress(
+            "generating_preseed",
+            _("Generating Debian preseed configuration..."),
+        )
+        preseed_result = await self._generate_preseed(
+            config,
+            fqdn_hostname,
+            gateway_ip,
+            vm_ip,
+            debian_version,
+        )
+        if not preseed_result.get("success"):
+            return preseed_result
+        preseed_content = preseed_result.get("preseed")
+        self.logger.info("✅ [STEP_12] Preseed file generated")
+
+        # Step 13: Create data directory with setup files
+        self.logger.info("📋 [STEP_13] Creating data directory...")
+        data_result = self.autoinstall_setup.create_debian_data_dir(
+            vm_name=config.vm_name,
+            preseed_content=preseed_content,
+            server_hostname=config.server_config.server_url,
+            server_port=config.server_config.server_port,
+            use_https=config.server_config.use_https,
+            auto_approve_token=config.auto_approve_token,
+            debian_version=debian_version,
+        )
+        if not data_result.get("success"):
+            return {
+                "success": False,
+                "error": _("Failed to create data directory: %s")
+                % data_result.get("error"),
+            }
+        self.logger.info(
+            "✅ [STEP_13] Data directory created: %s", data_result.get("data_dir")
+        )
+
+        # Step 14: Create modified ISO with serial console boot
+        self.logger.info("📋 [STEP_14] Creating serial console ISO...")
+        await self.launcher.send_progress(
+            "creating_serial_iso",
+            _("Creating modified ISO for serial console installation..."),
+        )
+        dns_server = get_host_dns_server(self.logger)
+        preseed_url = data_result.get("preseed_url")
+        self.logger.info("📋 [STEP_14] Preseed URL: %s", preseed_url)
+
+        serial_iso_result = await asyncio.to_thread(
+            self.autoinstall_setup.create_serial_console_iso,
+            iso_path,
+            config.vm_name,
+            preseed_url,
+            vm_ip,
+            gateway_ip,
+            dns_server,
+        )
+        if not serial_iso_result.get("success"):
+            return {
+                "success": False,
+                "error": _("Failed to create serial console ISO: %s")
+                % serial_iso_result.get("error"),
+            }
+        serial_iso_path = serial_iso_result.get("iso_path")
+        self.logger.info("✅ [STEP_14] Serial console ISO created: %s", serial_iso_path)
+
+        return {
+            "success": True,
+            "disk_path": disk_path,
+            "serial_iso_path": serial_iso_path,
+        }
+
+    async def _launch_and_install_debian_vm(
+        self,
+        config: VmmVmConfig,
+        disk_path: str,
+        serial_iso_path: str,
+        memory: str,
+    ) -> Dict[str, Any]:
+        """Launch VM from ISO, wait for install, restart from disk (steps 15-17).
+
+        Returns:
+            Dict with success status.
+        """
+        # Step 15: Launch VM from modified ISO
+        self.logger.info("📋 [STEP_15] Launching VM from ISO...")
+        await self.launcher.send_progress(
+            "launching_vm",
+            _("Launching Debian VM from ISO for installation..."),
+        )
+        launch_result = await self._launch_vm_from_iso(
+            config, disk_path, serial_iso_path, memory
+        )
+        if not launch_result.get("success"):
+            return launch_result
+        self.logger.info("✅ [STEP_15] VM launched with serial console boot")
+
+        # Step 16: Wait for installation to complete
+        self.logger.info("📋 [STEP_16] Waiting for installation...")
+        await self.launcher.send_progress(
+            "awaiting_installation",
+            _(
+                "Debian installation in progress. "
+                "This typically takes 15-20 minutes..."
+            ),
+        )
+        shutdown_result = await self.console_automation.wait_for_installation_complete(
+            config.vm_name, timeout=1200  # 20 minutes
+        )
+        if not shutdown_result.get("success"):
+            self.logger.warning(
+                "⚠️ Installation may still be running: %s",
+                shutdown_result.get("error"),
+            )
+        else:
+            self.logger.info("✅ [STEP_16] Installation complete")
+
+        # Step 17: Stop VM and restart from disk only (no ISO)
+        self.logger.info("📋 [STEP_17] Stopping VM to remove ISO from boot path...")
+        await self.launcher.send_progress(
+            "stopping_vm",
+            _("Stopping VM to switch from ISO boot to disk boot..."),
+        )
+
+        # Force stop the VM to remove the ISO from the boot configuration
+        stop_result = await self._stop_vm_for_restart(config.vm_name)
+        if not stop_result.get("success"):
+            self.logger.warning(
+                "⚠️ Could not stop VM cleanly: %s", stop_result.get("error")
+            )
+
+        # Wait for VM to actually be stopped
+        await asyncio.sleep(3)
+
+        # Now start from disk only
+        self.logger.info("📋 [STEP_17b] Starting VM from disk (no ISO)...")
+        await self.launcher.send_progress(
+            "restarting_vm",
+            _("Starting Debian VM from installed system..."),
+        )
+        restart_result = await self.launcher.launch_vm_from_disk(
+            config.vm_name,
+            disk_path,
+            memory,
+        )
+        if not restart_result.get("success"):
+            return restart_result
+        self.logger.info("✅ [STEP_17] VM restarted from disk")
+
+        return {"success": True}
+
+    def _finalize_debian_vm(
+        self,
+        config: VmmVmConfig,
+        fqdn_hostname: str,
+        debian_version: str,
+        vm_ip: str,
+        disk_path: str,
+        memory: str,
+    ) -> None:
+        """Save metadata and persist vm.conf (steps 18-19)."""
+        # Step 18: Save metadata
+        self.logger.info("📋 [STEP_18] Saving VM metadata...")
+        self._save_vm_metadata(
+            config.vm_name,
+            fqdn_hostname,
+            config.distribution,
+            debian_version,
+            vm_ip,
+        )
+        self.logger.info("✅ [STEP_18] Metadata saved")
+
+        # Step 19: Add to vm.conf for persistence
+        self.logger.info("📋 [STEP_19] Adding VM to vm.conf...")
+        persist_result = self.vmconf_manager.persist_vm(
+            config.vm_name,
+            disk_path,
+            memory,
+            enable=True,
+            boot_device=None,
+        )
+        if persist_result:
+            self.logger.info("✅ [STEP_19] VM added to vm.conf")
+        else:
+            self.logger.warning("⚠️ [STEP_19] Failed to add VM to vm.conf")
 
     def _validate_config(self, config: VmmVmConfig) -> Dict[str, Any]:
         """Validate VM configuration."""

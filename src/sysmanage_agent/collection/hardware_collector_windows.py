@@ -9,23 +9,43 @@ from typing import Any, Dict, List
 from src.i18n import _
 from .hardware_collector_base import HardwareCollectorBase
 
+WMIC_CSV_FORMAT = "/format:csv"
+NONE_VALUE = "(none)"
+
 
 class HardwareCollectorWindows(HardwareCollectorBase):
     """Collects hardware information on Windows systems."""
+
+    def _parse_wmic_csv_lines(self, stdout: str) -> List[str]:
+        """Parse WMIC CSV output into non-empty lines."""
+        return [line for line in stdout.strip().split("\n") if line.strip()]
+
+    def _parse_cpu_wmic_data(self, data: List[str]) -> Dict[str, Any]:
+        """Parse a WMIC CSV data row into CPU info fields.
+
+        Expected CSV format: Node,Manufacturer,MaxClockSpeed,Name,NumberOfCores,NumberOfLogicalProcessors
+        """
+        cpu_info = {}
+        if len(data) >= 6:
+            cpu_info["vendor"] = data[1].strip()
+            cpu_info["frequency_mhz"] = int(data[2]) if data[2].strip() else 0
+            cpu_info["model"] = data[3].strip()
+            cpu_info["cores"] = int(data[4]) if data[4].strip() else 0
+            cpu_info["threads"] = int(data[5]) if data[5].strip() else 0
+        return cpu_info
 
     def get_cpu_info(self) -> Dict[str, Any]:
         """Get CPU information on Windows using wmic."""
 
         cpu_info = {}
         try:
-            # Get CPU info using wmic
             result = subprocess.run(
                 [
                     "wmic",
                     "cpu",
                     "get",
                     "Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed",
-                    "/format:csv",
+                    WMIC_CSV_FORMAT,
                 ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
@@ -33,21 +53,10 @@ class HardwareCollectorWindows(HardwareCollectorBase):
                 check=False,
             )
             if result.returncode == 0:
-                lines = [
-                    line for line in result.stdout.strip().split("\n") if line.strip()
-                ]
+                lines = self._parse_wmic_csv_lines(result.stdout)
                 if len(lines) > 1:
-                    # Skip header and get first CPU data line
                     data = lines[1].split(",")
-                    if len(data) >= 6:
-                        # CSV format: Node,Manufacturer,MaxClockSpeed,Name,NumberOfCores,NumberOfLogicalProcessors
-                        cpu_info["vendor"] = data[1].strip()
-                        cpu_info["frequency_mhz"] = (
-                            int(data[2]) if data[2].strip() else 0
-                        )
-                        cpu_info["model"] = data[3].strip()
-                        cpu_info["cores"] = int(data[4]) if data[4].strip() else 0
-                        cpu_info["threads"] = int(data[5]) if data[5].strip() else 0
+                    cpu_info = self._parse_cpu_wmic_data(data)
 
         except Exception as error:
             cpu_info["error"] = _("Failed to get Windows CPU info: %s") % str(error)
@@ -65,7 +74,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
                     "computersystem",
                     "get",
                     "TotalPhysicalMemory",
-                    "/format:csv",
+                    WMIC_CSV_FORMAT,
                 ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
@@ -90,6 +99,91 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
         return memory_info
 
+    def _collect_physical_disk_drives(self) -> List[Dict[str, Any]]:
+        """Collect physical disk drive information from WMIC diskdrive."""
+        devices = []
+        result = subprocess.run(
+            [
+                "wmic",
+                "diskdrive",
+                "get",
+                "Size,Model,DeviceID,InterfaceType",
+                WMIC_CSV_FORMAT,
+            ],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode != 0:
+            return devices
+
+        lines = self._parse_wmic_csv_lines(result.stdout)
+        for line in lines[1:]:  # Skip header
+            device_info = self._parse_physical_disk_line(line)
+            if device_info is not None:
+                devices.append(device_info)
+
+        return devices
+
+    def _parse_physical_disk_line(self, line: str) -> Dict[str, Any]:
+        """Parse a single WMIC diskdrive CSV line into a device info dict."""
+        data = line.split(",")
+        if len(data) < 4 or not data[1].strip():
+            return None
+        return {
+            "name": data[1].strip(),
+            "model": data[3].strip() if len(data) > 3 else "Unknown",
+            "size": int(data[4]) if data[4].strip().isdigit() else 0,
+            "interface_type": data[2].strip() if len(data) > 2 else "Unknown",
+            "is_physical": True,
+            "device_type": "physical",
+            "file_system": "N/A",
+            "free_space": 0,
+        }
+
+    def _collect_logical_disk_drives(self) -> List[Dict[str, Any]]:
+        """Collect logical disk drive information from WMIC logicaldisk."""
+        devices = []
+        result = subprocess.run(
+            [
+                "wmic",
+                "logicaldisk",
+                "get",
+                "Size,FreeSpace,FileSystem,DeviceID,VolumeName",
+                WMIC_CSV_FORMAT,
+            ],  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode != 0:
+            return devices
+
+        lines = self._parse_wmic_csv_lines(result.stdout)
+        for line in lines[1:]:  # Skip header
+            device_info = self._parse_logical_disk_line(line)
+            if device_info is not None:
+                devices.append(device_info)
+
+        return devices
+
+    def _parse_logical_disk_line(self, line: str) -> Dict[str, Any]:
+        """Parse a single WMIC logicaldisk CSV line into a device info dict."""
+        data = line.split(",")
+        if len(data) < 4 or not data[1].strip():
+            return None
+        return {
+            "name": data[1].strip(),
+            "file_system": data[2].strip(),
+            "free_space": int(data[3]) if data[3].strip().isdigit() else 0,
+            "size": int(data[4]) if data[4].strip().isdigit() else 0,
+            "volume_name": data[5].strip() if len(data) > 5 else "",
+            "is_physical": False,
+            "device_type": "logical",
+        }
+
     def get_storage_info(self) -> List[Dict[str, Any]]:
         """Get storage information on Windows using wmic for both physical and logical drives."""
 
@@ -97,39 +191,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
         # First, get physical disk drives
         try:
-            result = subprocess.run(
-                [
-                    "wmic",
-                    "diskdrive",
-                    "get",
-                    "Size,Model,DeviceID,InterfaceType",
-                    "/format:csv",
-                ],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
-                lines = [
-                    line for line in result.stdout.strip().split("\n") if line.strip()
-                ]
-                for line in lines[1:]:  # Skip header
-                    data = line.split(",")
-                    if len(data) >= 4 and data[1].strip():
-                        device_info = {
-                            "name": data[1].strip(),  # DeviceID like \\.\PHYSICALDRIVE0
-                            "model": data[3].strip() if len(data) > 3 else "Unknown",
-                            "size": int(data[4]) if data[4].strip().isdigit() else 0,
-                            "interface_type": (
-                                data[2].strip() if len(data) > 2 else "Unknown"
-                            ),
-                            "is_physical": True,
-                            "device_type": "physical",
-                            "file_system": "N/A",  # Physical drives don't have filesystems
-                            "free_space": 0,  # Physical drives don't have free space concept
-                        }
-                        storage_devices.append(device_info)
+            storage_devices.extend(self._collect_physical_disk_drives())
         except Exception as error:
             self.logger.error(
                 "Failed to get Windows physical disk info: %s", str(error)
@@ -137,39 +199,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
         # Then, get logical drives (partitions/volumes)
         try:
-            result = subprocess.run(
-                [
-                    "wmic",
-                    "logicaldisk",
-                    "get",
-                    "Size,FreeSpace,FileSystem,DeviceID,VolumeName",
-                    "/format:csv",
-                ],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            if result.returncode == 0:
-                lines = [
-                    line for line in result.stdout.strip().split("\n") if line.strip()
-                ]
-                for line in lines[1:]:  # Skip header
-                    data = line.split(",")
-                    if len(data) >= 4 and data[1].strip():
-                        device_info = {
-                            "name": data[1].strip(),  # Drive letter like C:
-                            "file_system": data[2].strip(),
-                            "free_space": (
-                                int(data[3]) if data[3].strip().isdigit() else 0
-                            ),
-                            "size": int(data[4]) if data[4].strip().isdigit() else 0,
-                            "volume_name": data[5].strip() if len(data) > 5 else "",
-                            "is_physical": False,  # Logical drives are never physical
-                            "device_type": "logical",
-                        }
-                        storage_devices.append(device_info)
-
+            storage_devices.extend(self._collect_logical_disk_drives())
         except Exception as error:
             storage_devices.append(
                 {"error": _("Failed to get Windows logical disk info: %s") % str(error)}
@@ -209,13 +239,39 @@ class HardwareCollectorWindows(HardwareCollectorBase):
         # D: through W: are typically physical drives or partitions
         return True
 
+    def _detect_new_adapter(self, line: str, original_line: str) -> Dict[str, Any]:
+        """Detect and create a new adapter dict from an ipconfig adapter header line.
+
+        Returns a new adapter dict if the line is an adapter header, None otherwise.
+        """
+        if original_line.startswith("   "):
+            return None
+        if "adapter " not in line or ":" not in line:
+            return None
+
+        adapter_name = line.split(":")[0].strip()
+        return {
+            "name": adapter_name,
+            "description": adapter_name,
+            "type": "Unknown",
+            "mac_address": None,
+            "ip_addresses": [],
+            "subnet_masks": [],
+            "gateways": [],
+            "dns_servers": [],
+            "dhcp_enabled": False,
+            "enabled": True,
+            "is_active": False,
+            "media_state": "Unknown",
+            "connection_status": "Unknown",
+        }
+
     def get_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Windows using ipconfig /all."""
 
         network_interfaces = []
 
         try:
-            # Run ipconfig /all to get comprehensive network information
             result = subprocess.run(
                 ["ipconfig", "/all"],  # nosec B603, B607
                 capture_output=True,
@@ -230,50 +286,25 @@ class HardwareCollectorWindows(HardwareCollectorBase):
                 )
                 return network_interfaces
 
-            # Parse the ipconfig output
-            output = result.stdout
             current_adapter = None
 
-            for line in output.split("\n"):
+            for line in result.stdout.split("\n"):
                 original_line = line
                 line = line.strip()
 
-                # Skip empty lines and general system info
                 if self._should_skip_ipconfig_line(line):
                     continue
 
-                # Detect new adapter sections (these are not indented)
-                if not original_line.startswith("   ") and (
-                    "adapter " in line and ":" in line
-                ):
-                    # Save previous adapter if it exists
+                new_adapter = self._detect_new_adapter(line, original_line)
+                if new_adapter is not None:
                     if current_adapter:
                         network_interfaces.append(current_adapter)
-
-                    # Start new adapter
-                    adapter_name = line.split(":")[0].strip()
-                    current_adapter = {
-                        "name": adapter_name,
-                        "description": adapter_name,
-                        "type": "Unknown",
-                        "mac_address": None,
-                        "ip_addresses": [],
-                        "subnet_masks": [],
-                        "gateways": [],
-                        "dns_servers": [],
-                        "dhcp_enabled": False,
-                        "enabled": True,
-                        "is_active": False,
-                        "media_state": "Unknown",
-                        "connection_status": "Unknown",
-                    }
+                    current_adapter = new_adapter
                     continue
 
-                # Parse adapter properties (these are indented with spaces)
                 if current_adapter and original_line.startswith("   ") and ":" in line:
                     self._parse_adapter_property(current_adapter, line)
 
-            # Don't forget the last adapter
             if current_adapter:
                 network_interfaces.append(current_adapter)
 
@@ -329,14 +360,13 @@ class HardwareCollectorWindows(HardwareCollectorBase):
         elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
             self._handle_ip_address(current_adapter, value)
         elif "Subnet Mask" in key:
-            if value and value != "(none)" and value:
+            if value and value != NONE_VALUE and value:
                 current_adapter["subnet_masks"].append(value)
         elif "Default Gateway" in key:
-            if value and value != "(none)" and value:
+            if value and value != NONE_VALUE and value:
                 current_adapter["gateways"].append(value)
-        elif "DNS Servers" in key:
-            if value and value != "(none)" and value:
-                current_adapter["dns_servers"].append(value)
+        elif "DNS Servers" in key and value and value != NONE_VALUE:
+            current_adapter["dns_servers"].append(value)
 
     def _handle_media_state(self, current_adapter: Dict[str, Any], value: str) -> None:
         """Handle media state property."""
@@ -372,7 +402,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
     def _handle_ip_address(self, current_adapter: Dict[str, Any], value: str) -> None:
         """Handle IP address (IPv4 or IPv6) property."""
-        if value and value != "(none)" and value:
+        if value and value != NONE_VALUE and value:
             # Remove any suffixes like "(Preferred)" and handle IPv6 zone IDs
             ip_addr = value.split("(")[0].strip()
             if "%" in ip_addr:  # Remove IPv6 zone ID

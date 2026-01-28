@@ -359,8 +359,12 @@ class SysManageAgent(
             if http_url.startswith("https://"):
                 ssl_context = ssl.create_default_context()
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
+                    ssl_context.check_hostname = (
+                        False  # NOSONAR - intentionally configurable
+                    )
+                    ssl_context.verify_mode = (
+                        ssl.CERT_NONE
+                    )  # NOSONAR - intentionally configurable
 
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
@@ -405,13 +409,21 @@ class SysManageAgent(
             self.logger.error("Failed to queue message: %s", error)
             return False
 
-    async def _handle_server_error(self, data: Dict[str, Any]) -> None:
-        """Handle error messages from server."""
-        # Server sends error_type and message at top level, not in data field
-        error_code = data.get("error_type", "unknown")
-        error_message = data.get("message", "No error message provided")
+    def _parse_server_error_timestamp(self, message_timestamp) -> datetime:
+        """Parse a server error message timestamp into a timezone-aware datetime."""
+        if isinstance(message_timestamp, str):
+            if message_timestamp.endswith("+00:00"):
+                message_timestamp = message_timestamp[:-6] + "Z"
+            msg_time = datetime.fromisoformat(message_timestamp.replace("Z", "+00:00"))
+        else:
+            msg_time = message_timestamp
 
-        # Check if this is a stale error message
+        if msg_time.tzinfo is None:
+            msg_time = msg_time.replace(tzinfo=timezone.utc)
+        return msg_time
+
+    def _is_stale_error_message(self, data: Dict[str, Any], error_code: str) -> bool:
+        """Check if an error message is stale (older than last registration)."""
         message_timestamp = data.get("timestamp")
         self.logger.debug(
             "Error message timestamp validation - timestamp: %s, last_registration_time: %s",
@@ -419,63 +431,60 @@ class SysManageAgent(
             self.last_registration_time,
         )
 
-        if message_timestamp and self.last_registration_time:
-            try:
-                # Parse the message timestamp
-                if isinstance(message_timestamp, str):
-                    # Handle ISO format timestamps
-                    if message_timestamp.endswith("+00:00"):
-                        message_timestamp = message_timestamp[:-6] + "Z"
-                    msg_time = datetime.fromisoformat(
-                        message_timestamp.replace("Z", "+00:00")
-                    )
-                else:
-                    msg_time = message_timestamp
-
-                # Ensure both timestamps are timezone-aware
-                if msg_time.tzinfo is None:
-                    msg_time = msg_time.replace(tzinfo=timezone.utc)
-                if self.last_registration_time.tzinfo is None:
-                    self.last_registration_time = self.last_registration_time.replace(
-                        tzinfo=timezone.utc
-                    )
-
-                self.logger.debug(
-                    "Timestamp comparison - msg_time: %s, last_registration: %s",
-                    msg_time,
-                    self.last_registration_time,
-                )
-
-                # If the error message is older than our last registration, ignore it
-                if msg_time < self.last_registration_time:
-                    self.logger.info(
-                        "Ignoring stale error message [%s] from %s (registration at %s)",
-                        error_code,
-                        msg_time,
-                        self.last_registration_time,
-                    )
-                    return
-
-                self.logger.debug(
-                    "Error message is NOT stale - msg_time: %s >= last_registration: %s",
-                    msg_time,
-                    self.last_registration_time,
-                )
-            except (ValueError, TypeError) as error:
-                self.logger.warning(
-                    "Could not parse message timestamp for stale check: %s", error
-                )
-        else:
+        if not message_timestamp or not self.last_registration_time:
             if not message_timestamp:
                 self.logger.debug("No timestamp in error message, processing normally")
             if not self.last_registration_time:
                 self.logger.debug(
                     "No last_registration_time set, processing error normally"
                 )
+            return False
+
+        try:
+            msg_time = self._parse_server_error_timestamp(message_timestamp)
+
+            if self.last_registration_time.tzinfo is None:
+                self.last_registration_time = self.last_registration_time.replace(
+                    tzinfo=timezone.utc
+                )
+
+            self.logger.debug(
+                "Timestamp comparison - msg_time: %s, last_registration: %s",
+                msg_time,
+                self.last_registration_time,
+            )
+
+            if msg_time < self.last_registration_time:
+                self.logger.info(
+                    "Ignoring stale error message [%s] from %s (registration at %s)",
+                    error_code,
+                    msg_time,
+                    self.last_registration_time,
+                )
+                return True
+
+            self.logger.debug(
+                "Error message is NOT stale - msg_time: %s >= last_registration: %s",
+                msg_time,
+                self.last_registration_time,
+            )
+        except (ValueError, TypeError) as error:
+            self.logger.warning(
+                "Could not parse message timestamp for stale check: %s", error
+            )
+
+        return False
+
+    async def _handle_server_error(self, data: Dict[str, Any]) -> None:
+        """Handle error messages from server."""
+        error_code = data.get("error_type", "unknown")
+        error_message = data.get("message", "No error message provided")
+
+        if self._is_stale_error_message(data, error_code):
+            return
 
         self.logger.error("Server error [%s]: %s", error_code, error_message)
 
-        # Handle specific error codes from server
         if error_code == "host_not_registered":
             await self._handle_host_not_registered()
         elif error_code == "host_not_approved":
@@ -512,7 +521,62 @@ class SysManageAgent(
         self.logger.info("Disconnecting to trigger re-registration...")
         self.running = False
 
-    async def message_receiver(self):  # pylint: disable=too-many-branches
+    async def _process_received_message(self, data: Dict[str, Any]) -> bool:
+        """Process a single received message. Returns False if receiver should stop."""
+        message_type = data.get("message_type")
+
+        if message_type == "command":
+            await self.handle_command(data)
+        elif message_type == "ping":
+            pong = self.create_message("pong", {"ping_id": data.get("message_id")})
+            await self.send_message(pong)
+        elif message_type == "ack":
+            self._log_ack_message(data)
+        elif message_type == "error":
+            await self._handle_server_error(data)
+            if self.needs_registration:
+                return False
+        elif message_type == "host_approved":
+            await self.handle_host_approval(data)
+        elif message_type == "registration_success":
+            await self.handle_registration_success(data)
+        elif message_type in (
+            "diagnostic_result_ack",
+            "available_packages_batch_queued",
+            "available_packages_batch_start_queued",
+            "available_packages_batch_end_queued",
+        ):
+            status = data.get("status", "unknown")
+            self.logger.debug("Server confirmed %s: %s", message_type, status)
+        else:
+            self.logger.warning("Unknown message type: %s", message_type)
+        return True
+
+    def _log_ack_message(self, data: Dict[str, Any]) -> None:
+        """Log an acknowledgment message from the server."""
+        ack_data = data.get("data", {})
+        queue_id = data.get("queue_id")
+        acked_msg_id = (
+            ack_data.get("acked_message_id")
+            or ack_data.get("message_id")
+            or data.get("message_id", "unknown")
+        )
+        status = data.get("status", "unknown")
+
+        if queue_id:
+            self.logger.debug(
+                "Server acknowledged message queue_id: %s (status: %s)",
+                queue_id,
+                status,
+            )
+        else:
+            self.logger.debug(
+                "Server acknowledged message: %s (status: %s)",
+                acked_msg_id,
+                status,
+            )
+
+    async def message_receiver(self):
         """Handle incoming messages from server."""
         self.logger.debug("Message receiver started")
         try:
@@ -522,70 +586,8 @@ class SysManageAgent(
 
                 try:
                     data = json.loads(message)
-                    message_type = data.get("message_type")
-
-                    if message_type == "command":
-                        await self.handle_command(data)
-                    elif message_type == "ping":
-                        # Respond to ping
-                        pong = self.create_message(
-                            "pong", {"ping_id": data.get("message_id")}
-                        )
-                        await self.send_message(pong)
-                    elif message_type == "ack":
-                        ack_data = data.get("data", {})
-                        # Try to get the queue_id or message_id that was acknowledged
-                        queue_id = data.get("queue_id")
-                        acked_msg_id = (
-                            ack_data.get("acked_message_id")
-                            or ack_data.get("message_id")
-                            or data.get("message_id", "unknown")
-                        )
-                        status = data.get("status", "unknown")
-
-                        if queue_id:
-                            self.logger.debug(
-                                "Server acknowledged message queue_id: %s (status: %s)",
-                                queue_id,
-                                status,
-                            )
-                        else:
-                            self.logger.debug(
-                                "Server acknowledged message: %s (status: %s)",
-                                acked_msg_id,
-                                status,
-                            )
-                    elif message_type == "error":
-                        await self._handle_server_error(data)
-                        if self.needs_registration:
-                            return
-                    elif message_type == "host_approved":
-                        await self.handle_host_approval(data)
-                    elif message_type == "registration_success":
-                        await self.handle_registration_success(data)
-                    elif message_type == "diagnostic_result_ack":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed diagnostic processing: %s", status
-                        )
-                    elif message_type == "available_packages_batch_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch queued: %s", status
-                        )
-                    elif message_type == "available_packages_batch_start_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch start queued: %s", status
-                        )
-                    elif message_type == "available_packages_batch_end_queued":
-                        status = data.get("status", "unknown")
-                        self.logger.debug(
-                            "Server confirmed packages batch end queued: %s", status
-                        )
-                    else:
-                        self.logger.warning("Unknown message type: %s", message_type)
-
+                    if not await self._process_received_message(data):
+                        return
                 except json.JSONDecodeError:
                     self.logger.error("Invalid JSON received: %s", message)
                 except Exception as error:
@@ -633,9 +635,167 @@ class SysManageAgent(
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
-    async def run(
-        self,
-    ):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    def _create_ssl_context(self):
+        """Create SSL context for WebSocket connection."""
+        ssl_context = ssl.create_default_context()
+
+        cert_paths = self.cert_store.load_certificates()
+        if cert_paths:
+            client_cert_path, client_key_path, ca_cert_path = cert_paths
+            ssl_context.load_cert_chain(client_cert_path, client_key_path)
+            ssl_context.load_verify_locations(ca_cert_path)
+            ssl_context.check_hostname = True
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
+            self.logger.info("Using mutual TLS with client certificates")
+        elif not self.config.should_verify_ssl():
+            ssl_context.check_hostname = False  # NOSONAR - intentionally configurable
+            ssl_context.verify_mode = (
+                ssl.CERT_NONE
+            )  # NOSONAR - intentionally configurable
+
+        return ssl_context
+
+    async def _run_agent_tasks(self):
+        """Run all concurrent agent tasks and handle their lifecycle."""
+        sender_task = asyncio.create_task(self.message_handler.message_sender())
+        receiver_task = asyncio.create_task(self.message_handler.message_receiver())
+        update_checker_task = asyncio.create_task(self.update_checker())
+        data_collector_task = asyncio.create_task(
+            self._collect_and_send_periodic_data()
+        )
+        package_collector_task = asyncio.create_task(self.package_collector())
+        child_host_heartbeat_task = asyncio.create_task(self.child_host_heartbeat())
+
+        done, pending = await asyncio.wait(
+            [sender_task, receiver_task],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        # Cancel all background and remaining connection tasks
+        background_tasks = [
+            update_checker_task,
+            data_collector_task,
+            package_collector_task,
+            child_host_heartbeat_task,
+        ]
+        for task in background_tasks:
+            task.cancel()
+        for task in pending:
+            task.cancel()
+
+        # Await all cancelled tasks, collecting exceptions
+        all_cancelled = background_tasks + list(pending)
+        results = await asyncio.gather(*all_cancelled, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception) and not isinstance(
+                result, asyncio.CancelledError
+            ):
+                self.logger.warning("Task error during shutdown: %s", result)
+
+        # Check if any connection task had an exception
+        for task in done:
+            if task.exception():
+                raise task.exception()
+
+    async def _handle_connection_error(self, base_reconnect_interval: float) -> bool:
+        """Handle connection cleanup and reconnection logic. Returns False to break the loop."""
+        self.connected = False
+        self.websocket = None
+        self.running = False
+        self.connection_failures += 1
+
+        try:
+            await self.message_handler.on_connection_lost()
+        except Exception as error:
+            self.logger.error(
+                "Error notifying message handler of connection loss: %s", error
+            )
+
+        self.logger.info(
+            "Connection attempt %d failed, current failure count: %d",
+            self.connection_failures,
+            self.connection_failures,
+        )
+
+        if not self.config.should_auto_reconnect():
+            self.logger.info("Auto-reconnect disabled, exiting...")
+            return False
+
+        reconnect_interval = min(
+            base_reconnect_interval * (2 ** min(self.connection_failures, 6)),
+            300,
+        )
+        jitter = 0.5 + (secrets.randbelow(1000) / 1000.0)
+        reconnect_interval *= jitter
+
+        self.logger.info(
+            "Reconnecting in %.1f seconds (attempt %d)",
+            reconnect_interval,
+            self.connection_failures + 1,
+        )
+        await asyncio.sleep(reconnect_interval)
+        return True
+
+    async def _establish_websocket_connection(self):
+        """Establish a WebSocket connection and run agent tasks."""
+        if not await self._check_server_health():
+            self.logger.warning("Server health check failed, waiting before retry...")
+            await asyncio.sleep(5)
+            return
+
+        if self.needs_registration:
+            self.logger.info("Re-registration required, attempting to register...")
+            if not await self.registration.register_with_retry():
+                self.logger.error(
+                    "Failed to re-register with server. Will retry on next connection attempt."
+                )
+                await asyncio.sleep(10)
+                return
+            self.needs_registration = False
+            self.logger.info("Re-registration successful")
+
+        auth_token = await self.get_auth_token()
+        self.logger.info("Got authentication token for WebSocket connection")
+        websocket_url = f"{self.server_url}?token={auth_token}"
+
+        ssl_context = None
+        if self.server_url.startswith("wss://"):
+            ssl_context = self._create_ssl_context()
+
+        ping_interval = self.config.get_ping_interval()
+        ping_timeout = ping_interval / 2
+
+        async with websockets.connect(
+            websocket_url,
+            ssl=ssl_context,
+            ping_interval=ping_interval,
+            ping_timeout=ping_timeout,
+            close_timeout=10,
+        ) as websocket:
+            self.websocket = websocket
+            self.connected = True
+            self.running = True
+            self.connection_failures = 0
+            self.logger.info(_("Connected to server successfully"))
+
+            try:
+                await self.message_handler.on_connection_established()
+            except Exception as error:
+                self.logger.error(
+                    "Failed to start queue processing: %s", error, exc_info=True
+                )
+
+            self.logger.info(
+                _("Connected to server, waiting for registration confirmation...")
+            )
+
+            try:
+                await self._run_agent_tasks()
+            except asyncio.CancelledError:
+                self.logger.debug("Connection tasks cancelled")
+                raise
+
+    async def run(self):
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
 
@@ -646,7 +806,6 @@ class SysManageAgent(
         self.logger.info("IPv4: %s", system_info["ipv4"])
         self.logger.info("IPv6: %s", system_info["ipv6"])
 
-        # Attempt registration with server
         self.logger.info(_("Registering with SysManage server..."))
         if not await self.registration.register_with_retry():
             self.logger.error(_("Failed to register with server. Exiting."))
@@ -654,8 +813,6 @@ class SysManageAgent(
 
         self.logger.info(_("Registration successful, checking certificates..."))
 
-        # Check if we have certificates for secure authentication
-        # For now, we'll continue with token-based auth but log certificate status
         if self.cert_store.has_certificates():
             self.logger.info(
                 _("Valid certificates found - secure authentication available")
@@ -676,153 +833,7 @@ class SysManageAgent(
 
         while True:
             try:
-                # Check if server is available before attempting connection
-                if not await self._check_server_health():
-                    self.logger.warning(
-                        "Server health check failed, waiting before retry..."
-                    )
-                    await asyncio.sleep(5)
-                    continue
-
-                # Check if we need to re-register due to host_not_registered error
-                if self.needs_registration:
-                    self.logger.info(
-                        "Re-registration required, attempting to register..."
-                    )
-                    if not await self.registration.register_with_retry():
-                        self.logger.error(
-                            "Failed to re-register with server. Will retry on next connection attempt."
-                        )
-                        await asyncio.sleep(10)  # Short wait before trying again
-                        continue
-                    self.needs_registration = False
-                    self.logger.info("Re-registration successful")
-
-                # Get authentication token
-                auth_token = await self.get_auth_token()
-                self.logger.info("Got authentication token for WebSocket connection")
-
-                # Add token to WebSocket URL
-                websocket_url = f"{self.server_url}?token={auth_token}"
-
-                # Create SSL context based on configuration
-                ssl_context = None
-                if self.server_url.startswith("wss://"):
-                    ssl_context = ssl.create_default_context()
-
-                    # If we have certificates, use them for mutual TLS
-                    cert_paths = self.cert_store.load_certificates()
-                    if cert_paths:
-                        client_cert_path, client_key_path, ca_cert_path = cert_paths
-                        ssl_context.load_cert_chain(client_cert_path, client_key_path)
-                        ssl_context.load_verify_locations(ca_cert_path)
-                        ssl_context.check_hostname = True
-                        ssl_context.verify_mode = ssl.CERT_REQUIRED
-                        self.logger.info("Using mutual TLS with client certificates")
-                    elif not self.config.should_verify_ssl():
-                        ssl_context.check_hostname = False
-                        ssl_context.verify_mode = ssl.CERT_NONE
-
-                # Set up WebSocket connection with proper timeouts and ping/pong
-                ping_interval = self.config.get_ping_interval()
-                ping_timeout = ping_interval / 2  # Half of ping interval for timeout
-
-                async with websockets.connect(
-                    websocket_url,
-                    ssl=ssl_context,
-                    ping_interval=ping_interval,
-                    ping_timeout=ping_timeout,
-                    close_timeout=10,
-                ) as websocket:
-                    self.websocket = websocket
-                    self.connected = True
-                    self.running = True
-                    self.connection_failures = (
-                        0  # Reset failure count on successful connection
-                    )
-                    self.logger.info(_("Connected to server successfully"))
-
-                    # Notify message handler that connection is established
-                    try:
-                        await self.message_handler.on_connection_established()
-                    except Exception as error:
-                        self.logger.error(
-                            "Failed to start queue processing: %s", error, exc_info=True
-                        )
-
-                    # Wait for registration_success before sending inventory data
-                    self.logger.info(
-                        _(
-                            "Connected to server, waiting for registration confirmation..."
-                        )
-                    )
-
-                    # Run sender, receiver, update checker, data collector, package collector, and child host heartbeat concurrently with proper error handling
-                    # IMPORTANT: Use message_handler's methods which properly queue commands
-                    # instead of blocking on command execution
-                    try:
-                        sender_task = asyncio.create_task(
-                            self.message_handler.message_sender()
-                        )
-                        receiver_task = asyncio.create_task(
-                            self.message_handler.message_receiver()
-                        )
-                        update_checker_task = asyncio.create_task(self.update_checker())
-                        data_collector_task = asyncio.create_task(
-                            self._collect_and_send_periodic_data()
-                        )
-                        package_collector_task = asyncio.create_task(
-                            self.package_collector()
-                        )
-                        child_host_heartbeat_task = asyncio.create_task(
-                            self.child_host_heartbeat()
-                        )
-
-                        # Wait for either sender or receiver to complete (connection tasks only)
-                        # Update checker, data collector, package collector, and child host heartbeat run independently and don't trigger disconnection
-                        done, pending = await asyncio.wait(
-                            [sender_task, receiver_task],
-                            return_when=asyncio.FIRST_COMPLETED,
-                        )
-
-                        # Cancel the background tasks when connection fails
-                        update_checker_task.cancel()
-                        data_collector_task.cancel()
-                        package_collector_task.cancel()
-                        child_host_heartbeat_task.cancel()
-                        try:
-                            await update_checker_task
-                        except asyncio.CancelledError:
-                            pass
-                        try:
-                            await data_collector_task
-                        except asyncio.CancelledError:
-                            pass
-                        try:
-                            await package_collector_task
-                        except asyncio.CancelledError:
-                            pass
-                        try:
-                            await child_host_heartbeat_task
-                        except asyncio.CancelledError:
-                            pass
-
-                        # Cancel any remaining connection tasks
-                        for task in pending:
-                            task.cancel()
-                            try:
-                                await task
-                            except asyncio.CancelledError:
-                                pass
-
-                        # Check if any connection task had an exception
-                        for task in done:
-                            if task.exception():
-                                raise task.exception()
-
-                    except asyncio.CancelledError:
-                        self.logger.debug("Connection tasks cancelled")
-                        raise
+                await self._establish_websocket_connection()
 
             except websockets.ConnectionClosed:
                 self.logger.warning(
@@ -837,45 +848,10 @@ class SysManageAgent(
                     "WEBSOCKET_UNKNOWN_ERROR: Connection error: %s", error
                 )
 
-            # Clean up connection state
-            self.connected = False
-            self.websocket = None
-            self.running = False
-            self.connection_failures += 1
-
-            # Notify message handler that connection is lost
-            try:
-                await self.message_handler.on_connection_lost()
-            except Exception as error:
-                self.logger.error(
-                    "Error notifying message handler of connection loss: %s", error
-                )
-
-            self.logger.info(
-                "Connection attempt %d failed, current failure count: %d",
-                self.connection_failures,
-                self.connection_failures,
+            should_continue = await self._handle_connection_error(
+                base_reconnect_interval
             )
-
-            # Only reconnect if auto-reconnect is enabled
-            if self.config.should_auto_reconnect():
-                # Calculate exponential backoff with jitter
-                reconnect_interval = min(
-                    base_reconnect_interval * (2 ** min(self.connection_failures, 6)),
-                    300,
-                )
-                # Add jitter to prevent thundering herd (using secrets for cryptographic randomness)
-                jitter = 0.5 + (secrets.randbelow(1000) / 1000.0)  # 0.5 to 1.5
-                reconnect_interval *= jitter
-
-                self.logger.info(
-                    "Reconnecting in %.1f seconds (attempt %d)",
-                    reconnect_interval,
-                    self.connection_failures + 1,
-                )
-                await asyncio.sleep(reconnect_interval)
-            else:
-                self.logger.info("Auto-reconnect disabled, exiting...")
+            if not should_continue:
                 break
 
 

@@ -14,6 +14,21 @@ from src.sysmanage_agent.operations.bsd_macos_repository_operations import (
     BSDMacOSRepositoryOperations,
 )
 
+# Path to patch aiofiles.open in the module under test
+_BSD_MACOS_AIOFILES_OPEN = (
+    "src.sysmanage_agent.operations.bsd_macos_repository_operations.aiofiles.open"
+)
+
+
+def _mock_aiofiles_open():
+    """Create a mock for aiofiles.open that supports async context manager."""
+    mock_file = AsyncMock()
+    mock_file.write = AsyncMock()
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_file)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_ctx
+
 
 @pytest.fixture
 def mock_agent():
@@ -180,7 +195,9 @@ class TestFreeBSDOperations:
             "success": True,
             "result": {"stdout": "Updated", "stderr": ""},
         }
-        with patch("os.makedirs"), patch("builtins.open", mock_open()):
+        with patch("os.makedirs"), patch(
+            _BSD_MACOS_AIOFILES_OPEN, return_value=_mock_aiofiles_open()
+        ):
             result = await bsd_macos_ops.add_freebsd_repository(
                 "myrepo", "http://pkg.freebsd.org/"
             )

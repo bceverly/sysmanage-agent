@@ -10,13 +10,141 @@ import os
 import socket
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
 from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations import package_installation_helpers
+
+
+def _create_uninstall_record(
+    request_id: str, requested_by: str, packages: List[Dict[str, Any]]
+) -> Tuple[bool, str]:
+    """Create a tracking record for an uninstall request."""
+    try:
+        db_manager = get_database_manager()
+        with db_manager.get_session() as session:
+            tracking_record = InstallationRequestTracking(
+                request_id=request_id,
+                requested_by=requested_by,
+                status="in_progress",
+                packages_json=json.dumps(packages),
+                received_at=datetime.now(timezone.utc),
+                started_at=datetime.now(timezone.utc),
+            )
+            session.add(tracking_record)
+            session.commit()
+        return True, ""
+    except Exception as error:
+        return False, f"Failed to store uninstall request: {str(error)}"
+
+
+def _validate_uninstall_packages(
+    packages: List[Dict[str, Any]], logger: logging.Logger
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Validate packages for uninstallation."""
+    valid_packages = []
+    failed_packages = []
+    for package in packages:
+        package_name = package.get("package_name")
+        if not package_name:
+            logger.warning("Skipping package with no name")
+            failed_packages.append({"package": package, "error": "No package name"})
+            continue
+        valid_packages.append(package)
+    return valid_packages, failed_packages
+
+
+def _group_uninstall_packages(
+    valid_packages: List[Dict[str, Any]],
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Group packages by package manager for uninstallation."""
+    package_groups: Dict[str, List[Dict[str, Any]]] = {}
+    for package in valid_packages:
+        package_manager = package.get("package_manager", "auto")
+        if package_manager == "auto":
+            package_manager = "apt"
+        if package_manager not in package_groups:
+            package_groups[package_manager] = []
+        package_groups[package_manager].append(package)
+    return package_groups
+
+
+def _process_apt_uninstall_result(
+    result: Dict[str, Any], pkg_list: List[Dict[str, Any]]
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+    """Process the result of an apt uninstall operation."""
+    success_packages = []
+    failed_packages = []
+    uninstall_log = []
+
+    if result.get("success", False):
+        for package in pkg_list:
+            package_name = package["package_name"]
+            success_packages.append({"package_name": package_name, "result": result})
+            uninstall_log.append(f"[OK] {package_name} uninstalled successfully")
+    else:
+        error_msg = result.get("error", "Unknown error")
+        for package in pkg_list:
+            package_name = package["package_name"]
+            failed_packages.append(
+                {"package_name": package_name, "error": error_msg, "result": result}
+            )
+            uninstall_log.append(f"[FAIL] {package_name} failed: {error_msg}")
+
+    return success_packages, failed_packages, uninstall_log
+
+
+def _process_non_apt_uninstall(
+    pkg_list: List[Dict[str, Any]], pkg_manager: str, logger: logging.Logger
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+    """Process uninstallation for non-apt package managers."""
+    failed_packages = []
+    uninstall_log = []
+
+    for package in pkg_list:
+        package_name = package.get("package_name")
+        uninstall_log.append(f"Uninstalling {package_name}...")
+        logger.info("Uninstalling package: %s", package_name)
+        # Non-apt managers not implemented yet  # NOSONAR
+        failed_packages.append(
+            {
+                "package_name": package_name,
+                "error": f"Uninstall not implemented for {pkg_manager} package manager",
+            }
+        )
+        uninstall_log.append(
+            f"[FAIL] {package_name} failed: Uninstall not implemented for {pkg_manager}"
+        )
+
+    return [], failed_packages, uninstall_log
+
+
+def _update_uninstall_record(
+    request_id: str,
+    overall_success: bool,
+    uninstall_log_text: str,
+    logger: logging.Logger,
+) -> None:
+    """Update the tracking record with completion status."""
+    try:
+        db_manager = get_database_manager()
+        with db_manager.get_session() as session:
+            tracking_record = (
+                session.query(InstallationRequestTracking)
+                .filter_by(request_id=request_id)
+                .first()
+            )
+            if tracking_record:
+                tracking_record.status = "completed" if overall_success else "failed"
+                tracking_record.completed_at = datetime.now(timezone.utc)
+                tracking_record.result_log = uninstall_log_text
+                tracking_record.success = "true" if overall_success else "false"
+                session.commit()
+    except Exception as error:
+        logger.error("Failed to update uninstall tracking record: %s", error)
 
 
 class PackageOperations:
@@ -249,143 +377,31 @@ class PackageOperations:
         )
 
         # Store the request in agent database for tracking
-        try:
-            db_manager = get_database_manager()
-            with db_manager.get_session() as session:
-                # Create tracking record
-                tracking_record = InstallationRequestTracking(
-                    request_id=request_id,
-                    requested_by=requested_by,
-                    status="in_progress",
-                    packages_json=json.dumps(packages),
-                    received_at=datetime.now(timezone.utc),
-                    started_at=datetime.now(timezone.utc),
-                )
-                session.add(tracking_record)
-                session.commit()
+        success, error_msg = _create_uninstall_record(
+            request_id, requested_by, packages
+        )
+        if not success:
+            self.logger.error(error_msg)
+            return {"success": False, "error": error_msg}
 
-        except Exception as error:
-            self.logger.error("Failed to store uninstall request: %s", error)
-            return {
-                "success": False,
-                "error": f"Failed to store uninstall request: {str(error)}",
-            }
+        # Validate and process packages
+        success_packages, failed_packages, uninstall_log = (
+            await self._process_uninstall_packages(packages)
+        )
 
-        # Uninstall all packages in a single batch command
-        success_packages = []
-        failed_packages = []
-        uninstall_log = []
-
-        # Extract valid package names
-        valid_packages = []
-        for package in packages:
-            package_name = package.get("package_name")
-            if not package_name:
-                self.logger.warning("Skipping package with no name")
-                failed_packages.append({"package": package, "error": "No package name"})
-                continue
-            valid_packages.append(package)
-
-        if not valid_packages:
-            uninstall_log.append("No valid packages to uninstall")
-        else:
-            # Group packages by package manager
-            package_groups = {}
-            for package in valid_packages:
-                package_manager = package.get("package_manager", "auto")
-                if package_manager == "auto":
-                    # Auto-detect package manager (assume apt for now)
-                    package_manager = "apt"
-
-                if package_manager not in package_groups:
-                    package_groups[package_manager] = []
-                package_groups[package_manager].append(package)
-
-            # Uninstall packages for each package manager
-            for pkg_manager, pkg_list in package_groups.items():
-                if pkg_manager == "apt":
-                    result = await self._uninstall_packages_with_apt(
-                        [pkg["package_name"] for pkg in pkg_list]
-                    )
-
-                    if result.get("success", False):
-                        # All packages succeeded
-                        for package in pkg_list:
-                            package_name = package["package_name"]
-                            success_packages.append(
-                                {"package_name": package_name, "result": result}
-                            )
-                            uninstall_log.append(
-                                f"✓ {package_name} uninstalled successfully"
-                            )
-                    else:
-                        # All packages failed
-                        error_msg = result.get("error", "Unknown error")
-                        for package in pkg_list:
-                            package_name = package["package_name"]
-                            failed_packages.append(
-                                {
-                                    "package_name": package_name,
-                                    "error": error_msg,
-                                    "result": result,
-                                }
-                            )
-                            uninstall_log.append(
-                                f"✗ {package_name} failed: {error_msg}"
-                            )
-                else:
-                    # Fall back to individual uninstall for non-apt package managers
-                    for package in pkg_list:
-                        package_name = package.get("package_name")
-                        uninstall_log.append(f"Uninstalling {package_name}...")
-                        self.logger.info("Uninstalling package: %s", package_name)
-
-                        # For now, just simulate success for non-apt managers
-                        # TODO: Implement other package managers  # pylint: disable=fixme
-                        failed_packages.append(
-                            {
-                                "package_name": package_name,
-                                "error": f"Uninstall not implemented for {pkg_manager} package manager",
-                            }
-                        )
-                        uninstall_log.append(
-                            f"✗ {package_name} failed: Uninstall not implemented for {pkg_manager}"
-                        )
-
-        # Determine overall success
+        # Determine overall success and finalize
         overall_success = len(failed_packages) == 0
         uninstall_log_text = "\n".join(uninstall_log)
 
-        # Update tracking record with completion
-        try:
-            db_manager = get_database_manager()
-            with db_manager.get_session() as session:
-                tracking_record = (
-                    session.query(InstallationRequestTracking)
-                    .filter_by(request_id=request_id)
-                    .first()
-                )
-                if tracking_record:
-                    tracking_record.status = (
-                        "completed" if overall_success else "failed"
-                    )
-                    tracking_record.completed_at = datetime.now(timezone.utc)
-                    tracking_record.result_log = uninstall_log_text
-                    tracking_record.success = "true" if overall_success else "false"
-                    session.commit()
+        # Update tracking record
+        _update_uninstall_record(
+            request_id, overall_success, uninstall_log_text, self.logger
+        )
 
-        except Exception as error:
-            self.logger.error("Failed to update uninstall tracking record: %s", error)
-
-        # Send completion notification to server via HTTP POST
-        try:
-            await self._send_installation_completion(
-                request_id, overall_success, uninstall_log_text
-            )
-        except Exception as error:
-            self.logger.error(
-                "Failed to send uninstall completion to server: %s", error
-            )
+        # Send completion notification
+        await self._send_uninstall_completion(
+            request_id, overall_success, uninstall_log_text
+        )
 
         return {
             "success": overall_success,
@@ -395,6 +411,60 @@ class PackageOperations:
             "uninstall_log": uninstall_log_text,
             "summary": f"Uninstalled {len(success_packages)}/{len(packages)} packages successfully",
         }
+
+    async def _process_uninstall_packages(
+        self, packages: List[Dict[str, Any]]
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+        """Process uninstallation for all packages."""
+        valid_packages, failed_packages = _validate_uninstall_packages(
+            packages, self.logger
+        )
+
+        if not valid_packages:
+            return [], failed_packages, ["No valid packages to uninstall"]
+
+        package_groups = _group_uninstall_packages(valid_packages)
+        success_packages: List[Dict[str, Any]] = []
+        uninstall_log: List[str] = []
+
+        for pkg_manager, pkg_list in package_groups.items():
+            if pkg_manager == "apt":
+                apt_success, apt_failed, apt_log = (
+                    await self._uninstall_apt_package_group(pkg_list)
+                )
+                success_packages.extend(apt_success)
+                failed_packages.extend(apt_failed)
+                uninstall_log.extend(apt_log)
+            else:
+                _, non_apt_failed, non_apt_log = _process_non_apt_uninstall(
+                    pkg_list, pkg_manager, self.logger
+                )
+                failed_packages.extend(non_apt_failed)
+                uninstall_log.extend(non_apt_log)
+
+        return success_packages, failed_packages, uninstall_log
+
+    async def _uninstall_apt_package_group(
+        self, pkg_list: List[Dict[str, Any]]
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+        """Uninstall a group of apt packages."""
+        result = await self._uninstall_packages_with_apt(
+            [pkg["package_name"] for pkg in pkg_list]
+        )
+        return _process_apt_uninstall_result(result, pkg_list)
+
+    async def _send_uninstall_completion(
+        self, request_id: str, overall_success: bool, uninstall_log_text: str
+    ) -> None:
+        """Send uninstall completion notification to server."""
+        try:
+            await self._send_installation_completion(
+                request_id, overall_success, uninstall_log_text
+            )
+        except Exception as error:
+            self.logger.error(
+                "Failed to send uninstall completion to server: %s", error
+            )
 
     async def _install_packages_with_apt(
         self, package_names: list

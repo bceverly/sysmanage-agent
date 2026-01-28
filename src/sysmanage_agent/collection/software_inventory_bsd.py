@@ -82,20 +82,26 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         except Exception as error:
             logger.error(_("Failed to collect FreeBSD pkg packages: %s"), str(error))
 
+    def _detect_bsd_platform_source(self):
+        """Detect the BSD platform and return the appropriate source name.
+
+        Returns:
+            A tuple of (platform_name, source_name) where platform_name is the
+            lowercased system name and source_name is the package source label.
+        """
+        platform_name = platform.system().lower()
+        source_map = {
+            "openbsd": "openbsd_packages",
+            "netbsd": "netbsd_packages",
+        }
+        source_name = source_map.get(platform_name, "bsd_packages")
+        return (platform_name, source_name)
+
     def _collect_pkg_info_packages(self):
         """Collect packages from OpenBSD/NetBSD pkg_info."""
         try:
-            # Determine the correct source name based on platform
-            platform_name = platform.system().lower()
-            if platform_name == "openbsd":
-                source_name = "openbsd_packages"
-                logger.debug(_("Collecting OpenBSD pkg_info packages"))
-            elif platform_name == "netbsd":
-                source_name = "netbsd_packages"
-                logger.debug(_("Collecting NetBSD pkg_info packages"))
-            else:
-                source_name = "bsd_packages"
-                logger.debug(_("Collecting BSD pkg_info packages"))
+            platform_name, source_name = self._detect_bsd_platform_source()
+            logger.debug(_("Collecting %s pkg_info packages"), platform_name.upper())
 
             # Use pkg_info -a to list all installed packages
             result = subprocess.run(
@@ -128,8 +134,8 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             if line:
                 # Format: package-version comment
                 match = re.match(
-                    r"^([^-]+(?:-[^0-9][^-]*)*)-([0-9][^\s]*)\s+(.*)$", line
-                )
+                    r"^([^-]+(?:-\D[^-]*)*)-(\d[^\s]*)\s+(.*)$", line
+                )  # NOSONAR - regex operates on trusted internal data
                 if match:
                     package_name = match.group(1)
                     version = match.group(2)

@@ -44,6 +44,102 @@ def _b64_encode_24bit(b1: int, b2: int, b3: int, n: int) -> str:
     return result
 
 
+def _create_repeated_bytes(digest: bytes, length: int) -> bytes:
+    """Create a byte string by repeating digest to fill specified length."""
+    result = b""
+    remaining = length
+    while remaining > 64:
+        result += digest
+        remaining -= 64
+    result += digest[:remaining]
+    return result
+
+
+def _create_digest_a(
+    password_bytes: bytes, salt_bytes: bytes, digest_b: bytes
+) -> bytes:
+    """Create digest A as per SHA-512 crypt specification."""
+    a_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
+    a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+    a_ctx.update(salt_bytes)
+
+    # Step 11: Add bytes from B based on password length
+    pwd_len = len(password_bytes)
+    remaining = pwd_len
+    while remaining > 64:
+        a_ctx.update(digest_b)
+        remaining -= 64
+    a_ctx.update(digest_b[:remaining])
+
+    # Step 12: For each bit of password length, add B or password
+    i = pwd_len
+    while i > 0:
+        if i & 1:
+            a_ctx.update(digest_b)
+        else:
+            a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+        i >>= 1
+
+    return a_ctx.digest()
+
+
+def _perform_rounds(
+    digest_a: bytes, p_bytes: bytes, s_bytes: bytes, rounds: int
+) -> bytes:
+    """Perform the key stretching rounds of SHA-512 crypt."""
+    digest_c = digest_a
+    for i in range(rounds):
+        c_ctx = hashlib.sha512()
+
+        if i & 1:
+            c_ctx.update(p_bytes)
+        else:
+            c_ctx.update(digest_c)
+
+        if i % 3:
+            c_ctx.update(s_bytes)
+
+        if i % 7:
+            c_ctx.update(p_bytes)
+
+        if i & 1:
+            c_ctx.update(digest_c)
+        else:
+            c_ctx.update(p_bytes)
+
+        digest_c = c_ctx.digest()
+
+    return digest_c
+
+
+def _encode_final_digest(digest_c: bytes) -> str:
+    """Encode the final digest using SHA-512 crypt base64 encoding."""
+    result = ""
+    result += _b64_encode_24bit(digest_c[0], digest_c[21], digest_c[42], 4)
+    result += _b64_encode_24bit(digest_c[22], digest_c[43], digest_c[1], 4)
+    result += _b64_encode_24bit(digest_c[44], digest_c[2], digest_c[23], 4)
+    result += _b64_encode_24bit(digest_c[3], digest_c[24], digest_c[45], 4)
+    result += _b64_encode_24bit(digest_c[25], digest_c[46], digest_c[4], 4)
+    result += _b64_encode_24bit(digest_c[47], digest_c[5], digest_c[26], 4)
+    result += _b64_encode_24bit(digest_c[6], digest_c[27], digest_c[48], 4)
+    result += _b64_encode_24bit(digest_c[28], digest_c[49], digest_c[7], 4)
+    result += _b64_encode_24bit(digest_c[50], digest_c[8], digest_c[29], 4)
+    result += _b64_encode_24bit(digest_c[9], digest_c[30], digest_c[51], 4)
+    result += _b64_encode_24bit(digest_c[31], digest_c[52], digest_c[10], 4)
+    result += _b64_encode_24bit(digest_c[53], digest_c[11], digest_c[32], 4)
+    result += _b64_encode_24bit(digest_c[12], digest_c[33], digest_c[54], 4)
+    result += _b64_encode_24bit(digest_c[34], digest_c[55], digest_c[13], 4)
+    result += _b64_encode_24bit(digest_c[56], digest_c[14], digest_c[35], 4)
+    result += _b64_encode_24bit(digest_c[15], digest_c[36], digest_c[57], 4)
+    result += _b64_encode_24bit(digest_c[37], digest_c[58], digest_c[16], 4)
+    result += _b64_encode_24bit(digest_c[59], digest_c[17], digest_c[38], 4)
+    result += _b64_encode_24bit(digest_c[18], digest_c[39], digest_c[60], 4)
+    result += _b64_encode_24bit(digest_c[40], digest_c[61], digest_c[19], 4)
+    result += _b64_encode_24bit(digest_c[62], digest_c[20], digest_c[41], 4)
+    result += _b64_encode_24bit(0, 0, digest_c[63], 2)
+    return result
+
+
 def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
     """
     Implement SHA-512 crypt algorithm as specified by glibc.
@@ -73,6 +169,7 @@ def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
     salt = salt[:16]
     password_bytes = password.encode("utf-8")
     salt_bytes = salt.encode("utf-8")
+    pwd_len = len(password_bytes)
 
     # Step 1-8: Create digest B
     # Note: hashlib.sha512 usage here is part of SHA-512 crypt KDF, not simple hashing
@@ -83,28 +180,7 @@ def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
     digest_b = b_ctx.digest()
 
     # Step 9-12: Create digest A
-    a_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
-    a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
-    a_ctx.update(salt_bytes)
-
-    # Step 11: Add bytes from B based on password length
-    pwd_len = len(password_bytes)
-    remaining = pwd_len
-    while remaining > 64:
-        a_ctx.update(digest_b)
-        remaining -= 64
-    a_ctx.update(digest_b[:remaining])
-
-    # Step 12: For each bit of password length, add B or password
-    i = pwd_len
-    while i > 0:
-        if i & 1:
-            a_ctx.update(digest_b)
-        else:
-            a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
-        i >>= 1
-
-    digest_a = a_ctx.digest()
+    digest_a = _create_digest_a(password_bytes, salt_bytes, digest_b)
 
     # Step 13-15: Create digest DP (password repeated)
     dp_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
@@ -113,12 +189,7 @@ def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
     digest_dp = dp_ctx.digest()
 
     # Step 16: Create P string
-    p_bytes = b""
-    remaining = pwd_len
-    while remaining > 64:
-        p_bytes += digest_dp
-        remaining -= 64
-    p_bytes += digest_dp[:remaining]
+    p_bytes = _create_repeated_bytes(digest_dp, pwd_len)
 
     # Step 17-19: Create digest DS (salt repeated 16 + A[0] times)
     ds_ctx = hashlib.sha512()
@@ -127,61 +198,13 @@ def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
     digest_ds = ds_ctx.digest()
 
     # Step 20: Create S string
-    s_bytes = b""
-    remaining = len(salt_bytes)
-    while remaining > 64:
-        s_bytes += digest_ds
-        remaining -= 64
-    s_bytes += digest_ds[:remaining]
+    s_bytes = _create_repeated_bytes(digest_ds, len(salt_bytes))
 
     # Step 21: Perform rounds
-    digest_c = digest_a
-    for i in range(rounds):
-        c_ctx = hashlib.sha512()
-
-        if i & 1:
-            c_ctx.update(p_bytes)
-        else:
-            c_ctx.update(digest_c)
-
-        if i % 3:
-            c_ctx.update(s_bytes)
-
-        if i % 7:
-            c_ctx.update(p_bytes)
-
-        if i & 1:
-            c_ctx.update(digest_c)
-        else:
-            c_ctx.update(p_bytes)
-
-        digest_c = c_ctx.digest()
+    digest_c = _perform_rounds(digest_a, p_bytes, s_bytes, rounds)
 
     # Step 22: Encode final digest
-    # The encoding order is specified by glibc
-    result = ""
-    result += _b64_encode_24bit(digest_c[0], digest_c[21], digest_c[42], 4)
-    result += _b64_encode_24bit(digest_c[22], digest_c[43], digest_c[1], 4)
-    result += _b64_encode_24bit(digest_c[44], digest_c[2], digest_c[23], 4)
-    result += _b64_encode_24bit(digest_c[3], digest_c[24], digest_c[45], 4)
-    result += _b64_encode_24bit(digest_c[25], digest_c[46], digest_c[4], 4)
-    result += _b64_encode_24bit(digest_c[47], digest_c[5], digest_c[26], 4)
-    result += _b64_encode_24bit(digest_c[6], digest_c[27], digest_c[48], 4)
-    result += _b64_encode_24bit(digest_c[28], digest_c[49], digest_c[7], 4)
-    result += _b64_encode_24bit(digest_c[50], digest_c[8], digest_c[29], 4)
-    result += _b64_encode_24bit(digest_c[9], digest_c[30], digest_c[51], 4)
-    result += _b64_encode_24bit(digest_c[31], digest_c[52], digest_c[10], 4)
-    result += _b64_encode_24bit(digest_c[53], digest_c[11], digest_c[32], 4)
-    result += _b64_encode_24bit(digest_c[12], digest_c[33], digest_c[54], 4)
-    result += _b64_encode_24bit(digest_c[34], digest_c[55], digest_c[13], 4)
-    result += _b64_encode_24bit(digest_c[56], digest_c[14], digest_c[35], 4)
-    result += _b64_encode_24bit(digest_c[15], digest_c[36], digest_c[57], 4)
-    result += _b64_encode_24bit(digest_c[37], digest_c[58], digest_c[16], 4)
-    result += _b64_encode_24bit(digest_c[59], digest_c[17], digest_c[38], 4)
-    result += _b64_encode_24bit(digest_c[18], digest_c[39], digest_c[60], 4)
-    result += _b64_encode_24bit(digest_c[40], digest_c[61], digest_c[19], 4)
-    result += _b64_encode_24bit(digest_c[62], digest_c[20], digest_c[41], 4)
-    result += _b64_encode_24bit(0, 0, digest_c[63], 2)
+    result = _encode_final_digest(digest_c)
 
     # Format: $6$salt$hash (or $6$rounds=N$salt$hash if non-default rounds)
     if rounds == 5000:

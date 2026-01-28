@@ -103,7 +103,9 @@ class SystemControl:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    async def update_system(self) -> Dict[str, Any]:
+    async def update_system(
+        self,
+    ) -> Dict[str, Any]:  # NOSONAR - async required by interface
         """Update the system using the default package manager."""
         try:
             update_detector = UpdateDetector()

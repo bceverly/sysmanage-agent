@@ -76,6 +76,31 @@ class WindowsRepositoryOperations:
 
         return repositories
 
+    def _is_winget_header_line(self, line: str) -> bool:
+        """Check if a line is a winget output header line."""
+        if "Name" in line and "Argument" in line:
+            return True
+        return line.startswith("---")
+
+    def _parse_winget_source_line(self, line: str) -> dict | None:
+        """Parse a winget source line and return repo dict or None if should skip."""
+        parts = line.split()
+        if len(parts) < 2:
+            return None
+
+        name = parts[0]
+        # Skip the official msstore and winget sources
+        if name.lower() in ["msstore", "winget"]:
+            return None
+
+        return {
+            "name": name,
+            "type": "winget",
+            "url": parts[1] if len(parts) > 1 else "",
+            "enabled": True,
+            "file_path": None,
+        }
+
     async def _list_winget_sources(self) -> list:
         """List winget sources."""
         repositories = []
@@ -91,34 +116,14 @@ class WindowsRepositoryOperations:
 
         for i, line in enumerate(lines):
             line = line.strip()
-            # Skip header lines
-            if "Name" in line and "Argument" in line:
+            if self._is_winget_header_line(line):
                 continue
-            if line.startswith("---"):
-                continue
-            # Parse winget source lines
-            if not (line and i > 1):  # Skip first two header lines
+            if not (line and i > 1):
                 continue
 
-            parts = line.split()
-            if len(parts) < 2:
-                continue
-
-            name = parts[0]
-            url = parts[1] if len(parts) > 1 else ""
-            # Skip the official msstore and winget sources
-            if name.lower() in ["msstore", "winget"]:
-                continue
-
-            repositories.append(
-                {
-                    "name": name,
-                    "type": "winget",
-                    "url": url,
-                    "enabled": True,
-                    "file_path": None,
-                }
-            )
+            repo = self._parse_winget_source_line(line)
+            if repo:
+                repositories.append(repo)
 
         return repositories
 

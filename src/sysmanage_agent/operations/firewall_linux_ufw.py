@@ -596,7 +596,7 @@ class UfwOperations:
     def _generate_ufw_nat_rules(self, bridge_name: str) -> str:
         """Generate NAT rules for UFW before.rules file."""
         # Get the LXD bridge subnet
-        subnet = "10.0.0.0/8"  # Default, will match most LXD configurations
+        subnet = "10.0.0.0/8"  # NOSONAR - default private subnet for LXD networking
 
         # Try to get actual subnet from the bridge
         try:

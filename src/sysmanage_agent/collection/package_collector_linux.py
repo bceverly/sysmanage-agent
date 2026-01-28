@@ -239,7 +239,6 @@ class LinuxPackageCollector(BasePackageCollector):
 
     def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
         """Parse apt-cache dumpavail output to extract package info with descriptions."""
-        # pylint: disable=too-many-nested-blocks
         packages = []
         current_package = {}
 
@@ -255,54 +254,73 @@ class LinuxPackageCollector(BasePackageCollector):
                 i += 1
                 continue
 
-            # Start of a new package block
-            current_package = {}
-
-            # Process all fields in this package block
-            while i < len(lines) and lines[i].strip():
-                line = lines[i].strip()
-
-                if ":" in line:
-                    field, value = line.split(":", 1)
-                    field = field.strip().lower()
-                    value = value.strip()
-
-                    if field == "package":
-                        current_package["name"] = value
-                    elif field == "version":
-                        current_package["version"] = value
-                    elif field == "description":
-                        # Description might span multiple lines
-                        description_lines = [value]
-                        i += 1
-
-                        # Collect continuation lines (start with space)
-                        while i < len(lines) and lines[i].startswith(" "):
-                            desc_line = lines[i][1:]  # Remove leading space
-                            if desc_line.strip():  # Skip empty description lines
-                                description_lines.append(desc_line.strip())
-                            i += 1
-
-                        # Join description lines and clean up
-                        current_package["description"] = " ".join(
-                            description_lines
-                        ).strip()
-                        continue  # i already incremented in the while loop
-
-                i += 1
+            # Start of a new package block - process all its fields
+            current_package, i = self._parse_apt_package_block(lines, i)
 
             # Add package if we have minimum required fields
             if current_package.get("name") and current_package.get("version"):
-                # Ensure description exists (empty string if missing)
                 if "description" not in current_package:
                     current_package["description"] = ""
-
                 packages.append(current_package)
 
             # Skip empty line after package block
             i += 1
 
         return packages
+
+    def _parse_apt_package_block(self, lines: List[str], start: int) -> tuple:
+        """Parse a single package block from apt-cache dumpavail output.
+
+        Reads fields (Package, Version, Description, etc.) from consecutive
+        non-empty lines starting at the given index.
+
+        Returns a tuple of (package_dict, next_line_index).
+        """
+        current_package = {}
+        i = start
+
+        while i < len(lines) and lines[i].strip():
+            line = lines[i].strip()
+
+            if ":" in line:
+                field, value = line.split(":", 1)
+                field = field.strip().lower()
+                value = value.strip()
+
+                if field == "package":
+                    current_package["name"] = value
+                elif field == "version":
+                    current_package["version"] = value
+                elif field == "description":
+                    description, i = self._parse_apt_description(lines, i, value)
+                    current_package["description"] = description
+                    continue  # i already incremented in _parse_apt_description
+
+            i += 1
+
+        return current_package, i
+
+    def _parse_apt_description(
+        self, lines: List[str], current_index: int, first_line: str
+    ) -> tuple:
+        """Parse a multi-line description field from apt-cache dumpavail output.
+
+        Description fields can span multiple continuation lines that start
+        with a space character.
+
+        Returns a tuple of (description_string, next_line_index).
+        """
+        description_lines = [first_line]
+        i = current_index + 1
+
+        # Collect continuation lines (start with space)
+        while i < len(lines) and lines[i].startswith(" "):
+            desc_line = lines[i][1:]  # Remove leading space
+            if desc_line.strip():  # Skip empty description lines
+                description_lines.append(desc_line.strip())
+            i += 1
+
+        return " ".join(description_lines).strip(), i
 
     def _parse_yum_output(self, output: str) -> List[Dict[str, str]]:
         """Parse YUM/DNF package list output."""
@@ -360,69 +378,74 @@ class LinuxPackageCollector(BasePackageCollector):
                 # Package line: "repo/package version"
                 if current_package:
                     packages.append(current_package)
-
-                parts = line.split()
-                if len(parts) >= 2:
-                    name = parts[0].split("/")[-1]
-                    version = parts[1]
-
-                    current_package = {
-                        "name": name,
-                        "version": version,
-                        "description": "",
-                    }
+                current_package = self._parse_pacman_package_line(line)
 
         if current_package:
             packages.append(current_package)
 
         return packages
 
+    def _parse_pacman_package_line(self, line: str) -> Dict[str, str]:
+        """Parse a single pacman package header line.
+
+        Expects format: 'repo/package version [installed]'.
+        Returns a package dict with name, version, and empty description,
+        or an empty dict if the line cannot be parsed.
+        """
+        parts = line.split()
+        if len(parts) >= 2:
+            name = parts[0].split("/")[-1]
+            version = parts[1]
+            return {"name": name, "version": version, "description": ""}
+        return {}
+
     def _parse_snap_output(self, output: str) -> List[Dict[str, str]]:
         """Parse Snap package list output from 'snap find %'."""
         packages = []
-        lines = output.splitlines()
 
-        # Skip header line and empty lines
-        for line in lines:
+        for line in output.splitlines():
             if line.startswith("Name") or not line.strip():
                 continue
 
-            # Parse fixed-width columns based on 'snap find %' format
-            # Name (25 chars), Version (28 chars), Publisher (21 chars), Notes (8 chars), Summary (rest)
-            try:
-                if len(line) < 30:  # Skip lines that are too short
-                    continue
-
-                # Extract name (first column, trim whitespace)
-                name = line[:25].strip()
-                if not name:
-                    continue
-
-                # Extract version (second column, starts around position 25)
-                version_start = 25
-                version_line = line[version_start:]
-                version_match = version_line.split()[0] if version_line.split() else ""
-
-                # Find summary - it's the last column after publisher and notes
-                # Split the line and take everything after position 3 (name, version, publisher, notes)
-                parts = line.split()
-                if len(parts) >= 5:
-                    # Summary is everything from the 5th element onwards
-                    summary = " ".join(parts[4:])
-                else:
-                    summary = ""
-
-                if name and version_match:
-                    packages.append(
-                        {"name": name, "version": version_match, "description": summary}
-                    )
-
-            except Exception:  # nosec B112
-                # If parsing fails for a line, skip it and continue processing
-                # This is safe because we're parsing text output that may have malformed lines
-                continue
+            parsed = self._parse_snap_line(line)
+            if parsed is not None:
+                packages.append(parsed)
 
         return packages
+
+    def _parse_snap_line(self, line: str) -> Dict[str, str]:
+        """Parse a single line from 'snap find %' output into a package dict.
+
+        Expects fixed-width columns: Name (25 chars), Version, Publisher, Notes, Summary.
+        Returns a package dict with name, version, and description, or None if
+        the line cannot be parsed.
+        """
+        try:
+            if len(line) < 30:
+                return None
+
+            # Extract name (first column, trim whitespace)
+            name = line[:25].strip()
+            if not name:
+                return None
+
+            # Extract version (second column, starts around position 25)
+            version_line = line[25:]
+            version_match = version_line.split()[0] if version_line.split() else ""
+
+            # Find summary - it's the last column after publisher and notes
+            parts = line.split()
+            summary = " ".join(parts[4:]) if len(parts) >= 5 else ""
+
+            if name and version_match:
+                return {"name": name, "version": version_match, "description": summary}
+
+            return None
+
+        except Exception:  # nosec B112
+            # If parsing fails for a line, skip it and continue processing
+            # This is safe because we're parsing text output that may have malformed lines
+            return None
 
     def _parse_flatpak_output(self, output: str) -> List[Dict[str, str]]:
         """Parse Flatpak package list output."""

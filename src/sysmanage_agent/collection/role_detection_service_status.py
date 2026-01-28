@@ -65,34 +65,48 @@ class ServiceStatusDetector:
                 return snap_status
 
         # Try systemctl
-        systemctl_path = self._get_command_path("systemctl")
-        if systemctl_path:
-            result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
-                [systemctl_path, "is-active", service_name],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-
-            if result.returncode == 0 and result.stdout.strip() == "active":
-                return "running"
-            if result.stdout.strip() in ["inactive", "failed"]:
-                return "stopped"
+        systemctl_status = self._detect_systemctl_status(service_name)
+        if systemctl_status != "unknown":
+            return systemctl_status
 
         # Try service command as fallback
-        service_path = self._get_command_path("service")
-        if service_path:
-            result = subprocess.run(  # nosec B603 B607 # service with controlled args
-                [service_path, service_name, "status"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-            return "running" if result.returncode == 0 else "stopped"
+        return self._detect_service_command_status(service_name)
+
+    def _detect_systemctl_status(self, service_name: str) -> str:
+        """Detect service status using systemctl."""
+        systemctl_path = self._get_command_path("systemctl")
+        if not systemctl_path:
+            return "unknown"
+
+        result = subprocess.run(  # nosec B603 B607 # systemctl with controlled args
+            [systemctl_path, "is-active", service_name],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+
+        if result.returncode == 0 and result.stdout.strip() == "active":
+            return "running"
+        if result.stdout.strip() in ["inactive", "failed"]:
+            return "stopped"
 
         return "unknown"
+
+    def _detect_service_command_status(self, service_name: str) -> str:
+        """Detect service status using the service command."""
+        service_path = self._get_command_path("service")
+        if not service_path:
+            return "unknown"
+
+        result = subprocess.run(  # nosec B603 B607 # service with controlled args
+            [service_path, service_name, "status"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        return "running" if result.returncode == 0 else "stopped"
 
     def _get_macos_service_status(self, service_name: str) -> str:
         """Get the status of a service on macOS."""
@@ -170,27 +184,7 @@ class ServiceStatusDetector:
     def _check_process_status(self, service_name: str) -> str:
         """Check if service is running by examining processes."""
         try:
-            result = subprocess.run(  # nosec B603 B607 # ps with controlled args
-                ["ps", "aux"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-            if result.returncode == 0:
-                # Look for the service process in the output
-                for line in result.stdout.lower().split("\n"):
-                    if service_name.lower() in line and "grep" not in line:
-                        return "running"
-                    # Also check for common process name variations
-                    if (
-                        service_name in ["postgresql", "postgres"]
-                        and "postgres:" in line
-                        and "grep" not in line
-                    ):
-                        return "running"
-                # If we checked processes and didn't find it, it's stopped
-                return "stopped"
+            return self._detect_process_from_ps(service_name)
         except Exception as error:
             self.logger.debug(
                 "Error checking processes for %s: %s", service_name, error
@@ -201,6 +195,15 @@ class ServiceStatusDetector:
     def _get_bsd_service_status(self, service_name: str) -> str:
         """Get the status of a service on BSD systems."""
         # BSD systems - check if process is running
+        ps_status = self._detect_process_from_ps(service_name)
+        if ps_status != "unknown":
+            return ps_status
+
+        # Try service command as fallback for BSD
+        return self._detect_bsd_service_command_status(service_name)
+
+    def _detect_process_from_ps(self, service_name: str) -> str:
+        """Detect whether a service is running by checking ps output."""
         result = subprocess.run(  # nosec B603 B607 # ps with controlled args
             ["ps", "aux"],
             capture_output=True,
@@ -208,34 +211,38 @@ class ServiceStatusDetector:
             timeout=10,
             check=False,
         )
-        if result.returncode == 0:
-            # Look for the service process in the output
-            for line in result.stdout.lower().split("\n"):
-                if service_name.lower() in line and "grep" not in line:
-                    return "running"
-                # Also check for common process name variations
-                if (
-                    service_name in ["postgresql", "postgres"]
-                    and "postgres:" in line
-                    and "grep" not in line
-                ):
-                    return "running"
-            # If we checked processes and didn't find it, it's stopped
-            return "stopped"
+        if result.returncode != 0:
+            return "unknown"
 
-        # Try service command as fallback for BSD
+        return self._parse_ps_output_for_service(result.stdout, service_name)
+
+    def _parse_ps_output_for_service(self, ps_output: str, service_name: str) -> str:
+        """Parse ps output to determine if a service is running."""
+        for line in ps_output.lower().split("\n"):
+            if "grep" in line:
+                continue
+            if service_name.lower() in line:
+                return "running"
+            # Check for common process name variations (e.g., postgres:)
+            if service_name in ["postgresql", "postgres"] and "postgres:" in line:
+                return "running"
+        # If we checked processes and didn't find it, it's stopped
+        return "stopped"
+
+    def _detect_bsd_service_command_status(self, service_name: str) -> str:
+        """Detect service status using the BSD service onestatus command."""
         service_path = self._get_command_path("service")
-        if service_path:
-            result = subprocess.run(  # nosec B603 B607 # service with controlled args
-                [service_path, service_name, "onestatus"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-            return "running" if result.returncode == 0 else "stopped"
+        if not service_path:
+            return "unknown"
 
-        return "unknown"
+        result = subprocess.run(  # nosec B603 B607 # service with controlled args
+            [service_path, service_name, "onestatus"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        return "running" if result.returncode == 0 else "stopped"
 
     def _get_snap_service_status(self, service_name: str) -> str:
         """Check the status of a snap service."""

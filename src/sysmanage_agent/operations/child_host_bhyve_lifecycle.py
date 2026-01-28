@@ -24,6 +24,9 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
 )
 
 
+_NO_CHILD_NAME_MSG = _("No child_name specified")
+
+
 class BhyveLifecycleHelper:
     """Helper class for bhyve VM lifecycle operations."""
 
@@ -64,7 +67,7 @@ class BhyveLifecycleHelper:
     async def _run_subprocess(
         self,
         cmd: list,
-        timeout: int = 60,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of the established API contract
     ) -> subprocess.CompletedProcess:
         """
         Run a subprocess command asynchronously.
@@ -100,7 +103,7 @@ class BhyveLifecycleHelper:
         """
         child_name = parameters.get("child_name")
         if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
+            return {"success": False, "error": _NO_CHILD_NAME_MSG}
 
         try:
             # Check if VM is already running
@@ -219,7 +222,7 @@ class BhyveLifecycleHelper:
         """
         child_name = parameters.get("child_name")
         if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
+            return {"success": False, "error": _NO_CHILD_NAME_MSG}
 
         try:
             # Check if VM is running
@@ -264,7 +267,7 @@ class BhyveLifecycleHelper:
         """
         child_name = parameters.get("child_name")
         if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
+            return {"success": False, "error": _NO_CHILD_NAME_MSG}
 
         # Stop and start
         stop_result = await self.stop_child_host(parameters)
@@ -288,7 +291,7 @@ class BhyveLifecycleHelper:
         """
         child_name = parameters.get("child_name")
         if not child_name:
-            return {"success": False, "error": _("No child_name specified")}
+            return {"success": False, "error": _NO_CHILD_NAME_MSG}
 
         try:
             # Stop VM if running

@@ -116,7 +116,7 @@ class DebianConsoleAutomation:
         gateway_ip: str = None,
         vm_ip: str = None,
         dns_server: str = None,
-        timeout: int = None,
+        timeout: int = None,  # NOSONAR - timeout is part of the established API for callers to control boot menu wait duration
     ) -> Dict[str, Any]:
         """
         Inject boot parameters at Debian installer boot menu.
@@ -454,7 +454,7 @@ class DebianConsoleAutomation:
         agent_config: str,
         firstboot_script: str,
         systemd_service: str,
-        timeout: int = None,
+        timeout: int = None,  # NOSONAR - timeout is part of the established API for callers to control installation wait duration
     ) -> Dict[str, Any]:
         """
         Run manual preseed-style setup via serial console.
@@ -605,7 +605,7 @@ class DebianConsoleAutomation:
     async def wait_for_installation_complete(
         self,
         vm_name: str,
-        timeout: int = None,
+        timeout: int = None,  # NOSONAR - timeout is part of the established API for callers to control installation wait duration
     ) -> Dict[str, Any]:
         """
         Wait for Debian installation to complete.

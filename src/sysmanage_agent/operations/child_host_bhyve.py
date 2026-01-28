@@ -42,6 +42,10 @@ from src.sysmanage_agent.operations.child_host_bhyve_persistence import (
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 
+_DEV_VMM_PATH = "/dev/vmm"
+_ALREADY_INSTALLED = "already installed"
+
+
 class BhyveOperations:
     """bhyve-specific operations for child host management on FreeBSD."""
 
@@ -118,7 +122,7 @@ class BhyveOperations:
     async def _run_subprocess(
         self,
         cmd: list,
-        timeout: int = 60,
+        timeout: int = 60,  # NOSONAR - timeout parameter is part of the established API
     ) -> subprocess.CompletedProcess:
         """
         Run a subprocess command asynchronously.
@@ -142,6 +146,148 @@ class BhyveOperations:
             check=False,
         )
 
+    async def _handle_already_initialized(self) -> dict:
+        """Handle the case where bhyve is already initialized and running.
+
+        Ensures UEFI firmware, qemu-img, and NAT networking are still set up.
+
+        Returns:
+            Dict with success status and component installation results.
+        """
+        self.logger.info(_("bhyve is already initialized and running"))
+        uefi_installed = await self._install_uefi_firmware()
+        qemu_img_installed = await self._install_qemu_img()
+        nat_result = await self._networking.setup_nat_networking(self._run_subprocess)
+        nat_configured = nat_result.get("success", False)
+        if not nat_configured:
+            self.logger.warning(
+                _("NAT networking setup had issues: %s"),
+                nat_result.get("error", "Unknown error"),
+            )
+        await self._send_virtualization_status_update()
+        return {
+            "success": True,
+            "message": _("bhyve is already initialized and running"),
+            "already_initialized": True,
+            "uefi_installed": uefi_installed,
+            "qemu_img_installed": qemu_img_installed,
+            "nat_configured": nat_configured,
+            "nat_bridge": nat_result.get("bridge"),
+            "nat_gateway": nat_result.get("gateway"),
+            "nat_subnet": nat_result.get("subnet"),
+        }
+
+    async def _load_kernel_modules(self, bhyve_status: dict) -> dict:
+        """Load vmm.ko and nmdm.ko kernel modules.
+
+        Args:
+            bhyve_status: Current bhyve status dict
+
+        Returns:
+            Dict with success status. On failure, contains error message.
+        """
+        if not bhyve_status["enabled"]:
+            self.logger.info(_("Loading vmm.ko kernel module"))
+            result = await self._run_subprocess(["kldload", "vmm"], timeout=30)
+            if result.returncode != 0:
+                if "already loaded" not in result.stderr.lower():
+                    return {
+                        "success": False,
+                        "error": _("Failed to load vmm.ko: %s")
+                        % (result.stderr or result.stdout),
+                    }
+
+        self.logger.info(_("Loading nmdm.ko kernel module for console support"))
+        result = await self._run_subprocess(["kldload", "nmdm"], timeout=30)
+        if result.returncode != 0:
+            if "already loaded" not in result.stderr.lower():
+                self.logger.warning(
+                    _("Failed to load nmdm.ko (console may not work): %s"),
+                    result.stderr or result.stdout,
+                )
+
+        return {"success": True}
+
+    async def _configure_loader_conf(self) -> dict:
+        """Add vmm_load and nmdm_load entries to /boot/loader.conf.
+
+        Returns:
+            Dict with success status. On failure, contains error message.
+        """
+        loader_conf = "/boot/loader.conf"
+        vmm_load_line = 'vmm_load="YES"'
+        nmdm_load_line = 'nmdm_load="YES"'
+
+        try:
+            needs_vmm_update = True
+            needs_nmdm_update = True
+            if os.path.exists(loader_conf):
+                async with aiofiles.open(
+                    loader_conf, "r", encoding="utf-8"
+                ) as loader_file:
+                    content = await loader_file.read()
+                    if vmm_load_line in content:
+                        needs_vmm_update = False
+                        self.logger.info(
+                            _("vmm.ko already configured in %s"), loader_conf
+                        )
+                    if nmdm_load_line in content:
+                        needs_nmdm_update = False
+                        self.logger.info(
+                            _("nmdm.ko already configured in %s"), loader_conf
+                        )
+
+            if needs_vmm_update or needs_nmdm_update:
+                async with aiofiles.open(
+                    loader_conf, "a", encoding="utf-8"
+                ) as loader_file:
+                    if needs_vmm_update:
+                        self.logger.info(_("Adding vmm.ko to %s"), loader_conf)
+                        await loader_file.write(
+                            "\n# bhyve VMM support - added by sysmanage\n"
+                        )
+                        await loader_file.write(f"{vmm_load_line}\n")
+                    if needs_nmdm_update:
+                        self.logger.info(_("Adding nmdm.ko to %s"), loader_conf)
+                        await loader_file.write(
+                            "# nmdm console support for bhyve VMs\n"
+                        )
+                        await loader_file.write(f"{nmdm_load_line}\n")
+
+            return {"success": True}
+
+        except PermissionError:
+            return {
+                "success": False,
+                "error": _("Permission denied writing to %s") % loader_conf,
+            }
+
+    async def _install_tools_and_networking(self) -> dict:
+        """Install UEFI firmware, qemu-img, and set up NAT networking.
+
+        Returns:
+            Dict with uefi_installed, qemu_img_installed, nat_configured,
+            and nat_result keys.
+        """
+        uefi_installed = await self._install_uefi_firmware()
+        qemu_img_installed = await self._install_qemu_img()
+
+        self.logger.info(_("Setting up NAT networking for bhyve VMs"))
+        nat_result = await self._networking.setup_nat_networking(self._run_subprocess)
+        nat_configured = nat_result.get("success", False)
+        if not nat_configured:
+            self.logger.warning(
+                _("NAT networking setup had issues: %s"),
+                nat_result.get("error", "Unknown error"),
+            )
+
+        return {
+            "uefi_installed": uefi_installed,
+            "qemu_img_installed": qemu_img_installed,
+            "nat_configured": nat_configured,
+            "nat_result": nat_result,
+        }
+
     async def initialize_bhyve(self, _parameters: dict) -> dict:
         """
         Initialize bhyve on FreeBSD: load vmm.ko and persist configuration.
@@ -162,130 +308,27 @@ class BhyveOperations:
             # Check current bhyve status
             bhyve_status = self.virtualization_checks.check_bhyve_support()
             if bhyve_status["enabled"] and bhyve_status["running"]:
-                self.logger.info(_("bhyve is already initialized and running"))
-                # Still check for UEFI firmware, qemu-img, and NAT networking
-                uefi_installed = await self._install_uefi_firmware()
-                qemu_img_installed = await self._install_qemu_img()
-                # Set up NAT networking (will skip if already configured)
-                nat_result = await self._networking.setup_nat_networking(
-                    self._run_subprocess
-                )
-                nat_configured = nat_result.get("success", False)
-                if not nat_configured:
-                    self.logger.warning(
-                        _("NAT networking setup had issues: %s"),
-                        nat_result.get("error", "Unknown error"),
-                    )
-                # Send virtualization status update to server
-                await self._send_virtualization_status_update()
-                return {
-                    "success": True,
-                    "message": _("bhyve is already initialized and running"),
-                    "already_initialized": True,
-                    "uefi_installed": uefi_installed,
-                    "qemu_img_installed": qemu_img_installed,
-                    "nat_configured": nat_configured,
-                    "nat_bridge": nat_result.get("bridge"),
-                    "nat_gateway": nat_result.get("gateway"),
-                    "nat_subnet": nat_result.get("subnet"),
-                }
+                return await self._handle_already_initialized()
 
-            # Step 1: Load vmm.ko kernel module if not already loaded
-            if not bhyve_status["enabled"]:
-                self.logger.info(_("Loading vmm.ko kernel module"))
-                result = await self._run_subprocess(["kldload", "vmm"], timeout=30)
-                if result.returncode != 0:
-                    # Check if it's already loaded (error code for already loaded)
-                    if "already loaded" not in result.stderr.lower():
-                        return {
-                            "success": False,
-                            "error": _("Failed to load vmm.ko: %s")
-                            % (result.stderr or result.stdout),
-                        }
+            # Step 1: Load kernel modules
+            kmod_result = await self._load_kernel_modules(bhyve_status)
+            if not kmod_result.get("success"):
+                return kmod_result
 
-            # Step 1b: Load nmdm.ko for null modem console support
-            self.logger.info(_("Loading nmdm.ko kernel module for console support"))
-            result = await self._run_subprocess(["kldload", "nmdm"], timeout=30)
-            if result.returncode != 0:
-                # Ignore if already loaded
-                if "already loaded" not in result.stderr.lower():
-                    self.logger.warning(
-                        _("Failed to load nmdm.ko (console may not work): %s"),
-                        result.stderr or result.stdout,
-                    )
-
-            # Step 2: Add vmm_load="YES" and nmdm_load="YES" to /boot/loader.conf
-            loader_conf = "/boot/loader.conf"
-            vmm_load_line = 'vmm_load="YES"'
-            nmdm_load_line = 'nmdm_load="YES"'
-
-            try:
-                # Check if already configured
-                needs_vmm_update = True
-                needs_nmdm_update = True
-                if os.path.exists(loader_conf):
-                    async with aiofiles.open(
-                        loader_conf, "r", encoding="utf-8"
-                    ) as loader_file:
-                        content = await loader_file.read()
-                        if vmm_load_line in content:
-                            needs_vmm_update = False
-                            self.logger.info(
-                                _("vmm.ko already configured in %s"), loader_conf
-                            )
-                        if nmdm_load_line in content:
-                            needs_nmdm_update = False
-                            self.logger.info(
-                                _("nmdm.ko already configured in %s"), loader_conf
-                            )
-
-                if needs_vmm_update or needs_nmdm_update:
-                    async with aiofiles.open(
-                        loader_conf, "a", encoding="utf-8"
-                    ) as loader_file:
-                        if needs_vmm_update:
-                            self.logger.info(_("Adding vmm.ko to %s"), loader_conf)
-                            await loader_file.write(
-                                "\n# bhyve VMM support - added by sysmanage\n"
-                            )
-                            await loader_file.write(f"{vmm_load_line}\n")
-                        if needs_nmdm_update:
-                            self.logger.info(_("Adding nmdm.ko to %s"), loader_conf)
-                            await loader_file.write(
-                                "# nmdm console support for bhyve VMs\n"
-                            )
-                            await loader_file.write(f"{nmdm_load_line}\n")
-
-            except PermissionError:
-                return {
-                    "success": False,
-                    "error": _("Permission denied writing to %s") % loader_conf,
-                }
+            # Step 2: Update /boot/loader.conf
+            loader_result = await self._configure_loader_conf()
+            if not loader_result.get("success"):
+                return loader_result
 
             # Step 3: Create VM directories
             for directory in [BHYVE_VM_DIR, BHYVE_IMAGES_DIR, BHYVE_CLOUDINIT_DIR]:
                 os.makedirs(directory, mode=0o755, exist_ok=True)
 
-            # Step 4: Install bhyve-firmware for UEFI support (needed for Linux guests)
-            uefi_installed = await self._install_uefi_firmware()
-
-            # Step 5: Install qemu-img for cloud image conversion (qcow2 -> raw)
-            qemu_img_installed = await self._install_qemu_img()
-
-            # Step 6: Set up NAT networking for VMs
-            self.logger.info(_("Setting up NAT networking for bhyve VMs"))
-            nat_result = await self._networking.setup_nat_networking(
-                self._run_subprocess
-            )
-            nat_configured = nat_result.get("success", False)
-            if not nat_configured:
-                self.logger.warning(
-                    _("NAT networking setup had issues: %s"),
-                    nat_result.get("error", "Unknown error"),
-                )
+            # Steps 4-6: Install tools and set up networking
+            tools = await self._install_tools_and_networking()
 
             # Verify /dev/vmm directory exists (indicates CPU virtualization support)
-            if not os.path.isdir("/dev/vmm"):
+            if not os.path.isdir(_DEV_VMM_PATH):
                 self.logger.warning(
                     _(
                         "/dev/vmm not created - CPU virtualization may be disabled in BIOS"
@@ -299,9 +342,9 @@ class BhyveOperations:
                     ),
                     "vmm_loaded": True,
                     "loader_conf_updated": True,
-                    "uefi_installed": uefi_installed,
-                    "qemu_img_installed": qemu_img_installed,
-                    "nat_configured": nat_configured,
+                    "uefi_installed": tools["uefi_installed"],
+                    "qemu_img_installed": tools["qemu_img_installed"],
+                    "nat_configured": tools["nat_configured"],
                 }
 
             # Install and enable VM autostart service
@@ -323,12 +366,12 @@ class BhyveOperations:
                 "message": _("bhyve has been initialized successfully"),
                 "vmm_loaded": True,
                 "loader_conf_updated": True,
-                "uefi_installed": uefi_installed,
-                "qemu_img_installed": qemu_img_installed,
-                "nat_configured": nat_configured,
-                "nat_bridge": nat_result.get("bridge"),
-                "nat_gateway": nat_result.get("gateway"),
-                "nat_subnet": nat_result.get("subnet"),
+                "uefi_installed": tools["uefi_installed"],
+                "qemu_img_installed": tools["qemu_img_installed"],
+                "nat_configured": tools["nat_configured"],
+                "nat_bridge": tools["nat_result"].get("bridge"),
+                "nat_gateway": tools["nat_result"].get("gateway"),
+                "nat_subnet": tools["nat_result"].get("subnet"),
                 "autostart_enabled": autostart_enabled,
             }
 
@@ -337,6 +380,49 @@ class BhyveOperations:
         except Exception as error:
             self.logger.error(_("Error initializing bhyve: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def _remove_vmm_from_loader_conf(self) -> dict:
+        """Remove vmm_load="YES" and its comment from /boot/loader.conf.
+
+        Returns:
+            Dict with success status. On failure, contains error message.
+        """
+        loader_conf = "/boot/loader.conf"
+        vmm_load_line = 'vmm_load="YES"'
+
+        try:
+            if not os.path.exists(loader_conf):
+                return {"success": True}
+
+            async with aiofiles.open(loader_conf, "r", encoding="utf-8") as loader_file:
+                content = await loader_file.read()
+                lines = content.splitlines(keepends=True)
+
+            # Filter out vmm_load and its comment
+            new_lines = []
+            skip_next = False
+            for line in lines:
+                if skip_next:
+                    skip_next = False
+                    continue
+                if "bhyve VMM support" in line:
+                    skip_next = True  # Skip the vmm_load line after comment
+                    continue
+                if vmm_load_line in line:
+                    continue
+                new_lines.append(line)
+
+            async with aiofiles.open(loader_conf, "w", encoding="utf-8") as loader_file:
+                await loader_file.writelines(new_lines)
+
+            self.logger.info(_("Removed vmm.ko from %s"), loader_conf)
+            return {"success": True}
+
+        except PermissionError:
+            return {
+                "success": False,
+                "error": _("Permission denied writing to %s") % loader_conf,
+            }
 
     async def disable_bhyve(self, _parameters: dict) -> dict:
         """
@@ -357,8 +443,8 @@ class BhyveOperations:
             self.logger.info(_("Disabling bhyve"))
 
             # Step 1: Check if any VMs are running
-            if os.path.isdir("/dev/vmm"):
-                vm_entries = os.listdir("/dev/vmm")
+            if os.path.isdir(_DEV_VMM_PATH):
+                vm_entries = os.listdir(_DEV_VMM_PATH)
                 if vm_entries:
                     return {
                         "success": False,
@@ -370,7 +456,6 @@ class BhyveOperations:
             self.logger.info(_("Unloading vmm.ko kernel module"))
             result = await self._run_subprocess(["kldunload", "vmm"], timeout=30)
             if result.returncode != 0:
-                # Check if it's already unloaded
                 if "not loaded" not in result.stderr.lower():
                     return {
                         "success": False,
@@ -380,43 +465,9 @@ class BhyveOperations:
                 self.logger.info(_("vmm.ko was already unloaded"))
 
             # Step 3: Remove vmm_load="YES" from /boot/loader.conf
-            loader_conf = "/boot/loader.conf"
-            vmm_load_line = 'vmm_load="YES"'
-
-            try:
-                if os.path.exists(loader_conf):
-                    async with aiofiles.open(
-                        loader_conf, "r", encoding="utf-8"
-                    ) as loader_file:
-                        content = await loader_file.read()
-                        lines = content.splitlines(keepends=True)
-
-                    # Filter out vmm_load and its comment
-                    new_lines = []
-                    skip_next = False
-                    for line in lines:
-                        if skip_next:
-                            skip_next = False
-                            continue
-                        if "bhyve VMM support" in line:
-                            skip_next = True  # Skip the vmm_load line after comment
-                            continue
-                        if vmm_load_line in line:
-                            continue
-                        new_lines.append(line)
-
-                    async with aiofiles.open(
-                        loader_conf, "w", encoding="utf-8"
-                    ) as loader_file:
-                        await loader_file.writelines(new_lines)
-
-                    self.logger.info(_("Removed vmm.ko from %s"), loader_conf)
-
-            except PermissionError:
-                return {
-                    "success": False,
-                    "error": _("Permission denied writing to %s") % loader_conf,
-                }
+            loader_result = await self._remove_vmm_from_loader_conf()
+            if not loader_result.get("success"):
+                return loader_result
 
             self.logger.info(_("bhyve disabled successfully"))
             # Send virtualization status update to server
@@ -470,7 +521,7 @@ class BhyveOperations:
                 return True
 
             # Check if package is already installed (different exit code)
-            if "already installed" in result.stdout.lower():
+            if _ALREADY_INSTALLED in result.stdout.lower():
                 self.logger.info(_("bhyve-firmware package is already installed"))
                 return True
 
@@ -526,7 +577,7 @@ class BhyveOperations:
                 return True
 
             # Check if package is already installed
-            if "already installed" in result.stdout.lower():
+            if _ALREADY_INSTALLED in result.stdout.lower():
                 self.logger.info(_("qemu-nox11 package is already installed"))
                 return True
 
@@ -541,7 +592,7 @@ class BhyveOperations:
                 self.logger.info(_("qemu package installed successfully"))
                 return True
 
-            if "already installed" in result.stdout.lower():
+            if _ALREADY_INSTALLED in result.stdout.lower():
                 self.logger.info(_("qemu package is already installed"))
                 return True
 
@@ -582,6 +633,164 @@ class BhyveOperations:
                 return True
 
         return False
+
+    def _prepare_vm_disk(self, config: BhyveVmConfig, vm_dir: str) -> Dict[str, Any]:
+        """Prepare the VM disk by downloading a cloud image or creating an empty disk.
+
+        Args:
+            config: VM configuration (disk_path is set as a side effect)
+            vm_dir: VM directory path
+
+        Returns:
+            Dict with success status.
+        """
+        disk_filename = f"{config.vm_name}.img"
+        config.disk_path = os.path.join(vm_dir, disk_filename)
+
+        if config.cloud_image_url:
+            self.logger.info(_("Downloading cloud image"))
+            return self._creation_helper.download_cloud_image(
+                config.cloud_image_url,
+                config.disk_path,
+                config.get_disk_gb(),
+            )
+
+        self.logger.info(_("Creating empty disk"))
+        disk_result = self._creation_helper.create_disk_image(
+            config.disk_path,
+            config.get_disk_gb(),
+            config.use_zvol,
+            config.zvol_parent,
+        )
+        if disk_result.get("success"):
+            config.disk_path = disk_result["path"]
+        return disk_result
+
+    def _configure_cloud_init(
+        self,
+        config: BhyveVmConfig,
+        is_freebsd: bool,
+        freebsd_provisioner,
+        vm_dir: str,
+    ) -> Dict[str, Any]:
+        """Configure cloud-init or firstboot injection for the VM.
+
+        Args:
+            config: VM configuration
+            is_freebsd: Whether this is a FreeBSD guest
+            freebsd_provisioner: FreeBSD provisioner instance (or None)
+            vm_dir: VM directory path
+
+        Returns:
+            Dict with success status.
+        """
+        if not config.use_cloud_init:
+            return {"success": True}
+
+        if is_freebsd and freebsd_provisioner:
+            self.logger.info(_("Injecting firstboot script into FreeBSD disk image"))
+            provision_result = freebsd_provisioner.provision(
+                config, config.disk_path, vm_dir
+            )
+            if provision_result.get("success"):
+                config.cloud_init_iso_path = None
+            return provision_result
+
+        self.logger.info(_("Creating cloud-init ISO"))
+        return self._creation_helper.create_cloud_init_iso(config)
+
+    def _start_vm(self, config: BhyveVmConfig, tap_interface: str) -> Dict[str, Any]:
+        """Start the VM using UEFI or bhyveload depending on guest type.
+
+        Args:
+            config: VM configuration
+            tap_interface: Tap interface name
+
+        Returns:
+            Dict with success status.
+        """
+        if self._creation_helper.is_linux_guest(config) or config.use_uefi:
+            return self._creation_helper.start_vm_with_uefi(config, tap_interface)
+        return self._creation_helper.start_vm_with_bhyveload(config, tap_interface)
+
+    async def _process_vm_post_boot(
+        self,
+        config: BhyveVmConfig,
+        tap_interface: str,
+        is_freebsd: bool,
+    ) -> Dict[str, Any]:
+        """Handle post-boot steps: wait for IP, SSH, and build result dict.
+
+        Args:
+            config: VM configuration
+            tap_interface: Tap interface name
+            is_freebsd: Whether this is a FreeBSD guest
+
+        Returns:
+            Dict with success status and VM information.
+        """
+        vm_ip = await self._creation_helper.wait_for_vm_ip(
+            config.vm_name, tap_interface
+        )
+        console_device = self._creation_helper.get_console_device(config.vm_name)
+
+        save_bhyve_metadata(
+            vm_name=config.vm_name,
+            hostname=config.hostname,
+            distribution=config.distribution,
+            vm_ip=vm_ip,
+            logger=self.logger,
+        )
+
+        if not vm_ip:
+            return {
+                "success": True,
+                "message": _("VM created but IP not yet available"),
+                "vm_name": config.vm_name,
+                "status": "running",
+                "ip_pending": True,
+                "child_name": config.vm_name,
+                "child_type": "bhyve",
+                "console_device": console_device,
+            }
+
+        ssh_available = await self._creation_helper.wait_for_ssh(vm_ip)
+        if not ssh_available:
+            msg = _("VM created, cloud-init may still be running")
+            if is_freebsd:
+                msg = _("VM created, firstboot may still be running")
+            return {
+                "success": True,
+                "message": msg,
+                "vm_name": config.vm_name,
+                "status": "running",
+                "ip_address": vm_ip,
+                "ssh_pending": True,
+                "child_name": config.vm_name,
+                "child_type": "bhyve",
+                "console_device": console_device,
+            }
+
+        self.logger.info(
+            _("bhyve VM '%s' created successfully at %s"), config.vm_name, vm_ip
+        )
+        save_bhyve_metadata(
+            vm_name=config.vm_name,
+            hostname=config.hostname,
+            distribution=config.distribution,
+            vm_ip=vm_ip,
+            logger=self.logger,
+        )
+        return {
+            "success": True,
+            "message": _("VM created successfully"),
+            "vm_name": config.vm_name,
+            "status": "running",
+            "ip_address": vm_ip,
+            "child_name": config.vm_name,
+            "child_type": "bhyve",
+            "console_device": console_device,
+        }
 
     async def create_bhyve_vm(self, config: BhyveVmConfig) -> Dict[str, Any]:
         """
@@ -627,59 +836,20 @@ class BhyveOperations:
                 freebsd_provisioner = FreeBSDBhyveProvisioner(self.logger)
 
             try:
-                # Create VM directory
+                # Create VM directory and prepare disk
                 vm_dir = os.path.join(BHYVE_VM_DIR, config.vm_name)
                 os.makedirs(vm_dir, mode=0o755, exist_ok=True)
 
-                # Set up disk path
-                disk_filename = f"{config.vm_name}.img"
-                config.disk_path = os.path.join(vm_dir, disk_filename)
+                disk_result = self._prepare_vm_disk(config, vm_dir)
+                if not disk_result.get("success"):
+                    return disk_result
 
-                # Download cloud image or create empty disk
-                if config.cloud_image_url:
-                    self.logger.info(_("Downloading cloud image"))
-                    disk_result = self._creation_helper.download_cloud_image(
-                        config.cloud_image_url,
-                        config.disk_path,
-                        config.get_disk_gb(),
-                    )
-                    if not disk_result.get("success"):
-                        return disk_result
-                else:
-                    self.logger.info(_("Creating empty disk"))
-                    disk_result = self._creation_helper.create_disk_image(
-                        config.disk_path,
-                        config.get_disk_gb(),
-                        config.use_zvol,
-                        config.zvol_parent,
-                    )
-                    if not disk_result.get("success"):
-                        return disk_result
-                    config.disk_path = disk_result["path"]
-
-                # Create cloud-init/config disk or inject firstboot
-                if config.use_cloud_init:
-                    if is_freebsd and freebsd_provisioner:
-                        # FreeBSD: Inject firstboot script directly into disk image
-                        # This doesn't rely on nuageinit/cloud-init
-                        self.logger.info(
-                            _("Injecting firstboot script into FreeBSD disk image")
-                        )
-                        provision_result = freebsd_provisioner.provision(
-                            config, config.disk_path, vm_dir
-                        )
-                        if not provision_result.get("success"):
-                            return provision_result
-                        # FreeBSD doesn't need a cloud-init ISO since we inject directly
-                        config.cloud_init_iso_path = None
-                    else:
-                        # Linux: Use standard cloud-init ISO
-                        self.logger.info(_("Creating cloud-init ISO"))
-                        cloudinit_result = self._creation_helper.create_cloud_init_iso(
-                            config
-                        )
-                        if not cloudinit_result.get("success"):
-                            return cloudinit_result
+                # Configure cloud-init or firstboot injection
+                ci_result = self._configure_cloud_init(
+                    config, is_freebsd, freebsd_provisioner, vm_dir
+                )
+                if not ci_result.get("success"):
+                    return ci_result
 
                 # Set up networking
                 bridge_result = self._creation_helper.create_bridge_if_needed()
@@ -698,15 +868,7 @@ class BhyveOperations:
                 tap_interface = tap_result["tap"]
 
                 # Start the VM
-                if self._creation_helper.is_linux_guest(config) or config.use_uefi:
-                    start_result = self._creation_helper.start_vm_with_uefi(
-                        config, tap_interface
-                    )
-                else:
-                    start_result = self._creation_helper.start_vm_with_bhyveload(
-                        config, tap_interface
-                    )
-
+                start_result = self._start_vm(config, tap_interface)
                 if not start_result.get("success"):
                     return start_result
 
@@ -731,75 +893,10 @@ class BhyveOperations:
                         _("Failed to save VM config: %s"), save_result.get("error")
                     )
 
-                # Wait for VM to get IP
-                vm_ip = await self._creation_helper.wait_for_vm_ip(
-                    config.vm_name, tap_interface
+                # Handle post-boot: wait for IP, SSH, return result
+                return await self._process_vm_post_boot(
+                    config, tap_interface, is_freebsd
                 )
-                # Get console device for user access
-                console_device = self._creation_helper.get_console_device(
-                    config.vm_name
-                )
-
-                # Save metadata for VM listing (hostname, distribution, IP)
-                save_bhyve_metadata(
-                    vm_name=config.vm_name,
-                    hostname=config.hostname,
-                    distribution=config.distribution,
-                    vm_ip=vm_ip,
-                    logger=self.logger,
-                )
-
-                if not vm_ip:
-                    return {
-                        "success": True,
-                        "message": _("VM created but IP not yet available"),
-                        "vm_name": config.vm_name,
-                        "status": "running",
-                        "ip_pending": True,
-                        "child_name": config.vm_name,
-                        "child_type": "bhyve",
-                        "console_device": console_device,
-                    }
-
-                # Wait for SSH
-                ssh_available = await self._creation_helper.wait_for_ssh(vm_ip)
-                if not ssh_available:
-                    msg = _("VM created, cloud-init may still be running")
-                    if is_freebsd:
-                        msg = _("VM created, firstboot may still be running")
-                    return {
-                        "success": True,
-                        "message": msg,
-                        "vm_name": config.vm_name,
-                        "status": "running",
-                        "ip_address": vm_ip,
-                        "ssh_pending": True,
-                        "child_name": config.vm_name,
-                        "child_type": "bhyve",
-                        "console_device": console_device,
-                    }
-
-                self.logger.info(
-                    _("bhyve VM '%s' created successfully at %s"), config.vm_name, vm_ip
-                )
-                # Update metadata with confirmed IP address
-                save_bhyve_metadata(
-                    vm_name=config.vm_name,
-                    hostname=config.hostname,
-                    distribution=config.distribution,
-                    vm_ip=vm_ip,
-                    logger=self.logger,
-                )
-                return {
-                    "success": True,
-                    "message": _("VM created successfully"),
-                    "vm_name": config.vm_name,
-                    "status": "running",
-                    "ip_address": vm_ip,
-                    "child_name": config.vm_name,
-                    "child_type": "bhyve",
-                    "console_device": console_device,
-                }
 
             finally:
                 self._in_progress_vms.discard(config.vm_name)

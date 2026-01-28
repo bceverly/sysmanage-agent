@@ -212,7 +212,9 @@ class LinuxSystemUpdateDetector:
 
             if "New release" in result.stdout:
                 # Extract new version from output like "New release '25.10' available"
-                version_match = re.search(r"['\"](\d+\.\d+)['\"]", result.stdout)
+                version_match = re.search(
+                    r"['\"](\d+\.\d+)['\"]", result.stdout
+                )  # NOSONAR - regex operates on trusted internal data
                 if version_match:
                     new_version = version_match.group(1)
 

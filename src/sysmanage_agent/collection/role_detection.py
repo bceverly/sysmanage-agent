@@ -188,79 +188,101 @@ class RoleDetector:
     ) -> None:
         """Check packages for a specific role and add found roles to the list."""
         for package_pattern, service_info in packages_config.items():
-            # Check if package is installed
             package_version = self.package_detector.find_package_version(
                 package_pattern, installed_packages
             )
-            if package_version:
-                self.logger.info(
-                    "Found %s package: %s v%s",
-                    role_name,
-                    package_pattern,
-                    package_version,
-                )
+            if not package_version:
+                continue
 
-                # Check service status for packages that have services
-                service_status = "unknown"
-                active_service = None
+            self.logger.info(
+                "Found %s package: %s v%s",
+                role_name,
+                package_pattern,
+                package_version,
+            )
 
-                if service_info["service_names"]:
-                    for service_name in service_info["service_names"]:
-                        status = self.service_detector.get_service_status(service_name)
-                        if status == "running":
-                            service_status = status
-                            active_service = service_name
-                            break
-                        if status == "stopped" and service_status == "unknown":
-                            service_status = status
-                            active_service = service_name
-                else:
-                    # For packages without services (like SQLite), mark as "installed"
-                    service_status = "installed"
+            service_status, active_service = self._detect_service_status(
+                service_info["service_names"]
+            )
 
-                # Check for duplicates based on role + service_name combination
-                role_service_key = (role_name, active_service)
-                self.logger.debug(
-                    "Checking for duplicate: role=%s, service=%s, existing_roles_count=%d",
-                    role_name,
-                    active_service,
-                    len(roles),
-                )
+            self._add_role_if_unique(
+                roles,
+                role_name,
+                package_pattern,
+                package_version,
+                active_service,
+                service_status,
+            )
 
-                existing_role = next(
-                    (
-                        r
-                        for r in roles
-                        if (r["role"], r["service_name"]) == role_service_key
-                    ),
-                    None,
-                )
+    def _detect_service_status(self, service_names: List[str]) -> tuple:
+        """Detect the status of services and return the best match.
 
-                if existing_role:
-                    # Skip this duplicate - we already have this role+service combination
-                    self.logger.info(
-                        "Skipping duplicate role: %s with service %s (already have package %s)",
-                        role_name,
-                        active_service,
-                        existing_role["package_name"],
-                    )
-                else:
-                    self.logger.debug(
-                        "Adding new role: %s with service %s, package %s",
-                        role_name,
-                        active_service,
-                        package_pattern,
-                    )
-                    roles.append(
-                        {
-                            "role": role_name,
-                            "package_name": package_pattern,
-                            "package_version": package_version,
-                            "service_name": active_service,
-                            "service_status": service_status,
-                            "is_active": service_status == "running",
-                        }
-                    )
+        Returns:
+            Tuple of (service_status, active_service_name)
+        """
+        if not service_names:
+            return ("installed", None)
+
+        service_status = "unknown"
+        active_service = None
+
+        for service_name in service_names:
+            status = self.service_detector.get_service_status(service_name)
+            if status == "running":
+                return (status, service_name)
+            if status == "stopped" and service_status == "unknown":
+                service_status = status
+                active_service = service_name
+
+        return (service_status, active_service)
+
+    def _add_role_if_unique(
+        self,
+        roles: List[Dict[str, Any]],
+        role_name: str,
+        package_pattern: str,
+        package_version: str,
+        active_service: str,
+        service_status: str,
+    ) -> None:
+        """Add a role to the list if no duplicate role+service combination exists."""
+        role_service_key = (role_name, active_service)
+        self.logger.debug(
+            "Checking for duplicate: role=%s, service=%s, existing_roles_count=%d",
+            role_name,
+            active_service,
+            len(roles),
+        )
+
+        existing_role = next(
+            (r for r in roles if (r["role"], r["service_name"]) == role_service_key),
+            None,
+        )
+
+        if existing_role:
+            self.logger.info(
+                "Skipping duplicate role: %s with service %s (already have package %s)",
+                role_name,
+                active_service,
+                existing_role["package_name"],
+            )
+        else:
+            self.logger.debug(
+                "Adding new role: %s with service %s, package %s",
+                role_name,
+                active_service,
+                package_pattern,
+            )
+            roles.append(
+                {
+                    "role": role_name,
+                    "package_name": package_pattern,
+                    "package_version": package_version,
+                    "service_name": active_service,
+                    "service_status": service_status,
+                    "is_active": service_status == "running",
+                }
+            )
 
     def _detect_virtualization_host_roles(self, roles: List[Dict[str, Any]]) -> None:
         """

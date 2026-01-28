@@ -10,6 +10,11 @@ from typing import Any, Dict
 
 from src.i18n import _
 
+# Module-level constants for repeated error messages
+_UNSUPPORTED_PLATFORM = _("Unsupported platform: %s")
+_USER_AND_GROUP_DELETED = _("User %s and default group deleted successfully")
+_USER_DELETED_GROUP_FAILED = "User %s deleted but default group deletion failed: %s"
+
 
 class UserAccountOperations:
     """Handles user account and group management across different platforms."""
@@ -46,7 +51,7 @@ class UserAccountOperations:
             else:
                 return {
                     "success": False,
-                    "error": _("Unsupported platform: %s") % self.system_platform,
+                    "error": _UNSUPPORTED_PLATFORM % self.system_platform,
                 }
 
             # If user was created successfully, send updated user list to server
@@ -88,7 +93,7 @@ class UserAccountOperations:
             else:
                 return {
                     "success": False,
-                    "error": _("Unsupported platform: %s") % self.system_platform,
+                    "error": _UNSUPPORTED_PLATFORM % self.system_platform,
                 }
 
             # If group was created successfully, send updated user list to server
@@ -131,7 +136,7 @@ class UserAccountOperations:
             else:
                 return {
                     "success": False,
-                    "error": _("Unsupported platform: %s") % self.system_platform,
+                    "error": _UNSUPPORTED_PLATFORM % self.system_platform,
                 }
 
             # If user was deleted successfully, send updated user list to server
@@ -173,7 +178,7 @@ class UserAccountOperations:
             else:
                 return {
                     "success": False,
-                    "error": _("Unsupported platform: %s") % self.system_platform,
+                    "error": _UNSUPPORTED_PLATFORM % self.system_platform,
                 }
 
             # If group was deleted successfully, send updated user list to server
@@ -556,12 +561,11 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _("User %s and default group deleted successfully")
-                        % username,
+                        "message": _USER_AND_GROUP_DELETED % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
-                    "User %s deleted but default group deletion failed: %s",
+                    _USER_DELETED_GROUP_FAILED,
                     username,
                     group_result.get("error"),
                 )
@@ -601,10 +605,7 @@ class UserAccountOperations:
                     if group_result.get("success"):
                         return {
                             "success": True,
-                            "message": _(
-                                "User %s and default group deleted successfully"
-                            )
-                            % username,
+                            "message": _USER_AND_GROUP_DELETED % username,
                         }
                     # Group deletion failed but user was deleted - still return success
                     self.logger.warning(
@@ -683,12 +684,11 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _("User %s and default group deleted successfully")
-                        % username,
+                        "message": _USER_AND_GROUP_DELETED % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
-                    "User %s deleted but default group deletion failed: %s",
+                    _USER_DELETED_GROUP_FAILED,
                     username,
                     group_result.get("error"),
                 )
@@ -729,12 +729,11 @@ class UserAccountOperations:
                 if group_result.get("success"):
                     return {
                         "success": True,
-                        "message": _("User %s and default group deleted successfully")
-                        % username,
+                        "message": _USER_AND_GROUP_DELETED % username,
                     }
                 # Group deletion failed but user was deleted - still return success
                 self.logger.warning(
-                    "User %s deleted but default group deletion failed: %s",
+                    _USER_DELETED_GROUP_FAILED,
                     username,
                     group_result.get("error"),
                 )

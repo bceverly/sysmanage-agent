@@ -9,6 +9,8 @@ import logging
 import os
 from typing import Any, Dict
 
+import aiofiles
+
 
 class SSHKeyOperations:
     """Handles SSH key operations for the agent."""
@@ -18,7 +20,9 @@ class SSHKeyOperations:
         self.agent_instance = agent_instance
         self.logger = logging.getLogger(__name__)
 
-    async def deploy_ssh_keys(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def deploy_ssh_keys(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:  # NOSONAR
         """Deploy SSH keys to a user's .ssh directory with proper permissions."""
         username = parameters.get("username")
         ssh_keys = parameters.get("ssh_keys", [])
@@ -56,16 +60,20 @@ class SSHKeyOperations:
                     key_file_path = os.path.join(ssh_dir, filename)
 
                     # Write the key file
-                    with open(key_file_path, "w", encoding="utf-8") as file_handle:
-                        file_handle.write(content)
+                    async with aiofiles.open(
+                        key_file_path, "w", encoding="utf-8"
+                    ) as file_handle:
+                        await file_handle.write(content)
                         # Ensure content ends with newline
                         if not content.endswith("\n"):
-                            file_handle.write("\n")
+                            await file_handle.write("\n")
 
                     # Set appropriate permissions based on key type
                     if subtype == "public":
                         # Public keys: readable by owner and group (644)
-                        os.chmod(key_file_path, 0o644)
+                        os.chmod(
+                            key_file_path, 0o644
+                        )  # NOSONAR - permissions are appropriate for this file type
                     else:
                         # Private keys and others: readable by owner only (600)
                         os.chmod(key_file_path, 0o600)
@@ -102,21 +110,25 @@ class SSHKeyOperations:
                     # Read existing authorized_keys if it exists
                     existing_keys = []
                     if os.path.exists(authorized_keys_path):
-                        with open(
+                        async with aiofiles.open(
                             authorized_keys_path, "r", encoding="utf-8"
                         ) as file_handle:
-                            existing_keys = file_handle.read().splitlines()
+                            content = await file_handle.read()
+                            existing_keys = content.splitlines()
 
                     # Append new public keys to authorized_keys
-                    with open(
+                    async with aiofiles.open(
                         authorized_keys_path, "a", encoding="utf-8"
                     ) as file_handle:
                         for pub_key in public_keys:
                             pub_key_path = pub_key["path"]
-                            with open(pub_key_path, "r", encoding="utf-8") as key_file:
-                                key_content = key_file.read().strip()
+                            async with aiofiles.open(
+                                pub_key_path, "r", encoding="utf-8"
+                            ) as key_file:
+                                key_content_raw = await key_file.read()
+                                key_content = key_content_raw.strip()
                                 if key_content not in existing_keys:
-                                    file_handle.write(key_content + "\n")
+                                    await file_handle.write(key_content + "\n")
 
                     # Set proper permissions for authorized_keys
                     os.chmod(authorized_keys_path, 0o600)

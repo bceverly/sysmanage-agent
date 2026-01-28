@@ -114,7 +114,7 @@ class AlpineConsoleAutomation:
         self,
         vm_name: str,
         setup_script: str,
-        timeout: int = None,
+        timeout: int = None,  # NOSONAR - timeout parameter is part of the established API contract
     ) -> Dict[str, Any]:
         """
         Run automated setup via serial console.

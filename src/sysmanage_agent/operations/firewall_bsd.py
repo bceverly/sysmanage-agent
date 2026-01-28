@@ -7,15 +7,19 @@ All commands are hardcoded with no user input, use shell=False, and only call
 trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 """
 
+import asyncio
 import subprocess  # nosec B404
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-from src.i18n import _  # pylint: disable=not-callable
+from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_base import FirewallBase
 from src.sysmanage_agent.operations.firewall_bsd_pf import PFFirewallOperations
 from src.sysmanage_agent.operations.firewall_bsd_ipfw import IPFWFirewallOperations
 from src.sysmanage_agent.operations.firewall_bsd_npf import NPFFirewallOperations
+
+# Module-level constants for repeated strings
+_NO_SUPPORTED_FIREWALL = _("No supported firewall found on this BSD system")
 
 
 class BSDFirewallOperations(FirewallBase):
@@ -42,6 +46,188 @@ class BSDFirewallOperations(FirewallBase):
             return command
         return ["sudo"] + command
 
+    async def _check_command_exists(self, command: str) -> bool:
+        """
+        Check if a command exists on the system using 'which'.
+
+        Args:
+            command: The command name to check
+
+        Returns:
+            True if the command exists, False otherwise
+        """
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "which",
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await asyncio.wait_for(proc.communicate(), timeout=5)
+            return proc.returncode == 0
+        except (FileNotFoundError, asyncio.TimeoutError):
+            return False
+
+    async def _run_firewall_command(
+        self, command: List[str], timeout: int = 10
+    ) -> tuple:
+        """
+        Run a firewall command asynchronously.
+
+        Args:
+            command: The command to execute as a list
+            timeout: Timeout in seconds
+
+        Returns:
+            Tuple of (returncode, stdout, stderr)
+        """
+        proc = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return proc.returncode, stdout.decode(), stderr.decode()
+        except asyncio.TimeoutError as exc:
+            proc.kill()
+            await proc.wait()
+            raise subprocess.TimeoutExpired(command, timeout) from exc
+
+    async def _disable_ipfw(self) -> Optional[Dict]:
+        """Disable IPFW firewall. Returns result dict or None if IPFW not available."""
+        if self.system != "FreeBSD":
+            return None
+        if not await self._check_command_exists("ipfw"):
+            return None
+
+        self.logger.info("Disabling IPFW firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["sysctl", "net.inet.ip.fw.enable=0"])
+            )
+            if returncode == 0:
+                self.logger.info("IPFW firewall disabled successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("IPFW firewall disabled successfully"),
+                }
+            return {"success": False, "error": f"Failed to disable IPFW: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    async def _disable_npf(self) -> Optional[Dict]:
+        """Disable NPF firewall. Returns result dict or None if NPF not available."""
+        if self.system != "NetBSD":
+            return None
+        if not await self._check_command_exists("npfctl"):
+            return None
+
+        self.logger.info("Disabling NPF firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["npfctl", "stop"])
+            )
+            if returncode == 0:
+                self.logger.info("NPF firewall disabled successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("NPF firewall disabled successfully"),
+                }
+            return {"success": False, "error": f"Failed to disable NPF: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    async def _disable_pf(self) -> Optional[Dict]:
+        """Disable PF firewall. Returns result dict or None if PF not available."""
+        if not await self._check_command_exists("pfctl"):
+            return None
+
+        self.logger.info("Disabling PF firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["pfctl", "-d"])
+            )
+            if returncode == 0:
+                self.logger.info("PF firewall disabled successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("PF firewall disabled successfully"),
+                }
+            return {"success": False, "error": f"Failed to disable PF: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    async def _restart_ipfw(self) -> Optional[Dict]:
+        """Restart IPFW firewall. Returns result dict or None if IPFW not available."""
+        if self.system != "FreeBSD":
+            return None
+        if not await self._check_command_exists("ipfw"):
+            return None
+
+        self.logger.info("Restarting IPFW firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["service", "ipfw", "restart"])
+            )
+            if returncode == 0:
+                self.logger.info("IPFW firewall restarted successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("IPFW firewall restarted successfully"),
+                }
+            return {"success": False, "error": f"Failed to restart IPFW: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    async def _restart_npf(self) -> Optional[Dict]:
+        """Restart NPF firewall. Returns result dict or None if NPF not available."""
+        if self.system != "NetBSD":
+            return None
+        if not await self._check_command_exists("npfctl"):
+            return None
+
+        self.logger.info("Restarting NPF firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["npfctl", "reload"])
+            )
+            if returncode == 0:
+                self.logger.info("NPF firewall restarted successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("NPF firewall restarted successfully"),
+                }
+            return {"success": False, "error": f"Failed to restart NPF: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    async def _restart_pf(self) -> Optional[Dict]:
+        """Restart PF firewall. Returns result dict or None if PF not available."""
+        if not await self._check_command_exists("pfctl"):
+            return None
+
+        self.logger.info("Restarting PF firewall")
+        try:
+            returncode, _, stderr = await self._run_firewall_command(
+                self._build_command(["pfctl", "-f", "/etc/pf.conf"])
+            )
+            if returncode == 0:
+                self.logger.info("PF firewall restarted successfully")
+                await self._send_firewall_status_update()
+                return {
+                    "success": True,
+                    "message": _("PF firewall restarted successfully"),
+                }
+            return {"success": False, "error": f"Failed to restart PF: {stderr}"}
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
     async def enable_firewall(self, ports: List[int], protocol: str) -> Dict:
         """
         Enable firewall on BSD systems.
@@ -57,55 +243,20 @@ class BSDFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try IPFW first (FreeBSD default)
-        if self.system == "FreeBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "ipfw"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    return await self.ipfw_ops.enable_ipfw_firewall(ports, protocol)
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        if self.system == "FreeBSD" and await self._check_command_exists("ipfw"):
+            return await self.ipfw_ops.enable_ipfw_firewall(ports, protocol)
 
         # Try NPF (NetBSD default)
-        if self.system == "NetBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "npfctl"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    return await self.npf_ops.enable_npf_firewall(ports, protocol)
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        if self.system == "NetBSD" and await self._check_command_exists("npfctl"):
+            return await self.npf_ops.enable_npf_firewall(ports, protocol)
 
         # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "pfctl"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                return await self.pf_ops.enable_pf_firewall(ports, protocol)
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if await self._check_command_exists("pfctl"):
+            return await self.pf_ops.enable_pf_firewall(ports, protocol)
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this BSD system"),
+            "error": _NO_SUPPORTED_FIREWALL,
         }
 
     async def disable_firewall(self) -> Dict:
@@ -119,113 +270,23 @@ class BSDFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try IPFW first (FreeBSD default)
-        if self.system == "FreeBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "ipfw"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Disabling IPFW firewall")
-                    # Disable IPFW using sysctl
-                    result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["sysctl", "net.inet.ip.fw.enable=0"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info("IPFW firewall disabled successfully")
-                        await self._send_firewall_status_update()
-                        return {
-                            "success": True,
-                            "message": _("IPFW firewall disabled successfully"),
-                        }
-                    return {
-                        "success": False,
-                        "error": f"Failed to disable IPFW: {result.stderr}",
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        result = await self._disable_ipfw()
+        if result is not None:
+            return result
 
         # Try NPF (NetBSD default)
-        if self.system == "NetBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "npfctl"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Disabling NPF firewall")
-                    result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["npfctl", "stop"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info("NPF firewall disabled successfully")
-                        await self._send_firewall_status_update()
-                        return {
-                            "success": True,
-                            "message": _("NPF firewall disabled successfully"),
-                        }
-                    return {
-                        "success": False,
-                        "error": f"Failed to disable NPF: {result.stderr}",
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        result = await self._disable_npf()
+        if result is not None:
+            return result
 
         # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "pfctl"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Disabling PF firewall")
-                result = subprocess.run(  # nosec B603 B607
-                    self._build_command(["pfctl", "-d"]),
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("PF firewall disabled successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("PF firewall disabled successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to disable PF: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        result = await self._disable_pf()
+        if result is not None:
+            return result
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this BSD system"),
+            "error": _NO_SUPPORTED_FIREWALL,
         }
 
     async def restart_firewall(self) -> Dict:
@@ -239,112 +300,23 @@ class BSDFirewallOperations(FirewallBase):
             Dict with success status and message
         """
         # Try IPFW first (FreeBSD default)
-        if self.system == "FreeBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "ipfw"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Restarting IPFW firewall")
-                    result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["service", "ipfw", "restart"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info("IPFW firewall restarted successfully")
-                        await self._send_firewall_status_update()
-                        return {
-                            "success": True,
-                            "message": _("IPFW firewall restarted successfully"),
-                        }
-                    return {
-                        "success": False,
-                        "error": f"Failed to restart IPFW: {result.stderr}",
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        result = await self._restart_ipfw()
+        if result is not None:
+            return result
 
         # Try NPF (NetBSD default)
-        if self.system == "NetBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["which", "npfctl"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("Restarting NPF firewall")
-                    result = subprocess.run(  # nosec B603 B607
-                        self._build_command(["npfctl", "reload"]),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-                    if result.returncode == 0:
-                        self.logger.info("NPF firewall restarted successfully")
-                        await self._send_firewall_status_update()
-                        return {
-                            "success": True,
-                            "message": _("NPF firewall restarted successfully"),
-                        }
-                    return {
-                        "success": False,
-                        "error": f"Failed to restart NPF: {result.stderr}",
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+        result = await self._restart_npf()
+        if result is not None:
+            return result
 
         # Try PF (OpenBSD default, also available on FreeBSD/NetBSD)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["which", "pfctl"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Restarting PF firewall")
-                result = subprocess.run(  # nosec B603 B607
-                    self._build_command(["pfctl", "-f", "/etc/pf.conf"]),
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    self.logger.info("PF firewall restarted successfully")
-                    await self._send_firewall_status_update()
-                    return {
-                        "success": True,
-                        "message": _("PF firewall restarted successfully"),
-                    }
-                return {
-                    "success": False,
-                    "error": f"Failed to restart PF: {result.stderr}",
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        result = await self._restart_pf()
+        if result is not None:
+            return result
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this BSD system"),
+            "error": _NO_SUPPORTED_FIREWALL,
         }
 
     async def deploy_firewall(self) -> Dict:
@@ -440,9 +412,7 @@ class BSDFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _(  # pylint: disable=not-callable
-                "No supported firewall found on this BSD system"
-            ),
+            "error": _NO_SUPPORTED_FIREWALL,
         }
 
     async def remove_firewall_ports(

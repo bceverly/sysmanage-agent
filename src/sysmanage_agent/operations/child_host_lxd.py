@@ -13,6 +13,9 @@ from src.sysmanage_agent.operations.child_host_lxd_container_creator import (
 )
 from src.sysmanage_agent.operations.child_host_types import LxdContainerConfig
 
+# Module-level constants for repeated error messages
+_CONTAINER_NAME_REQUIRED = _("Container name is required")
+
 
 class LxdOperations:
     """LXD-specific operations for child host management on Ubuntu."""
@@ -48,69 +51,17 @@ class LxdOperations:
                 }
 
             # Step 1: Install LXD via snap if not installed
-            if not lxd_check.get("installed"):
-                if not lxd_check.get("snap_available"):
-                    return {
-                        "success": False,
-                        "error": _("Snap is not available to install LXD"),
-                    }
-
-                self.logger.info(_("Installing LXD via snap"))
-                install_result = await run_command_async(
-                    ["sudo", "snap", "install", "lxd"],
-                    timeout=300,  # 5 minutes for download/install
-                )
-
-                if install_result.returncode != 0:
-                    error_msg = (
-                        install_result.stderr
-                        or install_result.stdout
-                        or "Unknown error"
-                    )
-                    self.logger.error(_("Failed to install LXD: %s"), error_msg)
-                    return {
-                        "success": False,
-                        "error": _("Failed to install LXD: %s") % error_msg,
-                    }
-
-                self.logger.info(_("LXD installed successfully"))
+            install_result = await self._ensure_lxd_installed(lxd_check)
+            if install_result and not install_result.get("success"):
+                return install_result
 
             # Step 2: Add current user to lxd group if not already
-            if not lxd_check.get("user_in_group"):
-                self.logger.info(_("Adding current user to lxd group"))
-                username = pwd.getpwuid(os.getuid()).pw_name
-
-                usermod_result = await run_command_async(
-                    ["sudo", "usermod", "-aG", "lxd", username],
-                    timeout=30,
-                )
-
-                if usermod_result.returncode != 0:
-                    self.logger.warning(
-                        _("Could not add user to lxd group: %s"),
-                        usermod_result.stderr or usermod_result.stdout,
-                    )
-                    # Continue anyway - the user may need to log out/in
+            await self._ensure_user_in_lxd_group(lxd_check)
 
             # Step 3: Initialize LXD if not already initialized
-            if not lxd_check.get("initialized"):
-                self.logger.info(_("Initializing LXD with default settings"))
-                init_result = await run_command_async(
-                    ["sudo", "lxd", "init", "--auto"],
-                    timeout=120,  # 2 minutes for init
-                )
-
-                if init_result.returncode != 0:
-                    error_msg = (
-                        init_result.stderr or init_result.stdout or "Unknown error"
-                    )
-                    self.logger.error(_("Failed to initialize LXD: %s"), error_msg)
-                    return {
-                        "success": False,
-                        "error": _("Failed to initialize LXD: %s") % error_msg,
-                    }
-
-                self.logger.info(_("LXD initialized successfully"))
+            init_result = await self._ensure_lxd_initialized(lxd_check)
+            if init_result and not init_result.get("success"):
+                return init_result
 
             # Step 4: Configure firewall for LXD networking
             firewall_result = self._configure_lxd_firewall()
@@ -121,21 +72,7 @@ class LxdOperations:
                 # Continue anyway - containers may still work or user can fix manually
 
             # Verify LXD is now working
-            verify_result = self.virtualization_checks.check_lxd_support()
-
-            if verify_result.get("installed") and verify_result.get("initialized"):
-                self.logger.info(_("LXD is ready for use"))
-                return {
-                    "success": True,
-                    "message": _("LXD has been installed and initialized"),
-                    "user_needs_relogin": not lxd_check.get("user_in_group"),
-                    "firewall_configured": firewall_result.get("success", False),
-                }
-
-            return {
-                "success": False,
-                "error": _("LXD initialization completed but verification failed"),
-            }
+            return self._verify_lxd_ready(lxd_check, firewall_result)
 
         except asyncio.TimeoutError:
             self.logger.error(_("LXD initialization timed out"))
@@ -149,6 +86,96 @@ class LxdOperations:
                 "success": False,
                 "error": str(error),
             }
+
+    async def _ensure_lxd_installed(self, lxd_check: dict) -> dict | None:
+        """Install LXD via snap if not already installed."""
+        if lxd_check.get("installed"):
+            return None
+
+        if not lxd_check.get("snap_available"):
+            return {
+                "success": False,
+                "error": _("Snap is not available to install LXD"),
+            }
+
+        self.logger.info(_("Installing LXD via snap"))
+        install_result = await run_command_async(
+            ["sudo", "snap", "install", "lxd"],
+            timeout=300,  # 5 minutes for download/install
+        )
+
+        if install_result.returncode != 0:
+            error_msg = (
+                install_result.stderr or install_result.stdout or "Unknown error"
+            )
+            self.logger.error(_("Failed to install LXD: %s"), error_msg)
+            return {
+                "success": False,
+                "error": _("Failed to install LXD: %s") % error_msg,
+            }
+
+        self.logger.info(_("LXD installed successfully"))
+        return None
+
+    async def _ensure_user_in_lxd_group(self, lxd_check: dict) -> None:
+        """Add current user to lxd group if not already a member."""
+        if lxd_check.get("user_in_group"):
+            return
+
+        self.logger.info(_("Adding current user to lxd group"))
+        username = pwd.getpwuid(os.getuid()).pw_name
+
+        usermod_result = await run_command_async(
+            ["sudo", "usermod", "-aG", "lxd", username],
+            timeout=30,
+        )
+
+        if usermod_result.returncode != 0:
+            self.logger.warning(
+                _("Could not add user to lxd group: %s"),
+                usermod_result.stderr or usermod_result.stdout,
+            )
+            # Continue anyway - the user may need to log out/in
+
+    async def _ensure_lxd_initialized(self, lxd_check: dict) -> dict | None:
+        """Initialize LXD if not already initialized."""
+        if lxd_check.get("initialized"):
+            return None
+
+        self.logger.info(_("Initializing LXD with default settings"))
+        init_result = await run_command_async(
+            ["sudo", "lxd", "init", "--auto"],
+            timeout=120,  # 2 minutes for init
+        )
+
+        if init_result.returncode != 0:
+            error_msg = init_result.stderr or init_result.stdout or "Unknown error"
+            self.logger.error(_("Failed to initialize LXD: %s"), error_msg)
+            return {
+                "success": False,
+                "error": _("Failed to initialize LXD: %s") % error_msg,
+            }
+
+        self.logger.info(_("LXD initialized successfully"))
+        return None
+
+    def _verify_lxd_ready(self, lxd_check: dict, firewall_result: dict) -> dict:
+        """Verify LXD is working and return final result."""
+        verify_result = self.virtualization_checks.check_lxd_support()
+
+        if verify_result.get("installed") and verify_result.get("initialized"):
+            self.logger.info(_("LXD is ready for use"))
+            return {
+                "success": True,
+                "message": _("LXD has been installed and initialized"),
+                "user_needs_relogin": not lxd_check.get("user_in_group"),
+                "firewall_configured": firewall_result.get("success", False),
+            }
+
+        return {
+            "success": False,
+            "error": _("LXD initialization completed but verification failed"),
+        }
 
     def _configure_lxd_firewall(self) -> dict:
         """
@@ -211,7 +238,7 @@ class LxdOperations:
         """Start a stopped LXD container."""
         container_name = parameters.get("child_name")
         if not container_name:
-            return {"success": False, "error": _("Container name is required")}
+            return {"success": False, "error": _CONTAINER_NAME_REQUIRED}
 
         try:
             self.logger.info("Starting LXD container: %s", container_name)
@@ -257,7 +284,7 @@ class LxdOperations:
         """Stop a running LXD container."""
         container_name = parameters.get("child_name")
         if not container_name:
-            return {"success": False, "error": _("Container name is required")}
+            return {"success": False, "error": _CONTAINER_NAME_REQUIRED}
 
         try:
             self.logger.info("Stopping LXD container: %s", container_name)
@@ -303,7 +330,7 @@ class LxdOperations:
         """Restart an LXD container."""
         container_name = parameters.get("child_name")
         if not container_name:
-            return {"success": False, "error": _("Container name is required")}
+            return {"success": False, "error": _CONTAINER_NAME_REQUIRED}
 
         try:
             self.logger.info("Restarting LXD container: %s", container_name)
@@ -349,7 +376,7 @@ class LxdOperations:
         """Delete an LXD container permanently."""
         container_name = parameters.get("child_name")
         if not container_name:
-            return {"success": False, "error": _("Container name is required")}
+            return {"success": False, "error": _CONTAINER_NAME_REQUIRED}
 
         try:
             self.logger.info("Deleting LXD container: %s", container_name)

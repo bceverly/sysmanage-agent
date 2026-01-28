@@ -52,8 +52,10 @@ class DatabaseManager:
 
         # Create session factory
         # SessionLocal is a SQLAlchemy naming convention, not snake_case
-        self.SessionLocal = sessionmaker(  # pylint: disable=invalid-name
-            autocommit=False, autoflush=False, bind=self.engine
+        self.SessionLocal = (  # pylint: disable=invalid-name
+            sessionmaker(  # noqa: N815  # NOSONAR - SQLAlchemy naming convention
+                autocommit=False, autoflush=False, bind=self.engine
+            )
         )
 
         logger.info("Database manager initialized with path: %s", database_path)
@@ -68,7 +70,7 @@ class DatabaseManager:
         directory = os.path.dirname(self.database_path)
         try:
             Path(directory).mkdir(parents=True, exist_ok=True)
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             logger.error("Failed to create database directory %s: %s", directory, error)
             raise
 

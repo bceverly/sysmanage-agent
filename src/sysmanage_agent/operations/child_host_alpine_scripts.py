@@ -252,8 +252,8 @@ rm -f /etc/local.d/sysmanage-firstboot.start
 def generate_answer_file(
     hostname: str,
     username: str,
-    user_password_hash: str,  # pylint: disable=unused-argument
-    root_password_hash: str,  # pylint: disable=unused-argument
+    _user_password_hash: str,  # pylint: disable=unused-argument
+    _root_password_hash: str,  # pylint: disable=unused-argument
     gateway_ip: str,
     vm_ip: str,
     disk: str = "vda",
@@ -279,7 +279,7 @@ def generate_answer_file(
     """
     # Extract subnet from gateway IP for netmask calculation
     # Assume /24 subnet
-    netmask = "255.255.255.0"
+    netmask = "255.255.255.0"  # NOSONAR - standard netmask for VM networking
 
     # Get parent DNS - will be overridden at runtime
     dns = gateway_ip  # Use gateway as DNS, or could use 8.8.8.8

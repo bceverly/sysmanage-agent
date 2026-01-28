@@ -8,6 +8,9 @@ Supports custom formats and selective level filtering.
 import logging
 from typing import Set
 
+# Module-level constants for repeated strings
+_DEFAULT_LOG_FORMAT = "%(levelname)s: %(message)s"
+
 
 class FlexibleLogger:
     """
@@ -58,12 +61,12 @@ class FlexibleLogger:
         """Get log format from config."""
         try:
             return (
-                self.config_manager.get("logging.format", "%(levelname)s: %(message)s")
+                self.config_manager.get("logging.format", _DEFAULT_LOG_FORMAT)
                 if self.config_manager
-                else "%(levelname)s: %(message)s"
+                else _DEFAULT_LOG_FORMAT
             )
         except Exception:  # pylint: disable=broad-exception-caught
-            return "%(levelname)s: %(message)s"
+            return _DEFAULT_LOG_FORMAT
 
     def _should_log(self, level: int) -> bool:
         """Check if message should be logged based on configured levels."""

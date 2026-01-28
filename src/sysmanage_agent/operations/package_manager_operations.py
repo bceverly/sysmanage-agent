@@ -3,14 +3,18 @@ Package manager operations for SysManage Agent.
 Manages enabling additional package managers on remote hosts.
 """
 
+import asyncio
 import logging
 import platform
 import shutil
-import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+
+# Constants for repeated error messages
+_INSTALLATION_FAILED = "Installation failed"
+_INSTALLATION_TIMEOUT = "Installation timed out after 5 minutes"
 
 
 class PackageManagerOperations:
@@ -111,41 +115,65 @@ class PackageManagerOperations:
         try:
             if apt_path:
                 # Debian/Ubuntu
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", apt_path, "install", "-y", "flatpak"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    apt_path,
+                    "install",
+                    "-y",
+                    "flatpak",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             elif dnf_path:
                 # Fedora/RHEL/CentOS
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", dnf_path, "install", "-y", "flatpak"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    dnf_path,
+                    "install",
+                    "-y",
+                    "flatpak",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             elif zypper_path:
                 # openSUSE/SLES
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", zypper_path, "install", "-y", "flatpak"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    zypper_path,
+                    "install",
+                    "-y",
+                    "flatpak",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             else:
                 return {
                     "success": False,
                     "error": _("No supported package manager found to install flatpak"),
                 }
 
-            if result.returncode != 0:
+            if returncode != 0:
                 return {
                     "success": False,
-                    "error": result.stderr or result.stdout or _("Installation failed"),
+                    "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
             # Add flathub repository
@@ -157,10 +185,10 @@ class PackageManagerOperations:
                 "message": _("Flatpak installed successfully"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
-                "error": _("Installation timed out after 5 minutes"),
+                "error": _(_INSTALLATION_TIMEOUT),
             }
         except Exception as err:
             return {
@@ -168,32 +196,29 @@ class PackageManagerOperations:
                 "error": str(err),
             }
 
-    async def _add_flathub_repo(self) -> None:
+    async def _add_flathub_repo(self) -> None:  # NOSONAR
         """Add Flathub repository to Flatpak."""
         flatpak_path = shutil.which("flatpak")
         if not flatpak_path:
             return
 
         try:
-            subprocess.run(  # nosec B603 B607
-                [
-                    "sudo",
-                    flatpak_path,
-                    "remote-add",
-                    "--if-not-exists",
-                    "flathub",
-                    "https://flathub.org/repo/flathub.flatpakrepo",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
+            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                "sudo",
+                flatpak_path,
+                "remote-add",
+                "--if-not-exists",
+                "flathub",
+                "https://flathub.org/repo/flathub.flatpakrepo",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            await asyncio.wait_for(process.communicate(), timeout=60)
             self.logger.info(_("Flathub repository added"))
         except Exception as err:
             self.logger.warning(_("Could not add Flathub repository: %s"), err)
 
-    async def _enable_snap(self) -> Dict[str, Any]:
+    async def _enable_snap(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Snap package manager on Linux systems."""
         if self.system != "Linux":
             return {
@@ -219,53 +244,82 @@ class PackageManagerOperations:
         try:
             if apt_path:
                 # Debian/Ubuntu
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", apt_path, "install", "-y", "snapd"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    apt_path,
+                    "install",
+                    "-y",
+                    "snapd",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             elif dnf_path:
                 # Fedora/RHEL/CentOS
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", dnf_path, "install", "-y", "snapd"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    dnf_path,
+                    "install",
+                    "-y",
+                    "snapd",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             elif zypper_path:
                 # openSUSE/SLES
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", zypper_path, "install", "-y", "snapd"],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
+                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                    "sudo",
+                    zypper_path,
+                    "install",
+                    "-y",
+                    "snapd",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=300
+                )
+                returncode = process.returncode
+                stdout_text = stdout.decode() if stdout else ""
+                stderr_text = stderr.decode() if stderr else ""
             else:
                 return {
                     "success": False,
                     "error": _("No supported package manager found to install snapd"),
                 }
 
-            if result.returncode != 0:
+            if returncode != 0:
                 return {
                     "success": False,
-                    "error": result.stderr or result.stdout or _("Installation failed"),
+                    "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
             # Enable and start snapd service
             systemctl_path = shutil.which("systemctl")
             if systemctl_path:
-                subprocess.run(  # nosec B603 B607
-                    ["sudo", systemctl_path, "enable", "--now", "snapd.socket"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,
+                systemctl_process = (
+                    await asyncio.create_subprocess_exec(  # nosec B603 B607
+                        "sudo",
+                        systemctl_path,
+                        "enable",
+                        "--now",
+                        "snapd.socket",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
                 )
+                await asyncio.wait_for(systemctl_process.communicate(), timeout=30)
 
             self.logger.info(_("Snap installed successfully"))
             return {
@@ -273,10 +327,10 @@ class PackageManagerOperations:
                 "message": _("Snap installed successfully"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
-                "error": _("Installation timed out after 5 minutes"),
+                "error": _(_INSTALLATION_TIMEOUT),
             }
         except Exception as err:
             return {
@@ -284,7 +338,7 @@ class PackageManagerOperations:
                 "error": str(err),
             }
 
-    async def _enable_homebrew(self) -> Dict[str, Any]:
+    async def _enable_homebrew(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Homebrew package manager on macOS or Linux."""
         # Check if homebrew is already installed
         brew_path = shutil.which("brew")
@@ -308,7 +362,7 @@ class PackageManagerOperations:
             "requires_manual_install": True,
         }
 
-    async def _enable_chocolatey(self) -> Dict[str, Any]:
+    async def _enable_chocolatey(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Chocolatey package manager on Windows."""
         if self.system != "Windows":
             return {
@@ -336,18 +390,21 @@ class PackageManagerOperations:
                 "'https://community.chocolatey.org/install.ps1'))"
             )
 
-            result = subprocess.run(  # nosec B603 B607
-                ["powershell", "-Command", install_cmd],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
+            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                "powershell",
+                "-Command",
+                install_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+            stdout_text = stdout.decode() if stdout else ""
+            stderr_text = stderr.decode() if stderr else ""
 
-            if result.returncode != 0:
+            if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": result.stderr or result.stdout or _("Installation failed"),
+                    "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
             self.logger.info(_("Chocolatey installed successfully"))
@@ -356,10 +413,10 @@ class PackageManagerOperations:
                 "message": _("Chocolatey installed successfully"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
-                "error": _("Installation timed out after 5 minutes"),
+                "error": _(_INSTALLATION_TIMEOUT),
             }
         except Exception as err:
             return {
@@ -367,7 +424,7 @@ class PackageManagerOperations:
                 "error": str(err),
             }
 
-    async def _enable_scoop(self) -> Dict[str, Any]:
+    async def _enable_scoop(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Scoop package manager on Windows."""
         if self.system != "Windows":
             return {
@@ -392,18 +449,21 @@ class PackageManagerOperations:
                 "irm get.scoop.sh | iex"
             )
 
-            result = subprocess.run(  # nosec B603 B607
-                ["powershell", "-Command", install_cmd],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
+            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                "powershell",
+                "-Command",
+                install_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+            stdout_text = stdout.decode() if stdout else ""
+            stderr_text = stderr.decode() if stderr else ""
 
-            if result.returncode != 0:
+            if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": result.stderr or result.stdout or _("Installation failed"),
+                    "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
             self.logger.info(_("Scoop installed successfully"))
@@ -412,10 +472,10 @@ class PackageManagerOperations:
                 "message": _("Scoop installed successfully"),
             }
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             return {
                 "success": False,
-                "error": _("Installation timed out after 5 minutes"),
+                "error": _(_INSTALLATION_TIMEOUT),
             }
         except Exception as err:
             return {

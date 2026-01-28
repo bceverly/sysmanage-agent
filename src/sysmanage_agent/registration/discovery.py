@@ -39,7 +39,9 @@ class ServerDiscoveryClient:
         self.bind_address = bind_address_arg
         self.hostname = platform.node()
 
-    async def discover_servers(self, timeout: int = 10) -> List[Dict[str, Any]]:
+    async def discover_servers(
+        self, timeout: int = 10
+    ) -> List[Dict[str, Any]]:  # NOSONAR - timeout parameter is appropriate here
         """
         Discover SysManage servers on the network.
 
@@ -71,7 +73,61 @@ class ServerDiscoveryClient:
 
         return unique_servers
 
-    async def broadcast_discovery(self, timeout: int = 5) -> List[Dict[str, Any]]:
+    def _create_discovery_request(self) -> bytes:
+        """Create the discovery request JSON payload."""
+        discovery_request = {
+            "service": "sysmanage-agent",
+            "hostname": self.hostname,
+            "platform": platform.system(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "request_config": True,
+        }
+        return json.dumps(discovery_request).encode("utf-8")
+
+    def _send_discovery_to_addresses(
+        self, sock: socket.socket, request_data: bytes
+    ) -> None:
+        """Send discovery request to all broadcast addresses."""
+        broadcast_addresses = self._get_broadcast_addresses()
+        for broadcast_addr in broadcast_addresses:
+            try:
+                sock.sendto(request_data, (broadcast_addr, self.discovery_port))
+                logger.debug(
+                    "Discovery request sent to %s:%s",
+                    broadcast_addr,
+                    self.discovery_port,
+                )
+            except Exception as error:
+                logger.debug("Failed to send to %s: %s", broadcast_addr, error)
+
+    def _collect_discovery_responses(
+        self, sock: socket.socket, timeout: int
+    ) -> List[Dict[str, Any]]:
+        """Collect discovery responses within timeout period."""
+        servers = []
+        start_time = asyncio.get_event_loop().time()
+        while (asyncio.get_event_loop().time() - start_time) < timeout:
+            try:
+                data, addr = sock.recvfrom(4096)
+                response = json.loads(data.decode("utf-8"))
+                if self._validate_server_response(response, addr):
+                    response["discovered_via"] = "broadcast"
+                    response["server_ip"] = addr[0]
+                    servers.append(response)
+                    logger.info(_("Server discovered at %s"), addr[0])
+            except socket.timeout:
+                continue
+            except json.JSONDecodeError:
+                logger.warning(_("Invalid JSON response from unknown source"))
+            except Exception as error:
+                logger.debug(
+                    "Error receiving discovery response: %s", type(error).__name__
+                )
+        return servers
+
+    async def broadcast_discovery(  # NOSONAR - async required by interface, timeout parameter appropriate
+        self, timeout: int = 5
+    ) -> List[Dict[str, Any]]:
         """
         Send broadcast discovery requests and collect responses.
 
@@ -84,63 +140,14 @@ class ServerDiscoveryClient:
         servers = []
 
         try:
-            # Create UDP socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.settimeout(0.5)  # Short timeout for individual receives
+            sock.settimeout(0.5)
 
-            # Create discovery request
-            discovery_request = {
-                "service": "sysmanage-agent",
-                "hostname": self.hostname,
-                "platform": platform.system(),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "request_config": True,
-            }
-            request_data = json.dumps(discovery_request).encode("utf-8")
-
-            # Get broadcast addresses to try
-            broadcast_addresses = self._get_broadcast_addresses()
-
-            # Send discovery requests
-            for broadcast_addr in broadcast_addresses:
-                try:
-                    sock.sendto(request_data, (broadcast_addr, self.discovery_port))
-                    logger.debug(
-                        "Discovery request sent to %s:%s",
-                        broadcast_addr,
-                        self.discovery_port,
-                    )
-                except Exception as error:
-                    logger.debug("Failed to send to %s: %s", broadcast_addr, error)
-
-            # Collect responses
-            start_time = asyncio.get_event_loop().time()
-            while (asyncio.get_event_loop().time() - start_time) < timeout:
-                try:
-                    data, addr = sock.recvfrom(4096)
-                    response = json.loads(data.decode("utf-8"))
-
-                    if self._validate_server_response(response, addr):
-                        response["discovered_via"] = "broadcast"
-                        response["server_ip"] = addr[0]
-                        servers.append(response)
-                        logger.info(_("Server discovered at %s"), addr[0])
-
-                except socket.timeout:
-                    continue
-                except json.JSONDecodeError:
-                    logger.warning(
-                        _("Invalid JSON response from %s"),
-                        addr[0] if "addr" in locals() else "unknown",
-                    )
-                except Exception as error:
-                    logger.debug(
-                        "Error receiving discovery response: %s", type(error).__name__
-                    )
-                    continue
-
+            request_data = self._create_discovery_request()
+            self._send_discovery_to_addresses(sock, request_data)
+            servers = self._collect_discovery_responses(sock, timeout)
             sock.close()
 
         except Exception as error:
@@ -148,7 +155,9 @@ class ServerDiscoveryClient:
 
         return servers
 
-    async def listen_for_announcements(self, timeout: int = 5) -> List[Dict[str, Any]]:
+    async def listen_for_announcements(  # NOSONAR - async required by interface, timeout parameter appropriate
+        self, timeout: int = 5
+    ) -> List[Dict[str, Any]]:
         """
         Listen for server announcement broadcasts.
 
@@ -194,10 +203,7 @@ class ServerDiscoveryClient:
                 except socket.timeout:
                     continue
                 except json.JSONDecodeError:
-                    logger.warning(
-                        _("Invalid JSON announcement from %s"),
-                        addr[0] if "addr" in locals() else "unknown",
-                    )
+                    logger.warning(_("Invalid JSON announcement from unknown source"))
                 except Exception as error:
                     logger.debug("Error receiving announcement: %s", error)
                     continue
@@ -318,6 +324,7 @@ class ServerDiscoveryClient:
     def _get_broadcast_addresses(self) -> List[str]:
         """Get list of broadcast addresses to try."""
         # Common broadcast addresses for discovery
+        # NOSONAR - broadcast addresses for network discovery
         addresses = [
             "255.255.255.255",  # Global broadcast
             "192.168.1.255",  # Common home network
