@@ -13,7 +13,7 @@ import asyncio
 import os
 import secrets
 import shutil
-import subprocess  # nosec B404 - needed for sync disk operations
+import subprocess  # nosec B404 # needed for sync disk operations
 import tempfile
 from typing import Any, Dict, Optional
 

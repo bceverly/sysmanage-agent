@@ -8,6 +8,8 @@ This module handles building the site77.tgz file that contains:
 - First-boot setup scripts
 """
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import os

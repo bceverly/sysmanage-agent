@@ -15,7 +15,7 @@ import asyncio
 import json
 import os
 import re
-import subprocess  # nosec B404 - still needed for sync functions
+import subprocess  # nosec B404 # still needed for sync functions
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional

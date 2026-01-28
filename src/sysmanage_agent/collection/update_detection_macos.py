@@ -262,7 +262,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
             )
             if result.returncode == 0:
                 return result.stdout.strip()
-        except Exception:
+        except Exception:  # nosec B110 # Fallback to unknown on any error
             pass
         return "unknown"
 

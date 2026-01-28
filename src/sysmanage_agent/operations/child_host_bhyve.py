@@ -561,7 +561,7 @@ class BhyveOperations:
             if result.returncode == 0:
                 self.logger.info(_("qemu-img already available"))
                 return True
-        except Exception as exc:  # nosec B110 - intentionally continue to install
+        except Exception as exc:  # nosec B110 # intentionally continue to install
             self.logger.debug(_("qemu-img not found, will try to install: %s"), exc)
 
         # Try to install qemu-nox11 package (smaller, no X11 dependencies)

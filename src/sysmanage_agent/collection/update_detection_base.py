@@ -126,7 +126,7 @@ class UpdateDetectorBase:
                 )
                 if result.returncode == 0:
                     return True
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
+            except Exception:  # nosec B112 # Continue trying other homebrew paths
                 continue
         return False
 
@@ -147,7 +147,7 @@ class UpdateDetectorBase:
                         return owner_info.pw_name
                     # On Windows, return empty string since Homebrew doesn't exist
                     return ""
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
+            except Exception:  # nosec B112 # Continue trying other homebrew paths
                 continue
         return ""
 
@@ -175,7 +175,7 @@ class UpdateDetectorBase:
 
                     # Normal case
                     return path
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
+            except Exception:  # nosec B112 # Continue trying other homebrew paths
                 continue
         return "brew"  # Fallback
 

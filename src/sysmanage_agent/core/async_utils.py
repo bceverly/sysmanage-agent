@@ -57,8 +57,10 @@ async def run_command_async(
         subprocess.CalledProcessError: If check=True and command fails
     """
     try:
-        process = await _create_async_process(
-            cmd, shell=shell, cwd=cwd, env=env, input_data=input_data
+        process = (
+            await _create_async_process(  # nosec B604 # shell param passed through
+                cmd, shell=shell, cwd=cwd, env=env, input_data=input_data
+            )
         )
         return await _collect_process_output(
             process, cmd, timeout=timeout, check=check, input_data=input_data

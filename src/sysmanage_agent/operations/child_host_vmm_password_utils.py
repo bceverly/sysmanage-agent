@@ -59,8 +59,8 @@ def _create_digest_a(
     password_bytes: bytes, salt_bytes: bytes, digest_b: bytes
 ) -> bytes:
     """Create digest A as per SHA-512 crypt specification."""
-    a_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
-    a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+    a_ctx = hashlib.sha512()  # nosec B324 # SHA-512 crypt KDF, not simple hash
+    a_ctx.update(password_bytes)  # nosec B324 # SHA-512 crypt KDF step
     a_ctx.update(salt_bytes)
 
     # Step 11: Add bytes from B based on password length
@@ -77,7 +77,7 @@ def _create_digest_a(
         if i & 1:
             a_ctx.update(digest_b)
         else:
-            a_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+            a_ctx.update(password_bytes)  # nosec B324 # SHA-512 crypt KDF step
         i >>= 1
 
     return a_ctx.digest()
@@ -173,19 +173,19 @@ def _sha512_crypt_impl(password: str, salt: str, rounds: int = 5000) -> str:
 
     # Step 1-8: Create digest B
     # Note: hashlib.sha512 usage here is part of SHA-512 crypt KDF, not simple hashing
-    b_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
-    b_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+    b_ctx = hashlib.sha512()  # nosec B324 # SHA-512 crypt KDF, not simple hash
+    b_ctx.update(password_bytes)  # nosec B324 # SHA-512 crypt KDF step
     b_ctx.update(salt_bytes)
-    b_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+    b_ctx.update(password_bytes)  # nosec B324 # SHA-512 crypt KDF step
     digest_b = b_ctx.digest()
 
     # Step 9-12: Create digest A
     digest_a = _create_digest_a(password_bytes, salt_bytes, digest_b)
 
     # Step 13-15: Create digest DP (password repeated)
-    dp_ctx = hashlib.sha512()  # nosec B324 - SHA-512 crypt KDF, not simple hash
+    dp_ctx = hashlib.sha512()  # nosec B324 # SHA-512 crypt KDF, not simple hash
     for _ in range(pwd_len):
-        dp_ctx.update(password_bytes)  # nosec B324 - SHA-512 crypt KDF step
+        dp_ctx.update(password_bytes)  # nosec B324 # SHA-512 crypt KDF step
     digest_dp = dp_ctx.digest()
 
     # Step 16: Create P string

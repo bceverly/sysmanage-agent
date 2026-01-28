@@ -12,7 +12,7 @@ import logging
 import os
 import pty
 import select
-import subprocess  # nosec B404 - still needed for sync functions
+import subprocess  # nosec B404 # still needed for sync functions
 import time
 import traceback
 from typing import Any, Dict, List, Optional

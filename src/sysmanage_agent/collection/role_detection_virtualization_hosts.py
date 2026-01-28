@@ -64,7 +64,7 @@ class VirtualizationHostDetector:
                         parts = lines[1].split()
                         if len(parts) >= 2:
                             version = parts[1]
-            except Exception:  # nosec B110 - version is optional, defaults to "unknown"
+            except Exception:  # nosec B110 # version is optional, defaults to "unknown"
                 pass
 
             # Check service status
@@ -189,7 +189,7 @@ class VirtualizationHostDetector:
                 )
                 if uname_result.returncode == 0:
                     obsd_version = uname_result.stdout.strip()
-            except Exception:  # nosec B110 - version is optional
+            except Exception:  # nosec B110 # version is optional
                 pass
 
             # Get vmd version info from pkg_info if available
@@ -209,7 +209,7 @@ class VirtualizationHostDetector:
                     lines = vmctl_status.stdout.strip().split("\n")
                     if len(lines) > 1:
                         vm_count = len([ln for ln in lines[1:] if ln.strip()])
-            except Exception:  # nosec B110 - VM count is optional
+            except Exception:  # nosec B110 # VM count is optional
                 pass
 
             self.logger.info(
@@ -275,7 +275,7 @@ class VirtualizationHostDetector:
                 )
                 if version_result.returncode == 0:
                     version = version_result.stdout.strip()
-            except Exception:  # nosec B110 - version is optional
+            except Exception:  # nosec B110 # version is optional
                 pass
 
             # Get count of defined VMs
@@ -293,7 +293,7 @@ class VirtualizationHostDetector:
                     vm_count = len(
                         [ln for ln in vmlist_result.stdout.strip().split("\n") if ln]
                     )
-            except Exception:  # nosec B110 - VM count is optional
+            except Exception:  # nosec B110 # VM count is optional
                 pass
 
             self.logger.info(
@@ -345,7 +345,7 @@ class VirtualizationHostDetector:
                 )
                 if uname_result.returncode == 0:
                     freebsd_version = uname_result.stdout.strip()
-            except Exception:  # nosec B110 - version is optional
+            except Exception:  # nosec B110 # version is optional
                 pass
 
             # Get count of running VMs by listing /dev/vmm entries
@@ -354,7 +354,7 @@ class VirtualizationHostDetector:
                 if os.path.isdir(DEV_VMM_PATH):
                     vms = os.listdir(DEV_VMM_PATH)
                     vm_count = len(vms)
-            except Exception:  # nosec B110 - VM count is optional
+            except Exception:  # nosec B110 # VM count is optional
                 pass
 
             # Check if UEFI firmware is available

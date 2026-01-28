@@ -78,7 +78,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 )
                 if result.returncode == 0:
                     return True
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
+            except Exception:  # nosec B112 # Continue trying other homebrew paths
                 continue
         return False
 
@@ -97,7 +97,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 )
                 if result.returncode == 0:
                     return path
-            except Exception:  # nosec B112 - Continue trying other homebrew paths
+            except Exception:  # nosec B112 # Continue trying other homebrew paths
                 continue
         return "brew"  # Fallback
 

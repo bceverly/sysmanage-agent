@@ -11,7 +11,7 @@ import os
 import platform
 import re
 import socket
-import subprocess  # nosec B404 - subprocess needed for service checks
+import subprocess  # nosec B404 # subprocess needed for service checks
 from typing import Dict, Optional
 
 import yaml

@@ -7,7 +7,7 @@ This module contains Linux-specific repository operations for APT, YUM/DNF, and 
 
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import aiofiles
@@ -164,7 +164,7 @@ class LinuxRepositoryOperations:
                     return ppa_name
         return ""
 
-    def _parse_list_line(self, line: str, filepath: str) -> dict | None:
+    def _parse_list_line(self, line: str, filepath: str) -> Optional[Dict[str, Any]]:
         """Parse a single line from a .list file and return repo dict or None."""
         line = line.strip()
         if not line:
@@ -569,7 +569,7 @@ class LinuxRepositoryOperations:
         except Exception:
             return False
 
-    def _parse_zypper_line(self, line: str) -> dict | None:
+    def _parse_zypper_line(self, line: str) -> Optional[Dict[str, Any]]:
         """Parse a single line from zypper lr output."""
         if "|" not in line or line.startswith("#"):
             return None

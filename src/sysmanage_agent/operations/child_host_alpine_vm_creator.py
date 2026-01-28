@@ -14,7 +14,7 @@ import asyncio
 import json
 import os
 import re
-import subprocess  # nosec B404 - needed for sync network operations
+import subprocess  # nosec B404 # needed for sync network operations
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -768,7 +768,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
                     self.logger.info(_("VM '%s' has shutdown"), vm_name)
                     return {"success": True}
 
-            except Exception:  # nosec B110 - polling loop, VM may not exist yet
+            except Exception:  # nosec B110 # polling loop, VM may not exist yet
                 pass
 
             await asyncio.sleep(10)

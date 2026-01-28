@@ -6,7 +6,7 @@ This module contains Windows-specific repository operations for Chocolatey and w
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 
@@ -82,7 +82,7 @@ class WindowsRepositoryOperations:
             return True
         return line.startswith("---")
 
-    def _parse_winget_source_line(self, line: str) -> dict | None:
+    def _parse_winget_source_line(self, line: str) -> Optional[Dict[str, Any]]:
         """Parse a winget source line and return repo dict or None if should skip."""
         parts = line.split()
         if len(parts) < 2:

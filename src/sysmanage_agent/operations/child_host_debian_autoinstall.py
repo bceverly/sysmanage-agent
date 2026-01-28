@@ -7,6 +7,8 @@ This module implements the automated installation of Debian VMs:
 - Manages configuration files for firstboot setup
 """
 
+from __future__ import annotations
+
 import base64
 import logging
 import os

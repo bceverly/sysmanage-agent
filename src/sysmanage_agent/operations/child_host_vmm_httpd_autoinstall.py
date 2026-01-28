@@ -205,7 +205,7 @@ class HttpdAutoinstallSetup:
 
             # Step 2: Extract ramdisk
             # NOSONAR - temp files required for ramdisk modification
-            ramdisk_img = "/tmp/ramdisk.img"  # nosec B108 - /tmp required on OpenBSD
+            ramdisk_img = "/tmp/ramdisk.img"  # nosec B108 # /tmp required on OpenBSD
             self.logger.info(_("Extracting ramdisk from bsd.rd"))
             result = subprocess.run(  # nosec B603 B607
                 ["rdsetroot", "-x", str(bsdrd_decompressed), ramdisk_img],
@@ -223,7 +223,7 @@ class HttpdAutoinstallSetup:
 
             # Step 3: Mount ramdisk
             # NOSONAR - temp files required for ramdisk modification
-            mount_point = "/tmp/ramdisk_mount"  # nosec B108 - /tmp required on OpenBSD
+            mount_point = "/tmp/ramdisk_mount"  # nosec B108 # /tmp required on OpenBSD
             Path(mount_point).mkdir(parents=True, exist_ok=True)
 
             result = subprocess.run(  # nosec B603 B607

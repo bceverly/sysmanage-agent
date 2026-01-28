@@ -13,7 +13,7 @@ import hashlib
 import os
 import shutil
 import socket
-import subprocess  # nosec B404 - needed for sync disk/network operations
+import subprocess  # nosec B404 # needed for sync disk/network operations
 import time
 from typing import Any, Dict, List, Optional
 

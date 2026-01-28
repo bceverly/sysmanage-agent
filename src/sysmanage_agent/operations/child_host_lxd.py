@@ -5,6 +5,7 @@ LXD-specific child host operations for Ubuntu hosts.
 import asyncio
 import os
 import pwd
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
@@ -87,7 +88,7 @@ class LxdOperations:
                 "error": str(error),
             }
 
-    async def _ensure_lxd_installed(self, lxd_check: dict) -> dict | None:
+    async def _ensure_lxd_installed(self, lxd_check: dict) -> Optional[Dict[str, Any]]:
         """Install LXD via snap if not already installed."""
         if lxd_check.get("installed"):
             return None
@@ -137,7 +138,9 @@ class LxdOperations:
             )
             # Continue anyway - the user may need to log out/in
 
-    async def _ensure_lxd_initialized(self, lxd_check: dict) -> dict | None:
+    async def _ensure_lxd_initialized(
+        self, lxd_check: dict
+    ) -> Optional[Dict[str, Any]]:
         """Initialize LXD if not already initialized."""
         if lxd_check.get("initialized"):
             return None

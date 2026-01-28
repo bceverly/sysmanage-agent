@@ -12,6 +12,7 @@ import asyncio
 import os
 import subprocess  # nosec B404 # Required for system command execution
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 import aiofiles
 
@@ -136,7 +137,7 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             check=False,
         )
 
-    def _check_vmm_preconditions(self, vmm_check: dict) -> dict | None:
+    def _check_vmm_preconditions(self, vmm_check: dict) -> Optional[Dict[str, Any]]:
         """
         Check VMM preconditions before initialization.
 
@@ -173,7 +174,7 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
 
         return None
 
-    async def _create_hostname_files(self, gateway_ip: str) -> dict | None:
+    async def _create_hostname_files(self, gateway_ip: str) -> Optional[Dict[str, Any]]:
         """
         Create /etc/hostname.vether0 and /etc/hostname.bridge0 files.
 
@@ -283,7 +284,7 @@ class VmmOperations:  # pylint: disable=too-many-instance-attributes
             timeout=10,
         )
 
-    async def _create_vm_conf(self) -> dict | None:
+    async def _create_vm_conf(self) -> Optional[Dict[str, Any]]:
         """
         Create /etc/vm.conf with local switch configuration.
 

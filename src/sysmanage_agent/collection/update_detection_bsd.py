@@ -488,7 +488,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 with urllib.request.urlopen(
                     "https://www.openbsd.org/", timeout=10
-                ) as response:  # nosec B310 - hardcoded HTTPS URL to openbsd.org
+                ) as response:  # nosec B310 # hardcoded HTTPS URL to openbsd.org
                     html_content = response.read().decode("utf-8")
 
                 logger.debug(_("Successfully fetched OpenBSD website, parsing version"))

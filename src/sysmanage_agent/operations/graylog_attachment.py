@@ -6,11 +6,11 @@ import asyncio
 import logging
 import os
 import platform
-import subprocess  # nosec B404 - subprocess needed for system service management
+import subprocess  # nosec B404 # subprocess needed for system service management
 import tempfile
 import urllib.parse
 import urllib.request
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiofiles
 import yaml
@@ -287,7 +287,7 @@ log {{
 
     def _get_bsd_forward_line(
         self, graylog_server: str, port: int, mechanism: str
-    ) -> str | None:
+    ) -> Optional[str]:
         """Generate BSD syslog forwarding line based on mechanism."""
         if mechanism == "syslog_tcp":
             return f"*.*\t@@{graylog_server}:{port}\n"
@@ -354,7 +354,7 @@ log {{
             else:  # OpenBSD, NetBSD
                 restart_cmd = ["rcctl", "restart", service_name]
 
-            # nosec B603 - safe: hardcoded BSD service commands
+            # nosec B603 # safe: hardcoded BSD service commands
             process = await asyncio.create_subprocess_exec(
                 *restart_cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -431,7 +431,7 @@ log {{
             self.logger.info("Updated Graylog Sidecar configuration")
 
             # Install and start service
-            # nosec B603 - safe: sidecar_path validated, hardcoded args
+            # nosec B603 # safe: sidecar_path validated, hardcoded args
             install_process = await asyncio.create_subprocess_exec(
                 sidecar_path,
                 "-service",
@@ -450,7 +450,7 @@ log {{
                 )
 
             # Start service
-            # nosec B603 - safe: sidecar_path validated, hardcoded args
+            # nosec B603 # safe: sidecar_path validated, hardcoded args
             start_process = await asyncio.create_subprocess_exec(
                 sidecar_path,
                 "-service",
@@ -543,14 +543,14 @@ log {{
             # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(
                 req, timeout=300
-            ) as response:  # nosec B310 - URL validated above (HTTPS only, github.com domain)
+            ) as response:  # nosec B310 # URL validated above (HTTPS only, github.com domain)
                 async with aiofiles.open(installer_path, "wb") as out_file:
                     await out_file.write(response.read())
 
             self.logger.info("Downloaded Sidecar installer to %s", installer_path)
 
             # Run installer silently
-            # nosec B603 - safe: installer_path is temp file, /S is hardcoded
+            # nosec B603 # safe: installer_path is temp file, /S is hardcoded
             process = await asyncio.create_subprocess_exec(
                 installer_path,
                 "/S",  # Silent install
