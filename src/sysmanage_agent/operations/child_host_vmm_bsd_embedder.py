@@ -5,6 +5,8 @@ This module handles embedding site.tgz into bsd.rd for automated
 installation via PXE boot.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import shutil

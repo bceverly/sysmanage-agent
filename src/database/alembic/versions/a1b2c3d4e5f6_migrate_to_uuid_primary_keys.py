@@ -41,47 +41,35 @@ def upgrade() -> None:
         op.execute("DROP TABLE IF EXISTS system_info_backup")
 
         # Backup existing data
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE message_queue_backup AS
         SELECT * FROM message_queue
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE queue_metrics_backup AS
         SELECT * FROM queue_metrics
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE host_approval_backup AS
         SELECT * FROM host_approval
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE script_executions_backup AS
         SELECT * FROM script_executions
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE available_packages_backup AS
         SELECT * FROM available_packages
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         CREATE TABLE installation_request_tracking_backup AS
         SELECT * FROM installation_request_tracking
-        """
-        )
+        """)
 
         # Drop existing tables
         op.drop_table("message_queue")
@@ -212,66 +200,54 @@ def upgrade() -> None:
         # Restore data with UUID conversion
         # Note: In SQLite, we lose the old integer IDs but that's acceptable for the agent
         # Generate UUIDs for existing records
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO message_queue (id, message_id, direction, message_type, message_data, status, priority, retry_count, max_retries, created_at, scheduled_at, started_at, completed_at, error_message, last_error_at, correlation_id, reply_to)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             message_id, direction, message_type, message_data, status, priority, retry_count, max_retries, created_at, scheduled_at, started_at, completed_at, error_message, last_error_at, correlation_id, reply_to
         FROM message_queue_backup
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO queue_metrics (id, metric_name, direction, count, total_time_ms, avg_time_ms, min_time_ms, max_time_ms, error_count, period_start, period_end, updated_at)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             metric_name, direction, count, total_time_ms, avg_time_ms, min_time_ms, max_time_ms, error_count, period_start, period_end, updated_at
         FROM queue_metrics_backup
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO host_approval (id, host_id, host_token, approval_status, certificate, approved_at, created_at, updated_at)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             CASE WHEN host_id IS NOT NULL THEN lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) ELSE NULL END as host_id,
             host_token, approval_status, certificate, approved_at, created_at, updated_at
         FROM host_approval_backup
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO script_executions (id, execution_id, execution_uuid, script_name, shell_type, status, exit_code, stdout_output, stderr_output, error_message, execution_time, received_at, started_at, completed_at, result_sent_at)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             execution_id, execution_uuid, script_name, shell_type, status, exit_code, stdout_output, stderr_output, error_message, execution_time, received_at, started_at, completed_at, result_sent_at
         FROM script_executions_backup
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO available_packages (id, package_manager, package_name, package_version, package_description, collection_date, created_at)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             package_manager, package_name, package_version, package_description, collection_date, created_at
         FROM available_packages_backup
-        """
-        )
+        """)
 
-        op.execute(
-            """
+        op.execute("""
         INSERT INTO installation_request_tracking (id, request_id, requested_by, status, packages_json, received_at, started_at, completed_at, result_log, success)
         SELECT
             lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(6))) as id,
             request_id, requested_by, status, packages_json, received_at, started_at, completed_at, result_log, success
         FROM installation_request_tracking_backup
-        """
-        )
+        """)
 
         # Drop backup tables
         op.drop_table("message_queue_backup")

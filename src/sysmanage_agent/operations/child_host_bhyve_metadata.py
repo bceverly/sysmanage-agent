@@ -15,7 +15,6 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 
-
 # Metadata directory for storing VM information
 BHYVE_METADATA_DIR = "/vm/metadata"
 

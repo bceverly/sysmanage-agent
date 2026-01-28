@@ -19,7 +19,6 @@ from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 from src.sysmanage_agent.communication.child_host_collector import ChildHostCollector
 
-
 _UNKNOWN_ERROR = "Unknown error"
 
 

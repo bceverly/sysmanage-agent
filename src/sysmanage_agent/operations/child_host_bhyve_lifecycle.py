@@ -23,7 +23,6 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
     delete_bhyve_metadata,
 )
 
-
 _NO_CHILD_NAME_MSG = _("No child_name specified")
 
 

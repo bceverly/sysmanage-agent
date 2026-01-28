@@ -18,7 +18,6 @@ Supported OS types:
 
 from typing import Optional, List
 
-
 # Shell configurations by OS type
 OS_SHELLS = {
     "ubuntu": ["sh", "bash", "dash"],

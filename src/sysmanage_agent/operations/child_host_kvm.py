@@ -20,7 +20,6 @@ from src.sysmanage_agent.operations.child_host_kvm_lifecycle import KvmLifecycle
 from src.sysmanage_agent.operations.child_host_kvm_networking import KvmNetworking
 from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 
-
 # Package installation commands by Linux distribution
 # libguestfs-tools is needed for guest filesystem operations
 # genisoimage is needed to create cloud-init ISOs

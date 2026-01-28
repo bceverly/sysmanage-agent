@@ -15,15 +15,13 @@ def test_config_lang_default():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".yaml", delete=False
     ) as config_file:
-        config_file.write(
-            """
+        config_file.write("""
 server:
   hostname: "localhost"
   port: 8000
 logging:
   level: "INFO"
-"""
-        )
+""")
         temp_config = config_file.name
 
     try:
@@ -39,8 +37,7 @@ def test_config_lang_configured():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".yaml", delete=False
     ) as config_file:
-        config_file.write(
-            """
+        config_file.write("""
 server:
   hostname: "localhost"
   port: 8000
@@ -48,8 +45,7 @@ i18n:
   language: "es"
 logging:
   level: "INFO"
-"""
-        )
+""")
         temp_config = config_file.name
 
     try:

@@ -109,8 +109,7 @@ def agent_config():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".yaml", delete=False
     ) as config_file:
-        config_file.write(
-            f"""
+        config_file.write(f"""
 server:
   hostname: "test.example.com"
   port: 8000
@@ -128,8 +127,7 @@ websocket:
   ping_interval: 5
 database:
   path: ":memory:"  # Use in-memory database for tests
-"""
-        )
+""")
         temp_config_path = config_file.name
 
     yield temp_config_path
@@ -294,8 +292,7 @@ def agent_legacy():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".yaml", delete=False
     ) as legacy_config_file:
-        legacy_config_file.write(
-            f"""
+        legacy_config_file.write(f"""
 server:
   hostname: "test.example.com"
   port: 8000
@@ -311,8 +308,7 @@ websocket:
   auto_reconnect: false
   reconnect_interval: 1
   ping_interval: 5
-"""
-        )
+""")
         temp_config_path = legacy_config_file.name
 
     try:

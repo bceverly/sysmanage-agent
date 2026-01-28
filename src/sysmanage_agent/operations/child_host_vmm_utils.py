@@ -15,7 +15,6 @@ from urllib.parse import urlparse
 
 from src.i18n import _
 
-
 # VMM directories
 VMM_DISK_DIR = "/var/vmm"
 VMM_METADATA_DIR = "/var/vmm/metadata"

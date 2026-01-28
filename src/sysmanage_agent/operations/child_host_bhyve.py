@@ -41,7 +41,6 @@ from src.sysmanage_agent.operations.child_host_bhyve_persistence import (
 )
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
-
 _DEV_VMM_PATH = "/dev/vmm"
 _ALREADY_INSTALLED = "already installed"
 
