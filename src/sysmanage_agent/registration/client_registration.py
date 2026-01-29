@@ -183,6 +183,7 @@ class ClientRegistration:
             ssl_context = (
                 ssl.create_default_context()
             )  # NOSONAR - SSL verification is intentionally configurable
+            ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
             ssl_context.check_hostname = (
                 False  # NOSONAR - SSL verification is intentionally configurable
             )

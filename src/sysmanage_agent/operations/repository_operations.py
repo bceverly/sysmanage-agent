@@ -6,7 +6,7 @@ Handles third-party repository management operations.
 import logging
 import os
 import platform
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiofiles
 
@@ -15,6 +15,17 @@ from src.i18n import _
 # Constants for error messages used in multiple places
 _UNSUPPORTED_DISTRO = "Unsupported distribution: %s"
 _UNSUPPORTED_OS = "Unsupported operating system: %s"
+
+# Distro family detection patterns
+_DEBIAN_FAMILY = ("ubuntu", "debian")
+_RHEL_FAMILY = ("fedora", "rhel", "centos", "rocky", "alma")
+_SUSE_FAMILY = ("opensuse", "suse")
+
+
+def _is_distro_family(distro: str, family: tuple) -> bool:
+    """Check if distro belongs to a family."""
+    return any(name in distro for name in family)
+
 
 # pylint: disable=wrong-import-position
 # These imports are placed after constants to avoid circular imports
@@ -38,6 +49,32 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
         self.bsd_macos_ops = BSDMacOSRepositoryOperations(agent_instance)
         self.windows_ops = WindowsRepositoryOperations(agent_instance)
 
+    async def _list_linux_repositories(self) -> list:
+        """List repositories on Linux based on detected distro."""
+        distro_info = await self._detect_linux_distro()
+        distro = distro_info.get("distro", "").lower()
+
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            return await self.linux_ops.list_apt_repositories()
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return await self.linux_ops.list_yum_repositories()
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return await self.linux_ops.list_zypper_repositories()
+        return []
+
+    async def _list_non_linux_repositories(self, system: str) -> list:
+        """List repositories on non-Linux systems."""
+        handlers = {
+            "Darwin": self.bsd_macos_ops.list_homebrew_taps,
+            "FreeBSD": self.bsd_macos_ops.list_freebsd_repositories,
+            "NetBSD": self.bsd_macos_ops.list_netbsd_repositories,
+            "Windows": self.windows_ops.list_windows_repositories,
+        }
+        handler = handlers.get(system)
+        if handler:
+            return await handler()
+        return []
+
     async def list_third_party_repositories(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -47,40 +84,12 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
         )
         try:
             self.logger.info(_("Listing third-party repositories"))
-            repositories = []
             system = platform.system()
 
             if system == "Linux":
-                distro_info = await self._detect_linux_distro()
-                distro = distro_info.get("distro", "").lower()
-
-                if "ubuntu" in distro or "debian" in distro:
-                    repos = await self.linux_ops.list_apt_repositories()
-                    repositories.extend(repos)
-                elif (
-                    "fedora" in distro
-                    or "rhel" in distro
-                    or "centos" in distro
-                    or "rocky" in distro
-                    or "alma" in distro
-                ):
-                    repos = await self.linux_ops.list_yum_repositories()
-                    repositories.extend(repos)
-                elif "opensuse" in distro or "suse" in distro:
-                    repos = await self.linux_ops.list_zypper_repositories()
-                    repositories.extend(repos)
-            elif system == "Darwin":
-                repos = await self.bsd_macos_ops.list_homebrew_taps()
-                repositories.extend(repos)
-            elif system == "FreeBSD":
-                repos = await self.bsd_macos_ops.list_freebsd_repositories()
-                repositories.extend(repos)
-            elif system == "NetBSD":
-                repos = await self.bsd_macos_ops.list_netbsd_repositories()
-                repositories.extend(repos)
-            elif system == "Windows":
-                repos = await self.windows_ops.list_windows_repositories()
-                repositories.extend(repos)
+                repositories = await self._list_linux_repositories()
+            else:
+                repositories = await self._list_non_linux_repositories(system)
 
             return {
                 "success": True,
@@ -109,6 +118,55 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error detecting Linux distribution: %s"), error)
             return {"distro": "unknown"}
 
+    async def _add_linux_repository(
+        self, repo_identifier: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Add a repository on Linux based on detected distro."""
+        self.logger.debug("Detecting Linux distribution for repository add")
+        distro_info = await self._detect_linux_distro()
+        distro = distro_info.get("distro", "").lower()
+        self.logger.debug("Detected distribution: %s", distro)
+
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            self.logger.debug("Calling _add_apt_repository for %s", repo_identifier)
+            result = await self.linux_ops.add_apt_repository(repo_identifier)
+            self.logger.debug("_add_apt_repository returned: %s", result)
+            return result
+
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return await self.linux_ops.add_yum_repository(repo_identifier)
+
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return await self.linux_ops.add_zypper_repository(
+                repo_identifier, parameters.get("url", "")
+            )
+
+        return {"success": False, "error": _(_UNSUPPORTED_DISTRO) % distro}
+
+    async def _add_non_linux_repository(
+        self, system: str, repo_identifier: str, parameters: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Add a repository on non-Linux systems. Returns None if system unsupported."""
+        handlers = {
+            "Darwin": lambda: self.bsd_macos_ops.add_homebrew_tap(repo_identifier),
+            "FreeBSD": lambda: self.bsd_macos_ops.add_freebsd_repository(
+                repo_identifier, parameters.get("url", "")
+            ),
+            "NetBSD": lambda: self.bsd_macos_ops.add_netbsd_repository(
+                repo_identifier, parameters.get("url", "")
+            ),
+            "Windows": lambda: self.windows_ops.add_windows_repository(
+                repo_identifier,
+                parameters.get("url", ""),
+                parameters.get("type", ""),
+            ),
+        }
+
+        handler = handlers.get(system)
+        if handler:
+            return await handler()
+        return None
+
     async def add_third_party_repository(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -127,55 +185,13 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             system = platform.system()
 
             if system == "Linux":
-                self.logger.debug("Detecting Linux distribution for repository add")
-                distro_info = await self._detect_linux_distro()
-                distro = distro_info.get("distro", "").lower()
-                self.logger.debug("Detected distribution: %s", distro)
-
-                if "ubuntu" in distro or "debian" in distro:
-                    self.logger.debug(
-                        "Calling _add_apt_repository for %s", repo_identifier
-                    )
-                    result = await self.linux_ops.add_apt_repository(repo_identifier)
-                    self.logger.debug("_add_apt_repository returned: %s", result)
-                elif (
-                    "fedora" in distro
-                    or "rhel" in distro
-                    or "centos" in distro
-                    or "rocky" in distro
-                    or "alma" in distro
-                ):
-                    result = await self.linux_ops.add_yum_repository(repo_identifier)
-                elif "opensuse" in distro or "suse" in distro:
-                    result = await self.linux_ops.add_zypper_repository(
-                        repo_identifier, parameters.get("url", "")
-                    )
-                else:
-                    return {
-                        "success": False,
-                        "error": _(_UNSUPPORTED_DISTRO) % distro,
-                    }
-            elif system == "Darwin":
-                result = await self.bsd_macos_ops.add_homebrew_tap(repo_identifier)
-            elif system == "FreeBSD":
-                result = await self.bsd_macos_ops.add_freebsd_repository(
-                    repo_identifier, parameters.get("url", "")
-                )
-            elif system == "NetBSD":
-                result = await self.bsd_macos_ops.add_netbsd_repository(
-                    repo_identifier, parameters.get("url", "")
-                )
-            elif system == "Windows":
-                result = await self.windows_ops.add_windows_repository(
-                    repo_identifier,
-                    parameters.get("url", ""),
-                    parameters.get("type", ""),
-                )
+                result = await self._add_linux_repository(repo_identifier, parameters)
             else:
-                return {
-                    "success": False,
-                    "error": _(_UNSUPPORTED_OS) % system,
-                }
+                result = await self._add_non_linux_repository(
+                    system, repo_identifier, parameters
+                )
+                if result is None:
+                    return {"success": False, "error": _(_UNSUPPORTED_OS) % system}
 
             if result["success"]:
                 await self._run_package_update()
@@ -187,6 +203,19 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
         except Exception as error:
             self.logger.error(_("Error adding third-party repository: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def _delete_linux_repository(self, repo: Dict[str, Any]) -> Dict[str, Any]:
+        """Delete a single Linux repository based on distro."""
+        distro_info = await self._detect_linux_distro()
+        distro = distro_info.get("distro", "").lower()
+
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            return await self.linux_ops.delete_apt_repository(repo)
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return await self.linux_ops.delete_yum_repository(repo)
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return await self.linux_ops.delete_zypper_repository(repo)
+        return {"success": False, "error": _(_UNSUPPORTED_DISTRO) % distro}
 
     async def delete_third_party_repositories(
         self, parameters: Dict[str, Any]
@@ -206,38 +235,13 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             )
 
             system = platform.system()
-            results = []
+            if system != "Linux":
+                return {"success": False, "error": _(_UNSUPPORTED_OS) % system}
 
+            results = []
             for repo in repositories:
                 repo_name = repo.get("name")
-
-                if system == "Linux":
-                    distro_info = await self._detect_linux_distro()
-                    distro = distro_info.get("distro", "").lower()
-
-                    if "ubuntu" in distro or "debian" in distro:
-                        result = await self.linux_ops.delete_apt_repository(repo)
-                    elif (
-                        "fedora" in distro
-                        or "rhel" in distro
-                        or "centos" in distro
-                        or "rocky" in distro
-                        or "alma" in distro
-                    ):
-                        result = await self.linux_ops.delete_yum_repository(repo)
-                    elif "opensuse" in distro or "suse" in distro:
-                        result = await self.linux_ops.delete_zypper_repository(repo)
-                    else:
-                        result = {
-                            "success": False,
-                            "error": _(_UNSUPPORTED_DISTRO) % distro,
-                        }
-                else:
-                    result = {
-                        "success": False,
-                        "error": _(_UNSUPPORTED_OS) % system,
-                    }
-
+                result = await self._delete_linux_repository(repo)
                 results.append(
                     {
                         "repository": repo_name,
@@ -262,6 +266,21 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error deleting third-party repositories: %s"), error)
             return {"success": False, "error": str(error)}
 
+    async def _enable_linux_repository(
+        self, repo_name: str, file_path: str
+    ) -> Dict[str, Any]:
+        """Enable a single Linux repository based on distro."""
+        distro_info = await self._detect_linux_distro()
+        distro = distro_info.get("distro", "").lower()
+
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            return await self.linux_ops.enable_apt_repository(file_path)
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return await self.linux_ops.enable_yum_repository(repo_name)
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return await self.linux_ops.enable_zypper_repository(repo_name)
+        return {"success": False, "error": _(_UNSUPPORTED_DISTRO) % distro}
+
     async def enable_third_party_repositories(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -281,37 +300,13 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
 
             system = platform.system()
             if system != "Linux":
-                return {
-                    "success": False,
-                    "error": _(_UNSUPPORTED_OS) % system,
-                }
-
-            distro_info = await self._detect_linux_distro()
-            distro = distro_info.get("distro", "").lower()
+                return {"success": False, "error": _(_UNSUPPORTED_OS) % system}
 
             results = []
             for repo in repositories:
                 repo_name = repo.get("name")
                 file_path = repo.get("file_path")
-
-                if "ubuntu" in distro or "debian" in distro:
-                    result = await self.linux_ops.enable_apt_repository(file_path)
-                elif (
-                    "fedora" in distro
-                    or "rhel" in distro
-                    or "centos" in distro
-                    or "rocky" in distro
-                    or "alma" in distro
-                ):
-                    result = await self.linux_ops.enable_yum_repository(repo_name)
-                elif "opensuse" in distro or "suse" in distro:
-                    result = await self.linux_ops.enable_zypper_repository(repo_name)
-                else:
-                    result = {
-                        "success": False,
-                        "error": _(_UNSUPPORTED_DISTRO) % distro,
-                    }
-
+                result = await self._enable_linux_repository(repo_name, file_path)
                 results.append(
                     {
                         "repository": repo_name,
@@ -336,6 +331,21 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error enabling third-party repositories: %s"), error)
             return {"success": False, "error": str(error)}
 
+    async def _disable_linux_repository(
+        self, repo_name: str, file_path: str
+    ) -> Dict[str, Any]:
+        """Disable a single Linux repository based on distro."""
+        distro_info = await self._detect_linux_distro()
+        distro = distro_info.get("distro", "").lower()
+
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            return await self.linux_ops.disable_apt_repository(file_path)
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return await self.linux_ops.disable_yum_repository(repo_name)
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return await self.linux_ops.disable_zypper_repository(repo_name)
+        return {"success": False, "error": _(_UNSUPPORTED_DISTRO) % distro}
+
     async def disable_third_party_repositories(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -355,37 +365,13 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
 
             system = platform.system()
             if system != "Linux":
-                return {
-                    "success": False,
-                    "error": _(_UNSUPPORTED_OS) % system,
-                }
-
-            distro_info = await self._detect_linux_distro()
-            distro = distro_info.get("distro", "").lower()
+                return {"success": False, "error": _(_UNSUPPORTED_OS) % system}
 
             results = []
             for repo in repositories:
                 repo_name = repo.get("name")
                 file_path = repo.get("file_path")
-
-                if "ubuntu" in distro or "debian" in distro:
-                    result = await self.linux_ops.disable_apt_repository(file_path)
-                elif (
-                    "fedora" in distro
-                    or "rhel" in distro
-                    or "centos" in distro
-                    or "rocky" in distro
-                    or "alma" in distro
-                ):
-                    result = await self.linux_ops.disable_yum_repository(repo_name)
-                elif "opensuse" in distro or "suse" in distro:
-                    result = await self.linux_ops.disable_zypper_repository(repo_name)
-                else:
-                    result = {
-                        "success": False,
-                        "error": _(_UNSUPPORTED_DISTRO) % distro,
-                    }
-
+                result = await self._disable_linux_repository(repo_name, file_path)
                 results.append(
                     {
                         "repository": repo_name,
@@ -410,29 +396,28 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             self.logger.error(_("Error disabling third-party repositories: %s"), error)
             return {"success": False, "error": str(error)}
 
+    def _get_package_update_command(self, distro: str) -> Optional[str]:
+        """Get the package update command for a Linux distro."""
+        if _is_distro_family(distro, _DEBIAN_FAMILY):
+            return "sudo apt-get update"
+        if _is_distro_family(distro, _RHEL_FAMILY):
+            return "sudo dnf check-update"
+        if _is_distro_family(distro, _SUSE_FAMILY):
+            return "sudo zypper refresh"
+        return None
+
     async def _run_package_update(self) -> None:
         """Run package manager update after repository changes."""
         try:
             system = platform.system()
-            if system == "Linux":
-                distro_info = await self._detect_linux_distro()
-                distro = distro_info.get("distro", "").lower()
+            if system != "Linux":
+                return
 
-                if "ubuntu" in distro or "debian" in distro:
-                    command = "sudo apt-get update"
-                elif (
-                    "fedora" in distro
-                    or "rhel" in distro
-                    or "centos" in distro
-                    or "rocky" in distro
-                    or "alma" in distro
-                ):
-                    command = "sudo dnf check-update"
-                elif "opensuse" in distro or "suse" in distro:
-                    command = "sudo zypper refresh"
-                else:
-                    return
+            distro_info = await self._detect_linux_distro()
+            distro = distro_info.get("distro", "").lower()
 
+            command = self._get_package_update_command(distro)
+            if command:
                 await self.agent_instance.system_ops.execute_shell_command(
                     {"command": command}
                 )

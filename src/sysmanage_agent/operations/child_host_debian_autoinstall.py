@@ -454,6 +454,7 @@ label install
         content = cfg_path.read_text()
         # Comment out the default line if present
         content = content.replace("default installgui", "# default installgui")
+        # NOSONAR - path is constructed from a known temp directory with a fixed filename
         cfg_path.write_text(content)
         self.logger.info(_("Disabled GTK installer default"))
 

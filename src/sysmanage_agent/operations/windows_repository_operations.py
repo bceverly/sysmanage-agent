@@ -96,7 +96,7 @@ class WindowsRepositoryOperations:
         return {
             "name": name,
             "type": "winget",
-            "url": parts[1] if len(parts) > 1 else "",
+            "url": parts[1],
             "enabled": True,
             "file_path": None,
         }

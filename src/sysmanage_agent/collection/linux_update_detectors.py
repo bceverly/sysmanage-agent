@@ -9,6 +9,7 @@ across different package managers.
 import json
 import logging
 import subprocess  # nosec B404
+from typing import Optional
 
 from src.i18n import _
 
@@ -414,7 +415,7 @@ class LinuxUpdateDetector:
         device_name: str,
         current_version: str,
         device: dict,
-    ) -> dict:
+    ) -> Optional[dict]:
         """Process a single fwupd release and return an update record if applicable."""
         if not release:
             return None

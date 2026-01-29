@@ -733,7 +733,7 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
 
         return f"{subnet_prefix}.100"
 
-    async def _generate_preseed(
+    async def _generate_preseed(  # NOSONAR - async required by caller interface
         self,
         config: VmmVmConfig,
         fqdn_hostname: str,

@@ -261,8 +261,8 @@ class AntivirusServiceManager:
         _, stderr = await process.communicate()
         return process, stderr
 
-    async def disable_antivirus(  # pylint: disable=unused-argument,too-many-branches,too-many-statements
-        self, parameters: Dict[str, Any]
+    async def disable_antivirus(  # pylint: disable=too-many-branches,too-many-statements
+        self, _parameters: Dict[str, Any]  # NOSONAR - reserved for future use
     ) -> Dict[str, Any]:
         """Disable antivirus service(s)."""
         self.logger.info("Disabling antivirus service")
@@ -440,8 +440,8 @@ class AntivirusServiceManager:
             self.logger.error("Failed to disable antivirus: %s", error)
             return {"success": False, "error": str(error)}
 
-    async def remove_antivirus(  # pylint: disable=unused-argument,too-many-branches,too-many-statements
-        self, parameters: Dict[str, Any]
+    async def remove_antivirus(  # pylint: disable=too-many-branches,too-many-statements
+        self, _parameters: Dict[str, Any]  # NOSONAR - reserved for future use
     ) -> Dict[str, Any]:
         """Remove antivirus software from the system."""
         self.logger.info("Removing antivirus software")

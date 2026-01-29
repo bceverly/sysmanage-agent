@@ -141,7 +141,9 @@ class BhyvePersistenceHelper:
             self.logger.error(_("Failed to load VM config for %s: %s"), vm_name, error)
             return None
 
-    async def delete_vm_config(self, vm_name: str) -> Dict[str, Any]:
+    async def delete_vm_config(  # NOSONAR - async required by caller interface
+        self, vm_name: str
+    ) -> Dict[str, Any]:
         """
         Delete VM configuration file.
 

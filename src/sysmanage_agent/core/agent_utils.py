@@ -201,7 +201,8 @@ class AuthenticationHelper:
         # Set up SSL context if needed
         ssl_context = None
         if use_https:
-            ssl_context = ssl.create_default_context()
+            ssl_context = ssl.create_default_context()  # NOSONAR
+            ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
             if not self.agent.config.should_verify_ssl():
                 ssl_context.check_hostname = (
                     False  # NOSONAR - SSL verification is configurable by admin
@@ -473,9 +474,9 @@ class MessageProcessor:
         except Exception as error:
             self.logger.error(_("Failed to queue script execution result: %s"), error)
 
-    async def _check_execution_uuid_processed(
+    async def _check_execution_uuid_processed(  # NOSONAR - async required by caller interface
         self, execution_uuid: str
-    ) -> bool:  # noqa: async required - callers use await; DB ops are lightweight
+    ) -> bool:
         """Check if an execution UUID has already been processed."""
         try:
             db_manager = get_database_manager()
@@ -493,9 +494,9 @@ class MessageProcessor:
             self.logger.error(_("Error checking execution UUID: %s"), error)
             return False  # Allow processing if we can't check
 
-    async def _store_execution_uuid(
+    async def _store_execution_uuid(  # NOSONAR - async required by caller interface
         self, parameters: Dict[str, Any]
-    ):  # noqa: async required - callers use await; DB ops are lightweight
+    ):
         """Store execution UUID and metadata in database."""
         try:
             execution_id = parameters.get("execution_id")

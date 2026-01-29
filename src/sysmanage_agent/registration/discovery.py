@@ -40,8 +40,8 @@ class ServerDiscoveryClient:
         self.hostname = platform.node()
 
     async def discover_servers(
-        self, timeout: int = 10
-    ) -> List[Dict[str, Any]]:  # NOSONAR - timeout parameter is appropriate here
+        self, timeout: int = 10  # NOSONAR - timeout parameter is appropriate here
+    ) -> List[Dict[str, Any]]:
         """
         Discover SysManage servers on the network.
 
@@ -125,8 +125,9 @@ class ServerDiscoveryClient:
                 )
         return servers
 
-    async def broadcast_discovery(  # NOSONAR - async required by interface, timeout parameter appropriate
-        self, timeout: int = 5
+    async def broadcast_discovery(
+        self,
+        timeout: int = 5,  # NOSONAR - timeout parameter appropriate, async required by interface
     ) -> List[Dict[str, Any]]:
         """
         Send broadcast discovery requests and collect responses.
@@ -155,8 +156,9 @@ class ServerDiscoveryClient:
 
         return servers
 
-    async def listen_for_announcements(  # NOSONAR - async required by interface, timeout parameter appropriate
-        self, timeout: int = 5
+    async def listen_for_announcements(
+        self,
+        timeout: int = 5,  # NOSONAR - timeout parameter appropriate, async required by interface
     ) -> List[Dict[str, Any]]:
         """
         Listen for server announcement broadcasts.

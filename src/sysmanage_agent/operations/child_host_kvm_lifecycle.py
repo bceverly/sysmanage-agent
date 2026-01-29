@@ -14,6 +14,9 @@ from src.sysmanage_agent.core.agent_utils import run_command_async
 # Cloud-init ISO directory
 KVM_CLOUDINIT_DIR = "/var/lib/libvirt/cloud-init"
 
+# Error message for missing VM name
+_ERR_VM_NAME_REQUIRED = "VM name is required"
+
 
 class KvmLifecycle:
     """KVM/libvirt VM lifecycle operations."""
@@ -31,7 +34,7 @@ class KvmLifecycle:
         """Start a stopped KVM virtual machine."""
         vm_name = parameters.get("child_name") or parameters.get("vm_name")
         if not vm_name:
-            return {"success": False, "error": _("VM name is required")}
+            return {"success": False, "error": _(_ERR_VM_NAME_REQUIRED)}
 
         try:
             self.logger.info("Starting KVM VM: %s", vm_name)
@@ -75,7 +78,7 @@ class KvmLifecycle:
         """Stop a running KVM virtual machine (graceful shutdown)."""
         vm_name = parameters.get("child_name") or parameters.get("vm_name")
         if not vm_name:
-            return {"success": False, "error": _("VM name is required")}
+            return {"success": False, "error": _(_ERR_VM_NAME_REQUIRED)}
 
         try:
             self.logger.info("Stopping KVM VM: %s", vm_name)
@@ -119,7 +122,7 @@ class KvmLifecycle:
         """Restart a KVM virtual machine."""
         vm_name = parameters.get("child_name") or parameters.get("vm_name")
         if not vm_name:
-            return {"success": False, "error": _("VM name is required")}
+            return {"success": False, "error": _(_ERR_VM_NAME_REQUIRED)}
 
         try:
             self.logger.info("Restarting KVM VM: %s", vm_name)
@@ -175,7 +178,7 @@ class KvmLifecycle:
         """Delete a KVM virtual machine and its storage."""
         vm_name = parameters.get("child_name") or parameters.get("vm_name")
         if not vm_name:
-            return {"success": False, "error": _("VM name is required")}
+            return {"success": False, "error": _(_ERR_VM_NAME_REQUIRED)}
 
         try:
             self.logger.info("Deleting KVM VM: %s", vm_name)

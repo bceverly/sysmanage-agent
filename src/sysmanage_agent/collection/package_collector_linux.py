@@ -6,7 +6,7 @@ This module handles the collection of available packages from Linux package mana
 
 import logging
 import subprocess  # nosec B404
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
@@ -413,7 +413,7 @@ class LinuxPackageCollector(BasePackageCollector):
 
         return packages
 
-    def _parse_snap_line(self, line: str) -> Dict[str, str]:
+    def _parse_snap_line(self, line: str) -> Optional[Dict[str, str]]:
         """Parse a single line from 'snap find %' output into a package dict.
 
         Expects fixed-width columns: Name (25 chars), Version, Publisher, Notes, Summary.

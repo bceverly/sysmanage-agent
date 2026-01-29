@@ -10,7 +10,7 @@ import os
 import platform
 import subprocess  # nosec B404
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # Platform-specific imports
 try:
@@ -101,7 +101,7 @@ class BasePackageCollector:
                 return True
         return False
 
-    def _resolve_glob_path(self, path: str) -> str:
+    def _resolve_glob_path(self, path: str) -> Optional[str]:
         """Resolve a path that may contain glob wildcards.
 
         Returns the first matching path, or the original path if no wildcards.
@@ -230,10 +230,9 @@ class BasePackageCollector:
         if path == "winget":
             return self._detect_command_available(path)
 
-        if os.path.exists(path):
-            if self._detect_command_available(path):
-                logger.info(_("Found winget at: %s"), path)
-                return True
+        if os.path.exists(path) and self._detect_command_available(path):
+            logger.info(_("Found winget at: %s"), path)
+            return True
 
         return False
 

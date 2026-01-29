@@ -4,9 +4,84 @@ Helper functions for firewall port collection and formatting.
 This module contains utility functions for port detection and formatting.
 """
 
-# pylint: disable=too-many-nested-blocks
-
 import subprocess  # nosec B404
+
+
+def _empty_port_lists() -> tuple:
+    """Return empty port lists for IPv4/IPv6 TCP/UDP."""
+    return [], [], [], []
+
+
+def _add_port_to_list(port: str, port_list: list) -> None:
+    """Add port to list if not already present."""
+    if port not in port_list:
+        port_list.append(port)
+
+
+def _extract_port_from_address(local_addr: str, use_dot_separator: bool = False) -> str:
+    """Extract port number from local address string.
+
+    Args:
+        local_addr: Address string like '*:22', '0.0.0.0:22', '[::]:22', or '*.22'
+        use_dot_separator: If True, try dot separator for BSD-style addresses
+
+    Returns:
+        Port number as string, or empty string if invalid
+    """
+    if ":" not in local_addr and "." not in local_addr:
+        return ""
+
+    # Try colon first (IPv6 and some IPv4)
+    if ":" in local_addr:
+        port = local_addr.rsplit(":", 1)[-1]
+    elif use_dot_separator:
+        # BSD style: 192.168.1.1.22 or *.22
+        port = local_addr.rsplit(".", 1)[-1]
+    else:
+        return ""
+
+    return port if port.isdigit() else ""
+
+
+def _is_ipv6_address(local_addr: str, proto: str = "") -> bool:
+    """Determine if address is IPv6.
+
+    Args:
+        local_addr: Address string to check
+        proto: Protocol string (may contain '6' for IPv6)
+
+    Returns:
+        True if address is IPv6
+    """
+    return "6" in proto or "[" in local_addr or local_addr.startswith("::")
+
+
+def _categorize_port(
+    port: str,
+    proto: str,
+    is_ipv6: bool,
+    ipv4_tcp: list,
+    ipv4_udp: list,
+    ipv6_tcp: list,
+    ipv6_udp: list,
+) -> None:
+    """Categorize port by protocol and IP version, adding to appropriate list.
+
+    Args:
+        port: Port number as string
+        proto: Protocol string (should contain 'tcp' or 'udp')
+        is_ipv6: Whether this is an IPv6 address
+        ipv4_tcp: List to add IPv4 TCP ports to
+        ipv4_udp: List to add IPv4 UDP ports to
+        ipv6_tcp: List to add IPv6 TCP ports to
+        ipv6_udp: List to add IPv6 UDP ports to
+    """
+    if "tcp" in proto:
+        target_list = ipv6_tcp if is_ipv6 else ipv4_tcp
+        _add_port_to_list(port, target_list)
+    elif "udp" in proto:
+        target_list = ipv6_udp if is_ipv6 else ipv4_udp
+        _add_port_to_list(port, target_list)
 
 
 class FirewallPortHelpers:
@@ -62,6 +137,81 @@ class FirewallPortHelpers:
         ]
         return result
 
+    def _parse_windows_protocol_line(self, line: str) -> str:
+        """Parse protocol from Windows Firewall rule line.
+
+        Args:
+            line: Line containing "Protocol:" prefix
+
+        Returns:
+            'tcp', 'udp', or empty string if not recognized
+        """
+        if "TCP" in line:
+            return "tcp"
+        if "UDP" in line:
+            return "udp"
+        return ""
+
+    def _extract_windows_port(self, line: str) -> str:
+        """Extract port from Windows Firewall LocalPort line.
+
+        Args:
+            line: Line containing "LocalPort:" prefix
+
+        Returns:
+            Port string or empty string if invalid
+        """
+        parts = line.split(":", 1)
+        if len(parts) <= 1:
+            return ""
+
+        port = parts[1].strip()
+        if not port or port == "Any":
+            return ""
+        return port
+
+    def _add_windows_port(
+        self,
+        port: str,
+        proto: str,
+        ipv4_tcp: list,
+        ipv4_udp: list,
+        ipv6_tcp: list,
+        ipv6_udp: list,
+    ) -> None:
+        """Add port to both IPv4 and IPv6 lists for Windows Firewall.
+
+        Windows Firewall rules apply to both IPv4/IPv6 unless scoped.
+
+        Args:
+            port: Port number as string
+            proto: Protocol ('tcp' or 'udp')
+            ipv4_tcp: IPv4 TCP port list
+            ipv4_udp: IPv4 UDP port list
+            ipv6_tcp: IPv6 TCP port list
+            ipv6_udp: IPv6 UDP port list
+        """
+        if proto == "tcp":
+            ipv4_tcp.append(port)
+            ipv6_tcp.append(port)
+        elif proto == "udp":
+            ipv4_udp.append(port)
+            ipv6_udp.append(port)
+
+    def _run_netsh_command(self) -> subprocess.CompletedProcess:
+        """Run netsh command to get Windows Firewall rules.
+
+        Returns:
+            CompletedProcess result or None if command failed
+        """
+        return subprocess.run(  # nosec B603 B607
+            ["netsh", "advfirewall", "firewall", "show", "rule", "name=all"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+
     def get_windows_firewall_ports(self) -> tuple:
         """Get open ports from Windows Firewall for IPv4 and IPv6.
 
@@ -74,56 +224,256 @@ class FirewallPortHelpers:
         ipv6_udp_ports = []
 
         try:
-            result = subprocess.run(  # nosec B603 B607
-                ["netsh", "advfirewall", "firewall", "show", "rule", "name=all"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
+            result = self._run_netsh_command()
             if result.returncode != 0:
-                return ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports
+                return _empty_port_lists()
 
             current_proto = None
             for line in result.stdout.split("\n"):
-                # Windows Firewall doesn't explicitly separate IPv4/IPv6
-                # Rules apply to both unless specifically scoped to an interface type
                 if "Profiles:" in line:
-                    # Skip profile lines (future: could use to determine IPv4/IPv6 scope)
                     continue
 
                 if "Protocol:" in line:
-                    if "TCP" in line:
-                        current_proto = "tcp"
-                    elif "UDP" in line:
-                        current_proto = "udp"
+                    current_proto = self._parse_windows_protocol_line(line)
                     continue
 
                 if "LocalPort:" not in line or not current_proto:
                     continue
 
-                parts = line.split(":", 1)
-                if len(parts) <= 1:
+                port = self._extract_windows_port(line)
+                if not port:
                     continue
 
-                port = parts[1].strip()
-                if not port or port == "Any":
-                    continue
-
-                # Windows Firewall rules don't explicitly separate IPv4/IPv6 by default
-                # Rules apply to both unless specifically scoped to an interface type
-                # For now, add to both IPv4 and IPv6 lists
-                if current_proto == "tcp":
-                    ipv4_tcp_ports.append(port)
-                    ipv6_tcp_ports.append(port)
-                elif current_proto == "udp":
-                    ipv4_udp_ports.append(port)
-                    ipv6_udp_ports.append(port)
+                self._add_windows_port(
+                    port,
+                    current_proto,
+                    ipv4_tcp_ports,
+                    ipv4_udp_ports,
+                    ipv6_tcp_ports,
+                    ipv6_udp_ports,
+                )
 
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
 
         return ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports
+
+    def _run_ss_command(self) -> subprocess.CompletedProcess:
+        """Run ss command to get listening ports.
+
+        Returns:
+            CompletedProcess result
+        """
+        return subprocess.run(  # nosec B603 B607
+            ["ss", "-tuln"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+    def _run_netstat_command(self) -> subprocess.CompletedProcess:
+        """Run netstat command to get listening ports.
+
+        Returns:
+            CompletedProcess result
+        """
+        return subprocess.run(  # nosec B603 B607
+            ["netstat", "-an"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+    def _is_ss_listening_line(self, line: str) -> bool:
+        """Check if ss output line represents a listening socket.
+
+        Args:
+            line: Line from ss output
+
+        Returns:
+            True if this is a listening socket line
+        """
+        return "LISTEN" in line or "UNCONN" in line
+
+    def _parse_ss_line(self, line: str) -> tuple:
+        """Parse ss output line to extract protocol and local address.
+
+        Args:
+            line: Line from ss output
+
+        Returns:
+            Tuple of (proto, local_addr) or (None, None) if invalid
+        """
+        parts = line.split()
+        if len(parts) < 5:
+            return None, None
+
+        proto = parts[0].lower()
+        local_addr = parts[4]
+        return proto, local_addr
+
+    def _parse_netstat_line(self, line: str) -> tuple:
+        """Parse netstat output line to extract protocol and local address.
+
+        Args:
+            line: Line from netstat output
+
+        Returns:
+            Tuple of (proto, local_addr) or (None, None) if invalid
+        """
+        parts = line.split()
+        if len(parts) < 4:
+            return None, None
+
+        proto = parts[0].lower()
+        local_addr = parts[3] if len(parts) > 3 else ""
+        return proto, local_addr
+
+    def _extract_port_from_ss_addr(self, local_addr: str) -> str:
+        """Extract port from ss address format.
+
+        Args:
+            local_addr: Address like '*:22', '0.0.0.0:22', '[::]:22'
+
+        Returns:
+            Port string or empty string if invalid
+        """
+        if ":" not in local_addr:
+            return ""
+
+        port = local_addr.rsplit(":", 1)[-1]
+        return port if port.isdigit() else ""
+
+    def _process_ss_output(
+        self,
+        output: str,
+        ipv4_tcp: list,
+        ipv4_udp: list,
+        ipv6_tcp: list,
+        ipv6_udp: list,
+    ) -> None:
+        """Process ss command output and populate port lists.
+
+        Args:
+            output: Raw output from ss command
+            ipv4_tcp: IPv4 TCP port list to populate
+            ipv4_udp: IPv4 UDP port list to populate
+            ipv6_tcp: IPv6 TCP port list to populate
+            ipv6_udp: IPv6 UDP port list to populate
+        """
+        for line in output.split("\n"):
+            if not self._is_ss_listening_line(line):
+                continue
+
+            proto, local_addr = self._parse_ss_line(line)
+            if proto is None:
+                continue
+
+            port = self._extract_port_from_ss_addr(local_addr)
+            if not port:
+                continue
+
+            is_ipv6 = _is_ipv6_address(local_addr)
+            _categorize_port(
+                port, proto, is_ipv6, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp
+            )
+
+    def _process_netstat_output(
+        self,
+        output: str,
+        ipv4_tcp: list,
+        ipv4_udp: list,
+        ipv6_tcp: list,
+        ipv6_udp: list,
+    ) -> None:
+        """Process netstat command output and populate port lists.
+
+        Args:
+            output: Raw output from netstat command
+            ipv4_tcp: IPv4 TCP port list to populate
+            ipv4_udp: IPv4 UDP port list to populate
+            ipv6_tcp: IPv6 TCP port list to populate
+            ipv6_udp: IPv6 UDP port list to populate
+        """
+        for line in output.split("\n"):
+            if "LISTEN" not in line:
+                continue
+
+            proto, local_addr = self._parse_netstat_line(line)
+            if proto is None or not local_addr:
+                continue
+
+            port = _extract_port_from_address(local_addr, use_dot_separator=True)
+            if not port:
+                continue
+
+            is_ipv6 = _is_ipv6_address(local_addr, proto)
+            # Note: UDP doesn't have LISTEN state, so only TCP ports are caught with netstat
+            if "tcp" in proto:
+                _categorize_port(
+                    port, proto, is_ipv6, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp
+                )
+
+    def _sort_port_lists(
+        self, ipv4_tcp: list, ipv4_udp: list, ipv6_tcp: list, ipv6_udp: list
+    ) -> tuple:
+        """Sort all port lists and return as tuple.
+
+        Args:
+            ipv4_tcp: IPv4 TCP port list
+            ipv4_udp: IPv4 UDP port list
+            ipv6_tcp: IPv6 TCP port list
+            ipv6_udp: IPv6 UDP port list
+
+        Returns:
+            Tuple of sorted port lists
+        """
+        return (
+            sorted(ipv4_tcp),
+            sorted(ipv4_udp),
+            sorted(ipv6_tcp),
+            sorted(ipv6_udp),
+        )
+
+    def _try_ss_ports(self) -> tuple:
+        """Try to get listening ports using ss command.
+
+        Returns:
+            Tuple of port lists or None if ss failed
+        """
+        try:
+            result = self._run_ss_command()
+            if result.returncode != 0:
+                return None
+
+            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
+            self._process_ss_output(
+                result.stdout, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp
+            )
+            return self._sort_port_lists(ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    def _try_netstat_ports(self) -> tuple:
+        """Try to get listening ports using netstat command.
+
+        Returns:
+            Tuple of port lists or None if netstat failed
+        """
+        try:
+            result = self._run_netstat_command()
+            if result.returncode != 0:
+                return None
+
+            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
+            self._process_netstat_output(
+                result.stdout, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp
+            )
+            return self._sort_port_lists(ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
 
     def get_listening_ports(self) -> tuple:
         """
@@ -135,128 +485,14 @@ class FirewallPortHelpers:
         Returns:
             tuple: (ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports)
         """
-        ipv4_tcp_ports = []
-        ipv4_udp_ports = []
-        ipv6_tcp_ports = []
-        ipv6_udp_ports = []
-
         # Try ss first (more modern, available on Linux and some BSDs)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["ss", "-tuln"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            if result.returncode == 0:
-                for line in result.stdout.split("\n"):
-                    if "LISTEN" not in line and "UNCONN" not in line:
-                        continue
-
-                    parts = line.split()
-                    if len(parts) < 5:
-                        continue
-
-                    proto = parts[0].lower()
-                    local_addr = parts[4]
-
-                    # Extract port from address (format: *:22 or 0.0.0.0:22 or [::]:22)
-                    if ":" not in local_addr:
-                        continue
-
-                    port = local_addr.rsplit(":", 1)[-1]
-                    if not port.isdigit():
-                        continue
-
-                    # Determine if IPv4 or IPv6
-                    is_ipv6 = "[" in local_addr or local_addr.startswith("::")
-
-                    # Categorize by protocol and IP version
-                    if "tcp" in proto:
-                        if is_ipv6:
-                            if port not in ipv6_tcp_ports:
-                                ipv6_tcp_ports.append(port)
-                        else:
-                            if port not in ipv4_tcp_ports:
-                                ipv4_tcp_ports.append(port)
-                    elif "udp" in proto:
-                        if is_ipv6:
-                            if port not in ipv6_udp_ports:
-                                ipv6_udp_ports.append(port)
-                        else:
-                            if port not in ipv4_udp_ports:
-                                ipv4_udp_ports.append(port)
-
-                return (
-                    sorted(ipv4_tcp_ports),
-                    sorted(ipv4_udp_ports),
-                    sorted(ipv6_tcp_ports),
-                    sorted(ipv6_udp_ports),
-                )
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        result = self._try_ss_ports()
+        if result is not None:
+            return result
 
         # Fall back to netstat (more universal, available on all Unix-like systems)
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["netstat", "-an"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            if result.returncode == 0:
-                for line in result.stdout.split("\n"):
-                    if "LISTEN" not in line:
-                        continue
+        result = self._try_netstat_ports()
+        if result is not None:
+            return result
 
-                    parts = line.split()
-                    if len(parts) < 4:
-                        continue
-
-                    # netstat format varies by OS, but typically:
-                    # Proto Recv-Q Send-Q Local-Address Foreign-Address State
-                    proto = parts[0].lower()
-                    local_addr = parts[3] if len(parts) > 3 else ""
-
-                    # Extract port from address
-                    if ":" not in local_addr and "." not in local_addr:
-                        continue
-
-                    # NetBSD/BSD format: address.port or address:port
-                    # Try colon first (IPv6 and some IPv4)
-                    if ":" in local_addr:
-                        port = local_addr.rsplit(":", 1)[-1]
-                    else:
-                        # BSD style: 192.168.1.1.22 or *.22
-                        port = local_addr.rsplit(".", 1)[-1]
-
-                    if not port.isdigit():
-                        continue
-
-                    # Determine if IPv4 or IPv6
-                    is_ipv6 = (
-                        "6" in proto or "[" in local_addr or local_addr.startswith("::")
-                    )
-
-                    # Categorize by protocol and IP version
-                    if "tcp" in proto:
-                        if is_ipv6:
-                            if port not in ipv6_tcp_ports:
-                                ipv6_tcp_ports.append(port)
-                        else:
-                            if port not in ipv4_tcp_ports:
-                                ipv4_tcp_ports.append(port)
-                    # Note: UDP doesn't have LISTEN state, so this won't catch UDP ports with netstat
-
-                return (
-                    sorted(ipv4_tcp_ports),
-                    sorted(ipv4_udp_ports),
-                    sorted(ipv6_tcp_ports),
-                    sorted(ipv6_udp_ports),
-                )
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
-
-        return [], [], [], []
+        return _empty_port_lists()

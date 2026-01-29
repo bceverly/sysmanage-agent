@@ -55,6 +55,7 @@ class RegistrationManager:
                 ssl_context = (
                     ssl.create_default_context()
                 )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
                     ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
                     ssl_context.verify_mode = (
@@ -119,6 +120,7 @@ class RegistrationManager:
                 ssl_context = (
                     ssl.create_default_context()
                 )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
                     ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
                     ssl_context.verify_mode = (
@@ -567,6 +569,7 @@ class RegistrationManager:
                 ssl_context = (
                     ssl.create_default_context()
                 )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not config.get("server", {}).get("ssl", {}).get("verify", True):
                     ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
                     ssl_context.verify_mode = (

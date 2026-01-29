@@ -115,7 +115,7 @@ def generate_autoinstall_file(  # pylint: disable=too-many-arguments,too-many-lo
     gateway_ip: str,
     vm_ip: str,
     dns_server: str,
-    ubuntu_version: str = "24.04",  # pylint: disable=unused-argument # Reserved for future
+    ubuntu_version: str = "24.04",  # NOSONAR pylint: disable=unused-argument # reserved for future use
     timezone: str = "UTC",
     shutdown_action: str = "poweroff",
 ) -> str:

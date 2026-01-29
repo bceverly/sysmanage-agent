@@ -13,6 +13,9 @@ from typing import Dict, List
 from src.i18n import _
 from src.sysmanage_agent.operations.firewall_base import FirewallBase
 
+# Path to macOS Application Firewall command
+SOCKETFILTERFW_PATH = "/usr/libexec/ApplicationFirewall/socketfilterfw"
+
 
 class MacOSFirewallOperations(FirewallBase):
     """Manages firewall operations on macOS systems."""
@@ -35,10 +38,12 @@ class MacOSFirewallOperations(FirewallBase):
         try:
             # Enable macOS firewall
             self.logger.info("Enabling macOS firewall")
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "sudo",
-                    "/usr/libexec/ApplicationFirewall/socketfilterfw",
+                    SOCKETFILTERFW_PATH,
                     "--setglobalstate",
                     "on",
                 ],
@@ -73,10 +78,12 @@ class MacOSFirewallOperations(FirewallBase):
         """
         try:
             self.logger.info("Disabling macOS firewall")
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "sudo",
-                    "/usr/libexec/ApplicationFirewall/socketfilterfw",
+                    SOCKETFILTERFW_PATH,
                     "--setglobalstate",
                     "off",
                 ],
@@ -114,10 +121,12 @@ class MacOSFirewallOperations(FirewallBase):
         try:
             self.logger.info("Restarting macOS firewall")
             # macOS doesn't have a restart, so we toggle it off and on
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "sudo",
-                    "/usr/libexec/ApplicationFirewall/socketfilterfw",
+                    SOCKETFILTERFW_PATH,
                     "--setglobalstate",
                     "off",
                 ],
@@ -133,10 +142,12 @@ class MacOSFirewallOperations(FirewallBase):
                     "error": f"Failed to restart macOS firewall: {result.stderr}",
                 }
 
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "sudo",
-                    "/usr/libexec/ApplicationFirewall/socketfilterfw",
+                    SOCKETFILTERFW_PATH,
                     "--setglobalstate",
                     "on",
                 ],

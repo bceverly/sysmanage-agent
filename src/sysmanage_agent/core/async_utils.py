@@ -124,7 +124,9 @@ async def _create_async_process(
 async def _collect_process_output(
     process: asyncio.subprocess.Process,
     cmd: Union[List[str], str],
-    timeout: Optional[float] = None,
+    timeout: Optional[  # NOSONAR - timeout parameter is passed to asyncio.wait_for
+        float
+    ] = None,
     check: bool = False,
     input_data: Optional[str] = None,
 ) -> AsyncProcessResult:

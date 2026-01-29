@@ -7,7 +7,7 @@ import asyncio
 import logging
 import platform
 import shutil
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
@@ -15,6 +15,56 @@ from src.sysmanage_agent.core.agent_utils import is_running_privileged
 # Constants for repeated error messages
 _INSTALLATION_FAILED = "Installation failed"
 _INSTALLATION_TIMEOUT = "Installation timed out after 5 minutes"
+
+
+async def _run_package_install(
+    package_manager_path: str, package_name: str, install_args: List[str]
+) -> Tuple[int, str, str]:
+    """
+    Execute a package installation command with the given package manager.
+
+    Args:
+        package_manager_path: Full path to the package manager executable
+        install_args: Additional arguments for the install command
+        package_name: Name of the package to install
+
+    Returns:
+        Tuple of (return_code, stdout_text, stderr_text)
+    """
+    process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+        "sudo",
+        package_manager_path,
+        *install_args,
+        package_name,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+    stdout_text = stdout.decode() if stdout else ""
+    stderr_text = stderr.decode() if stderr else ""
+    return process.returncode, stdout_text, stderr_text
+
+
+def _get_linux_package_manager() -> Optional[Tuple[str, List[str]]]:
+    """
+    Detect available Linux package manager and return its path with install args.
+
+    Returns:
+        Tuple of (package_manager_path, install_args) or None if not found
+    """
+    apt_path = shutil.which("apt")
+    if apt_path:
+        return apt_path, ["install", "-y"]
+
+    dnf_path = shutil.which("dnf")
+    if dnf_path:
+        return dnf_path, ["install", "-y"]
+
+    zypper_path = shutil.which("zypper")
+    if zypper_path:
+        return zypper_path, ["install", "-y"]
+
+    return None
 
 
 class PackageManagerOperations:
@@ -99,7 +149,6 @@ class PackageManagerOperations:
         flatpak_path = shutil.which("flatpak")
         if flatpak_path:
             self.logger.info(_("Flatpak is already installed"))
-            # Ensure flathub is added
             await self._add_flathub_repo()
             return {
                 "success": True,
@@ -107,68 +156,41 @@ class PackageManagerOperations:
                 "already_installed": True,
             }
 
-        # Determine the package manager to use for installation
-        apt_path = shutil.which("apt")
-        dnf_path = shutil.which("dnf")
-        zypper_path = shutil.which("zypper")
+        return await self._install_linux_package(
+            "flatpak", "Flatpak", self._add_flathub_repo
+        )
+
+    async def _install_linux_package(
+        self,
+        package_name: str,
+        display_name: str,
+        post_install_hook=None,
+    ) -> Dict[str, Any]:
+        """
+        Install a package using the detected Linux package manager.
+
+        Args:
+            package_name: Name of the package to install
+            display_name: Human-readable name for messages
+            post_install_hook: Optional async function to call after successful install
+
+        Returns:
+            Dict with success status and message
+        """
+        pkg_manager = _get_linux_package_manager()
+        if not pkg_manager:
+            return {
+                "success": False,
+                "error": _("No supported package manager found to install %s")
+                % package_name,
+            }
+
+        pkg_path, install_args = pkg_manager
 
         try:
-            if apt_path:
-                # Debian/Ubuntu
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    apt_path,
-                    "install",
-                    "-y",
-                    "flatpak",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            elif dnf_path:
-                # Fedora/RHEL/CentOS
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    dnf_path,
-                    "install",
-                    "-y",
-                    "flatpak",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            elif zypper_path:
-                # openSUSE/SLES
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    zypper_path,
-                    "install",
-                    "-y",
-                    "flatpak",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            else:
-                return {
-                    "success": False,
-                    "error": _("No supported package manager found to install flatpak"),
-                }
+            returncode, stdout_text, stderr_text = await _run_package_install(
+                pkg_path, package_name, install_args
+            )
 
             if returncode != 0:
                 return {
@@ -176,13 +198,13 @@ class PackageManagerOperations:
                     "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
-            # Add flathub repository
-            await self._add_flathub_repo()
+            if post_install_hook:
+                await post_install_hook()
 
-            self.logger.info(_("Flatpak installed successfully"))
+            self.logger.info(_("%s installed successfully"), display_name)
             return {
                 "success": True,
-                "message": _("Flatpak installed successfully"),
+                "message": _("%s installed successfully") % display_name,
             }
 
         except asyncio.TimeoutError:
@@ -218,7 +240,7 @@ class PackageManagerOperations:
         except Exception as err:
             self.logger.warning(_("Could not add Flathub repository: %s"), err)
 
-    async def _enable_snap(self) -> Dict[str, Any]:  # NOSONAR
+    async def _enable_snap(self) -> Dict[str, Any]:
         """Enable Snap package manager on Linux systems."""
         if self.system != "Linux":
             return {
@@ -236,107 +258,29 @@ class PackageManagerOperations:
                 "already_installed": True,
             }
 
-        # Determine the package manager to use for installation
-        apt_path = shutil.which("apt")
-        dnf_path = shutil.which("dnf")
-        zypper_path = shutil.which("zypper")
+        return await self._install_linux_package(
+            "snapd", "Snap", self._enable_snapd_service
+        )
+
+    async def _enable_snapd_service(self) -> None:
+        """Enable and start the snapd service."""
+        systemctl_path = shutil.which("systemctl")
+        if not systemctl_path:
+            return
 
         try:
-            if apt_path:
-                # Debian/Ubuntu
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    apt_path,
-                    "install",
-                    "-y",
-                    "snapd",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            elif dnf_path:
-                # Fedora/RHEL/CentOS
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    dnf_path,
-                    "install",
-                    "-y",
-                    "snapd",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            elif zypper_path:
-                # openSUSE/SLES
-                process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                    "sudo",
-                    zypper_path,
-                    "install",
-                    "-y",
-                    "snapd",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=300
-                )
-                returncode = process.returncode
-                stdout_text = stdout.decode() if stdout else ""
-                stderr_text = stderr.decode() if stderr else ""
-            else:
-                return {
-                    "success": False,
-                    "error": _("No supported package manager found to install snapd"),
-                }
-
-            if returncode != 0:
-                return {
-                    "success": False,
-                    "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
-                }
-
-            # Enable and start snapd service
-            systemctl_path = shutil.which("systemctl")
-            if systemctl_path:
-                systemctl_process = (
-                    await asyncio.create_subprocess_exec(  # nosec B603 B607
-                        "sudo",
-                        systemctl_path,
-                        "enable",
-                        "--now",
-                        "snapd.socket",
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                )
-                await asyncio.wait_for(systemctl_process.communicate(), timeout=30)
-
-            self.logger.info(_("Snap installed successfully"))
-            return {
-                "success": True,
-                "message": _("Snap installed successfully"),
-            }
-
-        except asyncio.TimeoutError:
-            return {
-                "success": False,
-                "error": _(_INSTALLATION_TIMEOUT),
-            }
+            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
+                "sudo",
+                systemctl_path,
+                "enable",
+                "--now",
+                "snapd.socket",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await asyncio.wait_for(process.communicate(), timeout=30)
         except Exception as err:
-            return {
-                "success": False,
-                "error": str(err),
-            }
+            self.logger.warning(_("Could not enable snapd service: %s"), err)
 
     async def _enable_homebrew(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Homebrew package manager on macOS or Linux."""

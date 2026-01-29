@@ -18,6 +18,9 @@ from src.sysmanage_agent.operations.firewall_base import FirewallBase
 from src.sysmanage_agent.operations.firewall_linux_firewalld import FirewalldOperations
 from src.sysmanage_agent.operations.firewall_linux_ufw import UfwOperations
 
+# Constant for error message when no supported firewall is found
+NO_SUPPORTED_FIREWALL_MSG = "No supported firewall found on this system"
+
 
 class LinuxFirewallOperations(FirewallBase):
     """Manages firewall operations on Linux systems."""
@@ -71,7 +74,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this system"),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),
         }
 
     async def disable_firewall(self) -> Dict:
@@ -93,7 +96,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this system"),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),
         }
 
     async def restart_firewall(self) -> Dict:
@@ -115,7 +118,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this system"),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),
         }
 
     async def deploy_firewall(self) -> Dict:
@@ -158,7 +161,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this system"),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),
         }
 
     async def remove_firewall_ports(
@@ -189,9 +192,7 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _(  # pylint: disable=not-callable
-                "No supported firewall found on this system"
-            ),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),  # pylint: disable=not-callable
         }
 
     def configure_lxd_firewall(self, bridge_name: str = "lxdbr0") -> Dict:
@@ -226,5 +227,5 @@ class LinuxFirewallOperations(FirewallBase):
 
         return {
             "success": False,
-            "error": _("No supported firewall found on this system"),
+            "error": _(NO_SUPPORTED_FIREWALL_MSG),
         }

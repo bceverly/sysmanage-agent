@@ -12,6 +12,9 @@ from typing import Any, Dict
 
 import aiofiles
 
+# Default SSL certificate directory
+_SSL_CERTS_DIR = "/etc/ssl/certs"
+
 
 class CertificateOperations:
     """Handles certificate-related operations for the agent."""
@@ -153,26 +156,26 @@ class CertificateOperations:
                         os_release = file_handle.read().lower()
 
                     if any(distro in os_release for distro in ["ubuntu", "debian"]):
-                        ssl_dir = "/etc/ssl/certs"
+                        ssl_dir = _SSL_CERTS_DIR
                     elif any(
                         distro in os_release
                         for distro in ["rhel", "centos", "fedora", "red hat"]
                     ):
                         ssl_dir = "/etc/pki/tls/certs"
                     elif "opensuse" in os_release:
-                        ssl_dir = "/etc/ssl/certs"
+                        ssl_dir = _SSL_CERTS_DIR
                     else:
                         # Default Linux path
-                        ssl_dir = "/etc/ssl/certs"
+                        ssl_dir = _SSL_CERTS_DIR
                 except Exception:
-                    ssl_dir = "/etc/ssl/certs"  # Fallback
+                    ssl_dir = _SSL_CERTS_DIR  # Fallback
             else:
-                ssl_dir = "/etc/ssl/certs"  # Fallback
+                ssl_dir = _SSL_CERTS_DIR  # Fallback
 
         elif system == "darwin":  # macOS
-            ssl_dir = "/etc/ssl/certs"
+            ssl_dir = _SSL_CERTS_DIR
         elif system in ["freebsd", "openbsd"]:
-            ssl_dir = "/etc/ssl/certs"
+            ssl_dir = _SSL_CERTS_DIR
         else:
             return {
                 "success": False,

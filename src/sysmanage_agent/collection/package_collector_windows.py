@@ -9,7 +9,7 @@ import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET  # nosec B405 # Parsing trusted Chocolatey API XML
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
@@ -257,7 +257,7 @@ class WindowsPackageCollector(BasePackageCollector):
 
     def _parse_chocolatey_entry(
         self, entry: ET.Element, namespace: dict
-    ) -> Dict[str, str]:
+    ) -> Optional[Dict[str, str]]:
         """Parse a single Atom entry element into a package dict.
 
         Extracts the package title and version from the entry's XML elements.
@@ -332,7 +332,7 @@ class WindowsPackageCollector(BasePackageCollector):
         ]
         return any(skip in line.lower() for skip in skip_keywords)
 
-    def _parse_chocolatey_package_line(self, line: str) -> Dict[str, str]:
+    def _parse_chocolatey_package_line(self, line: str) -> Optional[Dict[str, str]]:
         """Parse a single Chocolatey package line in 'name version' format.
 
         Validates that the package name is not a common English word that

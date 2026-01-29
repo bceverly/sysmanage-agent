@@ -24,6 +24,10 @@ from src.sysmanage_agent.operations.child_host_config_generator import (
     generate_agent_config,
 )
 
+# SSH options for non-interactive remote execution
+_SSH_STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking=no"
+_SSH_USER_KNOWN_HOSTS_FILE = "UserKnownHostsFile=/dev/null"
+
 
 class FreeBSDBhyveProvisioner:
     """FreeBSD VM provisioning for bhyve by injecting firstboot scripts."""
@@ -729,7 +733,9 @@ local-hostname: {config.hostname.split('.')[0]}
             return {"success": False, "error": str(err)}
 
     async def run_bootstrap_via_ssh(
-        self, ip_address: str, timeout: int = 600
+        self,
+        ip_address: str,
+        timeout: int = 600,  # NOSONAR - timeout parameter is for polling loop control
     ) -> Dict[str, Any]:
         """
         Run the FreeBSD bootstrap script via SSH.
@@ -782,9 +788,9 @@ local-hostname: {config.hostname.split('.')[0]}
                         "-i",
                         self._ssh_private_key_path,
                         "-o",
-                        "StrictHostKeyChecking=no",
+                        _SSH_STRICT_HOST_KEY_CHECKING,
                         "-o",
-                        "UserKnownHostsFile=/dev/null",
+                        _SSH_USER_KNOWN_HOSTS_FILE,
                         "-o",
                         "ConnectTimeout=10",
                         "-o",
@@ -835,9 +841,9 @@ fi
                     [
                         "ssh",
                         "-o",
-                        "StrictHostKeyChecking=no",
+                        _SSH_STRICT_HOST_KEY_CHECKING,
                         "-o",
-                        "UserKnownHostsFile=/dev/null",
+                        _SSH_USER_KNOWN_HOSTS_FILE,
                         "-o",
                         "ConnectTimeout=30",
                         f"root@{ip_address}",
@@ -856,9 +862,9 @@ fi
                         "-i",
                         self._ssh_private_key_path,
                         "-o",
-                        "StrictHostKeyChecking=no",
+                        _SSH_STRICT_HOST_KEY_CHECKING,
                         "-o",
-                        "UserKnownHostsFile=/dev/null",
+                        _SSH_USER_KNOWN_HOSTS_FILE,
                         "-o",
                         "ConnectTimeout=30",
                         "-t",

@@ -6,7 +6,7 @@ Handles macOS-specific hardware information gathering.
 import json
 import re
 import subprocess  # nosec B404
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 from .hardware_collector_base import HardwareCollectorBase
@@ -198,7 +198,7 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
 
         return mount_usage
 
-    def _parse_df_line_usage(self, parts: List[str]) -> Dict[str, int]:
+    def _parse_df_line_usage(self, parts: List[str]) -> Optional[Dict[str, int]]:
         """Parse numeric usage columns from a single df output line.
 
         Returns a dict with capacity_bytes, used_bytes, available_bytes or None.
@@ -351,7 +351,7 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
                 disk_images.add(disk_image_match.group(1))
         return disk_images
 
-    def _parse_apfs_container_size(self, parts: List[str]) -> int:
+    def _parse_apfs_container_size(self, parts: List[str]) -> Optional[int]:
         """Parse the size in bytes from an APFS Container Scheme line's parts.
 
         Looks for a pattern like '+994.7 GB' within the split line parts.

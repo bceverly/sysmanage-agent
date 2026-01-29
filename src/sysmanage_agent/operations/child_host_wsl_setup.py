@@ -195,7 +195,10 @@ class WslSetupOperations:
             return {"success": False, "error": str(error)}
 
     async def _run_wsl_command(
-        self, distribution: str, command: str, timeout: int = 30
+        self,
+        distribution: str,
+        command: str,
+        timeout: int = 30,  # NOSONAR - timeout parameter is for asyncio.wait_for
     ) -> Dict[str, Any]:
         """Run a command in a WSL distribution asynchronously."""
         proc = await asyncio.create_subprocess_exec(

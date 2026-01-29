@@ -11,7 +11,7 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 # pylint: disable=protected-access
 
 import asyncio
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import aiofiles
 
@@ -159,7 +159,7 @@ class IPFWFirewallOperations:
 
     async def apply_firewall_roles_ipfw(
         self, port_configs: Dict, agent_ports: List[int], errors: List[str]
-    ) -> Dict:
+    ) -> Optional[Dict]:
         """Apply firewall roles using IPFW (synchronize - add and remove rules)."""
         try:
             # Check if IPFW is available
@@ -259,9 +259,9 @@ class IPFWFirewallOperations:
         except (FileNotFoundError, asyncio.TimeoutError):
             return None  # IPFW not available
 
-    async def remove_firewall_ports_ipfw(  # pylint: disable=unused-argument
-        self, ports_to_remove: Dict, preserved_ports: set, errors: List[str]
-    ) -> Dict:
+    async def remove_firewall_ports_ipfw(
+        self, ports_to_remove: Dict, preserved_ports: set, _errors: List[str]
+    ) -> Optional[Dict]:
         """Remove specific firewall ports using IPFW."""
         try:
             # Check if IPFW is available

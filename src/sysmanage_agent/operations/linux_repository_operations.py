@@ -578,14 +578,14 @@ class LinuxRepositoryOperations:
         if len(parts) < 4:
             return None
 
-        url = parts[3] if len(parts) > 3 else ""
+        url = parts[3]
         is_obs = self._check_obs_url(url)
 
         return {
             "name": parts[1],
             "type": "OBS" if is_obs else "Zypper",
             "url": url,
-            "enabled": parts[2] == "Yes" if len(parts) > 2 else True,
+            "enabled": parts[2] == "Yes",
             "file_path": f"/etc/zypp/repos.d/{parts[1]}.repo",
         }
 

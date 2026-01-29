@@ -73,7 +73,23 @@ class FirewallCollector:
 
     def _collect_linux_firewall(self) -> Dict:
         """Collect firewall status on Linux (ufw, firewalld, iptables, nftables)."""
-        # Try ufw first (Ubuntu/Debian)
+        # Try each firewall in order of preference
+        collectors = [
+            self._collect_ufw,
+            self._collect_firewalld,
+            self._collect_iptables,
+            self._collect_nftables,
+        ]
+
+        for collector in collectors:
+            result = collector()
+            if result is not None:
+                return result
+
+        return self._empty_status()
+
+    def _collect_ufw(self) -> Optional[Dict]:
+        """Collect ufw firewall status (Ubuntu/Debian)."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["ufw", "status"],
@@ -82,40 +98,27 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            if result.returncode == 0:
-                enabled = "Status: active" in result.stdout
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                    self.linux_parsers.parse_ufw_rules(result.stdout)
-                )
+            if result.returncode != 0:
+                return None
 
-                # Merge IPv4 and IPv6 ports with protocol tags
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
-                )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
+            enabled = "Status: active" in result.stdout
+            ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+                self.linux_parsers.parse_ufw_rules(result.stdout)
+            )
 
-                # Legacy combined lists for backward compatibility
-                all_tcp_ports = sorted(set(ipv4_tcp_ports + ipv6_tcp_ports))
-                all_udp_ports = sorted(set(ipv4_udp_ports + ipv6_udp_ports))
-
-                return {
-                    "firewall_name": "ufw",
-                    "enabled": enabled,
-                    "tcp_open_ports": (
-                        json.dumps(all_tcp_ports) if all_tcp_ports else None
-                    ),
-                    "udp_open_ports": (
-                        json.dumps(all_udp_ports) if all_udp_ports else None
-                    ),
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
+            return self._build_firewall_status_with_ipv6(
+                "ufw",
+                enabled,
+                ipv4_tcp_ports,
+                ipv4_udp_ports,
+                ipv6_tcp_ports,
+                ipv6_udp_ports,
+            )
         except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+            return None
 
-        # Try firewalld (RHEL/CentOS/Fedora)
+    def _collect_firewalld(self) -> Optional[Dict]:
+        """Collect firewalld status (RHEL/CentOS/Fedora)."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["firewall-cmd", "--state"],
@@ -124,42 +127,24 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            # If firewall-cmd exists, report firewalld regardless of state
+
             if result.returncode == 0 and "running" in result.stdout:
-                # Firewall is running
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+                ipv4_tcp_ports, ipv4_udp_ports, _ipv6_tcp, _ipv6_udp = (
                     self.linux_parsers.get_firewalld_ports()
                 )
-                tcp_ports = ipv4_tcp_ports  # For legacy compatibility
-                udp_ports = ipv4_udp_ports  # For legacy compatibility
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
+                return self._build_firewall_status_legacy(
+                    "firewalld", True, ipv4_tcp_ports, ipv4_udp_ports
                 )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
-                return {
-                    "firewall_name": "firewalld",
-                    "enabled": True,
-                    "tcp_open_ports": json.dumps(tcp_ports) if tcp_ports else None,
-                    "udp_open_ports": json.dumps(udp_ports) if udp_ports else None,
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
-            if "not running" in result.stdout or result.returncode != 0:
-                # Firewalld exists but is disabled/not running
-                return {
-                    "firewall_name": "firewalld",
-                    "enabled": False,
-                    "tcp_open_ports": None,
-                    "udp_open_ports": None,
-                    "ipv4_ports": None,
-                    "ipv6_ports": None,
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
 
-        # Try iptables (legacy)
+            if "not running" in result.stdout or result.returncode != 0:
+                return self._build_disabled_status("firewalld")
+
+            return None
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    def _collect_iptables(self) -> Optional[Dict]:
+        """Collect iptables firewall status (legacy Linux)."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["iptables", "-L", "-n"],
@@ -168,31 +153,21 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            if result.returncode == 0:
-                has_rules = len(result.stdout.strip().split("\n")) > 8
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                    self.linux_parsers.parse_iptables_rules()
-                )
-                tcp_ports = ipv4_tcp_ports  # For legacy compatibility
-                udp_ports = ipv4_udp_ports  # For legacy compatibility
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
-                )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
-                return {
-                    "firewall_name": "iptables",
-                    "enabled": has_rules,
-                    "tcp_open_ports": json.dumps(tcp_ports) if tcp_ports else None,
-                    "udp_open_ports": json.dumps(udp_ports) if udp_ports else None,
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+            if result.returncode != 0:
+                return None
 
-        # Try nftables
+            has_rules = len(result.stdout.strip().split("\n")) > 8
+            ipv4_tcp_ports, ipv4_udp_ports, _ipv6_tcp, _ipv6_udp = (
+                self.linux_parsers.parse_iptables_rules()
+            )
+            return self._build_firewall_status_legacy(
+                "iptables", has_rules, ipv4_tcp_ports, ipv4_udp_ports
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    def _collect_nftables(self) -> Optional[Dict]:
+        """Collect nftables firewall status."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["nft", "list", "ruleset"],
@@ -201,30 +176,79 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            if result.returncode == 0 and result.stdout.strip():
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                    self.linux_parsers.parse_nftables_rules(result.stdout)
-                )
-                tcp_ports = ipv4_tcp_ports  # For legacy compatibility
-                udp_ports = ipv4_udp_ports  # For legacy compatibility
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
-                )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
-                return {
-                    "firewall_name": "nftables",
-                    "enabled": True,
-                    "tcp_open_ports": json.dumps(tcp_ports) if tcp_ports else None,
-                    "udp_open_ports": json.dumps(udp_ports) if udp_ports else None,
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+            if result.returncode != 0 or not result.stdout.strip():
+                return None
 
-        return self._empty_status()
+            ipv4_tcp_ports, ipv4_udp_ports, _ipv6_tcp, _ipv6_udp = (
+                self.linux_parsers.parse_nftables_rules(result.stdout)
+            )
+            return self._build_firewall_status_legacy(
+                "nftables", True, ipv4_tcp_ports, ipv4_udp_ports
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return None
+
+    def _build_firewall_status_with_ipv6(
+        self,
+        name: str,
+        enabled: bool,
+        ipv4_tcp_ports: list,
+        ipv4_udp_ports: list,
+        ipv6_tcp_ports: list,
+        ipv6_udp_ports: list,
+    ) -> Dict:
+        """Build firewall status dict with full IPv4/IPv6 separation."""
+        ipv4_ports = self.port_helpers.merge_ports_with_protocols(
+            ipv4_tcp_ports, ipv4_udp_ports
+        )
+        ipv6_ports = self.port_helpers.merge_ports_with_protocols(
+            ipv6_tcp_ports, ipv6_udp_ports
+        )
+
+        # Legacy combined lists for backward compatibility
+        all_tcp_ports = sorted(set(ipv4_tcp_ports + ipv6_tcp_ports))
+        all_udp_ports = sorted(set(ipv4_udp_ports + ipv6_udp_ports))
+
+        return {
+            "firewall_name": name,
+            "enabled": enabled,
+            "tcp_open_ports": json.dumps(all_tcp_ports) if all_tcp_ports else None,
+            "udp_open_ports": json.dumps(all_udp_ports) if all_udp_ports else None,
+            "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
+            "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
+        }
+
+    def _build_firewall_status_legacy(
+        self,
+        name: str,
+        enabled: bool,
+        ipv4_tcp_ports: list,
+        ipv4_udp_ports: list,
+    ) -> Dict:
+        """Build firewall status dict for legacy firewalls (IPv4-only in legacy fields)."""
+        ipv4_ports = self.port_helpers.merge_ports_with_protocols(
+            ipv4_tcp_ports, ipv4_udp_ports
+        )
+
+        return {
+            "firewall_name": name,
+            "enabled": enabled,
+            "tcp_open_ports": json.dumps(ipv4_tcp_ports) if ipv4_tcp_ports else None,
+            "udp_open_ports": json.dumps(ipv4_udp_ports) if ipv4_udp_ports else None,
+            "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
+            "ipv6_ports": None,
+        }
+
+    def _build_disabled_status(self, name: str) -> Dict:
+        """Build firewall status dict for a disabled firewall."""
+        return {
+            "firewall_name": name,
+            "enabled": False,
+            "tcp_open_ports": None,
+            "udp_open_ports": None,
+            "ipv4_ports": None,
+            "ipv6_ports": None,
+        }
 
     def _collect_windows_firewall(self) -> Dict:
         """Collect firewall status on Windows."""
@@ -311,72 +335,81 @@ class FirewallCollector:
 
     def _collect_bsd_firewall(self) -> Dict:
         """Collect firewall status on BSD systems (pf, ipfw, npf)."""
-        # Try NPF first (NetBSD default)
+        # Try NPF first on NetBSD
         if self.system == "NetBSD":
-            try:
-                result = subprocess.run(  # nosec B603 B607
-                    ["npfctl", "show"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-                if result.returncode == 0:
-                    # Check if NPF is active - must have "filtering:" and "active" but NOT "inactive"
-                    # Output format: "# filtering:    active" or "# filtering:    inactive"
-                    output_lower = result.stdout.lower()
-                    enabled = (
-                        "filtering:" in output_lower
-                        and "active" in output_lower
-                        and "inactive" not in output_lower
-                    )
-                    ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                        self.bsd_parsers.parse_npf_rules(result.stdout)
-                    )
-
-                    # If no ports found from NPF rules, fallback to detecting listening ports
-                    # This handles cases where NPF uses default policies without explicit rules
-                    if not any(
-                        [ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports]
-                    ):
-                        self.logger.debug(
-                            "No ports found in NPF rules, falling back to listening port detection"
-                        )
-                        (
-                            ipv4_tcp_ports,
-                            ipv4_udp_ports,
-                            ipv6_tcp_ports,
-                            ipv6_udp_ports,
-                        ) = self.port_helpers.get_listening_ports()
-
-                    # Merge IPv4 and IPv6 ports with protocol tags
-                    ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                        ipv4_tcp_ports, ipv4_udp_ports
-                    )
-                    ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                        ipv6_tcp_ports, ipv6_udp_ports
-                    )
-
-                    # Legacy combined lists for backward compatibility
-                    all_tcp_ports = sorted(set(ipv4_tcp_ports + ipv6_tcp_ports))
-                    all_udp_ports = sorted(set(ipv4_udp_ports + ipv6_udp_ports))
-
-                    return {
-                        "firewall_name": "npf",
-                        "enabled": enabled,
-                        "tcp_open_ports": (
-                            json.dumps(all_tcp_ports) if all_tcp_ports else None
-                        ),
-                        "udp_open_ports": (
-                            json.dumps(all_udp_ports) if all_udp_ports else None
-                        ),
-                        "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                        "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                    }
-            except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
-                pass
+            result = self._collect_npf()
+            if result is not None:
+                return result
 
         # Try pf (OpenBSD default, FreeBSD option)
+        result = self._collect_pf()
+        if result is not None:
+            return result
+
+        # Try ipfw (FreeBSD option)
+        result = self._collect_ipfw()
+        if result is not None:
+            return result
+
+        return self._empty_status()
+
+    def _collect_npf(self) -> Optional[Dict]:
+        """Collect NPF firewall status (NetBSD)."""
+        try:
+            result = subprocess.run(  # nosec B603 B607
+                ["npfctl", "show"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode != 0:
+                return None
+
+            enabled = self._is_npf_enabled(result.stdout)
+            ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+                self._get_npf_ports(result.stdout)
+            )
+
+            return self._build_firewall_status_with_ipv6(
+                "npf",
+                enabled,
+                ipv4_tcp_ports,
+                ipv4_udp_ports,
+                ipv6_tcp_ports,
+                ipv6_udp_ports,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
+            return None
+
+    def _is_npf_enabled(self, output: str) -> bool:
+        """Check if NPF is active from npfctl output."""
+        # Output format: "# filtering:    active" or "# filtering:    inactive"
+        output_lower = output.lower()
+        return (
+            "filtering:" in output_lower
+            and "active" in output_lower
+            and "inactive" not in output_lower
+        )
+
+    def _get_npf_ports(self, output: str) -> tuple:
+        """Get ports from NPF rules, falling back to listening ports if needed."""
+        ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+            self.bsd_parsers.parse_npf_rules(output)
+        )
+
+        # If no ports found from NPF rules, fallback to detecting listening ports
+        # This handles cases where NPF uses default policies without explicit rules
+        if not any([ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports]):
+            self.logger.debug(
+                "No ports found in NPF rules, falling back to listening port detection"
+            )
+            return self.port_helpers.get_listening_ports()
+
+        return ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports
+
+    def _collect_pf(self) -> Optional[Dict]:
+        """Collect pf firewall status (OpenBSD default, FreeBSD option)."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["pfctl", "-s", "info"],
@@ -385,40 +418,27 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            if result.returncode == 0:
-                enabled = "Status: Enabled" in result.stdout
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                    self.bsd_parsers.get_pf_ports()
-                )
+            if result.returncode != 0:
+                return None
 
-                # Merge IPv4 and IPv6 ports with protocol tags
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
-                )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
+            enabled = "Status: Enabled" in result.stdout
+            ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+                self.bsd_parsers.get_pf_ports()
+            )
 
-                # Legacy combined lists for backward compatibility
-                all_tcp_ports = sorted(set(ipv4_tcp_ports + ipv6_tcp_ports))
-                all_udp_ports = sorted(set(ipv4_udp_ports + ipv6_udp_ports))
-
-                return {
-                    "firewall_name": "pf",
-                    "enabled": enabled,
-                    "tcp_open_ports": (
-                        json.dumps(all_tcp_ports) if all_tcp_ports else None
-                    ),
-                    "udp_open_ports": (
-                        json.dumps(all_udp_ports) if all_udp_ports else None
-                    ),
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
+            return self._build_firewall_status_with_ipv6(
+                "pf",
+                enabled,
+                ipv4_tcp_ports,
+                ipv4_udp_ports,
+                ipv6_tcp_ports,
+                ipv6_udp_ports,
+            )
         except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
-            pass
+            return None
 
-        # Try ipfw (FreeBSD option)
+    def _collect_ipfw(self) -> Optional[Dict]:
+        """Collect ipfw firewall status (FreeBSD option)."""
         try:
             result = subprocess.run(  # nosec B603 B607
                 ["ipfw", "show"],
@@ -427,51 +447,37 @@ class FirewallCollector:
                 timeout=5,
                 check=False,
             )
-            if result.returncode == 0 and result.stdout.strip():
-                # Check if IPFW is enabled via sysctl
-                enabled = False
-                try:
-                    sysctl_result = subprocess.run(  # nosec B603 B607
-                        ["sysctl", "-n", "net.inet.ip.fw.enable"],
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if sysctl_result.returncode == 0:
-                        enabled = sysctl_result.stdout.strip() == "1"
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
+            if result.returncode != 0 or not result.stdout.strip():
+                return None
 
-                ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
-                    self.bsd_parsers.parse_ipfw_rules(result.stdout)
-                )
+            enabled = self._is_ipfw_enabled()
+            ipv4_tcp_ports, ipv4_udp_ports, ipv6_tcp_ports, ipv6_udp_ports = (
+                self.bsd_parsers.parse_ipfw_rules(result.stdout)
+            )
 
-                # Merge IPv4 and IPv6 ports with protocol tags
-                ipv4_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv4_tcp_ports, ipv4_udp_ports
-                )
-                ipv6_ports = self.port_helpers.merge_ports_with_protocols(
-                    ipv6_tcp_ports, ipv6_udp_ports
-                )
-
-                # Legacy combined lists for backward compatibility
-                all_tcp_ports = sorted(set(ipv4_tcp_ports + ipv6_tcp_ports))
-                all_udp_ports = sorted(set(ipv4_udp_ports + ipv6_udp_ports))
-
-                return {
-                    "firewall_name": "ipfw",
-                    "enabled": enabled,
-                    "tcp_open_ports": (
-                        json.dumps(all_tcp_ports) if all_tcp_ports else None
-                    ),
-                    "udp_open_ports": (
-                        json.dumps(all_udp_ports) if all_udp_ports else None
-                    ),
-                    "ipv4_ports": json.dumps(ipv4_ports) if ipv4_ports else None,
-                    "ipv6_ports": json.dumps(ipv6_ports) if ipv6_ports else None,
-                }
+            return self._build_firewall_status_with_ipv6(
+                "ipfw",
+                enabled,
+                ipv4_tcp_ports,
+                ipv4_udp_ports,
+                ipv6_tcp_ports,
+                ipv6_udp_ports,
+            )
         except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
-            pass
+            return None
 
-        return self._empty_status()
+    def _is_ipfw_enabled(self) -> bool:
+        """Check if IPFW is enabled via sysctl."""
+        try:
+            sysctl_result = subprocess.run(  # nosec B603 B607
+                ["sysctl", "-n", "net.inet.ip.fw.enable"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if sysctl_result.returncode == 0:
+                return sysctl_result.stdout.strip() == "1"
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        return False

@@ -116,7 +116,7 @@ class WSLListing:
             return None
 
         name = parts[0]
-        status = parts[1].lower() if len(parts) > 1 else "unknown"
+        status = parts[1].lower()
         version = parts[2] if len(parts) > 2 else "2"
 
         mapped_status = self._map_wsl_status(status)

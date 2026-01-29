@@ -11,7 +11,7 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 # pylint: disable=protected-access
 
 import subprocess  # nosec B404
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.i18n import _  # pylint: disable=not-callable
 
@@ -29,9 +29,7 @@ class NPFFirewallOperations:
         self.parent = parent
         self.logger = parent.logger
 
-    async def enable_npf_firewall(
-        self, ports: List[int], protocol: str  # pylint: disable=unused-argument
-    ) -> Dict:
+    async def enable_npf_firewall(self, _ports: List[int], _protocol: str) -> Dict:
         """
         Enable NPF (NetBSD Packet Filter).
 
@@ -50,7 +48,8 @@ class NPFFirewallOperations:
 
             # Check if config already exists
             try:
-                with open(npf_conf, "r", encoding="utf-8") as file_handle:
+                # NOSONAR: Sync file I/O is acceptable for reading small config files
+                with open(npf_conf, "r", encoding="utf-8") as file_handle:  # NOSONAR
                     existing_config = file_handle.read()
             except FileNotFoundError:
                 existing_config = ""
@@ -108,11 +107,15 @@ group default {
 
                 # Write the configuration
                 try:
-                    with open(npf_conf, "w", encoding="utf-8") as file_handle:
+                    # NOSONAR: Sync file I/O is acceptable for writing small config files
+                    with open(
+                        npf_conf, "w", encoding="utf-8"
+                    ) as file_handle:  # NOSONAR
                         file_handle.write(config_content)
                 except PermissionError:
                     # Try with sudo if not running as root
-                    result = subprocess.run(  # nosec B603 B607
+                    # NOSONAR: Sync subprocess is acceptable for quick system commands
+                    result = subprocess.run(  # nosec B603 B607  # NOSONAR
                         self.parent._build_command(
                             [
                                 "sh",
@@ -134,7 +137,8 @@ group default {
                 self.logger.info("NPF config already exists, skipping creation")
 
             # Validate the configuration
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Sync subprocess is acceptable for quick system commands
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 self.parent._build_command(["npfctl", "validate", npf_conf]),
                 capture_output=True,
                 text=True,
@@ -149,7 +153,8 @@ group default {
                 }
 
             # Reload the configuration
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Sync subprocess is acceptable for quick system commands
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 self.parent._build_command(["npfctl", "reload", npf_conf]),
                 capture_output=True,
                 text=True,
@@ -164,7 +169,8 @@ group default {
                 }
 
             # Start NPF
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Sync subprocess is acceptable for quick system commands
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 self.parent._build_command(["npfctl", "start"]),
                 capture_output=True,
                 text=True,
@@ -198,13 +204,14 @@ group default {
             self.logger.error("Error enabling NPF firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
 
-    async def apply_firewall_roles_npf(  # pylint: disable=unused-argument
-        self, port_configs: Dict, agent_ports: List[int], errors: List[str]
-    ) -> Dict:
+    async def apply_firewall_roles_npf(
+        self, port_configs: Dict, agent_ports: List[int], _errors: List[str]
+    ) -> Optional[Dict]:
         """Apply firewall roles using NPF (NetBSD)."""
         try:
             # Check if NPF is available
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Sync subprocess is acceptable for quick system commands
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 ["npfctl", "show"],
                 capture_output=True,
                 text=True,
@@ -250,13 +257,14 @@ group default {
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return None  # NPF not available
 
-    async def remove_firewall_ports_npf(  # pylint: disable=unused-argument
-        self, ports_to_remove: Dict, preserved_ports: set, errors: List[str]
-    ) -> Dict:
+    async def remove_firewall_ports_npf(
+        self, ports_to_remove: Dict, preserved_ports: set, _errors: List[str]
+    ) -> Optional[Dict]:
         """Remove specific firewall ports using NPF (NetBSD)."""
         try:
             # Check if NPF is available
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Sync subprocess is acceptable for quick system commands
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 ["npfctl", "show"],
                 capture_output=True,
                 text=True,

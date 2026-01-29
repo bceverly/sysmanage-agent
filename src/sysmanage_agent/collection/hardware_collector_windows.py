@@ -133,9 +133,9 @@ class HardwareCollectorWindows(HardwareCollectorBase):
             return None
         return {
             "name": data[1].strip(),
-            "model": data[3].strip() if len(data) > 3 else "Unknown",
+            "model": data[3].strip(),
             "size": int(data[4]) if data[4].strip().isdigit() else 0,
-            "interface_type": data[2].strip() if len(data) > 2 else "Unknown",
+            "interface_type": data[2].strip(),
             "is_physical": True,
             "device_type": "physical",
             "file_system": "N/A",
@@ -360,10 +360,10 @@ class HardwareCollectorWindows(HardwareCollectorBase):
         elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
             self._handle_ip_address(current_adapter, value)
         elif "Subnet Mask" in key:
-            if value and value != NONE_VALUE and value:
+            if value and value != NONE_VALUE:
                 current_adapter["subnet_masks"].append(value)
         elif "Default Gateway" in key:
-            if value and value != NONE_VALUE and value:
+            if value and value != NONE_VALUE:
                 current_adapter["gateways"].append(value)
         elif "DNS Servers" in key and value and value != NONE_VALUE:
             current_adapter["dns_servers"].append(value)

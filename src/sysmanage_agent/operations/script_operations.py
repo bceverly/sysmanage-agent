@@ -11,9 +11,50 @@ import shutil
 import stat
 import tempfile
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from src.i18n import _
+
+# Default shell preferences by platform
+_DEFAULT_SHELLS = {
+    "linux": ["bash", "sh", "zsh"],
+    "darwin": ["bash", "zsh", "sh"],
+    "freebsd": ["bash", "sh", "zsh", "ksh"],
+    "openbsd": ["ksh", "sh", "bash"],
+    "netbsd": ["sh", "bash", "ksh"],
+    "windows": ["powershell", "cmd"],
+}
+
+# Shell executable paths for Unix systems
+_UNIX_SHELL_PATHS = {
+    "bash": ["/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"],
+    "sh": ["/bin/sh", "/usr/bin/sh"],
+    "zsh": ["/bin/zsh", "/usr/bin/zsh", "/usr/local/bin/zsh"],
+    "ksh": ["/bin/ksh", "/usr/bin/ksh"],
+}
+
+# Shell executable names for Windows
+_WINDOWS_SHELL_PATHS = {
+    "powershell": ["powershell.exe", "pwsh.exe"],
+    "cmd": ["cmd.exe"],
+}
+
+
+def _find_windows_shell(shell: str, shell_paths: Dict[str, List[str]]) -> Optional[str]:
+    """Find a Windows shell executable in PATH."""
+    for shell_cmd in shell_paths.get(shell, [shell]):
+        if shutil.which(shell_cmd):
+            return shell_cmd
+    return None
+
+
+def _find_unix_shell(shell: str, shell_paths: Dict[str, List[str]]) -> Optional[str]:
+    """Find a Unix shell executable at standard paths."""
+    default_paths = [f"/bin/{shell}", f"/usr/bin/{shell}"]
+    for shell_path in shell_paths.get(shell, default_paths):
+        if os.path.exists(shell_path) and os.access(shell_path, os.X_OK):
+            return shell_path
+    return None
 
 
 class ScriptOperations:
@@ -23,6 +64,44 @@ class ScriptOperations:
         """Initialize script operations with agent instance."""
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
+
+    def _get_shells_to_try(
+        self, shell_type: Optional[str], allowed_shells: List[str], system: str
+    ) -> List[str]:
+        """Determine which shells to try based on request and configuration."""
+        if shell_type:
+            if shell_type not in allowed_shells:
+                raise ValueError(
+                    _("Shell '%s' is not allowed by configuration") % shell_type
+                )
+            return [shell_type]
+
+        # Use system defaults, filtered by allowed shells
+        system_shells = _DEFAULT_SHELLS.get(system, ["sh"])
+        shells_to_try = [s for s in system_shells if s in allowed_shells]
+
+        if not shells_to_try:
+            raise ValueError(_("No allowed shells available for system '%s'") % system)
+
+        return shells_to_try
+
+    def _find_shell_executable(self, shells_to_try: List[str], system: str) -> str:
+        """Find the first available shell executable from the list."""
+        for shell in shells_to_try:
+            if system == "windows":
+                shell_path = _find_windows_shell(shell, _WINDOWS_SHELL_PATHS)
+            else:
+                shell_path = _find_unix_shell(shell, _UNIX_SHELL_PATHS)
+
+            if shell_path:
+                self.logger.info(_("Selected shell: %s"), shell_path)
+                return shell_path
+
+        allowed_shells = self.agent.config.get_allowed_shells()
+        raise ValueError(
+            _("No suitable shell found from allowed shells: %s")
+            % ", ".join(allowed_shells)
+        )
 
     def _detect_shell(self, shell_type: Optional[str] = None) -> str:
         """
@@ -38,66 +117,9 @@ class ScriptOperations:
             ValueError: If requested shell is not available or allowed
         """
         system = platform.system().lower()
-
-        # Get allowed shells from configuration
         allowed_shells = self.agent.config.get_allowed_shells()
-
-        # Default shell preferences by platform
-        default_shells = {
-            "linux": ["bash", "sh", "zsh"],
-            "darwin": ["bash", "zsh", "sh"],
-            "freebsd": ["bash", "sh", "zsh", "ksh"],
-            "openbsd": ["ksh", "sh", "bash"],
-            "netbsd": ["sh", "bash", "ksh"],
-            "windows": ["powershell", "cmd"],
-        }
-
-        # Determine shells to try
-        if shell_type:
-            # Specific shell requested
-            if shell_type not in allowed_shells:
-                raise ValueError(
-                    _("Shell '%s' is not allowed by configuration") % shell_type
-                )
-            shells_to_try = [shell_type]
-        else:
-            # Use system defaults, filtered by allowed shells
-            system_shells = default_shells.get(system, ["sh"])
-            shells_to_try = [s for s in system_shells if s in allowed_shells]
-
-        if not shells_to_try:
-            raise ValueError(_("No allowed shells available for system '%s'") % system)
-
-        # Find first available shell
-        shell_paths = {
-            "bash": ["/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"],
-            "sh": ["/bin/sh", "/usr/bin/sh"],
-            "zsh": ["/bin/zsh", "/usr/bin/zsh", "/usr/local/bin/zsh"],
-            "ksh": ["/bin/ksh", "/usr/bin/ksh"],
-            "powershell": ["powershell.exe", "pwsh.exe"],
-            "cmd": ["cmd.exe"],
-        }
-
-        for shell in shells_to_try:
-            if system == "windows":
-                # On Windows, try to find the executable in PATH
-                for shell_cmd in shell_paths.get(shell, [shell]):
-                    if shutil.which(shell_cmd):
-                        self.logger.info(_("Selected shell: %s"), shell_cmd)
-                        return shell_cmd
-            else:
-                # On Unix-like systems, check specific paths
-                for shell_path in shell_paths.get(
-                    shell, [f"/bin/{shell}", f"/usr/bin/{shell}"]
-                ):
-                    if os.path.exists(shell_path) and os.access(shell_path, os.X_OK):
-                        self.logger.info(_("Selected shell: %s"), shell_path)
-                        return shell_path
-
-        raise ValueError(
-            _("No suitable shell found from allowed shells: %s")
-            % ", ".join(allowed_shells)
-        )
+        shells_to_try = self._get_shells_to_try(shell_type, allowed_shells, system)
+        return self._find_shell_executable(shells_to_try, system)
 
     def _create_script_file(self, script_content: str, shell_path: str) -> str:
         """
@@ -168,8 +190,12 @@ class ScriptOperations:
 
         return {"success": True}
 
-    async def _execute_script_file(  # NOSONAR
-        self, script_content: str, shell_path: str, timeout: int, working_directory: str
+    async def _execute_script_file(
+        self,
+        script_content: str,
+        shell_path: str,
+        timeout: int,
+        working_directory: str,  # NOSONAR - timeout parameter is appropriate
     ) -> Dict[str, Any]:
         """Execute script file and return results."""
         # Create script file

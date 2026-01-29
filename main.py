@@ -357,7 +357,8 @@ class SysManageAgent(
             # Create SSL context if needed
             ssl_context = None
             if http_url.startswith("https://"):
-                ssl_context = ssl.create_default_context()
+                ssl_context = ssl.create_default_context()  # NOSONAR
+                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
                 if not self.config.should_verify_ssl():
                     ssl_context.check_hostname = (
                         False  # NOSONAR - intentionally configurable
@@ -637,7 +638,8 @@ class SysManageAgent(
 
     def _create_ssl_context(self):
         """Create SSL context for WebSocket connection."""
-        ssl_context = ssl.create_default_context()
+        ssl_context = ssl.create_default_context()  # NOSONAR
+        ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
 
         cert_paths = self.cert_store.load_certificates()
         if cert_paths:

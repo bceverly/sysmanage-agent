@@ -358,7 +358,7 @@ poweroff
         self,
         vm_name: str,
         setup_script: str,
-        timeout: int = 600,  # pylint: disable=unused-argument
+        _timeout: int = 600,  # NOSONAR - reserved for future use
     ) -> Dict[str, Any]:
         """
         Run setup script via serial console.

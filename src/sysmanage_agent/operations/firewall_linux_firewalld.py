@@ -14,6 +14,10 @@ from typing import Callable, Dict, List, Tuple
 
 from src.i18n import _  # pylint: disable=not-callable
 
+# Log message constants for firewalld rule operations
+LOG_REMOVE_TCP_RULE = "Removing firewalld rule: remove-port %d/tcp"
+LOG_REMOVE_UDP_RULE = "Removing firewalld rule: remove-port %d/udp"
+
 
 class FirewalldOperations:
     """Handles firewalld firewall operations on RHEL/CentOS/Fedora systems."""
@@ -66,7 +70,7 @@ class FirewalldOperations:
 
         # Always ensure SSH (port 22) is allowed to prevent lockout
         self.logger.info("Adding firewalld rule: allow 22/tcp (SSH)")
-        result = subprocess.run(  # nosec B603 B607
+        result = subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
             [
                 "sudo",
                 "firewall-cmd",
@@ -88,7 +92,7 @@ class FirewalldOperations:
         # Add rules for agent communication ports
         for port in ports:
             self.logger.info("Adding firewalld rule: allow %d/%s", port, protocol)
-            result = subprocess.run(  # nosec B603 B607
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
                 [
                     "sudo",
                     "firewall-cmd",
@@ -109,7 +113,7 @@ class FirewalldOperations:
                 )
 
         # Reload firewalld to apply changes
-        subprocess.run(  # nosec B603 B607
+        subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
             ["sudo", "firewall-cmd", "--reload"],
             capture_output=True,
             text=True,
@@ -119,7 +123,7 @@ class FirewalldOperations:
 
         # Start/enable firewalld service
         self.logger.info("Enabling firewalld service")
-        result = subprocess.run(  # nosec B603 B607
+        result = subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
             ["sudo", "systemctl", "enable", "--now", "firewalld"],
             capture_output=True,
             text=True,
@@ -147,7 +151,7 @@ class FirewalldOperations:
             Dict with success status and message
         """
         self.logger.info("Detected firewalld, disabling")
-        result = subprocess.run(  # nosec B603 B607
+        result = subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
             ["sudo", "systemctl", "stop", "firewalld"],
             capture_output=True,
             text=True,
@@ -175,7 +179,7 @@ class FirewalldOperations:
             Dict with success status and message
         """
         self.logger.info("Detected firewalld, restarting")
-        result = subprocess.run(  # nosec B603 B607
+        result = subprocess.run(  # nosec B603 B607  # NOSONAR - sync subprocess acceptable for quick firewall commands
             ["sudo", "systemctl", "restart", "firewalld"],
             capture_output=True,
             text=True,
@@ -285,6 +289,44 @@ class FirewalldOperations:
             ),
         }
 
+    def _remove_port_rule(self, port: int, protocol: str) -> None:
+        """Remove a single firewalld port rule."""
+        self.logger.info("Removing firewalld rule: remove-port %d/%s", port, protocol)
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "sudo",
+                "firewall-cmd",
+                "--permanent",
+                f"--remove-port={port}/{protocol}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode != 0:
+            self.logger.warning(
+                "Failed to remove firewalld rule for port %d/%s: %s",
+                port,
+                protocol,
+                result.stderr,
+            )
+
+    def _remove_port_protocols(
+        self, port: int, protocols: Dict[str, bool], desired: Dict[str, bool] = None
+    ) -> None:
+        """Remove TCP and/or UDP rules for a port based on desired state."""
+        if desired is None:
+            if protocols.get("tcp"):
+                self._remove_port_rule(port, "tcp")
+            if protocols.get("udp"):
+                self._remove_port_rule(port, "udp")
+        else:
+            if protocols.get("tcp") and not desired.get("tcp"):
+                self._remove_port_rule(port, "tcp")
+            if protocols.get("udp") and not desired.get("udp"):
+                self._remove_port_rule(port, "udp")
+
     def _remove_unneeded_ports(
         self,
         current_ports: Dict[int, Dict[str, bool]],
@@ -293,93 +335,13 @@ class FirewalldOperations:
     ) -> None:
         """Remove ports that are no longer needed."""
         for port, protocols in current_ports.items():
-            # Skip preserved ports (agent communication, SSH)
             if port in preserved_ports:
                 continue
 
-            # Check if this port should be removed
             if port not in desired_ports:
-                # Remove both protocols for this port
-                if protocols.get("tcp"):
-                    self.logger.info(
-                        "Removing firewalld rule: remove-port %d/tcp", port
-                    )
-                    result = subprocess.run(  # nosec B603 B607
-                        [
-                            "sudo",
-                            "firewall-cmd",
-                            "--permanent",
-                            f"--remove-port={port}/tcp",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to remove firewalld rule for port %d/tcp: %s",
-                            port,
-                            result.stderr,
-                        )
-
-                if protocols.get("udp"):
-                    self.logger.info(
-                        "Removing firewalld rule: remove-port %d/udp", port
-                    )
-                    result = subprocess.run(  # nosec B603 B607
-                        [
-                            "sudo",
-                            "firewall-cmd",
-                            "--permanent",
-                            f"--remove-port={port}/udp",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to remove firewalld rule for port %d/udp: %s",
-                            port,
-                            result.stderr,
-                        )
+                self._remove_port_protocols(port, protocols)
             else:
-                # Port exists but check if protocols changed
-                desired = desired_ports[port]
-                if protocols.get("tcp") and not desired.get("tcp"):
-                    self.logger.info(
-                        "Removing firewalld rule: remove-port %d/tcp", port
-                    )
-                    subprocess.run(  # nosec B603 B607
-                        [
-                            "sudo",
-                            "firewall-cmd",
-                            "--permanent",
-                            f"--remove-port={port}/tcp",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                if protocols.get("udp") and not desired.get("udp"):
-                    self.logger.info(
-                        "Removing firewalld rule: remove-port %d/udp", port
-                    )
-                    subprocess.run(  # nosec B603 B607
-                        [
-                            "sudo",
-                            "firewall-cmd",
-                            "--permanent",
-                            f"--remove-port={port}/udp",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
+                self._remove_port_protocols(port, protocols, desired_ports[port])
 
     def _add_new_ports(
         self,
@@ -450,32 +412,64 @@ class FirewalldOperations:
         if result.returncode != 0:
             self.logger.warning("Failed to reload firewalld: %s", result.stderr)
 
+    def _remove_port_with_error_tracking(
+        self, port: int, protocol: str, errors: List[str]
+    ) -> None:
+        """Remove a firewalld port rule with error tracking for removal operations."""
+        self.logger.info("Removing firewalld rule: remove-port %d/%s", port, protocol)
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "sudo",
+                "firewall-cmd",
+                "--permanent",
+                f"--remove-port={port}/{protocol}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode != 0 and "NOT_ENABLED" not in result.stderr:
+            errors.append(
+                f"Failed to remove {protocol.upper()} port {port}: {result.stderr}"
+            )
+            self.logger.warning(
+                "Failed to remove firewalld rule for port %d/%s: %s",
+                port,
+                protocol,
+                result.stderr,
+            )
+
+    def _build_ports_dict(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict[int, Dict[str, bool]]:
+        """Build a consolidated ports dictionary from IPv4 and IPv6 port lists."""
+        ports = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in ports:
+                ports[port] = {"tcp": False, "udp": False}
+            if tcp:
+                ports[port]["tcp"] = True
+            if udp:
+                ports[port]["udp"] = True
+        return ports
+
     async def remove_firewall_ports(
         self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
     ) -> Dict:
         """Remove specific firewall ports using firewalld."""
         self.logger.info("Removing specific firewall ports using firewalld")
 
-        errors = []
+        errors: List[str] = []
 
-        # Get agent communication ports (must always be preserved)
         agent_ports, _ = self._get_agent_communication_ports()
-        # Also preserve SSH port 22
         preserved_ports = set(agent_ports + [22])
 
-        # Build list of ports to remove from both IPv4 and IPv6
-        ports_to_remove = {}
-        for port_config in ipv4_ports + ipv6_ports:
-            port = port_config.get("port")
-            tcp = port_config.get("tcp", False)
-            udp = port_config.get("udp", False)
-
-            if port not in ports_to_remove:
-                ports_to_remove[port] = {"tcp": False, "udp": False}
-            if tcp:
-                ports_to_remove[port]["tcp"] = True
-            if udp:
-                ports_to_remove[port]["udp"] = True
+        ports_to_remove = self._build_ports_dict(ipv4_ports, ipv6_ports)
 
         self.logger.info(
             "Ports to remove: %s, Preserved (will not remove): %s",
@@ -483,9 +477,7 @@ class FirewalldOperations:
             list(preserved_ports),
         )
 
-        # Remove the specified ports
         for port, protocols in ports_to_remove.items():
-            # Skip preserved ports (agent communication, SSH)
             if port in preserved_ports:
                 self.logger.info(
                     "Skipping removal of preserved port %d (agent/SSH)", port
@@ -493,61 +485,11 @@ class FirewalldOperations:
                 continue
 
             if protocols.get("tcp"):
-                self.logger.info("Removing firewalld rule: remove-port %d/tcp", port)
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "sudo",
-                        "firewall-cmd",
-                        "--permanent",
-                        f"--remove-port={port}/tcp",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    # Rule might not exist, which is fine
-                    if "NOT_ENABLED" not in result.stderr:
-                        errors.append(
-                            f"Failed to remove TCP port {port}: {result.stderr}"
-                        )
-                        self.logger.warning(
-                            "Failed to remove firewalld rule for port %d/tcp: %s",
-                            port,
-                            result.stderr,
-                        )
-
+                self._remove_port_with_error_tracking(port, "tcp", errors)
             if protocols.get("udp"):
-                self.logger.info("Removing firewalld rule: remove-port %d/udp", port)
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "sudo",
-                        "firewall-cmd",
-                        "--permanent",
-                        f"--remove-port={port}/udp",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    # Rule might not exist, which is fine
-                    if "NOT_ENABLED" not in result.stderr:
-                        errors.append(
-                            f"Failed to remove UDP port {port}: {result.stderr}"
-                        )
-                        self.logger.warning(
-                            "Failed to remove firewalld rule for port %d/udp: %s",
-                            port,
-                            result.stderr,
-                        )
+                self._remove_port_with_error_tracking(port, "udp", errors)
 
-        # Reload firewalld to apply changes
         self._reload_firewalld()
-
-        # Send updated firewall status
         await self._send_firewall_status_update()
 
         if errors:

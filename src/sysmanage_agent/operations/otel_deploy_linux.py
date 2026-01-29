@@ -216,10 +216,8 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 }
 
             # Write the package to a temp file
-            # NOSONAR: Using sync tempfile for file creation is acceptable; the file
-            # creation itself is fast and the content is already in memory
             self.logger.info("Writing package to temporary file...")
-            with tempfile.NamedTemporaryFile(
+            with tempfile.NamedTemporaryFile(  # NOSONAR - sync tempfile acceptable; file creation is fast and content is in memory
                 mode="wb", suffix=".deb", delete=False
             ) as file_handle:
                 file_handle.write(deb_content)
@@ -373,8 +371,9 @@ class LinuxOtelDeployer(OtelDeployerBase):
         except Exception as error:  # pylint: disable=broad-exception-caught
             return {"success": False, "error": str(error)}
 
-    # NOSONAR: async keyword required by interface contract even though no await is used
-    async def _create_otel_config_linux(self, grafana_url: str) -> Dict[str, Any]:
+    async def _create_otel_config_linux(  # NOSONAR - async required by interface contract
+        self, grafana_url: str
+    ) -> Dict[str, Any]:
         """Create OpenTelemetry configuration file for Linux."""
         try:
             config_file = "/etc/otelcol-contrib/config.yaml"

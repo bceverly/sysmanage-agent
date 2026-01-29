@@ -69,7 +69,9 @@ class BSDFirewallOperations(FirewallBase):
             return False
 
     async def _run_firewall_command(
-        self, command: List[str], timeout: int = 10
+        self,
+        command: List[str],
+        timeout: int = 10,  # NOSONAR - timeout parameter is for asyncio.wait_for
     ) -> tuple:
         """
         Run a firewall command asynchronously.

@@ -215,7 +215,8 @@ class MessageHandler:
             # Create SSL context if needed
             ssl_context = None
             if http_url.startswith("https://"):
-                ssl_context = ssl.create_default_context()
+                ssl_context = ssl.create_default_context()  # NOSONAR
+                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
                 if not self.agent.config.should_verify_ssl():
                     ssl_context.check_hostname = False  # NOSONAR
                     ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
@@ -857,9 +858,9 @@ class MessageHandler:
             )
             return False
 
-    async def on_connection_established(
+    async def on_connection_established(  # NOSONAR - async required by caller interface
         self,
-    ):  # noqa: async required by caller interface
+    ):
         """
         Called when WebSocket connection is established.
         Recovers stuck messages and starts processing queued messages.
@@ -972,9 +973,9 @@ class MessageHandler:
             },
         }
 
-    async def cleanup_old_messages(
+    async def cleanup_old_messages(  # NOSONAR - async required by caller interface
         self, older_than_days: int = 7
-    ) -> int:  # noqa: async required by caller interface
+    ) -> int:
         """
         Clean up old completed messages.
 

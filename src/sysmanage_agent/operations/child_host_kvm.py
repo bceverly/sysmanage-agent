@@ -264,7 +264,9 @@ class KvmOperations:
             )
             return False
 
-    async def enable_kvm_modules(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def enable_kvm_modules(  # NOSONAR - async required by caller interface
+        self, _parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Enable KVM by loading the kernel modules via modprobe.
 
@@ -631,7 +633,9 @@ class KvmOperations:
             self.logger.warning(_("Error adding user to groups: %s"), group_error)
             return {"success": False, "error": str(group_error)}
 
-    async def initialize_kvm(self, _parameters: dict) -> dict:
+    async def initialize_kvm(  # NOSONAR - async required by caller interface
+        self, _parameters: dict
+    ) -> dict:
         """
         Initialize KVM/libvirt on Linux: install packages, enable service, configure network.
 
@@ -754,7 +758,9 @@ class KvmOperations:
         return await self.networking.list_all_networks(parameters)
 
     # Delegate lifecycle methods to KvmLifecycle
-    async def check_kvm_ready(self) -> Dict[str, Any]:
+    async def check_kvm_ready(  # NOSONAR - async required by caller interface
+        self,
+    ) -> Dict[str, Any]:
         """Check if KVM is fully operational and ready to create VMs."""
         return self.lifecycle.check_ready(self.virtualization_checks)
 

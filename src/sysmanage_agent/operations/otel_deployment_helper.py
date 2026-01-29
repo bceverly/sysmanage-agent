@@ -213,9 +213,7 @@ class OtelDeploymentHelper:
                 }
 
             # Write to temp file and install
-            # NOSONAR: Using sync tempfile for file creation is acceptable; the file
-            # creation itself is fast and the content is already in memory
-            with tempfile.NamedTemporaryFile(
+            with tempfile.NamedTemporaryFile(  # NOSONAR - sync tempfile acceptable; file creation is fast and content is in memory
                 mode="wb", suffix=".deb", delete=False
             ) as file_handle:
                 file_handle.write(deb_content)
@@ -313,8 +311,7 @@ class OtelDeploymentHelper:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    # NOSONAR: async keyword required by interface contract even though limited awaits
-    async def _create_linux_config(
+    async def _create_linux_config(  # NOSONAR - async required by interface contract
         self, grafana_url: str, config_generator
     ) -> Dict[str, Any]:
         """Create config file for Linux."""

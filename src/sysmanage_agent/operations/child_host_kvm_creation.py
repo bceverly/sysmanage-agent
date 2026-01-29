@@ -512,7 +512,10 @@ class KvmCreation:
         return None
 
     async def _wait_for_vm_ip(
-        self, vm_name: str, timeout: int = 300, interval: int = 5
+        self,
+        vm_name: str,
+        timeout: int = 300,  # NOSONAR - timeout parameter is for polling loop control
+        interval: int = 5,
     ) -> Optional[str]:
         """
         Wait for the VM to get an IP address.
@@ -539,7 +542,11 @@ class KvmCreation:
         return None
 
     async def _wait_for_ssh(
-        self, ip: str, port: int = 22, timeout: int = 180, interval: int = 5
+        self,
+        ip: str,
+        port: int = 22,
+        timeout: int = 180,  # NOSONAR - timeout parameter is for polling loop control
+        interval: int = 5,
     ) -> bool:
         """
         Wait for SSH to become available on the VM.

@@ -894,7 +894,10 @@ runcmd:
         return None
 
     async def wait_for_vm_ip(
-        self, vm_name: str, tap_interface: str, timeout: int = 300
+        self,
+        vm_name: str,
+        tap_interface: str,
+        timeout: int = 300,  # NOSONAR - timeout parameter is for polling loop control
     ) -> Optional[str]:
         """
         Wait for the VM to get an IP address.
@@ -928,7 +931,9 @@ runcmd:
         self.logger.warning(_("Timeout waiting for VM %s to get IP"), vm_name)
         return None
 
-    async def wait_for_ssh(self, ip: str, port: int = 22, timeout: int = 180) -> bool:
+    async def wait_for_ssh(  # NOSONAR - timeout parameter is for polling loop control
+        self, ip: str, port: int = 22, timeout: int = 180
+    ) -> bool:
         """
         Wait for SSH to become available.
 

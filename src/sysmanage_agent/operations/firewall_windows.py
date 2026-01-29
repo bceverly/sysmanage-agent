@@ -14,6 +14,14 @@ from typing import Dict, List
 from src.i18n import _  # pylint: disable=not-callable
 from src.sysmanage_agent.operations.firewall_base import FirewallBase
 
+# Constants for Windows Firewall rule parameters
+NETSH_DIR_IN = "dir=in"
+NETSH_ACTION_ALLOW = "action=allow"
+
+# Constants for log messages
+LOG_REMOVING_TCP_RULE = "Removing Windows Firewall rule: SysManage Role Port %d/TCP"
+LOG_REMOVING_UDP_RULE = "Removing Windows Firewall rule: SysManage Role Port %d/UDP"
+
 
 class WindowsFirewallOperations(FirewallBase):
     """Manages firewall operations on Windows systems."""
@@ -34,7 +42,9 @@ class WindowsFirewallOperations(FirewallBase):
         try:
             # Always ensure RDP (port 3389) is allowed on Windows to prevent lockout
             self.logger.info("Adding Windows Firewall rule for port 3389 (RDP)")
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -42,8 +52,8 @@ class WindowsFirewallOperations(FirewallBase):
                     "add",
                     "rule",
                     "name=Remote Desktop (RDP)",
-                    "dir=in",
-                    "action=allow",
+                    NETSH_DIR_IN,
+                    NETSH_ACTION_ALLOW,
                     "protocol=TCP",
                     "localport=3389",
                 ],
@@ -62,7 +72,9 @@ class WindowsFirewallOperations(FirewallBase):
             # Add firewall rules for agent communication
             for port in ports:
                 self.logger.info("Adding Windows Firewall rule for port %d", port)
-                result = subprocess.run(  # nosec B603 B607
+                # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+                # command with timeout, async version provides no benefit for firewall ops
+                result = subprocess.run(  # nosec B603 B607  # NOSONAR
                     [
                         "netsh",
                         "advfirewall",
@@ -70,8 +82,8 @@ class WindowsFirewallOperations(FirewallBase):
                         "add",
                         "rule",
                         f"name=SysManage Agent Port {port}",
-                        "dir=in",
-                        "action=allow",
+                        NETSH_DIR_IN,
+                        NETSH_ACTION_ALLOW,
                         f"protocol={protocol.upper()}",
                         f"localport={port}",
                     ],
@@ -88,7 +100,9 @@ class WindowsFirewallOperations(FirewallBase):
 
             # Enable Windows Firewall
             self.logger.info("Enabling Windows Firewall")
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -128,7 +142,9 @@ class WindowsFirewallOperations(FirewallBase):
         """
         try:
             self.logger.info("Disabling Windows Firewall")
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -173,7 +189,9 @@ class WindowsFirewallOperations(FirewallBase):
             self.logger.info("Restarting Windows Firewall")
             # Windows doesn't really have a "restart" for the firewall
             # But we can toggle it off and on
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -194,7 +212,9 @@ class WindowsFirewallOperations(FirewallBase):
                     "error": f"Failed to restart Windows Firewall: {result.stderr}",
                 }
 
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -242,7 +262,9 @@ class WindowsFirewallOperations(FirewallBase):
         current_ports: Dict[int, Dict[str, bool]] = {}
         try:
             # List all firewall rules and filter for SysManage Role rules
-            result = subprocess.run(  # nosec B603 B607
+            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
+            # command with timeout, async version provides no benefit for firewall ops
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR
                 [
                     "netsh",
                     "advfirewall",
@@ -311,14 +333,142 @@ class WindowsFirewallOperations(FirewallBase):
         elif protocol == "udp":
             current_ports[port]["udp"] = True
 
+    def _remove_port_rule(self, port: int, protocol: str) -> None:
+        """Remove a single Windows Firewall port rule."""
+        self.logger.info(
+            "Removing Windows Firewall rule: SysManage Role Port %d/%s",
+            port,
+            protocol.upper(),
+        )
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "netsh",
+                "advfirewall",
+                "firewall",
+                "delete",
+                "rule",
+                f"name=SysManage Role Port {port}/{protocol.upper()}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode != 0:
+            self.logger.warning(
+                "Failed to remove Windows Firewall rule for port %d/%s: %s",
+                port,
+                protocol,
+                result.stderr,
+            )
+
+    def _remove_port_protocols(
+        self, port: int, protocols: Dict[str, bool], desired: Dict[str, bool] = None
+    ) -> None:
+        """Remove TCP and/or UDP rules for a port based on desired state."""
+        if desired is None:
+            if protocols.get("tcp"):
+                self._remove_port_rule(port, "tcp")
+            if protocols.get("udp"):
+                self._remove_port_rule(port, "udp")
+        else:
+            if protocols.get("tcp") and not desired.get("tcp"):
+                self._remove_port_rule(port, "tcp")
+            if protocols.get("udp") and not desired.get("udp"):
+                self._remove_port_rule(port, "udp")
+
+    def _remove_unneeded_ports(
+        self,
+        current_ports: Dict[int, Dict[str, bool]],
+        desired_ports: Dict[int, Dict[str, bool]],
+        preserved_ports: set,
+    ) -> None:
+        """Remove ports that are no longer needed."""
+        for port, protocols in current_ports.items():
+            if port in preserved_ports:
+                continue
+
+            if port not in desired_ports:
+                self._remove_port_protocols(port, protocols)
+            else:
+                self._remove_port_protocols(port, protocols, desired_ports[port])
+
+    def _add_port_rule(self, port: int, protocol: str, errors: List[str]) -> None:
+        """Add a single Windows Firewall port rule with error tracking."""
+        self.logger.info("Adding Windows Firewall rule: allow %d/%s", port, protocol)
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "netsh",
+                "advfirewall",
+                "firewall",
+                "add",
+                "rule",
+                f"name=SysManage Role Port {port}/{protocol.upper()}",
+                NETSH_DIR_IN,
+                NETSH_ACTION_ALLOW,
+                f"protocol={protocol.upper()}",
+                f"localport={port}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode != 0:
+            errors.append(
+                f"Failed to add {protocol.upper()} port {port}: {result.stderr}"
+            )
+            self.logger.warning(
+                "Failed to add Windows Firewall rule for port %d/%s: %s",
+                port,
+                protocol,
+                result.stderr,
+            )
+
+    def _add_new_ports(
+        self,
+        desired_ports: Dict[int, Dict[str, bool]],
+        current_ports: Dict[int, Dict[str, bool]],
+        agent_ports: List[int],
+    ) -> List[str]:
+        """Add new ports and return list of errors."""
+        errors: List[str] = []
+        for port, protocols in desired_ports.items():
+            if port in agent_ports:
+                continue
+
+            current = current_ports.get(port, {"tcp": False, "udp": False})
+
+            if protocols.get("tcp") and not current.get("tcp"):
+                self._add_port_rule(port, "tcp", errors)
+            if protocols.get("udp") and not current.get("udp"):
+                self._add_port_rule(port, "udp", errors)
+
+        return errors
+
+    def _build_ports_dict(
+        self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
+    ) -> Dict[int, Dict[str, bool]]:
+        """Build a consolidated ports dictionary from IPv4 and IPv6 port lists."""
+        ports: Dict[int, Dict[str, bool]] = {}
+        for port_config in ipv4_ports + ipv6_ports:
+            port = port_config.get("port")
+            tcp = port_config.get("tcp", False)
+            udp = port_config.get("udp", False)
+
+            if port not in ports:
+                ports[port] = {"tcp": False, "udp": False}
+            if tcp:
+                ports[port]["tcp"] = True
+            if udp:
+                ports[port]["udp"] = True
+        return ports
+
     async def apply_firewall_roles(
         self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
     ) -> Dict:
         """
         Apply firewall roles by synchronizing open ports based on assigned roles.
-
-        This synchronizes the firewall state - adding new ports and removing
-        ports that are no longer needed.
 
         Args:
             ipv4_ports: List of {port, tcp, udp} for IPv4
@@ -329,28 +479,10 @@ class WindowsFirewallOperations(FirewallBase):
         """
         self.logger.info("Synchronizing firewall roles using Windows Firewall")
 
-        errors = []
-
-        # Get agent communication ports (must always be preserved)
         agent_ports, _ = self._get_agent_communication_ports()
-        # Also preserve RDP port 3389
         preserved_ports = set(agent_ports + [3389])
 
-        # Build desired port configuration from both IPv4 and IPv6
-        desired_ports = {}
-        for port_config in ipv4_ports + ipv6_ports:
-            port = port_config.get("port")
-            tcp = port_config.get("tcp", False)
-            udp = port_config.get("udp", False)
-
-            if port not in desired_ports:
-                desired_ports[port] = {"tcp": False, "udp": False}
-            if tcp:
-                desired_ports[port]["tcp"] = True
-            if udp:
-                desired_ports[port]["udp"] = True
-
-        # Get current SysManage Role rules
+        desired_ports = self._build_ports_dict(ipv4_ports, ipv6_ports)
         current_ports = self._get_windows_sysmanage_role_rules()
 
         self.logger.info(
@@ -360,173 +492,9 @@ class WindowsFirewallOperations(FirewallBase):
             list(preserved_ports),
         )
 
-        # Remove rules that are no longer needed
-        for port, protocols in current_ports.items():
-            # Skip preserved ports
-            if port in preserved_ports:
-                continue
+        self._remove_unneeded_ports(current_ports, desired_ports, preserved_ports)
+        errors = self._add_new_ports(desired_ports, current_ports, agent_ports)
 
-            # Check if this port should be removed
-            if port not in desired_ports:
-                # Remove both protocol rules for this port
-                if protocols.get("tcp"):
-                    self.logger.info(
-                        "Removing Windows Firewall rule: SysManage Role Port %d/TCP",
-                        port,
-                    )
-                    result = subprocess.run(  # nosec B603 B607
-                        [
-                            "netsh",
-                            "advfirewall",
-                            "firewall",
-                            "delete",
-                            "rule",
-                            f"name=SysManage Role Port {port}/TCP",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to remove Windows Firewall rule for port %d/tcp: %s",
-                            port,
-                            result.stderr,
-                        )
-
-                if protocols.get("udp"):
-                    self.logger.info(
-                        "Removing Windows Firewall rule: SysManage Role Port %d/UDP",
-                        port,
-                    )
-                    result = subprocess.run(  # nosec B603 B607
-                        [
-                            "netsh",
-                            "advfirewall",
-                            "firewall",
-                            "delete",
-                            "rule",
-                            f"name=SysManage Role Port {port}/UDP",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        self.logger.warning(
-                            "Failed to remove Windows Firewall rule for port %d/udp: %s",
-                            port,
-                            result.stderr,
-                        )
-            else:
-                # Port exists but check if protocols changed
-                desired = desired_ports[port]
-                if protocols.get("tcp") and not desired.get("tcp"):
-                    self.logger.info(
-                        "Removing Windows Firewall rule: SysManage Role Port %d/TCP",
-                        port,
-                    )
-                    subprocess.run(  # nosec B603 B607
-                        [
-                            "netsh",
-                            "advfirewall",
-                            "firewall",
-                            "delete",
-                            "rule",
-                            f"name=SysManage Role Port {port}/TCP",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                if protocols.get("udp") and not desired.get("udp"):
-                    self.logger.info(
-                        "Removing Windows Firewall rule: SysManage Role Port %d/UDP",
-                        port,
-                    )
-                    subprocess.run(  # nosec B603 B607
-                        [
-                            "netsh",
-                            "advfirewall",
-                            "firewall",
-                            "delete",
-                            "rule",
-                            f"name=SysManage Role Port {port}/UDP",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-
-        # Add new rules
-        for port, protocols in desired_ports.items():
-            # Skip agent communication ports (they're managed separately)
-            if port in agent_ports:
-                continue
-
-            current = current_ports.get(port, {"tcp": False, "udp": False})
-
-            if protocols.get("tcp") and not current.get("tcp"):
-                self.logger.info("Adding Windows Firewall rule: allow %d/tcp", port)
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "netsh",
-                        "advfirewall",
-                        "firewall",
-                        "add",
-                        "rule",
-                        f"name=SysManage Role Port {port}/TCP",
-                        "dir=in",
-                        "action=allow",
-                        "protocol=TCP",
-                        f"localport={port}",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    errors.append(f"Failed to add TCP port {port}: {result.stderr}")
-                    self.logger.warning(
-                        "Failed to add Windows Firewall rule for port %d/tcp: %s",
-                        port,
-                        result.stderr,
-                    )
-
-            if protocols.get("udp") and not current.get("udp"):
-                self.logger.info("Adding Windows Firewall rule: allow %d/udp", port)
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "netsh",
-                        "advfirewall",
-                        "firewall",
-                        "add",
-                        "rule",
-                        f"name=SysManage Role Port {port}/UDP",
-                        "dir=in",
-                        "action=allow",
-                        "protocol=UDP",
-                        f"localport={port}",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    errors.append(f"Failed to add UDP port {port}: {result.stderr}")
-                    self.logger.warning(
-                        "Failed to add Windows Firewall rule for port %d/udp: %s",
-                        port,
-                        result.stderr,
-                    )
-
-        # Send updated firewall status
         await self._send_firewall_status_update()
 
         if errors:
@@ -545,14 +513,45 @@ class WindowsFirewallOperations(FirewallBase):
             ),
         }
 
+    def _remove_port_with_error_tracking(
+        self, port: int, protocol: str, errors: List[str]
+    ) -> None:
+        """Remove a Windows Firewall port rule with error tracking."""
+        self.logger.info(
+            "Removing Windows Firewall rule: SysManage Role Port %d/%s",
+            port,
+            protocol.upper(),
+        )
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "netsh",
+                "advfirewall",
+                "firewall",
+                "delete",
+                "rule",
+                f"name=SysManage Role Port {port}/{protocol.upper()}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode != 0 and "No rules match" not in result.stderr:
+            errors.append(
+                f"Failed to remove {protocol.upper()} port {port}: {result.stderr}"
+            )
+            self.logger.warning(
+                "Failed to remove Windows Firewall rule for port %d/%s: %s",
+                port,
+                protocol,
+                result.stderr,
+            )
+
     async def remove_firewall_ports(
         self, ipv4_ports: List[Dict], ipv6_ports: List[Dict]
     ) -> Dict:
         """
         Remove specific firewall ports (explicit removal, not sync).
-
-        This removes only the specified ports from the firewall.
-        Used when a firewall role is removed from a host.
 
         Args:
             ipv4_ports: List of {port, tcp, udp} for IPv4 to remove
@@ -563,26 +562,12 @@ class WindowsFirewallOperations(FirewallBase):
         """
         self.logger.info("Removing specific firewall ports using Windows Firewall")
 
-        errors = []
+        errors: List[str] = []
 
-        # Get agent communication ports (must always be preserved)
         agent_ports, _ = self._get_agent_communication_ports()
-        # Also preserve RDP port 3389
         preserved_ports = set(agent_ports + [3389])
 
-        # Build list of ports to remove from both IPv4 and IPv6
-        ports_to_remove = {}
-        for port_config in ipv4_ports + ipv6_ports:
-            port = port_config.get("port")
-            tcp = port_config.get("tcp", False)
-            udp = port_config.get("udp", False)
-
-            if port not in ports_to_remove:
-                ports_to_remove[port] = {"tcp": False, "udp": False}
-            if tcp:
-                ports_to_remove[port]["tcp"] = True
-            if udp:
-                ports_to_remove[port]["udp"] = True
+        ports_to_remove = self._build_ports_dict(ipv4_ports, ipv6_ports)
 
         self.logger.info(
             "Ports to remove: %s, Preserved (will not remove): %s",
@@ -590,9 +575,7 @@ class WindowsFirewallOperations(FirewallBase):
             list(preserved_ports),
         )
 
-        # Remove the specified ports
         for port, protocols in ports_to_remove.items():
-            # Skip preserved ports (agent communication, RDP)
             if port in preserved_ports:
                 self.logger.info(
                     "Skipping removal of preserved port %d (agent/RDP)", port
@@ -600,66 +583,10 @@ class WindowsFirewallOperations(FirewallBase):
                 continue
 
             if protocols.get("tcp"):
-                self.logger.info(
-                    "Removing Windows Firewall rule: SysManage Role Port %d/TCP", port
-                )
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "netsh",
-                        "advfirewall",
-                        "firewall",
-                        "delete",
-                        "rule",
-                        f"name=SysManage Role Port {port}/TCP",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    # Rule might not exist, which is fine
-                    if "No rules match" not in result.stderr:
-                        errors.append(
-                            f"Failed to remove TCP port {port}: {result.stderr}"
-                        )
-                        self.logger.warning(
-                            "Failed to remove Windows Firewall rule for port %d/tcp: %s",
-                            port,
-                            result.stderr,
-                        )
-
+                self._remove_port_with_error_tracking(port, "tcp", errors)
             if protocols.get("udp"):
-                self.logger.info(
-                    "Removing Windows Firewall rule: SysManage Role Port %d/UDP", port
-                )
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "netsh",
-                        "advfirewall",
-                        "firewall",
-                        "delete",
-                        "rule",
-                        f"name=SysManage Role Port {port}/UDP",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    # Rule might not exist, which is fine
-                    if "No rules match" not in result.stderr:
-                        errors.append(
-                            f"Failed to remove UDP port {port}: {result.stderr}"
-                        )
-                        self.logger.warning(
-                            "Failed to remove Windows Firewall rule for port %d/udp: %s",
-                            port,
-                            result.stderr,
-                        )
+                self._remove_port_with_error_tracking(port, "udp", errors)
 
-        # Send updated firewall status
         await self._send_firewall_status_update()
 
         if errors:
