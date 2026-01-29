@@ -48,8 +48,9 @@ class NPFFirewallOperations:
 
             # Check if config already exists
             try:
-                # NOSONAR: Sync file I/O is acceptable for reading small config files
-                with open(npf_conf, "r", encoding="utf-8") as file_handle:  # NOSONAR
+                with open(
+                    npf_conf, "r", encoding="utf-8"
+                ) as file_handle:  # NOSONAR - Sync file I/O is acceptable for reading small config files
                     existing_config = file_handle.read()
             except FileNotFoundError:
                 existing_config = ""
@@ -107,15 +108,13 @@ group default {
 
                 # Write the configuration
                 try:
-                    # NOSONAR: Sync file I/O is acceptable for writing small config files
                     with open(
                         npf_conf, "w", encoding="utf-8"
-                    ) as file_handle:  # NOSONAR
+                    ) as file_handle:  # NOSONAR - Sync file I/O is acceptable for writing small config files
                         file_handle.write(config_content)
                 except PermissionError:
                     # Try with sudo if not running as root
-                    # NOSONAR: Sync subprocess is acceptable for quick system commands
-                    result = subprocess.run(  # nosec B603 B607  # NOSONAR
+                    result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                         self.parent._build_command(
                             [
                                 "sh",
@@ -137,8 +136,7 @@ group default {
                 self.logger.info("NPF config already exists, skipping creation")
 
             # Validate the configuration
-            # NOSONAR: Sync subprocess is acceptable for quick system commands
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                 self.parent._build_command(["npfctl", "validate", npf_conf]),
                 capture_output=True,
                 text=True,
@@ -153,8 +151,7 @@ group default {
                 }
 
             # Reload the configuration
-            # NOSONAR: Sync subprocess is acceptable for quick system commands
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                 self.parent._build_command(["npfctl", "reload", npf_conf]),
                 capture_output=True,
                 text=True,
@@ -169,8 +166,7 @@ group default {
                 }
 
             # Start NPF
-            # NOSONAR: Sync subprocess is acceptable for quick system commands
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                 self.parent._build_command(["npfctl", "start"]),
                 capture_output=True,
                 text=True,
@@ -210,8 +206,7 @@ group default {
         """Apply firewall roles using NPF (NetBSD)."""
         try:
             # Check if NPF is available
-            # NOSONAR: Sync subprocess is acceptable for quick system commands
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                 ["npfctl", "show"],
                 capture_output=True,
                 text=True,
@@ -263,8 +258,7 @@ group default {
         """Remove specific firewall ports using NPF (NetBSD)."""
         try:
             # Check if NPF is available
-            # NOSONAR: Sync subprocess is acceptable for quick system commands
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
                 ["npfctl", "show"],
                 capture_output=True,
                 text=True,

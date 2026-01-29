@@ -2,27 +2,33 @@
 bhyve VM creation helpers for FreeBSD hosts.
 
 This module contains helper functions for creating bhyve VMs:
-- Disk image creation and cloud image downloading
-- Cloud-init ISO creation
 - Network setup (bridge and tap interfaces)
-- VM startup (bhyveload for FreeBSD, UEFI for Linux)
+- VM existence checking
+- IP address discovery and SSH waiting
+
+Image handling is in child_host_bhyve_images.py
+Provisioning (cloud-init, startup) is in child_host_bhyve_provisioning.py
 """
 
 import asyncio
-import hashlib
 import os
-import shutil
 import socket
 import subprocess  # nosec B404 # needed for sync disk/network operations
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
-from src.sysmanage_agent.operations.child_host_config_generator import (
-    generate_agent_config,
-    generate_cloudinit_userdata,
+
+# Import from new modules for delegation
+from src.sysmanage_agent.operations.child_host_bhyve_images import (
+    BhyveImageHelper,
+    BHYVE_IMAGES_DIR,
+)
+from src.sysmanage_agent.operations.child_host_bhyve_provisioning import (
+    BhyveProvisioningHelper,
+    BHYVE_CLOUDINIT_DIR,
 )
 
 # Re-export metadata functions for backwards compatibility
@@ -39,8 +45,18 @@ from src.sysmanage_agent.operations.child_host_bhyve_metadata import (  # noqa: 
 
 # Default paths for bhyve
 BHYVE_VM_DIR = "/vm"
-BHYVE_IMAGES_DIR = "/vm/images"
-BHYVE_CLOUDINIT_DIR = "/vm/cloud-init"
+
+# Re-export for backwards compatibility
+__all__ = [
+    "BhyveCreationHelper",
+    "BHYVE_VM_DIR",
+    "BHYVE_IMAGES_DIR",
+    "BHYVE_CLOUDINIT_DIR",
+    "BHYVE_METADATA_DIR",
+    "delete_bhyve_metadata",
+    "load_bhyve_metadata",
+    "save_bhyve_metadata",
+]
 
 
 class BhyveCreationHelper:
@@ -54,6 +70,9 @@ class BhyveCreationHelper:
             logger: Logger instance
         """
         self.logger = logger
+        # Delegate to specialized helpers
+        self._image_helper = BhyveImageHelper(logger)
+        self._provisioning_helper = BhyveProvisioningHelper(logger)
 
     def vm_exists(self, vm_name: str) -> bool:
         """
@@ -88,7 +107,7 @@ class BhyveCreationHelper:
         Returns:
             nmdm device ID (0-999)
         """
-        return abs(hash(vm_name)) % 1000
+        return self._provisioning_helper.get_nmdm_id(vm_name)
 
     def get_console_device(self, vm_name: str) -> str:
         """
@@ -103,8 +122,7 @@ class BhyveCreationHelper:
         Returns:
             Path to the console device (e.g., /dev/nmdm42B)
         """
-        nmdm_id = self.get_nmdm_id(vm_name)
-        return f"/dev/nmdm{nmdm_id}B"
+        return self._provisioning_helper.get_console_device(vm_name)
 
     def is_linux_guest(self, config: BhyveVmConfig) -> bool:
         """
@@ -119,22 +137,7 @@ class BhyveCreationHelper:
         Returns:
             True if Linux guest, False if FreeBSD or other
         """
-        distro = config.distribution.lower() if config.distribution else ""
-        linux_distros = [
-            "ubuntu",
-            "debian",
-            "fedora",
-            "centos",
-            "rhel",
-            "rocky",
-            "alma",
-            "alpine",
-            "arch",
-            "opensuse",
-            "suse",
-            "linux",
-        ]
-        return any(d in distro for d in linux_distros)
+        return self._provisioning_helper.is_linux_guest(config)
 
     def get_bridge_interface(self) -> Optional[str]:
         """
@@ -283,80 +286,7 @@ class BhyveCreationHelper:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
-    def _is_qcow2_image(self, path: str) -> bool:
-        """
-        Check if a disk image is in qcow2 format.
-
-        Args:
-            path: Path to the image file
-
-        Returns:
-            True if qcow2 format, False otherwise
-        """
-        try:
-            # Check file magic bytes - qcow2 starts with "QFI\xfb"
-            with open(path, "rb") as img_file:
-                magic = img_file.read(4)
-                return magic == b"QFI\xfb"
-        except Exception:
-            return False
-
-    def _convert_qcow2_to_raw(self, qcow2_path: str, raw_path: str) -> Dict[str, Any]:
-        """
-        Convert a qcow2 image to raw format for bhyve.
-
-        bhyve requires raw disk images - it does not support qcow2 natively.
-
-        Args:
-            qcow2_path: Path to the qcow2 image
-            raw_path: Destination path for raw image
-
-        Returns:
-            Dict with success status
-        """
-        try:
-            self.logger.info(
-                _("Converting qcow2 image to raw format for bhyve compatibility")
-            )
-
-            # Use qemu-img to convert (from qemu-utils package)
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "qemu-img",
-                    "convert",
-                    "-f",
-                    "qcow2",
-                    "-O",
-                    "raw",
-                    qcow2_path,
-                    raw_path,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=1800,  # 30 minutes for large images
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("Failed to convert qcow2 to raw: %s") % result.stderr,
-                }
-
-            self.logger.info(_("Converted image to raw format: %s"), raw_path)
-            return {"success": True, "path": raw_path}
-
-        except FileNotFoundError:
-            return {
-                "success": False,
-                "error": _(
-                    "qemu-img not found. Install qemu-utils: pkg install qemu-utils"
-                ),
-            }
-        except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Image conversion timed out")}
-        except Exception as error:
-            return {"success": False, "error": str(error)}
+    # Delegate image operations to BhyveImageHelper
 
     def download_cloud_image(
         self, url: str, dest_path: str, disk_size_gb: int = 20
@@ -375,134 +305,7 @@ class BhyveCreationHelper:
         Returns:
             Dict with success status and path
         """
-        try:
-            self.logger.info(_("Downloading cloud image from: %s"), url)
-
-            # Create download directory
-            download_dir = os.path.join(BHYVE_IMAGES_DIR, ".downloads")
-            os.makedirs(download_dir, mode=0o755, exist_ok=True)
-
-            # Generate cache key from URL
-            url_hash = hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
-            filename = os.path.basename(url.split("?")[0])
-            cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
-            # Raw converted cache path
-            raw_cached_path = cached_path + ".raw"
-
-            # Handle compressed files
-            is_xz = filename.endswith(".xz")
-            if is_xz:
-                decompressed_path = cached_path[:-3]  # Remove .xz
-            else:
-                decompressed_path = cached_path
-
-            # Check if we have a cached raw conversion
-            if os.path.exists(raw_cached_path):
-                self.logger.info(_("Using cached raw cloud image: %s"), raw_cached_path)
-                shutil.copy2(raw_cached_path, dest_path)
-                # Resize to requested size
-                self._resize_disk_image(dest_path, disk_size_gb)
-                return {"success": True, "path": dest_path}
-
-            # Check cache for original (may need conversion)
-            need_download = not os.path.exists(decompressed_path)
-
-            if need_download:
-                # Download
-                result = subprocess.run(  # nosec B603 B607
-                    ["fetch", "-o", cached_path, url],
-                    capture_output=True,
-                    text=True,
-                    timeout=1800,  # 30 minutes
-                    check=False,
-                )
-
-                if result.returncode != 0:
-                    # Try curl as fallback
-                    result = subprocess.run(  # nosec B603 B607
-                        ["curl", "-L", "-o", cached_path, url],
-                        capture_output=True,
-                        text=True,
-                        timeout=1800,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        return {
-                            "success": False,
-                            "error": _("Failed to download image: %s") % result.stderr,
-                        }
-
-                self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
-
-                # Decompress if needed
-                if is_xz:
-                    self.logger.info(_("Decompressing xz archive"))
-                    result = subprocess.run(  # nosec B603 B607
-                        ["xz", "-dk", cached_path],
-                        capture_output=True,
-                        text=True,
-                        timeout=600,
-                        check=False,
-                    )
-                    if result.returncode != 0:
-                        return {
-                            "success": False,
-                            "error": _("Failed to decompress: %s") % result.stderr,
-                        }
-            else:
-                self.logger.info(_("Using cached cloud image: %s"), decompressed_path)
-
-            # Check if image is qcow2 and needs conversion
-            if self._is_qcow2_image(decompressed_path):
-                self.logger.info(
-                    _("Detected qcow2 format, converting to raw for bhyve")
-                )
-                convert_result = self._convert_qcow2_to_raw(
-                    decompressed_path, raw_cached_path
-                )
-                if not convert_result.get("success"):
-                    return convert_result
-                # Copy converted raw image to destination
-                shutil.copy2(raw_cached_path, dest_path)
-            else:
-                # Already raw format, just copy
-                shutil.copy2(decompressed_path, dest_path)
-
-            # Resize disk to requested size
-            self._resize_disk_image(dest_path, disk_size_gb)
-
-            return {"success": True, "path": dest_path}
-
-        except subprocess.TimeoutExpired:
-            return {"success": False, "error": _("Download timed out")}
-        except Exception as error:
-            return {"success": False, "error": str(error)}
-
-    def _resize_disk_image(self, path: str, size_gb: int) -> None:
-        """
-        Resize a raw disk image to the specified size.
-
-        Args:
-            path: Path to the raw disk image
-            size_gb: Target size in GB
-        """
-        try:
-            size_bytes = size_gb * 1024 * 1024 * 1024
-            current_size = os.path.getsize(path)
-
-            if current_size < size_bytes:
-                self.logger.info(_("Resizing disk image to %dGB"), size_gb)
-                result = subprocess.run(  # nosec B603 B607
-                    ["truncate", "-s", str(size_bytes), path],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    self.logger.warning(_("Failed to resize disk: %s"), result.stderr)
-        except Exception as error:
-            self.logger.warning(_("Error resizing disk: %s"), error)
+        return self._image_helper.download_cloud_image(url, dest_path, disk_size_gb)
 
     def create_disk_image(
         self, path: str, size_gb: int, use_zvol: bool = False, zvol_parent: str = ""
@@ -519,44 +322,11 @@ class BhyveCreationHelper:
         Returns:
             Dict with success status and disk path
         """
-        try:
-            if use_zvol and zvol_parent:
-                # Create ZFS zvol
-                zvol_name = f"{zvol_parent}/{os.path.basename(path)}"
-                self.logger.info(_("Creating ZFS zvol: %s (%dG)"), zvol_name, size_gb)
-                result = subprocess.run(  # nosec B603 B607
-                    ["zfs", "create", "-V", f"{size_gb}G", zvol_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": _("Failed to create zvol: %s") % result.stderr,
-                    }
-                return {"success": True, "path": f"/dev/zvol/{zvol_name}"}
+        return self._image_helper.create_disk_image(
+            path, size_gb, use_zvol, zvol_parent
+        )
 
-            # Create file-based disk using truncate
-            self.logger.info(_("Creating disk image: %s (%dG)"), path, size_gb)
-            size_bytes = size_gb * 1024 * 1024 * 1024
-            result = subprocess.run(  # nosec B603 B607
-                ["truncate", "-s", str(size_bytes), path],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("Failed to create disk: %s") % result.stderr,
-                }
-            return {"success": True, "path": path}
-
-        except Exception as error:
-            return {"success": False, "error": str(error)}
+    # Delegate provisioning operations to BhyveProvisioningHelper
 
     def create_cloud_init_iso(self, config: BhyveVmConfig) -> Dict[str, Any]:
         """
@@ -568,128 +338,11 @@ class BhyveCreationHelper:
         Returns:
             Dict with success status and ISO path
         """
-        try:
-            iso_dir = os.path.join(BHYVE_CLOUDINIT_DIR, config.vm_name)
-            os.makedirs(iso_dir, mode=0o755, exist_ok=True)
-
-            # Create meta-data
-            meta_data = f"""instance-id: {config.vm_name}
-local-hostname: {config.hostname}
-"""
-            meta_data_path = os.path.join(iso_dir, "meta-data")
-            with open(meta_data_path, "w", encoding="utf-8") as meta_file:
-                meta_file.write(meta_data)
-
-            # Build agent install commands as runcmd entries
-            runcmd_lines = []
-            # Always start with apt-get update to ensure fresh package lists
-            runcmd_lines.append("  - 'apt-get update'")
-            for cmd in config.agent_install_commands:
-                # Escape single quotes for YAML single-quoted strings (double them)
-                escaped_cmd = cmd.replace("'", "''")
-                runcmd_lines.append(f"  - '{escaped_cmd}'")
-
-            runcmd_section = "\n".join(runcmd_lines) if runcmd_lines else ""
-
-            # Determine OS type from the image for config generation
-            # Default to ubuntu for Linux images
-            os_type = "ubuntu"
-            if config.cloud_image_url:
-                url_lower = config.cloud_image_url.lower()
-                if "debian" in url_lower:
-                    os_type = "debian"
-                elif "alpine" in url_lower:
-                    os_type = "alpine"
-                elif "freebsd" in url_lower:
-                    os_type = "freebsd"
-
-            # Generate the complete agent configuration using unified generator
-            agent_config = generate_agent_config(
-                hostname=config.server_url,
-                port=config.server_port,
-                use_https=config.use_https,
-                os_type=os_type,
-                auto_approve_token=config.auto_approve_token,
-                verify_ssl=False,
-            )
-
-            # Generate cloud-init user-data using unified generator
-            user_data = generate_cloudinit_userdata(
-                hostname=config.hostname,
-                username=config.username,
-                password_hash=config.password_hash,
-                os_type=os_type,
-                agent_config=agent_config,
-                auto_approve_token=config.auto_approve_token,
-            )
-
-            if runcmd_section:
-                user_data += f"""
-runcmd:
-{runcmd_section}
-"""
-
-            user_data_path = os.path.join(iso_dir, "user-data")
-            with open(user_data_path, "w", encoding="utf-8") as user_file:
-                user_file.write(user_data)
-
-            # Create ISO using makefs (FreeBSD) or genisoimage
-            iso_path = os.path.join(BHYVE_CLOUDINIT_DIR, f"{config.vm_name}.iso")
-            config.cloud_init_iso_path = iso_path
-
-            # Try makefs first (native FreeBSD)
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "makefs",
-                    "-t",
-                    "cd9660",
-                    "-o",
-                    "rockridge",
-                    "-o",
-                    "label=cidata",
-                    iso_path,
-                    iso_dir,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                # Try genisoimage as fallback
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "genisoimage",
-                        "-output",
-                        iso_path,
-                        "-volid",
-                        "cidata",
-                        "-joliet",
-                        "-rock",
-                        iso_dir,
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": _("Failed to create cloud-init ISO: %s")
-                        % result.stderr,
-                    }
-
-            self.logger.info(_("Created cloud-init ISO: %s"), iso_path)
-            return {"success": True, "path": iso_path}
-
-        except Exception as error:
-            return {"success": False, "error": str(error)}
+        return self._provisioning_helper.create_cloud_init_iso(config)
 
     def generate_bhyve_command(
         self, config: BhyveVmConfig, tap_interface: str, use_nmdm: bool = True
-    ) -> List[str]:
+    ) -> list:
         """
         Generate the bhyve command line for starting a VM.
 
@@ -702,51 +355,9 @@ runcmd:
         Returns:
             List of command arguments for bhyve
         """
-        memory_mb = config.get_memory_mb()
-
-        # Determine console device
-        # When running daemonized via daemon(8), we can't use stdio
-        # Use nmdm (null modem device pair) instead - /dev/nmdm{N}A for bhyve,
-        # /dev/nmdm{N}B for console access via cu(1)
-        if use_nmdm:
-            nmdm_id = self.get_nmdm_id(config.vm_name)
-            console_device = f"/dev/nmdm{nmdm_id}A"
-        else:
-            console_device = "stdio"
-
-        cmd = [
-            "bhyve",
-            "-A",  # Generate ACPI tables
-            "-H",  # Yield CPU on HLT
-            "-P",  # Exit on PAUSE
-            "-s",
-            "0:0,hostbridge",  # Host bridge
-            "-s",
-            "1:0,lpc",  # LPC bridge for console
-            "-s",
-            f"2:0,virtio-net,{tap_interface}",  # Network
-            "-s",
-            f"3:0,virtio-blk,{config.disk_path}",  # Main disk
-            "-l",
-            f"com1,{console_device}",  # Serial console
-            "-c",
-            str(config.cpus),
-            "-m",
-            f"{memory_mb}M",
-        ]
-
-        # Add cloud-init ISO if present
-        if config.cloud_init_iso_path and os.path.exists(config.cloud_init_iso_path):
-            cmd.extend(["-s", f"4:0,ahci-cd,{config.cloud_init_iso_path}"])
-
-        # Add UEFI firmware for Linux guests or if explicitly requested
-        if config.use_uefi or self.is_linux_guest(config):
-            uefi_firmware = "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd"
-            if os.path.exists(uefi_firmware):
-                cmd.extend(["-l", f"bootrom,{uefi_firmware}"])
-
-        cmd.append(config.vm_name)
-        return cmd
+        return self._provisioning_helper.generate_bhyve_command(
+            config, tap_interface, use_nmdm
+        )
 
     def start_vm_with_bhyveload(
         self, config: BhyveVmConfig, tap_interface: str
@@ -761,55 +372,7 @@ runcmd:
         Returns:
             Dict with success status
         """
-        try:
-            # Load the FreeBSD kernel
-            self.logger.info(_("Loading FreeBSD kernel with bhyveload"))
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "bhyveload",
-                    "-m",
-                    f"{config.get_memory_mb()}M",
-                    "-d",
-                    config.disk_path,
-                    config.vm_name,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("bhyveload failed: %s") % result.stderr,
-                }
-
-            # Start bhyve in background
-            bhyve_cmd = self.generate_bhyve_command(config, tap_interface)
-
-            # Use daemon to run bhyve in background
-            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{config.vm_name}.pid"]
-            daemon_cmd.extend(bhyve_cmd)
-
-            result = subprocess.run(  # nosec B603 B607
-                daemon_cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,  # 3 minutes for UEFI firmware initialization
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("Failed to start bhyve: %s") % result.stderr,
-                }
-
-            return {"success": True}
-
-        except Exception as error:
-            return {"success": False, "error": str(error)}
+        return self._provisioning_helper.start_vm_with_bhyveload(config, tap_interface)
 
     def start_vm_with_uefi(
         self, config: BhyveVmConfig, tap_interface: str
@@ -824,33 +387,9 @@ runcmd:
         Returns:
             Dict with success status
         """
-        try:
-            # Generate bhyve command with UEFI
-            bhyve_cmd = self.generate_bhyve_command(config, tap_interface)
+        return self._provisioning_helper.start_vm_with_uefi(config, tap_interface)
 
-            # Use daemon to run bhyve in background
-            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{config.vm_name}.pid"]
-            daemon_cmd.extend(bhyve_cmd)
-
-            self.logger.info(_("Starting VM with UEFI boot: %s"), config.vm_name)
-            result = subprocess.run(  # nosec B603 B607
-                daemon_cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,  # 3 minutes for UEFI firmware initialization
-                check=False,
-            )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("Failed to start bhyve: %s") % result.stderr,
-                }
-
-            return {"success": True}
-
-        except Exception as error:
-            return {"success": False, "error": str(error)}
+    # IP and SSH waiting methods remain in this class (networking-related)
 
     def extract_ip_from_arp_line(self, line: str) -> Optional[str]:
         """

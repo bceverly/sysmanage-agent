@@ -351,6 +351,18 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
                 disk_images.add(disk_image_match.group(1))
         return disk_images
 
+    def _convert_size_to_bytes(self, size_val: float, unit: str) -> Optional[int]:
+        """Convert a size value and unit (GB, TB, MB) to bytes."""
+        unit_multipliers = {
+            "GB": 1024**3,
+            "TB": 1024**4,
+            "MB": 1024**2,
+        }
+        multiplier = unit_multipliers.get(unit)
+        if multiplier is None:
+            return None
+        return int(size_val * multiplier)
+
     def _parse_apfs_container_size(self, parts: List[str]) -> Optional[int]:
         """Parse the size in bytes from an APFS Container Scheme line's parts.
 
@@ -358,19 +370,16 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
         Returns the size in bytes, or None if not parseable.
         """
         for i, part in enumerate(parts):
-            if part.startswith("+") and i + 1 < len(parts):
-                size_val_str = part[1:]
-                unit = parts[i + 1]
-                try:
-                    size_val = float(size_val_str)
-                    if unit == "GB":
-                        return int(size_val * 1024**3)
-                    if unit == "TB":
-                        return int(size_val * 1024**4)
-                    if unit == "MB":
-                        return int(size_val * 1024**2)
-                except ValueError:
-                    pass
+            if not part.startswith("+") or i + 1 >= len(parts):
+                continue
+
+            size_val_str = part[1:]
+            unit = parts[i + 1]
+            try:
+                size_val = float(size_val_str)
+                return self._convert_size_to_bytes(size_val, unit)
+            except ValueError:
+                pass
         return None
 
     def _process_physical_store_line(
@@ -393,10 +402,73 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
                 del container["_current_disk"]
                 break
 
+    def _create_apfs_container_info(
+        self, current_disk: str, parts: List[str]
+    ) -> Optional[Dict[str, Any]]:
+        """Create an APFS container info dict from parsed line parts."""
+        if len(parts) < 6:
+            return None
+
+        size_bytes = self._parse_apfs_container_size(parts)
+        return {
+            "name": f"APFS Container {current_disk}",
+            "device_path": current_disk,
+            "mount_point": "",
+            "file_system": "APFS",
+            "device_type": "APFS Container",
+            "capacity_bytes": size_bytes,
+            "used_bytes": None,
+            "available_bytes": None,
+            "is_physical": True,
+            "_current_disk": current_disk,
+        }
+
+    def _process_diskutil_line(
+        self,
+        line: str,
+        current_disk: Optional[str],
+        containers: List[Dict[str, Any]],
+        disk_images: set,
+    ) -> Optional[str]:
+        """Process a single diskutil line. Returns updated current_disk."""
+        disk_match = re.match(r"/dev/(disk\d+) \(synthesized\):", line)
+        if disk_match:
+            return disk_match.group(1)
+
+        if current_disk and "APFS Container Scheme" in line:
+            container_info = self._create_apfs_container_info(
+                current_disk, line.split()
+            )
+            if container_info:
+                containers.append(container_info)
+            return None
+
+        if "Physical Store" in line and containers:
+            self._process_physical_store_line(line, containers, disk_images)
+
+        return current_disk
+
+    def _parse_diskutil_output(self, stdout: str) -> List[Dict[str, Any]]:
+        """Parse diskutil list output into APFS containers."""
+        containers: List[Dict[str, Any]] = []
+        lines = stdout.split("\n")
+        disk_images = self._detect_disk_images(lines)
+        current_disk: Optional[str] = None
+
+        for line in lines:
+            current_disk = self._process_diskutil_line(
+                line, current_disk, containers, disk_images
+            )
+
+        # Clean up temporary fields
+        for container in containers:
+            if "_current_disk" in container:
+                del container["_current_disk"]
+
+        return containers
+
     def _get_macos_apfs_containers(self) -> List[Dict[str, Any]]:
         """Get physical APFS containers using diskutil list."""
-
-        containers = []
         try:
             result = subprocess.run(
                 ["diskutil", "list"],  # nosec B603, B607
@@ -406,50 +478,13 @@ class HardwareCollectorMacOS(HardwareCollectorBase):
                 check=False,
             )
 
-            if result.returncode == 0:
-                lines = result.stdout.split("\n")
-                current_disk = None
-                disk_images = self._detect_disk_images(lines)
+            if result.returncode != 0:
+                return []
 
-                for line in lines:
-                    disk_match = re.match(r"/dev/(disk\d+) \(synthesized\):", line)
-                    if disk_match:
-                        current_disk = disk_match.group(1)
-                        continue
-
-                    if current_disk and "APFS Container Scheme" in line:
-                        parts = line.split()
-                        if len(parts) >= 6:
-                            size_bytes = self._parse_apfs_container_size(parts)
-                            container_info = {
-                                "name": f"APFS Container {current_disk}",
-                                "device_path": current_disk,
-                                "mount_point": "",
-                                "file_system": "APFS",
-                                "device_type": "APFS Container",
-                                "capacity_bytes": size_bytes,
-                                "used_bytes": None,
-                                "available_bytes": None,
-                                "is_physical": True,
-                                "_current_disk": current_disk,
-                            }
-                            containers.append(container_info)
-                        current_disk = None
-
-                    if "Physical Store" in line and containers:
-                        self._process_physical_store_line(line, containers, disk_images)
+            return self._parse_diskutil_output(result.stdout)
 
         except Exception as error:
-            containers.append(
-                {"error": _("Failed to get APFS container info: %s") % str(error)}
-            )
-
-        # Clean up any remaining temporary fields
-        for container in containers:
-            if "_current_disk" in container:
-                del container["_current_disk"]
-
-        return containers
+            return [{"error": _("Failed to get APFS container info: %s") % str(error)}]
 
     def _is_physical_volume_macos(self, device: Dict[str, Any]) -> bool:
         """

@@ -101,8 +101,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
         if self._command_exists("doas"):
             return ["doas", "pkgin", "update"]
         if self._command_exists("sudo"):
-            return ["sudo", "-n", "pkgin", "update"]  # -n = non-interactive
-        return ["pkgin", "update"]  # Try anyway
+            return ["sudo", "-n", "pkgin", "update"]
+        return ["pkgin", "update"]
 
     def _process_pkgin_update_repo(self):
         """Run pkgin update to refresh the package repository.
@@ -305,94 +305,121 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     }
                 )
 
+    def _run_freebsd_upgrade_command(self) -> subprocess.CompletedProcess:
+        """Run the freebsd-update upgrade command.
+
+        Returns:
+            CompletedProcess with the result of the upgrade command.
+        """
+        upgrade_cmd = ["freebsd-update", "upgrade", "-r", "RELEASE"]
+        logger.info(_("Running FreeBSD upgrade command: %s"), " ".join(upgrade_cmd))
+        return subprocess.run(  # nosec B603, B607
+            upgrade_cmd,
+            capture_output=True,
+            text=True,
+            timeout=1800,  # 30 minutes for upgrade
+            check=False,
+        )
+
+    def _run_freebsd_install_command(self) -> subprocess.CompletedProcess:
+        """Run the freebsd-update install command.
+
+        Returns:
+            CompletedProcess with the result of the install command.
+        """
+        install_cmd = ["freebsd-update", "install"]
+        return subprocess.run(  # nosec B603, B607
+            install_cmd,
+            capture_output=True,
+            text=True,
+            timeout=1800,  # 30 minutes for install
+            check=False,
+        )
+
+    def _record_freebsd_upgrade_success(
+        self, package: Dict, package_name: str, results: Dict
+    ):
+        """Record a successful FreeBSD upgrade.
+
+        Args:
+            package: The package dict with version info.
+            package_name: Name of the package.
+            results: Results dict to update.
+        """
+        logger.info(_("Successfully applied FreeBSD upgrade: %s"), package_name)
+        results["updated_packages"].append(
+            {
+                "package_name": package_name,
+                "old_version": package.get("current_version"),
+                "new_version": package.get("available_version"),
+                "package_manager": "freebsd-upgrade",
+            }
+        )
+        results["requires_reboot"] = True
+
+    def _record_freebsd_upgrade_failure(
+        self, package_name: str, error_msg: str, results: Dict
+    ):
+        """Record a failed FreeBSD upgrade.
+
+        Args:
+            package_name: Name of the package.
+            error_msg: Error message to record.
+            results: Results dict to update.
+        """
+        results["failed_packages"].append(
+            {
+                "package_name": package_name,
+                "package_manager": "freebsd-upgrade",
+                "error": error_msg,
+            }
+        )
+
+    def _apply_single_freebsd_upgrade(self, package: Dict, results: Dict):
+        """Apply a single FreeBSD upgrade package.
+
+        Args:
+            package: Package dict with upgrade info.
+            results: Results dict to populate.
+        """
+        package_name = package.get("package_name")
+        logger.info(_("Applying FreeBSD upgrade: %s"), package_name)
+
+        try:
+            result = self._run_freebsd_upgrade_command()
+
+            if result.returncode != 0:
+                error_msg = (
+                    result.stderr.strip()
+                    if result.stderr
+                    else _("FreeBSD upgrade failed")
+                )
+                self._record_freebsd_upgrade_failure(package_name, error_msg, results)
+                return
+
+            install_result = self._run_freebsd_install_command()
+
+            if install_result.returncode == 0:
+                self._record_freebsd_upgrade_success(package, package_name, results)
+            else:
+                error_msg = (
+                    install_result.stderr.strip()
+                    if install_result.stderr
+                    else _("FreeBSD upgrade install failed")
+                )
+                self._record_freebsd_upgrade_failure(package_name, error_msg, results)
+
+        except subprocess.TimeoutExpired:
+            self._record_freebsd_upgrade_failure(
+                package_name, _("FreeBSD upgrade timed out"), results
+            )
+        except Exception as error:
+            self._record_freebsd_upgrade_failure(package_name, str(error), results)
+
     def _apply_freebsd_upgrade_updates(self, packages: List[Dict], results: Dict):
         """Apply FreeBSD version upgrades using freebsd-update."""
         for package in packages:
-            package_name = package.get("package_name")
-            logger.info(_("Applying FreeBSD upgrade: %s"), package_name)
-
-            try:
-                # Run freebsd-update upgrade and install
-                upgrade_cmd = ["freebsd-update", "upgrade", "-r", "RELEASE"]
-                logger.info(
-                    _("Running FreeBSD upgrade command: %s"), " ".join(upgrade_cmd)
-                )
-
-                result = subprocess.run(  # nosec B603, B607
-                    upgrade_cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=1800,  # 30 minutes for upgrade
-                    check=False,
-                )
-
-                if result.returncode == 0:
-                    # Install the upgrade
-                    install_cmd = ["freebsd-update", "install"]
-                    install_result = subprocess.run(  # nosec B603, B607
-                        install_cmd,
-                        capture_output=True,
-                        text=True,
-                        timeout=1800,  # 30 minutes for install
-                        check=False,
-                    )
-
-                    if install_result.returncode == 0:
-                        logger.info(
-                            _("Successfully applied FreeBSD upgrade: %s"), package_name
-                        )
-                        results["updated_packages"].append(
-                            {
-                                "package_name": package_name,
-                                "old_version": package.get("current_version"),
-                                "new_version": package.get("available_version"),
-                                "package_manager": "freebsd-upgrade",
-                            }
-                        )
-                        results["requires_reboot"] = True
-                    else:
-                        error_msg = (
-                            install_result.stderr.strip()
-                            if install_result.stderr
-                            else _("FreeBSD upgrade install failed")
-                        )
-                        results["failed_packages"].append(
-                            {
-                                "package_name": package_name,
-                                "package_manager": "freebsd-upgrade",
-                                "error": error_msg,
-                            }
-                        )
-                else:
-                    error_msg = (
-                        result.stderr.strip()
-                        if result.stderr
-                        else _("FreeBSD upgrade failed")
-                    )
-                    results["failed_packages"].append(
-                        {
-                            "package_name": package_name,
-                            "package_manager": "freebsd-upgrade",
-                            "error": error_msg,
-                        }
-                    )
-
-            except subprocess.TimeoutExpired:
-                results["failed_packages"].append(
-                    {
-                        "package_name": package_name,
-                        "package_manager": "freebsd-upgrade",
-                        "error": _("FreeBSD upgrade timed out"),
-                    }
-                )
-            except Exception as error:
-                results["failed_packages"].append(
-                    {
-                        "package_name": package_name,
-                        "package_manager": "freebsd-upgrade",
-                        "error": str(error),
-                    }
-                )
+            self._apply_single_freebsd_upgrade(package, results)
 
     # OS-Level System Update Detection Methods
 
@@ -792,6 +819,48 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
         return []
 
+    def _find_matching_update(self, package_name: str, pkg_manager: str) -> Dict | None:
+        """Find a matching update from available_updates.
+
+        Args:
+            package_name: Name of the package to find.
+            pkg_manager: Package manager to match.
+
+        Returns:
+            The matching update dict, or None if not found.
+        """
+        for update in self.available_updates:
+            if (
+                update.get("package_name") == package_name
+                and update.get("package_manager") == pkg_manager
+            ):
+                return update
+        return None
+
+    def _enrich_package_info(self, pkg: Dict) -> Dict:
+        """Enrich a package dict with available update info.
+
+        Args:
+            pkg: Package dict with name and package_manager.
+
+        Returns:
+            Enriched package dict with merged update info.
+        """
+        package_info = pkg.copy()
+        package_name = pkg.get("name")
+        pkg_manager = pkg.get("package_manager", "unknown")
+
+        matching_update = self._find_matching_update(package_name, pkg_manager)
+        if matching_update:
+            for key, value in matching_update.items():
+                if key not in package_info:
+                    package_info[key] = value
+
+        if "package_name" not in package_info and "name" in package_info:
+            package_info["package_name"] = package_info["name"]
+
+        return package_info
+
     def _collect_packages_by_manager(
         self, packages_to_update: List[Dict]
     ) -> Dict[str, List[Dict]]:
@@ -804,27 +873,13 @@ class BSDUpdateDetector(UpdateDetectorBase):
             Dict mapping package manager names to lists of enriched package dicts.
         """
         packages_by_manager: Dict[str, List[Dict]] = {}
+
         for pkg in packages_to_update:
             pkg_manager = pkg.get("package_manager", "unknown")
             if pkg_manager not in packages_by_manager:
                 packages_by_manager[pkg_manager] = []
 
-            package_info = pkg.copy()
-            package_name = pkg.get("name")
-
-            for update in self.available_updates:
-                if (
-                    update.get("package_name") == package_name
-                    and update.get("package_manager") == pkg_manager
-                ):
-                    for key, value in update.items():
-                        if key not in package_info:
-                            package_info[key] = value
-                    break
-
-            if "package_name" not in package_info and "name" in package_info:
-                package_info["package_name"] = package_info["name"]
-
+            package_info = self._enrich_package_info(pkg)
             packages_by_manager[pkg_manager].append(package_info)
 
         return packages_by_manager

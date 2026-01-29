@@ -157,89 +157,75 @@ class IPFWFirewallOperations:
             self.logger.error("Error enabling IPFW firewall: %s", exc, exc_info=True)
             return {"success": False, "error": str(exc)}
 
+    async def _is_ipfw_available(self) -> bool:
+        """Check if IPFW is available on the system."""
+        result = await run_command_async(
+            ["ipfw", "list"],
+            timeout=5,
+        )
+        return result.returncode == 0
+
+    async def _delete_sysmanage_ipfw_rules(self) -> None:
+        """Delete all SysManage IPFW rules (rule numbers 10000-19999)."""
+        self.logger.info("Deleting existing SysManage IPFW rules (10000-19999)")
+        for rule_num in range(10000, 20000):
+            await run_command_async(
+                ["ipfw", "-q", "delete", str(rule_num)],
+                timeout=5,
+            )
+
+    async def _add_ipfw_rule(
+        self, rule_num: int, protocol: str, port: int, errors: List[str]
+    ) -> None:
+        """Add a single IPFW rule for the given protocol and port."""
+        self.logger.info(
+            "Adding IPFW rule %d: allow %s port %d", rule_num, protocol, port
+        )
+        result = await run_command_async(
+            [
+                "ipfw",
+                "add",
+                str(rule_num),
+                "allow",
+                protocol,
+                "from",
+                "any",
+                "to",
+                "any",
+                str(port),
+            ],
+            timeout=10,
+        )
+        if result.returncode != 0:
+            errors.append(
+                f"Failed to add IPFW rule for {protocol.upper()} port {port}: "
+                f"{result.stderr}"
+            )
+
     async def apply_firewall_roles_ipfw(
         self, port_configs: Dict, agent_ports: List[int], errors: List[str]
     ) -> Optional[Dict]:
         """Apply firewall roles using IPFW (synchronize - add and remove rules)."""
         try:
-            # Check if IPFW is available
-            result = await run_command_async(
-                ["ipfw", "list"],
-                timeout=5,
-            )
-            if result.returncode != 0:
-                return None  # IPFW not available
+            if not await self._is_ipfw_available():
+                return None
 
             self.logger.info("Synchronizing firewall roles using IPFW")
-
-            # Preserved ports: agent communication + SSH (22)
             preserved_ports = set(agent_ports + [22])
 
-            # First, delete all SysManage role rules (rule numbers 10000-19999)
-            # This is the cleanest way to synchronize
-            self.logger.info("Deleting existing SysManage IPFW rules (10000-19999)")
-            for rule_num in range(10000, 20000):
-                # Try to delete the rule; it will fail silently if it doesn't exist
-                await run_command_async(
-                    ["ipfw", "-q", "delete", str(rule_num)],
-                    timeout=5,
-                )
+            await self._delete_sysmanage_ipfw_rules()
 
-            # Add rules for requested ports
-            # Use rule numbers starting at 10000 for SysManage rules
             rule_num = 10000
             for port, protocols in port_configs.items():
                 if port in preserved_ports:
                     continue
 
                 if protocols["tcp"]:
-                    self.logger.info(
-                        "Adding IPFW rule %d: allow tcp port %d", rule_num, port
-                    )
-                    result = await run_command_async(
-                        [
-                            "ipfw",
-                            "add",
-                            str(rule_num),
-                            "allow",
-                            "tcp",
-                            "from",
-                            "any",
-                            "to",
-                            "any",
-                            str(port),
-                        ],
-                        timeout=10,
-                    )
-                    if result.returncode != 0:
-                        errors.append(
-                            f"Failed to add IPFW rule for TCP port {port}: {result.stderr}"
-                        )
+                    await self._add_ipfw_rule(rule_num, "tcp", port, errors)
                     rule_num += 1
 
                 if protocols["udp"]:
-                    self.logger.info(
-                        "Adding IPFW rule %d: allow udp port %d", rule_num, port
-                    )
-                    result = await run_command_async(
-                        [
-                            "ipfw",
-                            "add",
-                            str(rule_num),
-                            "allow",
-                            "udp",
-                            "from",
-                            "any",
-                            "to",
-                            "any",
-                            str(port),
-                        ],
-                        timeout=10,
-                    )
-                    if result.returncode != 0:
-                        errors.append(
-                            f"Failed to add IPFW rule for UDP port {port}: {result.stderr}"
-                        )
+                    await self._add_ipfw_rule(rule_num, "udp", port, errors)
                     rule_num += 1
 
             await self.parent._send_firewall_status_update()

@@ -152,6 +152,135 @@ class KvmCreation:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    def _get_image_cache_paths(self, url: str) -> Dict[str, Any]:
+        """
+        Get cache paths for a cloud image URL.
+
+        Args:
+            url: URL of the cloud image
+
+        Returns:
+            Dict with download_dir, cached_path, decompressed_path, is_xz_compressed
+        """
+        download_dir = os.path.join(KVM_IMAGES_DIR, ".downloads")
+        url_hash = hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
+        filename = os.path.basename(url.split("?")[0])
+        cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
+
+        is_xz_compressed = filename.endswith(".xz")
+        if is_xz_compressed:
+            decompressed_filename = filename[:-3]
+            decompressed_path = os.path.join(
+                download_dir, f"{url_hash}_{decompressed_filename}"
+            )
+        else:
+            decompressed_path = cached_path
+
+        return {
+            "download_dir": download_dir,
+            "cached_path": cached_path,
+            "decompressed_path": decompressed_path,
+            "is_xz_compressed": is_xz_compressed,
+        }
+
+    def _download_image_to_cache(self, url: str, cached_path: str) -> Dict[str, Any]:
+        """
+        Download a cloud image to cache.
+
+        Args:
+            url: URL to download from
+            cached_path: Path to save the file
+
+        Returns:
+            Dict with success status
+        """
+        result = subprocess.run(  # nosec B603 B607
+            ["sudo", "curl", "-L", "-o", cached_path, url],
+            capture_output=True,
+            text=True,
+            timeout=1800,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return {
+                "success": False,
+                "error": result.stderr or _("Failed to download cloud image"),
+            }
+
+        self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
+        return {"success": True}
+
+    def _create_qcow2_with_backing(
+        self, cached_path: str, dest_path: str
+    ) -> Dict[str, Any]:
+        """
+        Create a qcow2 disk with a backing file.
+
+        Args:
+            cached_path: Path to the backing image
+            dest_path: Destination path for the new disk
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(_("Creating disk with cloud image backing file"))
+
+        # Try with backing file format first
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "sudo",
+                "qemu-img",
+                "create",
+                "-f",
+                "qcow2",
+                "-F",
+                "qcow2",
+                "-b",
+                cached_path,
+                dest_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            return {"success": True}
+
+        # Try without backing file format (older qemu-img)
+        result = subprocess.run(  # nosec B603 B607
+            [
+                "sudo",
+                "qemu-img",
+                "create",
+                "-f",
+                "qcow2",
+                "-b",
+                cached_path,
+                dest_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            return {"success": True}
+
+        # Fallback: copy the image directly
+        self.logger.info(_("Using direct copy instead of backing file"))
+        shutil.copy2(cached_path, dest_path)
+        subprocess.run(  # nosec B603 B607
+            ["sudo", "chown", "libvirt-qemu:kvm", dest_path],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+        return {"success": True}
+
     def _download_cloud_image(self, url: str, dest_path: str) -> Dict[str, Any]:
         """
         Download a cloud image and convert it if necessary.
@@ -168,113 +297,41 @@ class KvmCreation:
         try:
             self.logger.info(_("Downloading cloud image from: %s"), url)
 
-            # Create temp download directory
-            download_dir = os.path.join(KVM_IMAGES_DIR, ".downloads")
-            os.makedirs(download_dir, mode=0o755, exist_ok=True)
+            paths = self._get_image_cache_paths(url)
+            os.makedirs(paths["download_dir"], mode=0o755, exist_ok=True)
 
-            # Generate filename from URL (MD5 used only for cache key, not security)
-            url_hash = hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
-            filename = os.path.basename(url.split("?")[0])
-            cached_path = os.path.join(download_dir, f"{url_hash}_{filename}")
-
-            # Determine if this is a compressed file that needs extraction
-            is_xz_compressed = filename.endswith(".xz")
-            if is_xz_compressed:
-                # The cached path is for the compressed file
-                # We need a separate path for the decompressed image
-                decompressed_filename = filename[:-3]  # Remove .xz suffix
-                decompressed_path = os.path.join(
-                    download_dir, f"{url_hash}_{decompressed_filename}"
-                )
-            else:
-                decompressed_path = cached_path
-
-            # Check if we have a cached decompressed copy
-            if is_xz_compressed and os.path.exists(decompressed_path):
+            # Check cache and determine source path
+            if paths["is_xz_compressed"] and os.path.exists(paths["decompressed_path"]):
                 self.logger.info(
-                    _("Using cached decompressed cloud image: %s"), decompressed_path
+                    _("Using cached decompressed cloud image: %s"),
+                    paths["decompressed_path"],
                 )
-                cached_path = decompressed_path
-            elif not os.path.exists(cached_path):
-                # Download the image
-                result = subprocess.run(  # nosec B603 B607
-                    ["sudo", "curl", "-L", "-o", cached_path, url],
-                    capture_output=True,
-                    text=True,
-                    timeout=1800,  # 30 minutes for large images
-                    check=False,
+                cached_path = paths["decompressed_path"]
+            elif not os.path.exists(paths["cached_path"]):
+                download_result = self._download_image_to_cache(
+                    url, paths["cached_path"]
                 )
+                if not download_result.get("success"):
+                    return download_result
 
-                if result.returncode != 0:
-                    return {
-                        "success": False,
-                        "error": result.stderr or _("Failed to download cloud image"),
-                    }
-
-                self.logger.info(_("Cloud image downloaded to: %s"), cached_path)
-
-                # Decompress if needed
-                if is_xz_compressed:
+                if paths["is_xz_compressed"]:
                     decompress_result = self._decompress_xz(
-                        cached_path, decompressed_path
+                        paths["cached_path"], paths["decompressed_path"]
                     )
                     if not decompress_result.get("success"):
                         return decompress_result
-                    # Use the decompressed path going forward
-                    cached_path = decompressed_path
+                    cached_path = paths["decompressed_path"]
+                else:
+                    cached_path = paths["cached_path"]
             else:
-                self.logger.info(_("Using cached cloud image: %s"), cached_path)
-
-            # Create a qcow2 disk with the cloud image as backing file
-            self.logger.info(_("Creating disk with cloud image backing file"))
-            result = subprocess.run(  # nosec B603 B607
-                [
-                    "sudo",
-                    "qemu-img",
-                    "create",
-                    "-f",
-                    "qcow2",
-                    "-F",
-                    "qcow2",
-                    "-b",
-                    cached_path,
-                    dest_path,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                # Try without backing file format (older qemu-img)
-                result = subprocess.run(  # nosec B603 B607
-                    [
-                        "sudo",
-                        "qemu-img",
-                        "create",
-                        "-f",
-                        "qcow2",
-                        "-b",
-                        cached_path,
-                        dest_path,
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                    check=False,
+                self.logger.info(
+                    _("Using cached cloud image: %s"), paths["cached_path"]
                 )
+                cached_path = paths["cached_path"]
 
-            if result.returncode != 0:
-                # Fallback: copy and resize the image directly
-                self.logger.info(_("Using direct copy instead of backing file"))
-                shutil.copy2(cached_path, dest_path)
-                subprocess.run(  # nosec B603 B607
-                    ["sudo", "chown", "libvirt-qemu:kvm", dest_path],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
+            create_result = self._create_qcow2_with_backing(cached_path, dest_path)
+            if not create_result.get("success"):
+                return create_result
 
             return {
                 "success": True,
@@ -581,6 +638,106 @@ class KvmCreation:
         self.logger.warning(_("Timeout waiting for SSH on %s"), ip)
         return False
 
+    def _prepare_vm_disk(self, config: KvmVmConfig) -> Dict[str, Any]:
+        """
+        Prepare the VM disk (download cloud image or create empty disk).
+
+        Args:
+            config: VM configuration
+
+        Returns:
+            Dict with success status
+        """
+        disk_filename = f"{config.vm_name}.qcow2"
+        config.disk_path = os.path.join(KVM_IMAGES_DIR, disk_filename)
+
+        if config.cloud_image_url:
+            self.logger.info(_("Preparing cloud image"))
+            disk_result = self._download_cloud_image(
+                config.cloud_image_url, config.disk_path
+            )
+            if not disk_result.get("success"):
+                return disk_result
+
+            resize_result = self._resize_disk(config.disk_path, config.disk_size)
+            if not resize_result.get("success"):
+                self.logger.warning(
+                    _("Could not resize disk: %s"), resize_result.get("error")
+                )
+            return {"success": True}
+
+        disk_result = self._create_disk_image(
+            config.disk_path, config.disk_size, config.disk_format
+        )
+        return disk_result
+
+    def _provision_vm(self, config: KvmVmConfig) -> Dict[str, Any]:
+        """
+        Provision the VM with cloud-init or FreeBSD config disk.
+
+        Args:
+            config: VM configuration
+
+        Returns:
+            Dict with success status
+        """
+        if not config.use_cloud_init:
+            return {"success": True}
+
+        if self._is_freebsd(config):
+            self.logger.info(_("Provisioning FreeBSD with config disk"))
+            freebsd_result = self._freebsd.provision_image(config.disk_path, config)
+            if not freebsd_result.get("success"):
+                return freebsd_result
+            config.cloud_init_iso_path = freebsd_result.get("config_disk_path")
+            return {"success": True}
+
+        self.logger.info(_("Creating cloud-init ISO"))
+        return self._cloudinit.create_cloud_init_iso(config)
+
+    async def _run_freebsd_bootstrap(self, config: KvmVmConfig, vm_ip: str) -> None:
+        """
+        Run FreeBSD bootstrap script if applicable.
+
+        Args:
+            config: VM configuration
+            vm_ip: VM IP address
+        """
+        if not self._is_freebsd(config) or not self._freebsd.has_ssh_key():
+            return
+
+        self.logger.info(_("Running FreeBSD bootstrap script"))
+        bootstrap_result = await self._freebsd.run_bootstrap_via_ssh(vm_ip)
+        if not bootstrap_result.get("success"):
+            self.logger.warning(
+                _("FreeBSD bootstrap failed: %s. Manual bootstrap may be required."),
+                bootstrap_result.get("error"),
+            )
+        else:
+            self.logger.info(_("FreeBSD bootstrap completed successfully"))
+
+        self._freebsd.cleanup()
+
+    async def _cleanup_failed_vm(self, vm_name: str) -> None:
+        """
+        Clean up a failed VM creation.
+
+        Args:
+            vm_name: Name of the VM to clean up
+        """
+        try:
+            if self._vm_exists(vm_name):
+                await run_command_async(
+                    ["sudo", "virsh", "destroy", vm_name],
+                    timeout=30,
+                )
+                await run_command_async(
+                    ["sudo", "virsh", "undefine", vm_name, "--remove-all-storage"],
+                    timeout=30,
+                )
+        except Exception:  # nosec B110 # Expected: cleanup is best-effort
+            pass
+
     async def create_vm(self, config: KvmVmConfig) -> Dict[str, Any]:
         """
         Create a KVM virtual machine with cloud-init.
@@ -594,66 +751,25 @@ class KvmCreation:
         try:
             self.logger.info(_("Creating KVM VM: %s"), config.vm_name)
 
-            # Step 1: Check if VM already exists
             if self._vm_exists(config.vm_name):
                 return {
                     "success": False,
                     "error": _("VM '%s' already exists") % config.vm_name,
                 }
 
-            # Step 2: Set up disk path
-            disk_filename = f"{config.vm_name}.qcow2"
-            config.disk_path = os.path.join(KVM_IMAGES_DIR, disk_filename)
+            disk_result = self._prepare_vm_disk(config)
+            if not disk_result.get("success"):
+                return disk_result
 
-            # Step 3: Download/prepare cloud image or create empty disk
-            if config.cloud_image_url:
-                self.logger.info(_("Preparing cloud image"))
-                disk_result = self._download_cloud_image(
-                    config.cloud_image_url, config.disk_path
-                )
-                if not disk_result.get("success"):
-                    return disk_result
+            provision_result = self._provision_vm(config)
+            if not provision_result.get("success"):
+                return provision_result
 
-                # Resize the disk to the requested size
-                resize_result = self._resize_disk(config.disk_path, config.disk_size)
-                if not resize_result.get("success"):
-                    self.logger.warning(
-                        _("Could not resize disk: %s"), resize_result.get("error")
-                    )
-            else:
-                # Create empty disk
-                disk_result = self._create_disk_image(
-                    config.disk_path, config.disk_size, config.disk_format
-                )
-                if not disk_result.get("success"):
-                    return disk_result
-
-            # Step 4: Provision the VM (cloud-init for Linux, config disk for FreeBSD)
-            if config.use_cloud_init:
-                if self._is_freebsd(config):
-                    # FreeBSD: Create config disk with cloud-init compatible format
-                    self.logger.info(_("Provisioning FreeBSD with config disk"))
-                    freebsd_result = self._freebsd.provision_image(
-                        config.disk_path, config
-                    )
-                    if not freebsd_result.get("success"):
-                        return freebsd_result
-                    # Set cloud_init_iso_path to the FreeBSD config disk
-                    config.cloud_init_iso_path = freebsd_result.get("config_disk_path")
-                else:
-                    # Linux: Use cloud-init ISO
-                    self.logger.info(_("Creating cloud-init ISO"))
-                    cloudinit_result = self._cloudinit.create_cloud_init_iso(config)
-                    if not cloudinit_result.get("success"):
-                        return cloudinit_result
-
-            # Step 5: Define and start VM
             self.logger.info(_("Defining and starting VM"))
             start_result = self._define_and_start_vm(config)
             if not start_result.get("success"):
                 return start_result
 
-            # Step 6: Wait for VM to get IP
             vm_ip = await self._wait_for_vm_ip(config.vm_name)
             if not vm_ip:
                 self.logger.warning(_("VM started but could not get IP address"))
@@ -665,7 +781,6 @@ class KvmCreation:
                     "ip_pending": True,
                 }
 
-            # Step 7: Wait for SSH (cloud-init needs time to run)
             ssh_available = await self._wait_for_ssh(vm_ip)
             if not ssh_available:
                 self.logger.warning(_("VM running but SSH not available yet"))
@@ -678,23 +793,7 @@ class KvmCreation:
                     "ssh_pending": True,
                 }
 
-            # Step 8: For FreeBSD, run the bootstrap script automatically
-            if self._is_freebsd(config) and self._freebsd.has_ssh_key():
-                self.logger.info(_("Running FreeBSD bootstrap script"))
-                bootstrap_result = await self._freebsd.run_bootstrap_via_ssh(vm_ip)
-                if not bootstrap_result.get("success"):
-                    self.logger.warning(
-                        _(
-                            "FreeBSD bootstrap failed: %s. Manual bootstrap may be required."
-                        ),
-                        bootstrap_result.get("error"),
-                    )
-                    # Don't fail the whole operation - VM is created and running
-                else:
-                    self.logger.info(_("FreeBSD bootstrap completed successfully"))
-
-                # Clean up the temporary SSH key
-                self._freebsd.cleanup()
+            await self._run_freebsd_bootstrap(config, vm_ip)
 
             self.logger.info(
                 _("KVM VM '%s' created successfully at %s"), config.vm_name, vm_ip
@@ -711,25 +810,7 @@ class KvmCreation:
 
         except Exception as error:
             self.logger.error(_("Error creating KVM VM: %s"), error)
-            # Try to clean up on failure
-            try:
-                if self._vm_exists(config.vm_name):
-                    await run_command_async(
-                        ["sudo", "virsh", "destroy", config.vm_name],
-                        timeout=30,
-                    )
-                    await run_command_async(
-                        [
-                            "sudo",
-                            "virsh",
-                            "undefine",
-                            config.vm_name,
-                            "--remove-all-storage",
-                        ],
-                        timeout=30,
-                    )
-            except Exception:  # nosec B110 # Expected: cleanup is best-effort
-                pass
+            await self._cleanup_failed_vm(config.vm_name)
             return {"success": False, "error": str(error)}
 
     def list_vms(self) -> Dict[str, Any]:

@@ -42,6 +42,94 @@ class WindowsPackageDetectorMixin:
                 }, i + 2  # Skip header and separator line
         return None, 0
 
+    def _extract_field_by_range(
+        self, line: str, start: int, end: int, default: str = "unknown"
+    ) -> str:
+        """Extract a field from a line between two column positions.
+
+        Args:
+            line: The line to extract from.
+            start: Start column position.
+            end: End column position (-1 means end of line).
+            default: Default value if extraction fails.
+
+        Returns:
+            Extracted and stripped field value, or default if empty.
+        """
+        if end > start:
+            return line[start:end].strip()
+        # End of line extraction
+        remainder = line[start:].strip()
+        if remainder:
+            return remainder.split()[0]
+        return default
+
+    def _extract_package_name(self, line: str, cols: dict) -> str:
+        """Extract package name from winget line.
+
+        Args:
+            line: The winget output line.
+            cols: Column positions dict.
+
+        Returns:
+            Package name string.
+        """
+        return self._extract_field_by_range(
+            line, cols["name_start"], cols["id_start"], "unknown"
+        )
+
+    def _extract_bundle_id(self, line: str, cols: dict, package_name: str) -> str:
+        """Extract bundle ID from winget line.
+
+        Args:
+            line: The winget output line.
+            cols: Column positions dict.
+            package_name: Fallback if bundle_id is empty.
+
+        Returns:
+            Bundle ID string.
+        """
+        if cols["version_start"] > cols["id_start"]:
+            return self._extract_field_by_range(
+                line, cols["id_start"], cols["version_start"]
+            )
+        remainder = line[cols["id_start"] :].strip()
+        if remainder:
+            return remainder.split()[0]
+        return package_name
+
+    def _extract_current_version(self, line: str, cols: dict) -> str:
+        """Extract current version from winget line.
+
+        Args:
+            line: The winget output line.
+            cols: Column positions dict.
+
+        Returns:
+            Current version string.
+        """
+        if cols["available_start"] > cols["version_start"]:
+            return self._extract_field_by_range(
+                line, cols["version_start"], cols["available_start"]
+            )
+        return self._extract_field_by_range(line, cols["version_start"], -1)
+
+    def _extract_available_version(self, line: str, cols: dict) -> str:
+        """Extract available version from winget line.
+
+        Args:
+            line: The winget output line.
+            cols: Column positions dict.
+
+        Returns:
+            Available version string.
+        """
+        if cols["source_start"] > cols["available_start"]:
+            return self._extract_field_by_range(
+                line, cols["available_start"], cols["source_start"]
+            )
+        return self._extract_field_by_range(line, cols["available_start"], -1)
+
     def _parse_winget_line_by_columns(self, line, cols):
         """Extract package fields from a winget output line using column positions.
 
@@ -54,43 +142,35 @@ class WindowsPackageDetectorMixin:
             dict or None: A dict with package_name, bundle_id, current_version,
                           available_version if parseable, or None on failure.
         """
-        name_start = cols["name_start"]
-        id_start = cols["id_start"]
-        version_start = cols["version_start"]
-        available_start = cols["available_start"]
-        source_start = cols["source_start"]
-
-        if id_start > name_start:
-            package_name = line[name_start:id_start].strip()
-            if version_start > id_start:
-                bundle_id = line[id_start:version_start].strip()
-                if available_start > version_start:
-                    current_version = line[version_start:available_start].strip()
-                    if source_start > available_start:
-                        available_version = line[available_start:source_start].strip()
-                    else:
-                        available_version = (
-                            line[available_start:].strip().split()[0]
-                            if line[available_start:].strip()
-                            else "unknown"
-                        )
-                else:
-                    current_version = (
-                        line[version_start:].strip().split()[0]
-                        if line[version_start:].strip()
-                        else "unknown"
-                    )
-                    available_version = "unknown"
-            else:
-                bundle_id = (
-                    line[id_start:].strip().split()[0]
-                    if line[id_start:].strip()
-                    else package_name
-                )
-                current_version = "unknown"
-                available_version = "unknown"
-        else:
+        if cols["id_start"] <= cols["name_start"]:
             return self._parse_winget_line_fallback(line)
+
+        package_name = self._extract_package_name(line, cols)
+
+        if cols["version_start"] <= cols["id_start"]:
+            # Can only extract bundle_id, versions unknown
+            bundle_id = self._extract_bundle_id(line, cols, package_name)
+            return {
+                "package_name": package_name.strip(),
+                "bundle_id": bundle_id.strip(),
+                "current_version": "unknown",
+                "available_version": "unknown",
+            }
+
+        bundle_id = self._extract_bundle_id(line, cols, package_name)
+
+        if cols["available_start"] <= cols["version_start"]:
+            # Can extract version but not available version
+            current_version = self._extract_current_version(line, cols)
+            return {
+                "package_name": package_name.strip(),
+                "bundle_id": bundle_id.strip(),
+                "current_version": current_version.strip(),
+                "available_version": "unknown",
+            }
+
+        current_version = self._extract_current_version(line, cols)
+        available_version = self._extract_available_version(line, cols)
 
         return {
             "package_name": package_name.strip(),

@@ -516,10 +516,51 @@ class HardwareCollectorBSD(HardwareCollectorBase):
         elif "media:" in line:
             self._parse_interface_media(line, current_interface)
 
+    def _process_ifconfig_line(
+        self,
+        original_line: str,
+        current_interface: Optional[Dict[str, Any]],
+        network_interfaces: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """Process a single ifconfig output line.
+
+        Returns the updated current_interface (may be changed, None, or same).
+        """
+        line = original_line.strip()
+        if not line:
+            return current_interface
+
+        header = self._detect_interface_header(line, original_line)
+        if header is not None:
+            if current_interface:
+                network_interfaces.append(current_interface)
+            # Empty dict means skip (e.g., loopback)
+            return header if header else None
+
+        is_detail_line = original_line.startswith("\t") or original_line.startswith(" ")
+        if current_interface and is_detail_line:
+            self._parse_interface_detail_line(line, current_interface)
+
+        return current_interface
+
+    def _parse_ifconfig_output(self, stdout: str) -> List[Dict[str, Any]]:
+        """Parse ifconfig -a output into a list of network interfaces."""
+        network_interfaces: List[Dict[str, Any]] = []
+        current_interface: Optional[Dict[str, Any]] = None
+
+        for line in stdout.split("\n"):
+            current_interface = self._process_ifconfig_line(
+                line, current_interface, network_interfaces
+            )
+
+        # Add the last interface
+        if current_interface:
+            network_interfaces.append(current_interface)
+
+        return network_interfaces
+
     def get_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on OpenBSD/FreeBSD using ifconfig."""
-
-        network_interfaces = []
         try:
             result = subprocess.run(
                 ["ifconfig", "-a"],  # nosec B603, B607
@@ -528,34 +569,10 @@ class HardwareCollectorBSD(HardwareCollectorBase):
                 timeout=30,
                 check=False,
             )
-            if result.returncode == 0:
-                current_interface: Optional[Dict[str, Any]] = None
-                for line in result.stdout.split("\n"):
-                    original_line = line
-                    line = line.strip()
-                    if not line:
-                        continue
+            if result.returncode != 0:
+                return []
 
-                    header = self._detect_interface_header(line, original_line)
-                    if header is not None:
-                        if current_interface:
-                            network_interfaces.append(current_interface)
-                        # Empty dict means skip (e.g., loopback)
-                        current_interface = header if header else None
-                        continue
-
-                    if current_interface and (
-                        original_line.startswith("\t") or original_line.startswith(" ")
-                    ):
-                        self._parse_interface_detail_line(line, current_interface)
-
-                # Add the last interface
-                if current_interface:
-                    network_interfaces.append(current_interface)
+            return self._parse_ifconfig_output(result.stdout)
 
         except Exception as error:
-            network_interfaces.append(
-                {"error": _("Failed to get BSD network info: %s") % str(error)}
-            )
-
-        return network_interfaces
+            return [{"error": _("Failed to get BSD network info: %s") % str(error)}]

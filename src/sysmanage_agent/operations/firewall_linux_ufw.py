@@ -492,14 +492,14 @@ class UfwOperations:
                 timeout=10,
                 check=False,
             )
-            if result.returncode != 0:
-                if (
-                    "Skipping" not in result.stdout
-                    and "already exists" not in result.stderr
-                ):
-                    self.logger.warning(
-                        "UFW rule failed: %s - %s", " ".join(rule), result.stderr
-                    )
+            if (
+                result.returncode != 0
+                and "Skipping" not in result.stdout
+                and "already exists" not in result.stderr
+            ):
+                self.logger.warning(
+                    "UFW rule failed: %s - %s", " ".join(rule), result.stderr
+                )
 
     def _configure_nat_masquerade(self, bridge_name: str, errors: List[str]) -> None:
         """Configure NAT masquerade for LXD containers."""

@@ -941,7 +941,7 @@ class MessageHandler:
                 await self.processing_task
             except (
                 asyncio.CancelledError
-            ):  # NOSONAR - expected: we just cancelled this task ourselves
+            ):  # NOSONAR - Expected: we intentionally cancelled this task, no need to propagate
                 pass
 
         # Reset the outbound queue processor flag so it can start again on reconnection

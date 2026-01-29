@@ -149,8 +149,10 @@ async def _collect_process_output(
     input_bytes = input_data.encode("utf-8") if input_data else None
 
     if timeout is not None:
-        stdout_bytes, stderr_bytes = await asyncio.wait_for(
-            process.communicate(input=input_bytes), timeout=timeout
+        stdout_bytes, stderr_bytes = (
+            await asyncio.wait_for(  # NOSONAR - wait_for needed for Python 3.9 compatibility
+                process.communicate(input=input_bytes), timeout=timeout
+            )
         )
     else:
         stdout_bytes, stderr_bytes = await process.communicate(input=input_bytes)

@@ -51,11 +51,8 @@ class DatabaseManager:
         )
 
         # Create session factory
-        # SessionLocal is a SQLAlchemy naming convention, not snake_case
-        self.SessionLocal = (  # pylint: disable=invalid-name
-            sessionmaker(  # noqa: N815  # NOSONAR - SQLAlchemy naming convention
-                autocommit=False, autoflush=False, bind=self.engine
-            )
+        self.session_local = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine
         )
 
         logger.info("Database manager initialized with path: %s", database_path)
@@ -85,7 +82,7 @@ class DatabaseManager:
 
     def get_session(self):
         """Get a database session."""
-        return self.SessionLocal()
+        return self.session_local()
 
     def close(self):
         """Close the database connection."""

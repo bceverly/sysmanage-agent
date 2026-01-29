@@ -90,6 +90,107 @@ class BhyveLifecycleHelper:
             check=False,
         )
 
+    def _parse_memory_string(self, memory_str: str) -> int:
+        """
+        Parse memory string to megabytes.
+
+        Args:
+            memory_str: Memory string (e.g., "1G", "1024M")
+
+        Returns:
+            Memory in megabytes
+        """
+        memory_str = memory_str.upper()
+        if memory_str.endswith("G"):
+            return int(float(memory_str[:-1]) * 1024)
+        if memory_str.endswith("M"):
+            return int(memory_str[:-1])
+        return 1024
+
+    def _get_vm_start_params(self, child_name: str) -> Dict[str, Any]:
+        """
+        Get VM start parameters from config or defaults.
+
+        Args:
+            child_name: Name of the VM
+
+        Returns:
+            Dict with memory_mb, cpus, use_uefi, disk_path, cloudinit_iso
+        """
+        vm_dir = os.path.join(BHYVE_VM_DIR, child_name)
+        disk_path = os.path.join(vm_dir, f"{child_name}.img")
+        cloudinit_iso = os.path.join(BHYVE_CLOUDINIT_DIR, f"{child_name}.iso")
+
+        params = {
+            "memory_mb": 1024,
+            "cpus": 1,
+            "use_uefi": True,
+            "disk_path": disk_path,
+            "cloudinit_iso": cloudinit_iso,
+        }
+
+        vm_config = self._load_vm_config(child_name)
+        if not vm_config:
+            return params
+
+        params["memory_mb"] = self._parse_memory_string(vm_config.get("memory", "1G"))
+        params["cpus"] = vm_config.get("cpus", 1)
+        params["use_uefi"] = vm_config.get("use_uefi", True)
+        if vm_config.get("disk_path"):
+            params["disk_path"] = vm_config["disk_path"]
+        if vm_config.get("cloud_init_iso_path"):
+            params["cloudinit_iso"] = vm_config["cloud_init_iso_path"]
+
+        return params
+
+    def _build_bhyve_command(
+        self,
+        child_name: str,
+        tap_interface: str,
+        params: Dict[str, Any],
+    ) -> list:
+        """
+        Build the bhyve command line.
+
+        Args:
+            child_name: Name of the VM
+            tap_interface: Tap interface for networking
+            params: VM parameters dict
+
+        Returns:
+            List of command arguments
+        """
+        cmd = [
+            "bhyve",
+            "-A",
+            "-H",
+            "-P",
+            "-s",
+            "0:0,hostbridge",
+            "-s",
+            "1:0,lpc",
+            "-s",
+            f"2:0,virtio-net,{tap_interface}",
+            "-s",
+            f"3:0,virtio-blk,{params['disk_path']}",
+            "-l",
+            "com1,stdio",
+            "-c",
+            str(params["cpus"]),
+            "-m",
+            f"{params['memory_mb']}M",
+        ]
+
+        if os.path.exists(params["cloudinit_iso"]):
+            cmd.extend(["-s", f"4:0,ahci-cd,{params['cloudinit_iso']}"])
+
+        uefi_firmware = "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd"
+        if params["use_uefi"] and os.path.exists(uefi_firmware):
+            cmd.extend(["-l", f"bootrom,{uefi_firmware}"])
+
+        cmd.append(child_name)
+        return cmd
+
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Start a bhyve VM.
@@ -105,7 +206,6 @@ class BhyveLifecycleHelper:
             return {"success": False, "error": _NO_CHILD_NAME_MSG}
 
         try:
-            # Check if VM is already running
             if os.path.exists(f"/dev/vmm/{child_name}"):
                 return {
                     "success": True,
@@ -114,84 +214,22 @@ class BhyveLifecycleHelper:
                     "status": "running",
                 }
 
-            vm_dir = os.path.join(BHYVE_VM_DIR, child_name)
-            disk_path = os.path.join(vm_dir, f"{child_name}.img")
+            params = self._get_vm_start_params(child_name)
 
-            if not os.path.exists(disk_path):
+            if not os.path.exists(params["disk_path"]):
                 return {
                     "success": False,
-                    "error": _("VM disk not found: %s") % disk_path,
+                    "error": _("VM disk not found: %s") % params["disk_path"],
                 }
 
-            # Load persisted config if available
-            vm_config = self._load_vm_config(child_name)
-            memory_mb = 1024  # default
-            cpus = 1  # default
-            use_uefi = True  # default
-            cloudinit_iso = os.path.join(BHYVE_CLOUDINIT_DIR, f"{child_name}.iso")
-
-            if vm_config:
-                # Parse memory from config (e.g., "1G" -> 1024 MB)
-                memory_str = vm_config.get("memory", "1G").upper()
-                if memory_str.endswith("G"):
-                    memory_mb = int(float(memory_str[:-1]) * 1024)
-                elif memory_str.endswith("M"):
-                    memory_mb = int(memory_str[:-1])
-                else:
-                    memory_mb = 1024
-
-                cpus = vm_config.get("cpus", 1)
-                use_uefi = vm_config.get("use_uefi", True)
-                if vm_config.get("disk_path"):
-                    disk_path = vm_config["disk_path"]
-                if vm_config.get("cloud_init_iso_path"):
-                    cloudinit_iso = vm_config["cloud_init_iso_path"]
-
-            # Create tap interface
             tap_result = self.creation_helper.create_tap_interface(child_name)
             if not tap_result.get("success"):
                 return tap_result
-            tap_interface = tap_result["tap"]
 
-            # Build bhyve command
-            cmd = [
-                "bhyve",
-                "-A",
-                "-H",
-                "-P",
-                "-s",
-                "0:0,hostbridge",
-                "-s",
-                "1:0,lpc",
-                "-s",
-                f"2:0,virtio-net,{tap_interface}",
-                "-s",
-                f"3:0,virtio-blk,{disk_path}",
-                "-l",
-                "com1,stdio",
-                "-c",
-                str(cpus),
-                "-m",
-                f"{memory_mb}M",
-            ]
+            cmd = self._build_bhyve_command(child_name, tap_result["tap"], params)
+            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{child_name}.pid"] + cmd
 
-            if os.path.exists(cloudinit_iso):
-                cmd.extend(["-s", f"4:0,ahci-cd,{cloudinit_iso}"])
-
-            # Check for UEFI firmware
-            uefi_firmware = "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd"
-            if use_uefi and os.path.exists(uefi_firmware):
-                cmd.extend(["-l", f"bootrom,{uefi_firmware}"])
-
-            cmd.append(child_name)
-
-            # Run with daemon
-            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{child_name}.pid"]
-            daemon_cmd.extend(cmd)
-
-            result = await self._run_subprocess(
-                daemon_cmd, timeout=180
-            )  # 3 min for UEFI init
+            result = await self._run_subprocess(daemon_cmd, timeout=180)
             if result.returncode != 0:
                 return {
                     "success": False,

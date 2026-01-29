@@ -68,6 +68,43 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                 except ValueError:
                     pass
 
+    def _process_cpuinfo_vendor(self, cpu_info: Dict[str, Any], value: str) -> None:
+        """Process vendor_id field from /proc/cpuinfo."""
+        if "vendor" not in cpu_info:
+            cpu_info["vendor"] = value
+
+    def _process_cpuinfo_model(self, cpu_info: Dict[str, Any], value: str) -> None:
+        """Process model name field from /proc/cpuinfo."""
+        if "model" not in cpu_info:
+            cpu_info["model"] = value
+
+    def _process_cpuinfo_frequency(self, cpu_info: Dict[str, Any], value: str) -> None:
+        """Process cpu MHz field from /proc/cpuinfo."""
+        try:
+            freq = int(float(value))
+            if "frequency_mhz" not in cpu_info or freq > 0:
+                cpu_info["frequency_mhz"] = freq
+        except ValueError:
+            pass
+
+    def _process_cpuinfo_field(
+        self, cpu_info: Dict[str, Any], key: str, value: str, processor_count: int
+    ) -> int:
+        """Process a single field from /proc/cpuinfo.
+
+        Returns the updated processor_count.
+        """
+        if key == "vendor_id":
+            self._process_cpuinfo_vendor(cpu_info, value)
+        elif key == "model name":
+            self._process_cpuinfo_model(cpu_info, value)
+        elif key == "cpu MHz":
+            self._process_cpuinfo_frequency(cpu_info, value)
+        elif key == "processor":
+            processor_count = max(processor_count, int(value) + 1)
+
+        return processor_count
+
     def _parse_proc_cpuinfo(self, cpu_info: Dict[str, Any]) -> None:
         """Parse /proc/cpuinfo as a fallback when lscpu is unavailable."""
         with open("/proc/cpuinfo", "r", encoding="utf-8") as file_handle:
@@ -75,24 +112,13 @@ class HardwareCollectorLinux(HardwareCollectorBase):
 
         processor_count = 0
         for line in lines:
-            if ":" in line:
-                key, value = line.split(":", 1)
-                key = key.strip()
-                value = value.strip()
+            if ":" not in line:
+                continue
 
-                if key == "vendor_id" and "vendor" not in cpu_info:
-                    cpu_info["vendor"] = value
-                elif key == "model name" and "model" not in cpu_info:
-                    cpu_info["model"] = value
-                elif key == "cpu MHz":
-                    try:
-                        freq = int(float(value))
-                        if "frequency_mhz" not in cpu_info or freq > 0:
-                            cpu_info["frequency_mhz"] = freq
-                    except ValueError:
-                        pass
-                elif key == "processor":
-                    processor_count = max(processor_count, int(value) + 1)
+            key, value = line.split(":", 1)
+            processor_count = self._process_cpuinfo_field(
+                cpu_info, key.strip(), value.strip(), processor_count
+            )
 
         if processor_count > 0:
             cpu_info["threads"] = processor_count

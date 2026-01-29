@@ -214,9 +214,70 @@ class UpdateDetectorBase:
             return len(self.available_updates) > 0
         return False
 
-    def _detect_best_package_manager(  # pylint: disable=too-many-return-statements
-        self,
-    ) -> str:
+    def _get_preferred_linux_manager(self, managers: List[str]) -> str:
+        """Get the preferred package manager for Linux systems.
+
+        Args:
+            managers: List of available package managers.
+
+        Returns:
+            The preferred package manager name, or empty string if none found.
+        """
+        # Prefer native system package managers
+        for preferred in ["apt", "dnf", "yum", "pacman", "zypper"]:
+            if preferred in managers:
+                return preferred
+        # Fallback to universal package managers
+        for fallback in ["snap", "flatpak"]:
+            if fallback in managers:
+                return fallback
+        return ""
+
+    def _get_preferred_darwin_manager(self, managers: List[str]) -> str:
+        """Get the preferred package manager for macOS systems.
+
+        Args:
+            managers: List of available package managers.
+
+        Returns:
+            The preferred package manager name, or empty string if none found.
+        """
+        if "homebrew" in managers:
+            return "homebrew"
+        if "macports" in managers:
+            return "macports"
+        return ""
+
+    def _get_preferred_windows_manager(self, managers: List[str]) -> str:
+        """Get the preferred package manager for Windows systems.
+
+        Args:
+            managers: List of available package managers.
+
+        Returns:
+            The preferred package manager name, or empty string if none found.
+        """
+        for preferred in ["winget", "chocolatey", "scoop"]:
+            if preferred in managers:
+                return preferred
+        return ""
+
+    def _get_preferred_bsd_manager(self, managers: List[str]) -> str:
+        """Get the preferred package manager for BSD systems.
+
+        Args:
+            managers: List of available package managers.
+
+        Returns:
+            The preferred package manager name, or empty string if none found.
+        """
+        if "pkg" in managers:
+            return "pkg"
+        if "pkgin" in managers:
+            return "pkgin"
+        return ""
+
+    def _detect_best_package_manager(self) -> str:
         """
         Detect the best/primary package manager for the current platform.
 
@@ -228,36 +289,21 @@ class UpdateDetectorBase:
         if not managers:
             return ""
 
-        # Platform-specific preferences
-        if self.platform == "linux":
-            # Prefer native system package managers
-            for preferred in ["apt", "dnf", "yum", "pacman", "zypper"]:
-                if preferred in managers:
-                    return preferred
-            # Fallback to universal package managers
-            for fallback in ["snap", "flatpak"]:
-                if fallback in managers:
-                    return fallback
+        # Platform-specific preferences using helper methods
+        platform_handlers = {
+            "linux": self._get_preferred_linux_manager,
+            "darwin": self._get_preferred_darwin_manager,
+            "windows": self._get_preferred_windows_manager,
+            "freebsd": self._get_preferred_bsd_manager,
+            "openbsd": self._get_preferred_bsd_manager,
+            "netbsd": self._get_preferred_bsd_manager,
+        }
 
-        elif self.platform == "darwin":
-            # Prefer Homebrew on macOS
-            if "homebrew" in managers:
-                return "homebrew"
-            if "macports" in managers:
-                return "macports"
-
-        elif self.platform == "windows":
-            # Prefer winget on Windows
-            for preferred in ["winget", "chocolatey", "scoop"]:
-                if preferred in managers:
-                    return preferred
-
-        elif self.platform in ["freebsd", "openbsd", "netbsd"]:
-            # BSD systems
-            if "pkg" in managers:
-                return "pkg"
-            if "pkgin" in managers:
-                return "pkgin"
+        handler = platform_handlers.get(self.platform)
+        if handler:
+            result = handler(managers)
+            if result:
+                return result
 
         # Return first available if no preference matches
         return managers[0] if managers else ""

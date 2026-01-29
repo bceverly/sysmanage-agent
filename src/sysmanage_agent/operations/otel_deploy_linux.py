@@ -144,162 +144,27 @@ class LinuxOtelDeployer(OtelDeployerBase):
 
     async def _deploy_with_apt(self, grafana_url: str) -> Dict[str, Any]:
         """Deploy OpenTelemetry using apt package manager."""
-        # pylint: disable=too-many-return-statements,too-many-locals,too-many-branches,too-many-statements
         try:
-            # Install OpenTelemetry collector
             self.logger.info("Installing OpenTelemetry collector using apt")
 
-            # Set environment to prevent interactive prompts
             env = os.environ.copy()
             env["DEBIAN_FRONTEND"] = "noninteractive"
 
-            # Install prerequisites
-            self.logger.info("Installing prerequisites...")
-            process = await asyncio.create_subprocess_exec(
-                "apt-get",
-                "install",
-                "-y",
-                "wget",
-                "gnupg2",
-                "software-properties-common",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env,
-            )
-            _stdout, stderr = await process.communicate()
-            if process.returncode != 0:
-                error_msg = f"Failed to install prerequisites: {stderr.decode()}"
-                self.logger.error(error_msg)
-                return {"success": False, "error": error_msg}
+            prereq_result = await self._install_apt_prerequisites(env)
+            if prereq_result:
+                return prereq_result
 
-            # Download OpenTelemetry package
-            self.logger.info("Downloading OpenTelemetry collector package...")
-            download_url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.112.0/otelcol-contrib_0.112.0_linux_amd64.deb"
-            self.logger.info("Download URL: %s", download_url)
+            download_result = await self._download_otel_package()
+            if isinstance(download_result, dict):
+                return download_result
 
-            process = await asyncio.create_subprocess_exec(
-                "wget",
-                "-O-",  # Output to stdout
-                download_url,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            deb_content, stderr = await process.communicate()
+            deb_content = download_result
+            install_result = await self._install_deb_package(deb_content, env)
+            if install_result:
+                return install_result
 
-            self.logger.info(
-                "Download completed. Return code: %d, Content size: %d bytes",
-                process.returncode,
-                len(deb_content),
-            )
+            await self._stop_otel_service()
 
-            if stderr:
-                self.logger.info(
-                    "Download stderr: %s", stderr.decode()[:500]
-                )  # Log first 500 chars
-
-            if process.returncode != 0:
-                error_msg = (
-                    f"Failed to download OpenTelemetry package: {stderr.decode()}"
-                )
-                self.logger.error(error_msg)
-                return {
-                    "success": False,
-                    "error": error_msg,
-                }
-
-            if len(deb_content) == 0:
-                error_msg = "Downloaded file is empty"
-                self.logger.error(error_msg)
-                return {
-                    "success": False,
-                    "error": error_msg,
-                }
-
-            # Write the package to a temp file
-            self.logger.info("Writing package to temporary file...")
-            with tempfile.NamedTemporaryFile(  # NOSONAR - sync tempfile acceptable; file creation is fast and content is in memory
-                mode="wb", suffix=".deb", delete=False
-            ) as file_handle:
-                file_handle.write(deb_content)
-                deb_file = file_handle.name
-            self.logger.info("Package written to: %s", deb_file)
-
-            try:
-                # Install the package
-                self.logger.info(
-                    "Installing OpenTelemetry collector package with dpkg..."
-                )
-                process = await asyncio.create_subprocess_exec(
-                    "dpkg",
-                    "-i",
-                    deb_file,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    env=env,
-                )
-                dpkg_stdout, dpkg_stderr = await process.communicate()
-
-                self.logger.info(
-                    "dpkg install completed. Return code: %d", process.returncode
-                )
-                if dpkg_stdout:
-                    self.logger.info("dpkg stdout: %s", dpkg_stdout.decode()[:500])
-                if dpkg_stderr:
-                    self.logger.info("dpkg stderr: %s", dpkg_stderr.decode()[:500])
-
-                if process.returncode != 0:
-                    # Try to fix dependencies
-                    self.logger.info("Fixing dependencies with apt-get install -f...")
-                    process = await asyncio.create_subprocess_exec(
-                        "apt-get",
-                        "install",
-                        "-f",
-                        "-y",
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                        env=env,
-                    )
-                    fix_stdout, fix_stderr = await process.communicate()
-
-                    self.logger.info(
-                        "apt-get fix completed. Return code: %d", process.returncode
-                    )
-                    if fix_stdout:
-                        self.logger.info(
-                            "apt-get stdout: %s", fix_stdout.decode()[:500]
-                        )
-                    if fix_stderr:
-                        self.logger.info(
-                            "apt-get stderr: %s", fix_stderr.decode()[:500]
-                        )
-
-                    if process.returncode != 0:
-                        error_msg = f"Failed to install OpenTelemetry collector: {dpkg_stderr.decode()}"
-                        self.logger.error(error_msg)
-                        return {
-                            "success": False,
-                            "error": error_msg,
-                        }
-            finally:
-                # Clean up temp file
-                self.logger.info("Cleaning up temporary file: %s", deb_file)
-                if os.path.exists(deb_file):
-                    os.unlink(deb_file)
-
-            # Stop service if it was auto-started by dpkg (it will have wrong config)
-            self.logger.info("Stopping otelcol-contrib service...")
-            process = await asyncio.create_subprocess_exec(
-                "systemctl",
-                "stop",
-                "otelcol-contrib",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            # Ignore return code - service may not be running
-
-            # Create configuration file
-            self.logger.info("Creating OpenTelemetry configuration file...")
             config_result = await self._create_otel_config_linux(grafana_url)
             if not config_result["success"]:
                 self.logger.error(
@@ -310,7 +175,6 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 "Configuration file created: %s", config_result.get("config_file")
             )
 
-            # Enable and start service
             self.logger.info("Enabling and starting OpenTelemetry service...")
             await self._enable_and_start_otel_service_linux()
             self.logger.info("OpenTelemetry service started successfully")
@@ -328,6 +192,151 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 exc_info=True,
             )
             return {"success": False, "error": str(error)}
+
+    async def _install_apt_prerequisites(self, env: dict) -> Dict[str, Any] | None:
+        """Install apt prerequisites. Returns error dict on failure, None on success."""
+        self.logger.info("Installing prerequisites...")
+        process = await asyncio.create_subprocess_exec(
+            "apt-get",
+            "install",
+            "-y",
+            "wget",
+            "gnupg2",
+            "software-properties-common",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+        _stdout, stderr = await process.communicate()
+        if process.returncode != 0:
+            error_msg = f"Failed to install prerequisites: {stderr.decode()}"
+            self.logger.error(error_msg)
+            return {"success": False, "error": error_msg}
+        return None
+
+    async def _download_otel_package(self) -> bytes | Dict[str, Any]:
+        """Download OpenTelemetry package. Returns bytes on success, error dict on failure."""
+        self.logger.info("Downloading OpenTelemetry collector package...")
+        download_url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.112.0/otelcol-contrib_0.112.0_linux_amd64.deb"
+        self.logger.info("Download URL: %s", download_url)
+
+        process = await asyncio.create_subprocess_exec(
+            "wget",
+            "-O-",
+            download_url,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        deb_content, stderr = await process.communicate()
+
+        self.logger.info(
+            "Download completed. Return code: %d, Content size: %d bytes",
+            process.returncode,
+            len(deb_content),
+        )
+
+        if stderr:
+            self.logger.info("Download stderr: %s", stderr.decode()[:500])
+
+        if process.returncode != 0:
+            error_msg = f"Failed to download OpenTelemetry package: {stderr.decode()}"
+            self.logger.error(error_msg)
+            return {"success": False, "error": error_msg}
+
+        if len(deb_content) == 0:
+            error_msg = "Downloaded file is empty"
+            self.logger.error(error_msg)
+            return {"success": False, "error": error_msg}
+
+        return deb_content
+
+    async def _install_deb_package(
+        self, deb_content: bytes, env: dict
+    ) -> Dict[str, Any] | None:
+        """Install deb package. Returns error dict on failure, None on success."""
+        self.logger.info("Writing package to temporary file...")
+        with tempfile.NamedTemporaryFile(  # NOSONAR - sync tempfile acceptable
+            mode="wb", suffix=".deb", delete=False
+        ) as file_handle:
+            file_handle.write(deb_content)
+            deb_file = file_handle.name
+        self.logger.info("Package written to: %s", deb_file)
+
+        try:
+            return await self._run_dpkg_install(deb_file, env)
+        finally:
+            self.logger.info("Cleaning up temporary file: %s", deb_file)
+            if os.path.exists(deb_file):
+                os.unlink(deb_file)
+
+    async def _run_dpkg_install(
+        self, deb_file: str, env: dict
+    ) -> Dict[str, Any] | None:
+        """Run dpkg install with dependency fix fallback."""
+        self.logger.info("Installing OpenTelemetry collector package with dpkg...")
+        process = await asyncio.create_subprocess_exec(
+            "dpkg",
+            "-i",
+            deb_file,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+        dpkg_stdout, dpkg_stderr = await process.communicate()
+
+        self.logger.info("dpkg install completed. Return code: %d", process.returncode)
+        if dpkg_stdout:
+            self.logger.info("dpkg stdout: %s", dpkg_stdout.decode()[:500])
+        if dpkg_stderr:
+            self.logger.info("dpkg stderr: %s", dpkg_stderr.decode()[:500])
+
+        if process.returncode == 0:
+            return None
+
+        return await self._fix_apt_dependencies(dpkg_stderr, env)
+
+    async def _fix_apt_dependencies(
+        self, dpkg_stderr: bytes, env: dict
+    ) -> Dict[str, Any] | None:
+        """Fix apt dependencies after failed dpkg install."""
+        self.logger.info("Fixing dependencies with apt-get install -f...")
+        process = await asyncio.create_subprocess_exec(
+            "apt-get",
+            "install",
+            "-f",
+            "-y",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+        fix_stdout, fix_stderr = await process.communicate()
+
+        self.logger.info("apt-get fix completed. Return code: %d", process.returncode)
+        if fix_stdout:
+            self.logger.info("apt-get stdout: %s", fix_stdout.decode()[:500])
+        if fix_stderr:
+            self.logger.info("apt-get stderr: %s", fix_stderr.decode()[:500])
+
+        if process.returncode != 0:
+            error_msg = (
+                f"Failed to install OpenTelemetry collector: {dpkg_stderr.decode()}"
+            )
+            self.logger.error(error_msg)
+            return {"success": False, "error": error_msg}
+
+        return None
+
+    async def _stop_otel_service(self):
+        """Stop otelcol-contrib service if running."""
+        self.logger.info("Stopping otelcol-contrib service...")
+        process = await asyncio.create_subprocess_exec(
+            "systemctl",
+            "stop",
+            "otelcol-contrib",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await process.communicate()
 
     async def _deploy_with_yum_dnf(self, grafana_url: str) -> Dict[str, Any]:
         """Deploy OpenTelemetry using yum/dnf package manager."""

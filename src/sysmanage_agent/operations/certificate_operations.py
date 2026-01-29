@@ -148,41 +148,50 @@ class CertificateOperations:
         """Get the appropriate SSL certificate directory for the current OS."""
         system = platform.system().lower()
 
-        if system == "linux":
-            # Try to detect the Linux distribution
-            if os.path.exists("/etc/os-release"):
-                try:
-                    with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
-                        os_release = file_handle.read().lower()
-
-                    if any(distro in os_release for distro in ["ubuntu", "debian"]):
-                        ssl_dir = _SSL_CERTS_DIR
-                    elif any(
-                        distro in os_release
-                        for distro in ["rhel", "centos", "fedora", "red hat"]
-                    ):
-                        ssl_dir = "/etc/pki/tls/certs"
-                    elif "opensuse" in os_release:
-                        ssl_dir = _SSL_CERTS_DIR
-                    else:
-                        # Default Linux path
-                        ssl_dir = _SSL_CERTS_DIR
-                except Exception:
-                    ssl_dir = _SSL_CERTS_DIR  # Fallback
-            else:
-                ssl_dir = _SSL_CERTS_DIR  # Fallback
-
-        elif system == "darwin":  # macOS
-            ssl_dir = _SSL_CERTS_DIR
-        elif system in ["freebsd", "openbsd"]:
-            ssl_dir = _SSL_CERTS_DIR
-        else:
+        ssl_dir = self._get_ssl_dir_for_system(system)
+        if ssl_dir is None:
             return {
                 "success": False,
                 "error": f"Unsupported operating system for certificate deployment: {system}",
             }
 
-        # Verify the directory exists and is writable
+        return self._validate_ssl_directory(ssl_dir)
+
+    def _get_ssl_dir_for_system(self, system: str) -> str | None:
+        """
+        Get the SSL directory path for the given system.
+
+        Returns:
+            SSL directory path, or None if system is unsupported.
+        """
+        if system == "linux":
+            return self._get_linux_ssl_dir()
+
+        if system in ["darwin", "freebsd", "openbsd"]:
+            return _SSL_CERTS_DIR
+
+        return None
+
+    def _get_linux_ssl_dir(self) -> str:
+        """Detect the appropriate SSL directory for Linux distributions."""
+        if not os.path.exists("/etc/os-release"):
+            return _SSL_CERTS_DIR
+
+        try:
+            with open("/etc/os-release", "r", encoding="utf-8") as file_handle:
+                os_release = file_handle.read().lower()
+        except Exception:  # pylint: disable=broad-exception-caught
+            return _SSL_CERTS_DIR
+
+        if any(
+            distro in os_release for distro in ["rhel", "centos", "fedora", "red hat"]
+        ):
+            return "/etc/pki/tls/certs"
+
+        return _SSL_CERTS_DIR
+
+    def _validate_ssl_directory(self, ssl_dir: str) -> Dict[str, Any]:
+        """Validate that the SSL directory exists and is writable."""
         if not os.path.exists(ssl_dir):
             try:
                 os.makedirs(ssl_dir, mode=0o755, exist_ok=True)

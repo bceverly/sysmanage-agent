@@ -42,9 +42,7 @@ class WindowsFirewallOperations(FirewallBase):
         try:
             # Always ensure RDP (port 3389) is allowed on Windows to prevent lockout
             self.logger.info("Adding Windows Firewall rule for port 3389 (RDP)")
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",
@@ -72,9 +70,7 @@ class WindowsFirewallOperations(FirewallBase):
             # Add firewall rules for agent communication
             for port in ports:
                 self.logger.info("Adding Windows Firewall rule for port %d", port)
-                # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-                # command with timeout, async version provides no benefit for firewall ops
-                result = subprocess.run(  # nosec B603 B607  # NOSONAR
+                result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                     [
                         "netsh",
                         "advfirewall",
@@ -100,9 +96,7 @@ class WindowsFirewallOperations(FirewallBase):
 
             # Enable Windows Firewall
             self.logger.info("Enabling Windows Firewall")
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",
@@ -142,9 +136,7 @@ class WindowsFirewallOperations(FirewallBase):
         """
         try:
             self.logger.info("Disabling Windows Firewall")
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",
@@ -189,9 +181,7 @@ class WindowsFirewallOperations(FirewallBase):
             self.logger.info("Restarting Windows Firewall")
             # Windows doesn't really have a "restart" for the firewall
             # But we can toggle it off and on
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",
@@ -212,9 +202,7 @@ class WindowsFirewallOperations(FirewallBase):
                     "error": f"Failed to restart Windows Firewall: {result.stderr}",
                 }
 
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",
@@ -262,9 +250,7 @@ class WindowsFirewallOperations(FirewallBase):
         current_ports: Dict[int, Dict[str, bool]] = {}
         try:
             # List all firewall rules and filter for SysManage Role rules
-            # NOSONAR: Using sync subprocess is acceptable here - short-lived system
-            # command with timeout, async version provides no benefit for firewall ops
-            result = subprocess.run(  # nosec B603 B607  # NOSONAR
+            result = subprocess.run(  # nosec B603 B607  # NOSONAR - Using sync subprocess is acceptable here - short-lived system command with timeout
                 [
                     "netsh",
                     "advfirewall",

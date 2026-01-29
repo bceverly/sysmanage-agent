@@ -46,10 +46,9 @@ class PFFirewallOperations:
             # Check if PF config exists
             pf_conf = "/etc/pf.conf"
             try:
-                # NOSONAR: Sync file I/O acceptable for small config file reads
                 with open(
                     pf_conf, "r", encoding="utf-8"
-                ) as file_handle:  # noqa: ASYNC230
+                ) as file_handle:  # noqa: ASYNC230  # NOSONAR - Sync file I/O acceptable for small config file reads
                     existing_rules = file_handle.read()
             except FileNotFoundError:
                 existing_rules = ""
@@ -71,10 +70,9 @@ class PFFirewallOperations:
                 # Append rules to pf.conf
                 self.logger.info("Adding %d rules to pf.conf", len(rules_to_add))
                 try:
-                    # NOSONAR: Sync file I/O acceptable for small config file writes
                     with open(
                         pf_conf, "a", encoding="utf-8"
-                    ) as file_handle:  # noqa: ASYNC230
+                    ) as file_handle:  # noqa: ASYNC230  # NOSONAR - Sync file I/O acceptable for small config file writes
                         file_handle.write("\n# SysManage Agent rules\n")
                         for rule in rules_to_add:
                             file_handle.write(f"{rule}\n")
@@ -83,8 +81,7 @@ class PFFirewallOperations:
                     rules_content = (
                         "\n# SysManage Agent rules\n" + "\n".join(rules_to_add) + "\n"
                     )
-                    # NOSONAR: Sync subprocess acceptable for quick firewall commands
-                    subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+                    subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                         self.parent._build_command(
                             ["sh", "-c", f"echo '{rules_content}' >> {pf_conf}"]
                         ),
@@ -95,8 +92,7 @@ class PFFirewallOperations:
                     )
 
             # Test the configuration
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 self.parent._build_command(["pfctl", "-nf", pf_conf]),
                 capture_output=True,
                 text=True,
@@ -111,8 +107,7 @@ class PFFirewallOperations:
                 }
 
             # Load the rules
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 self.parent._build_command(["pfctl", "-f", pf_conf]),
                 capture_output=True,
                 text=True,
@@ -127,8 +122,7 @@ class PFFirewallOperations:
                 }
 
             # Enable PF
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 self.parent._build_command(["pfctl", "-e"]),
                 capture_output=True,
                 text=True,
@@ -159,8 +153,7 @@ class PFFirewallOperations:
         """Apply firewall roles using PF (synchronize - add and remove rules)."""
         try:
             # Check if PF is available
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 ["pfctl", "-s", "info"],
                 capture_output=True,
                 text=True,
@@ -177,8 +170,7 @@ class PFFirewallOperations:
 
             # First, flush the sysmanage anchor to remove old rules
             self.logger.info("Flushing PF sysmanage anchor")
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 ["pfctl", "-a", "sysmanage", "-F", "rules"],
                 capture_output=True,
                 text=True,
@@ -201,8 +193,7 @@ class PFFirewallOperations:
             if rules:
                 rules_content = "\n".join(rules) + "\n"
                 self.logger.info("Adding %d PF rules to sysmanage anchor", len(rules))
-                # NOSONAR: Sync subprocess acceptable for quick firewall commands
-                result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+                result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                     ["pfctl", "-a", "sysmanage", "-f", "-"],
                     input=rules_content,
                     capture_output=True,
@@ -239,8 +230,7 @@ class PFFirewallOperations:
         """Remove specific firewall ports using PF."""
         try:
             # Check if PF is available
-            # NOSONAR: Sync subprocess acceptable for quick firewall commands
-            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221
+            result = subprocess.run(  # nosec B603 B607  # noqa: ASYNC221  # NOSONAR - Sync subprocess acceptable for quick firewall commands
                 ["pfctl", "-s", "info"],
                 capture_output=True,
                 text=True,

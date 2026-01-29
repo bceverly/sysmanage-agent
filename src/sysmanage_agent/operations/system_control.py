@@ -107,6 +107,7 @@ class SystemControl:
         self,
     ) -> Dict[str, Any]:  # NOSONAR - async required by interface
         """Update the system using the default package manager."""
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         try:
             update_detector = UpdateDetector()
             result = update_detector.update_system()

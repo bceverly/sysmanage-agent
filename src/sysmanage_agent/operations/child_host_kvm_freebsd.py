@@ -772,17 +772,9 @@ local-hostname: {config.hostname.split('.')[0]}
         self.logger.debug("Password sent")
         return True
 
-    def _run_su_bootstrap_via_pty(
-        self, ip_address: str, root_password: str, timeout: int = 600
-    ) -> Dict[str, Any]:
-        """
-        Run bootstrap as root using pty to interact with su password prompt.
-
-        This method creates a pseudo-terminal to handle su's password prompt
-        since su reads from /dev/tty, not stdin.
-        """
-        # The command to run after becoming root
-        root_commands = """
+    def _get_bootstrap_root_commands(self) -> str:
+        """Get the shell commands to run as root for bootstrap."""
+        return """
 set -e
 # Mount config disk (could be cd0 or cd1)
 if [ ! -d /mnt/cidata ]; then
@@ -799,10 +791,11 @@ else
 fi
 """
 
-        # SSH command with pty allocation (-t flag forces pseudo-tty)
-        ssh_cmd = [
+    def _build_ssh_command(self, ip_address: str, root_commands: str) -> list:
+        """Build the SSH command for PTY bootstrap."""
+        return [
             "ssh",
-            "-t",  # Force pseudo-tty allocation
+            "-t",
             "-t",  # Double -t forces tty even when stdin is not a terminal
             "-i",
             self._ssh_private_key_path,
@@ -816,15 +809,61 @@ fi
             f"su -m root -c '{root_commands}'",
         ]
 
+    def _handle_pty_data_available(
+        self,
+        master_fd: int,
+        output: list,
+        accumulated: str,
+        root_password: str,
+        password_sent: bool,
+    ) -> tuple:
+        """
+        Handle data available on PTY.
+
+        Returns:
+            Tuple of (should_break, accumulated, password_sent)
+        """
+        data = self._read_pty_data(master_fd)
+        if data is None:
+            return (True, accumulated, password_sent)
+        if not data:
+            self.logger.debug("PTY EOF reached")
+            return (True, accumulated, password_sent)
+
+        output.append(data)
+        accumulated += data
+        self.logger.debug(f"PTY output: {repr(data)}")
+
+        password_sent = self._send_password_if_prompted(
+            master_fd, accumulated, root_password, password_sent
+        )
+        return (False, accumulated, password_sent)
+
+    def _handle_process_exited(self, master_fd: int, output: list) -> None:
+        """Handle final read when process has exited."""
+        final_data = self._read_pty_data(master_fd)
+        if final_data:
+            output.append(final_data)
+            self.logger.debug(f"Final PTY output: {repr(final_data)}")
+
+    def _run_su_bootstrap_via_pty(
+        self, ip_address: str, root_password: str, timeout: int = 600
+    ) -> Dict[str, Any]:
+        """
+        Run bootstrap as root using pty to interact with su password prompt.
+
+        This method creates a pseudo-terminal to handle su's password prompt
+        since su reads from /dev/tty, not stdin.
+        """
+        root_commands = self._get_bootstrap_root_commands()
+        ssh_cmd = self._build_ssh_command(ip_address, root_commands)
+
         output = []
         master_fd = None
         try:
-            # Create a pseudo-terminal
             master_fd, slave_fd = pty.openpty()
-
             self.logger.debug("Starting SSH with pty for su password entry")
 
-            # Start the SSH process with the pty
             # pylint: disable=consider-using-with
             process = subprocess.Popen(  # nosec B603
                 ssh_cmd,
@@ -834,10 +873,8 @@ fi
                 close_fds=True,
             )
             # pylint: enable=consider-using-with
+            os.close(slave_fd)
 
-            os.close(slave_fd)  # Close slave in parent
-
-            # Wait for password prompt and respond
             password_sent = False
             start_time = time.time()
             accumulated = ""
@@ -852,40 +889,22 @@ fi
                         "stdout": "".join(output),
                     }
 
-                # Check if there's data to read
                 readable, _, _ = select.select([master_fd], [], [], 0.5)
 
                 if not readable:
-                    # No data available, check if process has exited
                     if process.poll() is None:
                         continue
-                    # Process exited, do one more read to get any remaining data
-                    final_data = self._read_pty_data(master_fd)
-                    if final_data:
-                        output.append(final_data)
-                        self.logger.debug(f"Final PTY output: {repr(final_data)}")
+                    self._handle_process_exited(master_fd, output)
                     break
 
-                # Read data from PTY
-                data = self._read_pty_data(master_fd)
-                if data is None:
-                    # Error reading
-                    break
-                if not data:
-                    # Empty read means EOF
-                    self.logger.debug("PTY EOF reached")
-                    break
-
-                output.append(data)
-                accumulated += data
-                self.logger.debug(f"PTY output: {repr(data)}")
-
-                # Check for password prompt and send if needed
-                password_sent = self._send_password_if_prompted(
-                    master_fd, accumulated, root_password, password_sent
+                should_break, accumulated, password_sent = (
+                    self._handle_pty_data_available(
+                        master_fd, output, accumulated, root_password, password_sent
+                    )
                 )
+                if should_break:
+                    break
 
-            # Ensure process is finished and get exit code
             exit_code = process.wait()
             self.logger.debug(f"Process exit code: {exit_code}")
 
@@ -893,7 +912,6 @@ fi
             master_fd = None
 
             full_output = "".join(output)
-
             if exit_code == 0:
                 return {"success": True, "stdout": full_output, "exit_code": exit_code}
 

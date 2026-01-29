@@ -3,7 +3,7 @@
 import os
 import re
 import subprocess  # nosec B404 # Required for system command execution
-from typing import List
+from typing import List, Optional
 
 from src.i18n import _
 
@@ -17,6 +17,24 @@ def is_valid_ip(addr: str) -> bool:
     return False
 
 
+def _extract_dns_from_header_line(line: str) -> Optional[str]:
+    """Extract DNS IP from the 'DNS Servers:' header line."""
+    parts = line.split("DNS Servers:")
+    if len(parts) <= 1 or not parts[1].strip():
+        return None
+    dns_ip = parts[1].strip().split()[0]
+    return dns_ip if is_valid_ip(dns_ip) else None
+
+
+def _extract_dns_continuation(line: str) -> Optional[str]:
+    """Extract DNS IP from a continuation line in DNS section."""
+    stripped = line.strip()
+    if not stripped or ":" in line:
+        return None
+    dns_ip = stripped.split()[0]
+    return dns_ip if is_valid_ip(dns_ip) else None
+
+
 def _parse_dns_from_systemd_resolve(output: str) -> List[str]:
     """Parse DNS servers from systemd-resolve output."""
     dns_servers = []
@@ -24,22 +42,24 @@ def _parse_dns_from_systemd_resolve(output: str) -> List[str]:
 
     for line in output.split("\n"):
         if "DNS Servers:" in line:
-            parts = line.split("DNS Servers:")
-            if len(parts) > 1 and parts[1].strip():
-                dns_ip = parts[1].strip().split()[0]
-                if is_valid_ip(dns_ip):
-                    dns_servers.append(dns_ip)
+            dns_ip = _extract_dns_from_header_line(line)
+            if dns_ip:
+                dns_servers.append(dns_ip)
             in_dns_section = True
-        elif in_dns_section:
-            stripped = line.strip()
-            if stripped and ":" not in line:
-                dns_ip = stripped.split()[0]
-                if is_valid_ip(dns_ip):
-                    dns_servers.append(dns_ip)
-                else:
-                    break
-            elif ":" in line:
-                in_dns_section = False
+            continue
+
+        if not in_dns_section:
+            continue
+
+        if ":" in line:
+            in_dns_section = False
+            continue
+
+        dns_ip = _extract_dns_continuation(line)
+        if dns_ip:
+            dns_servers.append(dns_ip)
+        elif line.strip():
+            break
 
     return dns_servers
 

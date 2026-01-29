@@ -11,7 +11,7 @@ import pwd
 import shutil
 import subprocess  # nosec B404 # Required for sync functions
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
@@ -23,6 +23,9 @@ from src.sysmanage_agent.operations.child_host_kvm_types import KvmVmConfig
 # Package installation commands by Linux distribution
 # libguestfs-tools is needed for guest filesystem operations
 # genisoimage is needed to create cloud-init ISOs
+# Path to the KVM device node
+DEV_KVM_PATH = "/dev/kvm"
+
 LIBVIRT_PACKAGES = {
     "debian": [
         "qemu-kvm",
@@ -88,6 +91,74 @@ class KvmOperations:
         self.lifecycle = KvmLifecycle(logger)
         self.creation = KvmCreation(logger)
 
+    def _read_cpu_flags(self) -> Dict[str, Any]:
+        """
+        Read CPU flags from /proc/cpuinfo.
+
+        Returns:
+            Dict with success status and cpu_flags string
+        """
+        try:
+            with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
+                for line in cpuinfo_file:
+                    if line.startswith("flags"):
+                        return {"success": True, "cpu_flags": line}
+            return {"success": True, "cpu_flags": ""}
+        except Exception as read_error:
+            self.logger.warning(_("Could not read CPU flags: %s"), read_error)
+            return {"success": False, "error": str(read_error)}
+
+    def _detect_kvm_module(self, cpu_flags: str) -> Optional[str]:
+        """
+        Detect which KVM module to load based on CPU flags.
+
+        Args:
+            cpu_flags: CPU flags string from /proc/cpuinfo
+
+        Returns:
+            Module name ("kvm_intel" or "kvm_amd") or None if not supported
+        """
+        if "vmx" in cpu_flags:
+            self.logger.info(_("Detected Intel CPU with VMX support"))
+            return "kvm_intel"
+        if "svm" in cpu_flags:
+            self.logger.info(_("Detected AMD CPU with SVM support"))
+            return "kvm_amd"
+
+        self.logger.warning(
+            _("No hardware virtualization support detected in CPU flags")
+        )
+        return None
+
+    def _load_kvm_module_with_modprobe(self, module_name: str) -> Dict[str, Any]:
+        """
+        Load a KVM module using modprobe.
+
+        Args:
+            module_name: Name of the module to load
+
+        Returns:
+            Dict with success status
+        """
+        self.logger.info(
+            _("Loading KVM module: %s with nested virtualization enabled"),
+            module_name,
+        )
+        result = subprocess.run(  # nosec B603 B607
+            ["modprobe", module_name, "nested=1"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip()
+            self.logger.error(_("Failed to load KVM module: %s"), error_msg)
+            return {"success": False, "error": error_msg}
+
+        return {"success": True}
+
     def _load_kvm_module(self) -> Dict[str, Any]:
         """
         Load the appropriate KVM kernel module based on CPU type.
@@ -96,35 +167,16 @@ class KvmOperations:
             Dict with success status and loaded module name
         """
         try:
-            # Check if /dev/kvm already exists
-            if os.path.exists("/dev/kvm"):
+            if os.path.exists(DEV_KVM_PATH):
                 self.logger.info(_("KVM device already exists"))
                 return {"success": True, "message": "KVM already available"}
 
-            # Read CPU flags to determine virtualization type
-            cpu_flags = ""
-            try:
-                with open("/proc/cpuinfo", "r", encoding="utf-8") as cpuinfo_file:
-                    for line in cpuinfo_file:
-                        if line.startswith("flags"):
-                            cpu_flags = line
-                            break
-            except Exception as read_error:
-                self.logger.warning(_("Could not read CPU flags: %s"), read_error)
-                return {"success": False, "error": str(read_error)}
+            flags_result = self._read_cpu_flags()
+            if not flags_result.get("success"):
+                return flags_result
 
-            # Determine which module to load
-            module_name = None
-            if "vmx" in cpu_flags:
-                module_name = "kvm_intel"
-                self.logger.info(_("Detected Intel CPU with VMX support"))
-            elif "svm" in cpu_flags:
-                module_name = "kvm_amd"
-                self.logger.info(_("Detected AMD CPU with SVM support"))
-            else:
-                self.logger.warning(
-                    _("No hardware virtualization support detected in CPU flags")
-                )
+            module_name = self._detect_kvm_module(flags_result.get("cpu_flags", ""))
+            if not module_name:
                 return {
                     "success": False,
                     "error": _(
@@ -132,51 +184,30 @@ class KvmOperations:
                     ),
                 }
 
-            # Load the KVM module using modprobe with nested virtualization enabled
-            # nested=1 allows running hypervisors inside VMs (e.g., bhyve in FreeBSD guest)
-            self.logger.info(
-                _("Loading KVM module: %s with nested virtualization enabled"),
-                module_name,
-            )
-            result = subprocess.run(  # nosec B603 B607
-                ["modprobe", module_name, "nested=1"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            load_result = self._load_kvm_module_with_modprobe(module_name)
+            if not load_result.get("success"):
+                return load_result
 
-            if result.returncode != 0:
-                error_msg = result.stderr.strip() or result.stdout.strip()
-                self.logger.error(_("Failed to load KVM module: %s"), error_msg)
-                return {"success": False, "error": error_msg}
-
-            # Verify /dev/kvm now exists
-            # Give it a moment for the device to appear
             time.sleep(0.5)
 
-            if os.path.exists("/dev/kvm"):
-                self.logger.info(
-                    _("KVM module loaded successfully, /dev/kvm is available")
-                )
-
-                # Make nested virtualization persistent across reboots
-                persistent_ok = self._configure_nested_virtualization_persistent(
-                    module_name
-                )
-
+            if not os.path.exists(DEV_KVM_PATH):
+                self.logger.warning(_("KVM module loaded but /dev/kvm not created"))
                 return {
-                    "success": True,
-                    "message": f"Loaded {module_name} module with nested virtualization",
-                    "module": module_name,
-                    "nested_enabled": True,
-                    "nested_persistent": persistent_ok,
+                    "success": False,
+                    "error": _("Module loaded but /dev/kvm not created"),
                 }
 
-            self.logger.warning(_("KVM module loaded but /dev/kvm not created"))
+            self.logger.info(_("KVM module loaded successfully, /dev/kvm is available"))
+            persistent_ok = self._configure_nested_virtualization_persistent(
+                module_name
+            )
+
             return {
-                "success": False,
-                "error": _("Module loaded but /dev/kvm not created"),
+                "success": True,
+                "message": f"Loaded {module_name} module with nested virtualization",
+                "module": module_name,
+                "nested_enabled": True,
+                "nested_persistent": persistent_ok,
             }
 
         except subprocess.TimeoutExpired:
@@ -318,7 +349,7 @@ class KvmOperations:
             self.logger.info(_("Disabling KVM kernel modules"))
 
             # First check if any VMs are running
-            if os.path.exists("/dev/kvm"):
+            if os.path.exists(DEV_KVM_PATH):
                 # Try to check for running VMs via virsh if available
                 virsh_path = shutil.which("virsh")
                 if virsh_path:
@@ -380,7 +411,7 @@ class KvmOperations:
 
             # Verify /dev/kvm is gone
             await asyncio.sleep(0.5)
-            if os.path.exists("/dev/kvm"):
+            if os.path.exists(DEV_KVM_PATH):
                 return {
                     "success": False,
                     "error": _("Modules unloaded but /dev/kvm still exists"),
@@ -658,7 +689,7 @@ class KvmOperations:
             # Step 0: Load KVM kernel module if /dev/kvm doesn't exist
             # Do this first, before checking status, so hardware accel is available
             module_loaded = False
-            if not os.path.exists("/dev/kvm"):
+            if not os.path.exists(DEV_KVM_PATH):
                 module_result = self._load_kvm_module()
                 if module_result.get("success"):
                     module_loaded = True

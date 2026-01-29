@@ -361,20 +361,26 @@ class ServiceStatusDetector:
         for line in lines:
             if "SERVICE_NAME:" in line:
                 current_service = line.split("SERVICE_NAME:")[1].strip()
-            elif "STATE" in line and current_service:
-                # Check if this service matches our pattern
-                if self._matches_service_pattern(current_service, svc_pattern):
-                    if "RUNNING" in line:
-                        self.logger.info(
-                            "Found running Windows service: %s", current_service
-                        )
-                        return "running"
-                    if "STOPPED" in line:
-                        self.logger.info(
-                            "Found stopped Windows service: %s", current_service
-                        )
-                        return "stopped"
+                continue
 
+            if "STATE" not in line or not current_service:
+                continue
+
+            if not self._matches_service_pattern(current_service, svc_pattern):
+                continue
+
+            return self._extract_service_state(line, current_service)
+
+        return "unknown"
+
+    def _extract_service_state(self, state_line: str, service_name: str) -> str:
+        """Extract service state from a STATE line."""
+        if "RUNNING" in state_line:
+            self.logger.info("Found running Windows service: %s", service_name)
+            return "running"
+        if "STOPPED" in state_line:
+            self.logger.info("Found stopped Windows service: %s", service_name)
+            return "stopped"
         return "unknown"
 
     def _matches_service_pattern(self, service_name: str, pattern: str) -> bool:

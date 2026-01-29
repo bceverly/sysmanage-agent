@@ -57,7 +57,7 @@ class RegistrationManager:
                 )  # NOSONAR - SSL verification is intentionally configurable
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
                     ssl_context.verify_mode = (
                         ssl.CERT_NONE
                     )  # NOSONAR - SSL verification is intentionally configurable
@@ -122,7 +122,7 @@ class RegistrationManager:
                 )  # NOSONAR - SSL verification is intentionally configurable
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
                     ssl_context.verify_mode = (
                         ssl.CERT_NONE
                     )  # NOSONAR - SSL verification is intentionally configurable
@@ -571,7 +571,7 @@ class RegistrationManager:
                 )  # NOSONAR - SSL verification is intentionally configurable
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not config.get("server", {}).get("ssl", {}).get("verify", True):
-                    ssl_context.check_hostname = False  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
                     ssl_context.verify_mode = (
                         ssl.CERT_NONE
                     )  # NOSONAR - SSL verification is intentionally configurable

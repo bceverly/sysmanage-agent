@@ -4,6 +4,7 @@ KVM/libvirt networking operations for Linux hosts.
 This module handles KVM network configuration including NAT and bridged modes.
 """
 
+import asyncio
 import os
 import shutil
 import subprocess  # nosec B404 # Required for system command execution
@@ -425,6 +426,7 @@ class KvmNetworking:
         Returns:
             Dict with success status and network details
         """
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         try:
             mode = parameters.get("mode", "nat").lower()
             network_name = parameters.get("network_name")
@@ -490,6 +492,7 @@ class KvmNetworking:
         Returns:
             Dict with success status and list of networks
         """
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         try:
             networks_result = self.list_networks()
             if not networks_result.get("success"):

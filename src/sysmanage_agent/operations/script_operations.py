@@ -230,8 +230,10 @@ class ScriptOperations:
             )
 
             try:
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=timeout
+                stdout, stderr = (
+                    await asyncio.wait_for(  # NOSONAR - wait_for needed for Python 3.9 compatibility
+                        process.communicate(), timeout=timeout
+                    )
                 )
                 execution_time = time.time() - start_time
 

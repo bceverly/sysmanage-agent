@@ -338,6 +338,30 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
         return any(line.startswith(prefix) for prefix in skip_prefixes)
 
+    def _handle_subnet_mask(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle subnet mask property."""
+        if value and value != NONE_VALUE:
+            current_adapter["subnet_masks"].append(value)
+
+    def _handle_gateway(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle default gateway property."""
+        if value and value != NONE_VALUE:
+            current_adapter["gateways"].append(value)
+
+    def _handle_dns_servers(self, current_adapter: Dict[str, Any], value: str) -> None:
+        """Handle DNS servers property."""
+        if value and value != NONE_VALUE:
+            current_adapter["dns_servers"].append(value)
+
+    def _is_ip_address_key(self, key: str) -> bool:
+        """Check if the key represents an IP address field."""
+        return (
+            "IPv4 Address" in key
+            or key == "IP Address"
+            or "IPv6 Address" in key
+            or "Link-local IPv6 Address" in key
+        )
+
     def _parse_adapter_property(
         self, current_adapter: Dict[str, Any], line: str
     ) -> None:
@@ -355,18 +379,14 @@ class HardwareCollectorWindows(HardwareCollectorBase):
             current_adapter["mac_address"] = value
         elif "DHCP Enabled" in key:
             current_adapter["dhcp_enabled"] = value.lower() == "yes"
-        elif "IPv4 Address" in key or key == "IP Address":
-            self._handle_ip_address(current_adapter, value)
-        elif "IPv6 Address" in key or "Link-local IPv6 Address" in key:
+        elif self._is_ip_address_key(key):
             self._handle_ip_address(current_adapter, value)
         elif "Subnet Mask" in key:
-            if value and value != NONE_VALUE:
-                current_adapter["subnet_masks"].append(value)
+            self._handle_subnet_mask(current_adapter, value)
         elif "Default Gateway" in key:
-            if value and value != NONE_VALUE:
-                current_adapter["gateways"].append(value)
-        elif "DNS Servers" in key and value and value != NONE_VALUE:
-            current_adapter["dns_servers"].append(value)
+            self._handle_gateway(current_adapter, value)
+        elif "DNS Servers" in key:
+            self._handle_dns_servers(current_adapter, value)
 
     def _handle_media_state(self, current_adapter: Dict[str, Any], value: str) -> None:
         """Handle media state property."""

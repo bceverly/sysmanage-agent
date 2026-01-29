@@ -5,6 +5,7 @@ This module contains utility functions for port detection and formatting.
 """
 
 import subprocess  # nosec B404
+from typing import Optional
 
 
 def _empty_port_lists() -> tuple:
@@ -328,7 +329,7 @@ class FirewallPortHelpers:
             return None, None
 
         proto = parts[0].lower()
-        local_addr = parts[3] if len(parts) > 3 else ""
+        local_addr = parts[3]
         return proto, local_addr
 
     def _extract_port_from_ss_addr(self, local_addr: str) -> str:
@@ -437,7 +438,7 @@ class FirewallPortHelpers:
             sorted(ipv6_udp),
         )
 
-    def _try_ss_ports(self) -> tuple:
+    def _try_ss_ports(self) -> Optional[tuple]:
         """Try to get listening ports using ss command.
 
         Returns:
@@ -456,7 +457,7 @@ class FirewallPortHelpers:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return None
 
-    def _try_netstat_ports(self) -> tuple:
+    def _try_netstat_ports(self) -> Optional[tuple]:
         """Try to get listening ports using netstat command.
 
         Returns:

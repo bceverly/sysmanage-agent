@@ -562,6 +562,50 @@ class WindowsUpdateApplierMixin:
 
         return []
 
+    def _find_windows_matching_update(
+        self, package_name: str, pkg_manager: str
+    ) -> Dict | None:
+        """Find a matching update from available_updates.
+
+        Args:
+            package_name: Name of the package to find.
+            pkg_manager: Package manager to match.
+
+        Returns:
+            The matching update dict, or None if not found.
+        """
+        for update in self.available_updates:
+            if (
+                update.get("package_name") == package_name
+                and update.get("package_manager") == pkg_manager
+            ):
+                return update
+        return None
+
+    def _enrich_windows_package_info(self, pkg: Dict) -> Dict:
+        """Enrich a package dict with available update info.
+
+        Args:
+            pkg: Package dict with name and package_manager.
+
+        Returns:
+            Enriched package dict with merged update info.
+        """
+        package_info = pkg.copy()
+        package_name = pkg.get("name")
+        pkg_manager = pkg.get("package_manager", "unknown")
+
+        matching_update = self._find_windows_matching_update(package_name, pkg_manager)
+        if matching_update:
+            for key, value in matching_update.items():
+                if key not in package_info:
+                    package_info[key] = value
+
+        if "package_name" not in package_info and "name" in package_info:
+            package_info["package_name"] = package_info["name"]
+
+        return package_info
+
     def _collect_windows_packages_by_manager(
         self, packages_to_update: List[Dict]
     ) -> Dict[str, List[Dict]]:
@@ -574,27 +618,13 @@ class WindowsUpdateApplierMixin:
             Dict mapping package manager names to lists of enriched package dicts.
         """
         packages_by_manager: Dict[str, List[Dict]] = {}
+
         for pkg in packages_to_update:
             pkg_manager = pkg.get("package_manager", "unknown")
             if pkg_manager not in packages_by_manager:
                 packages_by_manager[pkg_manager] = []
 
-            package_info = pkg.copy()
-            package_name = pkg.get("name")
-
-            for update in self.available_updates:
-                if (
-                    update.get("package_name") == package_name
-                    and update.get("package_manager") == pkg_manager
-                ):
-                    for key, value in update.items():
-                        if key not in package_info:
-                            package_info[key] = value
-                    break
-
-            if "package_name" not in package_info and "name" in package_info:
-                package_info["package_name"] = package_info["name"]
-
+            package_info = self._enrich_windows_package_info(pkg)
             packages_by_manager[pkg_manager].append(package_info)
 
         return packages_by_manager

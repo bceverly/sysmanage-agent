@@ -5,6 +5,7 @@ BSD and macOS Repository Operations Helper Module
 This module contains BSD and macOS-specific repository operations.
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -118,6 +119,7 @@ class BSDMacOSRepositoryOperations:
         self,
     ) -> list:  # NOSONAR - async required by caller interface
         """List pkg repositories on FreeBSD."""
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         repositories = []
 
         try:
@@ -215,6 +217,7 @@ class BSDMacOSRepositoryOperations:
         self,
     ) -> list:  # NOSONAR - async required by caller interface
         """List pkgsrc repositories on NetBSD."""
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         repositories = []
 
         try:

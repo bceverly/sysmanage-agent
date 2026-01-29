@@ -16,8 +16,9 @@ import shutil
 import subprocess  # nosec B404
 import tempfile
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.operations.child_host_debian_agent_download import (
@@ -34,6 +35,48 @@ from src.sysmanage_agent.operations.child_host_debian_scripts import (
     generate_firstboot_systemd_service,
     generate_preseed_file,
 )
+
+
+@dataclass
+class NetworkConfig:
+    """Network configuration for VM preseed generation."""
+
+    vm_ip: str
+    gateway_ip: str
+    dns_server: Optional[str] = None
+
+
+@dataclass
+class ServerConfig:
+    """SysManage server configuration for VM preseed generation."""
+
+    hostname: str
+    port: int
+    use_https: bool
+
+
+@dataclass
+class UserConfig:
+    """User configuration for VM preseed generation."""
+
+    username: str
+    user_password_hash: str
+    root_password_hash: str
+
+
+@dataclass
+class PreseedConfig:
+    """Configuration for generating enhanced preseed files."""
+
+    hostname: str
+    debian_version: str
+    network: NetworkConfig
+    server: ServerConfig
+    user: UserConfig
+    auto_approve_token: Optional[str] = None
+    disk: str = "vda"
+    timezone: str = "UTC"
+    agent_deb_url: Optional[str] = None
 
 
 class DebianAutoinstallSetup:
@@ -454,8 +497,9 @@ label install
         content = cfg_path.read_text()
         # Comment out the default line if present
         content = content.replace("default installgui", "# default installgui")
-        # NOSONAR - path is constructed from a known temp directory with a fixed filename
-        cfg_path.write_text(content)
+        cfg_path.write_text(
+            content
+        )  # NOSONAR - path is constructed from a known temp directory with a fixed filename, not user-controlled
         self.logger.info(_("Disabled GTK installer default"))
 
     def _regenerate_checksums(self, iso_dir: str) -> None:
@@ -742,23 +786,9 @@ ln -sf /etc/systemd/system/sysmanage-firstboot.service /target/etc/systemd/syste
 """
         return late_command.strip()
 
-    def generate_enhanced_preseed(  # NOSONAR - 15 params required: each param maps to a distinct preseed/late_command field; grouping would obscure the 1:1 mapping to Debian installer config  # pylint: disable=too-many-arguments,too-many-locals
+    def generate_enhanced_preseed(
         self,
-        hostname: str,
-        username: str,
-        user_password_hash: str,
-        root_password_hash: str,
-        gateway_ip: str,
-        vm_ip: str,
-        debian_version: str,
-        server_hostname: str,
-        server_port: int,
-        use_https: bool,
-        auto_approve_token: str = None,
-        dns_server: str = None,
-        disk: str = "vda",
-        timezone: str = "UTC",
-        agent_deb_url: str = None,
+        config: PreseedConfig,
     ) -> Dict[str, Any]:
         """
         Generate enhanced preseed with embedded late_command for agent setup.
@@ -767,21 +797,16 @@ ln -sf /etc/systemd/system/sysmanage-firstboot.service /target/etc/systemd/syste
         commands to set up sysmanage-agent without needing external files.
 
         Args:
-            hostname: VM hostname (FQDN)
-            username: User to create
-            user_password_hash: SHA-512 hashed password for user
-            root_password_hash: SHA-512 hashed password for root
-            gateway_ip: Gateway IP address
-            vm_ip: Static IP address for the VM
-            debian_version: Debian version (e.g., "12")
-            server_hostname: SysManage server hostname
-            server_port: SysManage server port
-            use_https: Whether to use HTTPS
-            auto_approve_token: Optional auto-approval token
-            dns_server: DNS server (defaults to gateway_ip)
-            disk: Target disk device (default: vda)
-            timezone: Timezone (default: UTC)
-            agent_deb_url: Optional URL to download agent .deb during install
+            config: PreseedConfig dataclass containing all configuration:
+                - hostname: VM hostname (FQDN)
+                - debian_version: Debian version (e.g., "12")
+                - network: NetworkConfig with vm_ip, gateway_ip, dns_server
+                - server: ServerConfig with hostname, port, use_https
+                - user: UserConfig with username, user_password_hash, root_password_hash
+                - auto_approve_token: Optional auto-approval token
+                - disk: Target disk device (default: vda)
+                - timezone: Timezone (default: UTC)
+                - agent_deb_url: Optional URL to download agent .deb during install
 
         Returns:
             Dict with success status and complete preseed content
@@ -789,16 +814,16 @@ ln -sf /etc/systemd/system/sysmanage-firstboot.service /target/etc/systemd/syste
         try:
             # First get the base preseed
             result = self.create_preseed_file(
-                hostname=hostname,
-                username=username,
-                user_password_hash=user_password_hash,
-                root_password_hash=root_password_hash,
-                gateway_ip=gateway_ip,
-                vm_ip=vm_ip,
-                debian_version=debian_version,
-                dns_server=dns_server,
-                disk=disk,
-                timezone=timezone,
+                hostname=config.hostname,
+                username=config.user.username,
+                user_password_hash=config.user.user_password_hash,
+                root_password_hash=config.user.root_password_hash,
+                gateway_ip=config.network.gateway_ip,
+                vm_ip=config.network.vm_ip,
+                debian_version=config.debian_version,
+                dns_server=config.network.dns_server,
+                disk=config.disk,
+                timezone=config.timezone,
             )
 
             if not result["success"]:
@@ -808,18 +833,22 @@ ln -sf /etc/systemd/system/sysmanage-firstboot.service /target/etc/systemd/syste
 
             # Generate the late command with embedded config
             # Use dns_server or fall back to gateway_ip
-            effective_dns = dns_server if dns_server else gateway_ip
+            effective_dns = (
+                config.network.dns_server
+                if config.network.dns_server
+                else config.network.gateway_ip
+            )
             late_command = self.create_late_command_script(
-                hostname=hostname,
-                server_hostname=server_hostname,
-                server_port=server_port,
-                use_https=use_https,
-                vm_ip=vm_ip,
-                gateway_ip=gateway_ip,
+                hostname=config.hostname,
+                server_hostname=config.server.hostname,
+                server_port=config.server.port,
+                use_https=config.server.use_https,
+                vm_ip=config.network.vm_ip,
+                gateway_ip=config.network.gateway_ip,
                 dns_server=effective_dns,
-                auto_approve_token=auto_approve_token,
-                debian_version=debian_version,
-                agent_deb_url=agent_deb_url,
+                auto_approve_token=config.auto_approve_token,
+                debian_version=config.debian_version,
+                agent_deb_url=config.agent_deb_url,
             )
 
             # Replace the basic late_command in the preseed with our enhanced one

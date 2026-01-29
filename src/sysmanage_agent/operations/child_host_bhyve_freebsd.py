@@ -154,6 +154,216 @@ load_rc_config $name
 run_rc_command "$1"
 """
 
+    def _attach_memory_disk(self, disk_path: str) -> Dict[str, Any]:
+        """
+        Attach a disk image as a memory disk device.
+
+        Args:
+            disk_path: Path to the raw disk image
+
+        Returns:
+            Dict with success status and md_unit
+        """
+        self.logger.info(_("Attaching disk image as memory disk"))
+        md_result = subprocess.run(  # nosec B603 B607
+            ["mdconfig", "-a", "-t", "vnode", "-f", disk_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if md_result.returncode != 0:
+            return {
+                "success": False,
+                "error": _("Failed to attach memory disk: %s") % md_result.stderr,
+            }
+
+        md_unit = md_result.stdout.strip()
+        self._md_device = md_unit
+        self.logger.info(_("Attached as %s"), md_unit)
+        return {"success": True, "md_unit": md_unit}
+
+    def _mount_freebsd_partition(
+        self, md_unit: str, mount_point: str
+    ) -> Dict[str, Any]:
+        """
+        Mount a FreeBSD UFS partition from a memory disk.
+
+        Args:
+            md_unit: Memory disk unit name (e.g., "md0")
+            mount_point: Directory to mount to
+
+        Returns:
+            Dict with success status
+        """
+        for partition in ["p4", "p3", "p2", "s1a", "a", ""]:
+            dev_path = f"/dev/{md_unit}{partition}"
+            if not os.path.exists(dev_path) and partition:
+                continue
+
+            self.logger.info(_("Trying to mount %s"), dev_path)
+            mount_result = subprocess.run(  # nosec B603 B607
+                ["mount", "-t", "ufs", dev_path, mount_point],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+            if mount_result.returncode == 0:
+                self.logger.info(_("Mounted %s successfully"), dev_path)
+                return {"success": True}
+
+        return {"success": False, "error": _("Failed to mount FreeBSD partition")}
+
+    def _create_user_in_image(
+        self, mount_point: str, username: str, password_hash: str
+    ) -> None:
+        """
+        Create a user in the mounted FreeBSD image.
+
+        Args:
+            mount_point: Path where image is mounted
+            username: Username to create
+            password_hash: Password hash for the user
+        """
+        self.logger.info(_("Creating user %s"), username)
+        master_passwd_path = os.path.join(mount_point, "etc", "master.passwd")
+
+        with open(master_passwd_path, "r", encoding="utf-8") as mpf:
+            master_passwd_lines = mpf.readlines()
+
+        max_uid = 1000
+        for line in master_passwd_lines:
+            parts = line.split(":")
+            if len(parts) >= 3:
+                try:
+                    uid = int(parts[2])
+                    if 1000 <= uid < 65000:
+                        max_uid = max(max_uid, uid)
+                except ValueError:
+                    pass
+
+        new_uid = max_uid + 1
+        user_line = (
+            f"{username}:{password_hash}:{new_uid}:0:"
+            f":0:0:{username} User:/home/{username}:/bin/sh\n"
+        )
+
+        with open(master_passwd_path, "a", encoding="utf-8") as mpf:
+            mpf.write(user_line)
+
+        etc_dir = os.path.join(mount_point, "etc")
+        pwd_result = subprocess.run(  # nosec B603 B607
+            ["pwd_mkdb", "-d", etc_dir, "-p", master_passwd_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        if pwd_result.returncode != 0:
+            self.logger.warning(_("pwd_mkdb warning: %s"), pwd_result.stderr)
+        else:
+            self.logger.info(_("Password database rebuilt successfully"))
+
+        home_dir = os.path.join(mount_point, "home", username)
+        os.makedirs(home_dir, mode=0o755, exist_ok=True)
+
+    def _add_user_to_wheel_group(self, mount_point: str, username: str) -> None:
+        """
+        Add a user to the wheel group in the mounted image.
+
+        Args:
+            mount_point: Path where image is mounted
+            username: Username to add to wheel group
+        """
+        group_path = os.path.join(mount_point, "etc", "group")
+        with open(group_path, "r", encoding="utf-8") as group_file:
+            group_lines = group_file.readlines()
+
+        with open(group_path, "w", encoding="utf-8") as group_file:
+            for line in group_lines:
+                if line.startswith("wheel:"):
+                    line = line.rstrip()
+                    line = (
+                        f"{line}{username}\n"
+                        if line.endswith(":")
+                        else f"{line},{username}\n"
+                    )
+                group_file.write(line)
+
+    def _write_firstboot_files(self, mount_point: str, config: BhyveVmConfig) -> None:
+        """
+        Write firstboot script and sentinel file to the mounted image.
+
+        Args:
+            mount_point: Path where image is mounted
+            config: VM configuration
+        """
+        self.logger.info(_("Creating firstboot script"))
+        rcd_path = os.path.join(mount_point, "etc", "rc.d")
+        firstboot_script_path = os.path.join(rcd_path, "sysmanage_firstboot")
+
+        firstboot_script = self._generate_firstboot_script(config)
+        with open(firstboot_script_path, "w", encoding="utf-8") as fbf:
+            fbf.write(firstboot_script)
+        # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
+        os.chmod(
+            firstboot_script_path, 0o755
+        )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
+
+        firstboot_sentinel = os.path.join(mount_point, "firstboot")
+        with open(firstboot_sentinel, "w", encoding="utf-8") as fsf:
+            fsf.write("")
+
+    def _configure_rc_conf(self, mount_point: str, hostname: str) -> None:
+        """
+        Configure rc.conf with hostname and service settings.
+
+        Args:
+            mount_point: Path where image is mounted
+            hostname: Hostname to set
+        """
+        self.logger.info(_("Setting hostname to %s"), hostname)
+        rc_conf_path = os.path.join(mount_point, "etc", "rc.conf")
+        with open(rc_conf_path, "a", encoding="utf-8") as rc_file:
+            rc_file.write(f'\nhostname="{hostname}"\n')
+            rc_file.write('firstboot_sentinel="/firstboot"\n')
+            rc_file.write('sysmanage_firstboot_enable="YES"\n')
+            rc_file.write('sshd_enable="YES"\n')
+            rc_file.write('ntpd_enable="YES"\n')
+            rc_file.write('ntpd_sync_on_start="YES"\n')
+
+    def _cleanup_mount(
+        self, mount_point: Optional[str], md_unit: Optional[str]
+    ) -> None:
+        """
+        Clean up mount point and memory disk.
+
+        Args:
+            mount_point: Directory where image was mounted
+            md_unit: Memory disk unit name
+        """
+        if mount_point:
+            subprocess.run(  # nosec B603 B607
+                ["umount", mount_point],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            shutil.rmtree(mount_point, ignore_errors=True)
+
+        if md_unit:
+            subprocess.run(  # nosec B603 B607
+                ["mdconfig", "-d", "-u", md_unit],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            self._md_device = None
+
     def inject_firstboot_into_image(
         self, config: BhyveVmConfig, disk_path: str
     ) -> Dict[str, Any]:
@@ -178,57 +388,18 @@ run_rc_command "$1"
 
         try:
             self.logger.info(_("Injecting firstboot script into FreeBSD image"))
-
-            # Create a temporary mount point
             mount_point = tempfile.mkdtemp(prefix="bhyve_freebsd_mount_")
 
-            # Attach the raw image as a memory disk
-            self.logger.info(_("Attaching disk image as memory disk"))
-            md_result = subprocess.run(  # nosec B603 B607
-                ["mdconfig", "-a", "-t", "vnode", "-f", disk_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            # Attach disk as memory device
+            attach_result = self._attach_memory_disk(disk_path)
+            if not attach_result.get("success"):
+                return attach_result
+            md_unit = attach_result["md_unit"]
 
-            if md_result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": _("Failed to attach memory disk: %s") % md_result.stderr,
-                }
-
-            md_unit = md_result.stdout.strip()  # e.g., "md0"
-            self._md_device = md_unit
-            self.logger.info(_("Attached as %s"), md_unit)
-
-            # Mount the UFS partition (typically partition 4 on FreeBSD images)
-            # Try different partition schemes
-            mounted = False
-            for partition in ["p4", "p3", "p2", "s1a", "a", ""]:
-                dev_path = f"/dev/{md_unit}{partition}"
-                if not os.path.exists(dev_path) and partition:
-                    continue
-
-                self.logger.info(_("Trying to mount %s"), dev_path)
-                mount_result = subprocess.run(  # nosec B603 B607
-                    ["mount", "-t", "ufs", dev_path, mount_point],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,
-                )
-
-                if mount_result.returncode == 0:
-                    mounted = True
-                    self.logger.info(_("Mounted %s successfully"), dev_path)
-                    break
-
-            if not mounted:
-                return {
-                    "success": False,
-                    "error": _("Failed to mount FreeBSD partition"),
-                }
+            # Mount FreeBSD partition
+            mount_result = self._mount_freebsd_partition(md_unit, mount_point)
+            if not mount_result.get("success"):
+                return mount_result
 
             # Verify this is a FreeBSD root filesystem
             if not os.path.exists(os.path.join(mount_point, "etc", "rc.conf")):
@@ -240,122 +411,23 @@ run_rc_command "$1"
                     "error": _("Mounted filesystem is not a FreeBSD root"),
                 }
 
-            # 1. Set hostname
-            self.logger.info(_("Setting hostname to %s"), config.hostname)
-            rc_conf_path = os.path.join(mount_point, "etc", "rc.conf")
-            with open(rc_conf_path, "a", encoding="utf-8") as rc_file:
-                rc_file.write(f'\nhostname="{config.hostname}"\n')
-
-            # 2. Create user with password hash
-            self.logger.info(_("Creating user %s"), config.username)
-
-            # Add user to master.passwd
-            master_passwd_path = os.path.join(mount_point, "etc", "master.passwd")
-
-            # Read existing master.passwd to get next UID
-            with open(master_passwd_path, "r", encoding="utf-8") as mpf:
-                master_passwd_lines = mpf.readlines()
-
-            # Find max UID and add new user
-            max_uid = 1000
-            for line in master_passwd_lines:
-                parts = line.split(":")
-                if len(parts) >= 3:
-                    try:
-                        uid = int(parts[2])
-                        if 1000 <= uid < 65000:
-                            max_uid = max(max_uid, uid)
-                    except ValueError:
-                        pass
-
-            new_uid = max_uid + 1
-            # Format: username:password:uid:gid:class:change:expire:gecos:home:shell
-            # Note: class field should be empty (not "wheel" - that's for group membership)
-            # gid 0 is wheel group
-            user_line = (
-                f"{config.username}:{config.password_hash}:{new_uid}:0:"
-                f":0:0:{config.username} User:/home/{config.username}:/bin/sh\n"
+            # Configure the image
+            self._configure_rc_conf(mount_point, config.hostname)
+            self._create_user_in_image(
+                mount_point, config.username, config.password_hash
             )
-
-            with open(master_passwd_path, "a", encoding="utf-8") as mpf:
-                mpf.write(user_line)
-
-            # Rebuild password database using pwd_mkdb
-            # -d specifies output directory for pwd.db/spwd.db (must be /etc)
-            # -p creates a Version 7 format passwd file
-            etc_dir = os.path.join(mount_point, "etc")
-            pwd_result = subprocess.run(  # nosec B603 B607
-                ["pwd_mkdb", "-d", etc_dir, "-p", master_passwd_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if pwd_result.returncode != 0:
-                self.logger.warning(_("pwd_mkdb warning: %s"), pwd_result.stderr)
-            else:
-                self.logger.info(_("Password database rebuilt successfully"))
-
-            # Create home directory
-            home_dir = os.path.join(mount_point, "home", config.username)
-            os.makedirs(home_dir, mode=0o755, exist_ok=True)
-
-            # 3. Add user to wheel group in /etc/group
-            group_path = os.path.join(mount_point, "etc", "group")
-            with open(group_path, "r", encoding="utf-8") as group_file:
-                group_lines = group_file.readlines()
-
-            with open(group_path, "w", encoding="utf-8") as group_file:
-                for line in group_lines:
-                    if line.startswith("wheel:"):
-                        line = line.rstrip()
-                        if line.endswith(":"):
-                            line = f"{line}{config.username}\n"
-                        else:
-                            line = f"{line},{config.username}\n"
-                    group_file.write(line)
-
-            # 4. Create firstboot rc.d script
-            self.logger.info(_("Creating firstboot script"))
-            rcd_path = os.path.join(mount_point, "etc", "rc.d")
-            firstboot_script_path = os.path.join(rcd_path, "sysmanage_firstboot")
-
-            firstboot_script = self._generate_firstboot_script(config)
-            with open(firstboot_script_path, "w", encoding="utf-8") as fbf:
-                fbf.write(firstboot_script)
-            # Make firstboot script executable - must be 755 to run as rc.d script
-            # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-            os.chmod(
-                firstboot_script_path, 0o755
-            )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
-
-            # 5. Create /firstboot sentinel file to enable firstboot scripts
-            firstboot_sentinel = os.path.join(mount_point, "firstboot")
-            with open(firstboot_sentinel, "w", encoding="utf-8") as fsf:
-                fsf.write("")
-
-            # 6. Enable firstboot and our script in rc.conf
-            with open(rc_conf_path, "a", encoding="utf-8") as rc_file:
-                rc_file.write('firstboot_sentinel="/firstboot"\n')
-                rc_file.write('sysmanage_firstboot_enable="YES"\n')
-                # Also enable sshd for remote access
-                rc_file.write('sshd_enable="YES"\n')
-                # Enable NTP with sync-on-start to fix time drift issues
-                rc_file.write('ntpd_enable="YES"\n')
-                rc_file.write('ntpd_sync_on_start="YES"\n')
+            self._add_user_to_wheel_group(mount_point, config.username)
+            self._write_firstboot_files(mount_point, config)
 
             self.logger.info(_("Firstboot injection complete"))
 
-            # Unmount
+            # Clean unmount
             subprocess.run(  # nosec B603 B607
                 ["umount", mount_point],
                 capture_output=True,
                 timeout=30,
                 check=False,
             )
-
-            # Detach memory disk
             subprocess.run(  # nosec B603 B607
                 ["mdconfig", "-d", "-u", md_unit],
                 capture_output=True,
@@ -368,25 +440,7 @@ run_rc_command "$1"
 
         except Exception as err:
             self.logger.error(_("Error injecting firstboot: %s"), err)
-
-            # Cleanup on error
-            if mount_point:
-                subprocess.run(  # nosec B603 B607
-                    ["umount", mount_point],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-                shutil.rmtree(mount_point, ignore_errors=True)
-
-            if md_unit:
-                subprocess.run(  # nosec B603 B607
-                    ["mdconfig", "-d", "-u", md_unit],
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-
+            self._cleanup_mount(mount_point, md_unit)
             return {"success": False, "error": str(err)}
 
         finally:

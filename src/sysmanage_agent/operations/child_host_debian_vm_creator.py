@@ -24,6 +24,10 @@ from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
 from src.sysmanage_agent.operations.child_host_debian_autoinstall import (
     DebianAutoinstallSetup,
+    NetworkConfig,
+    PreseedConfig,
+    ServerConfig,
+    UserConfig,
 )
 from src.sysmanage_agent.operations.child_host_debian_console import (
     DebianConsoleAutomation,
@@ -776,23 +780,30 @@ class DebianVmCreator:  # pylint: disable=too-many-instance-attributes
                 )
 
             # Generate enhanced preseed with embedded late_command
-            result = self.autoinstall_setup.generate_enhanced_preseed(
+            preseed_config = PreseedConfig(
                 hostname=fqdn_hostname,
-                username=config.username,
-                user_password_hash=user_password_hash,
-                root_password_hash=root_password_hash,
-                gateway_ip=gateway_ip,
-                vm_ip=vm_ip,
                 debian_version=debian_version,
-                server_hostname=config.server_config.server_url,
-                server_port=config.server_config.server_port,
-                use_https=config.server_config.use_https,
+                network=NetworkConfig(
+                    vm_ip=vm_ip,
+                    gateway_ip=gateway_ip,
+                    dns_server=dns_server,
+                ),
+                server=ServerConfig(
+                    hostname=config.server_config.server_url,
+                    port=config.server_config.server_port,
+                    use_https=config.server_config.use_https,
+                ),
+                user=UserConfig(
+                    username=config.username,
+                    user_password_hash=user_password_hash,
+                    root_password_hash=root_password_hash,
+                ),
                 auto_approve_token=config.auto_approve_token,
-                dns_server=dns_server,
                 disk="vdb",  # Second disk (first is ISO during install)
                 timezone="UTC",
                 agent_deb_url=agent_deb_url,
             )
+            result = self.autoinstall_setup.generate_enhanced_preseed(preseed_config)
 
             return result
 

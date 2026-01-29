@@ -505,10 +505,73 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                     }
                 )
 
+    def _is_macos_upgrade_line(self, line: str) -> bool:
+        """Check if a softwareupdate output line is a macOS upgrade.
+
+        Args:
+            line: A line from softwareupdate --list output.
+
+        Returns:
+            True if line represents a macOS upgrade, False otherwise.
+        """
+        return "macOS" in line and ("Installer" in line or "Upgrade" in line)
+
+    def _get_current_macos_version(self) -> str:
+        """Get the current macOS version using sw_vers.
+
+        Returns:
+            Current macOS version string, or "Unknown" if unavailable.
+        """
+        current_result = subprocess.run(  # nosec B603, B607
+            ["sw_vers", "-productVersion"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if current_result.returncode == 0:
+            return current_result.stdout.strip()
+        return "Unknown"
+
+    def _parse_macos_upgrade_line(self, line: str) -> str | None:
+        """Parse a macOS upgrade line to extract version info.
+
+        Args:
+            line: A line from softwareupdate output.
+
+        Returns:
+            Available version string, or None if unparseable.
+        """
+        parts = line.strip().split()
+        if len(parts) < 2:
+            return None
+        # Everything after the * is the version info
+        return " ".join(parts[1:])
+
+    def _add_macos_upgrade_update(self, available_version: str):
+        """Add a macOS upgrade to available_updates.
+
+        Args:
+            available_version: The available macOS version string.
+        """
+        current_version = self._get_current_macos_version()
+        self.available_updates.append(
+            {
+                "package_name": "macos-upgrade",
+                "current_version": current_version,
+                "available_version": available_version,
+                "package_manager": "macos-upgrade",
+                "is_security_update": True,  # Always security for OS upgrades
+                "is_system_update": True,
+                "update_size": 8000000000,  # ~8GB estimate for macOS
+                "repository": "apple-software-update",
+                "requires_reboot": True,
+            }
+        )
+
     def _detect_macos_version_upgrades(self):
         """Detect macOS version upgrades using softwareupdate."""
         try:
-            # Check for major macOS upgrades
             result = subprocess.run(  # nosec B603, B607
                 ["softwareupdate", "--list", "--include-config-data"],
                 capture_output=True,
@@ -517,47 +580,16 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                 check=False,
             )
 
-            if result.returncode == 0:
-                lines = result.stdout.split("\n")
-                for line in lines:
-                    # Look for macOS installer packages
-                    if "macOS" in line and ("Installer" in line or "Upgrade" in line):
-                        # Parse the line to extract version info
-                        # Format is usually: "* macOS Something-Version"
-                        parts = line.strip().split()
-                        if len(parts) >= 2:
-                            package_name = "macos-upgrade"
-                            available_version = " ".join(
-                                parts[1:]
-                            )  # Everything after the *
+            if result.returncode != 0:
+                return
 
-                            # Get current macOS version
-                            current_result = subprocess.run(  # nosec B603, B607
-                                ["sw_vers", "-productVersion"],
-                                capture_output=True,
-                                text=True,
-                                timeout=10,
-                                check=False,
-                            )
-                            current_version = (
-                                current_result.stdout.strip()
-                                if current_result.returncode == 0
-                                else "Unknown"
-                            )
+            for line in result.stdout.split("\n"):
+                if not self._is_macos_upgrade_line(line):
+                    continue
 
-                            self.available_updates.append(
-                                {
-                                    "package_name": package_name,
-                                    "current_version": current_version,
-                                    "available_version": available_version,
-                                    "package_manager": "macos-upgrade",
-                                    "is_security_update": True,  # Always security for OS upgrades
-                                    "is_system_update": True,
-                                    "update_size": 8000000000,  # ~8GB estimate for macOS
-                                    "repository": "apple-software-update",
-                                    "requires_reboot": True,
-                                }
-                            )
+                available_version = self._parse_macos_upgrade_line(line)
+                if available_version:
+                    self._add_macos_upgrade_update(available_version)
 
         except Exception as error:
             logger.error(_("Failed to detect macOS version upgrades: %s"), str(error))

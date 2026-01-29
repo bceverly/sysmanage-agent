@@ -138,6 +138,7 @@ class ServerDiscoveryClient:
         Returns:
             List of server responses
         """
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         servers = []
 
         try:
@@ -169,6 +170,7 @@ class ServerDiscoveryClient:
         Returns:
             List of servers from announcements
         """
+        await asyncio.sleep(0)  # Yield to event loop for interface consistency
         servers = []
 
         try:
