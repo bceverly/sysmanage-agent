@@ -4,6 +4,8 @@ Linux firewall rule parsers for UFW, firewalld, iptables, and nftables.
 This module contains parsing logic for different Linux firewall systems.
 """
 
+from __future__ import annotations
+
 import subprocess  # nosec B404
 
 

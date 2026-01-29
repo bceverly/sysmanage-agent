@@ -5,6 +5,7 @@ This module contains parsing logic for different BSD firewall systems.
 """
 
 import subprocess  # nosec B404
+from typing import List, Optional
 
 # Constants for rule parsing
 _TO_ANY_PATTERN = " to any "
@@ -101,14 +102,14 @@ class BsdFirewallParsers:
             return True
         return False
 
-    def _extract_pf_port(self, line: str) -> str | None:
+    def _extract_pf_port(self, line: str) -> Optional[str]:
         """Extract port number from a pf rule line."""
         parts = line.split("port")
         if len(parts) <= 1:
             return None
         return parts[1].strip().split()[0].strip("=")
 
-    def _get_pf_protocol(self, line_lower: str) -> str | None:
+    def _get_pf_protocol(self, line_lower: str) -> Optional[str]:
         """Determine the protocol from a pf rule line.
 
         Returns:
@@ -211,7 +212,7 @@ class BsdFirewallParsers:
         line_lower = line.lower()
         return "ip6" in line_lower or "ipv6" in line_lower
 
-    def _extract_ipfw_port_dst_port(self, line: str) -> str | None:
+    def _extract_ipfw_port_dst_port(self, line: str) -> Optional[str]:
         """Extract port using dst-port format."""
         if "dst-port" not in line.lower():
             return None
@@ -220,7 +221,7 @@ class BsdFirewallParsers:
             return None
         return parts[1].strip().split()[0].strip(",")
 
-    def _extract_ipfw_port_to_any(self, line: str) -> str | None:
+    def _extract_ipfw_port_to_any(self, line: str) -> Optional[str]:
         """Extract port from 'to any <port>' format."""
         if _TO_ANY_PATTERN not in line:
             return None
@@ -233,7 +234,7 @@ class BsdFirewallParsers:
             return port_match[0]
         return None
 
-    def _extract_ipfw_port(self, line: str) -> str | None:
+    def _extract_ipfw_port(self, line: str) -> Optional[str]:
         """Extract port number from an ipfw rule line."""
         port = self._extract_ipfw_port_dst_port(line)
         if port is not None:
@@ -320,7 +321,7 @@ class BsdFirewallParsers:
         """Determine if an npf rule is for IPv6."""
         return "family inet6" in line or "inet6" in line
 
-    def _extract_npf_port_list(self, port_part: str) -> list | None:
+    def _extract_npf_port_list(self, port_part: str) -> Optional[List]:
         """Extract ports from a port list format: { 80, 443, 25 }."""
         if not port_part.startswith("{"):
             return None
@@ -331,7 +332,7 @@ class BsdFirewallParsers:
         ].strip()
         return [p.strip() for p in port_list_str.split(",")]
 
-    def _extract_npf_port_range(self, port_part: str) -> list | None:
+    def _extract_npf_port_range(self, port_part: str) -> Optional[List]:
         """Extract port range format: 33434-33600."""
         first_token = port_part.split()[0]
         if "-" not in first_token:
@@ -342,7 +343,7 @@ class BsdFirewallParsers:
         """Extract single port from port part."""
         return [port_part.split()[0].strip(",")]
 
-    def _extract_npf_ports(self, line: str) -> list | None:
+    def _extract_npf_ports(self, line: str) -> Optional[List]:
         """Extract port number(s) from an npf rule line."""
         parts = line.split("port")
         if len(parts) <= 1:
@@ -363,7 +364,7 @@ class BsdFirewallParsers:
         # Default to single port
         return self._extract_npf_single_port(port_part)
 
-    def _get_npf_protocol(self, line_lower: str) -> str | None:
+    def _get_npf_protocol(self, line_lower: str) -> Optional[str]:
         """Determine the protocol from an npf rule line.
 
         Returns:
