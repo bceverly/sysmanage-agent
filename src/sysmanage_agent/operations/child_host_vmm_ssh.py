@@ -26,8 +26,8 @@ class VmmSshOperations:
         self.logger = logger
 
     async def wait_for_ssh(
-        self, ip_address: str, timeout: int = 300
-    ) -> Dict[str, Any]:  # NOSONAR - timeout parameter is part of the established API
+        self, ip_address: str, timeout: int = 300  # NOSONAR
+    ) -> Dict[str, Any]:
         """
         Wait for SSH to become available on the VM.
 

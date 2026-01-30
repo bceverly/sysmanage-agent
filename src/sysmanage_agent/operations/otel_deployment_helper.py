@@ -321,14 +321,12 @@ class OtelDeploymentHelper:
 
             async with aiofiles.open(config_file, "w", encoding="utf-8") as file_handle:
                 await file_handle.write(config_generator(grafana_url))
-            # NOSONAR - permissions are appropriate for this file type
-            os.chmod(config_file, 0o644)
+            os.chmod(config_file, 0o644)  # NOSONAR
 
             env_file = "/etc/otelcol-contrib/otelcol-contrib.conf"
             async with aiofiles.open(env_file, "w", encoding="utf-8") as file_handle:
                 await file_handle.write(f'OTELCOL_OPTIONS="--config={config_file}"\n')
-            # NOSONAR - permissions are appropriate for this file type
-            os.chmod(env_file, 0o644)
+            os.chmod(env_file, 0o644)  # NOSONAR
 
             return {"success": True, "config_file": config_file}
         except Exception as error:

@@ -469,8 +469,8 @@ class BhyveCreationHelper:
         self.logger.warning(_("Timeout waiting for VM %s to get IP"), vm_name)
         return None
 
-    async def wait_for_ssh(  # NOSONAR - timeout parameter is for polling loop control
-        self, ip: str, port: int = 22, timeout: int = 180
+    async def wait_for_ssh(
+        self, ip: str, port: int = 22, timeout: int = 180  # NOSONAR
     ) -> bool:
         """
         Wait for SSH to become available.

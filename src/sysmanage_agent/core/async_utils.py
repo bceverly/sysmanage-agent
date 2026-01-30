@@ -25,9 +25,7 @@ class AsyncProcessResult:
 
 async def run_command_async(
     cmd: Union[List[str], str],
-    timeout: Optional[
-        float
-    ] = 30.0,  # NOSONAR - timeout parameter is passed to asyncio.wait_for, not used for manual sleep-based polling
+    timeout: Optional[float] = 30.0,  # NOSONAR
     check: bool = False,
     cwd: Optional[str] = None,
     env: Optional[Dict[str, str]] = None,

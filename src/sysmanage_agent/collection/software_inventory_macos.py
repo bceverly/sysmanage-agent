@@ -293,8 +293,9 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         if "kind" not in app or "bytes" not in str(app["kind"]):
             return
 
-        # NOSONAR - regex operates on trusted internal data
-        size_match = re.search(r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"]))
+        size_match = re.search(
+            r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"])
+        )  # NOSONAR
         if size_match:
             package["size_bytes"] = self._parse_size_string(
                 f"{size_match.group(1)} {size_match.group(2)}"

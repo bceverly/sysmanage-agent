@@ -593,8 +593,7 @@ class ChildHostListing:
         if not line:
             return None
 
-        # NOSONAR - regex operates on trusted internal data
-        match = re.match(r'"(.+)"\s+\{([^}]+)\}', line)
+        match = re.match(r'"(.+)"\s+\{([^}]+)\}', line)  # NOSONAR
         if not match:
             return None
 

@@ -106,8 +106,7 @@ def extract_openbsd_version(distribution: str, logger) -> Optional[str]:
         Version string (e.g., "7.7") or None if not found
     """
     try:
-        # NOSONAR - regex operates on trusted internal data
-        match = re.search(r"(\d+\.\d+)", distribution)
+        match = re.search(r"(\d+\.\d+)", distribution)  # NOSONAR
         if match:
             return match.group(1)
         return None

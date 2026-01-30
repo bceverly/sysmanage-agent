@@ -112,8 +112,7 @@ class NetworkUtils:
         try:
             # Connect to a remote address to determine local IP
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                # NOSONAR - Google DNS used only for route detection
-                sock.connect(("8.8.8.8", 80))
+                sock.connect(("8.8.8.8", 80))  # NOSONAR
                 local_ip = sock.getsockname()[0]
                 if local_ip:
                     return self._resolve_ip_to_hostname(local_ip)
@@ -167,8 +166,7 @@ class NetworkUtils:
         try:
             # Get IPv4 address by connecting to a remote host
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                # NOSONAR - Google DNS used only for route detection
-                sock.connect(("8.8.8.8", 80))
+                sock.connect(("8.8.8.8", 80))  # NOSONAR
                 ipv4 = sock.getsockname()[0]
         except Exception as error:
             self.logger.debug("Could not determine IPv4 address: %s", error)
@@ -176,8 +174,7 @@ class NetworkUtils:
         try:
             # Get IPv6 address by connecting to a remote host
             with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as sock:
-                # NOSONAR - Google DNS used only for route detection
-                sock.connect(("2001:4860:4860::8888", 80))
+                sock.connect(("2001:4860:4860::8888", 80))  # NOSONAR
                 ipv6 = sock.getsockname()[0]
         except Exception as error:
             self.logger.debug("Could not determine IPv6 address: %s", error)

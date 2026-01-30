@@ -84,9 +84,7 @@ async def configure_config_file(sample_path: str, target_path: str, sed_patterns
     logger.info("%s configured", target_path)
 
 
-async def wait_for_virus_database(
-    db_paths: list, timeout: int = 30
-):  # NOSONAR - timeout parameter is intentional for polling loop control
+async def wait_for_virus_database(db_paths: list, timeout: int = 30):  # NOSONAR
     """Wait for virus database to be downloaded."""
     logger.info("Waiting for virus database download")
     database_ready = False

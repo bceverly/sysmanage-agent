@@ -53,15 +53,11 @@ class RegistrationManager:
             # Set up SSL context if needed
             ssl_context = None
             if use_https:
-                ssl_context = (
-                    ssl.create_default_context()
-                )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context = ssl.create_default_context()  # NOSONAR
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
-                    ssl_context.verify_mode = (
-                        ssl.CERT_NONE
-                    )  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR
+                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
 
             # Get authentication token
             auth_token = await self.get_auth_token()
@@ -118,15 +114,11 @@ class RegistrationManager:
 
             ssl_context = None
             if use_https:
-                ssl_context = (
-                    ssl.create_default_context()
-                )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context = ssl.create_default_context()  # NOSONAR
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
-                    ssl_context.verify_mode = (
-                        ssl.CERT_NONE
-                    )  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR
+                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
 
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             async with aiohttp.ClientSession(connector=connector) as session:
@@ -582,15 +574,11 @@ class RegistrationManager:
             # Create SSL context if needed
             ssl_context = None
             if use_ssl:
-                ssl_context = (
-                    ssl.create_default_context()
-                )  # NOSONAR - SSL verification is intentionally configurable
+                ssl_context = ssl.create_default_context()  # NOSONAR
                 ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
                 if not config.get("server", {}).get("ssl", {}).get("verify", True):
-                    ssl_context.check_hostname = False  # NOSONAR - Hostname verification disabled for self-signed certificate support in private networks
-                    ssl_context.verify_mode = (
-                        ssl.CERT_NONE
-                    )  # NOSONAR - SSL verification is intentionally configurable
+                    ssl_context.check_hostname = False  # NOSONAR
+                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
 
             # Make the HTTP request
             async with aiohttp.ClientSession() as session:

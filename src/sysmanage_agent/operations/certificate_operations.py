@@ -67,8 +67,7 @@ class CertificateOperations:
                             await file_handle.write("\n")
 
                     # Set appropriate permissions for certificates (644 - readable by all)
-                    # NOSONAR - permissions are appropriate for this file type
-                    os.chmod(cert_file_path, 0o644)
+                    os.chmod(cert_file_path, 0o644)  # NOSONAR
 
                     # Set root ownership (certificates should be owned by root)
                     os.chown(cert_file_path, 0, 0)

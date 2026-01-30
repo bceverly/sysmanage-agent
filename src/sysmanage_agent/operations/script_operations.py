@@ -194,8 +194,8 @@ class ScriptOperations:
         self,
         script_content: str,
         shell_path: str,
-        timeout: int,
-        working_directory: str,  # NOSONAR - timeout parameter is appropriate
+        timeout: int,  # NOSONAR
+        working_directory: str,
     ) -> Dict[str, Any]:
         """Execute script file and return results."""
         # Create script file

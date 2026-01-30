@@ -302,8 +302,7 @@ class LinuxSystemUpdateDetector:
 
             # Check if there's a newer release repository available
             if "update" in result.stdout.lower() or "upgrade" in result.stdout.lower():
-                # NOSONAR - regex operates on trusted internal data
-                version_match = re.search(r"(\d+\.\d+)", result.stdout)
+                version_match = re.search(r"(\d+\.\d+)", result.stdout)  # NOSONAR
                 if version_match:
                     new_version = version_match.group(1)
                     update = {
