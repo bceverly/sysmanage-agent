@@ -333,6 +333,7 @@ class MessageProcessor:
             "create_host_group": self.agent.create_host_group,
             "delete_host_user": self.agent.delete_host_user,
             "delete_host_group": self.agent.delete_host_group,
+            "change_hostname": self.agent.change_hostname,
             # Child host management commands
             "check_virtualization_support": self.agent.child_host_ops.check_virtualization_support,
             "list_child_hosts": self.agent.child_host_ops.list_child_hosts,

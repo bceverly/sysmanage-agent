@@ -11,6 +11,7 @@ from typing import Any, Dict
 from src.sysmanage_agent.operations.antivirus_operations import AntivirusOperations
 from src.sysmanage_agent.operations.certificate_operations import CertificateOperations
 from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
+from src.sysmanage_agent.operations.hostname_operations import HostnameOperations
 from src.sysmanage_agent.operations.opentelemetry_operations import (
     OpenTelemetryOperations,
 )
@@ -43,6 +44,7 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.ssh_ops = SSHKeyOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
         self.user_account_ops = UserAccountOperations(agent_instance)
+        self.hostname_ops = HostnameOperations(agent_instance)
 
     # ========== System Control Delegation ==========
 
@@ -338,3 +340,9 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     async def delete_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Delete a group from the host."""
         return await self.user_account_ops.delete_host_group(parameters)
+
+    # ========== Hostname Operations Delegation ==========
+
+    async def change_hostname(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Change the system hostname."""
+        return await self.hostname_ops.change_hostname(parameters)

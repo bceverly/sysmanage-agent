@@ -564,7 +564,9 @@ label install
             # Extract just the hostname from the URL if it's a full URL
             if mirror_url.startswith("https://"):
                 mirror_url = mirror_url.replace("https://", "").split("/")[0]
-            elif mirror_url.startswith("http://"):
+            elif mirror_url.startswith(
+                "http://"
+            ):  # NOSONAR - string parsing, not HTTP connection
                 mirror_url = mirror_url.replace("http://", "").split("/")[0]  # NOSONAR
 
             preseed_content = generate_preseed_file(

@@ -148,6 +148,10 @@ class SystemOperationsDelegator:
         """Delete a group from the host."""
         return await self.system_ops.delete_host_group(parameters)
 
+    async def change_hostname(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Change the system hostname."""
+        return await self.system_ops.change_hostname(parameters)
+
 
 class DataCollectorDelegator:
     """Mixin providing data collector delegators."""
