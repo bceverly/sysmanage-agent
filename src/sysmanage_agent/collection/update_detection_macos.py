@@ -21,6 +21,8 @@ providing detailed metadata including current version, available version,
 security status, and update size.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import re

@@ -108,10 +108,9 @@ UBUNTU_ISO_URLS = {
 }
 
 # Ubuntu mirror URLs for package installation
-# NOSONAR - Ubuntu mirrors may use http for compatibility
 UBUNTU_MIRROR_URLS = {
-    "24.04": "http://archive.ubuntu.com/ubuntu",
-    "22.04": "http://archive.ubuntu.com/ubuntu",
+    "24.04": "http://archive.ubuntu.com/ubuntu",  # NOSONAR - Ubuntu mirrors use http
+    "22.04": "http://archive.ubuntu.com/ubuntu",  # NOSONAR - Ubuntu mirrors use http
 }
 
 # Ubuntu codenames

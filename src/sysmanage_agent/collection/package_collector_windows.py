@@ -236,11 +236,10 @@ class WindowsPackageCollector(BasePackageCollector):
         """
         root = ET.fromstring(xml_data)  # nosec B314 # Trusted Chocolatey API XML
 
-        # NOSONAR - XML namespace URIs, not network connections
         namespace = {
-            "atom": "http://www.w3.org/2005/Atom",
-            "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",
-            "m": "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+            "atom": "http://www.w3.org/2005/Atom",  # NOSONAR - XML namespace URI, not network connection
+            "d": "http://schemas.microsoft.com/ado/2007/08/dataservices",  # NOSONAR - XML namespace URI
+            "m": "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",  # NOSONAR - XML namespace URI
         }
 
         entries = root.findall("atom:entry", namespace)

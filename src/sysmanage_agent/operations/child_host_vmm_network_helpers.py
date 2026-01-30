@@ -196,15 +196,14 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
         or None if no suitable subnet found
     """
     # Common private subnets to try
-    # NOSONAR - private subnets for VM networking
     candidate_subnets = [
-        "100.64.0.0",  # CGNAT range - won't conflict with typical networks
-        "10.0.0.0",
-        "10.1.0.0",
-        "10.2.0.0",
-        "192.168.100.0",
-        "192.168.101.0",
-        "172.16.0.0",
+        "100.64.0.0",  # NOSONAR - CGNAT range - won't conflict with typical networks
+        "10.0.0.0",  # NOSONAR - private subnet for VM networking
+        "10.1.0.0",  # NOSONAR - private subnet for VM networking
+        "10.2.0.0",  # NOSONAR - private subnet for VM networking
+        "192.168.100.0",  # NOSONAR - private subnet for VM networking
+        "192.168.101.0",  # NOSONAR - private subnet for VM networking
+        "172.16.0.0",  # NOSONAR - private subnet for VM networking
     ]
 
     try:
@@ -231,11 +230,10 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
 
 def format_subnet_info(network: str) -> Dict[str, str]:
     """Format subnet information for use in dhcpd and bridge config."""
-    # NOSONAR - private subnet IPs and netmask for VM networking
     parts = network.split(".")
     return {
         "network": network,
-        "netmask": "255.255.255.0",
+        "netmask": "255.255.255.0",  # NOSONAR - private subnet netmask for VM networking
         "gateway_ip": f"{parts[0]}.{parts[1]}.{parts[2]}.1",
         "dhcp_start": f"{parts[0]}.{parts[1]}.{parts[2]}.10",
         "dhcp_end": f"{parts[0]}.{parts[1]}.{parts[2]}.254",

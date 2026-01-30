@@ -328,13 +328,12 @@ class ServerDiscoveryClient:
     def _get_broadcast_addresses(self) -> List[str]:
         """Get list of broadcast addresses to try."""
         # Common broadcast addresses for discovery
-        # NOSONAR - broadcast addresses for network discovery
         addresses = [
-            "255.255.255.255",  # Global broadcast
-            "192.168.1.255",  # Common home network
-            "192.168.0.255",  # Common home network
-            "10.0.0.255",  # Common corporate network
-            "172.16.255.255",  # Common corporate network
+            "255.255.255.255",  # NOSONAR - Global broadcast for network discovery
+            "192.168.1.255",  # NOSONAR - Common home network broadcast
+            "192.168.0.255",  # NOSONAR - Common home network broadcast
+            "10.0.0.255",  # NOSONAR - Common corporate network broadcast
+            "172.16.255.255",  # NOSONAR - Common corporate network broadcast
         ]
 
         # Try to determine actual broadcast addresses

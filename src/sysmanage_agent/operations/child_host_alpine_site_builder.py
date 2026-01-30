@@ -338,8 +338,9 @@ class AlpineSiteTarballBuilder:
             tarball_path = output_dir / tarball_name
 
             # Create tarball
-            # NOSONAR - creating tarball, not extracting untrusted content
-            with tarfile.open(tarball_path, "w:gz") as tar:
+            with tarfile.open(
+                tarball_path, "w:gz"
+            ) as tar:  # NOSONAR - creating tarball, safe operation
                 tar.add(site_dir, arcname=".")
 
             return {

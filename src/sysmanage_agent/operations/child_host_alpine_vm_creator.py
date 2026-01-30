@@ -707,8 +707,7 @@ class AlpineVmCreator:  # pylint: disable=too-many-instance-attributes
             )
 
             # Write script to temp file for reference/debugging
-            # NOSONAR - temp file for VM setup
-            script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108
+            script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108  # NOSONAR - temp file for VM setup
             await write_file_async(script_path, setup_script)
 
             self.logger.info(

@@ -380,8 +380,7 @@ poweroff
             )
 
             # Write setup script to temporary file
-            # NOSONAR - temp file for VM setup
-            script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108
+            script_path = f"/tmp/alpine_setup_{vm_name}.sh"  # nosec B108  # NOSONAR - temp file for VM setup
             with open(script_path, "w", encoding="utf-8") as script_file:
                 script_file.write(setup_script)
 

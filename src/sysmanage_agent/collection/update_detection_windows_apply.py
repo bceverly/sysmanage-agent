@@ -9,6 +9,8 @@ This module handles applying updates on Windows systems:
 - Windows version upgrades
 """
 
+from __future__ import annotations
+
 import logging
 import platform
 import subprocess  # nosec B404
