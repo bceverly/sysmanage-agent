@@ -72,8 +72,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
             if result.returncode == 0 and result.stdout.strip():
                 for line in result.stdout.strip().split("\n"):
                     # Parse format: package-version < needs updating (remote has version)
-                    match = re.match(  # NOSONAR - regex operates on trusted internal data
-                        r"^([^-]+(?:-\D[^-]*)*)-([^\s]+)\s+<\s+.*remote has ([^\)]+)",
+                    match = re.match(
+                        r"^([^-]+(?:-\D[^-]*)*)-([^\s]+)\s+<\s+.*remote has ([^\)]+)",  # NOSONAR
                         line,
                     )
                     if match:
@@ -142,8 +142,8 @@ class BSDUpdateDetector(UpdateDetectorBase):
         if not line.strip() or line.startswith("pkg_summary"):
             return None
 
-        match = re.match(  # NOSONAR - regex operates on trusted internal data
-            r"^(\w[\w+.-]*)-(\d[^\s]*)\s+",
+        match = re.match(
+            r"^(\w[\w+.-]*)-(\d[^\s]*)\s+",  # NOSONAR
             line,
         )
         if match:

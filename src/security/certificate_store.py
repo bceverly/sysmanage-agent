@@ -88,9 +88,9 @@ class CertificateStore:
         with open(self.client_cert_path, "w", encoding="utf-8") as file_handle:
             file_handle.write(cert_data["certificate"])
         if os.name != "nt":  # Unix only
-            os.chmod(  # NOSONAR
+            os.chmod(
                 self.client_cert_path,
-                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,  # NOSONAR
             )
 
         # Store client private key with restrictive permissions
@@ -103,18 +103,18 @@ class CertificateStore:
         with open(self.ca_cert_path, "w", encoding="utf-8") as file_handle:
             file_handle.write(cert_data["ca_certificate"])
         if os.name != "nt":  # Unix only
-            os.chmod(  # NOSONAR
+            os.chmod(
                 self.ca_cert_path,
-                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,  # NOSONAR
             )
 
         # Store server fingerprint
         with open(self.server_fingerprint_path, "w", encoding="utf-8") as file_handle:
             file_handle.write(cert_data["server_fingerprint"])
         if os.name != "nt":  # Unix only
-            os.chmod(  # NOSONAR
+            os.chmod(
                 self.server_fingerprint_path,
-                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,  # NOSONAR
             )
 
     def load_certificates(self) -> Optional[Tuple[str, str, str]]:

@@ -294,8 +294,8 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             return
 
         size_match = re.search(
-            r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"])
-        )  # NOSONAR
+            r"(\d+(?:\.\d+)?)\s*([KMGT]?B)", str(app["kind"])  # NOSONAR
+        )
         if size_match:
             package["size_bytes"] = self._parse_size_string(
                 f"{size_match.group(1)} {size_match.group(2)}"
