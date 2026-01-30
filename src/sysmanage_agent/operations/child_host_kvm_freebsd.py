@@ -371,9 +371,8 @@ local-hostname: {config.hostname.split('.')[0]}
                     bsf.write(bootstrap_script)
                 # Make bootstrap script executable - must be 755 to run as shell script
                 # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-                os.chmod(
-                    bootstrap_path, 0o755
-                )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
+                # NOSONAR - permissions are appropriate for this file type
+                os.chmod(bootstrap_path, 0o755)  # nosec B103
 
                 # Create ISO image (more compatible than FAT32 for cloud-init)
                 self._config_disk_path = os.path.join(

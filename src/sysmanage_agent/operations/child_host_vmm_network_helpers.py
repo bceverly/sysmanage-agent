@@ -181,7 +181,7 @@ def _find_unused_subnet(used_subnets: set, candidate_subnets: list) -> str:
             return subnet
 
     # Fallback
-    return "10.0.0.0"
+    return "10.0.0.0"  # NOSONAR - private subnet for VM networking
 
 
 def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
@@ -217,7 +217,7 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
         )
 
         if result.returncode != 0:
-            return format_subnet_info("10.0.0.0")
+            return format_subnet_info("10.0.0.0")  # NOSONAR - private subnet fallback
 
         used_subnets = _get_used_subnets_ifconfig(result.stdout)
         subnet = _find_unused_subnet(used_subnets, candidate_subnets)
@@ -225,7 +225,7 @@ def select_unused_subnet(logger) -> Optional[Dict[str, str]]:
 
     except Exception as error:
         logger.warning(_("Error selecting unused subnet: %s"), error)
-        return format_subnet_info("10.0.0.0")
+        return format_subnet_info("10.0.0.0")  # NOSONAR - private subnet fallback
 
 
 def format_subnet_info(network: str) -> Dict[str, str]:

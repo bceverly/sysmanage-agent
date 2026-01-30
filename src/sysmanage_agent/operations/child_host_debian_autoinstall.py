@@ -499,7 +499,7 @@ label install
         content = content.replace("default installgui", "# default installgui")
         cfg_path.write_text(
             content
-        )  # NOSONAR - path is constructed from a known temp directory with a fixed filename, not user-controlled
+        )  # NOSONAR - path constructed from temp directory with fixed filename, not user-controlled
         self.logger.info(_("Disabled GTK installer default"))
 
     def _regenerate_checksums(self, iso_dir: str) -> None:

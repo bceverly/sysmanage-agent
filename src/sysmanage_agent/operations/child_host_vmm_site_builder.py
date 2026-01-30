@@ -286,9 +286,8 @@ class SiteTarballBuilder:
             # Extract - the tarball extracts port files directly into build_path
             self.logger.info(_("Extracting tarball to %s"), build_path)
             # nosemgrep: trailofbits.python.tarfile-extractall-traversal.tarfile-extractall-traversal
-            with tarfile.open(
-                tarball_path, "r:gz"
-            ) as tar:  # NOSONAR - using safe filter for extraction
+            # NOSONAR - using safe filter for extraction
+            with tarfile.open(tarball_path, "r:gz") as tar:
                 tar.extractall(path=build_path, filter="data")  # type: ignore
             self.logger.info(_("Extraction complete"))
 
@@ -674,9 +673,8 @@ class SiteTarballBuilder:
             tarball_path = output_dir / tarball_name
 
             # Create tarball
-            with tarfile.open(
-                tarball_path, "w:gz"
-            ) as tar:  # NOSONAR - creating tarball, safe operation
+            # NOSONAR - creating tarball, safe operation
+            with tarfile.open(tarball_path, "w:gz") as tar:
                 tar.add(site_dir, arcname=".")
 
             return {

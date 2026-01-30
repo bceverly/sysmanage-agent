@@ -5,6 +5,7 @@ This module manages the registration lifecycle of a host with the server,
 including authentication tokens, host approval status, and certificate handling.
 """
 
+import asyncio
 import ssl
 import uuid
 from datetime import datetime, timezone
@@ -249,6 +250,9 @@ class RegistrationManager:
         self,
     ) -> None:  # NOSONAR - async required by interface
         """Clear all host approval records from local database."""
+        await asyncio.sleep(
+            0
+        )  # Yield to event loop - async required for interface consistency
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
@@ -271,6 +275,9 @@ class RegistrationManager:
         host_token: str = None,
     ) -> None:
         """Store host approval information in local database."""
+        await asyncio.sleep(
+            0
+        )  # Yield to event loop - async required for interface consistency
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
@@ -320,6 +327,9 @@ class RegistrationManager:
         self,
     ) -> Optional[str]:  # NOSONAR - async required by interface
         """Get the stored host_id from local database."""
+        await asyncio.sleep(
+            0
+        )  # Yield to event loop - async required for interface consistency
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
@@ -349,6 +359,9 @@ class RegistrationManager:
         self,
     ) -> Optional[str]:  # NOSONAR - async required by interface
         """Get the stored host_token from local database."""
+        await asyncio.sleep(
+            0
+        )  # Yield to event loop - async required for interface consistency
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()
@@ -461,6 +474,9 @@ class RegistrationManager:
         self,
     ) -> None:  # NOSONAR - async required by interface
         """Clear the stored host_id from local database and related data."""
+        await asyncio.sleep(
+            0
+        )  # Yield to event loop - async required for interface consistency
         try:
             db_manager = get_database_manager()
             session = db_manager.get_session()

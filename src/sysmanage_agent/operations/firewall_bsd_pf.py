@@ -13,6 +13,8 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 import subprocess  # nosec B404
 from typing import Dict, List, Optional
 
+import aiofiles
+
 from src.i18n import _  # pylint: disable=not-callable
 
 
@@ -46,10 +48,8 @@ class PFFirewallOperations:
             # Check if PF config exists
             pf_conf = "/etc/pf.conf"
             try:
-                with open(
-                    pf_conf, "r", encoding="utf-8"
-                ) as file_handle:  # noqa: ASYNC230  # NOSONAR - Sync file I/O acceptable for small config file reads
-                    existing_rules = file_handle.read()
+                async with aiofiles.open(pf_conf, "r", encoding="utf-8") as file_handle:
+                    existing_rules = await file_handle.read()
             except FileNotFoundError:
                 existing_rules = ""
 
@@ -70,12 +70,12 @@ class PFFirewallOperations:
                 # Append rules to pf.conf
                 self.logger.info("Adding %d rules to pf.conf", len(rules_to_add))
                 try:
-                    with open(
+                    async with aiofiles.open(
                         pf_conf, "a", encoding="utf-8"
-                    ) as file_handle:  # noqa: ASYNC230  # NOSONAR - Sync file I/O acceptable for small config file writes
-                        file_handle.write("\n# SysManage Agent rules\n")
+                    ) as file_handle:
+                        await file_handle.write("\n# SysManage Agent rules\n")
                         for rule in rules_to_add:
-                            file_handle.write(f"{rule}\n")
+                            await file_handle.write(f"{rule}\n")
                 except PermissionError:
                     # Try with sudo
                     rules_content = (

@@ -335,6 +335,92 @@ class KvmOperations:
             self.logger.error(_("Error enabling KVM modules: %s"), error)
             return {"success": False, "error": str(error)}
 
+    async def _check_running_vms(self) -> Optional[Dict[str, Any]]:
+        """
+        Check if any VMs are currently running.
+
+        Returns:
+            Error dict if VMs are running, None if no VMs running or check not possible
+        """
+        if not os.path.exists(DEV_KVM_PATH):
+            return None
+
+        virsh_path = shutil.which("virsh")
+        if not virsh_path:
+            return None
+
+        result = await run_command_async(
+            ["virsh", "list", "--state-running", "--name"],
+            timeout=10,
+        )
+        if result.returncode != 0:
+            return None
+
+        running_vms = [
+            vm.strip() for vm in result.stdout.strip().split("\n") if vm.strip()
+        ]
+        if not running_vms:
+            return None
+
+        return {
+            "success": False,
+            "error": _("Cannot disable KVM while VMs are running: %s")
+            % ", ".join(running_vms),
+        }
+
+    async def _detect_loaded_vendor_module(self) -> Optional[str]:
+        """
+        Detect which KVM vendor module is currently loaded.
+
+        Returns:
+            Module name ("kvm_intel" or "kvm_amd") or None if neither loaded
+        """
+        lsmod_result = await run_command_async(["lsmod"], timeout=10)
+        if lsmod_result.returncode != 0:
+            return None
+
+        if "kvm_intel" in lsmod_result.stdout:
+            return "kvm_intel"
+        if "kvm_amd" in lsmod_result.stdout:
+            return "kvm_amd"
+        return None
+
+    async def _unload_module(self, module_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Unload a kernel module using modprobe -r.
+
+        Args:
+            module_name: Name of the module to unload
+
+        Returns:
+            Error dict if unload failed, None on success
+        """
+        self.logger.info(_("Unloading %s module"), module_name)
+        result = await run_command_async(
+            ["modprobe", "-r", module_name],
+            timeout=30,
+        )
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip()
+            self.logger.error(_("Failed to unload %s: %s"), module_name, error_msg)
+            return {"success": False, "error": error_msg}
+        return None
+
+    async def _verify_kvm_removed(self) -> Optional[Dict[str, Any]]:
+        """
+        Verify that /dev/kvm has been removed after module unload.
+
+        Returns:
+            Error dict if /dev/kvm still exists, None if successfully removed
+        """
+        await asyncio.sleep(0.5)
+        if os.path.exists(DEV_KVM_PATH):
+            return {
+                "success": False,
+                "error": _("Modules unloaded but /dev/kvm still exists"),
+            }
+        return None
+
     async def disable_kvm_modules(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Disable KVM by unloading the kernel modules via modprobe -r.
@@ -348,74 +434,27 @@ class KvmOperations:
         try:
             self.logger.info(_("Disabling KVM kernel modules"))
 
-            # First check if any VMs are running
-            if os.path.exists(DEV_KVM_PATH):
-                # Try to check for running VMs via virsh if available
-                virsh_path = shutil.which("virsh")
-                if virsh_path:
-                    result = await run_command_async(
-                        ["virsh", "list", "--state-running", "--name"],
-                        timeout=10,
-                    )
-                    if result.returncode == 0:
-                        running_vms = [
-                            vm.strip()
-                            for vm in result.stdout.strip().split("\n")
-                            if vm.strip()
-                        ]
-                        if running_vms:
-                            return {
-                                "success": False,
-                                "error": _(
-                                    "Cannot disable KVM while VMs are running: %s"
-                                )
-                                % ", ".join(running_vms),
-                            }
-
-            # Determine which vendor module to unload first
-            vendor_module = None
-            lsmod_result = await run_command_async(
-                ["lsmod"],
-                timeout=10,
-            )
-            if lsmod_result.returncode == 0:
-                if "kvm_intel" in lsmod_result.stdout:
-                    vendor_module = "kvm_intel"
-                elif "kvm_amd" in lsmod_result.stdout:
-                    vendor_module = "kvm_amd"
+            # Check if any VMs are running
+            running_vms_error = await self._check_running_vms()
+            if running_vms_error:
+                return running_vms_error
 
             # Unload vendor-specific module first (kvm_intel or kvm_amd)
+            vendor_module = await self._detect_loaded_vendor_module()
             if vendor_module:
-                self.logger.info(_("Unloading %s module"), vendor_module)
-                result = await run_command_async(
-                    ["modprobe", "-r", vendor_module],
-                    timeout=30,
-                )
-                if result.returncode != 0:
-                    error_msg = result.stderr.strip() or result.stdout.strip()
-                    self.logger.error(
-                        _("Failed to unload %s: %s"), vendor_module, error_msg
-                    )
-                    return {"success": False, "error": error_msg}
+                unload_error = await self._unload_module(vendor_module)
+                if unload_error:
+                    return unload_error
 
             # Unload base kvm module
-            self.logger.info(_("Unloading kvm module"))
-            result = await run_command_async(
-                ["modprobe", "-r", "kvm"],
-                timeout=30,
-            )
-            if result.returncode != 0:
-                error_msg = result.stderr.strip() or result.stdout.strip()
-                self.logger.error(_("Failed to unload kvm: %s"), error_msg)
-                return {"success": False, "error": error_msg}
+            unload_error = await self._unload_module("kvm")
+            if unload_error:
+                return unload_error
 
             # Verify /dev/kvm is gone
-            await asyncio.sleep(0.5)
-            if os.path.exists(DEV_KVM_PATH):
-                return {
-                    "success": False,
-                    "error": _("Modules unloaded but /dev/kvm still exists"),
-                }
+            verify_error = await self._verify_kvm_removed()
+            if verify_error:
+                return verify_error
 
             self.logger.info(_("KVM kernel modules unloaded successfully"))
             return {

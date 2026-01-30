@@ -310,9 +310,8 @@ run_rc_command "$1"
         with open(firstboot_script_path, "w", encoding="utf-8") as fbf:
             fbf.write(firstboot_script)
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-        os.chmod(
-            firstboot_script_path, 0o755
-        )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
+        # NOSONAR - permissions are appropriate for this file type
+        os.chmod(firstboot_script_path, 0o755)  # nosec B103
 
         firstboot_sentinel = os.path.join(mount_point, "firstboot")
         with open(firstboot_sentinel, "w", encoding="utf-8") as fsf:
@@ -698,9 +697,8 @@ local-hostname: {config.hostname.split('.')[0]}
                     bsf.write(bootstrap_script)
                 # Make bootstrap script executable - must be 755 to run as shell script
                 # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-                os.chmod(
-                    bootstrap_path, 0o755
-                )  # nosec B103  # NOSONAR - permissions are appropriate for this file type
+                # NOSONAR - permissions are appropriate for this file type
+                os.chmod(bootstrap_path, 0o755)  # nosec B103
 
                 self._config_disk_path = os.path.join(
                     disk_dir, f"{config.vm_name}-freebsd-config.iso"

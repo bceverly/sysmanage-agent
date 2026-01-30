@@ -402,9 +402,8 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 await file_handle.write(config_content)
 
             # Set proper permissions
-            os.chmod(
-                config_file, 0o644
-            )  # NOSONAR - permissions are appropriate for this file type
+            # NOSONAR - permissions are appropriate for this file type
+            os.chmod(config_file, 0o644)
 
             # Create environment file with config path
             env_content = f'OTELCOL_OPTIONS="--config={config_file}"\n'
@@ -412,9 +411,8 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 await file_handle.write(env_content)
 
             # Set proper permissions
-            os.chmod(
-                env_file, 0o644
-            )  # NOSONAR - permissions are appropriate for this file type
+            # NOSONAR - permissions are appropriate for this file type
+            os.chmod(env_file, 0o644)
 
             return {"success": True, "config_file": config_file}
 

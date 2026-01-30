@@ -86,16 +86,14 @@ class HardwareCollectorBSD(HardwareCollectorBase):
             return
 
         model = cpu_info["model"]
-        ghz_match = re.search(
-            r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE
-        )  # NOSONAR - regex operates on trusted internal data
+        # NOSONAR - regex operates on trusted internal data
+        ghz_match = re.search(r"@\s*(\d+\.?\d*)\s*GHz", model, re.IGNORECASE)
         if ghz_match:
             freq_ghz = float(ghz_match.group(1))
             cpu_info["frequency_mhz"] = int(freq_ghz * 1000)
         else:
-            mhz_match = re.search(
-                r"(\d+)\s*MHz", model, re.IGNORECASE
-            )  # NOSONAR - regex operates on trusted internal data
+            # NOSONAR - regex operates on trusted internal data
+            mhz_match = re.search(r"(\d+)\s*MHz", model, re.IGNORECASE)
             if mhz_match:
                 cpu_info["frequency_mhz"] = int(mhz_match.group(1))
 
@@ -239,7 +237,7 @@ class HardwareCollectorBSD(HardwareCollectorBase):
         skip_devices = ["tmpfs", "kernfs", "procfs", "mfs", "fdesc"]
         # Known system mount points to skip during storage inventory
         # NOSONAR - these are system paths to skip, not paths we write to
-        skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]  # nosec B108
+        skip_mounts = ["/dev", "/proc", "/sys", "/tmp"]  # nosec B108  # NOSONAR
 
         device_lower = device_name.lower()
         mount_lower = mount_point.lower()

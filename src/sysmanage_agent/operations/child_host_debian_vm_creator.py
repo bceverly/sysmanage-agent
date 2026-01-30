@@ -112,9 +112,8 @@ def get_fqdn_hostname(hostname: str, server_url: str) -> str:
         return hostname
 
     # Extract domain from server URL
-    match = re.search(
-        r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url
-    )  # NOSONAR - regex operates on trusted internal data
+    # NOSONAR - regex operates on trusted internal data
+    match = re.search(r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", server_url)
     if match:
         domain_parts = match.group(0).split(".", 1)
         if len(domain_parts) > 1:

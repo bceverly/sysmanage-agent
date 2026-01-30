@@ -133,9 +133,8 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         for line in output.strip().split("\n"):
             if line:
                 # Format: package-version comment
-                match = re.match(
-                    r"^([^-]+(?:-\D[^-]*)*)-(\d[^\s]*)\s+(.*)$", line
-                )  # NOSONAR - regex operates on trusted internal data
+                # NOSONAR - regex operates on trusted internal data
+                match = re.match(r"^([^-]+(?:-\D[^-]*)*)-(\d[^\s]*)\s+(.*)$", line)
                 if match:
                     package_name = match.group(1)
                     version = match.group(2)

@@ -364,9 +364,8 @@ run_rc_command "$1"
 
             # Make executable - rc.d scripts must be 0o755 to run as services
             # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-            os.chmod(
-                BHYVE_RC_SCRIPT, 0o755
-            )  # nosec B103  # NOSONAR - permissions are appropriate for rc.d scripts
+            # NOSONAR - permissions are appropriate for rc.d scripts
+            os.chmod(BHYVE_RC_SCRIPT, 0o755)  # nosec B103
 
             self.logger.info(_("Installed bhyve autostart script: %s"), BHYVE_RC_SCRIPT)
             return {"success": True, "script_path": BHYVE_RC_SCRIPT}

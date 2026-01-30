@@ -13,6 +13,8 @@ trusted system utilities. B603/B607 warnings are suppressed as safe by design.
 import subprocess  # nosec B404
 from typing import Dict, List, Optional
 
+import aiofiles
+
 from src.i18n import _  # pylint: disable=not-callable
 
 
@@ -48,10 +50,10 @@ class NPFFirewallOperations:
 
             # Check if config already exists
             try:
-                with open(
+                async with aiofiles.open(
                     npf_conf, "r", encoding="utf-8"
-                ) as file_handle:  # NOSONAR - Sync file I/O is acceptable for reading small config files
-                    existing_config = file_handle.read()
+                ) as file_handle:
+                    existing_config = await file_handle.read()
             except FileNotFoundError:
                 existing_config = ""
 
@@ -108,10 +110,10 @@ group default {
 
                 # Write the configuration
                 try:
-                    with open(
+                    async with aiofiles.open(
                         npf_conf, "w", encoding="utf-8"
-                    ) as file_handle:  # NOSONAR - Sync file I/O is acceptable for writing small config files
-                        file_handle.write(config_content)
+                    ) as file_handle:
+                        await file_handle.write(config_content)
                 except PermissionError:
                     # Try with sudo if not running as root
                     result = subprocess.run(  # nosec B603 B607  # NOSONAR - Sync subprocess is acceptable for quick system commands
