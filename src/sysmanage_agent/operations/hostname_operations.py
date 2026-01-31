@@ -12,6 +12,10 @@ from typing import Any, Dict
 from src.i18n import _
 from src.sysmanage_agent.core.async_utils import run_command_async
 
+# Message constants
+_MSG_HOSTNAME_CHANGED = "Hostname changed to %s"
+_MSG_FAILED_SET_RUNTIME_HOSTNAME = "Failed to set runtime hostname: %s"
+
 
 class HostnameOperations:
     """Handles hostname change operations for the agent."""
@@ -108,7 +112,7 @@ class HostnameOperations:
             self.logger.info(_("Successfully changed hostname using hostnamectl"))
             return {
                 "success": True,
-                "result": _("Hostname changed to %s") % hostname,
+                "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
             }
 
         # Fallback: manually update /etc/hostname and run hostname command
@@ -145,13 +149,12 @@ class HostnameOperations:
         if hostname_result.returncode != 0:
             return {
                 "success": False,
-                "error": _("Failed to set runtime hostname: %s")
-                % hostname_result.stderr,
+                "error": _(_MSG_FAILED_SET_RUNTIME_HOSTNAME) % hostname_result.stderr,
             }
 
         return {
             "success": True,
-            "result": _("Hostname changed to %s") % hostname,
+            "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
         }
 
     async def _change_macos_hostname(self, hostname: str) -> Dict[str, Any]:
@@ -203,7 +206,7 @@ class HostnameOperations:
 
         return {
             "success": True,
-            "result": _("Hostname changed to %s") % hostname,
+            "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
         }
 
     async def _change_windows_hostname(self, hostname: str) -> Dict[str, Any]:
@@ -254,7 +257,7 @@ class HostnameOperations:
         if result.returncode != 0:
             return {
                 "success": False,
-                "error": _("Failed to set runtime hostname: %s") % result.stderr,
+                "error": _(_MSG_FAILED_SET_RUNTIME_HOSTNAME) % result.stderr,
             }
 
         # Update /etc/rc.conf for persistence
@@ -286,7 +289,7 @@ class HostnameOperations:
 
         return {
             "success": True,
-            "result": _("Hostname changed to %s") % hostname,
+            "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
         }
 
     async def _change_bsd_hostname(self, hostname: str) -> Dict[str, Any]:
@@ -307,7 +310,7 @@ class HostnameOperations:
         if result.returncode != 0:
             return {
                 "success": False,
-                "error": _("Failed to set runtime hostname: %s") % result.stderr,
+                "error": _(_MSG_FAILED_SET_RUNTIME_HOSTNAME) % result.stderr,
             }
 
         # Update /etc/myname for persistence
@@ -331,7 +334,7 @@ class HostnameOperations:
 
         return {
             "success": True,
-            "result": _("Hostname changed to %s") % hostname,
+            "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
         }
 
     async def _send_hostname_update(self, new_hostname: str):

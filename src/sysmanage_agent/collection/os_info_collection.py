@@ -7,6 +7,7 @@ import json
 import logging
 import platform
 import subprocess  # nosec B404
+import time
 from typing import Any, Dict
 
 from src.i18n import _
@@ -217,6 +218,135 @@ class OSInfoCollector:
             "raw_status": raw_status,  # Keep original for debugging
         }
 
+    def _get_timezone(self) -> str:
+        """Get the system timezone.
+
+        Returns the timezone name (e.g., 'America/New_York', 'UTC', 'EST')
+        """
+        try:
+            # Try to get IANA timezone name on Unix systems
+            system = platform.system()
+
+            if system in ("Linux", "FreeBSD", "OpenBSD", "NetBSD"):
+                # Try reading /etc/timezone (Debian/Ubuntu)
+                try:
+                    result = subprocess.run(
+                        ["cat", "/etc/timezone"],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        return result.stdout.strip()
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+                # Try reading /etc/localtime symlink target (RHEL/CentOS/Fedora/FreeBSD)
+                try:
+                    result = subprocess.run(
+                        ["readlink", "-f", "/etc/localtime"],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        # Extract timezone from path like /usr/share/zoneinfo/America/New_York
+                        path = result.stdout.strip()
+                        if "/zoneinfo/" in path:
+                            return path.split("/zoneinfo/")[-1]
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+                # Try timedatectl (systemd)
+                try:
+                    result = subprocess.run(
+                        [
+                            "timedatectl",
+                            "show",
+                            "--property=Timezone",
+                            "--value",
+                        ],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        return result.stdout.strip()
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+            elif system == "Darwin":
+                # macOS: use systemsetup
+                try:
+                    result = subprocess.run(
+                        [
+                            "sudo",
+                            "-n",
+                            "systemsetup",
+                            "-gettimezone",
+                        ],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        # Output format: "Time Zone: America/New_York"
+                        output = result.stdout.strip()
+                        if ":" in output:
+                            return output.split(":", 1)[1].strip()
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+                # Fallback: read /etc/localtime symlink
+                try:
+                    result = subprocess.run(
+                        ["readlink", "/etc/localtime"],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        path = result.stdout.strip()
+                        if "/zoneinfo/" in path:
+                            return path.split("/zoneinfo/")[-1]
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+            elif system == "Windows":
+                # Windows: use PowerShell to get timezone
+                try:
+                    result = subprocess.run(
+                        [
+                            "powershell",
+                            "-Command",
+                            "(Get-TimeZone).Id",
+                        ],  # nosec B603, B607
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        check=False,
+                    )
+                    if result.returncode == 0 and result.stdout.strip():
+                        return result.stdout.strip()
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    pass
+
+            # Fallback: use Python's time module
+            # Returns abbreviation like 'EST', 'PST', or offset
+            if time.daylight:
+                return time.tzname[1]  # Daylight saving time name
+            return time.tzname[0]  # Standard time name
+
+        except Exception as error:
+            self.logger.warning(_("Failed to get timezone: %s"), error)
+            # Ultimate fallback
+            return time.tzname[0] if time.tzname[0] else "Unknown"
+
     def get_os_version_info(self) -> Dict[str, Any]:
         """Get comprehensive OS version information as separate data."""
         # Get CPU architecture (x86_64, arm64, aarch64, riscv64, etc.)
@@ -238,6 +368,7 @@ class OSInfoCollector:
             "architecture": platform.architecture()[0],
             "processor": platform.processor(),
             "machine_architecture": machine_arch,  # CPU architecture
+            "timezone": self._get_timezone(),
             "python_version": platform.python_version(),
             "os_info": os_info,
         }
