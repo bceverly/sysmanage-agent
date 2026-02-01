@@ -8,9 +8,12 @@ import logging
 import platform
 import subprocess  # nosec B404
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
+
+# Constant for zoneinfo path used in timezone extraction
+ZONEINFO_PATH_SEGMENT = "/zoneinfo/"
 
 
 class OSInfoCollector:
@@ -218,133 +221,124 @@ class OSInfoCollector:
             "raw_status": raw_status,  # Keep original for debugging
         }
 
+    def _extract_timezone_from_zoneinfo_path(self, path: str) -> Optional[str]:
+        """Extract timezone name from a zoneinfo path.
+
+        Args:
+            path: Path like /usr/share/zoneinfo/America/New_York
+
+        Returns:
+            Timezone name or None if not found
+        """
+        if ZONEINFO_PATH_SEGMENT in path:
+            return path.split(ZONEINFO_PATH_SEGMENT)[-1]
+        return None
+
+    def _run_timezone_command(
+        self, cmd: list, timeout: int = 5
+    ) -> Optional[subprocess.CompletedProcess]:
+        """Run a command to get timezone info, handling errors.
+
+        Returns:
+            CompletedProcess if successful, None otherwise
+        """
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        return None
+
+    def _get_timezone_linux_bsd(self) -> Optional[str]:
+        """Get timezone on Linux/BSD systems."""
+        # Try /etc/timezone (Debian/Ubuntu)
+        result = self._run_timezone_command(["cat", "/etc/timezone"])
+        if result:
+            return result.stdout.strip()
+
+        # Try /etc/localtime symlink (RHEL/CentOS/Fedora/FreeBSD)
+        result = self._run_timezone_command(["readlink", "-f", "/etc/localtime"])
+        if result:
+            timezone_name = self._extract_timezone_from_zoneinfo_path(
+                result.stdout.strip()
+            )
+            if timezone_name:
+                return timezone_name
+
+        # Try timedatectl (systemd)
+        result = self._run_timezone_command(
+            ["timedatectl", "show", "--property=Timezone", "--value"]
+        )
+        if result:
+            return result.stdout.strip()
+
+        return None
+
+    def _get_timezone_darwin(self) -> Optional[str]:
+        """Get timezone on macOS."""
+        # Try systemsetup
+        result = self._run_timezone_command(
+            ["sudo", "-n", "systemsetup", "-gettimezone"]
+        )
+        if result:
+            output = result.stdout.strip()
+            if ":" in output:
+                return output.split(":", 1)[1].strip()
+
+        # Fallback: read /etc/localtime symlink
+        result = self._run_timezone_command(["readlink", "/etc/localtime"])
+        if result:
+            return self._extract_timezone_from_zoneinfo_path(result.stdout.strip())
+
+        return None
+
+    def _get_timezone_windows(self) -> Optional[str]:
+        """Get timezone on Windows."""
+        result = self._run_timezone_command(
+            ["powershell", "-Command", "(Get-TimeZone).Id"], timeout=10
+        )
+        if result:
+            return result.stdout.strip()
+        return None
+
+    def _get_timezone_fallback(self) -> str:
+        """Get timezone using Python's time module as fallback."""
+        if time.daylight:
+            return time.tzname[1]  # Daylight saving time name
+        return time.tzname[0]  # Standard time name
+
     def _get_timezone(self) -> str:
         """Get the system timezone.
 
         Returns the timezone name (e.g., 'America/New_York', 'UTC', 'EST')
         """
         try:
-            # Try to get IANA timezone name on Unix systems
             system = platform.system()
 
+            # Try platform-specific methods
+            timezone_result = None
             if system in ("Linux", "FreeBSD", "OpenBSD", "NetBSD"):
-                # Try reading /etc/timezone (Debian/Ubuntu)
-                try:
-                    result = subprocess.run(
-                        ["cat", "/etc/timezone"],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        return result.stdout.strip()
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
-
-                # Try reading /etc/localtime symlink target (RHEL/CentOS/Fedora/FreeBSD)
-                try:
-                    result = subprocess.run(
-                        ["readlink", "-f", "/etc/localtime"],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        # Extract timezone from path like /usr/share/zoneinfo/America/New_York
-                        path = result.stdout.strip()
-                        if "/zoneinfo/" in path:
-                            return path.split("/zoneinfo/")[-1]
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
-
-                # Try timedatectl (systemd)
-                try:
-                    result = subprocess.run(
-                        [
-                            "timedatectl",
-                            "show",
-                            "--property=Timezone",
-                            "--value",
-                        ],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        return result.stdout.strip()
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
-
+                timezone_result = self._get_timezone_linux_bsd()
             elif system == "Darwin":
-                # macOS: use systemsetup
-                try:
-                    result = subprocess.run(
-                        [
-                            "sudo",
-                            "-n",
-                            "systemsetup",
-                            "-gettimezone",
-                        ],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        # Output format: "Time Zone: America/New_York"
-                        output = result.stdout.strip()
-                        if ":" in output:
-                            return output.split(":", 1)[1].strip()
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
-
-                # Fallback: read /etc/localtime symlink
-                try:
-                    result = subprocess.run(
-                        ["readlink", "/etc/localtime"],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        path = result.stdout.strip()
-                        if "/zoneinfo/" in path:
-                            return path.split("/zoneinfo/")[-1]
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
-
+                timezone_result = self._get_timezone_darwin()
             elif system == "Windows":
-                # Windows: use PowerShell to get timezone
-                try:
-                    result = subprocess.run(
-                        [
-                            "powershell",
-                            "-Command",
-                            "(Get-TimeZone).Id",
-                        ],  # nosec B603, B607
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=False,
-                    )
-                    if result.returncode == 0 and result.stdout.strip():
-                        return result.stdout.strip()
-                except (FileNotFoundError, subprocess.TimeoutExpired):
-                    pass
+                timezone_result = self._get_timezone_windows()
 
-            # Fallback: use Python's time module
-            # Returns abbreviation like 'EST', 'PST', or offset
-            if time.daylight:
-                return time.tzname[1]  # Daylight saving time name
-            return time.tzname[0]  # Standard time name
+            if timezone_result:
+                return timezone_result
+
+            # Fallback to Python's time module
+            return self._get_timezone_fallback()
 
         except Exception as error:
             self.logger.warning(_("Failed to get timezone: %s"), error)
-            # Ultimate fallback
             return time.tzname[0] if time.tzname[0] else "Unknown"
 
     def get_os_version_info(self) -> Dict[str, Any]:

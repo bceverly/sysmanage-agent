@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess  # nosec B404
 import tempfile
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -562,12 +563,10 @@ label install
             codename = DEBIAN_CODENAMES[debian_version]
             mirror_url = DEBIAN_MIRROR_URLS.get(debian_version, "deb.debian.org")
             # Extract just the hostname from the URL if it's a full URL
-            if mirror_url.startswith("https://"):
-                mirror_url = mirror_url.replace("https://", "").split("/")[0]
-            elif mirror_url.startswith(
-                "http://"
-            ):  # NOSONAR - string parsing, not HTTP connection
-                mirror_url = mirror_url.replace("http://", "").split("/")[0]  # NOSONAR
+            # Use urlparse to handle any URL scheme cleanly
+            if "://" in mirror_url:
+                parsed = urllib.parse.urlparse(mirror_url)
+                mirror_url = parsed.netloc or parsed.path.split("/")[0]
 
             preseed_content = generate_preseed_file(
                 hostname=hostname,
