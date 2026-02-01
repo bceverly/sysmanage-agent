@@ -236,7 +236,7 @@ class OSInfoCollector:
 
     def _run_timezone_command(
         self, cmd: list, timeout: int = 5
-    ) -> subprocess.CompletedProcess | None:
+    ) -> Optional[subprocess.CompletedProcess]:
         """Run a command to get timezone info, handling errors.
 
         Returns:
