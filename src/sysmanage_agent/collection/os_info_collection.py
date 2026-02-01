@@ -8,7 +8,7 @@ import logging
 import platform
 import subprocess  # nosec B404
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.i18n import _
 
@@ -221,7 +221,7 @@ class OSInfoCollector:
             "raw_status": raw_status,  # Keep original for debugging
         }
 
-    def _extract_timezone_from_zoneinfo_path(self, path: str) -> str | None:
+    def _extract_timezone_from_zoneinfo_path(self, path: str) -> Optional[str]:
         """Extract timezone name from a zoneinfo path.
 
         Args:
@@ -256,7 +256,7 @@ class OSInfoCollector:
             pass
         return None
 
-    def _get_timezone_linux_bsd(self) -> str | None:
+    def _get_timezone_linux_bsd(self) -> Optional[str]:
         """Get timezone on Linux/BSD systems."""
         # Try /etc/timezone (Debian/Ubuntu)
         result = self._run_timezone_command(["cat", "/etc/timezone"])
@@ -281,7 +281,7 @@ class OSInfoCollector:
 
         return None
 
-    def _get_timezone_darwin(self) -> str | None:
+    def _get_timezone_darwin(self) -> Optional[str]:
         """Get timezone on macOS."""
         # Try systemsetup
         result = self._run_timezone_command(
@@ -299,7 +299,7 @@ class OSInfoCollector:
 
         return None
 
-    def _get_timezone_windows(self) -> str | None:
+    def _get_timezone_windows(self) -> Optional[str]:
         """Get timezone on Windows."""
         result = self._run_timezone_command(
             ["powershell", "-Command", "(Get-TimeZone).Id"], timeout=10
