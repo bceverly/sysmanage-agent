@@ -465,7 +465,7 @@ class WindowsFirewallOperations(FirewallBase):
         """
         self.logger.info("Synchronizing firewall roles using Windows Firewall")
 
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
         preserved_ports = set(agent_ports + [3389])
 
         desired_ports = self._build_ports_dict(ipv4_ports, ipv6_ports)
@@ -550,7 +550,7 @@ class WindowsFirewallOperations(FirewallBase):
 
         errors: List[str] = []
 
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
         preserved_ports = set(agent_ports + [3389])
 
         ports_to_remove = self._build_ports_dict(ipv4_ports, ipv6_ports)

@@ -375,7 +375,7 @@ class BSDFirewallOperations(FirewallBase):
         errors = []
 
         # Get agent communication ports (must always be open)
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
 
         # Combine port configurations
         all_port_configs = {}
@@ -443,7 +443,7 @@ class BSDFirewallOperations(FirewallBase):
         errors = []
 
         # Get agent communication ports (must always be preserved)
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
         # Also preserve SSH port 22
         preserved_ports = set(agent_ports + [22])
 

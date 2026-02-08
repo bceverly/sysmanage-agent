@@ -22,11 +22,57 @@ if "aiohttp" not in sys.modules:
     sys.modules["aiohttp.ClientSession"] = MagicMock()
     sys.modules["aiohttp.ClientError"] = Exception
 
+
+# Replace the i18n _ function with a passthrough for testing
+# This must happen before any modules that use _ are imported
+def _passthrough(x):
+    """Passthrough function for i18n during testing."""
+    return x
+
+
+# We need to patch this early, before modules are imported
+# Import i18n module and replace the _ function
+try:
+    import src.i18n as i18n_module
+
+    i18n_module._ = _passthrough
+except ImportError:
+    pass
+
+# Also patch the firewall modules specifically after they're imported
+# to ensure the _ function is replaced in all modules that use it
+_firewall_modules_to_patch = [
+    "src.sysmanage_agent.operations.firewall_linux_ufw",
+    "src.sysmanage_agent.operations.firewall_linux_firewalld",
+    "src.sysmanage_agent.operations.firewall_linux",
+    "src.sysmanage_agent.operations.firewall_operations",
+    "src.sysmanage_agent.operations.firewall_base",
+    "src.sysmanage_agent.operations.firewall_bsd",
+    "src.sysmanage_agent.operations.firewall_bsd_pf",
+    "src.sysmanage_agent.operations.firewall_bsd_ipfw",
+    "src.sysmanage_agent.operations.firewall_bsd_npf",
+    "src.sysmanage_agent.operations.firewall_macos",
+    "src.sysmanage_agent.operations.firewall_windows",
+]
+
+
+def _patch_i18n_in_module(module_name):
+    """Patch the _ function in a module if it's been imported."""
+    if module_name in sys.modules:
+        module = sys.modules[module_name]
+        if hasattr(module, "_"):
+            module._ = _passthrough
+
+
 # pylint: disable=wrong-import-position,wildcard-import,unused-wildcard-import
 # Import after mocking to avoid import errors
 from main import SysManageAgent
 from src.database.base import Base, DatabaseManager
 from src.database.models import *
+
+# After all imports, patch any firewall modules that were imported
+for _mod_name in _firewall_modules_to_patch:
+    _patch_i18n_in_module(_mod_name)
 
 
 @pytest.fixture(scope="function")

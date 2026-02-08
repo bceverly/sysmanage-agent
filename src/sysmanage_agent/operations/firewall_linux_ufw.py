@@ -217,7 +217,7 @@ class UfwOperations:
         errors = []
 
         # Get agent communication ports (must always be preserved)
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
         # Also preserve SSH port 22 and LXD bridge ports (53=DNS, 67=DHCP)
         # LXD ports are needed for container networking on lxdbr0
         preserved_ports = set(agent_ports + [22, 53, 67])
@@ -664,7 +664,7 @@ COMMIT
 
         errors: List[str] = []
 
-        agent_ports, _ = self._get_agent_communication_ports()
+        agent_ports, _proto = self._get_agent_communication_ports()
         preserved_ports = set(agent_ports + [22, 53, 67])
 
         ports_to_remove = self._build_ports_dict(ipv4_ports, ipv6_ports)
