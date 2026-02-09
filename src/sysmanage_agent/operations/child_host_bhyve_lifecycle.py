@@ -26,6 +26,33 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
 _NO_CHILD_NAME_MSG = _("No child_name specified")
 
 
+def _validate_path_in_allowed_dirs(path: str, allowed_dirs: list) -> bool:
+    """
+    Validate that a path is within one of the allowed directories.
+
+    Prevents path traversal attacks by resolving the real path and
+    checking it's within expected boundaries.
+
+    Args:
+        path: The path to validate
+        allowed_dirs: List of allowed base directories
+
+    Returns:
+        True if path is within an allowed directory, False otherwise
+    """
+    try:
+        # Resolve the real path (handles symlinks and ..)
+        real_path = os.path.realpath(path)
+        # Check if it's within any allowed directory
+        for allowed_dir in allowed_dirs:
+            real_allowed = os.path.realpath(allowed_dir)
+            if real_path.startswith(real_allowed + os.sep) or real_path == real_allowed:
+                return True
+        return False
+    except (OSError, ValueError):
+        return False
+
+
 class BhyveLifecycleHelper:
     """Helper class for bhyve VM lifecycle operations."""
 
@@ -136,10 +163,28 @@ class BhyveLifecycleHelper:
         params["memory_mb"] = self._parse_memory_string(vm_config.get("memory", "1G"))
         params["cpus"] = vm_config.get("cpus", 1)
         params["use_uefi"] = vm_config.get("use_uefi", True)
+
+        # Validate disk_path from config to prevent path traversal
+        allowed_dirs = [BHYVE_VM_DIR, BHYVE_CLOUDINIT_DIR]
         if vm_config.get("disk_path"):
-            params["disk_path"] = vm_config["disk_path"]
+            config_disk_path = vm_config["disk_path"]
+            if _validate_path_in_allowed_dirs(config_disk_path, allowed_dirs):
+                params["disk_path"] = config_disk_path
+            else:
+                self.logger.warning(
+                    _("Ignoring invalid disk_path from config: %s"), config_disk_path
+                )
+
+        # Validate cloud_init_iso_path from config to prevent path traversal
         if vm_config.get("cloud_init_iso_path"):
-            params["cloudinit_iso"] = vm_config["cloud_init_iso_path"]
+            config_iso_path = vm_config["cloud_init_iso_path"]
+            if _validate_path_in_allowed_dirs(config_iso_path, allowed_dirs):
+                params["cloudinit_iso"] = config_iso_path
+            else:
+                self.logger.warning(
+                    _("Ignoring invalid cloud_init_iso_path from config: %s"),
+                    config_iso_path,
+                )
 
         return params
 

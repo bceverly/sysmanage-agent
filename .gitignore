@@ -224,3 +224,6 @@ VERSION
 
 # SBOM (Software Bill of Materials) generated files
 sbom/
+
+# SonarQube scanner working directory
+.scannerwork/
