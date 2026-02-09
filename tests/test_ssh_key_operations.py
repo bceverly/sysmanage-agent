@@ -5,7 +5,6 @@ Tests SSH key deployment and management operations.
 
 # pylint: disable=protected-access,attribute-defined-outside-init
 
-import os
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -198,7 +197,7 @@ class TestWriteKeyFile:
     @patch("os.chmod")
     @patch("os.chown")
     async def test_write_key_adds_trailing_newline(
-        self, mock_chown, mock_chmod, mock_aiofiles_open
+        self, _mock_chown, _mock_chmod, mock_aiofiles_open
     ):
         """Test that key file gets trailing newline if missing."""
         mock_file = AsyncMock()
@@ -219,7 +218,7 @@ class TestWriteKeyFile:
     @patch("os.chmod")
     @patch("os.chown")
     async def test_write_key_preserves_trailing_newline(
-        self, mock_chown, mock_chmod, mock_aiofiles_open
+        self, _mock_chown, _mock_chmod, mock_aiofiles_open
     ):
         """Test that key file doesn't get double newline."""
         mock_file = AsyncMock()
@@ -391,11 +390,10 @@ class TestUpdateAuthorizedKeys:
         mock_auth_cm.__aenter__ = AsyncMock(return_value=mock_auth_file)
         mock_auth_cm.__aexit__ = AsyncMock(return_value=None)
 
-        def open_side_effect(path, mode, encoding=None):
+        def open_side_effect(path, _mode, _encoding=None):
             if "authorized_keys" in path:
                 return mock_auth_cm
-            else:
-                return mock_key_cm
+            return mock_key_cm
 
         with patch("aiofiles.open", side_effect=open_side_effect):
             public_keys = [

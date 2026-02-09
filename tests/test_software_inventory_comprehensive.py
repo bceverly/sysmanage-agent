@@ -11,7 +11,7 @@ This test file covers cross-platform scenarios and edge cases not covered
 in the platform-specific test files.
 """
 
-# pylint: disable=redefined-outer-name,protected-access
+# pylint: disable=redefined-outer-name,protected-access,unused-argument
 
 import subprocess
 from unittest.mock import Mock, patch
@@ -93,7 +93,10 @@ class TestMultiDistroSupport:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = (
-            "pacman 6.0.1-2\n" "linux 5.14.8.arch1-1\n" "base 2-2\n" "systemd 249.4-1\n"
+            "pacman 6.0.1-2\n"
+            + "linux 5.14.8.arch1-1\n"
+            + "base 2-2\n"
+            + "systemd 249.4-1\n"
         )
 
         with patch.object(
@@ -463,7 +466,7 @@ class TestErrorHandling:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise Exception("apt failed")
+                raise RuntimeError("apt failed")
             return Mock(returncode=0, stdout="package 1.0\n")
 
         with patch.object(

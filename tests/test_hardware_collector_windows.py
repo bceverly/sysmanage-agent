@@ -229,8 +229,8 @@ DESKTOP-ABC,C:,NTFS,250000000000,500000000000,Windows
         def mock_run(cmd, **_kwargs):
             result = Mock()
             if "diskdrive" in cmd:
-                raise Exception("Physical disk error")
-            elif "logicaldisk" in cmd:
+                raise RuntimeError("Physical disk error")
+            if "logicaldisk" in cmd:
                 result.returncode = 0
                 result.stdout = logicaldisk_output
             else:
@@ -257,7 +257,7 @@ DESKTOP-ABC,\\\\.\\PHYSICALDRIVE0,SCSI,Samsung SSD 860,500107862016
             if "diskdrive" in cmd:
                 result.stdout = diskdrive_output
             elif "logicaldisk" in cmd:
-                raise Exception("Logical disk error")
+                raise RuntimeError("Logical disk error")
             else:
                 result.stdout = ""
             return result
@@ -489,7 +489,7 @@ class TestParsePhysicalDiskLine:
 
     def test_parse_valid_line(self, collector):
         """Test parsing valid physical disk line."""
-        line = "Node,DeviceID,InterfaceType,Model,Size"
+        _header = "Node,DeviceID,InterfaceType,Model,Size"
         # This would be the data line, not header
         data_line = "DESKTOP-ABC,\\\\.\\PHYSICALDRIVE0,SCSI,Samsung SSD,500107862016"
         result = collector._parse_physical_disk_line(data_line)

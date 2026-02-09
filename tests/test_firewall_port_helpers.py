@@ -8,8 +8,6 @@ Tests port collection and formatting helper functions.
 import subprocess
 from unittest.mock import Mock, patch
 
-import pytest
-
 from src.sysmanage_agent.operations.firewall_port_helpers import (
     FirewallPortHelpers,
     _add_port_to_list,
@@ -83,36 +81,36 @@ class TestModuleLevelHelpers:
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
         _categorize_port("22", "tcp", False, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
         assert ipv4_tcp == ["22"]
-        assert ipv4_udp == []
+        assert not ipv4_udp
 
     def test_categorize_port_udp_ipv4(self):
         """Test categorizing UDP IPv4 port."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
         _categorize_port("53", "udp", False, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
         assert ipv4_udp == ["53"]
-        assert ipv4_tcp == []
+        assert not ipv4_tcp
 
     def test_categorize_port_tcp_ipv6(self):
         """Test categorizing TCP IPv6 port."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
         _categorize_port("22", "tcp6", True, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
         assert ipv6_tcp == ["22"]
-        assert ipv4_tcp == []
+        assert not ipv4_tcp
 
     def test_categorize_port_udp_ipv6(self):
         """Test categorizing UDP IPv6 port."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
         _categorize_port("53", "udp6", True, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
         assert ipv6_udp == ["53"]
-        assert ipv4_udp == []
+        assert not ipv4_udp
 
     def test_categorize_port_unknown_protocol(self):
         """Test categorizing with unknown protocol."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = [], [], [], []
         _categorize_port("22", "sctp", False, ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp)
         # Should not add to any list
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
 
 class TestFirewallPortHelpersInit:
@@ -170,7 +168,7 @@ class TestMergePortsWithProtocols:
     def test_merge_ports_empty(self):
         """Test merging empty port lists."""
         result = self.helpers.merge_ports_with_protocols([], [])
-        assert result == []
+        assert not result
 
     def test_merge_ports_no_duplicates(self):
         """Test that duplicate ports are merged."""
@@ -267,7 +265,7 @@ LocalPort:                            53
 """
 
         with patch.object(self.helpers, "_run_netsh_command", return_value=mock_result):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = (
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
                 self.helpers.get_windows_firewall_ports()
             )
 
@@ -280,12 +278,12 @@ LocalPort:                            53
         mock_result.returncode = 1
 
         with patch.object(self.helpers, "_run_netsh_command", return_value=mock_result):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = (
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
                 self.helpers.get_windows_firewall_ports()
             )
 
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_get_windows_firewall_ports_timeout(self):
         """Test getting Windows firewall ports with timeout."""
@@ -294,11 +292,11 @@ LocalPort:                            53
             "_run_netsh_command",
             side_effect=subprocess.TimeoutExpired(cmd="netsh", timeout=10),
         ):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = (
+            ipv4_tcp, _ipv4_udp, _ipv6_tcp, _ipv6_udp = (
                 self.helpers.get_windows_firewall_ports()
             )
 
-        assert ipv4_tcp == []
+        assert not ipv4_tcp
 
 
 class TestListeningPorts:

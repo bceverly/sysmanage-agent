@@ -294,7 +294,7 @@ class TestValidatePackages:
             }
         ]
 
-        valid, failed = validate_packages(packages, self.logger)
+        valid, _failed = validate_packages(packages, self.logger)
 
         assert len(valid) == 1
         assert valid[0]["package_name"] == "vim"
@@ -463,7 +463,7 @@ class TestInstallAptPackages:
 
         packages = [{"package_name": "vim", "package_manager": "apt"}]
 
-        success, failed, log = await install_apt_packages(
+        success, _failed, _log = await install_apt_packages(
             packages, mock_install_method, self.logger
         )
 
@@ -475,7 +475,7 @@ class TestInstallAptPackages:
         """Test apt package installation with empty list."""
         mock_install_method = AsyncMock()
 
-        success, failed, log = await install_apt_packages(
+        _success, _failed, _log = await install_apt_packages(
             [], mock_install_method, self.logger
         )
 
@@ -493,7 +493,7 @@ class TestInstallAptPackages:
 
         packages = [{"package_name": "vim", "package_manager": "apt"}]
 
-        success, failed, log = await install_apt_packages(
+        success, _failed, _log = await install_apt_packages(
             packages, mock_install_method, self.logger
         )
 
@@ -569,7 +569,7 @@ class TestInstallNonAptPackages:
 
             packages = [{"package_name": "pkg", "package_manager": "dnf"}]
 
-            success, failed, log = install_non_apt_packages(
+            success, failed, _log = install_non_apt_packages(
                 packages, "dnf", self.logger
             )
 
@@ -584,7 +584,7 @@ class TestInstallNonAptPackages:
         ) as mock_detector_class:
             mock_detector = Mock()
 
-            def install_side_effect(package_name, pkg_manager):
+            def install_side_effect(package_name, _pkg_manager):
                 if package_name == "success_pkg":
                     return {"success": True, "installed_version": "1.0"}
                 return {"success": False, "error": "Failed"}
@@ -597,7 +597,7 @@ class TestInstallNonAptPackages:
                 {"package_name": "fail_pkg", "package_manager": "dnf"},
             ]
 
-            success, failed, log = install_non_apt_packages(
+            success, failed, _log = install_non_apt_packages(
                 packages, "dnf", self.logger
             )
 
@@ -628,7 +628,7 @@ class TestInstallNonAptPackages:
 
             packages = [{"package_name": "pkg", "package_manager": "dnf"}]
 
-            success, failed, log = install_non_apt_packages(
+            _success, failed, _log = install_non_apt_packages(
                 packages, "dnf", self.logger
             )
 
@@ -649,7 +649,7 @@ class TestInstallNonAptPackages:
 
             packages = [{"package_name": "vim", "package_manager": "dnf"}]
 
-            success, failed, log = install_non_apt_packages(
+            _success, _failed, log = install_non_apt_packages(
                 packages, "dnf", self.logger
             )
 
@@ -673,7 +673,7 @@ class TestInstallNonAptPackages:
 
             packages = [{"package_name": "vim", "package_manager": "dnf"}]
 
-            success, failed, log = install_non_apt_packages(
+            success, _failed, _log = install_non_apt_packages(
                 packages, "dnf", self.logger
             )
 
@@ -751,7 +751,7 @@ class TestIntegration:
             {"package_name": "git", "package_manager": "pacman"},
         ]
 
-        valid, failed = validate_packages(packages, self.logger)
+        valid, _failed = validate_packages(packages, self.logger)
         groups = group_packages_by_manager(valid)
 
         assert len(groups) == 4

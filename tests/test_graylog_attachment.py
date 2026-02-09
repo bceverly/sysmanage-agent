@@ -3,11 +3,10 @@ Tests for Graylog attachment operations module.
 Tests configuration of syslog forwarding to Graylog on various platforms.
 """
 
-# pylint: disable=redefined-outer-name,protected-access
+# pylint: disable=redefined-outer-name,protected-access,too-many-lines
 
 import asyncio
-from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, Mock, MagicMock, patch, mock_open
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -30,9 +29,11 @@ class AsyncContextManagerMock:
         return False
 
     async def read(self):
+        """Read file content."""
         return self.read_data
 
     async def write(self, data):
+        """Write data to file."""
         self.written_data.append(data)
 
 
@@ -40,7 +41,7 @@ def create_async_file_mock(read_data=""):
     """Create a mock for aiofiles.open that supports async context manager."""
     mock_file = AsyncContextManagerMock(read_data)
 
-    def mock_open_func(*args, **kwargs):
+    def mock_open_func(*_args, **_kwargs):
         return mock_file
 
     return mock_open_func
@@ -826,6 +827,7 @@ class MockUrlResponse:
         pass
 
     def read(self):
+        """Read the mock content."""
         return self.content
 
 
@@ -839,7 +841,7 @@ class TestInstallWindowsSidecar:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        async def mock_wait_for(coro, timeout):
+        async def mock_wait_for(coro, timeout):  # pylint: disable=unused-argument
             return await coro
 
         with patch("platform.machine", return_value="AMD64"):
@@ -869,7 +871,7 @@ class TestInstallWindowsSidecar:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"", b""))
 
-        async def mock_wait_for(coro, timeout):
+        async def mock_wait_for(coro, timeout):  # pylint: disable=unused-argument
             return await coro
 
         with patch("platform.machine", return_value="x86"):
@@ -1126,7 +1128,9 @@ class TestSendGraylogStatusUpdate:
     """Tests for _send_graylog_status_update method."""
 
     @pytest.mark.asyncio
-    async def test_send_status_update_with_mocked_method(self, graylog_ops, mock_agent):
+    async def test_send_status_update_with_mocked_method(
+        self, graylog_ops, mock_agent
+    ):  # pylint: disable=unused-argument
         """Test Graylog status update by mocking the entire method."""
         # Simply verify the method can be called without error
         with patch.object(

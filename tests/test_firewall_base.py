@@ -156,7 +156,7 @@ class TestCheckConnectionForServerPort:
 
         self.base._check_connection_for_server_port(mock_conn, server_ports)
 
-        assert server_ports == []
+        assert not server_ports
 
     def test_check_connection_wrong_port(self):
         """Test checking connection on wrong port."""
@@ -167,7 +167,7 @@ class TestCheckConnectionForServerPort:
 
         self.base._check_connection_for_server_port(mock_conn, server_ports)
 
-        assert server_ports == []
+        assert not server_ports
 
     def test_check_connection_already_known(self):
         """Test checking connection for port already known."""
@@ -214,11 +214,11 @@ class TestCheckConnectionForServerPort:
         with patch("psutil.Process", return_value=mock_proc):
             self.base._check_connection_for_server_port(mock_conn, server_ports)
 
-        assert server_ports == []
+        assert not server_ports
 
     def test_check_connection_no_such_process(self):
         """Test checking connection when process no longer exists."""
-        import psutil
+        import psutil  # pylint: disable=import-outside-toplevel
 
         mock_conn = Mock()
         mock_conn.status = "LISTEN"
@@ -230,11 +230,11 @@ class TestCheckConnectionForServerPort:
         with patch("psutil.Process", side_effect=psutil.NoSuchProcess(12345)):
             self.base._check_connection_for_server_port(mock_conn, server_ports)
 
-        assert server_ports == []
+        assert not server_ports
 
     def test_check_connection_access_denied(self):
         """Test checking connection when access is denied."""
-        import psutil
+        import psutil  # pylint: disable=import-outside-toplevel
 
         mock_conn = Mock()
         mock_conn.status = "LISTEN"
@@ -246,7 +246,7 @@ class TestCheckConnectionForServerPort:
         with patch("psutil.Process", side_effect=psutil.AccessDenied(12345)):
             self.base._check_connection_for_server_port(mock_conn, server_ports)
 
-        assert server_ports == []
+        assert not server_ports
 
 
 class TestGetLocalServerPorts:
@@ -266,7 +266,7 @@ class TestGetLocalServerPorts:
         with patch("psutil.net_connections", return_value=[mock_conn]):
             ports = self.base._get_local_server_ports()
 
-        assert ports == []
+        assert not ports
 
     def test_get_local_server_ports_found(self):
         """Test getting local server ports when server is running."""
@@ -313,7 +313,7 @@ class TestGetLocalServerPorts:
         with patch("psutil.net_connections", side_effect=Exception("Error")):
             ports = self.base._get_local_server_ports()
 
-        assert ports == []
+        assert not ports
 
 
 class TestSendFirewallStatusUpdate:

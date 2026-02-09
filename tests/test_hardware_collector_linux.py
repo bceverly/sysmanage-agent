@@ -125,7 +125,7 @@ model name	: Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz
 cpu MHz		: 1800.000
 """
 
-        def mock_run(cmd, **_kwargs):
+        def _mock_run(cmd, **_kwargs):
             result = Mock()
             if "lscpu" in cmd:
                 result.returncode = 1
@@ -184,10 +184,10 @@ vendor_id	: GenuineIntel
 model name	: Intel Core i5
 """
 
-        def mock_open_files(filename, *args, **kwargs):
+        def mock_open_files(filename, *_args, **_kwargs):
             if "cpuinfo_max_freq" in filename:
                 return mock_open(read_data="3500000")()  # 3.5 GHz in kHz
-            elif "cpuinfo" in filename:
+            if "cpuinfo" in filename:
                 return mock_open(read_data=proc_cpuinfo)()
             raise FileNotFoundError
 
@@ -438,10 +438,10 @@ class TestGetNetworkInfo:
                 return interfaces
             return []
 
-        def mock_exists(path):
+        def mock_exists(_path):
             return True
 
-        def mock_open_files(filename, *args, **kwargs):
+        def mock_open_files(filename, *_args, **_kwargs):
             content_map = {
                 "/sys/class/net/eth0/type": "1",
                 "/sys/class/net/eth0/operstate": "up",
@@ -494,15 +494,15 @@ class TestGetNetworkInfo:
                 return True
             return False
 
-        def mock_path_join(base, *parts):
-            import os.path as real_os_path
+        def _mock_path_join(base, *parts):
+            import os.path as real_os_path  # pylint: disable=import-outside-toplevel
 
             return real_os_path.join(base, *parts)
 
-        def mock_open_files(filename, *args, **kwargs):
+        def mock_open_files(filename, *_args, **_kwargs):
             if "type" in filename:
                 return mock_open(read_data="1")()
-            elif "operstate" in filename:
+            if "operstate" in filename:
                 return mock_open(read_data="up")()
             raise FileNotFoundError
 

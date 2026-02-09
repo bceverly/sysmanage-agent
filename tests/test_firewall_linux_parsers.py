@@ -8,8 +8,6 @@ Tests parsing logic for UFW, firewalld, iptables, and nftables.
 import subprocess
 from unittest.mock import Mock, patch
 
-import pytest
-
 from src.sysmanage_agent.operations.firewall_linux_parsers import LinuxFirewallParsers
 
 
@@ -38,14 +36,14 @@ class TestAddPortToList:
             "22", is_ipv6=False, tcp_v4=tcp_v4, tcp_v6=tcp_v6
         )
         assert tcp_v4 == ["22"]
-        assert tcp_v6 == []
+        assert not tcp_v6
 
     def test_add_port_ipv6(self):
         """Test adding port to IPv6 list."""
         tcp_v4 = []
         tcp_v6 = []
         self.parsers._add_port_to_list("22", is_ipv6=True, tcp_v4=tcp_v4, tcp_v6=tcp_v6)
-        assert tcp_v4 == []
+        assert not tcp_v4
         assert tcp_v6 == ["22"]
 
 
@@ -59,37 +57,37 @@ class TestParseUfwRules:
     def test_parse_ufw_empty_output(self):
         """Test parsing empty UFW output."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules("")
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
-        assert ipv6_tcp == []
-        assert ipv6_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
+        assert not ipv6_tcp
+        assert not ipv6_udp
 
     def test_parse_ufw_single_tcp_port(self):
         """Test parsing single TCP port."""
         output = "22/tcp                     ALLOW       Anywhere"
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
         assert ipv4_tcp == ["22"]
-        assert ipv4_udp == []
-        assert ipv6_tcp == []
-        assert ipv6_udp == []
+        assert not ipv4_udp
+        assert not ipv6_tcp
+        assert not ipv6_udp
 
     def test_parse_ufw_single_udp_port(self):
         """Test parsing single UDP port."""
         output = "53/udp                     ALLOW       Anywhere"
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
-        assert ipv4_tcp == []
+        assert not ipv4_tcp
         assert ipv4_udp == ["53"]
-        assert ipv6_tcp == []
-        assert ipv6_udp == []
+        assert not ipv6_tcp
+        assert not ipv6_udp
 
     def test_parse_ufw_ipv6_port(self):
         """Test parsing IPv6 port with (v6) marker."""
         output = "22/tcp (v6)                ALLOW       Anywhere (v6)"
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
         assert ipv6_tcp == ["22"]
-        assert ipv6_udp == []
+        assert not ipv6_udp
 
     def test_parse_ufw_multiple_ports(self):
         """Test parsing multiple ports and protocols."""
@@ -108,39 +106,39 @@ To                         Action      From
         assert ipv4_tcp == ["22", "80", "443"]
         assert ipv4_udp == ["53"]
         assert ipv6_tcp == ["22", "80"]
-        assert ipv6_udp == []
+        assert not ipv6_udp
 
     def test_parse_ufw_port_without_protocol(self):
         """Test parsing port without protocol (applies to both TCP and UDP)."""
         output = "8080                       ALLOW       Anywhere"
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
+        ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = self.parsers.parse_ufw_rules(output)
         assert ipv4_tcp == ["8080"]
         assert ipv4_udp == ["8080"]
 
     def test_parse_ufw_deny_rule_ignored(self):
         """Test that DENY rules are ignored."""
         output = "22/tcp                     DENY        Anywhere"
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = self.parsers.parse_ufw_rules(output)
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_parse_ufw_line_no_allow(self):
         """Test parsing line without ALLOW keyword."""
         output = "Status: active"
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = self.parsers.parse_ufw_rules(output)
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_parse_ufw_line_empty_parts(self):
         """Test parsing line with insufficient parts."""
         output = ""
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
-        assert ipv4_tcp == []
+        ipv4_tcp, _ipv4_udp, _ipv6_tcp, _ipv6_udp = self.parsers.parse_ufw_rules(output)
+        assert not ipv4_tcp
 
     def test_parse_ufw_port_with_protocol_lower_case(self):
         """Test parsing port with lowercase protocol."""
         output = "22/TCP                     ALLOW       Anywhere"
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_ufw_rules(output)
+        ipv4_tcp, _ipv4_udp, _ipv6_tcp, _ipv6_udp = self.parsers.parse_ufw_rules(output)
         assert ipv4_tcp == ["22"]
 
 
@@ -173,10 +171,12 @@ class TestGetFirewalldPorts:
         mock_result.stdout = ""
 
         with patch("subprocess.run", return_value=mock_result):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.get_firewalld_ports()
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
+                self.parsers.get_firewalld_ports()
+            )
 
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_get_firewalld_ports_command_failure(self):
         """Test handling firewalld command failure."""
@@ -185,20 +185,24 @@ class TestGetFirewalldPorts:
         mock_result.stdout = ""
 
         with patch("subprocess.run", return_value=mock_result):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.get_firewalld_ports()
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
+                self.parsers.get_firewalld_ports()
+            )
 
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_get_firewalld_ports_file_not_found(self):
         """Test handling FileNotFoundError."""
         with patch(
             "subprocess.run", side_effect=FileNotFoundError("firewall-cmd not found")
         ):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.get_firewalld_ports()
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
+                self.parsers.get_firewalld_ports()
+            )
 
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
     def test_get_firewalld_ports_timeout(self):
         """Test handling subprocess timeout."""
@@ -206,10 +210,12 @@ class TestGetFirewalldPorts:
             "subprocess.run",
             side_effect=subprocess.TimeoutExpired(cmd="firewall-cmd", timeout=5),
         ):
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.get_firewalld_ports()
+            ipv4_tcp, ipv4_udp, _ipv6_tcp, _ipv6_udp = (
+                self.parsers.get_firewalld_ports()
+            )
 
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
 
 
 class TestParseIptablesRules:
@@ -269,7 +275,7 @@ class TestParseIptablesRules:
         )
         self.parsers._parse_iptables_line(line, tcp_ports, udp_ports)
         assert tcp_ports == ["22"]
-        assert udp_ports == []
+        assert not udp_ports
 
     def test_parse_iptables_line_accept_udp(self):
         """Test parsing iptables ACCEPT rule for UDP."""
@@ -279,7 +285,7 @@ class TestParseIptablesRules:
             "ACCEPT     udp  --  anywhere             anywhere             udp dpt:53"
         )
         self.parsers._parse_iptables_line(line, tcp_ports, udp_ports)
-        assert tcp_ports == []
+        assert not tcp_ports
         assert udp_ports == ["53"]
 
     def test_parse_iptables_line_no_accept(self):
@@ -290,8 +296,8 @@ class TestParseIptablesRules:
             "DROP       tcp  --  anywhere             anywhere             tcp dpt:22"
         )
         self.parsers._parse_iptables_line(line, tcp_ports, udp_ports)
-        assert tcp_ports == []
-        assert udp_ports == []
+        assert not tcp_ports
+        assert not udp_ports
 
     def test_parse_iptables_line_no_dpt(self):
         """Test parsing iptables line without dpt."""
@@ -299,8 +305,8 @@ class TestParseIptablesRules:
         udp_ports = []
         line = "ACCEPT     all  --  anywhere             anywhere"
         self.parsers._parse_iptables_line(line, tcp_ports, udp_ports)
-        assert tcp_ports == []
-        assert udp_ports == []
+        assert not tcp_ports
+        assert not udp_ports
 
     def test_parse_iptables_output(self):
         """Test parsing full iptables output."""
@@ -327,7 +333,9 @@ num   pkts bytes target     prot opt in     out     source               destina
 
         with patch.object(self.parsers, "_run_iptables_command") as mock_run:
             mock_run.side_effect = [ipv4_output, ipv6_output]
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_iptables_rules()
+            ipv4_tcp, _ipv4_udp, ipv6_tcp, _ipv6_udp = (
+                self.parsers.parse_iptables_rules()
+            )
 
         assert ipv4_tcp == ["22"]
         assert ipv6_tcp == ["443"]
@@ -336,9 +344,11 @@ num   pkts bytes target     prot opt in     out     source               destina
         """Test parsing when iptables fails but ip6tables works."""
         with patch.object(self.parsers, "_run_iptables_command") as mock_run:
             mock_run.side_effect = [None, "ACCEPT     tcp  dpt:443"]
-            ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_iptables_rules()
+            ipv4_tcp, _ipv4_udp, ipv6_tcp, _ipv6_udp = (
+                self.parsers.parse_iptables_rules()
+            )
 
-        assert ipv4_tcp == []
+        assert not ipv4_tcp
         assert ipv6_tcp == ["443"]
 
 
@@ -422,13 +432,13 @@ class TestParseNftablesRules:
         port_lists = {"ipv4_tcp": [], "ipv4_udp": [], "ipv6_tcp": [], "ipv6_udp": []}
         self.parsers._add_nftables_port_by_family("22", "ip", True, False, port_lists)
         assert port_lists["ipv4_tcp"] == ["22"]
-        assert port_lists["ipv6_tcp"] == []
+        assert not port_lists["ipv6_tcp"]
 
     def test_add_nftables_port_by_family_ip6(self):
         """Test adding port for IPv6 family."""
         port_lists = {"ipv4_tcp": [], "ipv4_udp": [], "ipv6_tcp": [], "ipv6_udp": []}
         self.parsers._add_nftables_port_by_family("22", "ip6", True, False, port_lists)
-        assert port_lists["ipv4_tcp"] == []
+        assert not port_lists["ipv4_tcp"]
         assert port_lists["ipv6_tcp"] == ["22"]
 
     def test_add_nftables_port_by_family_inet(self):
@@ -444,14 +454,14 @@ class TestParseNftablesRules:
         udp_list = []
         self.parsers._add_port_by_protocol("22", True, False, tcp_list, udp_list)
         assert tcp_list == ["22"]
-        assert udp_list == []
+        assert not udp_list
 
     def test_add_port_by_protocol_udp(self):
         """Test adding port by UDP protocol."""
         tcp_list = []
         udp_list = []
         self.parsers._add_port_by_protocol("53", False, True, tcp_list, udp_list)
-        assert tcp_list == []
+        assert not tcp_list
         assert udp_list == ["53"]
 
     def test_parse_nftables_line_accept(self):
@@ -464,13 +474,13 @@ class TestParseNftablesRules:
         """Test parsing nftables non-accept rule."""
         port_lists = {"ipv4_tcp": [], "ipv4_udp": [], "ipv6_tcp": [], "ipv6_udp": []}
         self.parsers._parse_nftables_line("tcp dport 22 drop", "ip", port_lists)
-        assert port_lists["ipv4_tcp"] == []
+        assert not port_lists["ipv4_tcp"]
 
     def test_parse_nftables_line_no_family(self):
         """Test parsing nftables rule without family context."""
         port_lists = {"ipv4_tcp": [], "ipv4_udp": [], "ipv6_tcp": [], "ipv6_udp": []}
         self.parsers._parse_nftables_line("tcp dport 22 accept", None, port_lists)
-        assert port_lists["ipv4_tcp"] == []
+        assert not port_lists["ipv4_tcp"]
 
     def test_parse_nftables_rules_full(self):
         """Test parsing full nftables ruleset."""
@@ -493,7 +503,7 @@ table inet myfilter {
     }
 }
 """
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_nftables_rules(
+        ipv4_tcp, ipv4_udp, ipv6_tcp, _ipv6_udp = self.parsers.parse_nftables_rules(
             output
         )
 
@@ -509,7 +519,7 @@ table inet myfilter {
     def test_parse_nftables_rules_empty(self):
         """Test parsing empty nftables output."""
         ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.parsers.parse_nftables_rules("")
-        assert ipv4_tcp == []
-        assert ipv4_udp == []
-        assert ipv6_tcp == []
-        assert ipv6_udp == []
+        assert not ipv4_tcp
+        assert not ipv4_udp
+        assert not ipv6_tcp
+        assert not ipv6_udp

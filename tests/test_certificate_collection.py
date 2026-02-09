@@ -15,13 +15,8 @@ This module provides comprehensive test coverage for:
 # pylint: disable=too-many-lines
 
 import json
-import os
 import subprocess
-import tempfile
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, Mock, call, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 
@@ -393,7 +388,7 @@ class TestSystemCertificatePaths:
         """Test unknown system returns empty list."""
         paths = self.collector._collect_system_cert_paths("UnknownOS")
 
-        assert paths == []
+        assert not paths
 
 
 class TestAppCertificatePaths:
@@ -550,7 +545,7 @@ aUNlcnQgR2xvYmFsIEcyIFRMUyBSU0EgU0hBMjU2IDIwMjAgQ0ExMIIBIjANBgkq
 
         result = self.collector._extract_certificates_from_keychain(keychain)
 
-        assert result == []
+        assert not result
         mock_run.assert_not_called()
 
     @patch("subprocess.run")
@@ -568,7 +563,7 @@ aUNlcnQgR2xvYmFsIEcyIFRMUyBSU0EgU0hBMjU2IDIwMjAgQ0ExMIIBIjANBgkq
 
         result = self.collector._extract_certificates_from_keychain(keychain)
 
-        assert result == []
+        assert not result
 
     @patch("subprocess.run")
     @patch("os.path.exists")
@@ -587,7 +582,7 @@ aUNlcnQgR2xvYmFsIEcyIFRMUyBSU0EgU0hBMjU2IDIwMjAgQ0ExMIIBIjANBgkq
 
         result = self.collector._extract_certificates_from_keychain(keychain)
 
-        assert result == []
+        assert not result
 
 
 class TestPEMParsing:
@@ -659,7 +654,7 @@ CERT1DATA
 
         result = self.collector._parse_macos_security_output("", keychain)
 
-        assert result == []
+        assert not result
 
 
 class TestX509CertificateParsing:
@@ -859,7 +854,7 @@ class TestExpirationDetection:
             ("Dec 31 23:59:59 2023 GMT", "12"),
         ]
 
-        for date_str, expected_month in months:
+        for date_str, _expected_month in months:
             result = self.collector._parse_openssl_date(date_str, "test")
             assert result is not None
 
@@ -1054,7 +1049,7 @@ class TestWindowsCertificateCollection:
 
         result = self.collector._collect_windows_certificates()
 
-        assert result == []
+        assert not result
 
     def test_build_powershell_command(self):
         """Test PowerShell command building."""
@@ -1207,7 +1202,7 @@ class TestUnixCertificateCollection:
         """Test Unix certificate collection with empty paths."""
         result = self.collector._collect_unix_certificates([])
 
-        assert result == []
+        assert not result
 
     @patch("glob.glob")
     def test_collect_unix_certificates_deduplication(self, mock_glob):
@@ -1236,7 +1231,7 @@ class TestUnixCertificateCollection:
             "_process_certificate_directory",
         ) as mock_process:
             # Simulate adding a certificate without fingerprint
-            def add_cert(cert_dir, certificates, seen_fingerprints):
+            def add_cert(_cert_dir, certificates, _seen_fingerprints):
                 certificates.append({"name": "cert1", "fingerprint_sha256": None})
 
             mock_process.side_effect = add_cert
@@ -1526,7 +1521,7 @@ class TestCertificateCollectionIntegration:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout=mock_ps_output, stderr="")
 
-            result = self.collector.collect_certificates()
+            _result = self.collector.collect_certificates()
 
             # Should attempt to collect from Windows stores
             assert mock_run.called

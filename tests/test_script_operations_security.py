@@ -3,10 +3,9 @@ Security-focused unit tests for src.sysmanage_agent.operations.script_operations
 Tests security validations, shell detection edge cases, and script handling.
 """
 
-# pylint: disable=protected-access,attribute-defined-outside-init
+# pylint: disable=protected-access,attribute-defined-outside-init,unused-argument
 
 import asyncio
-import os
 import stat
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -396,7 +395,8 @@ class TestExecuteScriptFile:
         self, mock_time, mock_unlink, mock_subprocess
     ):
         """Test successful script execution."""
-        mock_time.side_effect = [100.0, 101.5]
+        # Provide extra values for logging module which also calls time.time()
+        mock_time.side_effect = [100.0, 101.5] + [101.5] * 20
 
         mock_process = AsyncMock()
         mock_process.communicate.return_value = (b"output\n", b"")
@@ -502,8 +502,7 @@ class TestExecuteScriptFile:
 
         # Should still succeed despite cleanup failure
         assert result["success"] is True
-        # Warning should be logged
-        self.mock_agent  # Logger would be called
+        # Warning would be logged via the agent's logger
 
     @pytest.mark.asyncio
     @patch("asyncio.create_subprocess_exec")

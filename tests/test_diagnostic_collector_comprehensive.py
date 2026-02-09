@@ -15,8 +15,7 @@ Tests cover:
 # pylint: disable=protected-access,too-many-lines,unused-argument,attribute-defined-outside-init
 
 import asyncio
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -979,7 +978,7 @@ class TestStatisticsCalculation(TestDiagnosticCollectorSetup):
             "dict_data": {"nested": "value"},
         }
 
-        size, files = collector._calculate_collection_statistics(diagnostic_data)
+        _size, files = collector._calculate_collection_statistics(diagnostic_data)
 
         # Only list and dict should contribute
         assert files == 3  # 3 items in list
@@ -993,7 +992,7 @@ class TestStatisticsCalculation(TestDiagnosticCollectorSetup):
             "empty_files": {"files": []},
         }
 
-        size, files = collector._calculate_collection_statistics(diagnostic_data)
+        _size, files = collector._calculate_collection_statistics(diagnostic_data)
 
         assert files == 0
 
@@ -1055,7 +1054,7 @@ class TestDiagnosticWorkflow(TestDiagnosticCollectorSetup):
             nonlocal call_count
             call_count += 1
             if call_count <= 3:  # First collection type (system_logs uses 3 commands)
-                raise Exception("Collection failed")
+                raise RuntimeError("Collection failed")
             return {"success": True, "result": {"stdout": "data"}}
 
         collector.system_ops.execute_shell_command = AsyncMock(side_effect=mock_execute)

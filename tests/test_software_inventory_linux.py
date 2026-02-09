@@ -863,11 +863,11 @@ class TestErrorRecovery:
         """Test that failures in one collector don't affect others."""
         call_count = 0
 
-        def side_effect(*args, **kwargs):
+        def side_effect(*_args, **_kwargs):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise Exception("First call fails")
+                raise RuntimeError("First call fails")
             return Mock(returncode=0, stdout="package 1.0")
 
         with patch.object(

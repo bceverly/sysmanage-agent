@@ -11,11 +11,10 @@ This module provides extensive testing coverage for:
 - Error handling scenarios
 """
 
-import subprocess
-import time
-from unittest.mock import MagicMock, Mock, patch
+# pylint: disable=protected-access,too-many-lines,import-outside-toplevel
 
-import pytest
+import subprocess
+from unittest.mock import Mock, patch
 
 from src.sysmanage_agent.collection.os_info_collection import (
     ZONEINFO_PATH_SEGMENT,
@@ -500,7 +499,7 @@ class TestTimezoneCollection:
         mock_result.returncode = 0
         mock_result.stdout = "/usr/share/zoneinfo/Asia/Tokyo\n"
 
-        def side_effect(cmd, timeout=5):
+        def side_effect(cmd, timeout=5):  # pylint: disable=unused-argument
             if cmd == ["cat", "/etc/timezone"]:
                 return None
             return mock_result
@@ -519,7 +518,7 @@ class TestTimezoneCollection:
 
         call_count = [0]
 
-        def side_effect(cmd, timeout=5):
+        def side_effect(cmd, timeout=5):  # pylint: disable=unused-argument
             call_count[0] += 1
             if call_count[0] <= 2:  # First two calls fail
                 return None
@@ -555,7 +554,7 @@ class TestTimezoneCollection:
         mock_result.returncode = 0
         mock_result.stdout = "/var/db/timezone/zoneinfo/Pacific/Auckland\n"
 
-        def side_effect(cmd, timeout=5):
+        def side_effect(cmd, timeout=5):  # pylint: disable=unused-argument
             if cmd[0] == "sudo":
                 return None
             return mock_result
@@ -721,7 +720,7 @@ class TestPlatformInfoCollection:
     def test_collect_darwin_info_empty_mac_ver(self):
         """Test Darwin info when mac_ver returns empty."""
         with patch("platform.mac_ver", return_value=("", "", "")):
-            platform_name, release, os_info = self.collector._collect_darwin_info(
+            platform_name, _release, os_info = self.collector._collect_darwin_info(
                 "23.5.0"
             )
 
@@ -758,7 +757,7 @@ class TestPlatformInfoCollection:
             with patch.object(
                 self.collector, "_collect_linux_os_info", return_value={}
             ):
-                platform_name, release, os_info = self.collector._collect_linux_info(
+                platform_name, release, _os_info = self.collector._collect_linux_info(
                     "5.15.0"
                 )
 
@@ -815,7 +814,7 @@ class TestPlatformInfoCollection:
             create=True,
         ):
             os_info = self.collector._collect_linux_os_info()
-            assert os_info == {}
+            assert not os_info
 
     def test_collect_windows_info(self):
         """Test Windows info collection."""
@@ -863,7 +862,7 @@ class TestPlatformInfoCollection:
         mock_result.stdout = ""
 
         with patch("subprocess.run", return_value=mock_result):
-            platform_name, release, os_info = self.collector._collect_freebsd_info(
+            platform_name, _release, os_info = self.collector._collect_freebsd_info(
                 "14.0-RELEASE"
             )
 
@@ -874,7 +873,7 @@ class TestPlatformInfoCollection:
     def test_collect_freebsd_info_file_not_found(self):
         """Test FreeBSD info when freebsd-version is not found."""
         with patch("subprocess.run", side_effect=FileNotFoundError()):
-            platform_name, release, os_info = self.collector._collect_freebsd_info(
+            platform_name, _release, os_info = self.collector._collect_freebsd_info(
                 "14.0-RELEASE"
             )
 
@@ -888,7 +887,7 @@ class TestPlatformInfoCollection:
             "subprocess.run",
             side_effect=subprocess.TimeoutExpired("freebsd-version", 5),
         ):
-            platform_name, release, os_info = self.collector._collect_freebsd_info(
+            platform_name, _release, os_info = self.collector._collect_freebsd_info(
                 "14.0-RELEASE"
             )
 
@@ -924,7 +923,7 @@ class TestPlatformInfoCollection:
 
         assert platform_name == "HaikuOS"
         assert release == "R1"
-        assert os_info == {}
+        assert not os_info
 
 
 class TestUbuntuProInfo:

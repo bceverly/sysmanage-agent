@@ -468,7 +468,7 @@ class TestParseRegistrySubkey:
         """Test parsing valid registry subkey."""
         mock_winreg = MagicMock()
 
-        def query_value(key, name):
+        def query_value(_key, name):
             values = {
                 "DisplayName": ("Firefox", 1),
                 "DisplayVersion": ("91.0", 1),
@@ -523,7 +523,7 @@ class TestParseRegistrySubkey:
         """Test parsing subkey without version."""
         mock_winreg = MagicMock()
 
-        def query_value(key, name):
+        def query_value(_key, name):
             if name == "DisplayName":
                 return ("Firefox", 1)
             raise FileNotFoundError(f"Value {name} not found")
@@ -544,14 +544,14 @@ class TestCollectRegistryKeyPrograms:
         """Test successful registry key program collection."""
         mock_winreg = MagicMock()
         mock_key = MagicMock()
-        mock_subkey = MagicMock()
+        _mock_subkey = MagicMock()
 
         mock_winreg.OpenKey.return_value.__enter__ = Mock(return_value=mock_key)
         mock_winreg.OpenKey.return_value.__exit__ = Mock(return_value=False)
         mock_winreg.QueryInfoKey.return_value = (2, 0, 0)  # 2 subkeys
         mock_winreg.EnumKey.side_effect = ["Firefox", "VSCode"]
 
-        def query_value(key, name):
+        def query_value(_key, name):
             if name == "DisplayName":
                 return ("Test App", 1)
             if name == "DisplayVersion":
@@ -607,7 +607,7 @@ class TestCollectRegistryKeyPrograms:
         mock_winreg.QueryInfoKey.return_value = (1, 0, 0)
         mock_winreg.EnumKey.return_value = "TestApp"
 
-        def query_value(key, name):
+        def query_value(_key, name):
             if name == "DisplayName":
                 return ("Test App", 1)
             if name == "DisplayVersion":
@@ -662,11 +662,11 @@ class TestErrorRecovery:
         """Test that failures in one source don't affect others."""
         call_count = 0
 
-        def run_side_effect(*args, **kwargs):
+        def run_side_effect(*_args, **_kwargs):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:  # First two calls fail
-                raise Exception("Error")
+                raise RuntimeError("Error")
             # Third call succeeds (winget)
             return Mock(
                 returncode=0,
@@ -719,7 +719,7 @@ class TestIntegrationScenarios:
             with patch.object(collector, "_collect_windows_registry_programs"):
                 with patch("subprocess.run") as mock_run:
                     # Return different outputs for different commands
-                    def run_side_effect(*args, **kwargs):
+                    def run_side_effect(*args, **_kwargs):
                         cmd = args[0]
                         result = Mock()
                         result.returncode = 0

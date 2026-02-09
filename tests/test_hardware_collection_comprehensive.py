@@ -6,7 +6,7 @@ Tests the main HardwareCollector class and cross-platform functionality.
 # pylint: disable=protected-access,redefined-outer-name
 
 import json
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 

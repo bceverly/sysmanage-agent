@@ -275,7 +275,7 @@ class TestEnablePackageManager:
             )
 
             parameters = {"package_manager": "homebrew", "os_name": "macOS"}
-            result = await self.ops.enable_package_manager(parameters)
+            _result = await self.ops.enable_package_manager(parameters)
 
             self.ops._enable_homebrew.assert_called_once()
 

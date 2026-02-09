@@ -270,7 +270,7 @@ To                         Action      From
         with patch("subprocess.run", return_value=mock_result):
             ports = self.ufw.get_current_ports()
 
-        assert ports == {}
+        assert not ports
 
     def test_get_current_ports_failure(self):
         """Test getting current ports when command fails."""
@@ -281,14 +281,14 @@ To                         Action      From
         with patch("subprocess.run", return_value=mock_result):
             ports = self.ufw.get_current_ports()
 
-        assert ports == {}
+        assert not ports
 
     def test_get_current_ports_exception(self):
         """Test getting current ports when exception occurs."""
         with patch("subprocess.run", side_effect=Exception("Command failed")):
             ports = self.ufw.get_current_ports()
 
-        assert ports == {}
+        assert not ports
         self.mock_logger.warning.assert_called()
 
 
@@ -752,7 +752,7 @@ class TestUfwIpForwarding:
         ):
             self.ufw._enable_ip_forwarding(errors)
 
-        assert errors == []
+        assert not errors
 
     def test_enable_ip_forwarding_success(self):
         """Test enabling IP forwarding successfully."""
@@ -773,7 +773,7 @@ class TestUfwIpForwarding:
             with patch("subprocess.run", return_value=mock_result):
                 self.ufw._enable_ip_forwarding(errors)
 
-        assert errors == []
+        assert not errors
 
     def test_enable_ip_forwarding_failure(self):
         """Test enabling IP forwarding with failure."""
@@ -871,7 +871,7 @@ class TestUfwAddNewPorts:
         with patch("subprocess.run", return_value=mock_result):
             errors = self.ufw._add_new_ports(desired_ports, current_ports)
 
-        assert errors == []
+        assert not errors
 
     def test_add_new_ports_skip_existing(self):
         """Test that existing ports are skipped."""
@@ -887,7 +887,7 @@ class TestUfwAddNewPorts:
 
         # Should not call subprocess since port already exists
         mock_run.assert_not_called()
-        assert errors == []
+        assert not errors
 
     def test_add_new_ports_failure(self):
         """Test adding ports with failure."""

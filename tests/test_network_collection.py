@@ -6,7 +6,7 @@ MAC address collection, network statistics, routing table information,
 DNS configuration, multi-platform support, and error handling.
 """
 
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access,too-many-public-methods,attribute-defined-outside-init,too-many-lines,unused-argument
 
 import socket
 import subprocess
@@ -407,14 +407,14 @@ class TestLinuxNetworkCollection:
             with patch("os.listdir", return_value=[]):
                 result = self.collector.get_network_info()
 
-        assert result == []
+        assert not result
 
     def test_get_network_info_sysfs_not_available(self):
         """Test network collection when /sys/class/net doesn't exist."""
         with patch("os.path.exists", return_value=False):
             result = self.collector.get_network_info()
 
-        assert result == []
+        assert not result
 
     def test_get_network_info_error_handling(self):
         """Test error handling during network collection."""
@@ -505,7 +505,7 @@ lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 33200
         with patch("subprocess.run", return_value=mock_result):
             result = self.collector.get_network_info()
 
-        assert result == []
+        assert not result
 
     def test_get_network_info_exception(self):
         """Test handling unexpected exception."""
@@ -582,7 +582,7 @@ lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 33200
             "lo0: flags=8049<UP,LOOPBACK,RUNNING> mtu 33200",
         )
 
-        assert result == {}
+        assert not result
 
     def test_detect_interface_header_detail_line(self):
         """Test that detail lines are not detected as headers."""
@@ -775,7 +775,7 @@ Wireless LAN adapter Wi-Fi:
         with patch("subprocess.run", return_value=mock_result):
             result = self.collector.get_network_info()
 
-        assert result == []
+        assert not result
 
     def test_detect_new_adapter_ethernet(self):
         """Test detecting Ethernet adapter header."""

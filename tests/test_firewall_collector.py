@@ -6,14 +6,9 @@ Tests firewall status collection across different operating systems.
 # pylint: disable=protected-access,attribute-defined-outside-init,too-many-public-methods
 
 import json
-import subprocess
 from unittest.mock import Mock, patch
 
-import pytest
-
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
-from src.sysmanage_agent.operations.firewall_linux_parsers import LinuxFirewallParsers
-from src.sysmanage_agent.operations.firewall_port_helpers import FirewallPortHelpers
 
 
 class TestFirewallCollectorInit:
@@ -166,7 +161,9 @@ class TestNpfHelpers:
             return_value=(["22"], [], [], [])
         )
 
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.collector._get_npf_ports(output)
+        ipv4_tcp, _ipv4_udp, _ipv6_tcp, _ipv6_udp = self.collector._get_npf_ports(
+            output
+        )
         assert ipv4_tcp == ["22"]
 
     def test_get_npf_ports_fallback_to_listening(self):
@@ -181,7 +178,9 @@ class TestNpfHelpers:
             return_value=(["22", "80"], [], ["22"], [])
         )
 
-        ipv4_tcp, ipv4_udp, ipv6_tcp, ipv6_udp = self.collector._get_npf_ports(output)
+        ipv4_tcp, _ipv4_udp, _ipv6_tcp, _ipv6_udp = self.collector._get_npf_ports(
+            output
+        )
         assert "22" in ipv4_tcp
         assert "80" in ipv4_tcp
 

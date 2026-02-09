@@ -6,7 +6,7 @@ Tests VMM SSH operations for VM management.
 # pylint: disable=protected-access,attribute-defined-outside-init
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -55,7 +55,7 @@ class TestWaitForSSH:
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.time.time")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.asyncio.sleep")
     async def test_wait_for_ssh_success_after_retries(
-        self, mock_sleep, mock_time, mock_run_command
+        self, _mock_sleep, mock_time, mock_run_command
     ):
         """Test SSH becomes available after a few retries."""
         # Start at time 0, then 5, 10, 15
@@ -75,7 +75,7 @@ class TestWaitForSSH:
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.run_command_async")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.time.time")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.asyncio.sleep")
-    async def test_wait_for_ssh_timeout(self, mock_sleep, mock_time, mock_run_command):
+    async def test_wait_for_ssh_timeout(self, _mock_sleep, mock_time, mock_run_command):
         """Test SSH timeout when host never responds."""
         # Simulate time passing beyond timeout
         mock_time.side_effect = [0, 100, 200, 301]  # Last value exceeds 300 timeout
@@ -91,7 +91,7 @@ class TestWaitForSSH:
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.time.time")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.asyncio.sleep")
     async def test_wait_for_ssh_exception_during_check(
-        self, mock_sleep, mock_time, mock_run_command
+        self, _mock_sleep, mock_time, mock_run_command
     ):
         """Test SSH check with exception (continues retrying)."""
         mock_time.side_effect = [0, 5, 10]
@@ -111,7 +111,7 @@ class TestWaitForSSH:
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.time.time")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.asyncio.sleep")
     async def test_wait_for_ssh_nc_command_args(
-        self, mock_sleep, mock_time, mock_run_command
+        self, _mock_sleep, mock_time, mock_run_command
     ):
         """Test that correct nc command is used."""
         mock_time.return_value = 0
@@ -666,7 +666,7 @@ class TestVmmSshOperationsEdgeCases:
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.time.time")
     @patch("src.sysmanage_agent.operations.child_host_vmm_ssh.asyncio.sleep")
     async def test_wait_for_ssh_with_short_timeout(
-        self, mock_sleep, mock_time, mock_run_command
+        self, _mock_sleep, mock_time, mock_run_command
     ):
         """Test SSH wait with very short timeout."""
         mock_time.side_effect = [0, 2]  # Exceeds timeout of 1

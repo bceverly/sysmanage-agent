@@ -756,7 +756,7 @@ class TestIntegrationScenarios:
                     ):
                         with patch("subprocess.run") as mock_run:
                             # Configure different outputs for different commands
-                            def run_side_effect(*args, **kwargs):
+                            def run_side_effect(*args, **_kwargs):
                                 cmd = args[0]
                                 result = Mock()
                                 result.returncode = 0

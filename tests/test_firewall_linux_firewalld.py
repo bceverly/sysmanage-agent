@@ -265,7 +265,7 @@ class TestFirewalldGetCurrentPorts:
         with patch("subprocess.run", return_value=mock_result):
             ports = self.firewalld.get_current_ports()
 
-        assert ports == {}
+        assert not ports
 
     def test_get_current_ports_failure(self):
         """Test getting current ports when command fails."""
@@ -276,14 +276,14 @@ class TestFirewalldGetCurrentPorts:
         with patch("subprocess.run", return_value=mock_result):
             ports = self.firewalld.get_current_ports()
 
-        assert ports == {}
+        assert not ports
 
     def test_get_current_ports_exception(self):
         """Test getting current ports when exception occurs."""
         with patch("subprocess.run", side_effect=Exception("Command failed")):
             ports = self.firewalld.get_current_ports()
 
-        assert ports == {}
+        assert not ports
         self.mock_logger.warning.assert_called()
 
 
@@ -668,7 +668,7 @@ class TestFirewalldAddNewPorts:
         with patch("subprocess.run", return_value=mock_result):
             errors = self.firewalld._add_new_ports(desired_ports, current_ports)
 
-        assert errors == []
+        assert not errors
 
     def test_add_new_ports_skip_existing(self):
         """Test that existing ports are skipped."""
@@ -684,7 +684,7 @@ class TestFirewalldAddNewPorts:
 
         # Should not call subprocess since port already exists
         mock_run.assert_not_called()
-        assert errors == []
+        assert not errors
 
     def test_add_new_ports_failure(self):
         """Test adding ports with failure."""
@@ -715,7 +715,7 @@ class TestFirewalldAddNewPorts:
 
         # Should call twice for TCP and UDP
         assert mock_run.call_count == 2
-        assert errors == []
+        assert not errors
 
 
 class TestFirewalldRemovePortWithErrorTracking:
@@ -742,7 +742,7 @@ class TestFirewalldRemovePortWithErrorTracking:
         with patch("subprocess.run", return_value=mock_result):
             self.firewalld._remove_port_with_error_tracking(80, "tcp", errors)
 
-        assert errors == []
+        assert not errors
 
     def test_remove_port_with_error_tracking_failure(self):
         """Test removing port with error tracking - failure case."""
@@ -768,7 +768,7 @@ class TestFirewalldRemovePortWithErrorTracking:
             self.firewalld._remove_port_with_error_tracking(80, "tcp", errors)
 
         # NOT_ENABLED should not be added to errors
-        assert errors == []
+        assert not errors
 
 
 class TestFirewalldRemoveUnneededPorts:

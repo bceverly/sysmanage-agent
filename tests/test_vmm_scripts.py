@@ -5,8 +5,6 @@ Tests OpenBSD and Alpine Linux script and config generators.
 
 # pylint: disable=protected-access,attribute-defined-outside-init
 
-import pytest
-
 from src.sysmanage_agent.operations.child_host_vmm_scripts import (
     generate_agent_config,
     generate_firsttime_script,

@@ -215,7 +215,7 @@ class TestCheckLxdSupport:
                 with patch("shutil.which", return_value="/snap/bin/snap"):
                     with patch("subprocess.run") as mock_run:
 
-                        def run_side_effect(cmd, **kwargs):
+                        def run_side_effect(cmd, **_kwargs):
                             if "list" in cmd and "lxd" in cmd:
                                 return Mock(returncode=0)
                             if "storage" in cmd:
@@ -242,7 +242,7 @@ class TestCheckLxdSupport:
                 with patch("shutil.which", return_value="/snap/bin/snap"):
                     with patch("subprocess.run") as mock_run:
 
-                        def run_side_effect(cmd, **kwargs):
+                        def run_side_effect(cmd, **_kwargs):
                             if "list" in cmd and "lxd" in cmd:
                                 return Mock(returncode=0)
                             if "storage" in cmd:
@@ -446,7 +446,7 @@ class TestCheckKvmModulesLoaded:
 
         with patch("subprocess.run") as mock_run:
 
-            def run_side_effect(cmd, **kwargs):
+            def run_side_effect(cmd, **_kwargs):
                 if "lsmod" in cmd:
                     return Mock(returncode=0, stdout=lsmod_output)
                 if "modinfo" in cmd:
@@ -465,7 +465,7 @@ class TestCheckKvmModulesLoaded:
 
         with patch("subprocess.run") as mock_run:
 
-            def run_side_effect(cmd, **kwargs):
+            def run_side_effect(cmd, **_kwargs):
                 if "lsmod" in cmd:
                     return Mock(returncode=0, stdout=lsmod_output)
                 if "modinfo" in cmd:
@@ -486,7 +486,7 @@ class TestCheckLibvirtdStatus:
         """Test when libvirtd is enabled and running."""
         with patch("subprocess.run") as mock_run:
 
-            def run_side_effect(cmd, **kwargs):
+            def run_side_effect(cmd, **_kwargs):
                 if "is-enabled" in cmd:
                     return Mock(returncode=0, stdout="enabled")
                 if "is-active" in cmd:
@@ -503,7 +503,7 @@ class TestCheckLibvirtdStatus:
         """Test when libvirtd is disabled."""
         with patch("subprocess.run") as mock_run:
 
-            def run_side_effect(cmd, **kwargs):
+            def run_side_effect(cmd, **_kwargs):
                 if "is-enabled" in cmd:
                     return Mock(returncode=1, stdout="disabled")
                 if "is-active" in cmd:

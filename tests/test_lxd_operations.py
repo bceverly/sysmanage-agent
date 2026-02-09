@@ -14,7 +14,7 @@ Tests cover:
 import asyncio
 import json
 import logging
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -556,7 +556,8 @@ class TestLxdContainerCreatorWaitForContainerReady:
             mock_run.return_value = Mock(returncode=1, stdout="")
             with patch("time.time") as mock_time:
                 # Simulate timeout by advancing time
-                mock_time.side_effect = [0, 0.1, 2]
+                # Provide extra values for logging module which also calls time.time()
+                mock_time.side_effect = [0, 0.1, 2] + [2] * 20
                 result = lxd_creator._wait_for_container_ready(
                     "test-container", timeout=1
                 )

@@ -107,7 +107,7 @@ linux-image-5.15.0-100-generic/jammy-security 5.15.0-100.110 amd64 [upgradable f
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_debian_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_detect_debian_system_updates_failure(self):
         """Test Debian system update detection with command failure."""
@@ -116,7 +116,7 @@ linux-image-5.15.0-100-generic/jammy-security 5.15.0-100.110 amd64 [upgradable f
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_debian_system_updates()
 
-        assert updates == []
+        assert not updates
 
 
 # =============================================================================
@@ -156,7 +156,7 @@ httpd.x86_64                       2.4.53-11.el9               appstream
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_redhat_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_detect_redhat_system_updates_marks_system(self):
         """Test Red Hat detection marks updates as system updates."""
@@ -210,7 +210,7 @@ firefox 122.0-1 -> 122.0.1-1
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_arch_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_detect_arch_system_updates_marks_versions(self):
         """Test Arch detection extracts version info correctly."""
@@ -263,7 +263,7 @@ v | Main       | nginx          | 1.19.8-150300.3  | 1.21.6-150400.1   | x86_64
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_suse_system_updates()
 
-        assert updates == []
+        assert not updates
 
 
 # =============================================================================
@@ -304,7 +304,7 @@ class TestUbuntuReleaseUpgrades:
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_ubuntu_release_upgrades()
 
-        assert updates == []
+        assert not updates
 
     def test_detect_ubuntu_release_upgrade_command_failure(self):
         """Test Ubuntu release upgrade detection with command failure."""
@@ -314,7 +314,7 @@ class TestUbuntuReleaseUpgrades:
         ):
             updates = LinuxSystemUpdateDetector.detect_ubuntu_release_upgrades()
 
-        assert updates == []
+        assert not updates
 
 
 # =============================================================================
@@ -344,7 +344,7 @@ class TestFedoraVersionUpgrades:
         with patch("subprocess.run", return_value=mock_result):
             updates = LinuxSystemUpdateDetector.detect_fedora_version_upgrades()
 
-        assert updates == []
+        assert not updates
 
 
 # =============================================================================
@@ -445,7 +445,7 @@ class TestFwupdUpdateDetection:
         with patch("subprocess.run", side_effect=mock_run):
             updates = pkg_detector.detect_fwupd_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_detect_fwupd_daemon_not_running(self, pkg_detector):
         """Test fwupd detection when daemon not running."""
@@ -454,7 +454,7 @@ class TestFwupdUpdateDetection:
         with patch("subprocess.run", return_value=mock_devices):
             updates = pkg_detector.detect_fwupd_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_check_fwupd_daemon_running(self, pkg_detector):
         """Test fwupd daemon check when running."""
@@ -675,7 +675,7 @@ libsystemd0/jammy-updates 249.11-0ubuntu3.12 amd64 [upgradable from: 249.11-0ubu
         stdout = "Listing..."
         updates = pkg_detector._parse_apt_upgradable_output(stdout)
 
-        assert updates == []
+        assert not updates
 
     def test_parse_apt_upgradable_marks_security(self, pkg_detector):
         """Test APT parsing marks security updates correctly."""
@@ -707,21 +707,21 @@ class TestSystemUpdateErrorHandling:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("apt", 30)):
             updates = LinuxSystemUpdateDetector.detect_debian_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_redhat_detection_permission_error(self):
         """Test Red Hat detection handles permission error."""
         with patch("subprocess.run", side_effect=PermissionError("Access denied")):
             updates = LinuxSystemUpdateDetector.detect_redhat_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_arch_detection_file_not_found(self):
         """Test Arch detection handles missing pacman."""
         with patch("subprocess.run", side_effect=FileNotFoundError("pacman not found")):
             updates = LinuxSystemUpdateDetector.detect_arch_system_updates()
 
-        assert updates == []
+        assert not updates
 
     def test_fwupd_json_parse_error(self, pkg_detector):
         """Test fwupd handles JSON parse errors."""
@@ -742,4 +742,4 @@ class TestSystemUpdateErrorHandling:
         with patch("subprocess.run", side_effect=mock_run):
             updates = pkg_detector.detect_fwupd_updates()
 
-        assert updates == []
+        assert not updates

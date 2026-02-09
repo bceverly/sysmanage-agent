@@ -581,7 +581,7 @@ class TestConfigureLxdFirewall:
             return_value=True,
         ):
             with patch.object(self.ops, "_get_ufw", return_value=mock_ufw):
-                result = self.ops.configure_lxd_firewall()
+                _result = self.ops.configure_lxd_firewall()
 
         mock_ufw.configure_lxd_firewall.assert_called_once_with("lxdbr0")
 

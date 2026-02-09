@@ -13,7 +13,7 @@ Tests cover:
 
 import asyncio
 import logging
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -206,7 +206,7 @@ class TestLoadKvmModule:
 
         mock_exists.call_count = 0
 
-        def side_effect(path):
+        def _side_effect(path):
             mock_exists.call_count += 1
             return mock_exists(path)
 
