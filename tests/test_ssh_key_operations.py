@@ -390,7 +390,9 @@ class TestUpdateAuthorizedKeys:
         mock_auth_cm.__aenter__ = AsyncMock(return_value=mock_auth_file)
         mock_auth_cm.__aexit__ = AsyncMock(return_value=None)
 
-        def open_side_effect(path, _mode, _encoding=None):
+        def open_side_effect(
+            path, _mode="r", **_kwargs
+        ):  # Accept any kwargs like encoding
             if "authorized_keys" in path:
                 return mock_auth_cm
             return mock_key_cm
