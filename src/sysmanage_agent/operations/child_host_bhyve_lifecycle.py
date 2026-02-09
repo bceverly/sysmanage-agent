@@ -24,6 +24,30 @@ from src.sysmanage_agent.operations.child_host_bhyve_creation import (
 )
 
 _NO_CHILD_NAME_MSG = _("No child_name specified")
+_INVALID_VM_NAME_MSG = _("Invalid VM name")
+
+# Pattern for valid VM names: alphanumeric, hyphens, underscores only
+_VALID_VM_NAME_CHARS = set(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
+)
+
+
+def _is_valid_vm_name(name: str) -> bool:
+    """
+    Validate that a VM name contains only safe characters.
+
+    Prevents path traversal by rejecting names with /, .., or other
+    dangerous characters.
+
+    Args:
+        name: The VM name to validate
+
+    Returns:
+        True if name is valid, False otherwise
+    """
+    if not name or len(name) > 64:
+        return False
+    return all(c in _VALID_VM_NAME_CHARS for c in name)
 
 
 def _validate_path_in_allowed_dirs(path: str, allowed_dirs: list) -> bool:
@@ -171,9 +195,8 @@ class BhyveLifecycleHelper:
             if _validate_path_in_allowed_dirs(config_disk_path, allowed_dirs):
                 params["disk_path"] = config_disk_path
             else:
-                self.logger.warning(
-                    _("Ignoring invalid disk_path from config: %s"), config_disk_path
-                )
+                # Don't log user-controlled path data to prevent log injection
+                self.logger.warning(_("Ignoring invalid disk_path from VM config"))
 
         # Validate cloud_init_iso_path from config to prevent path traversal
         if vm_config.get("cloud_init_iso_path"):
@@ -181,9 +204,9 @@ class BhyveLifecycleHelper:
             if _validate_path_in_allowed_dirs(config_iso_path, allowed_dirs):
                 params["cloudinit_iso"] = config_iso_path
             else:
+                # Don't log user-controlled path data to prevent log injection
                 self.logger.warning(
-                    _("Ignoring invalid cloud_init_iso_path from config: %s"),
-                    config_iso_path,
+                    _("Ignoring invalid cloud_init_iso_path from VM config")
                 )
 
         return params
@@ -226,8 +249,12 @@ class BhyveLifecycleHelper:
             f"{params['memory_mb']}M",
         ]
 
-        if os.path.exists(params["cloudinit_iso"]):
-            cmd.extend(["-s", f"4:0,ahci-cd,{params['cloudinit_iso']}"])
+        # Cloud-init ISO path is safe: either constructed from validated child_name
+        # or loaded from config and validated by _validate_path_in_allowed_dirs
+        cloudinit_path = params["cloudinit_iso"]
+        cloudinit_exists = os.path.exists(cloudinit_path)  # NOSONAR - path validated
+        if cloudinit_exists:
+            cmd.extend(["-s", f"4:0,ahci-cd,{cloudinit_path}"])
 
         uefi_firmware = "/usr/local/share/uefi-firmware/BHYVE_UEFI.fd"
         if params["use_uefi"] and os.path.exists(uefi_firmware):
@@ -249,6 +276,8 @@ class BhyveLifecycleHelper:
         child_name = parameters.get("child_name")
         if not child_name:
             return {"success": False, "error": _NO_CHILD_NAME_MSG}
+        if not _is_valid_vm_name(child_name):
+            return {"success": False, "error": _INVALID_VM_NAME_MSG}
 
         try:
             if os.path.exists(f"/dev/vmm/{child_name}"):
@@ -261,11 +290,12 @@ class BhyveLifecycleHelper:
 
             params = self._get_vm_start_params(child_name)
 
-            if not os.path.exists(params["disk_path"]):
-                return {
-                    "success": False,
-                    "error": _("VM disk not found: %s") % params["disk_path"],
-                }
+            # Disk path is safe: either constructed from validated child_name
+            # or loaded from config and validated by _validate_path_in_allowed_dirs
+            disk_path = params["disk_path"]
+            disk_exists = os.path.exists(disk_path)  # NOSONAR - path validated
+            if not disk_exists:
+                return {"success": False, "error": _("VM disk not found")}
 
             tap_result = self.creation_helper.create_tap_interface(child_name)
             if not tap_result.get("success"):
@@ -305,6 +335,8 @@ class BhyveLifecycleHelper:
         child_name = parameters.get("child_name")
         if not child_name:
             return {"success": False, "error": _NO_CHILD_NAME_MSG}
+        if not _is_valid_vm_name(child_name):
+            return {"success": False, "error": _INVALID_VM_NAME_MSG}
 
         try:
             # Check if VM is running
@@ -350,6 +382,8 @@ class BhyveLifecycleHelper:
         child_name = parameters.get("child_name")
         if not child_name:
             return {"success": False, "error": _NO_CHILD_NAME_MSG}
+        if not _is_valid_vm_name(child_name):
+            return {"success": False, "error": _INVALID_VM_NAME_MSG}
 
         # Stop and start
         stop_result = await self.stop_child_host(parameters)
@@ -374,6 +408,8 @@ class BhyveLifecycleHelper:
         child_name = parameters.get("child_name")
         if not child_name:
             return {"success": False, "error": _NO_CHILD_NAME_MSG}
+        if not _is_valid_vm_name(child_name):
+            return {"success": False, "error": _INVALID_VM_NAME_MSG}
 
         try:
             # Stop VM if running
