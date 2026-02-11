@@ -710,3 +710,1219 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             # Should not raise exception, just log it
             await self.system_ops._send_os_update_after_pro_change()
+
+    # ========== Package Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_install_packages_delegation(self):
+        """Test install_packages delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops, "install_packages", new_callable=AsyncMock
+        ) as mock_install:
+            mock_install.return_value = {"success": True, "packages": ["vim", "curl"]}
+
+            parameters = {
+                "request_id": "test-123",
+                "packages": [{"package_name": "vim"}, {"package_name": "curl"}],
+            }
+            result = await self.system_ops.install_packages(parameters)
+
+            assert result["success"] is True
+            mock_install.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_uninstall_packages_delegation(self):
+        """Test uninstall_packages delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops, "uninstall_packages", new_callable=AsyncMock
+        ) as mock_uninstall:
+            mock_uninstall.return_value = {"success": True}
+
+            parameters = {
+                "request_id": "test-456",
+                "packages": [{"package_name": "vim"}],
+            }
+            result = await self.system_ops.uninstall_packages(parameters)
+
+            assert result["success"] is True
+            mock_uninstall.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_install_packages_with_apt_delegation(self):
+        """Test _install_packages_with_apt delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_install_packages_with_apt",
+            new_callable=AsyncMock,
+        ) as mock_apt:
+            mock_apt.return_value = {"success": True, "output": "Installed"}
+
+            result = await self.system_ops._install_packages_with_apt(["vim", "curl"])
+
+            assert result["success"] is True
+            mock_apt.assert_called_once_with(["vim", "curl"])
+
+    @pytest.mark.asyncio
+    async def test_uninstall_packages_with_apt_delegation(self):
+        """Test _uninstall_packages_with_apt delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_uninstall_packages_with_apt",
+            new_callable=AsyncMock,
+        ) as mock_apt:
+            mock_apt.return_value = {"success": True, "output": "Removed"}
+
+            result = await self.system_ops._uninstall_packages_with_apt(["vim"])
+
+            assert result["success"] is True
+            mock_apt.assert_called_once_with(["vim"])
+
+    @pytest.mark.asyncio
+    async def test_send_installation_completion_delegation(self):
+        """Test _send_installation_completion delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_send_installation_completion",
+            new_callable=AsyncMock,
+        ) as mock_send:
+            await self.system_ops._send_installation_completion(
+                "req-123", True, "All installed"
+            )
+
+            mock_send.assert_called_once_with("req-123", True, "All installed")
+
+    @pytest.mark.asyncio
+    async def test_send_installation_status_update_delegation(self):
+        """Test _send_installation_status_update delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_send_installation_status_update",
+            new_callable=AsyncMock,
+        ) as mock_send:
+            await self.system_ops._send_installation_status_update(
+                "install-123",
+                "completed",
+                "vim",
+                "admin",
+                error_message=None,
+                installed_version="8.2",
+                installation_log="Success",
+            )
+
+            mock_send.assert_called_once_with(
+                "install-123",
+                "completed",
+                "vim",
+                "admin",
+                None,
+                "8.2",
+                "Success",
+            )
+
+    @pytest.mark.asyncio
+    async def test_run_package_update_delegation(self):
+        """Test _run_package_update delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_run_package_update",
+            new_callable=AsyncMock,
+        ) as mock_update:
+            await self.system_ops._run_package_update()
+
+            mock_update.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trigger_update_detection_delegation(self):
+        """Test _trigger_update_detection delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_trigger_update_detection",
+            new_callable=AsyncMock,
+        ) as mock_trigger:
+            await self.system_ops._trigger_update_detection()
+
+            mock_trigger.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_package_versions_delegation(self):
+        """Test _get_package_versions delegates to package_ops."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_get_package_versions",
+            new_callable=AsyncMock,
+        ) as mock_versions:
+            mock_versions.return_value = {"vim": "8.2", "curl": "7.68"}
+
+            result = await self.system_ops._get_package_versions(["vim", "curl"])
+
+            assert result == {"vim": "8.2", "curl": "7.68"}
+            mock_versions.assert_called_once_with(["vim", "curl"])
+
+    # ========== SSH Key Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_ssh_keys_delegation(self):
+        """Test deploy_ssh_keys delegates to ssh_ops."""
+        with patch.object(
+            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.return_value = {"success": True, "result": "Keys deployed"}
+
+            parameters = {
+                "username": "testuser",
+                "ssh_keys": ["ssh-rsa AAAA..."],
+            }
+            result = await self.system_ops.deploy_ssh_keys(parameters)
+
+            assert result["success"] is True
+            mock_deploy.assert_called_once_with(parameters)
+
+    def test_validate_ssh_key_inputs_delegation(self):
+        """Test _validate_ssh_key_inputs delegates to ssh_ops."""
+        with patch.object(
+            self.system_ops.ssh_ops, "_validate_ssh_key_inputs"
+        ) as mock_validate:
+            mock_validate.return_value = {"valid": True}
+
+            result = self.system_ops._validate_ssh_key_inputs(
+                "testuser", ["ssh-rsa AAAA..."]
+            )
+
+            assert result["valid"] is True
+            mock_validate.assert_called_once_with("testuser", ["ssh-rsa AAAA..."])
+
+    def test_setup_ssh_environment_delegation(self):
+        """Test _setup_ssh_environment delegates to ssh_ops."""
+        with patch.object(
+            self.system_ops.ssh_ops, "_setup_ssh_environment"
+        ) as mock_setup:
+            mock_setup.return_value = {"success": True, "ssh_dir": "/home/user/.ssh"}
+
+            result = self.system_ops._setup_ssh_environment("testuser")
+
+            assert result["success"] is True
+            mock_setup.assert_called_once_with("testuser")
+
+    # ========== Certificate Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_certificates_delegation(self):
+        """Test deploy_certificates delegates to certificate_ops."""
+        with patch.object(
+            self.system_ops.certificate_ops,
+            "deploy_certificates",
+            new_callable=AsyncMock,
+        ) as mock_deploy:
+            mock_deploy.return_value = {
+                "success": True,
+                "result": "Certificates deployed",
+            }
+
+            parameters = {
+                "certificates": [{"name": "cert.pem", "content": "-----BEGIN..."}]
+            }
+            result = await self.system_ops.deploy_certificates(parameters)
+
+            assert result["success"] is True
+            mock_deploy.assert_called_once_with(parameters)
+
+    # ========== OpenTelemetry Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_opentelemetry_delegation(self):
+        """Test deploy_opentelemetry delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops, "deploy_opentelemetry", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.return_value = {"success": True, "result": "OTel deployed"}
+
+            parameters = {"config": "test-config"}
+            result = await self.system_ops.deploy_opentelemetry(parameters)
+
+            assert result["success"] is True
+            mock_deploy.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_remove_opentelemetry_delegation(self):
+        """Test remove_opentelemetry delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops, "remove_opentelemetry", new_callable=AsyncMock
+        ) as mock_remove:
+            mock_remove.return_value = {"success": True, "result": "OTel removed"}
+
+            result = await self.system_ops.remove_opentelemetry({})
+
+            assert result["success"] is True
+            mock_remove.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_start_opentelemetry_service_delegation(self):
+        """Test start_opentelemetry_service delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "start_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_start:
+            mock_start.return_value = {"success": True, "result": "Service started"}
+
+            result = await self.system_ops.start_opentelemetry_service({})
+
+            assert result["success"] is True
+            mock_start.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_stop_opentelemetry_service_delegation(self):
+        """Test stop_opentelemetry_service delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "stop_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_stop:
+            mock_stop.return_value = {"success": True, "result": "Service stopped"}
+
+            result = await self.system_ops.stop_opentelemetry_service({})
+
+            assert result["success"] is True
+            mock_stop.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_restart_opentelemetry_service_delegation(self):
+        """Test restart_opentelemetry_service delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "restart_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_restart:
+            mock_restart.return_value = {"success": True, "result": "Service restarted"}
+
+            result = await self.system_ops.restart_opentelemetry_service({})
+
+            assert result["success"] is True
+            mock_restart.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_connect_opentelemetry_grafana_delegation(self):
+        """Test connect_opentelemetry_grafana delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "connect_opentelemetry_grafana",
+            new_callable=AsyncMock,
+        ) as mock_connect:
+            mock_connect.return_value = {"success": True, "result": "Connected"}
+
+            parameters = {"grafana_url": "http://grafana:3000"}
+            result = await self.system_ops.connect_opentelemetry_grafana(parameters)
+
+            assert result["success"] is True
+            mock_connect.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_disconnect_opentelemetry_grafana_delegation(self):
+        """Test disconnect_opentelemetry_grafana delegates to otel_ops."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "disconnect_opentelemetry_grafana",
+            new_callable=AsyncMock,
+        ) as mock_disconnect:
+            mock_disconnect.return_value = {"success": True, "result": "Disconnected"}
+
+            result = await self.system_ops.disconnect_opentelemetry_grafana({})
+
+            assert result["success"] is True
+            mock_disconnect.assert_called_once_with({})
+
+    # ========== Antivirus Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_antivirus_delegation(self):
+        """Test deploy_antivirus delegates to antivirus_ops."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "deploy_antivirus", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.return_value = {"success": True, "result": "AV deployed"}
+
+            result = await self.system_ops.deploy_antivirus({})
+
+            assert result["success"] is True
+            mock_deploy.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_enable_antivirus_delegation(self):
+        """Test enable_antivirus delegates to antivirus_ops."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "enable_antivirus", new_callable=AsyncMock
+        ) as mock_enable:
+            mock_enable.return_value = {"success": True, "result": "AV enabled"}
+
+            result = await self.system_ops.enable_antivirus({})
+
+            assert result["success"] is True
+            mock_enable.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_disable_antivirus_delegation(self):
+        """Test disable_antivirus delegates to antivirus_ops."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "disable_antivirus", new_callable=AsyncMock
+        ) as mock_disable:
+            mock_disable.return_value = {"success": True, "result": "AV disabled"}
+
+            result = await self.system_ops.disable_antivirus({})
+
+            assert result["success"] is True
+            mock_disable.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_remove_antivirus_delegation(self):
+        """Test remove_antivirus delegates to antivirus_ops."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "remove_antivirus", new_callable=AsyncMock
+        ) as mock_remove:
+            mock_remove.return_value = {"success": True, "result": "AV removed"}
+
+            result = await self.system_ops.remove_antivirus({})
+
+            assert result["success"] is True
+            mock_remove.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_send_antivirus_status_update_delegation(self):
+        """Test _send_antivirus_status_update delegates to antivirus_ops."""
+        with patch.object(
+            self.system_ops.antivirus_ops,
+            "_send_antivirus_status_update",
+            new_callable=AsyncMock,
+        ) as mock_send:
+            antivirus_status = {"software_name": "clamav", "enabled": True}
+            await self.system_ops._send_antivirus_status_update(antivirus_status)
+
+            mock_send.assert_called_once_with(antivirus_status)
+
+    # ========== Repository Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_list_third_party_repositories_delegation(self):
+        """Test list_third_party_repositories delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "list_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_list:
+            mock_list.return_value = {"success": True, "repositories": []}
+
+            result = await self.system_ops.list_third_party_repositories({})
+
+            assert result["success"] is True
+            mock_list.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_add_third_party_repository_delegation(self):
+        """Test add_third_party_repository delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "add_third_party_repository",
+            new_callable=AsyncMock,
+        ) as mock_add:
+            mock_add.return_value = {"success": True, "result": "Repository added"}
+
+            parameters = {"repository_url": "https://example.com/repo"}
+            result = await self.system_ops.add_third_party_repository(parameters)
+
+            assert result["success"] is True
+            mock_add.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_delete_third_party_repositories_delegation(self):
+        """Test delete_third_party_repositories delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "delete_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_delete:
+            mock_delete.return_value = {
+                "success": True,
+                "result": "Repositories deleted",
+            }
+
+            parameters = {"repository_ids": [1, 2, 3]}
+            result = await self.system_ops.delete_third_party_repositories(parameters)
+
+            assert result["success"] is True
+            mock_delete.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_enable_third_party_repositories_delegation(self):
+        """Test enable_third_party_repositories delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "enable_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_enable:
+            mock_enable.return_value = {
+                "success": True,
+                "result": "Repositories enabled",
+            }
+
+            parameters = {"repository_ids": [1, 2]}
+            result = await self.system_ops.enable_third_party_repositories(parameters)
+
+            assert result["success"] is True
+            mock_enable.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_disable_third_party_repositories_delegation(self):
+        """Test disable_third_party_repositories delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "disable_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_disable:
+            mock_disable.return_value = {
+                "success": True,
+                "result": "Repositories disabled",
+            }
+
+            parameters = {"repository_ids": [1, 2]}
+            result = await self.system_ops.disable_third_party_repositories(parameters)
+
+            assert result["success"] is True
+            mock_disable.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_trigger_third_party_repository_rescan_delegation(self):
+        """Test _trigger_third_party_repository_rescan delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "_trigger_third_party_repository_rescan",
+            new_callable=AsyncMock,
+        ) as mock_rescan:
+            await self.system_ops._trigger_third_party_repository_rescan()
+
+            mock_rescan.assert_called_once()
+
+    def test_check_obs_url_delegation(self):
+        """Test _check_obs_url delegates to repo_ops."""
+        with patch.object(
+            self.system_ops.repo_ops, "_check_obs_url", create=True
+        ) as mock_check:
+            mock_check.return_value = True
+
+            result = self.system_ops._check_obs_url("https://download.opensuse.org/")
+
+            assert result is True
+            mock_check.assert_called_once_with("https://download.opensuse.org/")
+
+    def test_check_obs_url_invalid(self):
+        """Test _check_obs_url with invalid URL."""
+        with patch.object(
+            self.system_ops.repo_ops, "_check_obs_url", create=True
+        ) as mock_check:
+            mock_check.return_value = False
+
+            result = self.system_ops._check_obs_url("https://random-site.com/")
+
+            assert result is False
+            mock_check.assert_called_once_with("https://random-site.com/")
+
+    # ========== Firewall Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_firewall_delegation(self):
+        """Test deploy_firewall delegates to firewall_ops."""
+        with patch.object(
+            self.system_ops.firewall_ops, "deploy_firewall", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.return_value = {"success": True, "result": "Firewall deployed"}
+
+            result = await self.system_ops.deploy_firewall({})
+
+            assert result["success"] is True
+            mock_deploy.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_enable_firewall_delegation(self):
+        """Test enable_firewall delegates to firewall_ops."""
+        with patch.object(
+            self.system_ops.firewall_ops, "enable_firewall", new_callable=AsyncMock
+        ) as mock_enable:
+            mock_enable.return_value = {"success": True, "result": "Firewall enabled"}
+
+            result = await self.system_ops.enable_firewall({})
+
+            assert result["success"] is True
+            mock_enable.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_disable_firewall_delegation(self):
+        """Test disable_firewall delegates to firewall_ops."""
+        with patch.object(
+            self.system_ops.firewall_ops, "disable_firewall", new_callable=AsyncMock
+        ) as mock_disable:
+            mock_disable.return_value = {"success": True, "result": "Firewall disabled"}
+
+            result = await self.system_ops.disable_firewall({})
+
+            assert result["success"] is True
+            mock_disable.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_restart_firewall_delegation(self):
+        """Test restart_firewall delegates to firewall_ops."""
+        with patch.object(
+            self.system_ops.firewall_ops, "restart_firewall", new_callable=AsyncMock
+        ) as mock_restart:
+            mock_restart.return_value = {
+                "success": True,
+                "result": "Firewall restarted",
+            }
+
+            result = await self.system_ops.restart_firewall({})
+
+            assert result["success"] is True
+            mock_restart.assert_called_once_with({})
+
+    # ========== User Account Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_create_host_user_delegation(self):
+        """Test create_host_user delegates to user_account_ops."""
+        with patch.object(
+            self.system_ops.user_account_ops, "create_host_user", new_callable=AsyncMock
+        ) as mock_create:
+            mock_create.return_value = {"success": True, "result": "User created"}
+
+            parameters = {"username": "newuser", "groups": ["sudo"]}
+            result = await self.system_ops.create_host_user(parameters)
+
+            assert result["success"] is True
+            mock_create.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_create_host_group_delegation(self):
+        """Test create_host_group delegates to user_account_ops."""
+        with patch.object(
+            self.system_ops.user_account_ops,
+            "create_host_group",
+            new_callable=AsyncMock,
+        ) as mock_create:
+            mock_create.return_value = {"success": True, "result": "Group created"}
+
+            parameters = {"group_name": "newgroup"}
+            result = await self.system_ops.create_host_group(parameters)
+
+            assert result["success"] is True
+            mock_create.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_delete_host_user_delegation(self):
+        """Test delete_host_user delegates to user_account_ops."""
+        with patch.object(
+            self.system_ops.user_account_ops, "delete_host_user", new_callable=AsyncMock
+        ) as mock_delete:
+            mock_delete.return_value = {"success": True, "result": "User deleted"}
+
+            parameters = {"username": "olduser"}
+            result = await self.system_ops.delete_host_user(parameters)
+
+            assert result["success"] is True
+            mock_delete.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_delete_host_group_delegation(self):
+        """Test delete_host_group delegates to user_account_ops."""
+        with patch.object(
+            self.system_ops.user_account_ops,
+            "delete_host_group",
+            new_callable=AsyncMock,
+        ) as mock_delete:
+            mock_delete.return_value = {"success": True, "result": "Group deleted"}
+
+            parameters = {"group_name": "oldgroup"}
+            result = await self.system_ops.delete_host_group(parameters)
+
+            assert result["success"] is True
+            mock_delete.assert_called_once_with(parameters)
+
+    # ========== Hostname Operations Delegation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_change_hostname_delegation(self):
+        """Test change_hostname delegates to hostname_ops."""
+        with patch.object(
+            self.system_ops.hostname_ops, "change_hostname", new_callable=AsyncMock
+        ) as mock_change:
+            mock_change.return_value = {"success": True, "result": "Hostname changed"}
+
+            parameters = {"hostname": "new-hostname"}
+            result = await self.system_ops.change_hostname(parameters)
+
+            assert result["success"] is True
+            mock_change.assert_called_once_with(parameters)
+
+    # ========== Initialization Tests ==========
+
+    def test_init_all_operation_handlers(self):
+        """Test that all operation handlers are initialized."""
+        assert self.system_ops.certificate_ops is not None
+        assert self.system_ops.system_control is not None
+        assert self.system_ops.package_ops is not None
+        assert self.system_ops.otel_ops is not None
+        assert self.system_ops.antivirus_ops is not None
+        assert self.system_ops.firewall_ops is not None
+        assert self.system_ops.repo_ops is not None
+        assert self.system_ops.ssh_ops is not None
+        assert self.system_ops.ubuntu_pro_ops is not None
+        assert self.system_ops.user_account_ops is not None
+        assert self.system_ops.hostname_ops is not None
+
+    def test_init_agent_reference(self):
+        """Test that agent reference is properly set."""
+        assert self.system_ops.agent == self.mock_agent
+
+    def test_init_logger(self):
+        """Test that logger is properly initialized."""
+        assert self.system_ops.logger is not None
+        assert (
+            self.system_ops.logger.name
+            == "src.sysmanage_agent.operations.system_operations"
+        )
+
+    # ========== Edge Case Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_install_packages_with_empty_parameters(self):
+        """Test install_packages with empty parameters."""
+        with patch.object(
+            self.system_ops.package_ops, "install_packages", new_callable=AsyncMock
+        ) as mock_install:
+            mock_install.return_value = {
+                "success": False,
+                "error": "No packages specified",
+            }
+
+            result = await self.system_ops.install_packages({})
+
+            assert result["success"] is False
+            mock_install.assert_called_once_with({})
+
+    @pytest.mark.asyncio
+    async def test_deploy_certificates_with_empty_list(self):
+        """Test deploy_certificates with empty certificate list."""
+        with patch.object(
+            self.system_ops.certificate_ops,
+            "deploy_certificates",
+            new_callable=AsyncMock,
+        ) as mock_deploy:
+            mock_deploy.return_value = {
+                "success": False,
+                "error": "No certificates provided",
+            }
+
+            result = await self.system_ops.deploy_certificates({"certificates": []})
+
+            assert result["success"] is False
+            mock_deploy.assert_called_once_with({"certificates": []})
+
+    @pytest.mark.asyncio
+    async def test_deploy_ssh_keys_with_invalid_user(self):
+        """Test deploy_ssh_keys with invalid username."""
+        with patch.object(
+            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.return_value = {
+                "success": False,
+                "error": "User does not exist",
+            }
+
+            parameters = {"username": "nonexistent", "ssh_keys": ["ssh-rsa AAAA..."]}
+            result = await self.system_ops.deploy_ssh_keys(parameters)
+
+            assert result["success"] is False
+            mock_deploy.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_change_hostname_with_invalid_hostname(self):
+        """Test change_hostname with invalid hostname."""
+        with patch.object(
+            self.system_ops.hostname_ops, "change_hostname", new_callable=AsyncMock
+        ) as mock_change:
+            mock_change.return_value = {
+                "success": False,
+                "error": "Invalid hostname format",
+            }
+
+            parameters = {"hostname": "invalid..hostname"}
+            result = await self.system_ops.change_hostname(parameters)
+
+            assert result["success"] is False
+            mock_change.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_create_host_user_with_existing_user(self):
+        """Test create_host_user when user already exists."""
+        with patch.object(
+            self.system_ops.user_account_ops, "create_host_user", new_callable=AsyncMock
+        ) as mock_create:
+            mock_create.return_value = {
+                "success": False,
+                "error": "User already exists",
+            }
+
+            parameters = {"username": "existinguser"}
+            result = await self.system_ops.create_host_user(parameters)
+
+            assert result["success"] is False
+            mock_create.assert_called_once_with(parameters)
+
+    @pytest.mark.asyncio
+    async def test_add_third_party_repository_with_invalid_url(self):
+        """Test add_third_party_repository with invalid URL."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "add_third_party_repository",
+            new_callable=AsyncMock,
+        ) as mock_add:
+            mock_add.return_value = {
+                "success": False,
+                "error": "Invalid repository URL",
+            }
+
+            parameters = {"repository_url": "not-a-valid-url"}
+            result = await self.system_ops.add_third_party_repository(parameters)
+
+            assert result["success"] is False
+            mock_add.assert_called_once_with(parameters)
+
+    # ========== Exception Handling Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_deploy_opentelemetry_exception(self):
+        """Test deploy_opentelemetry when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops, "deploy_opentelemetry", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.side_effect = Exception("Deployment failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.deploy_opentelemetry({})
+
+            assert "Deployment failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_deploy_firewall_exception(self):
+        """Test deploy_firewall when exception is raised."""
+        with patch.object(
+            self.system_ops.firewall_ops, "deploy_firewall", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.side_effect = Exception("Firewall installation failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.deploy_firewall({})
+
+            assert "Firewall installation failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_deploy_antivirus_exception(self):
+        """Test deploy_antivirus when exception is raised."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "deploy_antivirus", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.side_effect = Exception("ClamAV installation failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.deploy_antivirus({})
+
+            assert "ClamAV installation failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_create_host_group_exception(self):
+        """Test create_host_group when exception is raised."""
+        with patch.object(
+            self.system_ops.user_account_ops,
+            "create_host_group",
+            new_callable=AsyncMock,
+        ) as mock_create:
+            mock_create.side_effect = Exception("Group creation failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.create_host_group({"group_name": "testgroup"})
+
+            assert "Group creation failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_delete_host_user_exception(self):
+        """Test delete_host_user when exception is raised."""
+        with patch.object(
+            self.system_ops.user_account_ops, "delete_host_user", new_callable=AsyncMock
+        ) as mock_delete:
+            mock_delete.side_effect = Exception("User deletion failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.delete_host_user({"username": "testuser"})
+
+            assert "User deletion failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_delete_host_group_exception(self):
+        """Test delete_host_group when exception is raised."""
+        with patch.object(
+            self.system_ops.user_account_ops,
+            "delete_host_group",
+            new_callable=AsyncMock,
+        ) as mock_delete:
+            mock_delete.side_effect = Exception("Group deletion failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.delete_host_group({"group_name": "testgroup"})
+
+            assert "Group deletion failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_change_hostname_exception(self):
+        """Test change_hostname when exception is raised."""
+        with patch.object(
+            self.system_ops.hostname_ops, "change_hostname", new_callable=AsyncMock
+        ) as mock_change:
+            mock_change.side_effect = Exception("Hostname change failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.change_hostname({"hostname": "newhostname"})
+
+            assert "Hostname change failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_list_third_party_repositories_exception(self):
+        """Test list_third_party_repositories when exception is raised."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "list_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_list:
+            mock_list.side_effect = Exception("Repository listing failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.list_third_party_repositories({})
+
+            assert "Repository listing failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_enable_third_party_repositories_exception(self):
+        """Test enable_third_party_repositories when exception is raised."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "enable_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_enable:
+            mock_enable.side_effect = Exception("Repository enable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.enable_third_party_repositories(
+                    {"repository_ids": [1]}
+                )
+
+            assert "Repository enable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_disable_third_party_repositories_exception(self):
+        """Test disable_third_party_repositories when exception is raised."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "disable_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_disable:
+            mock_disable.side_effect = Exception("Repository disable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.disable_third_party_repositories(
+                    {"repository_ids": [1]}
+                )
+
+            assert "Repository disable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_delete_third_party_repositories_exception(self):
+        """Test delete_third_party_repositories when exception is raised."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "delete_third_party_repositories",
+            new_callable=AsyncMock,
+        ) as mock_delete:
+            mock_delete.side_effect = Exception("Repository deletion failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.delete_third_party_repositories(
+                    {"repository_ids": [1]}
+                )
+
+            assert "Repository deletion failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_trigger_third_party_repository_rescan_exception(self):
+        """Test _trigger_third_party_repository_rescan when exception is raised."""
+        with patch.object(
+            self.system_ops.repo_ops,
+            "_trigger_third_party_repository_rescan",
+            new_callable=AsyncMock,
+        ) as mock_rescan:
+            mock_rescan.side_effect = Exception("Rescan failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops._trigger_third_party_repository_rescan()
+
+            assert "Rescan failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_enable_antivirus_exception(self):
+        """Test enable_antivirus when exception is raised."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "enable_antivirus", new_callable=AsyncMock
+        ) as mock_enable:
+            mock_enable.side_effect = Exception("Enable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.enable_antivirus({})
+
+            assert "Enable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_disable_antivirus_exception(self):
+        """Test disable_antivirus when exception is raised."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "disable_antivirus", new_callable=AsyncMock
+        ) as mock_disable:
+            mock_disable.side_effect = Exception("Disable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.disable_antivirus({})
+
+            assert "Disable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_remove_antivirus_exception(self):
+        """Test remove_antivirus when exception is raised."""
+        with patch.object(
+            self.system_ops.antivirus_ops, "remove_antivirus", new_callable=AsyncMock
+        ) as mock_remove:
+            mock_remove.side_effect = Exception("Remove failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.remove_antivirus({})
+
+            assert "Remove failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_remove_opentelemetry_exception(self):
+        """Test remove_opentelemetry when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops, "remove_opentelemetry", new_callable=AsyncMock
+        ) as mock_remove:
+            mock_remove.side_effect = Exception("Remove failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.remove_opentelemetry({})
+
+            assert "Remove failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_start_opentelemetry_service_exception(self):
+        """Test start_opentelemetry_service when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "start_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_start:
+            mock_start.side_effect = Exception("Start failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.start_opentelemetry_service({})
+
+            assert "Start failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_stop_opentelemetry_service_exception(self):
+        """Test stop_opentelemetry_service when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "stop_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_stop:
+            mock_stop.side_effect = Exception("Stop failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.stop_opentelemetry_service({})
+
+            assert "Stop failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_restart_opentelemetry_service_exception(self):
+        """Test restart_opentelemetry_service when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "restart_opentelemetry_service",
+            new_callable=AsyncMock,
+        ) as mock_restart:
+            mock_restart.side_effect = Exception("Restart failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.restart_opentelemetry_service({})
+
+            assert "Restart failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_connect_opentelemetry_grafana_exception(self):
+        """Test connect_opentelemetry_grafana when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "connect_opentelemetry_grafana",
+            new_callable=AsyncMock,
+        ) as mock_connect:
+            mock_connect.side_effect = Exception("Connect failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.connect_opentelemetry_grafana({})
+
+            assert "Connect failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_disconnect_opentelemetry_grafana_exception(self):
+        """Test disconnect_opentelemetry_grafana when exception is raised."""
+        with patch.object(
+            self.system_ops.otel_ops,
+            "disconnect_opentelemetry_grafana",
+            new_callable=AsyncMock,
+        ) as mock_disconnect:
+            mock_disconnect.side_effect = Exception("Disconnect failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.disconnect_opentelemetry_grafana({})
+
+            assert "Disconnect failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_enable_firewall_exception(self):
+        """Test enable_firewall when exception is raised."""
+        with patch.object(
+            self.system_ops.firewall_ops, "enable_firewall", new_callable=AsyncMock
+        ) as mock_enable:
+            mock_enable.side_effect = Exception("Enable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.enable_firewall({})
+
+            assert "Enable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_disable_firewall_exception(self):
+        """Test disable_firewall when exception is raised."""
+        with patch.object(
+            self.system_ops.firewall_ops, "disable_firewall", new_callable=AsyncMock
+        ) as mock_disable:
+            mock_disable.side_effect = Exception("Disable failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.disable_firewall({})
+
+            assert "Disable failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_restart_firewall_exception(self):
+        """Test restart_firewall when exception is raised."""
+        with patch.object(
+            self.system_ops.firewall_ops, "restart_firewall", new_callable=AsyncMock
+        ) as mock_restart:
+            mock_restart.side_effect = Exception("Restart failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.restart_firewall({})
+
+            assert "Restart failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_deploy_ssh_keys_exception(self):
+        """Test deploy_ssh_keys when exception is raised."""
+        with patch.object(
+            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
+        ) as mock_deploy:
+            mock_deploy.side_effect = Exception("SSH key deployment failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.deploy_ssh_keys(
+                    {"username": "user", "ssh_keys": []}
+                )
+
+            assert "SSH key deployment failed" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_deploy_certificates_exception(self):
+        """Test deploy_certificates when exception is raised."""
+        with patch.object(
+            self.system_ops.certificate_ops,
+            "deploy_certificates",
+            new_callable=AsyncMock,
+        ) as mock_deploy:
+            mock_deploy.side_effect = Exception("Certificate deployment failed")
+
+            with pytest.raises(Exception) as excinfo:
+                await self.system_ops.deploy_certificates({"certificates": []})
+
+            assert "Certificate deployment failed" in str(excinfo.value)
+
+    # ========== Return Value Validation Tests ==========
+
+    @pytest.mark.asyncio
+    async def test_install_packages_return_structure(self):
+        """Test install_packages returns expected structure."""
+        with patch.object(
+            self.system_ops.package_ops, "install_packages", new_callable=AsyncMock
+        ) as mock_install:
+            expected_return = {
+                "success": True,
+                "request_id": "test-123",
+                "successful_packages": [{"package_name": "vim", "version": "8.2"}],
+                "failed_packages": [],
+                "installation_log": "All packages installed",
+            }
+            mock_install.return_value = expected_return
+
+            result = await self.system_ops.install_packages(
+                {"request_id": "test-123", "packages": [{"package_name": "vim"}]}
+            )
+
+            assert result == expected_return
+
+    @pytest.mark.asyncio
+    async def test_uninstall_packages_return_structure(self):
+        """Test uninstall_packages returns expected structure."""
+        with patch.object(
+            self.system_ops.package_ops, "uninstall_packages", new_callable=AsyncMock
+        ) as mock_uninstall:
+            expected_return = {
+                "success": True,
+                "request_id": "test-456",
+                "successful_packages": [{"package_name": "vim"}],
+                "failed_packages": [],
+                "uninstall_log": "All packages uninstalled",
+            }
+            mock_uninstall.return_value = expected_return
+
+            result = await self.system_ops.uninstall_packages(
+                {"request_id": "test-456", "packages": [{"package_name": "vim"}]}
+            )
+
+            assert result == expected_return
+
+    @pytest.mark.asyncio
+    async def test_get_package_versions_return_structure(self):
+        """Test _get_package_versions returns expected structure."""
+        with patch.object(
+            self.system_ops.package_ops,
+            "_get_package_versions",
+            new_callable=AsyncMock,
+        ) as mock_versions:
+            expected_return = {"vim": "8.2.0", "curl": "7.68.0", "git": "2.34.0"}
+            mock_versions.return_value = expected_return
+
+            result = await self.system_ops._get_package_versions(["vim", "curl", "git"])
+
+            assert result == expected_return
+            assert len(result) == 3

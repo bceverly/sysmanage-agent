@@ -68,6 +68,9 @@ const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
 [FORMAT]
+# Maximum number of lines in a module (increased for test files with many test cases)
+max-module-lines=2500
+
 # Maximum number of characters on a single line
 max-line-length=100
 

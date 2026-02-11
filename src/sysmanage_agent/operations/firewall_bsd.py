@@ -105,7 +105,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Disabling IPFW firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["sysctl", "net.inet.ip.fw.enable=0"])
             )
             if returncode == 0:
@@ -128,7 +128,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Disabling NPF firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["npfctl", "stop"])
             )
             if returncode == 0:
@@ -149,7 +149,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Disabling PF firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["pfctl", "-d"])
             )
             if returncode == 0:
@@ -172,7 +172,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Restarting IPFW firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["service", "ipfw", "restart"])
             )
             if returncode == 0:
@@ -195,7 +195,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Restarting NPF firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["npfctl", "reload"])
             )
             if returncode == 0:
@@ -216,7 +216,7 @@ class BSDFirewallOperations(FirewallBase):
 
         self.logger.info("Restarting PF firewall")
         try:
-            returncode, _, stderr = await self._run_firewall_command(
+            returncode, _stdout, stderr = await self._run_firewall_command(
                 self._build_command(["pfctl", "-f", "/etc/pf.conf"])
             )
             if returncode == 0:

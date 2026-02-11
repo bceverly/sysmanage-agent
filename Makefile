@@ -467,9 +467,9 @@ lint: format-python
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
-	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc || echo.
+	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc
 else
-	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc || true
+	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc
 endif
 	@echo "[OK] Python linting completed"
 
