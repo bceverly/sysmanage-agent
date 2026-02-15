@@ -5,12 +5,17 @@ This module provides mixin methods for checking Linux-specific
 virtualization technologies: LXD (containers) and KVM/QEMU.
 """
 
-import grp
 import json
 import os
 import platform
-import pwd
 import shutil
+
+try:
+    import grp
+    import pwd
+except ImportError:
+    grp = None  # Not available on Windows (Linux checks only)
+    pwd = None
 import subprocess  # nosec B404 # Required for system command execution
 from typing import Any, Dict, Optional
 

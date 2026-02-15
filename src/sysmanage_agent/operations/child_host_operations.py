@@ -37,15 +37,23 @@ _UNSUPPORTED_CHILD_TYPE = _("Unsupported child host type: %s")
 
 # pylint: disable=wrong-import-position
 # These imports are placed after constants to avoid circular imports
-from src.sysmanage_agent.operations.child_host_kvm import KvmOperations
 from src.sysmanage_agent.operations.child_host_listing import ChildHostListing
-from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
 from src.sysmanage_agent.operations.child_host_virtualization_checks import (
     VirtualizationChecks,
 )
-from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
-from src.sysmanage_agent.operations.child_host_bhyve import BhyveOperations
 from src.sysmanage_agent.operations.child_host_wsl import WslOperations
+
+# Unix-only child host backends (KVM, LXD, VMM, bhyve use Unix-only modules)
+if platform.system() != "Windows":
+    from src.sysmanage_agent.operations.child_host_kvm import KvmOperations
+    from src.sysmanage_agent.operations.child_host_lxd import LxdOperations
+    from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
+    from src.sysmanage_agent.operations.child_host_bhyve import BhyveOperations
+else:
+    KvmOperations = None  # type: ignore[misc,assignment]
+    LxdOperations = None  # type: ignore[misc,assignment]
+    VmmOperations = None  # type: ignore[misc,assignment]
+    BhyveOperations = None  # type: ignore[misc,assignment]
 
 # pylint: enable=wrong-import-position
 
@@ -73,18 +81,25 @@ class ChildHostOperations:
         self.wsl_ops = WslOperations(
             self.agent, self.logger, self.virtualization_checks
         )
-        self.lxd_ops = LxdOperations(
-            self.agent, self.logger, self.virtualization_checks
-        )
-        self.vmm_ops = VmmOperations(
-            self.agent, self.logger, self.virtualization_checks
-        )
-        self.kvm_ops = KvmOperations(
-            self.agent, self.logger, self.virtualization_checks
-        )
-        self.bhyve_ops = BhyveOperations(
-            self.agent, self.logger, self.virtualization_checks
-        )
+        # Unix-only backends - only initialize on non-Windows platforms
+        if platform.system() != "Windows":
+            self.lxd_ops = LxdOperations(
+                self.agent, self.logger, self.virtualization_checks
+            )
+            self.vmm_ops = VmmOperations(
+                self.agent, self.logger, self.virtualization_checks
+            )
+            self.kvm_ops = KvmOperations(
+                self.agent, self.logger, self.virtualization_checks
+            )
+            self.bhyve_ops = BhyveOperations(
+                self.agent, self.logger, self.virtualization_checks
+            )
+        else:
+            self.lxd_ops = None
+            self.vmm_ops = None
+            self.kvm_ops = None
+            self.bhyve_ops = None
 
     async def check_virtualization_support(  # NOSONAR - async required by interface
         self, _parameters: Dict[str, Any]

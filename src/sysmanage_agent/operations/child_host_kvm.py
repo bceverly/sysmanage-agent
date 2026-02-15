@@ -7,7 +7,10 @@ This module handles KVM/QEMU virtual machine management via libvirt/virsh.
 import asyncio
 import os
 import platform
-import pwd
+try:
+    import pwd
+except ImportError:
+    pwd = None  # Not available on Windows (KVM is Linux-only)
 import shutil
 import subprocess  # nosec B404 # Required for sync functions
 import time
