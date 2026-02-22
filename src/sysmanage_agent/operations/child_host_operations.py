@@ -50,10 +50,10 @@ if platform.system() != "Windows":
     from src.sysmanage_agent.operations.child_host_vmm import VmmOperations
     from src.sysmanage_agent.operations.child_host_bhyve import BhyveOperations
 else:
-    KvmOperations = None  # type: ignore[misc,assignment]
-    LxdOperations = None  # type: ignore[misc,assignment]
-    VmmOperations = None  # type: ignore[misc,assignment]
-    BhyveOperations = None  # type: ignore[misc,assignment]
+    KvmOperations = None  # type: ignore[misc,assignment]  # pylint: disable=invalid-name
+    LxdOperations = None  # type: ignore[misc,assignment]  # pylint: disable=invalid-name
+    VmmOperations = None  # type: ignore[misc,assignment]  # pylint: disable=invalid-name
+    BhyveOperations = None  # type: ignore[misc,assignment]  # pylint: disable=invalid-name
 
 # pylint: enable=wrong-import-position
 

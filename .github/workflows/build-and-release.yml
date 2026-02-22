@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for CI workflow
-        uses: lewagon/wait-on-check-action@v1.5.0
+        uses: lewagon/wait-on-check-action@74049309dfeff245fe8009a0137eacf28136cb3c # v1.5.0
         with:
           ref: ${{ github.sha }}
           check-name: 'Backend Tests (Python 3.10)'
@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -189,7 +189,7 @@ jobs:
           echo "Size: $(du -h "$DEB_FILE" | cut -f1)"
 
       - name: Upload .deb as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-deb
           path: |
@@ -197,7 +197,7 @@ jobs:
             sysmanage-agent_*.deb.sha256
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-sbom
           path: |
@@ -211,7 +211,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install RPM build tools
         run: |
@@ -294,7 +294,7 @@ jobs:
           echo "Spec file updated to version $VERSION"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.10'
 
@@ -335,7 +335,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-rpm
           path: |
@@ -356,7 +356,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install RPM build tools
         run: |
@@ -457,7 +457,7 @@ jobs:
           echo "Spec file updated to version $VERSION"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.11'
 
@@ -502,7 +502,7 @@ jobs:
           echo "Size: $(du -h "$RPM_FILE" | cut -f1)"
 
       - name: Upload .rpm as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-rpm-${{ matrix.target }}
           path: |
@@ -517,10 +517,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -603,7 +603,7 @@ jobs:
           echo "SHA256: $(cat "$PKG_FILE.sha256")"
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-macos-pkg
           path: |
@@ -621,10 +621,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -743,7 +743,7 @@ jobs:
           Get-Content $checksumFile
 
       - name: Upload MSI as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-windows-${{ matrix.arch }}-msi
           path: |
@@ -758,10 +758,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -950,7 +950,7 @@ jobs:
           tar -tf "$PKG_FILE" | head -20
 
       - name: Upload .pkg as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-freebsd-pkg
           path: |
@@ -965,10 +965,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -1115,7 +1115,7 @@ jobs:
           cat "$PKG_FILE.sha256"
 
       - name: Upload .tgz as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-netbsd-tgz
           path: |
@@ -1130,7 +1130,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Determine version
         id: version
@@ -1374,7 +1374,7 @@ jobs:
           cat "sysmanage-agent-${VERSION}-openbsd-port.tar.gz.sha256"
 
       - name: Upload tarball as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-openbsd-port
           path: |
@@ -1389,10 +1389,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: '3.12'
 
@@ -1479,7 +1479,7 @@ jobs:
           ls -lh sysmanage-agent-$VERSION.flatpak
 
       - name: Upload Flatpak as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-flatpak
           path: |
@@ -1500,7 +1500,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Determine version
         id: version
@@ -1512,7 +1512,7 @@ jobs:
           echo "Building OpenBSD package for version: $VERSION"
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@v1
+        uses: vmactions/openbsd-vm@9a8e4351a4a0dc6238e7c69276dcbf6c03bea576 # v1
         env:
           VERSION: ${{ steps.version.outputs.version }}
         with:
@@ -1623,7 +1623,7 @@ jobs:
           cat "${PKG_FILE}.sha256"
 
       - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}-pkg
           path: |
@@ -1642,7 +1642,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Determine version
         id: version
@@ -1762,7 +1762,7 @@ jobs:
           cat "${PKG_FILE}.sha256"
 
       - name: Upload Alpine ${{ matrix.alpine-version }} package
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-alpine-${{ matrix.alpine-version }}-pkg
           path: |
@@ -1777,7 +1777,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Determine version
         id: version
@@ -1788,7 +1788,7 @@ jobs:
           echo "Building consolidated release for version: $VERSION"
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           path: artifacts/
 
@@ -2300,7 +2300,7 @@ jobs:
           echo "" >> release_notes.md
 
       - name: Create consolidated GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           files: release-files/*
           body_path: release_notes.md
@@ -2330,7 +2330,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
@@ -2529,7 +2529,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.ref }}
 
@@ -2690,7 +2690,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.ref }}
 
@@ -2936,7 +2936,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Determine version
         id: version
@@ -2967,7 +2967,7 @@ jobs:
           ls -lh installer/ubuntu-snap-strict/sysmanage-agent-src.tar.gz
 
       - name: Build snap with snapcraft
-        uses: snapcore/action-build@v1
+        uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1
         id: build_snap
         with:
           path: installer/ubuntu-snap-strict

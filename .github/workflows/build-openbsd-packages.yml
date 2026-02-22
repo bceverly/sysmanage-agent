@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@v1.2.5
+        uses: vmactions/openbsd-vm@2e29de1eb150dfe1c9c97b84ff2b7896f14ca690 # v1.2.5
         env:
           INPUT_OPENBSD_VERSION: ${{ matrix.openbsd-version }}
           INPUT_VERSION: ${{ github.event.inputs.version }}
@@ -145,7 +145,7 @@ jobs:
           ls -la *.tgz 2>/dev/null || echo "No packages found"
 
       - name: Upload OpenBSD ${{ matrix.openbsd-version }} package
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-openbsd-${{ matrix.openbsd-version }}
           path: "*.tgz"
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           path: packages/
         continue-on-error: true
@@ -180,7 +180,7 @@ jobs:
           done
 
       - name: Upload combined packages
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: hashFiles('packages/*/*.tgz') != ''
         with:
           name: sysmanage-agent-openbsd-all

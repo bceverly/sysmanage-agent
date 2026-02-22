@@ -26,16 +26,16 @@ jobs:
         # See: https://github.com/ruamel/yaml.clib/issues/25
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true  # Allow testing on pre-release Python versions
 
     - name: Cache pip packages
-      uses: actions/cache@v5
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -91,7 +91,7 @@ jobs:
     - name: Create Pull Request for coverage badge update
       if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12'
       id: coverage-pr
-      uses: peter-evans/create-pull-request@v8
+      uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8
       with:
         token: ${{ secrets.AUTO_MERGE_TOKEN }}
         commit-message: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}% [skip ci]"
@@ -115,7 +115,7 @@ jobs:
 
     - name: Upload backend coverage to Codecov
       if: matrix.python-version == '3.12'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
@@ -129,10 +129,10 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
       with:
         python-version: '3.12'
 
@@ -157,7 +157,7 @@ jobs:
         python -m bandit -r src/ -f json -o bandit-report.json --skip B101,B404,B608 || true
 
     - name: Upload Bandit results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: bandit-security-report
         path: bandit-report.json
@@ -172,7 +172,7 @@ jobs:
         safety scan --output json --output-file safety-report.json || true
 
     - name: Upload Safety results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       if: hashFiles('safety-report.json') != ''
       with:
         name: safety-report
@@ -186,10 +186,10 @@ jobs:
     needs: [test-backend, lint-backend]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
       with:
         python-version: '3.12'
 
@@ -212,17 +212,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0  # Shallow clones should be disabled for better analysis
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
       with:
         python-version: '3.12'
 
     - name: Cache pip packages
-      uses: actions/cache@v5
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/requirements.txt') }}
@@ -241,7 +241,7 @@ jobs:
         python -m pytest tests/ -v --cov=src --cov=main --cov-report=xml --cov-report=term-missing
 
     - name: Cache SonarCloud packages
-      uses: actions/cache@v5
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
@@ -259,7 +259,7 @@ jobs:
 
     - name: SonarCloud Scan
       if: steps.check_token.outputs.has_token == 'true'
-      uses: SonarSource/sonarqube-scan-action@master
+      uses: SonarSource/sonarqube-scan-action@dcc5211de53084482f1c6779dda263459f5274f6 # master-2026-02-22
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
