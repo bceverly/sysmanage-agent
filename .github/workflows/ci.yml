@@ -257,9 +257,10 @@ jobs:
           echo "has_token=true" >> $GITHUB_OUTPUT
         fi
 
+    # nosemgrep: generic.secrets.security.detected-sonarqube-docs-api-key - tokens are stored in GitHub Secrets, not hardcoded
     - name: SonarCloud Scan
       if: steps.check_token.outputs.has_token == 'true'
-      uses: SonarSource/sonarqube-scan-action@dcc5211de53084482f1c6779dda263459f5274f6 # nosemgrep: generic.secrets.security.detected-sonarqube-docs-api-key -- commit SHA pin, not a secret
+      uses: SonarSource/sonarqube-scan-action@dcc5211de53084482f1c6779dda263459f5274f6 # master-2026-02-22
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
