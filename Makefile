@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local
 
 # Default target
 help:
@@ -30,6 +30,7 @@ help:
 	@echo "Packaging targets:"
 	@echo "  make installer     - Build installer package (auto-detects platform)"
 	@echo "  make installer-deb - Build Ubuntu/Debian .deb package (explicit)"
+	@echo "  make installer-alpine - Build Alpine .apk packages via Docker (explicit)"
 	@echo "  make installer-rpm - Build CentOS/RHEL/Fedora .rpm package (explicit)"
 	@echo "  make installer-msi - Build Windows .msi package for x64 (default)"
 	@echo "  make installer-msi-x64 - Build Windows .msi package for x64"
@@ -47,6 +48,17 @@ help:
 	@echo "  make snap-strict-install - Install locally built strict snap (Ubuntu only)"
 	@echo "  make snap-strict-uninstall - Uninstall strict snap (Ubuntu only)"
 	@echo "  make sbom          - Generate Software Bill of Materials (CycloneDX format)"
+	@echo ""
+	@echo "Deploy targets (local build & publish):"
+	@echo "  make deploy-check-deps - Verify deployment tools are installed"
+	@echo "  make checksums         - Generate SHA256 checksums for packages in installer/dist/"
+	@echo "  make release-notes     - Generate release notes markdown"
+	@echo "  make deploy-launchpad  - Build & upload source packages to Launchpad PPA"
+	@echo "  make deploy-obs        - Upload to openSUSE Build Service"
+	@echo "  make deploy-copr       - Build SRPM & upload to Fedora Copr"
+	@echo "  make deploy-snap       - Build and publish snap to Snap Store (edge channel)"
+	@echo "  make deploy-docs-repo  - Stage packages into local sysmanage-docs repo"
+	@echo "  make release-local     - Full release pipeline with interactive confirmation"
 	@echo ""
 	@echo "Platform-specific notes:"
 	@echo "  make install-dev auto-detects your platform and installs appropriate tools:"
@@ -1789,6 +1801,58 @@ installer-freebsd:
 		exit 1; \
 	fi
 
+# Build Alpine .apk packages using Docker (replicates CI/CD Alpine build)
+# Supports ALPINE_VERSIONS env var (default: "3.19 3.20 3.21")
+installer-alpine:
+	@echo "=== Building Alpine .apk Packages via Docker ==="
+	@echo ""
+	@command -v docker >/dev/null 2>&1 || { \
+		echo "ERROR: Docker not found."; \
+		echo "Docker is required to build Alpine packages."; \
+		echo "Install from: https://docs.docker.com/engine/install/"; \
+		exit 1; \
+	}
+	@echo "✓ Docker available"
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Building version: $$VERSION"; \
+		fi; \
+	fi; \
+	ALPINE_VERSIONS="$${ALPINE_VERSIONS:-3.19 3.20 3.21}"; \
+	echo "Alpine versions: $$ALPINE_VERSIONS"; \
+	echo ""; \
+	mkdir -p installer/dist; \
+	for ALPINE_VER in $$ALPINE_VERSIONS; do \
+		echo "--- Building for Alpine $$ALPINE_VER ---"; \
+		echo ""; \
+		docker pull alpine:$$ALPINE_VER; \
+		docker run --rm \
+			-v "$$(pwd):/workspace" \
+			-e VERSION="$$VERSION" \
+			alpine:$$ALPINE_VER \
+			/workspace/installer/alpine/docker-build.sh; \
+		ALPINE_NODOT=$$(echo "$$ALPINE_VER" | tr -d '.'); \
+		for pkg in sysmanage-agent-*.apk; do \
+			if [ -f "$$pkg" ]; then \
+				NEWNAME="sysmanage-agent-$${VERSION}-alpine$${ALPINE_NODOT}.apk"; \
+				mv "$$pkg" "installer/dist/$$NEWNAME"; \
+				echo "  Created: installer/dist/$$NEWNAME"; \
+			fi; \
+		done; \
+		echo ""; \
+	done; \
+	echo "✓ Alpine packages built successfully!"; \
+	echo ""; \
+	ls -lh installer/dist/*alpine*.apk 2>/dev/null || echo "WARNING: No .apk files found in installer/dist/"
+
 # Build Windows .msi installer packages (both x64 and ARM64)
 installer-msi: installer-msi-all
 
@@ -2619,3 +2683,1377 @@ sbom:
 	@echo "  cat sbom/sysmanage-agent-sbom.json | jq ."
 	@echo ""
 	@echo "Or upload it to vulnerability scanning tools that support CycloneDX format."
+
+# =============================================================================
+# Deploy targets - Local build & publish infrastructure
+# =============================================================================
+
+# Version resolution: VERSION env var > git tag > fallback 0.1.0
+# Usage: VERSION=1.2.3 make <target>
+
+# Check deployment tool dependencies
+deploy-check-deps:
+	@echo "=================================================="
+	@echo "Checking Deployment Tool Dependencies"
+	@echo "=================================================="
+	@echo ""
+	@MISSING=0; \
+	WARN=0; \
+	OS_TYPE=$$(uname -s); \
+	echo "Detected OS: $$OS_TYPE"; \
+	echo ""; \
+	\
+	echo "=== All Platforms ==="; \
+	echo ""; \
+	echo "--- Version Detection ---"; \
+	if command -v git >/dev/null 2>&1; then \
+		echo "  [OK] git"; \
+		TAG=$$(git describe --tags --abbrev=0 2>/dev/null || true); \
+		if [ -n "$$TAG" ]; then \
+			echo "  [OK] Git tag found: $$TAG"; \
+		else \
+			echo "  [WARN] No git tags found (set VERSION env var to override)"; \
+			WARN=1; \
+		fi; \
+	else \
+		echo "  [MISSING] git"; \
+		MISSING=1; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Checksums ---"; \
+	if command -v sha256sum >/dev/null 2>&1; then \
+		echo "  [OK] sha256sum"; \
+	elif command -v shasum >/dev/null 2>&1; then \
+		echo "  [OK] shasum (will use shasum -a 256)"; \
+	elif command -v sha256 >/dev/null 2>&1; then \
+		echo "  [OK] sha256 (OpenBSD)"; \
+	else \
+		echo "  [MISSING] sha256sum / shasum / sha256"; \
+		MISSING=1; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- SBOM Generation ---"; \
+	if python3 -c "import cyclonedx_py" 2>/dev/null; then \
+		echo "  [OK] cyclonedx-bom (Python)"; \
+	else \
+		echo "  [MISSING] cyclonedx-bom"; \
+		echo "  Install: pip3 install cyclonedx-bom"; \
+		MISSING=1; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Docs Repository ---"; \
+	DOCS_REPO="$${DOCS_REPO:-$(HOME)/dev/sysmanage-docs}"; \
+	if [ -d "$$DOCS_REPO" ]; then \
+		echo "  [OK] sysmanage-docs found at $$DOCS_REPO"; \
+	else \
+		echo "  [MISSING] sysmanage-docs not found at $$DOCS_REPO"; \
+		echo "  Clone it or set DOCS_REPO env var to the correct path"; \
+		MISSING=1; \
+	fi; \
+	echo ""; \
+	\
+	if [ "$$OS_TYPE" = "Linux" ]; then \
+		echo "=== Linux Deploy Targets ==="; \
+		echo ""; \
+		\
+		echo "--- Launchpad PPA (Ubuntu source packages) ---"; \
+		for cmd in dch debuild debsign dput gpg; do \
+			if command -v $$cmd >/dev/null 2>&1; then \
+				echo "  [OK] $$cmd"; \
+			else \
+				echo "  [MISSING] $$cmd"; \
+				MISSING=1; \
+			fi; \
+		done; \
+		if ! command -v dch >/dev/null 2>&1 || ! command -v debuild >/dev/null 2>&1; then \
+			echo "  Install: sudo apt-get install -y devscripts debhelper dh-python python3-all python3-setuptools dput-ng gnupg"; \
+		fi; \
+		if command -v gpg >/dev/null 2>&1; then \
+			GPG_KEY=$$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | head -1); \
+			if [ -n "$$GPG_KEY" ]; then \
+				echo "  [OK] GPG signing key found"; \
+			else \
+				echo "  [WARN] No GPG signing key found (needed for Launchpad uploads)"; \
+				echo "  Import a key or set LAUNCHPAD_GPG_KEY env var"; \
+				WARN=1; \
+			fi; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- OBS (openSUSE Build Service) ---"; \
+		if command -v osc >/dev/null 2>&1; then \
+			echo "  [OK] osc"; \
+		else \
+			echo "  [MISSING] osc"; \
+			echo "  Install: sudo apt-get install -y osc"; \
+			MISSING=1; \
+		fi; \
+		if [ -f "$$HOME/.config/osc/oscrc" ]; then \
+			echo "  [OK] OBS credentials (~/.config/osc/oscrc)"; \
+		elif [ -n "$$OBS_USERNAME" ] && [ -n "$$OBS_PASSWORD" ]; then \
+			echo "  [OK] OBS credentials (OBS_USERNAME + OBS_PASSWORD env vars)"; \
+		else \
+			echo "  [WARN] No OBS credentials found"; \
+			echo "  Configure ~/.config/osc/oscrc or set OBS_USERNAME + OBS_PASSWORD env vars"; \
+			WARN=1; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- COPR (Fedora Community Build Service) ---"; \
+		for cmd in copr-cli rpmbuild; do \
+			if command -v $$cmd >/dev/null 2>&1; then \
+				echo "  [OK] $$cmd"; \
+			else \
+				echo "  [MISSING] $$cmd"; \
+				MISSING=1; \
+			fi; \
+		done; \
+		if ! command -v copr-cli >/dev/null 2>&1; then \
+			echo "  Install: pip3 install copr-cli"; \
+		fi; \
+		if ! command -v rpmbuild >/dev/null 2>&1; then \
+			echo "  Install: sudo apt-get install -y rpm || sudo dnf install -y rpm-build"; \
+		fi; \
+		if [ -f "$$HOME/.config/copr" ]; then \
+			echo "  [OK] COPR credentials (~/.config/copr)"; \
+		elif [ -n "$$COPR_LOGIN" ] && [ -n "$$COPR_API_TOKEN" ] && [ -n "$$COPR_USERNAME" ]; then \
+			echo "  [OK] COPR credentials (COPR_LOGIN + COPR_API_TOKEN + COPR_USERNAME env vars)"; \
+		else \
+			echo "  [WARN] No COPR credentials found"; \
+			echo "  Configure ~/.config/copr or set COPR_LOGIN + COPR_API_TOKEN + COPR_USERNAME env vars"; \
+			WARN=1; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- Snap Store ---"; \
+		if command -v snapcraft >/dev/null 2>&1; then \
+			echo "  [OK] snapcraft"; \
+			if snapcraft whoami >/dev/null 2>&1; then \
+				echo "  [OK] Snap Store login active"; \
+			else \
+				echo "  [WARN] Not logged in to Snap Store"; \
+				echo "  Run: snapcraft login"; \
+				WARN=1; \
+			fi; \
+		else \
+			echo "  [MISSING] snapcraft"; \
+			echo "  Install: sudo snap install snapcraft --classic"; \
+			MISSING=1; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- Docs Repo Metadata Tools ---"; \
+		for cmd in dpkg-scanpackages createrepo_c; do \
+			if command -v $$cmd >/dev/null 2>&1; then \
+				echo "  [OK] $$cmd"; \
+			else \
+				echo "  [MISSING] $$cmd"; \
+				MISSING=1; \
+			fi; \
+		done; \
+		if ! command -v dpkg-scanpackages >/dev/null 2>&1; then \
+			echo "  Install: sudo apt-get install -y dpkg-dev"; \
+		fi; \
+		if ! command -v createrepo_c >/dev/null 2>&1; then \
+			echo "  Install: sudo apt-get install -y createrepo-c || sudo dnf install -y createrepo_c"; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- Docker (Alpine package builds) ---"; \
+		if command -v docker >/dev/null 2>&1; then \
+			echo "  [OK] docker"; \
+			if docker info >/dev/null 2>&1; then \
+				echo "  [OK] Docker daemon accessible"; \
+			else \
+				echo "  [WARN] Docker installed but daemon not accessible"; \
+				echo "  Ensure Docker is running and your user is in the docker group"; \
+				WARN=1; \
+			fi; \
+		else \
+			echo "  [MISSING] docker (optional - needed for installer-alpine)"; \
+			echo "  Install from: https://docs.docker.com/engine/install/"; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- Flatpak ---"; \
+		if command -v flatpak-builder >/dev/null 2>&1; then \
+			echo "  [OK] flatpak-builder"; \
+		else \
+			echo "  [MISSING] flatpak-builder (optional - needed for flatpak target)"; \
+			echo "  Install: sudo apt-get install -y flatpak flatpak-builder"; \
+		fi; \
+		if command -v flatpak >/dev/null 2>&1; then \
+			echo "  [OK] flatpak"; \
+		else \
+			echo "  [MISSING] flatpak (optional - needed for flatpak target)"; \
+		fi; \
+		echo ""; \
+	\
+	elif [ "$$OS_TYPE" = "Darwin" ]; then \
+		echo "=== macOS Packaging Tools ==="; \
+		echo ""; \
+		for cmd in pkgbuild productbuild; do \
+			if command -v $$cmd >/dev/null 2>&1; then \
+				echo "  [OK] $$cmd"; \
+			else \
+				echo "  [MISSING] $$cmd"; \
+				echo "  Install: xcode-select --install"; \
+				MISSING=1; \
+			fi; \
+		done; \
+		echo ""; \
+		echo "(Launchpad, OBS, COPR, Snap targets are Linux-only -- skipped)"; \
+		echo ""; \
+	\
+	elif echo "$$OS_TYPE" | grep -qE "^(MINGW|MSYS)"; then \
+		echo "=== Windows Packaging Tools ==="; \
+		echo ""; \
+		if command -v powershell >/dev/null 2>&1 || command -v powershell.exe >/dev/null 2>&1; then \
+			echo "  [OK] PowerShell"; \
+		else \
+			echo "  [MISSING] PowerShell"; \
+			MISSING=1; \
+		fi; \
+		if command -v wix >/dev/null 2>&1 || command -v dotnet >/dev/null 2>&1; then \
+			echo "  [OK] WiX Toolset / .NET SDK"; \
+		else \
+			echo "  [WARN] WiX Toolset v4 not detected"; \
+			echo "  Install: dotnet tool install --global wix"; \
+			WARN=1; \
+		fi; \
+		echo ""; \
+		echo "(Launchpad, OBS, COPR, Snap targets are Linux-only -- skipped)"; \
+		echo ""; \
+	\
+	elif [ "$$OS_TYPE" = "FreeBSD" ]; then \
+		echo "=== FreeBSD Packaging Tools ==="; \
+		echo ""; \
+		if command -v pkg >/dev/null 2>&1; then \
+			echo "  [OK] pkg"; \
+		else \
+			echo "  [MISSING] pkg"; \
+			MISSING=1; \
+		fi; \
+		echo ""; \
+		echo "(Launchpad, OBS, COPR, Snap targets are Linux-only -- skipped)"; \
+		echo ""; \
+	\
+	elif [ "$$OS_TYPE" = "NetBSD" ]; then \
+		echo "=== NetBSD Packaging Tools ==="; \
+		echo ""; \
+		if command -v pkg_create >/dev/null 2>&1; then \
+			echo "  [OK] pkg_create"; \
+		else \
+			echo "  [MISSING] pkg_create"; \
+			MISSING=1; \
+		fi; \
+		echo ""; \
+		echo "(Launchpad, OBS, COPR, Snap targets are Linux-only -- skipped)"; \
+		echo ""; \
+	\
+	elif [ "$$OS_TYPE" = "OpenBSD" ]; then \
+		echo "=== OpenBSD Packaging Tools ==="; \
+		echo ""; \
+		if command -v tar >/dev/null 2>&1; then \
+			echo "  [OK] tar (for port tarball creation)"; \
+		else \
+			echo "  [MISSING] tar"; \
+			MISSING=1; \
+		fi; \
+		echo ""; \
+		echo "(Launchpad, OBS, COPR, Snap targets are Linux-only -- skipped)"; \
+		echo ""; \
+	\
+	else \
+		echo "=== Unknown Platform: $$OS_TYPE ==="; \
+		echo ""; \
+		echo "  No platform-specific checks available."; \
+		echo ""; \
+	fi; \
+	\
+	echo "=========================================="; \
+	echo "Summary"; \
+	echo "=========================================="; \
+	echo ""; \
+	if [ $$MISSING -eq 0 ] && [ $$WARN -eq 0 ]; then \
+		echo "All deployment tools and credentials are configured."; \
+	elif [ $$MISSING -eq 0 ]; then \
+		echo "All required tools are installed."; \
+		echo "Some credentials/config may need attention (see [WARN] items above)."; \
+	else \
+		echo "Some required tools are missing (see [MISSING] items above)."; \
+		if [ $$WARN -ne 0 ]; then \
+			echo "Some credentials/config may also need attention (see [WARN] items)."; \
+		fi; \
+	fi
+
+# Generate SHA256 checksums for all packages in installer/dist/
+checksums:
+	@echo "=================================================="
+	@echo "Generating SHA256 Checksums"
+	@echo "=================================================="
+	@echo ""
+	@if [ ! -d installer/dist ] || [ -z "$$(ls -A installer/dist/ 2>/dev/null)" ]; then \
+		echo "ERROR: No packages found in installer/dist/"; \
+		echo "Run a package build target first (e.g., make installer-deb)"; \
+		exit 1; \
+	fi
+	@set -e; \
+	cd installer/dist; \
+	if command -v sha256sum >/dev/null 2>&1; then \
+		SHA256CMD="sha256sum"; \
+	elif command -v shasum >/dev/null 2>&1; then \
+		SHA256CMD="shasum -a 256"; \
+	elif command -v sha256 >/dev/null 2>&1; then \
+		SHA256CMD="sha256 -r"; \
+	else \
+		echo "ERROR: No SHA256 tool found (sha256sum, shasum, or sha256)"; \
+		exit 1; \
+	fi; \
+	COUNT=0; \
+	for f in *; do \
+		[ -f "$$f" ] || continue; \
+		case "$$f" in \
+			*.sha256) continue ;; \
+			*) \
+				$$SHA256CMD "$$f" > "$$f.sha256"; \
+				echo "  $$f.sha256"; \
+				COUNT=$$((COUNT + 1)); \
+				;; \
+		esac; \
+	done; \
+	echo ""; \
+	echo "Generated $$COUNT checksum files in installer/dist/"
+
+# Generate release notes markdown
+release-notes:
+	@echo "=================================================="
+	@echo "Generating Release Notes"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	mkdir -p installer/dist; \
+	NOTES="installer/dist/release-notes-$$VERSION.md"; \
+	echo "# SysManage Agent v$$VERSION Release Notes" > "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "Release date: $$(date -u +%Y-%m-%d)" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "## Installation" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### Ubuntu/Debian (APT)" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "# Add the PPA" >> "$$NOTES"; \
+	echo "sudo add-apt-repository ppa:bceverly/sysmanage-agent" >> "$$NOTES"; \
+	echo "sudo apt update" >> "$$NOTES"; \
+	echo "sudo apt install sysmanage-agent" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### Fedora/RHEL/CentOS (COPR)" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "sudo dnf copr enable bceverly/sysmanage-agent" >> "$$NOTES"; \
+	echo "sudo dnf install sysmanage-agent" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### openSUSE (OBS)" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "# Add the OBS repository for your distribution" >> "$$NOTES"; \
+	echo "sudo zypper install sysmanage-agent" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### Snap (Edge Channel)" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "sudo snap install sysmanage-agent-strict --edge" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### macOS" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "# Download the .pkg installer from the releases page" >> "$$NOTES"; \
+	echo "sudo installer -pkg sysmanage-agent-$$VERSION-macos.pkg -target /" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "### FreeBSD" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "pkg install sysmanage-agent" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "## Verify Downloads" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "SHA256 checksums are provided for all packages. Verify with:" >> "$$NOTES"; \
+	echo '```bash' >> "$$NOTES"; \
+	echo "sha256sum -c <package-file>.sha256" >> "$$NOTES"; \
+	echo '```' >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "## Software Bill of Materials" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "SBOM file in CycloneDX JSON format is available:" >> "$$NOTES"; \
+	echo "- \`sysmanage-agent-sbom.json\` - Python dependencies" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "## Packages" >> "$$NOTES"; \
+	echo "" >> "$$NOTES"; \
+	echo "| Platform | Package |" >> "$$NOTES"; \
+	echo "|----------|---------|" >> "$$NOTES"; \
+	if [ -d installer/dist ]; then \
+		for f in installer/dist/*; do \
+			case "$$f" in \
+				*.sha256|*.md) continue ;; \
+				*) echo "| $$(basename $$f | sed 's/.*\.//' | tr '[:lower:]' '[:upper:]') | \`$$(basename $$f)\` |" >> "$$NOTES" ;; \
+			esac; \
+		done; \
+	fi; \
+	echo "" >> "$$NOTES"; \
+	echo "Generated: $$NOTES"
+
+# Deploy to Launchpad PPA
+# Usage: LAUNCHPAD_RELEASES="noble jammy" make deploy-launchpad
+# Default releases: questing plucky oracular noble jammy
+deploy-launchpad:
+	@echo "=================================================="
+	@echo "Deploy to Launchpad PPA"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	\
+	RELEASES="$${LAUNCHPAD_RELEASES:-questing plucky oracular noble jammy}"; \
+	echo "Target releases: $$RELEASES"; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	for cmd in dch debuild debsign dput gpg; do \
+		command -v $$cmd >/dev/null 2>&1 || { \
+			echo "ERROR: $$cmd not found."; \
+			echo "Install with: sudo apt-get install -y devscripts debhelper dh-python python3-all python3-setuptools dput-ng gnupg"; \
+			exit 1; \
+		}; \
+	done; \
+	echo "Build tools available"; \
+	\
+	GPG_KEY_ID="$${LAUNCHPAD_GPG_KEY:-}"; \
+	if [ -z "$$GPG_KEY_ID" ]; then \
+		GPG_KEY_ID=$$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | awk '{print $$2}' | cut -d'/' -f2 | head -1); \
+	fi; \
+	if [ -z "$$GPG_KEY_ID" ]; then \
+		echo "ERROR: No GPG key found."; \
+		echo "Either import a GPG key to ~/.gnupg/ or set LAUNCHPAD_GPG_KEY env var"; \
+		exit 1; \
+	fi; \
+	echo "Using GPG key: $$GPG_KEY_ID"; \
+	echo ""; \
+	\
+	echo "Pre-warming GPG agent (you may be prompted for your passphrase)..."; \
+	export GPG_TTY=$$(tty); \
+	echo "test" | gpg --local-user "$$GPG_KEY_ID" --sign --armor -o /dev/null || \
+	{ echo "ERROR: GPG signing failed. Please unlock your key first with:"; \
+	  echo "  export GPG_TTY=\$$(tty) && gpg --sign --armor /dev/null"; \
+	  exit 1; }; \
+	echo "GPG agent ready"; \
+	echo ""; \
+	\
+	if dput --version 2>&1 | grep -q "dput-ng"; then \
+		mkdir -p ~/.dput.d/profiles; \
+		printf '{\n  "fqdn": "ppa.launchpad.net",\n  "incoming": "~bceverly/ubuntu/sysmanage-agent",\n  "method": "ftp",\n  "allow_unsigned_uploads": false\n}\n' > ~/.dput.d/profiles/launchpad.json; \
+	else \
+		if ! grep -q '^\[launchpad\]' ~/.dput.cf 2>/dev/null; then \
+			printf '\n[launchpad]\nfqdn = ppa.launchpad.net\nmethod = ftp\nincoming = ~bceverly/ubuntu/sysmanage-agent/\nlogin = anonymous\nallow_unsigned_uploads = 0\n' >> ~/.dput.cf; \
+		fi; \
+	fi; \
+	echo "Configured dput for Launchpad PPA"; \
+	echo ""; \
+	\
+	echo "Generating requirements-prod.txt..."; \
+	python3 scripts/update-requirements-prod.py; \
+	\
+	echo "Generating SBOM..."; \
+	$(MAKE) sbom; \
+	echo ""; \
+	\
+	export DEBFULLNAME="Bryan Everly"; \
+	export DEBEMAIL="bryan@theeverlys.com"; \
+	\
+	for RELEASE in $$RELEASES; do \
+		echo "=========================================="; \
+		echo "Building source package for Ubuntu $$RELEASE"; \
+		echo "Version: $$VERSION"; \
+		echo "=========================================="; \
+		\
+		case "$$RELEASE" in \
+			jammy) PYTHON_VERSION="3.10" ;; \
+			noble|oracular) PYTHON_VERSION="3.12" ;; \
+			plucky|questing) PYTHON_VERSION="3.13" ;; \
+			*) PYTHON_VERSION="3.12" ;; \
+		esac; \
+		echo "Target Python version: $$PYTHON_VERSION"; \
+		\
+		echo "Creating vendor directory for Python $$PYTHON_VERSION..."; \
+		rm -rf vendor; \
+		mkdir -p vendor; \
+		pip3 download -r requirements-prod.txt -d vendor \
+			--python-version "$$PYTHON_VERSION" \
+			--platform manylinux2014_x86_64 \
+			--platform manylinux_2_17_x86_64 \
+			--only-binary=:all:; \
+		pip3 download -r requirements-prod.txt -d vendor \
+			--python-version "$$PYTHON_VERSION" \
+			--no-binary :all: 2>/dev/null || true; \
+		echo "Downloaded $$(ls -1 vendor/*.whl 2>/dev/null | wc -l) wheels"; \
+		\
+		WORK_DIR="/tmp/sysmanage-agent-$$RELEASE"; \
+		rm -rf "$$WORK_DIR"; \
+		mkdir -p "$$WORK_DIR"; \
+		\
+		cp -r . "$$WORK_DIR/"; \
+		cd "$$WORK_DIR"; \
+		\
+		if [ -d "installer/ubuntu/debian" ]; then \
+			cp -r installer/ubuntu/debian .; \
+		else \
+			echo "Error: debian directory not found at installer/ubuntu/debian"; \
+			exit 1; \
+		fi; \
+		\
+		dch -v "$${VERSION}+ppa1~$${RELEASE}1" -D "$$RELEASE" "New upstream release $${VERSION}"; \
+		\
+		debuild -S -sa -us -uc; \
+		\
+		cd ..; \
+		\
+		if [ -n "$$LAUNCHPAD_GPG_PASSPHRASE" ]; then \
+			echo "$$LAUNCHPAD_GPG_PASSPHRASE" > "/tmp/gpg-passphrase-$$RELEASE"; \
+			debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-$$RELEASE" \
+				-k"$$GPG_KEY_ID" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
+			rm -f "/tmp/gpg-passphrase-$$RELEASE"; \
+		else \
+			debsign --re-sign -k"$$GPG_KEY_ID" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
+		fi; \
+		\
+		dput launchpad "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
+		\
+		echo "Uploaded to Launchpad PPA for $$RELEASE"; \
+		echo ""; \
+		\
+		cd "$(CURDIR)"; \
+	done; \
+	\
+	rm -rf vendor; \
+	\
+	echo "=========================================="; \
+	echo "All Launchpad uploads complete!"; \
+	echo "=========================================="; \
+	echo ""; \
+	echo "View build status at:"; \
+	echo "  https://launchpad.net/~bceverly/+archive/ubuntu/sysmanage-agent"
+
+# Deploy to openSUSE Build Service
+deploy-obs:
+	@echo "=================================================="
+	@echo "Deploy to openSUSE Build Service (OBS)"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	command -v osc >/dev/null 2>&1 || { \
+		echo "ERROR: osc not found."; \
+		echo "Install with: sudo apt-get install -y osc"; \
+		exit 1; \
+	}; \
+	echo "osc available"; \
+	\
+	OBS_USER="$${OBS_USERNAME:-}"; \
+	if [ -z "$$OBS_USER" ] && [ -f ~/.config/osc/oscrc ]; then \
+		OBS_USER=$$(grep "^user" ~/.config/osc/oscrc 2>/dev/null | head -1 | sed 's/^user[[:space:]]*=[[:space:]]*//');\
+	fi; \
+	if [ -z "$$OBS_USER" ]; then \
+		echo "ERROR: OBS credentials not configured."; \
+		echo "Either configure ~/.config/osc/oscrc or set OBS_USERNAME and OBS_PASSWORD env vars"; \
+		exit 1; \
+	fi; \
+	\
+	if [ -n "$$OBS_USERNAME" ] && [ -n "$$OBS_PASSWORD" ]; then \
+		mkdir -p ~/.config/osc; \
+		printf '[general]\napiurl = https://api.opensuse.org\n\n[https://api.opensuse.org]\nuser = %s\npass = %s\n' "$$OBS_USERNAME" "$$OBS_PASSWORD" > ~/.config/osc/oscrc; \
+		chmod 600 ~/.config/osc/oscrc; \
+		echo "OBS credentials configured from env vars"; \
+	fi; \
+	echo "OBS user: $$OBS_USER"; \
+	echo ""; \
+	\
+	echo "Generating requirements-prod.txt..."; \
+	python3 scripts/update-requirements-prod.py; \
+	\
+	WORKSPACE="$(CURDIR)"; \
+	\
+	OBS_DIR="/tmp/obs-sysmanage-agent"; \
+	rm -rf "$$OBS_DIR"; \
+	mkdir -p "$$OBS_DIR"; \
+	cd "$$OBS_DIR"; \
+	\
+	echo "Checking out OBS package home:$$OBS_USER/sysmanage-agent"; \
+	osc checkout "home:$$OBS_USER/sysmanage-agent"; \
+	cd "home:$$OBS_USER/sysmanage-agent"; \
+	\
+	echo "Copying spec file and rpmlintrc..."; \
+	cp "$$WORKSPACE/installer/opensuse/sysmanage-agent.spec" .; \
+	cp "$$WORKSPACE/installer/opensuse/sysmanage-agent-rpmlintrc" . 2>/dev/null || true; \
+	\
+	sed -i "s/^Version:.*/Version:        $$VERSION/" sysmanage-agent.spec; \
+	\
+	echo "Creating source tarball..."; \
+	TAR_NAME="sysmanage-agent-$$VERSION"; \
+	rm -rf "/tmp/$$TAR_NAME"; \
+	mkdir -p "/tmp/$$TAR_NAME"; \
+	cp -r "$$WORKSPACE/src" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/main.py" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/alembic.ini" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/requirements.txt" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/requirements-prod.txt" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/README.md" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/README.md"; \
+	cp "$$WORKSPACE/LICENSE" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/LICENSE"; \
+	mkdir -p "/tmp/$$TAR_NAME/installer/opensuse"; \
+	cp "$$WORKSPACE/installer/opensuse/"*.service "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
+	cp "$$WORKSPACE/installer/opensuse/"*.sudoers "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
+	cp "$$WORKSPACE/installer/opensuse/"*.example "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
+	cd /tmp; \
+	tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
+	echo "Created source tarball: sysmanage-agent-$$VERSION.tar.gz"; \
+	\
+	echo "Creating vendor tarball (Python 3.11 wheels)..."; \
+	rm -rf /tmp/vendor; \
+	mkdir -p /tmp/vendor; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 311 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 311 \
+		--no-binary :all: 2>/dev/null || true; \
+	cd /tmp; \
+	tar czf "sysmanage-agent-vendor-$$VERSION.tar.gz" vendor/; \
+	echo "Created vendor tarball: sysmanage-agent-vendor-$$VERSION.tar.gz"; \
+	\
+	cp "sysmanage-agent-$$VERSION.tar.gz" "$$OBS_DIR/home:$$OBS_USER/sysmanage-agent/"; \
+	cp "sysmanage-agent-vendor-$$VERSION.tar.gz" "$$OBS_DIR/home:$$OBS_USER/sysmanage-agent/"; \
+	\
+	cd "$$OBS_DIR/home:$$OBS_USER/sysmanage-agent"; \
+	osc remove *.tar.gz 2>/dev/null || true; \
+	osc add "sysmanage-agent-$$VERSION.tar.gz"; \
+	osc add "sysmanage-agent-vendor-$$VERSION.tar.gz"; \
+	osc add sysmanage-agent.spec 2>/dev/null || true; \
+	if [ -f sysmanage-agent-rpmlintrc ]; then \
+		osc add sysmanage-agent-rpmlintrc 2>/dev/null || true; \
+	fi; \
+	\
+	echo "Committing to OBS..."; \
+	osc commit -m "Release version $$VERSION"; \
+	\
+	echo ""; \
+	echo "=========================================="; \
+	echo "Uploaded version $$VERSION to OBS"; \
+	echo "=========================================="; \
+	echo ""; \
+	echo "View build status at:"; \
+	echo "  https://build.opensuse.org/package/show/home:$$OBS_USER/sysmanage-agent"
+
+# Deploy to Fedora Copr
+deploy-copr:
+	@echo "=================================================="
+	@echo "Deploy to Fedora Copr"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	for cmd in copr-cli rpmbuild; do \
+		command -v $$cmd >/dev/null 2>&1 || { \
+			echo "ERROR: $$cmd not found."; \
+			if [ "$$cmd" = "copr-cli" ]; then \
+				echo "Install with: pip3 install copr-cli"; \
+			else \
+				echo "Install with: sudo apt-get install -y rpm || sudo dnf install -y rpm-build"; \
+			fi; \
+			exit 1; \
+		}; \
+	done; \
+	echo "Build tools available"; \
+	\
+	COPR_USER="$${COPR_USERNAME:-}"; \
+	if [ -z "$$COPR_USER" ] && [ -f ~/.config/copr ]; then \
+		COPR_USER=$$(grep "^username" ~/.config/copr 2>/dev/null | head -1 | awk '{print $$3}'); \
+	fi; \
+	if [ -z "$$COPR_USER" ]; then \
+		echo "ERROR: Copr credentials not configured."; \
+		echo "Either configure ~/.config/copr or set COPR_LOGIN, COPR_API_TOKEN, and COPR_USERNAME env vars"; \
+		exit 1; \
+	fi; \
+	\
+	if [ -n "$$COPR_LOGIN" ] && [ -n "$$COPR_API_TOKEN" ] && [ -n "$$COPR_USERNAME" ]; then \
+		mkdir -p ~/.config; \
+		printf '[copr-cli]\nlogin = %s\nusername = %s\ntoken = %s\ncopr_url = https://copr.fedorainfracloud.org\n' "$$COPR_LOGIN" "$$COPR_USERNAME" "$$COPR_API_TOKEN" > ~/.config/copr; \
+		chmod 600 ~/.config/copr; \
+		echo "Copr credentials configured from env vars"; \
+	fi; \
+	echo "Copr user: $$COPR_USER"; \
+	echo ""; \
+	\
+	echo "Generating requirements-prod.txt..."; \
+	python3 scripts/update-requirements-prod.py; \
+	\
+	WORKSPACE="$(CURDIR)"; \
+	\
+	echo "Creating source tarball..."; \
+	TAR_NAME="sysmanage-agent-$$VERSION"; \
+	rm -rf "/tmp/$$TAR_NAME"; \
+	mkdir -p "/tmp/$$TAR_NAME"; \
+	cp -r "$$WORKSPACE/src" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/main.py" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/alembic.ini" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/requirements.txt" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/requirements-prod.txt" "/tmp/$$TAR_NAME/"; \
+	cp "$$WORKSPACE/README.md" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/README.md"; \
+	cp "$$WORKSPACE/LICENSE" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/LICENSE"; \
+	mkdir -p "/tmp/$$TAR_NAME/installer/opensuse"; \
+	cp "$$WORKSPACE/installer/opensuse/"*.service "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
+	cp "$$WORKSPACE/installer/opensuse/"*.sudoers "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
+	cp "$$WORKSPACE/installer/opensuse/"*.example "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
+	cd /tmp; \
+	tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
+	echo "Created source tarball: sysmanage-agent-$$VERSION.tar.gz"; \
+	\
+	echo "Creating vendor tarball (Python 3.9 + 3.12 + 3.13 + 3.14 wheels)..."; \
+	rm -rf /tmp/vendor; \
+	mkdir -p /tmp/vendor; \
+	echo "Downloading wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)..."; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 3.9.21 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
+	pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor \
+		--python-version 3.9.21 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all: 2>/dev/null || true; \
+	pip3 download tomli -d /tmp/vendor \
+		--python-version 3.9.21 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all: 2>/dev/null || true; \
+	echo "Downloading wheels for Python 3.12 (EPEL 10, CentOS Stream 10)..."; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 3.12.11 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
+	echo "Downloading wheels for Python 3.13 (Fedora 41, 42)..."; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 3.13.1 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
+	echo "Downloading wheels for Python 3.14 (Fedora 43)..."; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 3.14.0 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
+	echo "Total wheels: $$(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"; \
+	\
+	for pkg in websockets PyYAML aiohttp cryptography SQLAlchemy alembic; do \
+		pkg_lower=$$(echo "$$pkg" | tr '[:upper:]' '[:lower:]' | tr '-' '_'); \
+		if ls /tmp/vendor/$${pkg_lower}* 1>/dev/null 2>&1 || ls /tmp/vendor/$${pkg}* 1>/dev/null 2>&1; then \
+			echo "  $$pkg found"; \
+		else \
+			echo "  WARNING: $$pkg not found in vendor directory"; \
+		fi; \
+	done; \
+	\
+	cd /tmp; \
+	tar czf "sysmanage-agent-vendor-$$VERSION.tar.gz" vendor/; \
+	echo "Created vendor tarball: sysmanage-agent-vendor-$$VERSION.tar.gz"; \
+	\
+	echo ""; \
+	echo "Copying to rpmbuild directory..."; \
+	mkdir -p ~/rpmbuild/SOURCES; \
+	cp "/tmp/sysmanage-agent-$$VERSION.tar.gz" ~/rpmbuild/SOURCES/; \
+	cp "/tmp/sysmanage-agent-vendor-$$VERSION.tar.gz" ~/rpmbuild/SOURCES/; \
+	\
+	echo "Creating SRPM..."; \
+	cp "$$WORKSPACE/installer/opensuse/sysmanage-agent.spec" ~/rpmbuild/SOURCES/; \
+	cd ~/rpmbuild/SOURCES; \
+	sed -i "s/^Version:.*/Version:        $$VERSION/" sysmanage-agent.spec; \
+	rpmbuild -bs sysmanage-agent.spec --define "_topdir $$HOME/rpmbuild"; \
+	\
+	SRPM=$$(find ~/rpmbuild/SRPMS -name "sysmanage-agent-*.src.rpm" | head -1); \
+	echo "Created SRPM: $$SRPM"; \
+	\
+	echo ""; \
+	echo "Uploading SRPM to Copr..."; \
+	copr-cli build "$$COPR_USER/sysmanage-agent" "$$SRPM"; \
+	\
+	echo ""; \
+	echo "=========================================="; \
+	echo "Uploaded version $$VERSION to Copr"; \
+	echo "=========================================="; \
+	echo ""; \
+	echo "View build status at:"; \
+	echo "  https://copr.fedorainfracloud.org/coprs/$$COPR_USER/sysmanage-agent/builds/"
+
+# Deploy snap to Snap Store (wraps snap-strict-publish, edge channel)
+deploy-snap:
+	@echo "=================================================="
+	@echo "Deploy Snap to Snap Store (Edge Channel)"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	command -v snapcraft >/dev/null 2>&1 || { \
+		echo "ERROR: snapcraft not found."; \
+		echo "Install with: sudo snap install snapcraft --classic"; \
+		exit 1; \
+	}; \
+	\
+	echo "Creating VERSION file..."; \
+	echo "$$VERSION" > VERSION; \
+	\
+	echo "Creating source tarball for snap..."; \
+	tar czf installer/ubuntu-snap-strict/sysmanage-agent-src.tar.gz \
+		--exclude='.venv' \
+		--exclude='.git' \
+		--exclude='__pycache__' \
+		--exclude='*.pyc' \
+		--exclude='.pytest_cache' \
+		--exclude='agent.db' \
+		src main.py alembic.ini VERSION; \
+	\
+	echo "Building strict confinement snap..."; \
+	cd installer/ubuntu-snap-strict && snapcraft pack --verbose; \
+	cd "$(CURDIR)"; \
+	\
+	SNAP_FILE=$$(ls -t installer/ubuntu-snap-strict/sysmanage-agent-strict_*.snap 2>/dev/null | head -1); \
+	if [ -z "$$SNAP_FILE" ]; then \
+		echo "ERROR: No snap file produced in installer/ubuntu-snap-strict/"; \
+		exit 1; \
+	fi; \
+	echo "Built snap: $$SNAP_FILE"; \
+	\
+	echo ""; \
+	echo "Uploading to Snap Store (edge channel)..."; \
+	for i in 1 2 3 4 5; do \
+		echo "Attempt $$i of 5..."; \
+		if snapcraft upload --release=edge "$$SNAP_FILE"; then \
+			echo "Upload successful!"; \
+			break; \
+		fi; \
+		if [ $$i -eq 5 ]; then \
+			echo "All upload attempts failed"; \
+			exit 1; \
+		fi; \
+		echo "Upload failed, waiting 30 seconds before retry..."; \
+		sleep 30; \
+	done; \
+	\
+	echo ""; \
+	echo "=========================================="; \
+	echo "Published to Snap Store (edge channel)"; \
+	echo "=========================================="; \
+	echo ""; \
+	echo "Install with: sudo snap install sysmanage-agent-strict --edge"; \
+	echo "View at: https://snapcraft.io/sysmanage-agent-strict"
+
+# Stage packages into local sysmanage-docs repo (incremental/additive)
+# Usage: DOCS_REPO=/path/to/sysmanage-docs make deploy-docs-repo
+deploy-docs-repo:
+	@echo "=================================================="
+	@echo "Stage Packages to sysmanage-docs Repository"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	DOCS_REPO="$${DOCS_REPO:-$(HOME)/dev/sysmanage-docs}"; \
+	if [ ! -d "$$DOCS_REPO" ]; then \
+		echo "ERROR: sysmanage-docs repo not found at $$DOCS_REPO"; \
+		echo "Set DOCS_REPO env var to the correct path"; \
+		exit 1; \
+	fi; \
+	echo "Docs repo: $$DOCS_REPO"; \
+	echo ""; \
+	\
+	STAGED=""; \
+	MISSING=""; \
+	\
+	echo "--- Staging DEB packages ---"; \
+	DEB_FILES=$$(ls installer/dist/*.deb 2>/dev/null || true); \
+	if [ -n "$$DEB_FILES" ]; then \
+		DEB_DIR="$$DOCS_REPO/repo/agent/deb/pool/main/$${VERSION}-1"; \
+		mkdir -p "$$DEB_DIR"; \
+		for f in $$DEB_FILES; do \
+			cp "$$f" "$$DEB_DIR/"; \
+			echo "  Staged: $$(basename $$f) -> $$DEB_DIR/"; \
+		done; \
+		STAGED="$$STAGED deb"; \
+		if [ -x "$$DOCS_REPO/repo/agent/deb/update-repo.sh" ]; then \
+			echo "  Running update-repo.sh..."; \
+			cd "$$DOCS_REPO/repo/agent/deb" && ./update-repo.sh 2>/dev/null || true; \
+			cd "$(CURDIR)"; \
+			echo "  DEB metadata updated"; \
+		elif command -v dpkg-scanpackages >/dev/null 2>&1; then \
+			echo "  Regenerating DEB metadata..."; \
+			cd "$$DOCS_REPO/repo/agent/deb"; \
+			dpkg-scanpackages pool/main /dev/null > dists/stable/main/binary-amd64/Packages 2>/dev/null || true; \
+			gzip -k -f dists/stable/main/binary-amd64/Packages 2>/dev/null || true; \
+			if command -v apt-ftparchive >/dev/null 2>&1; then \
+				cd dists/stable && apt-ftparchive release . > Release 2>/dev/null || true; \
+				cd "$(CURDIR)"; \
+			fi; \
+			cd "$(CURDIR)"; \
+			echo "  DEB metadata updated"; \
+		fi; \
+	else \
+		echo "  No .deb packages found in installer/dist/"; \
+		MISSING="$$MISSING deb"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging RPM packages ---"; \
+	RPM_FILES=$$(ls installer/dist/*.rpm 2>/dev/null || true); \
+	if [ -n "$$RPM_FILES" ]; then \
+		for f in $$RPM_FILES; do \
+			BASENAME=$$(basename "$$f"); \
+			if echo "$$BASENAME" | grep -q "\.el9\."; then \
+				TARGET="el9"; \
+			elif echo "$$BASENAME" | grep -q "\.el8\."; then \
+				TARGET="el8"; \
+			elif echo "$$BASENAME" | grep -q "opensuse-leap"; then \
+				TARGET="opensuse-leap"; \
+			elif echo "$$BASENAME" | grep -q "opensuse-tumbleweed"; then \
+				TARGET="opensuse-tumbleweed"; \
+			elif echo "$$BASENAME" | grep -q "sles"; then \
+				TARGET="sles"; \
+			else \
+				TARGET="el9"; \
+			fi; \
+			if [ -x "$$DOCS_REPO/repo/agent/rpm/update-repo.sh" ]; then \
+				echo "  Staging $$BASENAME via update-repo.sh (target: $$TARGET)..."; \
+				"$$DOCS_REPO/repo/agent/rpm/update-repo.sh" "$$f" "$$TARGET" 2>/dev/null || true; \
+			else \
+				echo "  Staging $$BASENAME -> $$TARGET/"; \
+				case "$$TARGET" in \
+					el8) RPM_DIR="$$DOCS_REPO/repo/agent/rpm/el8/x86_64" ;; \
+					el9) RPM_DIR="$$DOCS_REPO/repo/agent/rpm/el9/x86_64" ;; \
+					opensuse-leap) RPM_DIR="$$DOCS_REPO/repo/agent/rpm/opensuse-leap/15/x86_64" ;; \
+					opensuse-tumbleweed) RPM_DIR="$$DOCS_REPO/repo/agent/rpm/opensuse-tumbleweed/x86_64" ;; \
+					sles) RPM_DIR="$$DOCS_REPO/repo/agent/rpm/sles/15/x86_64" ;; \
+				esac; \
+				mkdir -p "$$RPM_DIR"; \
+				cp "$$f" "$$RPM_DIR/"; \
+				if command -v createrepo_c >/dev/null 2>&1; then \
+					cd "$$RPM_DIR" && createrepo_c . 2>/dev/null || true; \
+					cd "$(CURDIR)"; \
+				fi; \
+			fi; \
+		done; \
+		STAGED="$$STAGED rpm"; \
+	else \
+		echo "  No .rpm packages found in installer/dist/"; \
+		MISSING="$$MISSING rpm"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging macOS packages ---"; \
+	PKG_FILES=$$(ls installer/dist/*macos*.pkg installer/dist/*darwin*.pkg 2>/dev/null || true); \
+	if [ -n "$$PKG_FILES" ]; then \
+		for f in $$PKG_FILES; do \
+			if [ -x "$$DOCS_REPO/repo/agent/mac/update-repo.sh" ]; then \
+				echo "  Staging $$(basename $$f) via update-repo.sh..."; \
+				"$$DOCS_REPO/repo/agent/mac/update-repo.sh" "$$f" 2>/dev/null || true; \
+			else \
+				MAC_DIR="$$DOCS_REPO/repo/agent/mac/packages/$$VERSION"; \
+				mkdir -p "$$MAC_DIR"; \
+				cp "$$f" "$$MAC_DIR/"; \
+				if [ -f "$$f.sha256" ]; then cp "$$f.sha256" "$$MAC_DIR/"; fi; \
+				echo "  Staged: $$(basename $$f) -> $$MAC_DIR/"; \
+			fi; \
+		done; \
+		STAGED="$$STAGED macos"; \
+	else \
+		echo "  No macOS packages found in installer/dist/"; \
+		MISSING="$$MISSING macos"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging Windows packages ---"; \
+	MSI_FILES=$$(ls installer/dist/*.msi 2>/dev/null || true); \
+	if [ -n "$$MSI_FILES" ]; then \
+		WIN_DIR="$$DOCS_REPO/repo/agent/windows/packages/$$VERSION"; \
+		mkdir -p "$$WIN_DIR"; \
+		for f in $$MSI_FILES; do \
+			cp "$$f" "$$WIN_DIR/"; \
+			if [ -f "$$f.sha256" ]; then cp "$$f.sha256" "$$WIN_DIR/"; fi; \
+			echo "  Staged: $$(basename $$f) -> $$WIN_DIR/"; \
+		done; \
+		STAGED="$$STAGED windows"; \
+	else \
+		echo "  No .msi packages found in installer/dist/"; \
+		MISSING="$$MISSING windows"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging FreeBSD packages ---"; \
+	FBSD_FILES=$$(ls installer/dist/*freebsd*.pkg installer/dist/*freebsd*.txz 2>/dev/null || true); \
+	if [ -n "$$FBSD_FILES" ]; then \
+		FBSD_DIR="$$DOCS_REPO/repo/agent/freebsd/$$VERSION"; \
+		mkdir -p "$$FBSD_DIR"; \
+		for f in $$FBSD_FILES; do \
+			cp "$$f" "$$FBSD_DIR/"; \
+			echo "  Staged: $$(basename $$f) -> $$FBSD_DIR/"; \
+		done; \
+		STAGED="$$STAGED freebsd"; \
+	else \
+		echo "  No FreeBSD packages found in installer/dist/"; \
+		MISSING="$$MISSING freebsd"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging OpenBSD packages ---"; \
+	OBSD_FILES=$$(ls installer/dist/*openbsd* 2>/dev/null || true); \
+	if [ -n "$$OBSD_FILES" ]; then \
+		OBSD_DIR="$$DOCS_REPO/repo/agent/openbsd/$$VERSION"; \
+		mkdir -p "$$OBSD_DIR"; \
+		for f in $$OBSD_FILES; do \
+			[ -f "$$f" ] || continue; \
+			cp "$$f" "$$OBSD_DIR/"; \
+			if [ -f "$$f.sha256" ]; then cp "$$f.sha256" "$$OBSD_DIR/"; fi; \
+			echo "  Staged: $$(basename $$f) -> $$OBSD_DIR/"; \
+		done; \
+		STAGED="$$STAGED openbsd"; \
+	else \
+		echo "  No OpenBSD packages found"; \
+		MISSING="$$MISSING openbsd"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging NetBSD packages ---"; \
+	NBSD_FILES=$$(ls installer/dist/*netbsd* 2>/dev/null || true); \
+	if [ -n "$$NBSD_FILES" ]; then \
+		NBSD_DIR="$$DOCS_REPO/repo/agent/netbsd/$$VERSION"; \
+		mkdir -p "$$NBSD_DIR"; \
+		for f in $$NBSD_FILES; do \
+			[ -f "$$f" ] || continue; \
+			cp "$$f" "$$NBSD_DIR/"; \
+			if [ -f "$$f.sha256" ]; then cp "$$f.sha256" "$$NBSD_DIR/"; fi; \
+			echo "  Staged: $$(basename $$f) -> $$NBSD_DIR/"; \
+		done; \
+		STAGED="$$STAGED netbsd"; \
+	else \
+		echo "  No NetBSD packages found"; \
+		MISSING="$$MISSING netbsd"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging Alpine packages ---"; \
+	APK_FILES=$$(ls installer/dist/*alpine*.apk 2>/dev/null || true); \
+	if [ -n "$$APK_FILES" ]; then \
+		APK_DIR="$$DOCS_REPO/repo/agent/alpine/$$VERSION"; \
+		mkdir -p "$$APK_DIR"; \
+		for f in $$APK_FILES; do \
+			cp "$$f" "$$APK_DIR/"; \
+			if [ -f "$$f.sha256" ]; then cp "$$f.sha256" "$$APK_DIR/"; fi; \
+			echo "  Staged: $$(basename $$f) -> $$APK_DIR/"; \
+		done; \
+		STAGED="$$STAGED alpine"; \
+	else \
+		echo "  No Alpine .apk packages found in installer/dist/"; \
+		MISSING="$$MISSING alpine"; \
+	fi; \
+	echo ""; \
+	\
+	echo "--- Staging checksums and SBOMs ---"; \
+	if [ -d sbom ]; then \
+		SBOM_DIR="$$DOCS_REPO/repo/agent/sbom/$$VERSION"; \
+		mkdir -p "$$SBOM_DIR"; \
+		cp sbom/*.json "$$SBOM_DIR/" 2>/dev/null || true; \
+		echo "  Staged SBOM files -> $$SBOM_DIR/"; \
+	fi; \
+	echo ""; \
+	\
+	echo "=========================================="; \
+	echo "Staging Summary (v$$VERSION)"; \
+	echo "=========================================="; \
+	echo ""; \
+	if [ -n "$$STAGED" ]; then \
+		echo "Staged platforms:$$STAGED"; \
+	else \
+		echo "No packages were staged."; \
+	fi; \
+	if [ -n "$$MISSING" ]; then \
+		echo "Missing platforms:$$MISSING"; \
+		echo ""; \
+		echo "Run deploy-docs-repo on other machines to stage those platforms."; \
+		echo "Each run is additive - existing packages are preserved."; \
+	fi; \
+	echo ""; \
+	echo "When all platforms are staged and GitHub access is restored:"; \
+	echo "  cd $$DOCS_REPO"; \
+	echo "  git add repo/"; \
+	echo "  git commit -m 'Release sysmanage-agent v$$VERSION'"; \
+	echo "  git push"
+
+# Full release pipeline with interactive confirmation
+release-local:
+	@echo "=================================================="
+	@echo "SysManage Agent - Local Release Pipeline"
+	@echo "=================================================="
+	@echo ""
+	@set -e; \
+	if [ -n "$$VERSION" ]; then \
+		echo "Using VERSION from environment: $$VERSION"; \
+	else \
+		VERSION=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); \
+		if [ -z "$$VERSION" ]; then \
+			VERSION="0.1.0"; \
+			echo "No git tags found, using default version: $$VERSION"; \
+		else \
+			echo "Using version from git tag: $$VERSION"; \
+		fi; \
+	fi; \
+	echo "Version: $$VERSION"; \
+	echo ""; \
+	\
+	OS_TYPE=$$(uname -s); \
+	echo "Detected OS: $$OS_TYPE"; \
+	echo ""; \
+	echo "This will run the release pipeline for the current platform."; \
+	echo "Each step requires confirmation before proceeding."; \
+	echo ""; \
+	\
+	echo "--- Step 1: Build packages for current platform ---"; \
+	case "$$OS_TYPE" in \
+		Linux) \
+			if [ -f /etc/os-release ] && grep -qE "^ID=\"?(opensuse|sles)" /etc/os-release 2>/dev/null; then \
+				BUILD_TARGET="installer-rpm"; \
+			elif [ -f /etc/redhat-release ]; then \
+				BUILD_TARGET="installer-rpm"; \
+			else \
+				BUILD_TARGET="installer-deb"; \
+			fi; \
+			;; \
+		Darwin) \
+			BUILD_TARGET="installer"; \
+			;; \
+		FreeBSD) \
+			BUILD_TARGET="installer-freebsd"; \
+			;; \
+		NetBSD) \
+			BUILD_TARGET="installer-netbsd"; \
+			;; \
+		OpenBSD) \
+			BUILD_TARGET="installer-openbsd"; \
+			;; \
+		MINGW*|MSYS*) \
+			BUILD_TARGET="installer-msi-all"; \
+			;; \
+		*) \
+			echo "WARNING: Unknown OS $$OS_TYPE, defaulting to installer-deb"; \
+			BUILD_TARGET="installer-deb"; \
+			;; \
+	esac; \
+	printf "Build packages with 'make $$BUILD_TARGET'? [y/N] "; \
+	read REPLY; \
+	case "$$REPLY" in \
+		[Yy]*) \
+			export VERSION; \
+			$(MAKE) $$BUILD_TARGET; \
+			;; \
+		*) echo "Skipped."; ;; \
+	esac; \
+	echo ""; \
+	\
+	echo "--- Step 2: Generate SBOM ---"; \
+	printf "Generate SBOM with 'make sbom'? [y/N] "; \
+	read REPLY; \
+	case "$$REPLY" in \
+		[Yy]*) $(MAKE) sbom; ;; \
+		*) echo "Skipped."; ;; \
+	esac; \
+	echo ""; \
+	\
+	echo "--- Step 3: Generate checksums ---"; \
+	printf "Generate checksums with 'make checksums'? [y/N] "; \
+	read REPLY; \
+	case "$$REPLY" in \
+		[Yy]*) $(MAKE) checksums; ;; \
+		*) echo "Skipped."; ;; \
+	esac; \
+	echo ""; \
+	\
+	echo "--- Step 4: Generate release notes ---"; \
+	printf "Generate release notes with 'make release-notes'? [y/N] "; \
+	read REPLY; \
+	case "$$REPLY" in \
+		[Yy]*) export VERSION; $(MAKE) release-notes; ;; \
+		*) echo "Skipped."; ;; \
+	esac; \
+	echo ""; \
+	\
+	echo "--- Step 5: Stage to docs repo ---"; \
+	printf "Stage packages to sysmanage-docs with 'make deploy-docs-repo'? [y/N] "; \
+	read REPLY; \
+	case "$$REPLY" in \
+		[Yy]*) export VERSION; $(MAKE) deploy-docs-repo; ;; \
+		*) echo "Skipped."; ;; \
+	esac; \
+	echo ""; \
+	\
+	if [ "$$OS_TYPE" = "Linux" ]; then \
+		echo "--- Step 6: Deploy to Launchpad ---"; \
+		printf "Upload to Launchpad PPA with 'make deploy-launchpad'? [y/N] "; \
+		read REPLY; \
+		case "$$REPLY" in \
+			[Yy]*) export VERSION; $(MAKE) deploy-launchpad; ;; \
+			*) echo "Skipped."; ;; \
+		esac; \
+		echo ""; \
+		\
+		echo "--- Step 7: Deploy to OBS ---"; \
+		printf "Upload to OBS with 'make deploy-obs'? [y/N] "; \
+		read REPLY; \
+		case "$$REPLY" in \
+			[Yy]*) export VERSION; $(MAKE) deploy-obs; ;; \
+			*) echo "Skipped."; ;; \
+		esac; \
+		echo ""; \
+		\
+		echo "--- Step 8: Deploy to COPR ---"; \
+		printf "Upload to COPR with 'make deploy-copr'? [y/N] "; \
+		read REPLY; \
+		case "$$REPLY" in \
+			[Yy]*) export VERSION; $(MAKE) deploy-copr; ;; \
+			*) echo "Skipped."; ;; \
+		esac; \
+		echo ""; \
+		\
+		echo "--- Step 9: Deploy to Snap Store ---"; \
+		printf "Publish snap with 'make deploy-snap'? [y/N] "; \
+		read REPLY; \
+		case "$$REPLY" in \
+			[Yy]*) export VERSION; $(MAKE) deploy-snap; ;; \
+			*) echo "Skipped."; ;; \
+		esac; \
+		echo ""; \
+		\
+		echo "--- Step 10: Build Alpine packages (requires Docker) ---"; \
+		if command -v docker >/dev/null 2>&1; then \
+			printf "Build Alpine .apk packages with 'make installer-alpine'? [y/N] "; \
+			read REPLY; \
+			case "$$REPLY" in \
+				[Yy]*) export VERSION; $(MAKE) installer-alpine; ;; \
+				*) echo "Skipped."; ;; \
+			esac; \
+		else \
+			echo "  Docker not found, skipping Alpine packages."; \
+		fi; \
+		echo ""; \
+		\
+		echo "--- Step 11: Build Flatpak package ---"; \
+		if command -v flatpak-builder >/dev/null 2>&1; then \
+			printf "Build Flatpak with 'make flatpak'? [y/N] "; \
+			read REPLY; \
+			case "$$REPLY" in \
+				[Yy]*) export VERSION; $(MAKE) flatpak; ;; \
+				*) echo "Skipped."; ;; \
+			esac; \
+		else \
+			echo "  flatpak-builder not found, skipping Flatpak package."; \
+		fi; \
+		echo ""; \
+	else \
+		echo "(Steps 6-11 skipped: Linux-only deploy targets)"; \
+		echo ""; \
+	fi; \
+	\
+	echo "=========================================="; \
+	echo "Release pipeline complete for v$$VERSION"; \
+	echo "=========================================="; \
+	echo ""; \
+	echo "Summary:"; \
+	echo "  Platform: $$OS_TYPE"; \
+	echo "  Version:  $$VERSION"; \
+	echo ""; \
+	echo "Next steps:"; \
+	echo "  - Run 'make release-local' on other machines for additional platforms"; \
+	echo "  - When all platforms are done, commit and push sysmanage-docs"
