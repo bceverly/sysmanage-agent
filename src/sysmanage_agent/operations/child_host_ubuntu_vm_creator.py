@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """
 Ubuntu VMM VM creation orchestration.
 
@@ -20,13 +19,9 @@ Key differences from Debian:
 """
 
 import asyncio
-import json
 import os
-import shutil
-import subprocess  # nosec B404
 import time
-from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
@@ -37,6 +32,15 @@ from src.sysmanage_agent.operations.child_host_ubuntu_autoinstall import (
 from src.sysmanage_agent.operations.child_host_ubuntu_packages import (
     extract_ubuntu_version,
 )
+from src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers import (
+    cleanup_installation_artifacts,
+    get_disk_size,
+    get_gateway_ip,
+    get_next_vm_ip,
+    parse_memory_gb,
+    save_vm_metadata,
+    validate_vm_config,
+)
 from src.sysmanage_agent.operations.child_host_vmm_disk import VmmDiskOperations
 from src.sysmanage_agent.operations.child_host_vmm_launcher import VmmLauncher
 from src.sysmanage_agent.operations.child_host_vmm_network_helpers import (
@@ -44,7 +48,6 @@ from src.sysmanage_agent.operations.child_host_vmm_network_helpers import (
 )
 from src.sysmanage_agent.operations.child_host_vmm_utils import (
     VMM_DISK_DIR,
-    VMM_METADATA_DIR,
     ensure_vmm_directories,
     get_fqdn_hostname,
     vm_exists,
@@ -104,7 +107,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
         """
         # Step 1: Validate configuration
         self.logger.info("Step 1: Validating configuration...")
-        validation_result = self._validate_config(config)
+        validation_result = validate_vm_config(config)
         if not validation_result.get("success"):
             return validation_result
         self.logger.info("Configuration validated")
@@ -161,7 +164,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
         # Step 8: Get gateway IP
         self.logger.info("Step 8: Getting gateway IP...")
-        gateway_ip = self._get_gateway_ip()
+        gateway_ip = get_gateway_ip(self.logger)
         if not gateway_ip:
             return {
                 "success": False,
@@ -184,7 +187,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
         # Step 10: Get next available VM IP
         self.logger.info("Step 10: Getting next VM IP...")
-        vm_ip = self._get_next_vm_ip(gateway_ip)
+        vm_ip = get_next_vm_ip(gateway_ip)
         self.logger.info("VM IP: %s", vm_ip)
 
         return {
@@ -380,7 +383,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
         )
         # Ubuntu requires minimum 2G RAM for installation
         memory = config.resource_config.memory or self.DEFAULT_MEMORY
-        if self._parse_memory_gb(memory) < 2:
+        if parse_memory_gb(memory) < 2:
             self.logger.info(
                 _("Overriding memory %s to %s (Ubuntu minimum requirement)"),
                 memory,
@@ -527,12 +530,13 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
             # Step 19: Save metadata
             self.logger.info("Step 19: Saving VM metadata...")
-            self._save_vm_metadata(
+            save_vm_metadata(
                 config.vm_name,
                 fqdn_hostname,
                 config.distribution,
                 ubuntu_version,
                 vm_ip,
+                self.logger,
             )
             self.logger.info("Metadata saved")
 
@@ -552,7 +556,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
             # Step 21: Clean up installation artifacts
             self.logger.info("Step 21: Cleaning up installation artifacts...")
-            self._cleanup_installation_artifacts(serial_iso_path, config.vm_name)
+            cleanup_installation_artifacts(serial_iso_path, config.vm_name, self.logger)
 
             await self.launcher.send_progress(
                 "complete", _("Ubuntu VM creation complete")
@@ -583,22 +587,6 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
                 "Exception during Ubuntu VM creation: %s", error, exc_info=True
             )
             return {"success": False, "error": str(error)}
-
-    def _validate_config(self, config: VmmVmConfig) -> Dict[str, Any]:
-        """Validate VM configuration."""
-        if not config.distribution:
-            return {"success": False, "error": _("Distribution is required")}
-        if not config.vm_name:
-            return {"success": False, "error": _("VM name is required")}
-        if not config.hostname:
-            return {"success": False, "error": _("Hostname is required")}
-        if not config.username:
-            return {"success": False, "error": _("Username is required")}
-        if not config.password_hash:
-            return {"success": False, "error": _("Password is required")}
-        if not config.server_config.server_url:
-            return {"success": False, "error": _("Server URL is required")}
-        return {"success": True}
 
     async def _check_vmm_ready(self) -> Dict[str, Any]:
         """Check if VMM is available and running."""
@@ -720,7 +708,7 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
             if not vm_running:
                 # VM stopped - verify installation actually completed
                 # by checking disk size (should be at least 2GB after install)
-                disk_size = self._get_disk_size(disk_path)
+                disk_size = get_disk_size(disk_path, self.logger)
                 elapsed = int(time.time() - start_time)
 
                 if disk_size >= self.MIN_INSTALLED_DISK_SIZE:
@@ -767,128 +755,6 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
             "error": _("Timeout waiting for installation to complete"),
         }
 
-    def _get_disk_size(self, disk_path: str) -> int:
-        """
-        Get the actual size of a disk image (not sparse size).
-
-        Args:
-            disk_path: Path to the disk image
-
-        Returns:
-            Actual disk size in bytes (not virtual size)
-        """
-        try:
-            # Use 'du -k' for OpenBSD compatibility (returns size in KB)
-            # OpenBSD du doesn't have -b flag
-            result = subprocess.run(  # nosec B603 B607
-                ["du", "-k", disk_path],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-            if result.returncode == 0:
-                # Output format: "size_in_kb\tpath"
-                size_kb_str = result.stdout.strip().split()[0]
-                return int(size_kb_str) * 1024  # Convert KB to bytes
-        except Exception as error:
-            self.logger.warning(_("Failed to get disk size: %s"), error)
-
-        # Fallback to stat if du fails
-        try:
-            return Path(disk_path).stat().st_size
-        except Exception:
-            return 0
-
-    def _cleanup_installation_artifacts(
-        self, serial_iso_path: str, vm_name: str
-    ) -> None:
-        """
-        Clean up installation artifacts after successful VM creation.
-
-        Removes:
-        - Serial console ISO (large file, no longer needed after install)
-        - Cidata ISO (small, no longer needed after install)
-        - Optionally the ubuntu-data directory (keeps for debugging by default)
-
-        Args:
-            serial_iso_path: Path to the serial console ISO
-            vm_name: Name of the VM
-        """
-        # Remove serial console ISO (typically ~3GB for Ubuntu)
-        try:
-            iso_path = Path(serial_iso_path)
-            if iso_path.exists():
-                iso_size_mb = iso_path.stat().st_size // (1024 * 1024)
-                iso_path.unlink()
-                self.logger.info(
-                    _("Removed serial console ISO: %s (%d MB freed)"),
-                    serial_iso_path,
-                    iso_size_mb,
-                )
-        except Exception as error:
-            self.logger.warning(
-                _("Failed to remove serial console ISO %s: %s"),
-                serial_iso_path,
-                error,
-            )
-
-        # Remove cidata ISO (small, ~365KB)
-        cidata_iso_path = Path(f"/var/vmm/cidata/cidata-{vm_name}.iso")
-        try:
-            if cidata_iso_path.exists():
-                cidata_iso_path.unlink()
-                self.logger.info(_("Removed cidata ISO: %s"), cidata_iso_path)
-        except Exception as error:
-            self.logger.warning(
-                _("Failed to remove cidata ISO %s: %s"),
-                cidata_iso_path,
-                error,
-            )
-
-        # Remove httpd autoinstall directory (no longer needed after install)
-        httpd_dir = Path(f"/var/www/htdocs/ubuntu/{vm_name}")
-        try:
-            if httpd_dir.exists():
-                shutil.rmtree(httpd_dir)
-                self.logger.info(
-                    _("Removed httpd autoinstall directory: %s"), httpd_dir
-                )
-        except Exception as error:
-            self.logger.warning(
-                _("Failed to remove httpd directory %s: %s"), httpd_dir, error
-            )
-
-        # Keep ubuntu-data directory for debugging/reference
-        # It's small and useful for troubleshooting
-        self.logger.info(
-            _("Keeping ubuntu-data directory for reference: /var/vmm/ubuntu-data/%s"),
-            vm_name,
-        )
-
-    def _parse_memory_gb(self, memory_str: str) -> float:
-        """
-        Parse memory string to GB value.
-
-        Args:
-            memory_str: Memory string like "1G", "2G", "512M"
-
-        Returns:
-            Memory in GB as float
-        """
-        memory_str = memory_str.upper().strip()
-        try:
-            if memory_str.endswith("G"):
-                return float(memory_str[:-1])
-            if memory_str.endswith("M"):
-                return float(memory_str[:-1]) / 1024
-            if memory_str.endswith("K"):
-                return float(memory_str[:-1]) / (1024 * 1024)
-            # Assume bytes, convert to GB
-            return float(memory_str) / (1024 * 1024 * 1024)
-        except ValueError:
-            return 0.0
-
     async def _get_agent_version(self) -> tuple:
         """Get latest sysmanage-agent version from GitHub."""
         await self.launcher.send_progress(
@@ -901,50 +767,6 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
                 _("Failed to check GitHub version: %s") % version_result.get("error")
             )
         return version_result.get("version"), version_result.get("tag_name")
-
-    def _get_gateway_ip(self) -> Optional[str]:
-        """Get gateway IP from vether0 interface."""
-        try:
-            result = subprocess.run(  # nosec B603 B607
-                ["ifconfig", "vether0"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            for line in result.stdout.split("\n"):
-                if "inet " in line and "netmask" in line:
-                    return line.split()[1]
-            return None
-        except Exception as error:
-            self.logger.error(_("Failed to get vether0 IP: %s"), error)
-            return None
-
-    def _get_next_vm_ip(self, gateway_ip: str) -> str:
-        """Get the next available VM IP address."""
-        parts = gateway_ip.rsplit(".", 1)
-        subnet_prefix = parts[0]
-
-        # Find used IPs from metadata
-        used_ips = set()
-        metadata_dir = Path(VMM_METADATA_DIR)
-        if metadata_dir.exists():
-            for metadata_file in metadata_dir.glob("*.json"):
-                try:
-                    with open(metadata_file, "r", encoding="utf-8") as file_handle:
-                        metadata = json.load(file_handle)
-                        if "vm_ip" in metadata:
-                            used_ips.add(metadata["vm_ip"])
-                except (OSError, json.JSONDecodeError):
-                    pass
-
-        # Find next available IP starting from .100
-        for i in range(100, 255):
-            candidate_ip = f"{subnet_prefix}.{i}"
-            if candidate_ip not in used_ips:
-                return candidate_ip
-
-        return f"{subnet_prefix}.100"
 
     async def _launch_vm_from_iso(
         self,
@@ -1011,33 +833,3 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
 
         except Exception as error:
             return {"success": False, "error": str(error)}
-
-    def _save_vm_metadata(
-        self,
-        vm_name: str,
-        hostname: str,
-        distribution: str,
-        ubuntu_version: str,
-        vm_ip: str,
-    ) -> None:
-        """Save VM metadata to JSON file."""
-        metadata_dir = Path(VMM_METADATA_DIR)
-        metadata_dir.mkdir(parents=True, exist_ok=True)
-
-        metadata = {
-            "vm_name": vm_name,
-            "hostname": hostname,
-            "vm_ip": vm_ip,
-            "distribution": {
-                "distribution_name": "Ubuntu",
-                "distribution_version": ubuntu_version,
-            },
-            "distribution_string": distribution,
-            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        }
-
-        metadata_path = metadata_dir / f"{vm_name}.json"
-        with open(metadata_path, "w", encoding="utf-8") as metadata_file:
-            json.dump(metadata, metadata_file, indent=2)
-
-        self.logger.info(_("Saved VM metadata to %s"), metadata_path)

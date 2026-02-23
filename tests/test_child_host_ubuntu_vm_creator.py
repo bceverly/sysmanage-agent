@@ -25,6 +25,15 @@ from src.sysmanage_agent.operations.child_host_types import (
     VmmVmConfig,
 )
 from src.sysmanage_agent.operations.child_host_ubuntu_vm_creator import UbuntuVmCreator
+from src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers import (
+    cleanup_installation_artifacts,
+    get_disk_size,
+    get_gateway_ip,
+    get_next_vm_ip,
+    parse_memory_gb,
+    save_vm_metadata,
+    validate_vm_config,
+)
 
 
 def create_valid_config(config_params=None):
@@ -117,22 +126,17 @@ class TestUbuntuVmCreatorInit:
 class TestValidateConfig:
     """Test cases for configuration validation."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
-
     def test_validate_config_success(self):
         """Test validation succeeds with valid config."""
         config = create_valid_config()
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is True
 
     def test_validate_config_missing_distribution(self):
         """Test validation fails without distribution."""
         config = create_valid_config({"distribution": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "Distribution" in result["error"]
@@ -140,7 +144,7 @@ class TestValidateConfig:
     def test_validate_config_missing_vm_name(self):
         """Test validation fails without VM name."""
         config = create_valid_config({"vm_name": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "VM name" in result["error"]
@@ -148,7 +152,7 @@ class TestValidateConfig:
     def test_validate_config_missing_hostname(self):
         """Test validation fails without hostname."""
         config = create_valid_config({"hostname": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "Hostname" in result["error"]
@@ -156,7 +160,7 @@ class TestValidateConfig:
     def test_validate_config_missing_username(self):
         """Test validation fails without username."""
         config = create_valid_config({"username": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "Username" in result["error"]
@@ -164,7 +168,7 @@ class TestValidateConfig:
     def test_validate_config_missing_password(self):
         """Test validation fails without password hash."""
         config = create_valid_config({"password_hash": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "Password" in result["error"]
@@ -172,7 +176,7 @@ class TestValidateConfig:
     def test_validate_config_missing_server_url(self):
         """Test validation fails without server URL."""
         config = create_valid_config({"server_url": ""})
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         assert "Server URL" in result["error"]
@@ -181,43 +185,38 @@ class TestValidateConfig:
 class TestParseMemoryGb:
     """Test cases for memory string parsing."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
-
     def test_parse_memory_gb_gigabytes(self):
         """Test parsing gigabyte memory strings."""
-        assert self.creator._parse_memory_gb("1G") == 1.0
-        assert self.creator._parse_memory_gb("2G") == 2.0
-        assert self.creator._parse_memory_gb("4g") == 4.0
-        assert self.creator._parse_memory_gb("0.5G") == 0.5
+        assert parse_memory_gb("1G") == 1.0
+        assert parse_memory_gb("2G") == 2.0
+        assert parse_memory_gb("4g") == 4.0
+        assert parse_memory_gb("0.5G") == 0.5
 
     def test_parse_memory_gb_megabytes(self):
         """Test parsing megabyte memory strings."""
-        assert self.creator._parse_memory_gb("1024M") == 1.0
-        assert self.creator._parse_memory_gb("512M") == 0.5
-        assert self.creator._parse_memory_gb("2048m") == 2.0
+        assert parse_memory_gb("1024M") == 1.0
+        assert parse_memory_gb("512M") == 0.5
+        assert parse_memory_gb("2048m") == 2.0
 
     def test_parse_memory_gb_kilobytes(self):
         """Test parsing kilobyte memory strings."""
-        result = self.creator._parse_memory_gb("1048576K")
+        result = parse_memory_gb("1048576K")
         assert result == pytest.approx(1.0, rel=1e-6)
 
     def test_parse_memory_gb_bytes(self):
         """Test parsing byte values (no suffix)."""
-        result = self.creator._parse_memory_gb("1073741824")
+        result = parse_memory_gb("1073741824")
         assert result == pytest.approx(1.0, rel=1e-6)
 
     def test_parse_memory_gb_invalid(self):
         """Test parsing invalid memory strings."""
-        assert self.creator._parse_memory_gb("invalid") == 0.0
-        assert self.creator._parse_memory_gb("") == 0.0
-        assert self.creator._parse_memory_gb("abc") == 0.0
+        assert parse_memory_gb("invalid") == 0.0
+        assert parse_memory_gb("") == 0.0
+        assert parse_memory_gb("abc") == 0.0
 
     def test_parse_memory_gb_whitespace(self):
         """Test parsing memory strings with whitespace."""
-        assert self.creator._parse_memory_gb("  2G  ") == 2.0
+        assert parse_memory_gb("  2G  ") == 2.0
 
 
 class TestCheckVmmReady:
@@ -278,9 +277,8 @@ class TestGetGatewayIp:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_gateway_ip_success(self, mock_run):
         """Test successful gateway IP extraction."""
         mock_run.return_value = Mock(
@@ -289,25 +287,25 @@ class TestGetGatewayIp:
             "        inet 192.168.100.1 netmask 0xffffff00 broadcast 192.168.100.255\n"
         )
 
-        result = self.creator._get_gateway_ip()
+        result = get_gateway_ip(self.mock_logger)
 
         assert result == "192.168.100.1"
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_gateway_ip_no_interface(self, mock_run):
         """Test gateway IP when vether0 doesn't exist."""
         mock_run.return_value = Mock(stdout="")
 
-        result = self.creator._get_gateway_ip()
+        result = get_gateway_ip(self.mock_logger)
 
         assert result is None
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_gateway_ip_exception(self, mock_run):
         """Test gateway IP extraction with exception."""
         mock_run.side_effect = Exception("Command failed")
 
-        result = self.creator._get_gateway_ip()
+        result = get_gateway_ip(self.mock_logger)
 
         assert result is None
         self.mock_logger.error.assert_called()
@@ -316,23 +314,18 @@ class TestGetGatewayIp:
 class TestGetNextVmIp:
     """Test cases for VM IP allocation."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
-
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_get_next_vm_ip_first_vm(self, mock_path_class):
         """Test getting first VM IP when no VMs exist."""
         mock_metadata_dir = Mock()
         mock_metadata_dir.exists.return_value = False
         mock_path_class.return_value = mock_metadata_dir
 
-        result = self.creator._get_next_vm_ip("192.168.100.1")
+        result = get_next_vm_ip("192.168.100.1")
 
         assert result == "192.168.100.100"
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_get_next_vm_ip_with_existing(self, mock_path_class):
         """Test getting next VM IP with existing VMs."""
         mock_metadata_dir = Mock()
@@ -361,11 +354,11 @@ class TestGetNextVmIp:
                     {"vm_ip": "192.168.100.101"},
                 ]
 
-                result = self.creator._get_next_vm_ip("192.168.100.1")
+                result = get_next_vm_ip("192.168.100.1")
 
         assert result == "192.168.100.102"
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_get_next_vm_ip_json_error(self, mock_path_class):
         """Test getting VM IP when metadata file is corrupt."""
         mock_metadata_dir = Mock()
@@ -383,7 +376,7 @@ class TestGetNextVmIp:
             with patch("json.load") as mock_json_load:
                 mock_json_load.side_effect = json.JSONDecodeError("error", "doc", 0)
 
-                result = self.creator._get_next_vm_ip("192.168.100.1")
+                result = get_next_vm_ip("192.168.100.1")
 
         # Should still return first available IP since error is silently handled
         assert result == "192.168.100.100"
@@ -395,9 +388,8 @@ class TestGetDiskSize:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_disk_size_success(self, mock_run):
         """Test successful disk size retrieval."""
         # du -k returns size in KB
@@ -406,13 +398,13 @@ class TestGetDiskSize:
             stdout="2097152\t/var/vmm/test.qcow2\n",
         )
 
-        result = self.creator._get_disk_size("/var/vmm/test.qcow2")
+        result = get_disk_size("/var/vmm/test.qcow2", self.mock_logger)
 
         # 2097152 KB = 2GB in bytes
         assert result == 2097152 * 1024
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_get_disk_size_du_fails_fallback_stat(self, mock_path_class, mock_run):
         """Test fallback to stat when du fails."""
         mock_run.return_value = Mock(returncode=1, stdout="")
@@ -421,12 +413,12 @@ class TestGetDiskSize:
         mock_path.stat.return_value = Mock(st_size=1073741824)  # 1GB
         mock_path_class.return_value = mock_path
 
-        result = self.creator._get_disk_size("/var/vmm/test.qcow2")
+        result = get_disk_size("/var/vmm/test.qcow2", self.mock_logger)
 
         assert result == 1073741824
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_get_disk_size_all_fail(self, mock_path_class, mock_run):
         """Test disk size returns 0 when all methods fail."""
         mock_run.side_effect = Exception("Command failed")
@@ -435,7 +427,7 @@ class TestGetDiskSize:
         mock_path.stat.side_effect = Exception("Stat failed")
         mock_path_class.return_value = mock_path
 
-        result = self.creator._get_disk_size("/var/vmm/test.qcow2")
+        result = get_disk_size("/var/vmm/test.qcow2", self.mock_logger)
 
         assert result == 0
 
@@ -575,7 +567,7 @@ class TestWaitForInstallationComplete:
     )
     @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.time.time")
     @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.asyncio.sleep")
-    @patch.object(UbuntuVmCreator, "_get_disk_size")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.get_disk_size")
     async def test_wait_installation_complete_success(
         self, mock_disk_size, _mock_sleep, mock_time, mock_run_cmd
     ):
@@ -600,7 +592,7 @@ class TestWaitForInstallationComplete:
     )
     @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.time.time")
     @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.asyncio.sleep")
-    @patch.object(UbuntuVmCreator, "_get_disk_size")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.get_disk_size")
     async def test_wait_installation_vm_crashed(
         self, mock_disk_size, _mock_sleep, mock_time, mock_run_cmd
     ):
@@ -733,9 +725,8 @@ class TestSaveVmMetadata:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.time.strftime")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.time.strftime")
     def test_save_metadata_success(self, mock_strftime):
         """Test successful metadata saving."""
         mock_strftime.return_value = "2024-01-15T12:00:00Z"
@@ -743,15 +734,16 @@ class TestSaveVmMetadata:
         # Use a real temporary directory for this test
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch(
-                "src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.VMM_METADATA_DIR",
+                "src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.VMM_METADATA_DIR",
                 tmpdir,
             ):
-                self.creator._save_vm_metadata(
+                save_vm_metadata(
                     "test-ubuntu",
                     "test-ubuntu.example.com",
                     "Ubuntu 24.04 LTS",
                     "24.04",
                     "192.168.100.100",
+                    self.mock_logger,
                 )
 
                 # Verify the file was created
@@ -775,10 +767,9 @@ class TestCleanupInstallationArtifacts:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.shutil.rmtree")
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.shutil.rmtree")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_cleanup_success(self, mock_path_class, mock_rmtree):
         """Test successful cleanup of installation artifacts."""
         mock_iso_path = Mock()
@@ -797,16 +788,16 @@ class TestCleanupInstallationArtifacts:
             mock_httpd_path,
         ]
 
-        self.creator._cleanup_installation_artifacts(
-            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu"
+        cleanup_installation_artifacts(
+            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu", self.mock_logger
         )
 
         mock_iso_path.unlink.assert_called_once()
         mock_cidata_path.unlink.assert_called_once()
         mock_rmtree.assert_called_once()
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.shutil.rmtree")
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.shutil.rmtree")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_cleanup_file_not_exists(self, mock_path_class, mock_rmtree):
         """Test cleanup when files don't exist."""
         mock_iso_path = Mock()
@@ -824,16 +815,16 @@ class TestCleanupInstallationArtifacts:
             mock_httpd_path,
         ]
 
-        self.creator._cleanup_installation_artifacts(
-            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu"
+        cleanup_installation_artifacts(
+            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu", self.mock_logger
         )
 
         mock_iso_path.unlink.assert_not_called()
         mock_cidata_path.unlink.assert_not_called()
         mock_rmtree.assert_not_called()
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.shutil.rmtree")
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.Path")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.shutil.rmtree")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.Path")
     def test_cleanup_handles_exceptions(self, mock_path_class, mock_rmtree):
         """Test cleanup handles exceptions gracefully."""
         mock_iso_path = Mock()
@@ -856,8 +847,8 @@ class TestCleanupInstallationArtifacts:
         ]
 
         # Should not raise, just log warnings
-        self.creator._cleanup_installation_artifacts(
-            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu"
+        cleanup_installation_artifacts(
+            "/var/vmm/iso/ubuntu-serial.iso", "test-ubuntu", self.mock_logger
         )
 
         # Verify warnings were logged
@@ -896,10 +887,10 @@ class TestPrepareVmEnvironment:
             UbuntuVmCreator, "_check_vmm_ready"
         ) as mock_check_vmm, patch.object(
             UbuntuVmCreator, "_get_agent_version"
-        ) as mock_get_agent, patch.object(
-            UbuntuVmCreator, "_get_gateway_ip"
-        ) as mock_get_gateway, patch.object(
-            UbuntuVmCreator, "_get_next_vm_ip"
+        ) as mock_get_agent, patch(
+            f"{module_path}.get_gateway_ip"
+        ) as mock_get_gateway, patch(
+            f"{module_path}.get_next_vm_ip"
         ) as mock_get_vm_ip:
 
             mock_extract_version.return_value = "24.04"
@@ -1007,7 +998,7 @@ class TestPrepareVmEnvironment:
     )
     @patch.object(UbuntuVmCreator, "_check_vmm_ready")
     @patch.object(UbuntuVmCreator, "_get_agent_version")
-    @patch.object(UbuntuVmCreator, "_get_gateway_ip")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.get_gateway_ip")
     async def test_prepare_environment_no_gateway(
         self,
         mock_get_gateway,
@@ -1048,7 +1039,7 @@ class TestPrepareVmEnvironment:
     )
     @patch.object(UbuntuVmCreator, "_check_vmm_ready")
     @patch.object(UbuntuVmCreator, "_get_agent_version")
-    @patch.object(UbuntuVmCreator, "_get_gateway_ip")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.get_gateway_ip")
     async def test_prepare_environment_no_dns(
         self,
         mock_get_gateway,
@@ -1364,8 +1355,12 @@ class TestCreateUbuntuVm:
     @patch.object(UbuntuVmCreator, "_prepare_vm_environment")
     @patch.object(UbuntuVmCreator, "_prepare_installation_resources")
     @patch.object(UbuntuVmCreator, "_run_installation")
-    @patch.object(UbuntuVmCreator, "_save_vm_metadata")
-    @patch.object(UbuntuVmCreator, "_cleanup_installation_artifacts")
+    @patch(
+        "src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.save_vm_metadata"
+    )
+    @patch(
+        "src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.cleanup_installation_artifacts"
+    )
     async def test_create_ubuntu_vm_success(
         self,
         mock_cleanup,
@@ -1499,8 +1494,12 @@ class TestCreateUbuntuVm:
     @patch.object(UbuntuVmCreator, "_prepare_vm_environment")
     @patch.object(UbuntuVmCreator, "_prepare_installation_resources")
     @patch.object(UbuntuVmCreator, "_run_installation")
-    @patch.object(UbuntuVmCreator, "_save_vm_metadata")
-    @patch.object(UbuntuVmCreator, "_cleanup_installation_artifacts")
+    @patch(
+        "src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.save_vm_metadata"
+    )
+    @patch(
+        "src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.cleanup_installation_artifacts"
+    )
     async def test_create_ubuntu_vm_persist_fails(
         self,
         _mock_cleanup,
@@ -1545,19 +1544,18 @@ class TestEdgeCases:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_logger = Mock()
-        self.creator = UbuntuVmCreator(Mock(), self.mock_logger, Mock(), Mock(), Mock())
 
     def test_parse_memory_unusual_values(self):
         """Test parsing unusual memory values."""
         # Very large value
-        assert self.creator._parse_memory_gb("64G") == 64.0
+        assert parse_memory_gb("64G") == 64.0
 
         # Decimal values
-        assert self.creator._parse_memory_gb("1.5G") == 1.5
+        assert parse_memory_gb("1.5G") == 1.5
 
         # Mixed case
-        assert self.creator._parse_memory_gb("2g") == 2.0
-        assert self.creator._parse_memory_gb("1024m") == 1.0
+        assert parse_memory_gb("2g") == 2.0
+        assert parse_memory_gb("1024m") == 1.0
 
     def test_validate_config_all_missing(self):
         """Test validation with completely empty config."""
@@ -1572,13 +1570,13 @@ class TestEdgeCases:
             server_config=VmmServerConfig(server_url=""),
         )
 
-        result = self.creator._validate_config(config)
+        result = validate_vm_config(config)
 
         assert result["success"] is False
         # Should fail on first missing field (distribution)
         assert "Distribution" in result["error"]
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_gateway_ip_multiple_interfaces(self, mock_run):
         """Test gateway IP extraction with multiple IPs."""
         mock_run.return_value = Mock(
@@ -1588,12 +1586,12 @@ class TestEdgeCases:
             "        inet6 fe80::1%vether0 prefixlen 64 scopeid 0x4\n"
         )
 
-        result = self.creator._get_gateway_ip()
+        result = get_gateway_ip(self.mock_logger)
 
         # Should return first inet address
         assert result == "192.168.100.1"
 
-    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_creator.subprocess.run")
+    @patch("src.sysmanage_agent.operations.child_host_ubuntu_vm_helpers.subprocess.run")
     def test_get_disk_size_large_disk(self, mock_run):
         """Test disk size retrieval for large disk."""
         # 100GB in KB
@@ -1602,6 +1600,6 @@ class TestEdgeCases:
             stdout="104857600\t/var/vmm/large.qcow2\n",
         )
 
-        result = self.creator._get_disk_size("/var/vmm/large.qcow2")
+        result = get_disk_size("/var/vmm/large.qcow2", self.mock_logger)
 
         assert result == 104857600 * 1024  # 100GB in bytes

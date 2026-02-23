@@ -9,8 +9,8 @@ import logging
 from typing import Any, Dict
 
 from src.sysmanage_agent.operations.antivirus_operations import AntivirusOperations
-from src.sysmanage_agent.operations.certificate_operations import CertificateOperations
 from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
+from src.sysmanage_agent.operations.generic_deployment import GenericDeployment
 from src.sysmanage_agent.operations.hostname_operations import HostnameOperations
 from src.sysmanage_agent.operations.opentelemetry_operations import (
     OpenTelemetryOperations,
@@ -19,7 +19,6 @@ from src.sysmanage_agent.operations.package_operations import PackageOperations
 from src.sysmanage_agent.operations.repository_operations import (
     ThirdPartyRepositoryOperations,
 )
-from src.sysmanage_agent.operations.ssh_key_operations import SSHKeyOperations
 from src.sysmanage_agent.operations.system_control import SystemControl
 from src.sysmanage_agent.operations.ubuntu_pro_operations import UbuntuProOperations
 from src.sysmanage_agent.operations.user_account_operations import UserAccountOperations
@@ -34,17 +33,16 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(__name__)
 
         # Initialize specialized operation handlers
-        self.certificate_ops = CertificateOperations(agent_instance)
         self.system_control = SystemControl(agent_instance)
         self.package_ops = PackageOperations(agent_instance)
         self.otel_ops = OpenTelemetryOperations(agent_instance)
         self.antivirus_ops = AntivirusOperations(agent_instance)
         self.firewall_ops = FirewallOperations(agent_instance)
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)
-        self.ssh_ops = SSHKeyOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
         self.user_account_ops = UserAccountOperations(agent_instance)
         self.hostname_ops = HostnameOperations(agent_instance)
+        self.generic_deployment = GenericDeployment(agent_instance)
 
     # ========== System Control Delegation ==========
 
@@ -172,32 +170,6 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         return (
             await self.ubuntu_pro_ops._send_os_update_after_pro_change()  # pylint: disable=protected-access
         )
-
-    # ========== SSH Key Operations Delegation ==========
-
-    async def deploy_ssh_keys(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy SSH keys to a user's .ssh directory with proper permissions."""
-        return await self.ssh_ops.deploy_ssh_keys(parameters)
-
-    def _validate_ssh_key_inputs(self, username: str, ssh_keys: list) -> dict:
-        """Validate SSH key deployment inputs."""
-        return (
-            self.ssh_ops._validate_ssh_key_inputs(  # pylint: disable=protected-access
-                username, ssh_keys
-            )
-        )
-
-    def _setup_ssh_environment(self, username: str) -> Dict[str, Any]:
-        """Setup SSH environment for a user."""
-        return self.ssh_ops._setup_ssh_environment(  # pylint: disable=protected-access
-            username
-        )
-
-    # ========== Certificate Operations Delegation ==========
-
-    async def deploy_certificates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy SSL certificates to the appropriate system directory."""
-        return await self.certificate_ops.deploy_certificates(parameters)
 
     # ========== OpenTelemetry Operations Delegation ==========
 
@@ -346,3 +318,15 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     async def change_hostname(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Change the system hostname."""
         return await self.hostname_ops.change_hostname(parameters)
+
+    # ========== Generic Deployment Operations Delegation ==========
+
+    async def deploy_files(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy files to the filesystem."""
+        return await self.generic_deployment.deploy_files(parameters)
+
+    async def execute_command_sequence(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Execute a command sequence."""
+        return await self.generic_deployment.execute_command_sequence(parameters)

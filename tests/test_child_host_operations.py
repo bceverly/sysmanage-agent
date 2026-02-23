@@ -420,47 +420,6 @@ class TestCreateChildHost:
     """Tests for create_child_host method."""
 
     @pytest.mark.asyncio
-    async def test_create_wsl_instance(self, child_host_ops):
-        """Test creating a WSL instance."""
-        child_host_ops.wsl_ops.create_wsl_instance = AsyncMock(
-            return_value={"success": True, "child_name": "Ubuntu"}
-        )
-
-        result = await child_host_ops.create_child_host(
-            {
-                "child_type": "wsl",
-                "distribution": "Ubuntu-24.04",
-                "hostname": "test.example.com",
-                "username": "admin",
-                "password_hash": "$6$...",
-                "server_url": "https://server.example.com",
-            }
-        )
-
-        assert result["success"] is True
-        assert result["child_name"] == "Ubuntu"
-
-    @pytest.mark.asyncio
-    async def test_create_lxd_container(self, child_host_ops):
-        """Test creating an LXD container."""
-        child_host_ops.lxd_ops.create_lxd_container = AsyncMock(
-            return_value={"success": True, "child_name": "test-container"}
-        )
-
-        result = await child_host_ops.create_child_host(
-            {
-                "child_type": "lxd",
-                "distribution": "ubuntu:22.04",
-                "hostname": "test.example.com",
-                "username": "admin",
-                "password_hash": "$6$...",
-                "server_url": "https://server.example.com",
-            }
-        )
-
-        assert result["success"] is True
-
-    @pytest.mark.asyncio
     async def test_create_vmm_vm(self, child_host_ops):
         """Test creating a VMM VM."""
         child_host_ops.vmm_ops.create_vmm_vm = AsyncMock(
@@ -540,70 +499,6 @@ class TestCreateChildHost:
 
         assert result["success"] is False
         assert "Unsupported" in result["error"]
-
-    @pytest.mark.asyncio
-    async def test_create_with_json_agent_commands(self, child_host_ops):
-        """Test creating child host with JSON string for agent_install_commands."""
-        child_host_ops.wsl_ops.create_wsl_instance = AsyncMock(
-            return_value={"success": True, "child_name": "Ubuntu"}
-        )
-
-        result = await child_host_ops.create_child_host(
-            {
-                "child_type": "wsl",
-                "distribution": "Ubuntu-24.04",
-                "hostname": "test.example.com",
-                "username": "admin",
-                "password_hash": "$6$...",
-                "server_url": "https://server.example.com",
-                "agent_install_commands": '["apt update", "apt install -y sysmanage-agent"]',
-            }
-        )
-
-        assert result["success"] is True
-
-    @pytest.mark.asyncio
-    async def test_create_with_invalid_json_agent_commands(self, child_host_ops):
-        """Test creating child host with invalid JSON for agent_install_commands."""
-        child_host_ops.wsl_ops.create_wsl_instance = AsyncMock(
-            return_value={"success": True, "child_name": "Ubuntu"}
-        )
-
-        result = await child_host_ops.create_child_host(
-            {
-                "child_type": "wsl",
-                "distribution": "Ubuntu-24.04",
-                "hostname": "test.example.com",
-                "username": "admin",
-                "password_hash": "$6$...",
-                "server_url": "https://server.example.com",
-                "agent_install_commands": "invalid json [",
-            }
-        )
-
-        # Should still succeed, invalid JSON becomes empty list
-        assert result["success"] is True
-
-    @pytest.mark.asyncio
-    async def test_create_with_auto_approve_token(self, child_host_ops):
-        """Test creating child host with auto_approve_token."""
-        child_host_ops.wsl_ops.create_wsl_instance = AsyncMock(
-            return_value={"success": True, "child_name": "Ubuntu"}
-        )
-
-        result = await child_host_ops.create_child_host(
-            {
-                "child_type": "wsl",
-                "distribution": "Ubuntu-24.04",
-                "hostname": "test.example.com",
-                "username": "admin",
-                "password_hash": "$6$...",
-                "server_url": "https://server.example.com",
-                "auto_approve_token": "abc123",
-            }
-        )
-
-        assert result["success"] is True
 
 
 class TestEnableWsl:

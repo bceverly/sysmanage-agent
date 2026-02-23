@@ -22,7 +22,6 @@ import platform
 from typing import Any, Dict
 
 from src.sysmanage_agent.operations.child_host_types import (
-    LxdContainerConfig,
     VmmResourceConfig,
     VmmServerConfig,
     VmmVmConfig,
@@ -390,37 +389,6 @@ class ChildHostOperations:
             distribution,
             hostname,
         )
-
-        if child_type == "wsl":
-            return await self.wsl_ops.create_wsl_instance(
-                distribution=distribution,
-                hostname=hostname,
-                username=username,
-                password_hash=password_hash,
-                server_url=server_url,
-                agent_install_commands=agent_install_commands,
-                listing_helper=self.listing_helper,
-                server_port=server_port,
-                use_https=use_https,
-                auto_approve_token=auto_approve_token,
-            )
-
-        if child_type == "lxd":
-            # For LXD, container_name comes from distribution (but the user also provides name)
-            container_name = parameters.get("container_name") or hostname.split(".")[0]
-            config = LxdContainerConfig(
-                distribution=distribution,
-                container_name=container_name,
-                hostname=hostname,
-                username=username,
-                password_hash=password_hash,
-                server_url=server_url,
-                agent_install_commands=agent_install_commands,
-                server_port=server_port,
-                use_https=use_https,
-                auto_approve_token=auto_approve_token,
-            )
-            return await self.lxd_ops.create_lxd_container(config)
 
         if child_type == "vmm":
             # For VMM, vm_name comes from hostname or explicit parameter

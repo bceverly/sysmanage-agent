@@ -858,74 +858,6 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             assert result == {"vim": "8.2", "curl": "7.68"}
             mock_versions.assert_called_once_with(["vim", "curl"])
 
-    # ========== SSH Key Operations Delegation Tests ==========
-
-    @pytest.mark.asyncio
-    async def test_deploy_ssh_keys_delegation(self):
-        """Test deploy_ssh_keys delegates to ssh_ops."""
-        with patch.object(
-            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.return_value = {"success": True, "result": "Keys deployed"}
-
-            parameters = {
-                "username": "testuser",
-                "ssh_keys": ["ssh-rsa AAAA..."],
-            }
-            result = await self.system_ops.deploy_ssh_keys(parameters)
-
-            assert result["success"] is True
-            mock_deploy.assert_called_once_with(parameters)
-
-    def test_validate_ssh_key_inputs_delegation(self):
-        """Test _validate_ssh_key_inputs delegates to ssh_ops."""
-        with patch.object(
-            self.system_ops.ssh_ops, "_validate_ssh_key_inputs"
-        ) as mock_validate:
-            mock_validate.return_value = {"valid": True}
-
-            result = self.system_ops._validate_ssh_key_inputs(
-                "testuser", ["ssh-rsa AAAA..."]
-            )
-
-            assert result["valid"] is True
-            mock_validate.assert_called_once_with("testuser", ["ssh-rsa AAAA..."])
-
-    def test_setup_ssh_environment_delegation(self):
-        """Test _setup_ssh_environment delegates to ssh_ops."""
-        with patch.object(
-            self.system_ops.ssh_ops, "_setup_ssh_environment"
-        ) as mock_setup:
-            mock_setup.return_value = {"success": True, "ssh_dir": "/home/user/.ssh"}
-
-            result = self.system_ops._setup_ssh_environment("testuser")
-
-            assert result["success"] is True
-            mock_setup.assert_called_once_with("testuser")
-
-    # ========== Certificate Operations Delegation Tests ==========
-
-    @pytest.mark.asyncio
-    async def test_deploy_certificates_delegation(self):
-        """Test deploy_certificates delegates to certificate_ops."""
-        with patch.object(
-            self.system_ops.certificate_ops,
-            "deploy_certificates",
-            new_callable=AsyncMock,
-        ) as mock_deploy:
-            mock_deploy.return_value = {
-                "success": True,
-                "result": "Certificates deployed",
-            }
-
-            parameters = {
-                "certificates": [{"name": "cert.pem", "content": "-----BEGIN..."}]
-            }
-            result = await self.system_ops.deploy_certificates(parameters)
-
-            assert result["success"] is True
-            mock_deploy.assert_called_once_with(parameters)
-
     # ========== OpenTelemetry Operations Delegation Tests ==========
 
     @pytest.mark.asyncio
@@ -1363,14 +1295,12 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
     def test_init_all_operation_handlers(self):
         """Test that all operation handlers are initialized."""
-        assert self.system_ops.certificate_ops is not None
         assert self.system_ops.system_control is not None
         assert self.system_ops.package_ops is not None
         assert self.system_ops.otel_ops is not None
         assert self.system_ops.antivirus_ops is not None
         assert self.system_ops.firewall_ops is not None
         assert self.system_ops.repo_ops is not None
-        assert self.system_ops.ssh_ops is not None
         assert self.system_ops.ubuntu_pro_ops is not None
         assert self.system_ops.user_account_ops is not None
         assert self.system_ops.hostname_ops is not None
@@ -1404,41 +1334,6 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             assert result["success"] is False
             mock_install.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_deploy_certificates_with_empty_list(self):
-        """Test deploy_certificates with empty certificate list."""
-        with patch.object(
-            self.system_ops.certificate_ops,
-            "deploy_certificates",
-            new_callable=AsyncMock,
-        ) as mock_deploy:
-            mock_deploy.return_value = {
-                "success": False,
-                "error": "No certificates provided",
-            }
-
-            result = await self.system_ops.deploy_certificates({"certificates": []})
-
-            assert result["success"] is False
-            mock_deploy.assert_called_once_with({"certificates": []})
-
-    @pytest.mark.asyncio
-    async def test_deploy_ssh_keys_with_invalid_user(self):
-        """Test deploy_ssh_keys with invalid username."""
-        with patch.object(
-            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.return_value = {
-                "success": False,
-                "error": "User does not exist",
-            }
-
-            parameters = {"username": "nonexistent", "ssh_keys": ["ssh-rsa AAAA..."]}
-            result = await self.system_ops.deploy_ssh_keys(parameters)
-
-            assert result["success"] is False
-            mock_deploy.assert_called_once_with(parameters)
 
     @pytest.mark.asyncio
     async def test_change_hostname_with_invalid_hostname(self):
@@ -1836,36 +1731,6 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
                 await self.system_ops.restart_firewall({})
 
             assert "Restart failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_deploy_ssh_keys_exception(self):
-        """Test deploy_ssh_keys when exception is raised."""
-        with patch.object(
-            self.system_ops.ssh_ops, "deploy_ssh_keys", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.side_effect = Exception("SSH key deployment failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.deploy_ssh_keys(
-                    {"username": "user", "ssh_keys": []}
-                )
-
-            assert "SSH key deployment failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_deploy_certificates_exception(self):
-        """Test deploy_certificates when exception is raised."""
-        with patch.object(
-            self.system_ops.certificate_ops,
-            "deploy_certificates",
-            new_callable=AsyncMock,
-        ) as mock_deploy:
-            mock_deploy.side_effect = Exception("Certificate deployment failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.deploy_certificates({"certificates": []})
-
-            assert "Certificate deployment failed" in str(excinfo.value)
 
     # ========== Return Value Validation Tests ==========
 

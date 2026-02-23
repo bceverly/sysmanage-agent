@@ -70,13 +70,15 @@ class SystemOperationsDelegator:
         """Disable Ubuntu Pro service."""
         return await self.system_ops.ubuntu_pro_disable_service(parameters)
 
-    async def deploy_ssh_keys(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy SSH keys to a user account."""
-        return await self.system_ops.deploy_ssh_keys(parameters)
+    async def deploy_files(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Deploy files to the filesystem."""
+        return await self.system_ops.deploy_files(parameters)
 
-    async def deploy_certificates(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy SSL certificates to the system."""
-        return await self.system_ops.deploy_certificates(parameters)
+    async def execute_command_sequence(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Execute a sequence of commands."""
+        return await self.system_ops.execute_command_sequence(parameters)
 
     async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Deploy OpenTelemetry collector to the system."""

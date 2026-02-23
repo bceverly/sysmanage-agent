@@ -222,32 +222,6 @@ class TestSystemOperationsDelegator:
         )
 
     @pytest.mark.asyncio
-    async def test_deploy_ssh_keys(self, delegator):
-        """Test deploy_ssh_keys delegation."""
-        delegator.system_ops.deploy_ssh_keys = AsyncMock(
-            return_value={"success": True, "result": "SSH keys deployed"}
-        )
-        parameters = {"username": "testuser", "keys": ["ssh-rsa AAA..."]}
-
-        result = await delegator.deploy_ssh_keys(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.deploy_ssh_keys.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_deploy_certificates(self, delegator):
-        """Test deploy_certificates delegation."""
-        delegator.system_ops.deploy_certificates = AsyncMock(
-            return_value={"success": True, "result": "Certificates deployed"}
-        )
-        parameters = {"certificates": [{"name": "cert1", "content": "..."}]}
-
-        result = await delegator.deploy_certificates(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.deploy_certificates.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
     async def test_deploy_opentelemetry(self, delegator):
         """Test deploy_opentelemetry delegation."""
         delegator.system_ops.deploy_opentelemetry = AsyncMock(
@@ -1228,8 +1202,6 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "ubuntu_pro_detach")
         assert hasattr(delegator, "ubuntu_pro_enable_service")
         assert hasattr(delegator, "ubuntu_pro_disable_service")
-        assert hasattr(delegator, "deploy_ssh_keys")
-        assert hasattr(delegator, "deploy_certificates")
         assert hasattr(delegator, "deploy_opentelemetry")
         assert hasattr(delegator, "remove_opentelemetry")
         assert hasattr(delegator, "list_third_party_repositories")

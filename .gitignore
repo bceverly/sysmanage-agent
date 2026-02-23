@@ -175,9 +175,6 @@ sysmanage-agent.yaml
 # GPG passphrase file (NEVER commit this!)
 .gpg-passphrase
 
-# Claude
-CLAUDE.md
-
 # Local sysmanage-agent database
 agent.db
 agent.db-journal

@@ -9,10 +9,6 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import run_command_async
-from src.sysmanage_agent.operations.child_host_lxd_container_creator import (
-    LxdContainerCreator,
-)
-from src.sysmanage_agent.operations.child_host_types import LxdContainerConfig
 
 # Module-level constants for repeated error messages
 _CONTAINER_NAME_REQUIRED = _("Container name is required")
@@ -33,7 +29,6 @@ class LxdOperations:
         self.agent = agent_instance
         self.logger = logger
         self.virtualization_checks = virtualization_checks
-        self.container_creator = LxdContainerCreator(agent_instance, logger)
 
     async def initialize_lxd(self, _parameters: dict) -> dict:
         """Initialize LXD on Ubuntu: install via snap, run lxd init, configure firewall."""
@@ -222,20 +217,6 @@ class LxdOperations:
         except Exception as error:
             self.logger.error(_("Error configuring firewall for LXD: %s"), error)
             return {"success": False, "error": str(error)}
-
-    async def create_lxd_container(self, config: LxdContainerConfig) -> dict:
-        """
-        Create a new LXD container with full installation flow.
-
-        Delegates to LxdContainerCreator for the full creation workflow.
-
-        Args:
-            config: LxdContainerConfig with all container settings
-
-        Returns:
-            Dict with success status and details
-        """
-        return await self.container_creator.create_lxd_container(config)
 
     async def start_child_host(self, parameters: dict) -> dict:
         """Start a stopped LXD container."""

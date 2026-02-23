@@ -3,8 +3,6 @@ Message Handler with Persistent Queue Integration.
 Provides reliable message delivery with queue-based persistence and message processing.
 """
 
-# pylint: disable=too-many-lines
-
 import asyncio
 import json
 import logging
@@ -19,6 +17,10 @@ import websockets
 from src.database.models import Priority, QueueDirection
 from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
+from src.sysmanage_agent.communication.message_logging_helpers import (
+    log_child_host_received,
+    log_duplicate_message,
+)
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 
 
@@ -385,13 +387,13 @@ class MessageHandler:
 
         # Detailed logging for create_child_host commands
         if command_type == "create_child_host":
-            self._log_child_host_received(data, queue_message_id, params)
+            log_child_host_received(self.logger, data, queue_message_id, params)
 
         # Check for duplicate messages (server retry)
         if queue_message_id and self.queue_manager.is_duplicate_message(
             queue_message_id
         ):
-            self._log_duplicate_message(command_type, params, queue_message_id)
+            log_duplicate_message(self.logger, command_type, params, queue_message_id)
             await self._send_command_acknowledgment(queue_message_id)
             return  # Duplicate handled
 
@@ -414,35 +416,6 @@ class MessageHandler:
             self.inbound_processing_task = asyncio.create_task(
                 self.process_inbound_queue()
             )
-
-    def _log_child_host_received(
-        self, data: Dict[str, Any], queue_message_id: str, params: Dict[str, Any]
-    ) -> None:
-        """Log detailed info when a create_child_host command is received."""
-        timestamp = datetime.now(timezone.utc).isoformat()
-        self.logger.info(
-            ">>> [CREATE_CHILD_HOST_RECEIVED] timestamp=%s queue_message_id=%s "
-            "message_id=%s vm_name=%s hostname=%s child_host_id=%s",
-            timestamp,
-            queue_message_id,
-            data.get("message_id"),
-            params.get("vm_name"),
-            params.get("hostname"),
-            params.get("child_host_id"),
-        )
-
-    def _log_duplicate_message(
-        self, command_type: str, params: Dict[str, Any], queue_message_id: str
-    ) -> None:
-        """Log when a duplicate message is skipped."""
-        if command_type == "create_child_host":
-            self.logger.info(
-                ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
-                "queue_message_id=%s",
-                params.get("vm_name"),
-                queue_message_id,
-            )
-        self.logger.info("Skipping duplicate command message: %s", queue_message_id)
 
     async def message_receiver(self):  # pylint: disable=too-many-branches
         """Handle incoming messages from server."""
