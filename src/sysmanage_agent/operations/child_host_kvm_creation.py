@@ -763,16 +763,12 @@ class KvmCreation:
             if not disk_result.get("success"):
                 return disk_result
 
-            provision_result = await asyncio.to_thread(
-                self._provision_vm, config
-            )
+            provision_result = await asyncio.to_thread(self._provision_vm, config)
             if not provision_result.get("success"):
                 return provision_result
 
             self.logger.info(_("Defining and starting VM"))
-            start_result = await asyncio.to_thread(
-                self._define_and_start_vm, config
-            )
+            start_result = await asyncio.to_thread(self._define_and_start_vm, config)
             if not start_result.get("success"):
                 return start_result
 

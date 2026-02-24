@@ -851,7 +851,10 @@ class BhyveOperations:
                 # Configure cloud-init or firstboot injection
                 ci_result = await asyncio.to_thread(
                     self._configure_cloud_init,
-                    config, is_freebsd, freebsd_provisioner, vm_dir,
+                    config,
+                    is_freebsd,
+                    freebsd_provisioner,
+                    vm_dir,
                 )
                 if not ci_result.get("success"):
                     return ci_result
