@@ -461,16 +461,17 @@ class TestGetAgentVersion:
 
     @pytest.mark.asyncio
     async def test_get_agent_version_failure(self):
-        """Test agent version retrieval failure."""
+        """Test agent version retrieval failure falls back to 'unknown'."""
         self.mock_github.get_latest_version.return_value = {
             "success": False,
             "error": "Rate limited",
         }
 
-        with pytest.raises(RuntimeError) as exc_info:
-            await self.creator._get_agent_version()
+        version, tag = await self.creator._get_agent_version()
 
-        assert "Rate limited" in str(exc_info.value)
+        assert version == "unknown"
+        assert tag == "unknown"
+        self.mock_logger.warning.assert_called()
 
 
 class TestStopVmForRestart:

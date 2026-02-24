@@ -1370,3 +1370,19 @@ msgstr "Error al enviar la actualización del estado de virtualización: %s"
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "qemu-img no encontrado, se intentará instalar: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "Configurando perfil predeterminado de LXD para compatibilidad de contenedores"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "No se pudo establecer security.nesting en el perfil predeterminado: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "Perfil predeterminado de LXD configurado con security.nesting=true"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "El comando agotó el tiempo de espera después de %d segundos: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "El comando agotó el tiempo de espera después de %d segundos"

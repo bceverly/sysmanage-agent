@@ -501,7 +501,9 @@ class TestWaitForVmIp:
         self, _mock_sleep, mock_time, mock_run_command, helper
     ):
         """Test timeout when IP never found."""
-        mock_time.side_effect = [0, 100, 200, 301]  # Exceeds 300 timeout
+        # Extra values needed because logging internally calls time.time()
+        # for log record creation (logger.info at start, logger.warning at end)
+        mock_time.side_effect = [0, 0, 100, 200, 301, 301]
         mock_run_command.return_value = Mock(returncode=0, stdout="")
 
         result = await helper.wait_for_vm_ip("test-vm", "tap0", timeout=300)
@@ -591,7 +593,9 @@ class TestWaitForSsh:
         self, mock_socket_class, _mock_sleep, mock_time, helper
     ):
         """Test SSH timeout when never available."""
-        mock_time.side_effect = [0, 60, 120, 181]  # Exceeds 180 timeout
+        # Extra values needed because logging internally calls time.time()
+        # for log record creation (logger.info at start, logger.warning at end)
+        mock_time.side_effect = [0, 0, 60, 120, 181, 181]
         mock_socket = MagicMock()
         mock_socket.connect_ex.return_value = 1  # Always fails
         mock_socket_class.return_value = mock_socket

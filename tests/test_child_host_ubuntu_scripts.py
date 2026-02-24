@@ -616,12 +616,13 @@ class TestUbuntuFirstbootScript:
         assert "/root/sysmanage_agent.whl" in script
         assert "pip3 install" in script
 
-    def test_generate_firstboot_script_github_fallback(self):
-        """Test that GitHub release fallback is included."""
+    def test_generate_firstboot_script_ppa_install(self):
+        """Test that Launchpad PPA installation is included."""
         script = generate_firstboot_script()
 
-        assert "github.com" in script
-        assert "releases/latest" in script
+        assert "ppa:bceverly/sysmanage-agent" in script
+        assert "add-apt-repository" in script
+        assert "apt-get install -y sysmanage-agent" in script
 
     def test_generate_firstboot_script_systemd_service(self):
         """Test that systemd service is created."""

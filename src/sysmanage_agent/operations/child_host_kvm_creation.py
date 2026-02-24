@@ -757,16 +757,22 @@ class KvmCreation:
                     "error": _("VM '%s' already exists") % config.vm_name,
                 }
 
-            disk_result = self._prepare_vm_disk(config)
+            # Run blocking disk/provisioning ops in a thread so the
+            # asyncio event loop stays responsive (WebSocket keepalive).
+            disk_result = await asyncio.to_thread(self._prepare_vm_disk, config)
             if not disk_result.get("success"):
                 return disk_result
 
-            provision_result = self._provision_vm(config)
+            provision_result = await asyncio.to_thread(
+                self._provision_vm, config
+            )
             if not provision_result.get("success"):
                 return provision_result
 
             self.logger.info(_("Defining and starting VM"))
-            start_result = self._define_and_start_vm(config)
+            start_result = await asyncio.to_thread(
+                self._define_and_start_vm, config
+            )
             if not start_result.get("success"):
                 return start_result
 
@@ -802,6 +808,7 @@ class KvmCreation:
                 "success": True,
                 "message": _("VM created successfully"),
                 "vm_name": config.vm_name,
+                "hostname": config.hostname,
                 "status": "running",
                 "ip_address": vm_ip,
                 "child_name": config.vm_name,

@@ -26,9 +26,10 @@ class SystemControl:
         self.logger = logging.getLogger(__name__)
 
     async def execute_shell_command(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a shell command."""
+        """Execute a shell command with optional timeout."""
         command = parameters.get("command")
         working_dir = parameters.get("working_directory")
+        timeout = parameters.get("timeout", 300)  # Default 5 minute timeout
 
         if not command:
             return {"success": False, "error": "No command specified"}
@@ -41,7 +42,28 @@ class SystemControl:
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await process.communicate()
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                # Kill the hung process
+                try:
+                    process.kill()
+                    await process.wait()
+                except ProcessLookupError:
+                    pass
+                return {
+                    "success": False,
+                    "error": _("Command timed out after %d seconds: %s")
+                    % (timeout, command),
+                    "result": {
+                        "stdout": "",
+                        "stderr": _("Command timed out after %d seconds") % timeout,
+                        "exit_code": -1,
+                    },
+                    "exit_code": -1,
+                }
 
             return {
                 "success": process.returncode == 0,

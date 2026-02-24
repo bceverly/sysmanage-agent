@@ -1367,3 +1367,19 @@ msgstr "Ошибка отправки обновления статуса вир
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "qemu-img не найден, попытка установки: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "Настройка профиля LXD по умолчанию для совместимости контейнеров"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "Не удалось установить security.nesting в профиле по умолчанию: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "Профиль LXD по умолчанию настроен с security.nesting=true"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "Превышено время ожидания команды через %d секунд: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "Превышено время ожидания команды через %d секунд"

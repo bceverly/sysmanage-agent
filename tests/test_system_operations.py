@@ -404,7 +404,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             assert result["success"] is True
             mock_execute.assert_called_once_with(
-                {"command": "sudo pro attach test-token-123"}
+                {"command": "sudo pro attach --no-auto-enable test-token-123", "timeout": 180}
             )
 
     @pytest.mark.asyncio

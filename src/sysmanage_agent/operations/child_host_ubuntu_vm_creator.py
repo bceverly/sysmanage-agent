@@ -756,16 +756,23 @@ class UbuntuVmCreator:  # pylint: disable=too-many-instance-attributes
         }
 
     async def _get_agent_version(self) -> tuple:
-        """Get latest sysmanage-agent version from GitHub."""
+        """Get latest sysmanage-agent version from GitHub.
+
+        Falls back to 'unknown' if GitHub is unreachable (e.g. private repo).
+        The agent version is only used in the success result message for Ubuntu
+        VMs, not in the autoinstall config itself, so this is non-critical.
+        """
         await self.launcher.send_progress(
             "checking_github",
             _("Checking GitHub for latest sysmanage-agent version..."),
         )
         version_result = self.github_checker.get_latest_version()
         if not version_result.get("success"):
-            raise RuntimeError(
-                _("Failed to check GitHub version: %s") % version_result.get("error")
+            self.logger.warning(
+                _("Could not check GitHub version: %s. Continuing with 'unknown'."),
+                version_result.get("error"),
             )
+            return "unknown", "unknown"
         return version_result.get("version"), version_result.get("tag_name")
 
     async def _launch_vm_from_iso(

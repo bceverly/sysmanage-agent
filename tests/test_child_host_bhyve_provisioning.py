@@ -706,9 +706,7 @@ class TestStartVmWithBhyveload:
             # bhyveload succeeds, daemon/bhyve fails
             mock_run.side_effect = [
                 Mock(returncode=0, stdout="", stderr=""),  # bhyveload
-                Mock(
-                    returncode=1, stdout="", stderr="bhyve: failed to start"
-                ),  # daemon+bhyve
+                Mock(returncode=1),  # daemon+bhyve (no stdout/stderr with DEVNULL)
             ]
             with patch("os.path.exists", return_value=False):
                 result = provisioning_helper.start_vm_with_bhyveload(
@@ -781,9 +779,7 @@ class TestStartVmWithUefi:
         base_config.disk_path = "/vm/test-vm/disk.img"
 
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(
-                returncode=1, stdout="", stderr="bhyve: failed to start UEFI"
-            )
+            mock_run.return_value = Mock(returncode=1)
             with patch("os.path.exists", return_value=False):
                 result = provisioning_helper.start_vm_with_uefi(base_config, "tap0")
 

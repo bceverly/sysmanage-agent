@@ -1365,3 +1365,19 @@ msgstr "वर्चुअलाइजेशन स्थिति अपडे�
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "qemu-img नहीं मिला, इंस्टॉल करने का प्रयास करेंगे: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "कंटेनर संगतता के लिए LXD डिफ़ॉल्ट प्रोफ़ाइल कॉन्फ़िगर कर रहा है"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "डिफ़ॉल्ट प्रोफ़ाइल पर security.nesting सेट नहीं कर सका: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "LXD डिफ़ॉल्ट प्रोफ़ाइल security.nesting=true के साथ कॉन्फ़िगर किया गया"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "%d सेकंड के बाद कमांड का समय समाप्त हो गया: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "%d सेकंड के बाद कमांड का समय समाप्त हो गया"

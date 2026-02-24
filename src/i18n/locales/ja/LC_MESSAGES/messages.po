@@ -1369,3 +1369,19 @@ msgstr "仮想化ステータス更新の送信エラー: %s"
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "qemu-imgが見つかりません。インストールを試みます: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "コンテナ互換性のためにLXDデフォルトプロファイルを設定しています"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "デフォルトプロファイルにsecurity.nestingを設定できませんでした: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "LXDデフォルトプロファイルがsecurity.nesting=trueで設定されました"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "コマンドが %d 秒後にタイムアウトしました: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "コマンドが %d 秒後にタイムアウトしました"

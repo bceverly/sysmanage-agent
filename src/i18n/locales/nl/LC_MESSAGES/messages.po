@@ -1367,3 +1367,19 @@ msgstr "Fout bij verzenden van virtualisatiestatusupdate: %s"
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "qemu-img niet gevonden, poging tot installatie: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "LXD-standaardprofiel configureren voor containercompatibiliteit"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "Kan security.nesting niet instellen op standaardprofiel: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "LXD-standaardprofiel geconfigureerd met security.nesting=true"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "Opdracht verlopen na %d seconden: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "Opdracht verlopen na %d seconden"

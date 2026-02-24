@@ -59,7 +59,10 @@ class LxdOperations:
             if init_result and not init_result.get("success"):
                 return init_result
 
-            # Step 4: Configure firewall for LXD networking
+            # Step 4: Configure default profile for container compatibility
+            await self._configure_default_profile()
+
+            # Step 5: Configure firewall for LXD networking
             firewall_result = self._configure_lxd_firewall()
             if not firewall_result.get("success"):
                 self.logger.warning(
@@ -156,6 +159,32 @@ class LxdOperations:
 
         self.logger.info(_("LXD initialized successfully"))
         return None
+
+    async def _configure_default_profile(self) -> None:
+        """Configure the LXD default profile for container compatibility.
+
+        Sets security.nesting=true so containers can run sudo and nested
+        operations (e.g. Ubuntu Pro attach, package management).
+        """
+        self.logger.info(
+            _("Configuring LXD default profile for container compatibility")
+        )
+
+        result = await run_command_async(
+            ["lxc", "profile", "set", "default", "security.nesting", "true"],
+            timeout=30,
+        )
+
+        if result.returncode != 0:
+            self.logger.warning(
+                _("Could not set security.nesting on default profile: %s"),
+                result.stderr or result.stdout,
+            )
+            # Continue anyway - individual containers can be configured manually
+        else:
+            self.logger.info(
+                _("LXD default profile configured with security.nesting=true")
+            )
 
     def _verify_lxd_ready(self, lxd_check: dict, firewall_result: dict) -> dict:
         """Verify LXD is working and return final result."""

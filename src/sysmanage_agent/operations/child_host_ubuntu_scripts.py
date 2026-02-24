@@ -515,7 +515,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \\
 echo "==> Installed Python packages:"
 dpkg -l | grep python3
 
-# Install sysmanage-agent from the pre-downloaded package or GitHub
+# Install sysmanage-agent from pre-downloaded package or Launchpad PPA
 echo "==> Installing sysmanage-agent..."
 if [ -f /root/sysmanage-agent.deb ]; then
     echo "Installing from local .deb package..."
@@ -526,29 +526,11 @@ elif [ -f /root/sysmanage_agent.whl ]; then
     pip3 install --break-system-packages /root/sysmanage_agent.whl
     rm -f /root/sysmanage_agent.whl
 else
-    echo "Installing from GitHub releases..."
-    # Get the latest release from GitHub
-    LATEST_URL="https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest"
-
-    # Try to download Ubuntu-specific package (uses Debian packages)
-    RELEASE_INFO=$(wget -qO- "$LATEST_URL" 2>/dev/null || curl -sL "$LATEST_URL" 2>/dev/null)
-    if [ -n "$RELEASE_INFO" ]; then
-        # Look for Debian/Ubuntu package in release assets
-        # Match any .deb file (excluding .sha256 checksums)
-        DEB_URL=$(echo "$RELEASE_INFO" | grep -oP '"browser_download_url":\\s*"\\K[^"]*\\.deb(?=")' | head -1)
-        if [ -n "$DEB_URL" ]; then
-            echo "Downloading from: $DEB_URL"
-            wget -O /tmp/sysmanage-agent.deb "$DEB_URL" && \\
-                dpkg -i /tmp/sysmanage-agent.deb && \\
-                rm -f /tmp/sysmanage-agent.deb || apt-get install -f -y
-        else
-            echo "No Debian package found, trying pip install..."
-            pip3 install --break-system-packages sysmanage-agent || true
-        fi
-    else
-        echo "Could not reach GitHub, trying pip install..."
-        pip3 install --break-system-packages sysmanage-agent || true
-    fi
+    echo "Installing from Launchpad PPA..."
+    DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+    add-apt-repository -y ppa:bceverly/sysmanage-agent
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y sysmanage-agent
 fi
 
 {config_write_cmds}

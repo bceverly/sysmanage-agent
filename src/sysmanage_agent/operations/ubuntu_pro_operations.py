@@ -30,9 +30,11 @@ class UbuntuProOperations:
             self.logger.info(_("Attaching Ubuntu Pro subscription..."))
 
             # Run pro attach command with the provided token
-            command = f"sudo pro attach {token}"
+            # Use --no-auto-enable to prevent hanging on service enablement
+            # (e.g., livepatch snap install hangs in LXD containers)
+            command = f"sudo pro attach --no-auto-enable {token}"
             result = await self.agent_instance.system_ops.execute_shell_command(
-                {"command": command}
+                {"command": command, "timeout": 180}
             )
 
             if result["success"]:

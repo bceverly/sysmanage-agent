@@ -784,6 +784,7 @@ class BhyveOperations:
             "success": True,
             "message": _("VM created successfully"),
             "vm_name": config.vm_name,
+            "hostname": config.hostname,
             "status": "running",
             "ip_address": vm_ip,
             "child_name": config.vm_name,
@@ -839,25 +840,34 @@ class BhyveOperations:
                 vm_dir = os.path.join(BHYVE_VM_DIR, config.vm_name)
                 os.makedirs(vm_dir, mode=0o755, exist_ok=True)
 
-                disk_result = self._prepare_vm_disk(config, vm_dir)
+                # Run blocking disk/provisioning ops in a thread so the
+                # asyncio event loop stays responsive (WebSocket keepalive).
+                disk_result = await asyncio.to_thread(
+                    self._prepare_vm_disk, config, vm_dir
+                )
                 if not disk_result.get("success"):
                     return disk_result
 
                 # Configure cloud-init or firstboot injection
-                ci_result = self._configure_cloud_init(
-                    config, is_freebsd, freebsd_provisioner, vm_dir
+                ci_result = await asyncio.to_thread(
+                    self._configure_cloud_init,
+                    config, is_freebsd, freebsd_provisioner, vm_dir,
                 )
                 if not ci_result.get("success"):
                     return ci_result
 
                 # Set up networking
-                bridge_result = self._creation_helper.create_bridge_if_needed()
+                bridge_result = await asyncio.to_thread(
+                    self._creation_helper.create_bridge_if_needed
+                )
                 if not bridge_result.get("success"):
                     self.logger.warning(
                         _("Bridge setup warning: %s"), bridge_result.get("error")
                     )
 
-                tap_result = self._creation_helper.create_tap_interface(config.vm_name)
+                tap_result = await asyncio.to_thread(
+                    self._creation_helper.create_tap_interface, config.vm_name
+                )
                 if not tap_result.get("success"):
                     return {
                         "success": False,
@@ -867,7 +877,9 @@ class BhyveOperations:
                 tap_interface = tap_result["tap"]
 
                 # Start the VM
-                start_result = self._start_vm(config, tap_interface)
+                start_result = await asyncio.to_thread(
+                    self._start_vm, config, tap_interface
+                )
                 if not start_result.get("success"):
                     return start_result
 

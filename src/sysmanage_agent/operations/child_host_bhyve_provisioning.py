@@ -325,21 +325,28 @@ runcmd:
             bhyve_cmd = self.generate_bhyve_command(config, tap_interface)
 
             # Use daemon to run bhyve in background
-            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{config.vm_name}.pid"]
+            pid_file = f"/var/run/bhyve.{config.vm_name}.pid"
+            daemon_cmd = ["daemon", "-p", pid_file]
             daemon_cmd.extend(bhyve_cmd)
 
+            # Use DEVNULL instead of capture_output to avoid pipe inheritance.
+            # When capture_output=True creates pipes, the forked bhyve process
+            # inherits the pipe file descriptors, keeping them open and blocking
+            # subprocess.run's communicate() until bhyve exits (or timeout).
+            # With DEVNULL, daemon forks and returns near-instantly.
             result = subprocess.run(  # nosec B603 B607
                 daemon_cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,  # 3 minutes for UEFI firmware initialization
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
                 check=False,
             )
 
             if result.returncode != 0:
                 return {
                     "success": False,
-                    "error": _("Failed to start bhyve: %s") % result.stderr,
+                    "error": _("Failed to start bhyve (exit code %d)")
+                    % result.returncode,
                 }
 
             return {"success": True}
@@ -365,22 +372,29 @@ runcmd:
             bhyve_cmd = self.generate_bhyve_command(config, tap_interface)
 
             # Use daemon to run bhyve in background
-            daemon_cmd = ["daemon", "-p", f"/var/run/bhyve.{config.vm_name}.pid"]
+            pid_file = f"/var/run/bhyve.{config.vm_name}.pid"
+            daemon_cmd = ["daemon", "-p", pid_file]
             daemon_cmd.extend(bhyve_cmd)
 
             self.logger.info(_("Starting VM with UEFI boot: %s"), config.vm_name)
+            # Use DEVNULL instead of capture_output to avoid pipe inheritance.
+            # When capture_output=True creates pipes, the forked bhyve process
+            # inherits the pipe file descriptors, keeping them open and blocking
+            # subprocess.run's communicate() until bhyve exits (or timeout).
+            # With DEVNULL, daemon forks and returns near-instantly.
             result = subprocess.run(  # nosec B603 B607
                 daemon_cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,  # 3 minutes for UEFI firmware initialization
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
                 check=False,
             )
 
             if result.returncode != 0:
                 return {
                     "success": False,
-                    "error": _("Failed to start bhyve: %s") % result.stderr,
+                    "error": _("Failed to start bhyve (exit code %d)")
+                    % result.returncode,
                 }
 
             return {"success": True}

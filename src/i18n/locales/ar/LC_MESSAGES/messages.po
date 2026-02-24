@@ -1370,3 +1370,19 @@ msgstr "خطأ في إرسال تحديث حالة الافتراضية: %s"
 
 msgid "qemu-img not found, will try to install: %s"
 msgstr "لم يتم العثور على qemu-img، سيتم محاولة التثبيت: %s"
+
+# LXD default profile configuration
+msgid "Configuring LXD default profile for container compatibility"
+msgstr "تكوين ملف تعريف LXD الافتراضي لتوافق الحاويات"
+
+msgid "Could not set security.nesting on default profile: %s"
+msgstr "تعذر تعيين security.nesting على الملف التعريفي الافتراضي: %s"
+
+msgid "LXD default profile configured with security.nesting=true"
+msgstr "تم تكوين ملف تعريف LXD الافتراضي مع security.nesting=true"
+
+msgid "Command timed out after %d seconds: %s"
+msgstr "انتهت مهلة الأمر بعد %d ثانية: %s"
+
+msgid "Command timed out after %d seconds"
+msgstr "انتهت مهلة الأمر بعد %d ثانية"
