@@ -2574,8 +2574,14 @@ jobs:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
         run: |
           echo "Checking out OBS package home:${OBS_USERNAME}/sysmanage-agent"
-          osc checkout home:${OBS_USERNAME}/sysmanage-agent
+          if ! osc checkout home:${OBS_USERNAME}/sysmanage-agent; then
+            echo "Checkout failed (possible stale cache), retrying with clean directory..."
+            rm -rf "home:${OBS_USERNAME}"
+            osc checkout home:${OBS_USERNAME}/sysmanage-agent
+          fi
           cd home:${OBS_USERNAME}/sysmanage-agent
+          # Remove old tarballs so only the new release is uploaded
+          rm -f sysmanage-agent-*.tar.gz
           echo "Current OBS package contents:"
           ls -la
 

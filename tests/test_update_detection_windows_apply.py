@@ -131,21 +131,24 @@ class TestDetectWingetProcessTimeout:
         results = {"failed_packages": []}
 
         # Time progression: start=0, then 35s elapsed (triggers log), then completes
-        with patch("time.time") as mock_time:
-            mock_time.side_effect = [
+        # Patch the module's time reference so logging's internal time.time() is unaffected
+        with patch(
+            "src.sysmanage_agent.collection.update_detection_windows_apply.time"
+        ) as mock_time_mod:
+            mock_time_mod.time.side_effect = [
                 0,  # start_time
-                0,  # last_log_time
-                35,  # elapsed (first check, > 30s triggers log)
-                35,  # for progress log
-                35,  # new last_log_time
-                40,  # second poll
-                40,  # elapsed check
-                50,  # third poll  - completed
+                0,  # elapsed check (loop 1)
+                35,  # log time check (loop 1, > 30s triggers log)
+                35,  # last_log_time assignment (loop 1)
+                35,  # elapsed check (loop 2)
+                40,  # log time check (loop 2)
+                40,  # elapsed check (loop 3)
+                50,  # log time check (loop 3)
             ]
-            with patch("time.sleep"):
-                windows_detector._detect_winget_process_timeout(
-                    mock_process, package, 1200, results
-                )
+            mock_time_mod.sleep = Mock()
+            windows_detector._detect_winget_process_timeout(
+                mock_process, package, 1200, results
+            )
 
         # Verify no failures since process completed
         assert len(results["failed_packages"]) == 0
