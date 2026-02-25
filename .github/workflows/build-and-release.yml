@@ -1338,7 +1338,7 @@ jobs:
           ---
 
           **Version:** ${{ steps.version.outputs.version }}
-          **Platform:** OpenBSD 7.4+
+          **Platform:** OpenBSD 7.5+
           **Architecture:** amd64 (primary), others may work
           EOF
 
@@ -1487,7 +1487,7 @@ jobs:
             installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak.sha256
             installer/flatpak/repo/**
 
-  # Build OpenBSD Packages (.tgz) for 7.4, 7.5, 7.6, and 7.7
+  # Build OpenBSD Packages (.tgz) for 7.5, 7.6, and 7.7
   build-openbsd-packages:
     name: Build OpenBSD ${{ matrix.openbsd-version }} Package
     runs-on: ubuntu-latest
@@ -1496,7 +1496,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.4', '7.5', '7.6', '7.7']
+        openbsd-version: ['7.5', '7.6', '7.7']
 
     steps:
       - name: Checkout code
@@ -1882,9 +1882,7 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
-          # OpenBSD packages (.tgz) for 7.4, 7.5, 7.6, 7.7
-          cp ${{ github.workspace }}/release-files/*-openbsd74.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd74.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          # OpenBSD packages (.tgz) for 7.5, 7.6, 7.7
           cp ${{ github.workspace }}/release-files/*-openbsd75.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd75.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd76.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
@@ -2148,7 +2146,7 @@ jobs:
 
           ### OpenBSD (Pre-built Package - Recommended)
           \`\`\`bash
-          # Download the pre-built package for your OpenBSD version (7.4, 7.5, 7.6, or 7.7)
+          # Download the pre-built package for your OpenBSD version (7.5, 7.6, or 7.7)
           # For OpenBSD 7.7:
           ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd77.tgz
           doas pkg_add sysmanage-agent-${VERSION}-openbsd77.tgz
@@ -2160,10 +2158,6 @@ jobs:
           # For OpenBSD 7.5:
           # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd75.tgz
           # doas pkg_add sysmanage-agent-${VERSION}-openbsd75.tgz
-
-          # For OpenBSD 7.4:
-          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd74.tgz
-          # doas pkg_add sysmanage-agent-${VERSION}-openbsd74.tgz
 
           # Configure and start
           doas cp /usr/local/share/examples/sysmanage-agent/sysmanage-agent.yaml /etc/sysmanage-agent.yaml
@@ -2241,7 +2235,7 @@ jobs:
           - **Windows**: 10 (1809+), 11, Server 2019+ (x64 and ARM64)
           - **FreeBSD**: 13.x, 14.x
           - **NetBSD**: 10.x (tested on 10.1)
-          - **OpenBSD**: 7.4, 7.5, 7.6, 7.7 (pre-built packages available)
+          - **OpenBSD**: 7.5, 7.6, 7.7 (pre-built packages available)
 
           ## Software Bill of Materials (SBOM)
 
