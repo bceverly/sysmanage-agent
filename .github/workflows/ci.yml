@@ -51,7 +51,7 @@ jobs:
 
     - name: Run backend tests
       run: |
-        python -m pytest tests/ -v --cov=src --cov=main --cov-report=xml --cov-report=term-missing
+        python -m pytest tests/ -v -n auto --dist=loadfile --cov=src --cov=main --cov-report=xml --cov-report=term-missing
 
     - name: Extract coverage percentage
       id: coverage
@@ -238,7 +238,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        python -m pytest tests/ -v --cov=src --cov=main --cov-report=xml --cov-report=term-missing
+        python -m pytest tests/ -v -n auto --dist=loadfile --cov=src --cov=main --cov-report=xml --cov-report=term-missing
 
     - name: Cache SonarCloud packages
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
