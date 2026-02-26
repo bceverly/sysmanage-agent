@@ -17,7 +17,6 @@ Tests cover:
 
 # pylint: disable=redefined-outer-name,protected-access,too-many-public-methods
 
-import asyncio
 import subprocess
 from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
@@ -1161,16 +1160,13 @@ class TestEdgeCases:
             await vmm_ops.create_vmm_vm(config_alpine)
         mock_alpine.assert_called_once()
 
-    def test_enable_start_vmd_empty_error_message(self, vmm_ops):
+    @pytest.mark.asyncio
+    async def test_enable_start_vmd_empty_error_message(self, vmm_ops):
         """Test handling of empty error messages."""
         vmm_check = {"enabled": False, "running": False}
 
-        async def run_test():
-            with patch.object(vmm_ops, "_run_subprocess") as mock_run:
-                mock_run.return_value = Mock(returncode=1, stdout="", stderr="")
-                result = await vmm_ops._enable_and_start_vmd(vmm_check)
-            return result
-
-        result = asyncio.get_event_loop().run_until_complete(run_test())
+        with patch.object(vmm_ops, "_run_subprocess") as mock_run:
+            mock_run.return_value = Mock(returncode=1, stdout="", stderr="")
+            result = await vmm_ops._enable_and_start_vmd(vmm_check)
         assert result["success"] is False
         assert "Unknown error" in result["error"]
