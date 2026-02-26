@@ -20,10 +20,8 @@ jobs:
     strategy:
       fail-fast: false  # Continue testing other versions even if one fails
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
         # Python 3.9 included for macOS system Python compatibility
-        # Python 3.14 excluded due to incompatibility with ruamel.yaml.clib (semgrep dependency)
-        # See: https://github.com/ruamel/yaml.clib/issues/25
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

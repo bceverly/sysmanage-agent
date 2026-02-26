@@ -1487,7 +1487,7 @@ jobs:
             installer/flatpak/sysmanage-agent-${{ steps.version.outputs.version }}.flatpak.sha256
             installer/flatpak/repo/**
 
-  # Build OpenBSD Packages (.tgz) for 7.5, 7.6, and 7.7
+  # Build OpenBSD Packages (.tgz) for 7.7 and 7.8
   build-openbsd-packages:
     name: Build OpenBSD ${{ matrix.openbsd-version }} Package
     runs-on: ubuntu-latest
@@ -1496,7 +1496,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.5', '7.6', '7.7']
+        openbsd-version: ['7.7', '7.8']
 
     steps:
       - name: Checkout code
@@ -1638,7 +1638,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alpine-version: ['3.19', '3.20', '3.21']
+        alpine-version: ['3.20', '3.21', '3.22']
 
     steps:
       - name: Checkout code
@@ -2311,12 +2311,10 @@ jobs:
     strategy:
       matrix:
         include:
+          - release: resolute
+            release_name: "26.04 Resolute"
           - release: questing
             release_name: "25.10 Questing"
-          - release: plucky
-            release_name: "25.04 Plucky"
-          - release: oracular
-            release_name: "24.10 Oracular"
           - release: noble
             release_name: "24.04 Noble"
           - release: jammy
@@ -2412,11 +2410,14 @@ jobs:
             jammy)
               PYTHON_VERSION="3.10"
               ;;
-            noble|oracular)
+            noble)
               PYTHON_VERSION="3.12"
               ;;
-            plucky|questing)
+            questing)
               PYTHON_VERSION="3.13"
+              ;;
+            resolute)
+              PYTHON_VERSION="3.14"
               ;;
             *)
               PYTHON_VERSION="3.12"
