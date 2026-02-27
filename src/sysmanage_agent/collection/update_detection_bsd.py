@@ -620,13 +620,13 @@ class BSDUpdateDetector(UpdateDetectorBase):
         """Detect all updates from BSD sources."""
         logger.info(_("=== BSD detect_updates called ==="))
 
-        # BSD system updates
-        logger.info(_("Calling _detect_openbsd_system_updates"))
-        self._detect_openbsd_system_updates()
+        # OpenBSD-specific detection
+        if platform.system() == "OpenBSD":
+            logger.info(_("Calling _detect_openbsd_system_updates"))
+            self._detect_openbsd_system_updates()
 
-        # BSD version upgrades
-        logger.info(_("Calling _detect_openbsd_version_upgrades"))
-        self._detect_openbsd_version_upgrades()
+            logger.info(_("Calling _detect_openbsd_version_upgrades"))
+            self._detect_openbsd_version_upgrades()
 
         # FreeBSD-specific detection
         if platform.system() == "FreeBSD":

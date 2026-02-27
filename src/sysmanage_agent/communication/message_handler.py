@@ -22,6 +22,7 @@ from src.sysmanage_agent.communication.message_logging_helpers import (
     log_duplicate_message,
 )
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.core.version import get_agent_version
 
 
 class MessageHandler:
@@ -143,6 +144,7 @@ class MessageHandler:
                 "is_privileged": is_running_privileged(),
                 "script_execution_enabled": self.agent.config.is_script_execution_enabled(),
                 "enabled_shells": self.agent.config.get_allowed_shells(),
+                "agent_version": get_agent_version(),
             },
         )
 

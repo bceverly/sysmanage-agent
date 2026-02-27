@@ -105,6 +105,7 @@ class SysManageAgent(
         self.connected = False
         self.running = False
         self.connection_failures = 0
+        self._autostart_task = None
 
         # Registration state tracking
         self.registration_status = None
@@ -657,6 +658,13 @@ class SysManageAgent(
 
         return ssl_context
 
+    async def _autostart_child_hosts(self):
+        """Background task to auto-start child host VMs after connection."""
+        try:
+            await self.child_host_ops.autostart_child_hosts()
+        except Exception as error:
+            self.logger.warning("Failed to auto-start child hosts: %s", error)
+
     async def _run_agent_tasks(self):
         """Run all concurrent agent tasks and handle their lifecycle."""
         sender_task = asyncio.create_task(self.message_handler.message_sender())
@@ -786,6 +794,10 @@ class SysManageAgent(
                 self.logger.error(
                     "Failed to start queue processing: %s", error, exc_info=True
                 )
+
+            # Launch VM autostart as a background task so it doesn't block
+            # the agent's message processing (VM startup can take 30+ seconds)
+            self._autostart_task = asyncio.create_task(self._autostart_child_hosts())
 
             self.logger.info(
                 _("Connected to server, waiting for registration confirmation...")

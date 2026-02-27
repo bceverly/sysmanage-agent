@@ -1419,3 +1419,26 @@ msgstr "Nicht unterstützte untergeordnete Distribution für Agent-Update: %s"
 msgid "Child agent updated successfully: %s"
 msgstr "Untergeordneter Agent erfolgreich aktualisiert: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "Automatischer Start der VMs..."
+
+msgid "Auto-started VM: %s"
+msgstr "VM automatisch gestartet: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "Automatischer Start der VM %s fehlgeschlagen: %s"
+
+msgid "No autostart VMs configured"
+msgstr "Keine VMs für automatischen Start konfiguriert"
+
+msgid "Skipping VM %s - already running"
+msgstr "VM %s übersprungen - läuft bereits"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "%d von %d konfigurierten VMs automatisch gestartet"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "Automatischer Start der untergeordneten Hosts fehlgeschlagen: %s"
+

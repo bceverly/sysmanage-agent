@@ -17,6 +17,9 @@ from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations import package_installation_helpers
 
+_DEBIAN_FRONTEND_ENV = "DEBIAN_FRONTEND=noninteractive"
+_DEBCONF_SEEN_ENV = "DEBCONF_NONINTERACTIVE_SEEN=true"
+
 
 def _create_uninstall_record(
     request_id: str, requested_by: str, packages: List[Dict[str, Any]]
@@ -482,8 +485,8 @@ class PackageOperations:
             # all sudo versions (Linux, macOS, BSDs)
             update_process = await asyncio.create_subprocess_exec(
                 "sudo",
-                "DEBIAN_FRONTEND=noninteractive",
-                "DEBCONF_NONINTERACTIVE_SEEN=true",
+                _DEBIAN_FRONTEND_ENV,
+                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "update",
                 stdout=asyncio.subprocess.PIPE,
@@ -494,8 +497,8 @@ class PackageOperations:
             # Install all packages in a single command
             install_cmd = [
                 "sudo",
-                "DEBIAN_FRONTEND=noninteractive",
-                "DEBCONF_NONINTERACTIVE_SEEN=true",
+                _DEBIAN_FRONTEND_ENV,
+                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "install",
                 "-y",
@@ -541,8 +544,8 @@ class PackageOperations:
             # Uninstall all packages in a single command (autoremove to clean up dependencies)
             uninstall_cmd = [
                 "sudo",
-                "DEBIAN_FRONTEND=noninteractive",
-                "DEBCONF_NONINTERACTIVE_SEEN=true",
+                _DEBIAN_FRONTEND_ENV,
+                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "remove",
                 "--autoremove",

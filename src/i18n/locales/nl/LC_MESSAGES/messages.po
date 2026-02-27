@@ -1417,3 +1417,26 @@ msgstr "Niet-ondersteunde kinddistributie voor agent-update: %s"
 msgid "Child agent updated successfully: %s"
 msgstr "Kindagent succesvol bijgewerkt: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "Automatisch starten van VMs..."
+
+msgid "Auto-started VM: %s"
+msgstr "VM automatisch gestart: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "Automatisch starten van VM %s mislukt: %s"
+
+msgid "No autostart VMs configured"
+msgstr "Geen VMs geconfigureerd voor automatisch starten"
+
+msgid "Skipping VM %s - already running"
+msgstr "VM %s overgeslagen - draait al"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "%d van %d geconfigureerde VMs automatisch gestart"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "Automatisch starten van onderliggende hosts mislukt: %s"
+

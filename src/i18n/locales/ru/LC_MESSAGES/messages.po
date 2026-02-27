@@ -1417,3 +1417,26 @@ msgstr "Неподдерживаемый дочерний дистрибутив
 msgid "Child agent updated successfully: %s"
 msgstr "Дочерний агент успешно обновлён: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "Автоматический запуск виртуальных машин..."
+
+msgid "Auto-started VM: %s"
+msgstr "ВМ запущена автоматически: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "Не удалось автоматически запустить ВМ %s: %s"
+
+msgid "No autostart VMs configured"
+msgstr "Нет виртуальных машин, настроенных для автозапуска"
+
+msgid "Skipping VM %s - already running"
+msgstr "Пропуск ВМ %s - уже запущена"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "Автоматически запущено %d из %d настроенных ВМ"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "Не удалось автоматически запустить дочерние хосты: %s"
+

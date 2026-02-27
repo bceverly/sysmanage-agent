@@ -1417,3 +1417,26 @@ msgstr "에이전트 업데이트에 지원되지 않는 자식 배포판: %s"
 msgid "Child agent updated successfully: %s"
 msgstr "자식 에이전트가 성공적으로 업데이트되었습니다: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "VM 자동 시작 중..."
+
+msgid "Auto-started VM: %s"
+msgstr "VM 자동 시작됨: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "VM %s 자동 시작 실패: %s"
+
+msgid "No autostart VMs configured"
+msgstr "자동 시작으로 구성된 VM이 없습니다"
+
+msgid "Skipping VM %s - already running"
+msgstr "VM %s 건너뜀 - 이미 실행 중"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "구성된 VM %d개 중 %d개 자동 시작됨"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "하위 호스트 자동 시작 실패: %s"
+

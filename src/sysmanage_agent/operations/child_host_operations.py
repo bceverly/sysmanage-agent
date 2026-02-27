@@ -100,6 +100,19 @@ class ChildHostOperations:
             self.kvm_ops = None
             self.bhyve_ops = None
 
+    async def autostart_child_hosts(self) -> None:
+        """
+        Auto-start child host VMs that are configured for autostart.
+
+        Currently only supports bhyve VMs on FreeBSD. Must not crash the agent
+        if anything goes wrong.
+        """
+        try:
+            if platform.system() == "FreeBSD" and self.bhyve_ops:
+                await self.bhyve_ops.autostart_vms()
+        except Exception as error:
+            self.logger.warning(_("Failed to auto-start child hosts: %s"), error)
+
     async def check_virtualization_support(  # NOSONAR - async required by interface
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:

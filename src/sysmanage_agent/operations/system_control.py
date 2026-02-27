@@ -230,30 +230,41 @@ class SystemControl:
             self.logger.error(_("Failed to update agent: %s"), error)
             return {"success": False, "error": str(error)}
 
-    async def _update_agent_linux(self) -> Dict[str, Any]:
-        """Update agent on Linux using the appropriate package manager."""
-        distro_id = ""
-        distro_id_like = ""
+    @staticmethod
+    def _detect_linux_distro() -> tuple:
+        """Detect Linux distribution ID and ID_LIKE values."""
         try:
             os_release = platform.freedesktop_os_release()
-            distro_id = os_release.get("ID", "").lower()
-            distro_id_like = os_release.get("ID_LIKE", "").lower()
+            return (
+                os_release.get("ID", "").lower(),
+                os_release.get("ID_LIKE", "").lower(),
+            )
         except OSError:
-            # Fallback: read /etc/os-release manually
-            try:
-                with open("/etc/os-release", encoding="utf-8") as os_release_file:
-                    for line in os_release_file:
-                        if line.startswith("ID="):
-                            distro_id = line.strip().split("=", 1)[1].strip('"').lower()
-                        elif line.startswith("ID_LIKE="):
-                            distro_id_like = (
-                                line.strip().split("=", 1)[1].strip('"').lower()
-                            )
-            except FileNotFoundError:
-                return {
-                    "success": False,
-                    "error": _("Cannot detect Linux distribution"),
-                }
+            pass
+
+        try:
+            distro_id = ""
+            distro_id_like = ""
+            with open("/etc/os-release", encoding="utf-8") as os_release_file:
+                for line in os_release_file:
+                    if line.startswith("ID="):
+                        distro_id = line.strip().split("=", 1)[1].strip('"').lower()
+                    elif line.startswith("ID_LIKE="):
+                        distro_id_like = (
+                            line.strip().split("=", 1)[1].strip('"').lower()
+                        )
+            return distro_id, distro_id_like
+        except FileNotFoundError:
+            return None, None
+
+    async def _update_agent_linux(self) -> Dict[str, Any]:
+        """Update agent on Linux using the appropriate package manager."""
+        distro_id, distro_id_like = self._detect_linux_distro()
+        if distro_id is None:
+            return {
+                "success": False,
+                "error": _("Cannot detect Linux distribution"),
+            }
 
         combined = f"{distro_id} {distro_id_like}"
 

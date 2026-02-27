@@ -1417,3 +1417,26 @@ msgstr "不支持的子发行版用于代理更新：%s"
 msgid "Child agent updated successfully: %s"
 msgstr "子代理更新成功：%s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "正在自动启动虚拟机..."
+
+msgid "Auto-started VM: %s"
+msgstr "已自动启动虚拟机: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "自动启动虚拟机 %s 失败: %s"
+
+msgid "No autostart VMs configured"
+msgstr "没有配置自动启动的虚拟机"
+
+msgid "Skipping VM %s - already running"
+msgstr "跳过虚拟机 %s - 已在运行"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "已自动启动 %d/%d 个配置的虚拟机"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "自动启动子主机失败: %s"
+

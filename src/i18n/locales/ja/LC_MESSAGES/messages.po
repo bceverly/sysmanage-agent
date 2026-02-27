@@ -1419,3 +1419,26 @@ msgstr "エージェント更新にサポートされていない子ディスト
 msgid "Child agent updated successfully: %s"
 msgstr "子エージェントが正常に更新されました：%s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "VMの自動起動を開始しています..."
+
+msgid "Auto-started VM: %s"
+msgstr "VMを自動起動しました: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "VM %s の自動起動に失敗しました: %s"
+
+msgid "No autostart VMs configured"
+msgstr "自動起動が設定されたVMはありません"
+
+msgid "Skipping VM %s - already running"
+msgstr "VM %s をスキップ - 既に実行中"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "設定された %d 台中 %d 台のVMを自動起動しました"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "子ホストの自動起動に失敗しました: %s"
+

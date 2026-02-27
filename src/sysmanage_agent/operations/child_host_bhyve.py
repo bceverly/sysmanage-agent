@@ -43,6 +43,8 @@ from src.sysmanage_agent.operations.child_host_bhyve_types import BhyveVmConfig
 
 _DEV_VMM_PATH = "/dev/vmm"
 _ALREADY_INSTALLED = "already installed"
+_MSG_NO_AUTOSTART_VMS = "No autostart VMs configured"
+_MSG_FAILED_AUTOSTART_VM = "Failed to auto-start VM %s: %s"
 
 
 class BhyveOperations:
@@ -922,6 +924,99 @@ class BhyveOperations:
             self._in_progress_vms.discard(config.vm_name)
             if freebsd_provisioner:
                 freebsd_provisioner.cleanup()
+            return {"success": False, "error": str(error)}
+
+    async def autostart_vms(self) -> Dict[str, Any]:
+        """
+        Auto-start VMs configured with autostart: true.
+
+        Called when the agent starts on a FreeBSD host with bhyve enabled.
+        Skips VMs that are already running. Respects per-VM autostart_delay.
+        Also ensures the rc.d autostart script is installed as a fallback.
+
+        Returns:
+            Dict with success status and counts of started/skipped/failed VMs.
+        """
+        try:
+            self.logger.info(_("Starting autostart VMs..."))
+
+            # Check bhyve support
+            bhyve_status = self.virtualization_checks.check_bhyve_support()
+            if not bhyve_status.get("enabled") or not bhyve_status.get("running"):
+                self.logger.info(_(_MSG_NO_AUTOSTART_VMS))
+                return {
+                    "success": True,
+                    "message": "bhyve not enabled/running, skipping autostart",
+                    "started": 0,
+                    "total": 0,
+                }
+
+            # Get VMs with autostart enabled
+            autostart_vms = await self._persistence_helper.list_autostart_vms()
+            if not autostart_vms:
+                self.logger.info(_(_MSG_NO_AUTOSTART_VMS))
+                return {
+                    "success": True,
+                    "message": _MSG_NO_AUTOSTART_VMS,
+                    "started": 0,
+                    "total": 0,
+                }
+
+            started = 0
+            failed = 0
+            skipped = 0
+            total = len(autostart_vms)
+
+            for vm_config in autostart_vms:
+                # Check if already running
+                if os.path.exists(os.path.join(_DEV_VMM_PATH, vm_config.vm_name)):
+                    self.logger.info(
+                        _("Skipping VM %s - already running"), vm_config.vm_name
+                    )
+                    skipped += 1
+                    continue
+
+                try:
+                    result = await self._lifecycle_helper.start_child_host(
+                        {"child_name": vm_config.vm_name}
+                    )
+                    if result.get("success"):
+                        self.logger.info(_("Auto-started VM: %s"), vm_config.vm_name)
+                        started += 1
+                    else:
+                        self.logger.warning(
+                            _(_MSG_FAILED_AUTOSTART_VM),
+                            vm_config.vm_name,
+                            result.get("error", "unknown"),
+                        )
+                        failed += 1
+                except Exception as exc:
+                    self.logger.warning(
+                        _(_MSG_FAILED_AUTOSTART_VM), vm_config.vm_name, exc
+                    )
+                    failed += 1
+
+                # Respect autostart delay between VMs
+                if vm_config.autostart_delay > 0:
+                    await asyncio.sleep(vm_config.autostart_delay)
+
+            self.logger.info(_("Auto-started %d of %d configured VMs"), started, total)
+
+            # Belt and suspenders: ensure rc.d script is installed
+            await self._persistence_helper.enable_autostart_service(
+                self._run_subprocess
+            )
+
+            return {
+                "success": True,
+                "started": started,
+                "failed": failed,
+                "skipped": skipped,
+                "total": total,
+            }
+
+        except Exception as error:
+            self.logger.error(_(_MSG_FAILED_AUTOSTART_VM), "autostart_vms", error)
             return {"success": False, "error": str(error)}
 
     async def start_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:

@@ -384,7 +384,15 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                 pass
 
         # Extract IP addresses from addr_info
-        for addr in iface.get("addr_info", []):
+        self._extract_addresses(iface.get("addr_info", []), info)
+
+        return info
+
+    def _extract_addresses(
+        self, addr_info: List[Dict[str, Any]], info: Dict[str, Any]
+    ) -> None:
+        """Extract IPv4/IPv6 addresses from addr_info into the info dict."""
+        for addr in addr_info:
             family = addr.get("family")
             local = addr.get("local", "")
             if family == "inet" and not info["ipv4_address"]:
@@ -392,19 +400,18 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                 prefixlen = addr.get("prefixlen")
                 if prefixlen is not None:
                     info["subnet_mask"] = self._prefixlen_to_netmask(prefixlen)
-            elif family == "inet6" and not info["ipv6_address"]:
-                # Skip link-local addresses in favor of global ones
-                if not local.startswith("fe80:"):
-                    info["ipv6_address"] = local
+            elif (
+                family == "inet6"
+                and not info["ipv6_address"]
+                and not local.startswith("fe80:")
+            ):
+                info["ipv6_address"] = local
 
-        # If no global IPv6 was found, take link-local as fallback
         if not info["ipv6_address"]:
-            for addr in iface.get("addr_info", []):
+            for addr in addr_info:
                 if addr.get("family") == "inet6":
                     info["ipv6_address"] = addr.get("local", "")
                     break
-
-        return info
 
     def get_network_info(self) -> List[Dict[str, Any]]:
         """Get network information on Linux using 'ip -j addr show'."""
@@ -423,7 +430,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                     for iface in interfaces
                     if iface.get("ifname") != "lo"
                 ]
-        except (json.JSONDecodeError, FileNotFoundError, OSError) as error:
+        except (json.JSONDecodeError, OSError) as error:
             self.logger.debug(
                 _("ip -j addr show failed, falling back to sysfs: %s"), error
             )

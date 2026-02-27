@@ -17,6 +17,7 @@ from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.core.version import get_agent_version
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
 from src.sysmanage_agent.collection.software_inventory_collection import (
     SoftwareInventoryCollector,
@@ -84,6 +85,9 @@ class ClientRegistration:
         # Add enabled shells from configuration
         enabled_shells = self.config.get_allowed_shells()
         basic_info["enabled_shells"] = enabled_shells
+
+        # Add agent version
+        basic_info["agent_version"] = get_agent_version()
 
         # Add auto-approve token if configured (used for automatic host approval
         # during child host creation)

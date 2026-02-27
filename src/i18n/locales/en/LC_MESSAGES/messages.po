@@ -926,3 +926,25 @@ msgstr "Unsupported child distribution for agent update: %s"
 msgid "Child agent updated successfully: %s"
 msgstr "Child agent updated successfully: %s"
 
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "Starting autostart VMs..."
+
+msgid "Auto-started VM: %s"
+msgstr "Auto-started VM: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "Failed to auto-start VM %s: %s"
+
+msgid "No autostart VMs configured"
+msgstr "No autostart VMs configured"
+
+msgid "Skipping VM %s - already running"
+msgstr "Skipping VM %s - already running"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "Auto-started %d of %d configured VMs"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "Failed to auto-start child hosts: %s"
+

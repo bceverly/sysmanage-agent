@@ -88,24 +88,68 @@ rcvar="sysmanage_firstboot_enable"
 start_cmd="sysmanage_firstboot_start"
 stop_cmd=":"
 
+LOGFILE="/var/log/sysmanage-firstboot.log"
+
+log_msg()
+{{
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $1" | tee -a "$LOGFILE"
+}}
+
+# Wait for DNS resolution to work (DHCP may be up but DNS not yet)
+wait_for_dns()
+{{
+    log_msg "Waiting for DNS resolution..."
+    _attempt=0
+    while [ $_attempt -lt 30 ]; do
+        if host -W 2 pkg.FreeBSD.org >/dev/null 2>&1; then
+            log_msg "DNS resolution working"
+            return 0
+        fi
+        if drill pkg.FreeBSD.org >/dev/null 2>&1; then
+            log_msg "DNS resolution working"
+            return 0
+        fi
+        # Fallback: try fetch since host/drill may not be available
+        if fetch -q -o /dev/null https://pkg.FreeBSD.org/ 2>/dev/null; then
+            log_msg "Network connectivity confirmed"
+            return 0
+        fi
+        _attempt=$((_attempt + 1))
+        log_msg "DNS not ready (attempt $_attempt/30), waiting 10s..."
+        sleep 10
+    done
+    log_msg "WARNING: DNS resolution not confirmed after 5 minutes, proceeding anyway"
+    return 1
+}}
+
 sysmanage_firstboot_start()
 {{
-    echo "=== SysManage Agent First Boot Setup ==="
+    log_msg "=== SysManage Agent First Boot Setup ==="
 
-    # Step 1: Install sudo and configure user
-    echo "Installing sudo..."
-    pkg install -y sudo
+    # Ensure pkg auto-confirms bootstrap and installs
+    export ASSUME_ALWAYS_YES=yes
 
-    echo "Configuring sudoers for {config.username}..."
+    # Wait for DNS/network connectivity before doing anything
+    wait_for_dns
+
+    # Step 1: Bootstrap pkg if needed
+    log_msg "Bootstrapping pkg..."
+    pkg bootstrap -y >> "$LOGFILE" 2>&1 || true
+
+    # Step 2: Install sudo and configure user
+    log_msg "Installing sudo..."
+    pkg install -y sudo >> "$LOGFILE" 2>&1
+
+    log_msg "Configuring sudoers for {config.username}..."
     echo "{config.username} ALL=(ALL) NOPASSWD: ALL" > /usr/local/etc/sudoers.d/{config.username}
     chmod 440 /usr/local/etc/sudoers.d/{config.username}
 
-    # Step 2: Install Python and agent dependencies
-    echo "Installing Python 3.11 and agent dependencies..."
-    pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets
+    # Step 3: Install Python and agent dependencies
+    log_msg "Installing Python 3.11 and agent dependencies..."
+    pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets >> "$LOGFILE" 2>&1
 
-    # Step 3: Create required directories
-    echo "Creating required directories..."
+    # Step 4: Create required directories
+    log_msg "Creating required directories..."
     mkdir -p /usr/local/lib/sysmanage-agent
     mkdir -p /usr/local/etc/sysmanage-agent
     mkdir -p /var/log/sysmanage-agent
@@ -113,41 +157,64 @@ sysmanage_firstboot_start()
     mkdir -p /etc/sysmanage-agent
     mkdir -p /var/lib/sysmanage-agent
 
-    # Step 4: Download and install agent
-    echo "Fetching latest agent version from GitHub..."
-    LATEST=$(fetch -q -o - https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest | grep -o '"tag_name": *"[^"]*"' | grep -o 'v[0-9.]*')
+    # Step 5: Download and install agent (with retries)
+    log_msg "Fetching latest agent version from GitHub..."
+    LATEST=""
+    _attempt=0
+    while [ -z "$LATEST" ] && [ $_attempt -lt 5 ]; do
+        LATEST=$(fetch -q -o - https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest 2>>"$LOGFILE" | grep -o '"tag_name": *"[^"]*"' | grep -o 'v[0-9.]*')
+        if [ -z "$LATEST" ]; then
+            _attempt=$((_attempt + 1))
+            log_msg "Failed to get latest version (attempt $_attempt/5), retrying in 15s..."
+            sleep 15
+        fi
+    done
+
+    if [ -z "$LATEST" ]; then
+        log_msg "ERROR: Could not determine latest agent version from GitHub"
+        return 1
+    fi
+
     VERSION=${{LATEST#v}}
-    echo "Latest version: ${{VERSION}}"
+    log_msg "Latest version: ${{VERSION}}"
 
-    echo "Downloading agent package..."
-    fetch -o /tmp/sysmanage-agent-${{VERSION}}.pkg "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.pkg"
+    log_msg "Downloading agent package..."
+    _attempt=0
+    while [ $_attempt -lt 3 ]; do
+        if fetch -o /tmp/sysmanage-agent-${{VERSION}}.pkg "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.pkg" >> "$LOGFILE" 2>&1; then
+            break
+        fi
+        _attempt=$((_attempt + 1))
+        log_msg "Download failed (attempt $_attempt/3), retrying in 15s..."
+        sleep 15
+    done
 
-    echo "Installing agent package..."
-    pkg add /tmp/sysmanage-agent-${{VERSION}}.pkg || true
-    cd / && tar -xf /tmp/sysmanage-agent-${{VERSION}}.pkg --include='usr/*'
+    log_msg "Installing agent package..."
+    pkg add /tmp/sysmanage-agent-${{VERSION}}.pkg >> "$LOGFILE" 2>&1 || true
+    cd / && tar -xf /tmp/sysmanage-agent-${{VERSION}}.pkg --include='usr/*' >> "$LOGFILE" 2>&1
     rm -f /tmp/sysmanage-agent-${{VERSION}}.pkg
 
-    # Step 5: Write agent configuration
-    echo "Writing agent configuration..."
+    # Step 6: Write agent configuration
+    log_msg "Writing agent configuration..."
     cat > /etc/sysmanage-agent.yaml << 'AGENT_CONFIG_EOF'
 {agent_config_escaped}
 AGENT_CONFIG_EOF
 
     ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
 
-    # Step 6: Sync time before starting agent (prevents message timestamp errors)
-    echo "Syncing system time..."
-    ntpdate -u pool.ntp.org || ntpdate -u time.nist.gov || true
+    # Step 7: Sync time before starting agent (prevents message timestamp errors)
+    log_msg "Syncing system time..."
+    ntpdate -u pool.ntp.org >> "$LOGFILE" 2>&1 || ntpdate -u time.nist.gov >> "$LOGFILE" 2>&1 || true
 
-    # Step 7: Enable and start the agent service
-    echo "Enabling sysmanage-agent service..."
-    sysrc sysmanage_agent_enable=YES
-    sysrc sysmanage_agent_user=root
+    # Step 8: Enable and start the agent service
+    log_msg "Enabling sysmanage-agent service..."
+    sysrc sysmanage_agent_enable=YES >> "$LOGFILE" 2>&1
+    sysrc sysmanage_agent_user=root >> "$LOGFILE" 2>&1
 
-    echo "Starting sysmanage-agent service..."
-    service sysmanage_agent start
+    log_msg "Starting sysmanage-agent service..."
+    service sysmanage_agent start >> "$LOGFILE" 2>&1
 
-    echo "=== SysManage Agent First Boot Setup Complete ==="
+    log_msg "=== SysManage Agent First Boot Setup Complete ==="
 }}
 
 load_rc_config $name
@@ -578,24 +645,35 @@ disable_root: false
 
 set -e
 
+export ASSUME_ALWAYS_YES=yes
+
 USERNAME="{config.username}"
+LOGFILE="/var/log/sysmanage-firstboot.log"
 
-echo "=== FreeBSD sysmanage-agent Bootstrap (bhyve) ==="
+log_msg()
+{{
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $1" | tee -a "$LOGFILE"
+}}
 
-# Step 1: Install sudo and configure user
-echo "Installing sudo and configuring user access..."
-pkg install -y sudo
+log_msg "=== FreeBSD sysmanage-agent Bootstrap (bhyve) ==="
+
+# Step 1: Bootstrap pkg and install sudo
+log_msg "Bootstrapping pkg..."
+pkg bootstrap -y >> "$LOGFILE" 2>&1 || true
+
+log_msg "Installing sudo and configuring user access..."
+pkg install -y sudo >> "$LOGFILE" 2>&1
 
 echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /usr/local/etc/sudoers.d/$USERNAME
 chmod 440 /usr/local/etc/sudoers.d/$USERNAME
-echo "User $USERNAME added to sudoers with NOPASSWD access."
+log_msg "User $USERNAME added to sudoers with NOPASSWD access."
 
 # Step 2: Install Python and all agent dependencies
-echo "Installing Python 3.11 and agent dependencies..."
-pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets
+log_msg "Installing Python 3.11 and agent dependencies..."
+pkg install -y python311 py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets >> "$LOGFILE" 2>&1
 
 # Step 3: Create required directories
-echo "Creating required directories..."
+log_msg "Creating required directories..."
 mkdir -p /usr/local/lib/sysmanage-agent
 mkdir -p /usr/local/etc/sysmanage-agent
 mkdir -p /var/log/sysmanage-agent
@@ -604,44 +682,67 @@ mkdir -p /etc/sysmanage-agent
 mkdir -p /var/lib/sysmanage-agent
 mkdir -p /usr/local/etc/rc.d
 
-# Step 4: Download and install agent from FreeBSD package
-echo "Fetching latest version from GitHub..."
-LATEST=$(fetch -q -o - https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest | grep -o '"tag_name": *"[^"]*"' | grep -o 'v[0-9.]*')
+# Step 4: Download and install agent from FreeBSD package (with retries)
+log_msg "Fetching latest version from GitHub..."
+LATEST=""
+_attempt=0
+while [ -z "$LATEST" ] && [ $_attempt -lt 5 ]; do
+    LATEST=$(fetch -q -o - https://api.github.com/repos/bceverly/sysmanage-agent/releases/latest 2>>"$LOGFILE" | grep -o '"tag_name": *"[^"]*"' | grep -o 'v[0-9.]*')
+    if [ -z "$LATEST" ]; then
+        _attempt=$((_attempt + 1))
+        log_msg "Failed to get latest version (attempt $_attempt/5), retrying in 15s..."
+        sleep 15
+    fi
+done
+
+if [ -z "$LATEST" ]; then
+    log_msg "ERROR: Could not determine latest agent version from GitHub"
+    exit 1
+fi
+
 VERSION=${{LATEST#v}}
-echo "Latest version: ${{VERSION}}"
+log_msg "Latest version: ${{VERSION}}"
 
-echo "Downloading agent package..."
-fetch -o /tmp/sysmanage-agent-${{VERSION}}.pkg "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.pkg"
+log_msg "Downloading agent package..."
+_attempt=0
+while [ $_attempt -lt 3 ]; do
+    if fetch -o /tmp/sysmanage-agent-${{VERSION}}.pkg "https://github.com/bceverly/sysmanage-agent/releases/download/${{LATEST}}/sysmanage-agent-${{VERSION}}.pkg" >> "$LOGFILE" 2>&1; then
+        break
+    fi
+    _attempt=$((_attempt + 1))
+    log_msg "Download failed (attempt $_attempt/3), retrying in 15s..."
+    sleep 15
+done
 
-echo "Installing agent package..."
-pkg add /tmp/sysmanage-agent-${{VERSION}}.pkg || true
+log_msg "Installing agent package..."
+pkg add /tmp/sysmanage-agent-${{VERSION}}.pkg >> "$LOGFILE" 2>&1 || true
 
-echo "Extracting package files..."
-cd / && tar -xf /tmp/sysmanage-agent-${{VERSION}}.pkg --include='usr/*'
+log_msg "Extracting package files..."
+cd / && tar -xf /tmp/sysmanage-agent-${{VERSION}}.pkg --include='usr/*' >> "$LOGFILE" 2>&1
 
 rm -f /tmp/sysmanage-agent-${{VERSION}}.pkg
 
 # Step 5: Write agent configuration
-echo "Creating agent configuration..."
+log_msg "Creating agent configuration..."
 cat > /etc/sysmanage-agent.yaml << 'AGENT_CONFIG_EOF'
 {agent_config}AGENT_CONFIG_EOF
 
 ln -sf /etc/sysmanage-agent.yaml /usr/local/etc/sysmanage-agent/config.yaml
 
 # Step 6: Sync time before starting agent (prevents message timestamp errors)
-echo "Syncing system time..."
-ntpdate -u pool.ntp.org || ntpdate -u time.nist.gov || true
+log_msg "Syncing system time..."
+ntpdate -u pool.ntp.org >> "$LOGFILE" 2>&1 || ntpdate -u time.nist.gov >> "$LOGFILE" 2>&1 || true
 
 # Step 7: Enable and start the agent service
-echo "Enabling and starting sysmanage-agent service..."
-sysrc sysmanage_agent_enable=YES
-sysrc sysmanage_agent_user=root
-service sysmanage_agent restart 2>/dev/null || service sysmanage_agent start
+log_msg "Enabling and starting sysmanage-agent service..."
+sysrc sysmanage_agent_enable=YES >> "$LOGFILE" 2>&1
+sysrc sysmanage_agent_user=root >> "$LOGFILE" 2>&1
+service sysmanage_agent restart 2>/dev/null || service sysmanage_agent start >> "$LOGFILE" 2>&1
 
-echo ""
-echo "=== Bootstrap complete ==="
-echo "The sysmanage-agent should now be running."
-echo "Check status with: service sysmanage_agent status"
+log_msg ""
+log_msg "=== Bootstrap complete ==="
+log_msg "The sysmanage-agent should now be running."
+log_msg "Check status with: service sysmanage_agent status"
 """
 
     def _generate_meta_data(self, config: BhyveVmConfig) -> str:

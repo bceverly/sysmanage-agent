@@ -1420,3 +1420,26 @@ msgstr "توزيعة فرعية غير مدعومة لتحديث الوكيل: %
 msgid "Child agent updated successfully: %s"
 msgstr "تم تحديث الوكيل الفرعي بنجاح: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "بدء التشغيل التلقائي للأجهزة الافتراضية..."
+
+msgid "Auto-started VM: %s"
+msgstr "تم التشغيل التلقائي للجهاز الافتراضي: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "فشل التشغيل التلقائي للجهاز الافتراضي %s: %s"
+
+msgid "No autostart VMs configured"
+msgstr "لا توجد أجهزة افتراضية مُعدة للتشغيل التلقائي"
+
+msgid "Skipping VM %s - already running"
+msgstr "تخطي الجهاز الافتراضي %s - قيد التشغيل بالفعل"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "تم التشغيل التلقائي لـ %d من أصل %d جهاز افتراضي مُعد"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "فشل التشغيل التلقائي للمضيفين الفرعيين: %s"
+

@@ -1420,3 +1420,26 @@ msgstr "Distribución hija no compatible para actualización del agente: %s"
 msgid "Child agent updated successfully: %s"
 msgstr "Agente hijo actualizado correctamente: %s"
 
+
+# bhyve VM autostart
+msgid "Starting autostart VMs..."
+msgstr "Iniciando VMs con inicio automático..."
+
+msgid "Auto-started VM: %s"
+msgstr "VM iniciada automáticamente: %s"
+
+msgid "Failed to auto-start VM %s: %s"
+msgstr "Error al iniciar automáticamente la VM %s: %s"
+
+msgid "No autostart VMs configured"
+msgstr "No hay VMs configuradas para inicio automático"
+
+msgid "Skipping VM %s - already running"
+msgstr "Omitiendo VM %s - ya está en ejecución"
+
+msgid "Auto-started %d of %d configured VMs"
+msgstr "Se iniciaron automáticamente %d de %d VMs configuradas"
+
+msgid "Failed to auto-start child hosts: %s"
+msgstr "Error al iniciar automáticamente los hosts secundarios: %s"
+
