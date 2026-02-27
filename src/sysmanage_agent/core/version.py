@@ -32,11 +32,11 @@ def get_agent_version() -> str:
         logger.info("Agent version from package metadata: %s", _CACHED_VERSION["value"])
         return _CACHED_VERSION["value"]
     except Exception:  # pylint: disable=broad-except
-        pass
+        pass  # nosec B110 - expected fallthrough to git detection
 
     # Try git describe for development builds
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607
             ["git", "describe", "--tags", "--abbrev=0"],
             capture_output=True,
             text=True,
@@ -48,7 +48,7 @@ def get_agent_version() -> str:
             logger.info("Agent version from git: %s", _CACHED_VERSION["value"])
             return _CACHED_VERSION["value"]
     except Exception:  # pylint: disable=broad-except
-        pass
+        pass  # nosec B110 - expected fallthrough to "unknown"
 
     _CACHED_VERSION["value"] = "unknown"
     logger.warning("Could not determine agent version, using 'unknown'")
