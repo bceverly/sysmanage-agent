@@ -347,7 +347,7 @@ class TestLinuxNetworkCollection:
         self.collector = HardwareCollectorLinux()
 
     def test_get_network_info_success(self):
-        """Test successful network interface collection on Linux."""
+        """Test successful network interface collection on Linux (sysfs fallback)."""
         interfaces = ["eth0", "wlan0", "lo"]
 
         def mock_listdir(path):
@@ -373,10 +373,16 @@ class TestLinuxNetworkCollection:
                 return mock_open(read_data="aa:bb:cc:dd:ee:ff")()
             return mock_open(read_data="")()
 
-        with patch("os.path.exists", side_effect=mock_exists):
-            with patch("os.listdir", side_effect=mock_listdir):
-                with patch("builtins.open", side_effect=mock_open_factory):
-                    result = self.collector.get_network_info()
+        # Mock subprocess.run to fail so the code falls through to the sysfs path
+        mock_ip_result = Mock()
+        mock_ip_result.returncode = 1
+        mock_ip_result.stdout = ""
+
+        with patch("subprocess.run", return_value=mock_ip_result):
+            with patch("os.path.exists", side_effect=mock_exists):
+                with patch("os.listdir", side_effect=mock_listdir):
+                    with patch("builtins.open", side_effect=mock_open_factory):
+                        result = self.collector.get_network_info()
 
         # Should have 2 interfaces (eth0 and wlan0, not lo)
         assert len(result) == 2
@@ -392,10 +398,15 @@ class TestLinuxNetworkCollection:
 
     def test_get_network_info_skips_loopback(self):
         """Test that loopback interface is skipped."""
-        with patch("os.path.exists", return_value=True):
-            with patch("os.listdir", return_value=["lo", "eth0"]):
-                with patch("builtins.open", mock_open(read_data="up")):
-                    result = self.collector.get_network_info()
+        mock_ip_result = Mock()
+        mock_ip_result.returncode = 1
+        mock_ip_result.stdout = ""
+
+        with patch("subprocess.run", return_value=mock_ip_result):
+            with patch("os.path.exists", return_value=True):
+                with patch("os.listdir", return_value=["lo", "eth0"]):
+                    with patch("builtins.open", mock_open(read_data="up")):
+                        result = self.collector.get_network_info()
 
         interface_names = [i.get("name") for i in result]
         assert "lo" not in interface_names
@@ -403,23 +414,38 @@ class TestLinuxNetworkCollection:
 
     def test_get_network_info_no_interfaces(self):
         """Test network collection when no interfaces exist."""
-        with patch("os.path.exists", return_value=True):
-            with patch("os.listdir", return_value=[]):
-                result = self.collector.get_network_info()
+        mock_ip_result = Mock()
+        mock_ip_result.returncode = 1
+        mock_ip_result.stdout = ""
+
+        with patch("subprocess.run", return_value=mock_ip_result):
+            with patch("os.path.exists", return_value=True):
+                with patch("os.listdir", return_value=[]):
+                    result = self.collector.get_network_info()
 
         assert not result
 
     def test_get_network_info_sysfs_not_available(self):
         """Test network collection when /sys/class/net doesn't exist."""
-        with patch("os.path.exists", return_value=False):
-            result = self.collector.get_network_info()
+        mock_ip_result = Mock()
+        mock_ip_result.returncode = 1
+        mock_ip_result.stdout = ""
+
+        with patch("subprocess.run", return_value=mock_ip_result):
+            with patch("os.path.exists", return_value=False):
+                result = self.collector.get_network_info()
 
         assert not result
 
     def test_get_network_info_error_handling(self):
         """Test error handling during network collection."""
-        with patch("os.path.exists", side_effect=Exception("Filesystem error")):
-            result = self.collector.get_network_info()
+        mock_ip_result = Mock()
+        mock_ip_result.returncode = 1
+        mock_ip_result.stdout = ""
+
+        with patch("subprocess.run", return_value=mock_ip_result):
+            with patch("os.path.exists", side_effect=Exception("Filesystem error")):
+                result = self.collector.get_network_info()
 
         assert len(result) == 1
         assert "error" in result[0]
@@ -1191,9 +1217,15 @@ class TestNetworkErrorHandling:
         """Test Linux network collection handles permission errors."""
         collector = HardwareCollectorLinux()
 
-        with patch("os.path.exists", return_value=True):
-            with patch("os.listdir", side_effect=PermissionError("Access denied")):
-                result = collector.get_network_info()
+        failed_ip = Mock()
+        failed_ip.returncode = 1
+        failed_ip.stdout = ""
+        failed_ip.stderr = "ip: command not found"
+
+        with patch("subprocess.run", return_value=failed_ip):
+            with patch("os.path.exists", return_value=True):
+                with patch("os.listdir", side_effect=PermissionError("Access denied")):
+                    result = collector.get_network_info()
 
         assert len(result) == 1
         assert "error" in result[0]
