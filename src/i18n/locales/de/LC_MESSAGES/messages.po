@@ -1385,3 +1385,37 @@ msgstr "Befehl hat nach %d Sekunden das Zeitlimit überschritten: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "Befehl hat nach %d Sekunden das Zeitlimit überschritten"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Prozessorerkennung-Fallback fehlgeschlagen: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show fehlgeschlagen, Fallback auf sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Agent-Aktualisierung fehlgeschlagen: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Agent-Aktualisierung wird unter Windows noch nicht unterstützt"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Agent-Aktualisierung wird unter macOS noch nicht unterstützt"
+
+msgid "Agent updated successfully"
+msgstr "Agent erfolgreich aktualisiert"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Linux-Distribution kann nicht erkannt werden"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Nicht unterstützte Linux-Distribution: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Agent auf untergeordnetem Host aktualisieren: Typ=%s, Name=%s, Distribution=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Nicht unterstützte untergeordnete Distribution für Agent-Update: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Untergeordneter Agent erfolgreich aktualisiert: %s"
+

@@ -1383,3 +1383,37 @@ msgstr "Opdracht verlopen na %d seconden: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "Opdracht verlopen na %d seconden"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Processor detectie-fallback mislukt: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show mislukt, terugvallen op sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Agent bijwerken mislukt: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Agent-update wordt nog niet ondersteund op Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Agent-update wordt nog niet ondersteund op macOS"
+
+msgid "Agent updated successfully"
+msgstr "Agent succesvol bijgewerkt"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Kan Linux-distributie niet detecteren"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Niet-ondersteunde Linux-distributie: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Agent bijwerken op kindhost: type=%s, naam=%s, distributie=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Niet-ondersteunde kinddistributie voor agent-update: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Kindagent succesvol bijgewerkt: %s"
+

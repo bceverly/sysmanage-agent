@@ -6,7 +6,6 @@ Handles package installation, uninstallation, and related operations.
 import asyncio
 import json
 import logging
-import os
 import socket
 import uuid
 from datetime import datetime, timezone
@@ -478,34 +477,33 @@ class PackageOperations:
                 "Installing packages with apt-get: %s", ", ".join(package_names)
             )
 
-            # Set non-interactive environment to prevent configuration dialogs
-            env = os.environ.copy()
-            env.update(
-                {
-                    "DEBIAN_FRONTEND": "noninteractive",
-                    "DEBCONF_NONINTERACTIVE_SEEN": "true",
-                }
-            )
-
             # Update package list first
+            # Pass env vars as sudo arguments for maximum portability across
+            # all sudo versions (Linux, macOS, BSDs)
             update_process = await asyncio.create_subprocess_exec(
                 "sudo",
-                "-E",
+                "DEBIAN_FRONTEND=noninteractive",
+                "DEBCONF_NONINTERACTIVE_SEEN=true",
                 "apt-get",
                 "update",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                env=env,
             )
             await update_process.communicate()
 
             # Install all packages in a single command
-            install_cmd = ["sudo", "-E", "apt-get", "install", "-y"] + package_names
+            install_cmd = [
+                "sudo",
+                "DEBIAN_FRONTEND=noninteractive",
+                "DEBCONF_NONINTERACTIVE_SEEN=true",
+                "apt-get",
+                "install",
+                "-y",
+            ] + package_names
             install_process = await asyncio.create_subprocess_exec(
                 *install_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                env=env,
             )
 
             stdout, stderr = await install_process.communicate()
@@ -540,19 +538,11 @@ class PackageOperations:
                 "Uninstalling packages with apt-get: %s", ", ".join(package_names)
             )
 
-            # Set non-interactive environment to prevent configuration dialogs
-            env = os.environ.copy()
-            env.update(
-                {
-                    "DEBIAN_FRONTEND": "noninteractive",
-                    "DEBCONF_NONINTERACTIVE_SEEN": "true",
-                }
-            )
-
             # Uninstall all packages in a single command (autoremove to clean up dependencies)
             uninstall_cmd = [
                 "sudo",
-                "-E",
+                "DEBIAN_FRONTEND=noninteractive",
+                "DEBCONF_NONINTERACTIVE_SEEN=true",
                 "apt-get",
                 "remove",
                 "--autoremove",
@@ -562,7 +552,6 @@ class PackageOperations:
                 *uninstall_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                env=env,
             )
 
             stdout, stderr = await uninstall_process.communicate()

@@ -1386,3 +1386,37 @@ msgstr "El comando agotó el tiempo de espera después de %d segundos: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "El comando agotó el tiempo de espera después de %d segundos"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Falló la detección alternativa del procesador: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show falló, volviendo a sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Error al actualizar el agente: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "La actualización del agente aún no es compatible con Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "La actualización del agente aún no es compatible con macOS"
+
+msgid "Agent updated successfully"
+msgstr "Agente actualizado correctamente"
+
+msgid "Cannot detect Linux distribution"
+msgstr "No se puede detectar la distribución de Linux"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Distribución de Linux no compatible: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Actualizando agente en host hijo: tipo=%s, nombre=%s, distribución=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Distribución hija no compatible para actualización del agente: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Agente hijo actualizado correctamente: %s"
+

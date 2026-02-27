@@ -1386,3 +1386,37 @@ msgstr "انتهت مهلة الأمر بعد %d ثانية: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "انتهت مهلة الأمر بعد %d ثانية"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "فشل الكشف البديل عن المعالج: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "فشل ip -j addr show، الرجوع إلى sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "فشل في تحديث الوكيل: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "تحديث الوكيل غير مدعوم بعد على Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "تحديث الوكيل غير مدعوم بعد على macOS"
+
+msgid "Agent updated successfully"
+msgstr "تم تحديث الوكيل بنجاح"
+
+msgid "Cannot detect Linux distribution"
+msgstr "لا يمكن اكتشاف توزيعة Linux"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "توزيعة Linux غير مدعومة: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "تحديث الوكيل على المضيف الفرعي: النوع=%s، الاسم=%s، التوزيعة=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "توزيعة فرعية غير مدعومة لتحديث الوكيل: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "تم تحديث الوكيل الفرعي بنجاح: %s"
+

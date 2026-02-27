@@ -82,7 +82,7 @@ get_priv_cmd() {
             if command -v doas >/dev/null 2>&1; then
                 echo "doas"
             elif command -v sudo >/dev/null 2>&1; then
-                echo "sudo -E"
+                echo "sudo"
             else
                 echo "❌ Neither doas nor sudo found. Please install one of them."
                 exit 1
@@ -91,7 +91,7 @@ get_priv_cmd() {
         *)
             # macOS and Linux use sudo
             if command -v sudo >/dev/null 2>&1; then
-                echo "sudo -E"
+                echo "sudo"
             else
                 echo "❌ sudo not found. Please install sudo."
                 exit 1
@@ -509,7 +509,7 @@ EOF
             fi
             ;;
         *)
-            # sudo with -E flag preserves environment
+            # sudo with explicit env vars passed on command line
             echo "🔑 Requesting elevated privileges with sudo..."
             # First, validate sudo access interactively (this will prompt for password if needed)
             if ! $priv_cmd true; then

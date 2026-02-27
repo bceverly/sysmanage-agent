@@ -1383,3 +1383,37 @@ msgstr "Превышено время ожидания команды через
 
 msgid "Command timed out after %d seconds"
 msgstr "Превышено время ожидания команды через %d секунд"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Резервное определение процессора не удалось: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show не удалось, переход на sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Не удалось обновить агент: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Обновление агента пока не поддерживается в Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Обновление агента пока не поддерживается в macOS"
+
+msgid "Agent updated successfully"
+msgstr "Агент успешно обновлён"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Не удаётся определить дистрибутив Linux"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Неподдерживаемый дистрибутив Linux: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Обновление агента на дочернем хосте: тип=%s, имя=%s, дистрибутив=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Неподдерживаемый дочерний дистрибутив для обновления агента: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Дочерний агент успешно обновлён: %s"
+

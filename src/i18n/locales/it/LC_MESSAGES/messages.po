@@ -1383,3 +1383,37 @@ msgstr "Il comando è scaduto dopo %d secondi: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "Il comando è scaduto dopo %d secondi"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Rilevamento processore alternativo non riuscito: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show non riuscito, ripiego su sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Aggiornamento agente non riuscito: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Aggiornamento agente non ancora supportato su Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Aggiornamento agente non ancora supportato su macOS"
+
+msgid "Agent updated successfully"
+msgstr "Agente aggiornato con successo"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Impossibile rilevare la distribuzione Linux"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Distribuzione Linux non supportata: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Aggiornamento agente sull'host figlio: tipo=%s, nome=%s, distribuzione=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Distribuzione figlio non supportata per aggiornamento agente: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Agente figlio aggiornato con successo: %s"
+

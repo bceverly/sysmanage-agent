@@ -341,6 +341,38 @@ class OSInfoCollector:
             self.logger.warning(_("Failed to get timezone: %s"), error)
             return time.tzname[0] if time.tzname[0] else "Unknown"
 
+    def _get_processor(self) -> str:
+        """Get the processor model name with platform-specific fallbacks.
+
+        platform.processor() returns an empty string on many Linux systems,
+        so we fall back to /proc/cpuinfo on Linux and sysctl on BSD.
+        """
+        result = platform.processor()
+        if result:
+            return result
+
+        system_name = platform.system()
+        try:
+            if system_name == "Linux":
+                with open("/proc/cpuinfo", encoding="utf-8") as cpuinfo:
+                    for line in cpuinfo:
+                        if line.startswith("model name"):
+                            return line.split(":", 1)[1].strip()
+            elif system_name in ("OpenBSD", "FreeBSD", "NetBSD"):
+                proc = subprocess.run(  # nosec B603
+                    ["/sbin/sysctl", "-n", "hw.model"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+                if proc.returncode == 0 and proc.stdout.strip():
+                    return proc.stdout.strip()
+        except Exception as error:
+            self.logger.debug(_("Processor detection fallback failed: %s"), error)
+
+        return platform.machine()
+
     def get_os_version_info(self) -> Dict[str, Any]:
         """Get comprehensive OS version information as separate data."""
         # Get CPU architecture (x86_64, arm64, aarch64, riscv64, etc.)
@@ -360,7 +392,7 @@ class OSInfoCollector:
             "platform_release": friendly_release,
             "platform_version": platform.version(),
             "architecture": platform.architecture()[0],
-            "processor": platform.processor(),
+            "processor": self._get_processor(),
             "machine_architecture": machine_arch,  # CPU architecture
             "timezone": self._get_timezone(),
             "python_version": platform.python_version(),

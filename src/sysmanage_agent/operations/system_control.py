@@ -204,6 +204,95 @@ class SystemControl:
             self.logger.error(_("Failed to shutdown system: %s"), error)
             return {"success": False, "error": str(error)}
 
+    async def update_agent(self) -> Dict[str, Any]:
+        """Update the sysmanage-agent package to the latest version."""
+        try:
+            system = platform.system().lower()
+            if system == "linux":
+                return await self._update_agent_linux()
+            if system.startswith("freebsd"):
+                return await self._update_agent_freebsd()
+            if system == "windows":
+                return {
+                    "success": False,
+                    "error": _("Agent update not yet supported on Windows"),
+                }
+            if system == "darwin":
+                return {
+                    "success": False,
+                    "error": _("Agent update not yet supported on macOS"),
+                }
+            return {
+                "success": False,
+                "error": _("Unsupported platform: %s") % system,
+            }
+        except Exception as error:
+            self.logger.error(_("Failed to update agent: %s"), error)
+            return {"success": False, "error": str(error)}
+
+    async def _update_agent_linux(self) -> Dict[str, Any]:
+        """Update agent on Linux using the appropriate package manager."""
+        distro_id = ""
+        distro_id_like = ""
+        try:
+            os_release = platform.freedesktop_os_release()
+            distro_id = os_release.get("ID", "").lower()
+            distro_id_like = os_release.get("ID_LIKE", "").lower()
+        except OSError:
+            # Fallback: read /etc/os-release manually
+            try:
+                with open("/etc/os-release", encoding="utf-8") as os_release_file:
+                    for line in os_release_file:
+                        if line.startswith("ID="):
+                            distro_id = line.strip().split("=", 1)[1].strip('"').lower()
+                        elif line.startswith("ID_LIKE="):
+                            distro_id_like = (
+                                line.strip().split("=", 1)[1].strip('"').lower()
+                            )
+            except FileNotFoundError:
+                return {
+                    "success": False,
+                    "error": _("Cannot detect Linux distribution"),
+                }
+
+        combined = f"{distro_id} {distro_id_like}"
+
+        if "debian" in combined or "ubuntu" in combined:
+            command = (
+                "sudo apt-get update "
+                "&& sudo apt-get install --only-upgrade -y sysmanage-agent"
+            )
+        elif "fedora" in combined or "rhel" in combined:
+            command = "sudo dnf upgrade -y sysmanage-agent"
+        elif "suse" in combined:
+            command = "sudo zypper --non-interactive update sysmanage-agent"
+        elif distro_id == "alpine":
+            command = "sudo apk update && sudo apk upgrade sysmanage-agent"
+        else:
+            return {
+                "success": False,
+                "error": _("Unsupported Linux distribution: %s") % distro_id,
+            }
+
+        result = await self.execute_shell_command({"command": command})
+        if result["success"]:
+            return {
+                "success": True,
+                "result": _("Agent updated successfully"),
+            }
+        return result
+
+    async def _update_agent_freebsd(self) -> Dict[str, Any]:
+        """Update agent on FreeBSD using pkg."""
+        command = "sudo pkg update && sudo pkg upgrade -y sysmanage-agent"
+        result = await self.execute_shell_command({"command": command})
+        if result["success"]:
+            return {
+                "success": True,
+                "result": _("Agent updated successfully"),
+            }
+        return result
+
     async def _send_antivirus_status_update(self, antivirus_status: Dict[str, Any]):
         """Send antivirus status update to server."""
         try:

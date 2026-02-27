@@ -1383,3 +1383,37 @@ msgstr "%d초 후 명령이 시간 초과되었습니다: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "%d초 후 명령이 시간 초과되었습니다"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "프로세서 감지 폴백 실패: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show 실패, sysfs로 폴백: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "에이전트 업데이트 실패: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Windows에서의 에이전트 업데이트는 아직 지원되지 않습니다"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "macOS에서의 에이전트 업데이트는 아직 지원되지 않습니다"
+
+msgid "Agent updated successfully"
+msgstr "에이전트가 성공적으로 업데이트되었습니다"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Linux 배포판을 감지할 수 없습니다"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "지원되지 않는 Linux 배포판: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "자식 호스트에서 에이전트 업데이트 중: 유형=%s, 이름=%s, 배포판=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "에이전트 업데이트에 지원되지 않는 자식 배포판: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "자식 에이전트가 성공적으로 업데이트되었습니다: %s"
+

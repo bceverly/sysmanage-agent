@@ -494,6 +494,23 @@ class KvmCreation:
                         "error": start_result.stderr or _("Failed to start VM"),
                     }
 
+                # Enable autostart so VM restarts after host reboot
+                self.logger.info(_("Enabling autostart for VM: %s"), config.vm_name)
+                autostart_result = subprocess.run(  # nosec B603 B607
+                    ["sudo", "virsh", "autostart", config.vm_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+
+                if autostart_result.returncode != 0:
+                    self.logger.warning(
+                        _("Failed to enable autostart for VM %s: %s"),
+                        config.vm_name,
+                        autostart_result.stderr,
+                    )
+
                 return {"success": True, "message": _("VM defined and started")}
 
             finally:

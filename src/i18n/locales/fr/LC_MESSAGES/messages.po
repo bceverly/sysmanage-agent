@@ -1383,3 +1383,37 @@ msgstr "La commande a expiré après %d secondes : %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "La commande a expiré après %d secondes"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Échec de la détection alternative du processeur : %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show a échoué, repli sur sysfs : %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Échec de la mise à jour de l'agent : %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Mise à jour de l'agent pas encore prise en charge sous Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Mise à jour de l'agent pas encore prise en charge sous macOS"
+
+msgid "Agent updated successfully"
+msgstr "Agent mis à jour avec succès"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Impossible de détecter la distribution Linux"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Distribution Linux non prise en charge : %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Mise à jour de l'agent sur l'hôte enfant : type=%s, nom=%s, distribution=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Distribution enfant non prise en charge pour la mise à jour de l'agent : %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Agent enfant mis à jour avec succès : %s"
+

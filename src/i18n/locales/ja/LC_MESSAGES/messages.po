@@ -1385,3 +1385,37 @@ msgstr "コマンドが %d 秒後にタイムアウトしました: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "コマンドが %d 秒後にタイムアウトしました"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "プロセッサ検出フォールバックが失敗しました: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show が失敗しました。sysfs にフォールバックします: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "エージェントの更新に失敗しました：%s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Windowsでのエージェント更新はまだサポートされていません"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "macOSでのエージェント更新はまだサポートされていません"
+
+msgid "Agent updated successfully"
+msgstr "エージェントが正常に更新されました"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Linuxディストリビューションを検出できません"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "サポートされていないLinuxディストリビューション：%s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "子ホストのエージェントを更新中：タイプ=%s、名前=%s、ディストリビューション=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "エージェント更新にサポートされていない子ディストリビューション：%s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "子エージェントが正常に更新されました：%s"
+

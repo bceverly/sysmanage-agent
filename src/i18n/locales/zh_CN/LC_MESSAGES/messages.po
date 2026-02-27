@@ -1383,3 +1383,37 @@ msgstr "命令在 %d 秒后超时: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "命令在 %d 秒后超时"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "处理器检测回退失败: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show 失败，回退到 sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "更新代理失败：%s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "尚不支持在 Windows 上更新代理"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "尚不支持在 macOS 上更新代理"
+
+msgid "Agent updated successfully"
+msgstr "代理更新成功"
+
+msgid "Cannot detect Linux distribution"
+msgstr "无法检测 Linux 发行版"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "不支持的 Linux 发行版：%s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "正在子主机上更新代理：类型=%s，名称=%s，发行版=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "不支持的子发行版用于代理更新：%s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "子代理更新成功：%s"
+

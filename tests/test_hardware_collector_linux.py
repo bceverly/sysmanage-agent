@@ -431,11 +431,99 @@ class TestGetNetworkInfo:
 
     def test_get_network_info_success(self, collector):
         """Test successful network info retrieval."""
-        interfaces = ["eth0", "lo", "wlan0"]
+        ip_json = json.dumps(
+            [
+                {
+                    "ifname": "lo",
+                    "operstate": "UNKNOWN",
+                    "address": "00:00:00:00:00:00",
+                    "mtu": 65536,
+                    "addr_info": [
+                        {"family": "inet", "local": "127.0.0.1", "prefixlen": 8}
+                    ],
+                },
+                {
+                    "ifname": "eth0",
+                    "operstate": "UP",
+                    "address": "00:11:22:33:44:55",
+                    "mtu": 1500,
+                    "addr_info": [
+                        {"family": "inet", "local": "192.168.1.10", "prefixlen": 24},
+                        {"family": "inet6", "local": "fe80::1", "prefixlen": 64},
+                    ],
+                },
+                {
+                    "ifname": "wlan0",
+                    "operstate": "DOWN",
+                    "address": "66:77:88:99:aa:bb",
+                    "mtu": 1500,
+                    "addr_info": [],
+                },
+            ]
+        )
+        mock_result = Mock(returncode=0, stdout=ip_json)
+
+        with patch("subprocess.run", return_value=mock_result):
+            with patch("os.path.exists", return_value=False):
+                net_info = collector.get_network_info()
+
+        # Should skip loopback
+        assert len(net_info) == 2
+        assert any(i["name"] == "eth0" for i in net_info)
+        assert any(i["name"] == "wlan0" for i in net_info)
+        assert not any(i["name"] == "lo" for i in net_info)
+
+        eth0 = next(i for i in net_info if i["name"] == "eth0")
+        assert eth0["is_active"] is True
+        assert eth0["mac_address"] == "00:11:22:33:44:55"
+        assert eth0["ipv4_address"] == "192.168.1.10"
+        assert eth0["subnet_mask"] == "255.255.255.0"
+        assert eth0["mtu"] == 1500
+
+        wlan0 = next(i for i in net_info if i["name"] == "wlan0")
+        assert wlan0["is_active"] is False
+        assert wlan0["ipv4_address"] is None
+
+    def test_get_network_info_no_interfaces(self, collector):
+        """Test network info when ip returns empty list."""
+        mock_result = Mock(returncode=0, stdout="[]")
+
+        with patch("subprocess.run", return_value=mock_result):
+            net_info = collector.get_network_info()
+
+        assert net_info == []
+
+    def test_get_network_info_partial_attributes(self, collector):
+        """Test network info when interface has no addresses."""
+        ip_json = json.dumps(
+            [
+                {
+                    "ifname": "eth0",
+                    "operstate": "UP",
+                    "address": "00:11:22:33:44:55",
+                    "mtu": 1500,
+                    "addr_info": [],
+                },
+            ]
+        )
+        mock_result = Mock(returncode=0, stdout=ip_json)
+
+        with patch("subprocess.run", return_value=mock_result):
+            with patch("os.path.exists", return_value=False):
+                net_info = collector.get_network_info()
+
+        assert len(net_info) == 1
+        assert net_info[0]["name"] == "eth0"
+        assert net_info[0]["is_active"] is True
+        assert net_info[0]["ipv4_address"] is None
+        assert net_info[0]["ipv6_address"] is None
+
+    def test_get_network_info_sysfs_fallback(self, collector):
+        """Test fallback to sysfs when ip command fails."""
 
         def mock_listdir(path):
             if path == "/sys/class/net":
-                return interfaces
+                return ["lo", "eth0"]
             return []
 
         def mock_exists(_path):
@@ -446,80 +534,32 @@ class TestGetNetworkInfo:
                 "/sys/class/net/eth0/type": "1",
                 "/sys/class/net/eth0/operstate": "up",
                 "/sys/class/net/eth0/address": "00:11:22:33:44:55",
-                "/sys/class/net/wlan0/type": "1",
-                "/sys/class/net/wlan0/operstate": "down",
-                "/sys/class/net/wlan0/address": "66:77:88:99:aa:bb",
             }
             for key, value in content_map.items():
                 if filename == key:
                     return mock_open(read_data=value)()
             raise FileNotFoundError
 
-        with patch("os.listdir", mock_listdir):
-            with patch("os.path.exists", mock_exists):
-                with patch("builtins.open", mock_open_files):
-                    net_info = collector.get_network_info()
+        mock_result = Mock(returncode=1, stdout="")
 
-        # Should skip loopback
-        assert len(net_info) == 2
-        assert any(i["name"] == "eth0" for i in net_info)
-        assert any(i["name"] == "wlan0" for i in net_info)
-        assert not any(i["name"] == "lo" for i in net_info)
-
-        eth0 = next(i for i in net_info if i["name"] == "eth0")
-        assert eth0["state"] == "up"
-        assert eth0["mac_address"] == "00:11:22:33:44:55"
-
-    def test_get_network_info_no_interfaces(self, collector):
-        """Test network info when no interfaces exist."""
-        with patch("os.path.exists", return_value=False):
-            net_info = collector.get_network_info()
-
-        assert net_info == []
-
-    def test_get_network_info_partial_attributes(self, collector):
-        """Test network info when some attributes are missing."""
-
-        def mock_listdir(path):
-            if path == "/sys/class/net":
-                return ["eth0"]
-            return []
-
-        def mock_path_exists(path):
-            # /sys/class/net must exist for the loop to work
-            if path == "/sys/class/net":
-                return True
-            # Only some attributes exist
-            if "type" in path or "operstate" in path:
-                return True
-            return False
-
-        def _mock_path_join(base, *parts):
-            import os.path as real_os_path  # pylint: disable=import-outside-toplevel
-
-            return real_os_path.join(base, *parts)
-
-        def mock_open_files(filename, *_args, **_kwargs):
-            if "type" in filename:
-                return mock_open(read_data="1")()
-            if "operstate" in filename:
-                return mock_open(read_data="up")()
-            raise FileNotFoundError
-
-        with patch("os.listdir", mock_listdir):
-            with patch("os.path.exists", mock_path_exists):
-                with patch("builtins.open", mock_open_files):
-                    net_info = collector.get_network_info()
+        with patch("subprocess.run", return_value=mock_result):
+            with patch("os.listdir", mock_listdir):
+                with patch("os.path.exists", mock_exists):
+                    with patch("builtins.open", mock_open_files):
+                        net_info = collector.get_network_info()
 
         assert len(net_info) == 1
         assert net_info[0]["name"] == "eth0"
-        assert "mac_address" not in net_info[0]  # Was not available
+        assert net_info[0]["mac_address"] == "00:11:22:33:44:55"
 
     def test_get_network_info_exception(self, collector):
-        """Test network info with general exception."""
-        with patch("os.path.exists", return_value=True):
-            with patch("os.listdir", side_effect=Exception("test error")):
-                net_info = collector.get_network_info()
+        """Test network info with exception falls back to sysfs error handling."""
+        mock_result = Mock(returncode=1, stdout="")
+
+        with patch("subprocess.run", return_value=mock_result):
+            with patch("os.path.exists", return_value=True):
+                with patch("os.listdir", side_effect=Exception("test error")):
+                    net_info = collector.get_network_info()
 
         assert len(net_info) > 0
         assert "error" in net_info[0]

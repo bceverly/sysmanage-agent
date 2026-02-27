@@ -50,6 +50,10 @@ class SystemOperationsDelegator:
         """Shutdown the system."""
         return await self.system_ops.shutdown_system()
 
+    async def update_agent(self) -> Dict[str, Any]:
+        """Update the sysmanage-agent to the latest version."""
+        return await self.system_ops.update_agent()
+
     async def ubuntu_pro_attach(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Attach Ubuntu Pro subscription using provided token."""
         return await self.system_ops.ubuntu_pro_attach(parameters)

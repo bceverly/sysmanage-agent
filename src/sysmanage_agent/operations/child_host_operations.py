@@ -750,6 +750,75 @@ class ChildHostOperations:
             "error": _UNSUPPORTED_CHILD_TYPE % child_type,
         }
 
+    async def update_child_agent(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update the sysmanage-agent inside a child host via the parent.
+
+        Args:
+            parameters: Dict containing:
+                - child_name: Name of the child host
+                - child_type: Type of child host ('wsl', 'lxd', 'bhyve', 'kvm', 'vmm')
+                - distribution: OS distribution of the child (e.g. 'Ubuntu', 'FreeBSD')
+
+        Returns:
+            Dict with success status
+        """
+        child_name = parameters.get("child_name")
+        child_type = parameters.get("child_type", "")
+        distribution = (parameters.get("distribution") or "").lower()
+
+        self.logger.info(
+            _("Updating agent on child host: type=%s, name=%s, distribution=%s"),
+            child_type,
+            child_name,
+            distribution,
+        )
+
+        # Build the update command based on the child's distribution
+        if any(d in distribution for d in ("ubuntu", "debian")):
+            update_cmd = (
+                "apt-get update && apt-get install --only-upgrade -y sysmanage-agent"
+            )
+        elif any(
+            d in distribution
+            for d in ("fedora", "centos", "oracle", "rocky", "alma", "rhel")
+        ):
+            update_cmd = "dnf upgrade -y sysmanage-agent"
+        elif "freebsd" in distribution:
+            update_cmd = "pkg update && pkg upgrade -y sysmanage-agent"
+        elif "alpine" in distribution:
+            update_cmd = "apk update && apk upgrade sysmanage-agent"
+        elif any(d in distribution for d in ("opensuse", "sles", "suse")):
+            update_cmd = "zypper --non-interactive update sysmanage-agent"
+        else:
+            return {
+                "success": False,
+                "error": _("Unsupported child distribution for agent update: %s")
+                % distribution,
+            }
+
+        # Execute via the appropriate container/VM exec mechanism
+        if child_type == "lxd":
+            exec_cmd = f"lxc exec {child_name} -- sh -c '{update_cmd}'"
+        elif child_type == "wsl":
+            exec_cmd = f"wsl -d {child_name} -- sh -c '{update_cmd}'"
+        elif child_type in ("bhyve", "vmm", "kvm"):
+            # For VMs, SSH into the child using its name
+            exec_cmd = f"ssh {child_name} '{update_cmd}'"
+        else:
+            return {
+                "success": False,
+                "error": _UNSUPPORTED_CHILD_TYPE % child_type,
+            }
+
+        result = await self.agent.execute_shell_command({"command": exec_cmd})
+        if result.get("success"):
+            return {
+                "success": True,
+                "result": _("Child agent updated successfully: %s") % child_name,
+            }
+        return result
+
     async def delete_child_host(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Delete a child host. This permanently removes the child host and all its data.

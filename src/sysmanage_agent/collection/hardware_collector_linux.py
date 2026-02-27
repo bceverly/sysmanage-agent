@@ -349,19 +349,95 @@ class HardwareCollectorLinux(HardwareCollectorBase):
 
         return interface_info
 
-    def get_network_info(self) -> List[Dict[str, Any]]:
-        """Get network information on Linux using /sys/class/net."""
+    @staticmethod
+    def _prefixlen_to_netmask(prefixlen: int) -> str:
+        """Convert a prefix length (e.g. 24) to a dotted-decimal netmask."""
+        bits = (0xFFFFFFFF << (32 - prefixlen)) & 0xFFFFFFFF
+        return ".".join(str((bits >> (8 * i)) & 0xFF) for i in range(3, -1, -1))
 
+    def _parse_ip_json_interface(self, iface: Dict[str, Any]) -> Dict[str, Any]:
+        """Parse a single interface entry from 'ip -j addr show' JSON output."""
+        name = iface.get("ifname", "")
+        operstate = iface.get("operstate", "").upper()
+        is_active = operstate in ("UP", "UNKNOWN")
+
+        info: Dict[str, Any] = {
+            "name": name,
+            "mac_address": iface.get("address"),
+            "is_active": is_active,
+            "ipv4_address": None,
+            "ipv6_address": None,
+            "subnet_mask": None,
+            "mtu": iface.get("mtu"),
+            "speed_mbps": None,
+        }
+
+        # Read speed from sysfs (only works for physical interfaces)
+        speed_path = f"/sys/class/net/{name}/speed"
+        if os.path.exists(speed_path):
+            try:
+                with open(speed_path, "r", encoding="utf-8") as speed_file:
+                    speed_val = int(speed_file.read().strip())
+                    if speed_val > 0:
+                        info["speed_mbps"] = speed_val
+            except (ValueError, OSError):
+                pass
+
+        # Extract IP addresses from addr_info
+        for addr in iface.get("addr_info", []):
+            family = addr.get("family")
+            local = addr.get("local", "")
+            if family == "inet" and not info["ipv4_address"]:
+                info["ipv4_address"] = local
+                prefixlen = addr.get("prefixlen")
+                if prefixlen is not None:
+                    info["subnet_mask"] = self._prefixlen_to_netmask(prefixlen)
+            elif family == "inet6" and not info["ipv6_address"]:
+                # Skip link-local addresses in favor of global ones
+                if not local.startswith("fe80:"):
+                    info["ipv6_address"] = local
+
+        # If no global IPv6 was found, take link-local as fallback
+        if not info["ipv6_address"]:
+            for addr in iface.get("addr_info", []):
+                if addr.get("family") == "inet6":
+                    info["ipv6_address"] = addr.get("local", "")
+                    break
+
+        return info
+
+    def get_network_info(self) -> List[Dict[str, Any]]:
+        """Get network information on Linux using 'ip -j addr show'."""
+        try:
+            result = subprocess.run(
+                ["ip", "-j", "addr", "show"],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                interfaces = json.loads(result.stdout)
+                return [
+                    self._parse_ip_json_interface(iface)
+                    for iface in interfaces
+                    if iface.get("ifname") != "lo"
+                ]
+        except (json.JSONDecodeError, FileNotFoundError, OSError) as error:
+            self.logger.debug(
+                _("ip -j addr show failed, falling back to sysfs: %s"), error
+            )
+
+        # Fallback to sysfs-only collection
         network_interfaces = []
         try:
             net_dir = "/sys/class/net"
             if os.path.exists(net_dir):
                 for interface in os.listdir(net_dir):
-                    if interface == "lo":  # Skip loopback
+                    if interface == "lo":
                         continue
                     interface_info = self._collect_single_interface_info(interface)
                     network_interfaces.append(interface_info)
-
         except Exception as error:
             network_interfaces.append(
                 {"error": _("Failed to get Linux network info: %s") % str(error)}

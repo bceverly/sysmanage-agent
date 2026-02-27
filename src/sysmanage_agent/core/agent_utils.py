@@ -334,6 +334,7 @@ class MessageProcessor:
             "delete_host_user": self.agent.delete_host_user,
             "delete_host_group": self.agent.delete_host_group,
             "change_hostname": self.agent.change_hostname,
+            "update_agent": lambda params: self.agent.update_agent(),
             # Child host management commands
             "check_virtualization_support": self.agent.child_host_ops.check_virtualization_support,
             "list_child_hosts": self.agent.child_host_ops.list_child_hosts,
@@ -350,6 +351,7 @@ class MessageProcessor:
             "stop_child_host": self.agent.child_host_ops.stop_child_host,
             "restart_child_host": self.agent.child_host_ops.restart_child_host,
             "delete_child_host": self.agent.child_host_ops.delete_child_host,
+            "update_child_agent": self.agent.child_host_ops.update_child_agent,
             # KVM networking commands
             "setup_kvm_networking": self.agent.child_host_ops.setup_kvm_networking,
             "list_kvm_networks": self.agent.child_host_ops.list_kvm_networks,

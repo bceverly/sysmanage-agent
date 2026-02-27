@@ -1381,3 +1381,37 @@ msgstr "%d सेकंड के बाद कमांड का समय स
 
 msgid "Command timed out after %d seconds"
 msgstr "%d सेकंड के बाद कमांड का समय समाप्त हो गया"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "प्रोसेसर पहचान फ़ॉलबैक विफल: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show विफल, sysfs पर वापस जा रहा है: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "एजेंट अपडेट विफल: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "एजेंट अपडेट अभी Windows पर समर्थित नहीं है"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "एजेंट अपडेट अभी macOS पर समर्थित नहीं है"
+
+msgid "Agent updated successfully"
+msgstr "एजेंट सफलतापूर्वक अपडेट किया गया"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Linux वितरण का पता नहीं लगाया जा सकता"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "असमर्थित Linux वितरण: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "चाइल्ड होस्ट पर एजेंट अपडेट हो रहा है: प्रकार=%s, नाम=%s, वितरण=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "एजेंट अपडेट के लिए असमर्थित चाइल्ड वितरण: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "चाइल्ड एजेंट सफलतापूर्वक अपडेट किया गया: %s"
+

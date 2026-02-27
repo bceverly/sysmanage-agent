@@ -889,3 +889,40 @@ msgstr "Command timed out after %d seconds: %s"
 
 msgid "Command timed out after %d seconds"
 msgstr "Command timed out after %d seconds"
+
+msgid "Processor detection fallback failed: %s"
+msgstr "Processor detection fallback failed: %s"
+
+msgid "ip -j addr show failed, falling back to sysfs: %s"
+msgstr "ip -j addr show failed, falling back to sysfs: %s"
+
+msgid "Failed to update agent: %s"
+msgstr "Failed to update agent: %s"
+
+msgid "Agent update not yet supported on Windows"
+msgstr "Agent update not yet supported on Windows"
+
+msgid "Agent update not yet supported on macOS"
+msgstr "Agent update not yet supported on macOS"
+
+msgid "Unsupported platform: %s"
+msgstr "Unsupported platform: %s"
+
+msgid "Agent updated successfully"
+msgstr "Agent updated successfully"
+
+msgid "Cannot detect Linux distribution"
+msgstr "Cannot detect Linux distribution"
+
+msgid "Unsupported Linux distribution: %s"
+msgstr "Unsupported Linux distribution: %s"
+
+msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
+msgstr "Updating agent on child host: type=%s, name=%s, distribution=%s"
+
+msgid "Unsupported child distribution for agent update: %s"
+msgstr "Unsupported child distribution for agent update: %s"
+
+msgid "Child agent updated successfully: %s"
+msgstr "Child agent updated successfully: %s"
+

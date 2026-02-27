@@ -165,6 +165,7 @@ class LxdOperations:
 
         Sets security.nesting=true so containers can run sudo and nested
         operations (e.g. Ubuntu Pro attach, package management).
+        Sets boot.autostart=true so containers restart after host reboot.
         """
         self.logger.info(
             _("Configuring LXD default profile for container compatibility")
@@ -180,10 +181,25 @@ class LxdOperations:
                 _("Could not set security.nesting on default profile: %s"),
                 result.stderr or result.stdout,
             )
-            # Continue anyway - individual containers can be configured manually
         else:
             self.logger.info(
                 _("LXD default profile configured with security.nesting=true")
+            )
+
+        # Enable autostart so containers restart after host reboot
+        autostart_result = await run_command_async(
+            ["lxc", "profile", "set", "default", "boot.autostart", "true"],
+            timeout=30,
+        )
+
+        if autostart_result.returncode != 0:
+            self.logger.warning(
+                _("Could not set boot.autostart on default profile: %s"),
+                autostart_result.stderr or autostart_result.stdout,
+            )
+        else:
+            self.logger.info(
+                _("LXD default profile configured with boot.autostart=true")
             )
 
     def _verify_lxd_ready(self, lxd_check: dict, firewall_result: dict) -> dict:
