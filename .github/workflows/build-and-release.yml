@@ -2810,10 +2810,10 @@ jobs:
           # Download wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)
           # Note: Use 3.9.21 to avoid cryptography's exclusion of 3.9.0 and 3.9.1
           echo "Downloading wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           # Download conditional dependencies for Python <3.11
-          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
+          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           echo "Downloaded $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels for Python 3.9"
 
           # Note: Skipping Python 3.11 - no distributions currently use it
@@ -2821,19 +2821,19 @@ jobs:
           # Download wheels for Python 3.12 (EPEL 10, CentOS Stream 10)
           echo ""
           echo "Downloading wheels for Python 3.12 (EPEL 10, CentOS Stream 10)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.12.11 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.12.11 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           echo "Total wheels after Python 3.12: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
 
           # Download wheels for Python 3.13 (Fedora 41, 42)
           echo ""
           echo "Downloading wheels for Python 3.13 (Fedora 41, 42)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.13.1 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.13.1 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           echo "Total wheels after Python 3.13: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
 
           # Download wheels for Python 3.14 (Fedora 43)
           echo ""
           echo "Downloading wheels for Python 3.14 (Fedora 43)..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.14.0 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
+          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.14.0 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           echo "Total wheels after Python 3.14: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
 
           # Verify all required packages are present
@@ -2917,11 +2917,11 @@ jobs:
           echo "https://copr.fedorainfracloud.org/coprs/$COPR_USERNAME/sysmanage-agent/builds/"
           echo ""
           echo "Copr will now build for all configured chroots:"
-          echo "  - Fedora 41 (Python 3.13)"
-          echo "  - Fedora 42 (Python 3.13)"
-          echo "  - Fedora 43 (Python 3.14)"
-          echo "  - EPEL 9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9 - Python 3.9)"
-          echo "  - EPEL 10 (RHEL 10, CentOS Stream 10 - Python 3.12)"
+          echo "  - Fedora 41 x86_64 and aarch64 (Python 3.13)"
+          echo "  - Fedora 42 x86_64 and aarch64 (Python 3.13)"
+          echo "  - Fedora 43 x86_64 and aarch64 (Python 3.14)"
+          echo "  - EPEL 9 x86_64 and aarch64 (RHEL 9, Rocky 9, AlmaLinux 9, Oracle Linux 9, CentOS Stream 9 - Python 3.9)"
+          echo "  - EPEL 10 x86_64 and aarch64 (RHEL 10, CentOS Stream 10 - Python 3.12)"
           echo "  - Amazon Linux 2023 (Python 3.9)"
           echo ""
           echo "Note: EPEL 8 (Python 3.6) is not supported - dependencies require Python >=3.9"

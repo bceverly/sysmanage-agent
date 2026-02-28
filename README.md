@@ -45,7 +45,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 
 ### Supported Platforms
 
-- 🐧 **Linux**: Ubuntu, Debian, CentOS, RHEL, Fedora
+- 🐧 **Linux**: Ubuntu, Debian, CentOS, RHEL, Fedora, Rocky, AlmaLinux, Oracle Linux
 - 🪟 **Windows**: 10, 11, Server 2019/2022
 - 🍎 **macOS**: Intel and Apple Silicon
 - 🔒 **FreeBSD**: Latest stable versions
@@ -73,9 +73,9 @@ sudo systemctl restart sysmanage-agent
 
 **Supported:** Ubuntu 22.04+, Debian 11+
 
-#### RHEL/CentOS/Fedora/Rocky/AlmaLinux - YUM/DNF Repository
+#### RHEL/CentOS/Fedora/Rocky/AlmaLinux/Oracle Linux - YUM/DNF Repository
 
-**EL9 (RHEL 9, Rocky 9, AlmaLinux 9, CentOS Stream 9):**
+**EL9 (RHEL 9, Rocky 9, AlmaLinux 9, Oracle Linux 9, CentOS Stream 9):**
 ```bash
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
@@ -88,7 +88,7 @@ EOF
 sudo dnf install sysmanage-agent
 ```
 
-**EL8 (RHEL 8, Rocky 8, AlmaLinux 8):**
+**EL8 (RHEL 8, Rocky 8, AlmaLinux 8, Oracle Linux 8):**
 ```bash
 # Install Python 3.11 first
 sudo dnf module install python311
