@@ -3469,7 +3469,7 @@ deploy-copr:
 	tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
 	echo "Created source tarball: sysmanage-agent-$$VERSION.tar.gz"; \
 	\
-	echo "Creating vendor tarball (Python 3.9 + 3.12 + 3.13 + 3.14 wheels)..."; \
+	echo "Creating vendor tarball (Python 3.9 + 3.11 + 3.12 + 3.13 + 3.14 wheels)..."; \
 	rm -rf /tmp/vendor; \
 	mkdir -p /tmp/vendor; \
 	echo "Downloading wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)..."; \
@@ -3488,6 +3488,12 @@ deploy-copr:
 		--platform manylinux2014_x86_64 \
 		--platform manylinux_2_17_x86_64 \
 		--only-binary=:all: 2>/dev/null || true; \
+	echo "Downloading wheels for Python 3.11 (EPEL 8)..."; \
+	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
+		--python-version 3.11.11 \
+		--platform manylinux2014_x86_64 \
+		--platform manylinux_2_17_x86_64 \
+		--only-binary=:all:; \
 	echo "Downloading wheels for Python 3.12 (EPEL 10, CentOS Stream 10)..."; \
 	pip3 download -r "$$WORKSPACE/requirements-prod.txt" -d /tmp/vendor \
 		--python-version 3.12.11 \
