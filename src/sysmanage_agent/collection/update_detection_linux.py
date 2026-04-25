@@ -310,9 +310,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             packages_by_manager.setdefault(mgr, []).append(pkg)
 
         for pkg_manager, pkg_list in packages_by_manager.items():
-            logger.info(
-                _("Applying %d updates using %s"), len(pkg_list), pkg_manager
-            )
+            logger.info(_("Applying %d updates using %s"), len(pkg_list), pkg_manager)
             try:
                 self._process_linux_manager_updates(pkg_manager, pkg_list, results)
             except Exception as error:  # pragma: no cover - defensive
@@ -330,8 +328,12 @@ class LinuxUpdateDetector(UpdateDetectorBase):
 
         try:
             results["requires_reboot"] = self._detect_linux_reboot_required()
-        except Exception:  # pragma: no cover - defensive
-            pass
+        except Exception as exc:  # pragma: no cover - defensive
+            # Don't fail the whole apply just because the reboot probe broke;
+            # log at debug so it's recoverable from logs without being noisy.
+            logger.debug(
+                "Reboot-required detection failed after applying updates: %s", exc
+            )
 
         logger.info(
             _("Update process completed: %d updated, %d failed"),
@@ -357,9 +359,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
         }
         handler = dispatch.get(pkg_manager)
         if handler is None:
-            logger.warning(
-                _("Unsupported package manager for apply: %s"), pkg_manager
-            )
+            logger.warning(_("Unsupported package manager for apply: %s"), pkg_manager)
             for pkg in pkg_list:
                 results["failed_packages"].append(
                     {
