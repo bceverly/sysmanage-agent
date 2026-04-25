@@ -44,7 +44,7 @@ class LinuxUpdateApplicator:
                         {
                             "package_name": package["package_name"],
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "apt",
                         }
                     )
@@ -87,7 +87,7 @@ class LinuxUpdateApplicator:
                         {
                             "package_name": package["package_name"],
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "snap",
                         }
                     )
@@ -128,7 +128,7 @@ class LinuxUpdateApplicator:
                         {
                             "package_name": package["package_name"],
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "flatpak",
                         }
                     )
@@ -170,7 +170,7 @@ class LinuxUpdateApplicator:
                         {
                             "package_name": package["package_name"],
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "dnf",
                         }
                     )
@@ -234,7 +234,7 @@ class LinuxUpdateApplicator:
                         {
                             "package_name": package_name,
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "fwupd",
                             "device_id": device_id,
                             "requires_reboot": True,

@@ -258,6 +258,119 @@ class LinuxUpdateDetector(UpdateDetectorBase):
 
     # ========== Update Application (Delegated) ==========
 
+    # ========== Apply Updates Dispatcher ==========
+
+    def apply_updates(
+        self,
+        package_names: List[str] = None,  # pylint: disable=unused-argument
+        package_managers: List[str] = None,  # pylint: disable=unused-argument
+        packages: List[Dict] = None,
+    ) -> Dict[str, Any]:
+        """Apply updates for the requested packages.
+
+        Groups packages by package manager and dispatches to the
+        appropriate per-manager `_apply_*_updates` handler so that, e.g.,
+        three snap packages become a single `snap refresh a b c` rather
+        than three separate calls.
+
+        Args:
+            packages: List of package dicts. Each must include
+                ``package_name`` and ``package_manager``; ``bundle_id``
+                is optional.
+            package_names, package_managers: Accepted for signature
+                symmetry with the BSD/Windows detectors. The server
+                dispatcher only ever passes ``packages``; these kwargs
+                are ignored.
+
+        Returns:
+            Dict with ``updated_packages``, ``failed_packages``,
+            ``requires_reboot``, and ``timestamp`` keys, matching the
+            shape produced by the BSD and Windows detectors.
+        """
+        results: Dict[str, Any] = {
+            "updated_packages": [],
+            "failed_packages": [],
+            "requires_reboot": False,
+            "timestamp": "",
+        }
+
+        if not packages:
+            return results
+
+        packages_by_manager: Dict[str, List[Dict]] = {}
+        for pkg in packages:
+            # Normalize the dict so applicators can rely on "package_name".
+            # The server-side validator emits {"name": ..., "package_manager": ...}
+            # while every Linux applicator reads pkg["package_name"]. Adding the
+            # alias here (mirroring the BSD detector's _enrich_package_info)
+            # avoids touching the validator or every applicator.
+            if "package_name" not in pkg and "name" in pkg:
+                pkg = {**pkg, "package_name": pkg["name"]}
+            mgr = pkg.get("package_manager", "unknown")
+            packages_by_manager.setdefault(mgr, []).append(pkg)
+
+        for pkg_manager, pkg_list in packages_by_manager.items():
+            logger.info(
+                _("Applying %d updates using %s"), len(pkg_list), pkg_manager
+            )
+            try:
+                self._process_linux_manager_updates(pkg_manager, pkg_list, results)
+            except Exception as error:  # pragma: no cover - defensive
+                logger.error(
+                    _("Failed to apply %s updates: %s"), pkg_manager, str(error)
+                )
+                for pkg in pkg_list:
+                    results["failed_packages"].append(
+                        {
+                            "package_name": pkg.get("package_name"),
+                            "package_manager": pkg_manager,
+                            "error": str(error),
+                        }
+                    )
+
+        try:
+            results["requires_reboot"] = self._detect_linux_reboot_required()
+        except Exception:  # pragma: no cover - defensive
+            pass
+
+        logger.info(
+            _("Update process completed: %d updated, %d failed"),
+            len(results["updated_packages"]),
+            len(results["failed_packages"]),
+        )
+        return results
+
+    def _process_linux_manager_updates(
+        self, pkg_manager: str, pkg_list: List[Dict], results: Dict
+    ) -> None:
+        """Route a per-manager apply call to the right `_apply_*` method."""
+        dispatch = {
+            "apt": self._apply_apt_updates,
+            "snap": self._apply_snap_updates,
+            "flatpak": self._apply_flatpak_updates,
+            "dnf": self._apply_dnf_updates,
+            "yum": self._apply_dnf_updates,
+            "fwupd": self._apply_fwupd_updates,
+            "ubuntu_release": self._apply_ubuntu_release_updates,
+            "fedora_release": self._apply_fedora_release_updates,
+            "opensuse_release": self._apply_opensuse_release_updates,
+        }
+        handler = dispatch.get(pkg_manager)
+        if handler is None:
+            logger.warning(
+                _("Unsupported package manager for apply: %s"), pkg_manager
+            )
+            for pkg in pkg_list:
+                results["failed_packages"].append(
+                    {
+                        "package_name": pkg.get("package_name"),
+                        "package_manager": pkg_manager,
+                        "error": f"Unsupported package manager: {pkg_manager}",
+                    }
+                )
+            return
+        handler(pkg_list, results)
+
     def _apply_apt_updates(self, packages: List[Dict], results: Dict):
         """Apply APT updates."""
         self.applicator.apply_apt_updates(packages, results)
