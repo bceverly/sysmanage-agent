@@ -718,27 +718,13 @@ class GenericDeployment:
         if spec.get("sudo") and os.geteuid() != 0:
             run_argv = ["sudo", "-n"] + run_argv
 
-        # Per Sonar's structured-concurrency rule, the timeout is owned by
-        # the caller (this method) via `asyncio.timeout()` rather than
-        # passed down as a parameter to `_exec_plan_command`.
         try:
-            async with asyncio.timeout(timeout):
-                return await self._exec_plan_command(
-                    argv,
-                    run_argv,
-                    description=description,
-                    ignore_errors=ignore_errors,
-                )
-        except asyncio.TimeoutError:
-            return (
-                {
-                    "argv": argv,
-                    "description": description,
-                    "success": False,
-                    "error": "timeout",
-                },
-                f"Command '{description}' timed out after {timeout}s",
-                not ignore_errors,
+            return await self._exec_plan_command(
+                argv,
+                run_argv,
+                description=description,
+                timeout=timeout,
+                ignore_errors=ignore_errors,
             )
         except FileNotFoundError as exc:
             return (
@@ -769,14 +755,16 @@ class GenericDeployment:
         run_argv: list,
         *,
         description: str,
+        timeout: int,
         ignore_errors: bool,
     ) -> tuple:
-        """Spawn the subprocess and translate the exit code into a result tuple.
+        """Spawn the subprocess and translate the exit/timeout into a result tuple.
 
-        Timeout enforcement lives in the caller via `asyncio.timeout()`.
-        On cancellation we still need to reap the subprocess so it doesn't
-        outlive the deployment run, then re-raise so the timeout block
-        sees it.
+        Uses `asyncio.wait_for` for the timeout because this codebase still
+        supports Python 3.9/3.10 where `asyncio.timeout()` (the structured
+        replacement) is not available.  Sonar S7497 will flag the
+        `timeout=` kwarg here — accept the warning until 3.10 support is
+        dropped.
         """
         proc = await asyncio.create_subprocess_exec(
             *run_argv,
@@ -784,11 +772,20 @@ class GenericDeployment:
             stderr=asyncio.subprocess.PIPE,
         )
         try:
-            stdout, stderr = await proc.communicate()
-        except asyncio.CancelledError:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        except asyncio.TimeoutError:
             proc.kill()
             await proc.wait()
-            raise
+            return (
+                {
+                    "argv": argv,
+                    "description": description,
+                    "success": False,
+                    "error": "timeout",
+                },
+                f"Command '{description}' timed out after {timeout}s",
+                not ignore_errors,
+            )
 
         returncode = proc.returncode or 0
         cmd_ok = returncode == 0
