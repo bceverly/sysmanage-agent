@@ -310,6 +310,7 @@ class MessageProcessor:
             "get_service_status": self._handle_get_service_status,
             "deploy_files": self.agent.deploy_files,
             "execute_command_sequence": self.agent.execute_command_sequence,
+            "apply_deployment_plan": self.agent.apply_deployment_plan,
             "deploy_opentelemetry": self.agent.deploy_opentelemetry,
             "remove_opentelemetry": self.agent.remove_opentelemetry,
             "list_third_party_repositories": self.agent.list_third_party_repositories,
@@ -317,16 +318,10 @@ class MessageProcessor:
             "delete_third_party_repositories": self.agent.delete_third_party_repositories,
             "enable_third_party_repositories": self.agent.enable_third_party_repositories,
             "disable_third_party_repositories": self.agent.disable_third_party_repositories,
-            "deploy_antivirus": self.agent.deploy_antivirus,
-            "enable_antivirus": self.agent.enable_antivirus,
-            "disable_antivirus": self.agent.disable_antivirus,
-            "remove_antivirus": self.agent.remove_antivirus,
-            "deploy_firewall": self.agent.deploy_firewall,
-            "enable_firewall": self.agent.enable_firewall,
-            "disable_firewall": self.agent.disable_firewall,
-            "restart_firewall": self.agent.restart_firewall,
-            "apply_firewall_roles": self.agent.apply_firewall_roles,
-            "remove_firewall_ports": self.agent.remove_firewall_ports,
+            # Phase 3: legacy AV/firewall handlers removed. The server now
+            # sends a declarative deploy plan via "apply_deployment_plan" and
+            # the agent runs it via deploy_files+execute_command_sequence+
+            # service_control under the hood.
             "attach_to_graylog": self.agent.attach_to_graylog,
             "enable_package_manager": self.agent.enable_package_manager,
             "create_host_user": self.agent.create_host_user,
@@ -550,18 +545,30 @@ class MessageProcessor:
         except Exception as error:
             self.logger.error(_("Error storing execution UUID: %s"), error)
 
+    # Actions accepted by the generic service-control handler. The first three
+    # change running state; the last two change boot-time enablement.
+    _SERVICE_CONTROL_ACTIONS = ("start", "stop", "restart", "enable", "disable")
+
     async def _handle_service_control(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Handle service control commands (start, stop, restart)."""
+        """Handle service control commands.
+
+        Supported actions: start, stop, restart, enable, disable. Picks the
+        appropriate service manager for the host (systemctl, rc-service+rc-update,
+        launchctl, sc.exe) so the same message works across distros.
+        """
         try:
             action = parameters.get("action")
             services = parameters.get("services", [])
 
-            if not action or action not in ["start", "stop", "restart"]:
+            if not action or action not in self._SERVICE_CONTROL_ACTIONS:
                 return {
                     "success": False,
-                    "error": "Invalid or missing action. Must be 'start', 'stop', or 'restart'",
+                    "error": (
+                        "Invalid or missing action. Must be one of: "
+                        + ", ".join(self._SERVICE_CONTROL_ACTIONS)
+                    ),
                 }
 
             if not services:
@@ -607,24 +614,31 @@ class MessageProcessor:
     async def _process_service_control_action(
         self, action: str, service: str
     ) -> Dict[str, Any]:
-        """Execute a single service control action (start/stop/restart) for one service.
+        """Execute one service control action for one service.
+
+        Picks the correct service manager for the host:
+            systemctl  — most modern Linux distros
+            rc-service / rc-update — Alpine, Gentoo (OpenRC)
+            launchctl  — macOS
+            sc.exe     — Windows
+        Falls back to systemctl if nothing else is present (preserving the
+        previous behavior on hosts where the platform probe is inconclusive).
 
         Args:
-            action: The systemctl action to perform (start, stop, restart)
-            service: The service name to act on
+            action: start | stop | restart | enable | disable
+            service: The service name (or unit name) to act on.
 
         Returns:
-            Dict with success status and message or error
+            Dict with success status and message or error.
         """
         try:
             self.logger.info(_("Executing %s for service: %s"), action, service)
 
-            systemctl_path = shutil.which("systemctl")
-            if not systemctl_path:
+            cmd = self._build_service_control_cmd(action, service)
+            if cmd is None:
+                # No supported service manager found on this host
                 self.logger.error(_(_SYSTEMCTL_NOT_FOUND))
                 return {"success": False, "error": _SYSTEMCTL_NOT_FOUND}
-
-            cmd = [systemctl_path, action, service]
 
             result = await run_command_async(cmd, timeout=30.0)
 
@@ -654,6 +668,62 @@ class MessageProcessor:
             error_msg = str(error)
             self.logger.error(_("Service control error for %s: %s"), service, error_msg)
             return {"success": False, "error": error_msg}
+
+    @staticmethod
+    def _build_service_control_cmd(action: str, service: str) -> Optional[list]:
+        """Pick the right service-manager invocation for this host.
+
+        Returns the argv list to pass to run_command_async, or None if no
+        supported manager is available.
+
+        Detection order: systemctl (most Linux), rc-service/rc-update (OpenRC),
+        launchctl (macOS), sc.exe (Windows). The first one found on PATH wins.
+        We do NOT use the BSD `service` command because its action vocabulary
+        (e.g. `service nginx onestart`) doesn't match what we accept here;
+        BSD support is a follow-up.
+        """
+        # systemctl handles all five actions natively
+        systemctl_path = shutil.which("systemctl")
+        if systemctl_path:
+            return [systemctl_path, action, service]
+
+        # OpenRC: enable/disable use rc-update; start/stop/restart use rc-service
+        rc_service = shutil.which("rc-service")
+        rc_update = shutil.which("rc-update")
+        if rc_service and rc_update:
+            if action in ("enable", "disable"):
+                # rc-update add <svc> default | rc-update del <svc> default
+                rc_action = "add" if action == "enable" else "del"
+                return [rc_update, rc_action, service, "default"]
+            return [rc_service, service, action]
+
+        # macOS launchctl. Service names on macOS are typically reverse-DNS
+        # (e.g. com.sysmanage.agent) and may need a domain prefix in newer
+        # macOS; this minimal form covers system daemons in /Library/LaunchDaemons.
+        launchctl_path = shutil.which("launchctl")
+        if launchctl_path:
+            mapping = {
+                "start": ["start", service],
+                "stop": ["stop", service],
+                "restart": ["kickstart", "-k", f"system/{service}"],
+                "enable": ["enable", f"system/{service}"],
+                "disable": ["disable", f"system/{service}"],
+            }
+            return [launchctl_path] + mapping[action]
+
+        # Windows sc.exe
+        sc_path = shutil.which("sc.exe") or shutil.which("sc")
+        if sc_path:
+            mapping = {
+                "start": ["start", service],
+                "stop": ["stop", service],
+                "restart": ["stop", service],  # caller should issue stop+start
+                "enable": ["config", service, "start=", "auto"],
+                "disable": ["config", service, "start=", "disabled"],
+            }
+            return [sc_path] + mapping[action]
+
+        return None
 
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""

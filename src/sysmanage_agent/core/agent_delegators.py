@@ -84,6 +84,10 @@ class SystemOperationsDelegator:
         """Execute a sequence of commands."""
         return await self.system_ops.execute_command_sequence(parameters)
 
+    async def apply_deployment_plan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply a declarative deployment plan (packages+files+commands+services)."""
+        return await self.system_ops.apply_deployment_plan(parameters)
+
     async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Deploy OpenTelemetry collector to the system."""
         return await self.system_ops.deploy_opentelemetry(parameters)
@@ -121,22 +125,6 @@ class SystemOperationsDelegator:
     ) -> Dict[str, Any]:
         """Disable third-party repositories on the system."""
         return await self.system_ops.disable_third_party_repositories(parameters)
-
-    async def deploy_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy antivirus software to the system."""
-        return await self.system_ops.deploy_antivirus(parameters)
-
-    async def enable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Enable antivirus service(s)."""
-        return await self.system_ops.enable_antivirus(parameters)
-
-    async def disable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Disable antivirus service(s)."""
-        return await self.system_ops.disable_antivirus(parameters)
-
-    async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove antivirus software from the system."""
-        return await self.system_ops.remove_antivirus(parameters)
 
     async def create_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new user account on the host."""
@@ -359,34 +347,6 @@ class UpdateManagerDelegator:
         await self.update_manager.send_reboot_status_update(requires_reboot)
 
 
-class FirewallDelegator:
-    """Mixin providing firewall operations delegators."""
-
-    async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy (install and enable) firewall on the system."""
-        return await self.firewall_ops.deploy_firewall(parameters)
-
-    async def enable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Enable firewall and ensure agent communication ports are open."""
-        return await self.firewall_ops.enable_firewall(parameters)
-
-    async def disable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Disable firewall on the system."""
-        return await self.firewall_ops.disable_firewall(parameters)
-
-    async def restart_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Restart firewall service on the system."""
-        return await self.firewall_ops.restart_firewall(parameters)
-
-    async def apply_firewall_roles(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Apply firewall roles by setting open ports based on assigned roles."""
-        return await self.firewall_ops.apply_firewall_roles(parameters)
-
-    async def remove_firewall_ports(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove specific firewall ports (used when a firewall role is removed)."""
-        return await self.firewall_ops.remove_firewall_ports(parameters)
-
-
 class MiscDelegator:
     """Mixin providing miscellaneous operation delegators."""
 
@@ -430,7 +390,6 @@ class AgentDelegatorMixin(
     DataCollectorDelegator,
     RegistrationDelegator,
     UpdateManagerDelegator,
-    FirewallDelegator,
     MiscDelegator,
 ):
     """Combined mixin providing all delegator methods for SysManageAgent."""

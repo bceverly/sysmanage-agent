@@ -1112,3 +1112,164 @@ class TestTestSudoAccess:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("sudo", 5)):
             result = _test_sudo_access()
             assert result is False
+
+
+# ============================================================================
+# Section 8.6 additions — enable/disable + platform-aware service control
+# ============================================================================
+
+
+class TestServiceControlNewActions:
+    """Tests for the enable/disable actions and the platform-aware
+    command builder added to service_control per ROADMAP Section 8.6."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_agent = Mock()
+        self.mock_agent.collect_roles = AsyncMock()
+        self.mock_logger = Mock()
+        self.processor = MessageProcessor(self.mock_agent, self.mock_logger)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("action", ["enable", "disable"])
+    async def test_enable_disable_accepted_as_valid_actions(self, action):
+        """enable/disable should pass the action validator and run a command."""
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+
+        with patch(
+            "src.sysmanage_agent.core.agent_utils.is_running_privileged",
+            return_value=True,
+        ), patch("shutil.which", return_value="/usr/bin/systemctl"), patch(
+            "src.sysmanage_agent.core.agent_utils.run_command_async",
+            return_value=mock_result,
+        ) as mock_run:
+            result = await self.processor._handle_service_control(
+                {"action": action, "services": ["nginx"]}
+            )
+
+        assert result["success"] is True
+        assert result["action"] == action
+        # Confirm we actually invoked systemctl with the right action
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd == ["/usr/bin/systemctl", action, "nginx"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_action_still_rejected(self):
+        """Actions outside the allowed set are still rejected after enable/disable were added."""
+        result = await self.processor._handle_service_control(
+            {"action": "reload", "services": ["nginx"]}
+        )
+        assert result["success"] is False
+        # New error message lists every allowed action
+        for verb in ("start", "stop", "restart", "enable", "disable"):
+            assert verb in result["error"]
+
+
+class TestBuildServiceControlCmd:
+    """Tests for the static _build_service_control_cmd helper that picks
+    the right service-manager invocation per host."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_agent = Mock()
+        self.mock_logger = Mock()
+        self.processor = MessageProcessor(self.mock_agent, self.mock_logger)
+
+    def _which_only(self, binary_name):
+        """Return a side_effect that makes shutil.which find ONLY one binary."""
+
+        def fake_which(name):
+            return f"/usr/bin/{name}" if name == binary_name else None
+
+        return fake_which
+
+    def test_systemctl_used_when_available(self):
+        """systemctl is preferred over everything else."""
+        with patch("shutil.which", side_effect=self._which_only("systemctl")):
+            cmd = self.processor._build_service_control_cmd("restart", "nginx")
+        assert cmd == ["/usr/bin/systemctl", "restart", "nginx"]
+
+    def test_openrc_start_uses_rc_service(self):
+        """On Alpine/Gentoo (no systemctl), rc-service runs lifecycle actions."""
+
+        def fake_which(name):
+            return {
+                "rc-service": "/sbin/rc-service",
+                "rc-update": "/sbin/rc-update",
+            }.get(name)
+
+        with patch("shutil.which", side_effect=fake_which):
+            cmd = self.processor._build_service_control_cmd("start", "nginx")
+        assert cmd == ["/sbin/rc-service", "nginx", "start"]
+
+    def test_openrc_enable_uses_rc_update(self):
+        """On OpenRC, enable maps to `rc-update add <svc> default`."""
+
+        def fake_which(name):
+            return {
+                "rc-service": "/sbin/rc-service",
+                "rc-update": "/sbin/rc-update",
+            }.get(name)
+
+        with patch("shutil.which", side_effect=fake_which):
+            cmd = self.processor._build_service_control_cmd("enable", "nginx")
+        assert cmd == ["/sbin/rc-update", "add", "nginx", "default"]
+
+    def test_openrc_disable_uses_rc_update_del(self):
+        """disable maps to `rc-update del`."""
+
+        def fake_which(name):
+            return {
+                "rc-service": "/sbin/rc-service",
+                "rc-update": "/sbin/rc-update",
+            }.get(name)
+
+        with patch("shutil.which", side_effect=fake_which):
+            cmd = self.processor._build_service_control_cmd("disable", "nginx")
+        assert cmd == ["/sbin/rc-update", "del", "nginx", "default"]
+
+    def test_macos_launchctl_restart_uses_kickstart(self):
+        """On macOS, restart is `launchctl kickstart -k system/<svc>`."""
+        with patch("shutil.which", side_effect=self._which_only("launchctl")):
+            cmd = self.processor._build_service_control_cmd(
+                "restart", "com.sysmanage.agent"
+            )
+        assert cmd == [
+            "/usr/bin/launchctl",
+            "kickstart",
+            "-k",
+            "system/com.sysmanage.agent",
+        ]
+
+    def test_macos_launchctl_enable_prefixed_with_domain(self):
+        """launchctl enable/disable need a domain prefix (e.g. system/<svc>)."""
+        with patch("shutil.which", side_effect=self._which_only("launchctl")):
+            cmd = self.processor._build_service_control_cmd(
+                "enable", "com.sysmanage.agent"
+            )
+        assert cmd == [
+            "/usr/bin/launchctl",
+            "enable",
+            "system/com.sysmanage.agent",
+        ]
+
+    def test_windows_sc_disable_uses_config_start_disabled(self):
+        """On Windows, disable maps to `sc.exe config <svc> start= disabled`."""
+
+        def fake_which(name):
+            # Note: on a non-Windows host shutil.which still resolves "sc" if
+            # something happens to be on PATH; we mock to be deterministic.
+            return "/usr/bin/sc.exe" if name == "sc.exe" else None
+
+        with patch("shutil.which", side_effect=fake_which):
+            cmd = self.processor._build_service_control_cmd("disable", "MyService")
+        assert cmd == ["/usr/bin/sc.exe", "config", "MyService", "start=", "disabled"]
+
+    def test_returns_none_when_no_supported_manager_present(self):
+        """If nothing usable is on PATH, returns None so the caller errors out."""
+        with patch("shutil.which", return_value=None):
+            cmd = self.processor._build_service_control_cmd("start", "nginx")
+        assert cmd is None

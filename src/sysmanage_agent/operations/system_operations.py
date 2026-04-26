@@ -8,8 +8,6 @@ This is a facade class that delegates to specialized operation classes.
 import logging
 from typing import Any, Dict
 
-from src.sysmanage_agent.operations.antivirus_operations import AntivirusOperations
-from src.sysmanage_agent.operations.firewall_operations import FirewallOperations
 from src.sysmanage_agent.operations.generic_deployment import GenericDeployment
 from src.sysmanage_agent.operations.hostname_operations import HostnameOperations
 from src.sysmanage_agent.operations.opentelemetry_operations import (
@@ -36,8 +34,6 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.system_control = SystemControl(agent_instance)
         self.package_ops = PackageOperations(agent_instance)
         self.otel_ops = OpenTelemetryOperations(agent_instance)
-        self.antivirus_ops = AntivirusOperations(agent_instance)
-        self.firewall_ops = FirewallOperations(agent_instance)
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
         self.user_account_ops = UserAccountOperations(agent_instance)
@@ -215,30 +211,6 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         """Disconnect OpenTelemetry from Grafana."""
         return await self.otel_ops.disconnect_opentelemetry_grafana(parameters)
 
-    # ========== Antivirus Operations Delegation ==========
-
-    async def deploy_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy antivirus software (ClamAV)."""
-        return await self.antivirus_ops.deploy_antivirus(parameters)
-
-    async def enable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Enable antivirus software (ClamAV)."""
-        return await self.antivirus_ops.enable_antivirus(parameters)
-
-    async def disable_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Disable antivirus software (ClamAV)."""
-        return await self.antivirus_ops.disable_antivirus(parameters)
-
-    async def remove_antivirus(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove antivirus software (ClamAV)."""
-        return await self.antivirus_ops.remove_antivirus(parameters)
-
-    async def _send_antivirus_status_update(self, antivirus_status: Dict[str, Any]):
-        """Send antivirus status update to server."""
-        return await self.antivirus_ops._send_antivirus_status_update(  # pylint: disable=protected-access
-            antivirus_status
-        )
-
     # ========== Repository Operations Delegation ==========
 
     async def list_third_party_repositories(
@@ -281,24 +253,6 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         """Check if URL is a valid OpenBuildService URL."""
         return self.repo_ops._check_obs_url(url)  # pylint: disable=protected-access
 
-    # ========== Firewall Operations Delegation ==========
-
-    async def deploy_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy (install and enable) firewall."""
-        return await self.firewall_ops.deploy_firewall(parameters)
-
-    async def enable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Enable firewall."""
-        return await self.firewall_ops.enable_firewall(parameters)
-
-    async def disable_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Disable firewall."""
-        return await self.firewall_ops.disable_firewall(parameters)
-
-    async def restart_firewall(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Restart firewall."""
-        return await self.firewall_ops.restart_firewall(parameters)
-
     # ========== User Account Operations Delegation ==========
 
     async def create_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -334,3 +288,7 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     ) -> Dict[str, Any]:
         """Execute a command sequence."""
         return await self.generic_deployment.execute_command_sequence(parameters)
+
+    async def apply_deployment_plan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply a complete declarative deployment plan."""
+        return await self.generic_deployment.apply_deployment_plan(parameters)

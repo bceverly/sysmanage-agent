@@ -966,72 +966,10 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             assert result["success"] is True
             mock_disconnect.assert_called_once_with({})
 
-    # ========== Antivirus Operations Delegation Tests ==========
-
-    @pytest.mark.asyncio
-    async def test_deploy_antivirus_delegation(self):
-        """Test deploy_antivirus delegates to antivirus_ops."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "deploy_antivirus", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.return_value = {"success": True, "result": "AV deployed"}
-
-            result = await self.system_ops.deploy_antivirus({})
-
-            assert result["success"] is True
-            mock_deploy.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_enable_antivirus_delegation(self):
-        """Test enable_antivirus delegates to antivirus_ops."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "enable_antivirus", new_callable=AsyncMock
-        ) as mock_enable:
-            mock_enable.return_value = {"success": True, "result": "AV enabled"}
-
-            result = await self.system_ops.enable_antivirus({})
-
-            assert result["success"] is True
-            mock_enable.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_disable_antivirus_delegation(self):
-        """Test disable_antivirus delegates to antivirus_ops."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "disable_antivirus", new_callable=AsyncMock
-        ) as mock_disable:
-            mock_disable.return_value = {"success": True, "result": "AV disabled"}
-
-            result = await self.system_ops.disable_antivirus({})
-
-            assert result["success"] is True
-            mock_disable.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_remove_antivirus_delegation(self):
-        """Test remove_antivirus delegates to antivirus_ops."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "remove_antivirus", new_callable=AsyncMock
-        ) as mock_remove:
-            mock_remove.return_value = {"success": True, "result": "AV removed"}
-
-            result = await self.system_ops.remove_antivirus({})
-
-            assert result["success"] is True
-            mock_remove.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_send_antivirus_status_update_delegation(self):
-        """Test _send_antivirus_status_update delegates to antivirus_ops."""
-        with patch.object(
-            self.system_ops.antivirus_ops,
-            "_send_antivirus_status_update",
-            new_callable=AsyncMock,
-        ) as mock_send:
-            antivirus_status = {"software_name": "clamav", "enabled": True}
-            await self.system_ops._send_antivirus_status_update(antivirus_status)
-
-            mock_send.assert_called_once_with(antivirus_status)
+    # NOTE: Antivirus delegation tests removed in Phase 3 — SystemOperations
+    # no longer has an antivirus_ops attribute. The open-source server now
+    # builds declarative deploy plans via backend/services/av_plan_builder.py
+    # and dispatches them via the apply_deployment_plan handler.
 
     # ========== Repository Operations Delegation Tests ==========
 
@@ -1159,62 +1097,10 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             assert result is False
             mock_check.assert_called_once_with("https://random-site.com/")
 
-    # ========== Firewall Operations Delegation Tests ==========
-
-    @pytest.mark.asyncio
-    async def test_deploy_firewall_delegation(self):
-        """Test deploy_firewall delegates to firewall_ops."""
-        with patch.object(
-            self.system_ops.firewall_ops, "deploy_firewall", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.return_value = {"success": True, "result": "Firewall deployed"}
-
-            result = await self.system_ops.deploy_firewall({})
-
-            assert result["success"] is True
-            mock_deploy.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_enable_firewall_delegation(self):
-        """Test enable_firewall delegates to firewall_ops."""
-        with patch.object(
-            self.system_ops.firewall_ops, "enable_firewall", new_callable=AsyncMock
-        ) as mock_enable:
-            mock_enable.return_value = {"success": True, "result": "Firewall enabled"}
-
-            result = await self.system_ops.enable_firewall({})
-
-            assert result["success"] is True
-            mock_enable.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_disable_firewall_delegation(self):
-        """Test disable_firewall delegates to firewall_ops."""
-        with patch.object(
-            self.system_ops.firewall_ops, "disable_firewall", new_callable=AsyncMock
-        ) as mock_disable:
-            mock_disable.return_value = {"success": True, "result": "Firewall disabled"}
-
-            result = await self.system_ops.disable_firewall({})
-
-            assert result["success"] is True
-            mock_disable.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_restart_firewall_delegation(self):
-        """Test restart_firewall delegates to firewall_ops."""
-        with patch.object(
-            self.system_ops.firewall_ops, "restart_firewall", new_callable=AsyncMock
-        ) as mock_restart:
-            mock_restart.return_value = {
-                "success": True,
-                "result": "Firewall restarted",
-            }
-
-            result = await self.system_ops.restart_firewall({})
-
-            assert result["success"] is True
-            mock_restart.assert_called_once_with({})
+    # NOTE: Firewall delegation tests removed in Phase 3 — SystemOperations
+    # no longer has a firewall_ops attribute. The open-source server now
+    # builds declarative deploy plans via backend/services/firewall_plan_builder.py
+    # and dispatches them via the apply_deployment_plan handler.
 
     # ========== User Account Operations Delegation Tests ==========
 
@@ -1301,8 +1187,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         assert self.system_ops.system_control is not None
         assert self.system_ops.package_ops is not None
         assert self.system_ops.otel_ops is not None
-        assert self.system_ops.antivirus_ops is not None
-        assert self.system_ops.firewall_ops is not None
+        # antivirus_ops and firewall_ops removed in Phase 3.
         assert self.system_ops.repo_ops is not None
         assert self.system_ops.ubuntu_pro_ops is not None
         assert self.system_ops.user_account_ops is not None
@@ -1406,31 +1291,8 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             assert "Deployment failed" in str(excinfo.value)
 
-    @pytest.mark.asyncio
-    async def test_deploy_firewall_exception(self):
-        """Test deploy_firewall when exception is raised."""
-        with patch.object(
-            self.system_ops.firewall_ops, "deploy_firewall", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.side_effect = Exception("Firewall installation failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.deploy_firewall({})
-
-            assert "Firewall installation failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_deploy_antivirus_exception(self):
-        """Test deploy_antivirus when exception is raised."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "deploy_antivirus", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.side_effect = Exception("ClamAV installation failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.deploy_antivirus({})
-
-            assert "ClamAV installation failed" in str(excinfo.value)
+    # NOTE: deploy_firewall / deploy_antivirus exception tests removed in
+    # Phase 3 — those delegators no longer exist on SystemOperations.
 
     @pytest.mark.asyncio
     async def test_create_host_group_exception(self):
@@ -1569,44 +1431,8 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             assert "Rescan failed" in str(excinfo.value)
 
-    @pytest.mark.asyncio
-    async def test_enable_antivirus_exception(self):
-        """Test enable_antivirus when exception is raised."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "enable_antivirus", new_callable=AsyncMock
-        ) as mock_enable:
-            mock_enable.side_effect = Exception("Enable failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.enable_antivirus({})
-
-            assert "Enable failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_disable_antivirus_exception(self):
-        """Test disable_antivirus when exception is raised."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "disable_antivirus", new_callable=AsyncMock
-        ) as mock_disable:
-            mock_disable.side_effect = Exception("Disable failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.disable_antivirus({})
-
-            assert "Disable failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_remove_antivirus_exception(self):
-        """Test remove_antivirus when exception is raised."""
-        with patch.object(
-            self.system_ops.antivirus_ops, "remove_antivirus", new_callable=AsyncMock
-        ) as mock_remove:
-            mock_remove.side_effect = Exception("Remove failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.remove_antivirus({})
-
-            assert "Remove failed" in str(excinfo.value)
+    # NOTE: enable/disable/remove_antivirus exception tests removed in
+    # Phase 3 — those delegators no longer exist on SystemOperations.
 
     @pytest.mark.asyncio
     async def test_remove_opentelemetry_exception(self):
@@ -1696,44 +1522,8 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
             assert "Disconnect failed" in str(excinfo.value)
 
-    @pytest.mark.asyncio
-    async def test_enable_firewall_exception(self):
-        """Test enable_firewall when exception is raised."""
-        with patch.object(
-            self.system_ops.firewall_ops, "enable_firewall", new_callable=AsyncMock
-        ) as mock_enable:
-            mock_enable.side_effect = Exception("Enable failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.enable_firewall({})
-
-            assert "Enable failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_disable_firewall_exception(self):
-        """Test disable_firewall when exception is raised."""
-        with patch.object(
-            self.system_ops.firewall_ops, "disable_firewall", new_callable=AsyncMock
-        ) as mock_disable:
-            mock_disable.side_effect = Exception("Disable failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.disable_firewall({})
-
-            assert "Disable failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_restart_firewall_exception(self):
-        """Test restart_firewall when exception is raised."""
-        with patch.object(
-            self.system_ops.firewall_ops, "restart_firewall", new_callable=AsyncMock
-        ) as mock_restart:
-            mock_restart.side_effect = Exception("Restart failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.restart_firewall({})
-
-            assert "Restart failed" in str(excinfo.value)
+    # NOTE: enable/disable/restart_firewall exception tests removed in
+    # Phase 3 — those delegators no longer exist on SystemOperations.
 
     # ========== Return Value Validation Tests ==========
 

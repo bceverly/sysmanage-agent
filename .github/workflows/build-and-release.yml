@@ -2715,8 +2715,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip rpm
 
-          # Install copr-cli via pip (not available in Ubuntu repos)
-          pip3 install copr-cli
+          # Install copr-cli via pip (not available in Ubuntu repos).
+          # `rich` is an undeclared runtime dep in copr-cli >= 1.115 — without
+          # it, every subcommand crashes with `ModuleNotFoundError: No module
+          # named 'rich'` before any HTTP request goes out.
+          pip3 install copr-cli rich
 
           # Add pip binaries to PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH

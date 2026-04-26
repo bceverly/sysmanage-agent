@@ -241,14 +241,12 @@ class LxdOperations:
                     "message": "Firewall configuration not needed on non-Linux",
                 }
 
-            # Use the existing firewall operations infrastructure
             # pylint: disable=import-outside-toplevel
-            from src.sysmanage_agent.operations.firewall_linux import (
-                LinuxFirewallOperations,
+            from src.sysmanage_agent.operations.lxd_firewall_helper import (
+                configure_lxd_firewall,
             )
 
-            firewall_ops = LinuxFirewallOperations(self.agent, self.logger)
-            result = firewall_ops.configure_lxd_firewall("lxdbr0")
+            result = configure_lxd_firewall(self.logger, "lxdbr0")
 
             if result.get("success"):
                 self.logger.info(_("Firewall configured for LXD networking"))

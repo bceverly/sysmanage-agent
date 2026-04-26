@@ -397,14 +397,12 @@ class TestLxdOperationsConfigureFirewall:
         assert "not needed" in result["message"].lower()
 
     def test_configure_firewall_success(self, lxd_ops):
-        """Test configuring firewall successfully."""
+        """Test configuring firewall successfully via the lxd_firewall_helper."""
         with patch("platform.system", return_value="Linux"):
             with patch(
-                "src.sysmanage_agent.operations.firewall_linux.LinuxFirewallOperations"
-            ) as mock_firewall:
-                mock_instance = Mock()
-                mock_instance.configure_lxd_firewall.return_value = {"success": True}
-                mock_firewall.return_value = mock_instance
+                "src.sysmanage_agent.operations.lxd_firewall_helper.configure_lxd_firewall",
+                return_value={"success": True, "message": "ok"},
+            ):
                 result = lxd_ops._configure_lxd_firewall()
 
         assert result["success"] is True
@@ -413,7 +411,7 @@ class TestLxdOperationsConfigureFirewall:
         """Test configuring firewall with exception."""
         with patch("platform.system", return_value="Linux"):
             with patch(
-                "src.sysmanage_agent.operations.firewall_linux.LinuxFirewallOperations",
+                "src.sysmanage_agent.operations.lxd_firewall_helper.configure_lxd_firewall",
                 side_effect=Exception("Firewall error"),
             ):
                 result = lxd_ops._configure_lxd_firewall()

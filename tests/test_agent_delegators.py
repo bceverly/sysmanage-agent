@@ -6,9 +6,10 @@ Tests the delegator mixin classes that forward calls to appropriate handlers:
 - DataCollectorDelegator
 - RegistrationDelegator
 - UpdateManagerDelegator
-- FirewallDelegator
 - MiscDelegator
 - AgentDelegatorMixin
+
+(FirewallDelegator was removed in Phase 3 — see comment in agent_delegators.py.)
 """
 
 # pylint: disable=protected-access,too-many-public-methods
@@ -20,7 +21,6 @@ import pytest
 from src.sysmanage_agent.core.agent_delegators import (
     AgentDelegatorMixin,
     DataCollectorDelegator,
-    FirewallDelegator,
     MiscDelegator,
     RegistrationDelegator,
     SystemOperationsDelegator,
@@ -346,57 +346,10 @@ class TestSystemOperationsDelegator:
             parameters
         )
 
-    @pytest.mark.asyncio
-    async def test_deploy_antivirus(self, delegator):
-        """Test deploy_antivirus delegation."""
-        delegator.system_ops.deploy_antivirus = AsyncMock(
-            return_value={"success": True, "result": "Antivirus deployed"}
-        )
-        parameters = {"software": "clamav"}
-
-        result = await delegator.deploy_antivirus(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.deploy_antivirus.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_enable_antivirus(self, delegator):
-        """Test enable_antivirus delegation."""
-        delegator.system_ops.enable_antivirus = AsyncMock(
-            return_value={"success": True, "result": "Antivirus enabled"}
-        )
-        parameters = {"software": "clamav"}
-
-        result = await delegator.enable_antivirus(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.enable_antivirus.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_disable_antivirus(self, delegator):
-        """Test disable_antivirus delegation."""
-        delegator.system_ops.disable_antivirus = AsyncMock(
-            return_value={"success": True, "result": "Antivirus disabled"}
-        )
-        parameters = {"software": "clamav"}
-
-        result = await delegator.disable_antivirus(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.disable_antivirus.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_remove_antivirus(self, delegator):
-        """Test remove_antivirus delegation."""
-        delegator.system_ops.remove_antivirus = AsyncMock(
-            return_value={"success": True, "result": "Antivirus removed"}
-        )
-        parameters = {"software": "clamav"}
-
-        result = await delegator.remove_antivirus(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.remove_antivirus.assert_called_once_with(parameters)
+    # NOTE: deploy/enable/disable/remove_antivirus delegators were removed
+    # in Phase 3; the open-source server now sends apply_deployment_plan
+    # messages instead, which are dispatched via the existing generic
+    # deployment handler.
 
     @pytest.mark.asyncio
     async def test_create_host_user(self, delegator):
@@ -1000,91 +953,10 @@ class TestUpdateManagerDelegator:
         )
 
 
-class TestFirewallDelegator:
-    """Test FirewallDelegator mixin class."""
-
-    @pytest.fixture
-    def delegator(self):
-        """Create a mock delegator instance."""
-        return MockDelegatorClass()
-
-    @pytest.mark.asyncio
-    async def test_deploy_firewall(self, delegator):
-        """Test deploy_firewall delegation."""
-        delegator.firewall_ops.deploy_firewall = AsyncMock(
-            return_value={"success": True, "result": "Firewall deployed"}
-        )
-        parameters = {"firewall_type": "ufw"}
-
-        result = await delegator.deploy_firewall(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.deploy_firewall.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_enable_firewall(self, delegator):
-        """Test enable_firewall delegation."""
-        delegator.firewall_ops.enable_firewall = AsyncMock(
-            return_value={"success": True, "result": "Firewall enabled"}
-        )
-        parameters = {}
-
-        result = await delegator.enable_firewall(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.enable_firewall.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_disable_firewall(self, delegator):
-        """Test disable_firewall delegation."""
-        delegator.firewall_ops.disable_firewall = AsyncMock(
-            return_value={"success": True, "result": "Firewall disabled"}
-        )
-        parameters = {}
-
-        result = await delegator.disable_firewall(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.disable_firewall.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_restart_firewall(self, delegator):
-        """Test restart_firewall delegation."""
-        delegator.firewall_ops.restart_firewall = AsyncMock(
-            return_value={"success": True, "result": "Firewall restarted"}
-        )
-        parameters = {}
-
-        result = await delegator.restart_firewall(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.restart_firewall.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_apply_firewall_roles(self, delegator):
-        """Test apply_firewall_roles delegation."""
-        delegator.firewall_ops.apply_firewall_roles = AsyncMock(
-            return_value={"success": True, "result": "Roles applied"}
-        )
-        parameters = {"roles": ["web_server", "ssh"]}
-
-        result = await delegator.apply_firewall_roles(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.apply_firewall_roles.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_remove_firewall_ports(self, delegator):
-        """Test remove_firewall_ports delegation."""
-        delegator.firewall_ops.remove_firewall_ports = AsyncMock(
-            return_value={"success": True, "result": "Ports removed"}
-        )
-        parameters = {"ports": [80, 443]}
-
-        result = await delegator.remove_firewall_ports(parameters)
-
-        assert result["success"] is True
-        delegator.firewall_ops.remove_firewall_ports.assert_called_once_with(parameters)
+# NOTE: TestFirewallDelegator was removed in Phase 3. The agent no longer
+# has a FirewallDelegator mixin — the open-source server now sends
+# apply_deployment_plan messages and the agent runs them via the existing
+# generic deployment handler (see test_generic_deployment.TestApplyDeploymentPlan).
 
 
 class TestMiscDelegator:
@@ -1181,7 +1053,6 @@ class TestAgentDelegatorMixin:
         assert issubclass(AgentDelegatorMixin, DataCollectorDelegator)
         assert issubclass(AgentDelegatorMixin, RegistrationDelegator)
         assert issubclass(AgentDelegatorMixin, UpdateManagerDelegator)
-        assert issubclass(AgentDelegatorMixin, FirewallDelegator)
         assert issubclass(AgentDelegatorMixin, MiscDelegator)
 
     def test_mock_delegator_has_all_methods(self):
@@ -1209,10 +1080,8 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "delete_third_party_repositories")
         assert hasattr(delegator, "enable_third_party_repositories")
         assert hasattr(delegator, "disable_third_party_repositories")
-        assert hasattr(delegator, "deploy_antivirus")
-        assert hasattr(delegator, "enable_antivirus")
-        assert hasattr(delegator, "disable_antivirus")
-        assert hasattr(delegator, "remove_antivirus")
+        # NOTE: deploy/enable/disable/remove_antivirus delegators removed
+        # in Phase 3.
         assert hasattr(delegator, "create_host_user")
         assert hasattr(delegator, "create_host_group")
         assert hasattr(delegator, "delete_host_user")
@@ -1265,13 +1134,7 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "check_reboot_status")
         assert hasattr(delegator, "send_reboot_status_update")
 
-        # FirewallDelegator methods
-        assert hasattr(delegator, "deploy_firewall")
-        assert hasattr(delegator, "enable_firewall")
-        assert hasattr(delegator, "disable_firewall")
-        assert hasattr(delegator, "restart_firewall")
-        assert hasattr(delegator, "apply_firewall_roles")
-        assert hasattr(delegator, "remove_firewall_ports")
+        # NOTE: FirewallDelegator removed in Phase 3.
 
         # MiscDelegator methods
         assert hasattr(delegator, "handle_command")
@@ -1329,15 +1192,8 @@ class TestDelegatorErrorHandling:
         with pytest.raises(Exception, match="Update check failed"):
             await delegator.check_updates()
 
-    @pytest.mark.asyncio
-    async def test_firewall_ops_exception_propagation(self, delegator):
-        """Test that exceptions from firewall_ops propagate correctly."""
-        delegator.firewall_ops.deploy_firewall = AsyncMock(
-            side_effect=Exception("Firewall deployment failed")
-        )
-
-        with pytest.raises(Exception, match="Firewall deployment failed"):
-            await delegator.deploy_firewall({})
+    # NOTE: test_firewall_ops_exception_propagation removed in Phase 3 —
+    # firewall ops are no longer dispatched through the agent delegator.
 
     @pytest.mark.asyncio
     async def test_script_ops_exception_propagation(self, delegator):
