@@ -104,100 +104,32 @@ class GenericDeployment:
         owner_gid = file_spec.get("owner_gid", 0)
         expected_sha256 = file_spec.get("expected_sha256")
         backup_requested = bool(file_spec.get("backup", False))
+        mode = _parse_octal_mode(permissions)
 
-        # Parse octal permissions string
-        try:
-            mode = int(permissions, 8)
-        except (ValueError, TypeError):
-            mode = 0o644
+        pre_err = self._verify_pre_write_hash(content, expected_sha256, path)
+        if pre_err:
+            return pre_err
 
-        # Compute the bytes we will actually write (mirrors the write loop
-        # below, which appends a trailing newline if missing). The hash check
-        # uses these bytes so the pre-write and post-write hashes agree.
-        bytes_to_write = content
-        if content and not content.endswith("\n"):
-            bytes_to_write = content + "\n"
-
-        # Pre-write integrity check: refuse to deploy content that doesn't
-        # match the server-supplied hash (catches corruption in transit).
-        if expected_sha256:
-            content_hash = self._sha256_of_content(bytes_to_write)
-            if content_hash.lower() != expected_sha256.lower():
-                return {
-                    "success": False,
-                    "error": (
-                        f"Pre-write SHA-256 mismatch for '{path}': "
-                        f"server expected {expected_sha256}, content hashes to {content_hash}"
-                    ),
-                }
-
-        # Ensure parent directory exists
         parent_dir = os.path.dirname(path)
         if parent_dir:
             os.makedirs(parent_dir, mode=0o755, exist_ok=True)
 
-        # Optional backup: snapshot the existing file before we overwrite it.
-        backup_path: Optional[str] = None
-        if backup_requested and os.path.exists(path):
-            backup_path = path + ".sysmanage.bak"
-            try:
-                shutil.copy2(path, backup_path)
-                self.logger.debug("Backed up existing file %s -> %s", path, backup_path)
-            except OSError as exc:
-                # If we can't make a backup, refuse rather than overwrite blindly.
-                return {
-                    "success": False,
-                    "error": f"Could not back up existing '{path}' before deploy: {exc}",
-                }
+        backup_path, backup_err = self._maybe_backup(path, backup_requested)
+        if backup_err:
+            return backup_err
 
-        # Write atomically: temp file in same directory, then rename
         try:
-            file_descriptor, tmp_path = tempfile.mkstemp(
-                dir=parent_dir, prefix=".sysmanage_deploy_"
+            await self._write_atomic(
+                parent_dir,
+                content,
+                mode=mode,
+                owner_uid=owner_uid,
+                owner_gid=owner_gid,
+                dest_path=path,
             )
-            try:
-                async with aiofiles.open(
-                    file_descriptor, "w", encoding="utf-8", closefd=True
-                ) as temp_file:
-                    await temp_file.write(content)
-                    if content and not content.endswith("\n"):
-                        await temp_file.write("\n")
-
-                os.chmod(tmp_path, mode)
-                os.chown(tmp_path, owner_uid, owner_gid)
-                os.rename(tmp_path, path)
-            except Exception:
-                # Clean up temp file on failure
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
-                raise
-
-            # Post-write integrity check: re-hash the file we just wrote.
-            # Catches truncation, encoding-conversion bugs, or a different
-            # process racing us between rename and now.
-            if expected_sha256:
-                on_disk_hash = self._sha256_of_file(path)
-                if on_disk_hash.lower() != expected_sha256.lower():
-                    rollback_msg = self._rollback_file(path, backup_path)
-                    return {
-                        "success": False,
-                        "error": (
-                            f"Post-write SHA-256 mismatch for '{path}': "
-                            f"expected {expected_sha256}, got {on_disk_hash}. {rollback_msg}"
-                        ),
-                    }
-
-            self.logger.info("Deployed file: %s", path)
-            return {
-                "success": True,
-                "path": path,
-                "permissions": permissions,
-                "owner_uid": owner_uid,
-                "owner_gid": owner_gid,
-                "backup_path": backup_path,
-                "verified_sha256": expected_sha256 if expected_sha256 else None,
-            }
-
+            post_err = self._verify_post_write_hash(path, expected_sha256, backup_path)
+            if post_err:
+                return post_err
         except PermissionError as exc:
             self._rollback_file(path, backup_path)
             return {
@@ -210,6 +142,99 @@ class GenericDeployment:
                 "success": False,
                 "error": f"OS error writing '{path}': {exc}",
             }
+
+        self.logger.info("Deployed file: %s", path)
+        return {
+            "success": True,
+            "path": path,
+            "permissions": permissions,
+            "owner_uid": owner_uid,
+            "owner_gid": owner_gid,
+            "backup_path": backup_path,
+            "verified_sha256": expected_sha256 if expected_sha256 else None,
+        }
+
+    def _verify_pre_write_hash(
+        self, content: str, expected_sha256: Optional[str], path: str
+    ) -> Optional[Dict[str, Any]]:
+        """Reject content whose hash doesn't match the server-supplied digest."""
+        if not expected_sha256:
+            return None
+        bytes_to_write = content
+        if content and not content.endswith("\n"):
+            bytes_to_write = content + "\n"
+        content_hash = self._sha256_of_content(bytes_to_write)
+        if content_hash.lower() == expected_sha256.lower():
+            return None
+        return {
+            "success": False,
+            "error": (
+                f"Pre-write SHA-256 mismatch for '{path}': "
+                f"server expected {expected_sha256}, content hashes to {content_hash}"
+            ),
+        }
+
+    def _maybe_backup(self, path: str, requested: bool) -> tuple:
+        """Snapshot an existing file before overwrite; return (backup_path, error_dict)."""
+        if not requested or not os.path.exists(path):
+            return None, None
+        backup_path = path + ".sysmanage.bak"
+        try:
+            shutil.copy2(path, backup_path)
+            self.logger.debug("Backed up existing file %s -> %s", path, backup_path)
+            return backup_path, None
+        except OSError as exc:
+            return None, {
+                "success": False,
+                "error": f"Could not back up existing '{path}' before deploy: {exc}",
+            }
+
+    async def _write_atomic(
+        self,
+        parent_dir: str,
+        content: str,
+        *,
+        mode: int,
+        owner_uid: int,
+        owner_gid: int,
+        dest_path: str,
+    ) -> None:
+        """Write `content` to a sibling temp file, chmod/chown, then rename in place."""
+        file_descriptor, tmp_path = tempfile.mkstemp(
+            dir=parent_dir, prefix=".sysmanage_deploy_"
+        )
+        try:
+            async with aiofiles.open(
+                file_descriptor, "w", encoding="utf-8", closefd=True
+            ) as temp_file:
+                await temp_file.write(content)
+                if content and not content.endswith("\n"):
+                    await temp_file.write("\n")
+            os.chmod(tmp_path, mode)
+            os.chown(tmp_path, owner_uid, owner_gid)
+            os.rename(tmp_path, dest_path)
+        except Exception:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
+
+    def _verify_post_write_hash(
+        self, path: str, expected_sha256: Optional[str], backup_path: Optional[str]
+    ) -> Optional[Dict[str, Any]]:
+        """Re-hash the on-disk file; roll back from backup on mismatch."""
+        if not expected_sha256:
+            return None
+        on_disk_hash = self._sha256_of_file(path)
+        if on_disk_hash.lower() == expected_sha256.lower():
+            return None
+        rollback_msg = self._rollback_file(path, backup_path)
+        return {
+            "success": False,
+            "error": (
+                f"Post-write SHA-256 mismatch for '{path}': "
+                f"expected {expected_sha256}, got {on_disk_hash}. {rollback_msg}"
+            ),
+        }
 
     @staticmethod
     def _sha256_of_content(content: str) -> str:
@@ -503,58 +528,81 @@ class GenericDeployment:
         results: Dict[str, Any] = {}
         errors: list = []
 
-        # 1. Install packages (if any)
-        pkgs = plan.get("packages") or []
-        if pkgs:
-            pkg_results, pkg_errors = await self._apply_plan_packages(
-                pkgs, install=True
-            )
-            results["packages"] = pkg_results
-            errors.extend(pkg_errors)
-            if pkg_errors and not _all_pkg_install_optional(pkgs):
-                return _plan_result(False, results, errors, "packages")
-
-        # 2. Deploy files
-        files = plan.get("files") or []
-        if files:
-            files_result = await self.deploy_files({"files": files})
-            results["files"] = files_result
-            if not files_result.get("success"):
-                errors.extend(files_result.get("errors", []))
-                return _plan_result(False, results, errors, "files")
-
-        # 3. Run commands
-        cmds = plan.get("commands") or []
-        if cmds:
-            cmd_results, cmd_errors, hard_fail = await self._apply_plan_commands(cmds)
-            results["commands"] = cmd_results
-            errors.extend(cmd_errors)
-            if hard_fail:
-                return _plan_result(False, results, errors, "commands")
-
-        # 4. Service actions
-        svc_actions = plan.get("service_actions") or []
-        if svc_actions:
-            svc_results, svc_errors = await self._apply_plan_service_actions(
-                svc_actions
-            )
-            results["service_actions"] = svc_results
-            errors.extend(svc_errors)
-            if svc_errors:
-                return _plan_result(False, results, errors, "service_actions")
-
-        # 5. Remove packages
-        pkgs_rm = plan.get("packages_to_remove") or []
-        if pkgs_rm:
-            rm_results, rm_errors = await self._apply_plan_packages(
-                pkgs_rm, install=False
-            )
-            results["packages_to_remove"] = rm_results
-            errors.extend(rm_errors)
-            if rm_errors:
-                return _plan_result(False, results, errors, "packages_to_remove")
+        # Each phase returns the failed-step name on a hard failure, or
+        # None to continue.  Sequenced this way so the dispatcher itself
+        # stays trivially flat (Sonar cognitive complexity).
+        phases = (
+            self._phase_install_packages,
+            self._phase_deploy_files,
+            self._phase_run_commands,
+            self._phase_service_actions,
+            self._phase_remove_packages,
+        )
+        for phase in phases:
+            failed_step = await phase(plan, results, errors)
+            if failed_step:
+                return _plan_result(False, results, errors, failed_step)
 
         return _plan_result(True, results, errors, None)
+
+    async def _phase_install_packages(
+        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+    ) -> Optional[str]:
+        pkgs = plan.get("packages") or []
+        if not pkgs:
+            return None
+        pkg_results, pkg_errors = await self._apply_plan_packages(pkgs, install=True)
+        results["packages"] = pkg_results
+        errors.extend(pkg_errors)
+        if pkg_errors and not _all_pkg_install_optional(pkgs):
+            return "packages"
+        return None
+
+    async def _phase_deploy_files(
+        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+    ) -> Optional[str]:
+        files = plan.get("files") or []
+        if not files:
+            return None
+        files_result = await self.deploy_files({"files": files})
+        results["files"] = files_result
+        if not files_result.get("success"):
+            errors.extend(files_result.get("errors", []))
+            return "files"
+        return None
+
+    async def _phase_run_commands(
+        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+    ) -> Optional[str]:
+        cmds = plan.get("commands") or []
+        if not cmds:
+            return None
+        cmd_results, cmd_errors, hard_fail = await self._apply_plan_commands(cmds)
+        results["commands"] = cmd_results
+        errors.extend(cmd_errors)
+        return "commands" if hard_fail else None
+
+    async def _phase_service_actions(
+        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+    ) -> Optional[str]:
+        svc_actions = plan.get("service_actions") or []
+        if not svc_actions:
+            return None
+        svc_results, svc_errors = await self._apply_plan_service_actions(svc_actions)
+        results["service_actions"] = svc_results
+        errors.extend(svc_errors)
+        return "service_actions" if svc_errors else None
+
+    async def _phase_remove_packages(
+        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+    ) -> Optional[str]:
+        pkgs_rm = plan.get("packages_to_remove") or []
+        if not pkgs_rm:
+            return None
+        rm_results, rm_errors = await self._apply_plan_packages(pkgs_rm, install=False)
+        results["packages_to_remove"] = rm_results
+        errors.extend(rm_errors)
+        return "packages_to_remove" if rm_errors else None
 
     async def _apply_plan_packages(self, pkgs: list, install: bool) -> tuple:
         """
@@ -567,68 +615,64 @@ class GenericDeployment:
         results = []
         errors = []
         for entry in pkgs:
-            if isinstance(entry, str):
-                pkg_name = entry
-                pkg_mgr = None
-            elif isinstance(entry, dict):
-                pkg_name = entry.get("name")
-                pkg_mgr = entry.get("manager")
-            else:
-                errors.append(f"Bad package entry: {entry!r}")
+            pkg_name, pkg_mgr, parse_error = _parse_pkg_entry(entry)
+            if parse_error:
+                errors.append(parse_error)
                 continue
-            if not pkg_name:
-                errors.append("Package entry missing 'name'")
-                continue
-
-            try:
-                if install:
-                    result = await self.agent.install_package(
-                        {
-                            "package_name": pkg_name,
-                            "package_manager": pkg_mgr or "auto",
-                        }
-                    )
-                else:
-                    # Use install_packages with a single-entry list for
-                    # uninstall — uninstall_packages expects UUID-tracked
-                    # entries, install_package only installs. The plan
-                    # caller surfaces the manager hint here.
-                    result = await self.agent.uninstall_packages(
-                        {
-                            "packages": [
-                                {
-                                    "package_name": pkg_name,
-                                    "package_manager": pkg_mgr or "auto",
-                                }
-                            ],
-                        }
-                    )
-                results.append(
-                    {
-                        "name": pkg_name,
-                        "manager": pkg_mgr,
-                        "success": bool(result.get("success", False)),
-                        "result": result,
-                    }
-                )
-                if not result.get("success", False):
-                    errors.append(
-                        f"Package {'install' if install else 'remove'} failed for "
-                        f"{pkg_name}: {result.get('error') or result}"
-                    )
-            except Exception as exc:
-                errors.append(
-                    f"Package {'install' if install else 'remove'} exception "
-                    f"for {pkg_name}: {exc}"
-                )
-                results.append(
-                    {
-                        "name": pkg_name,
-                        "success": False,
-                        "error": str(exc),
-                    }
-                )
+            result, error_msg = await self._apply_one_plan_package(
+                pkg_name, pkg_mgr, install
+            )
+            results.append(result)
+            if error_msg:
+                errors.append(error_msg)
         return results, errors
+
+    async def _apply_one_plan_package(
+        self, pkg_name: str, pkg_mgr: Optional[str], install: bool
+    ) -> tuple:
+        """Install or uninstall a single package; return (result, error_msg)."""
+        action_name = "install" if install else "remove"
+        try:
+            if install:
+                result = await self.agent.install_package(
+                    {
+                        "package_name": pkg_name,
+                        "package_manager": pkg_mgr or "auto",
+                    }
+                )
+            else:
+                # uninstall_packages takes a list — wrap the single entry
+                # so the manager hint flows through.
+                result = await self.agent.uninstall_packages(
+                    {
+                        "packages": [
+                            {
+                                "package_name": pkg_name,
+                                "package_manager": pkg_mgr or "auto",
+                            }
+                        ],
+                    }
+                )
+        except Exception as exc:
+            return (
+                {"name": pkg_name, "success": False, "error": str(exc)},
+                f"Package {action_name} exception for {pkg_name}: {exc}",
+            )
+
+        success = bool(result.get("success", False))
+        entry = {
+            "name": pkg_name,
+            "manager": pkg_mgr,
+            "success": success,
+            "result": result,
+        }
+        if success:
+            return entry, None
+        return (
+            entry,
+            f"Package {action_name} failed for "
+            f"{pkg_name}: {result.get('error') or result}",
+        )
 
     async def _apply_plan_commands(self, commands: list) -> tuple:
         """
@@ -641,93 +685,128 @@ class GenericDeployment:
         results = []
         errors = []
         for spec in commands:
-            argv = spec.get("argv") or []
-            if not argv or not isinstance(argv, list):
-                errors.append(f"Plan command missing/invalid 'argv': {spec!r}")
-                results.append({"argv": argv, "success": False, "error": "no argv"})
-                if not spec.get("ignore_errors"):
-                    return results, errors, True
-                continue
-
-            timeout = int(spec.get("timeout", 60))
-            ignore_errors = bool(spec.get("ignore_errors", False))
-            description = spec.get("description") or " ".join(argv)
-            run_argv = list(argv)
-            if spec.get("sudo") and os.geteuid() != 0:
-                run_argv = ["sudo", "-n"] + run_argv
-
-            try:
-                proc = await asyncio.create_subprocess_exec(
-                    *run_argv,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                try:
-                    stdout, stderr = await asyncio.wait_for(
-                        proc.communicate(), timeout=timeout
-                    )
-                except asyncio.TimeoutError:
-                    proc.kill()
-                    await proc.wait()
-                    errors.append(f"Command '{description}' timed out after {timeout}s")
-                    results.append(
-                        {
-                            "argv": argv,
-                            "description": description,
-                            "success": False,
-                            "error": "timeout",
-                        }
-                    )
-                    if not ignore_errors:
-                        return results, errors, True
-                    continue
-
-                returncode = proc.returncode or 0
-                cmd_ok = returncode == 0
-                results.append(
-                    {
-                        "argv": argv,
-                        "description": description,
-                        "returncode": returncode,
-                        "stdout": stdout.decode(errors="replace")[-2000:],
-                        "stderr": stderr.decode(errors="replace")[-2000:],
-                        "success": cmd_ok,
-                    }
-                )
-                if not cmd_ok:
-                    err_msg = (
-                        f"Command '{description}' exited {returncode}: "
-                        f"{stderr.decode(errors='replace')[:300]}"
-                    )
-                    errors.append(err_msg)
-                    if not ignore_errors:
-                        return results, errors, True
-            except FileNotFoundError as exc:
-                errors.append(f"Command '{description}' not found: {exc}")
-                results.append(
-                    {
-                        "argv": argv,
-                        "description": description,
-                        "success": False,
-                        "error": f"FileNotFoundError: {exc}",
-                    }
-                )
-                if not ignore_errors:
-                    return results, errors, True
-            except Exception as exc:
-                errors.append(f"Command '{description}' exception: {exc}")
-                results.append(
-                    {
-                        "argv": argv,
-                        "description": description,
-                        "success": False,
-                        "error": str(exc),
-                    }
-                )
-                if not ignore_errors:
-                    return results, errors, True
-
+            result, error_msg, hard_fail = await self._run_one_plan_command(spec)
+            results.append(result)
+            if error_msg:
+                errors.append(error_msg)
+            if hard_fail:
+                return results, errors, True
         return results, errors, False
+
+    async def _run_one_plan_command(self, spec: Dict[str, Any]) -> tuple:
+        """
+        Run a single plan command spec.
+
+        Returns (result_dict, error_msg_or_None, hard_fail_bool).  Splits
+        the command-shape validation, exec, timeout and exception handling
+        into separate steps so the per-spec branching never accumulates
+        Sonar's cognitive-complexity threshold.
+        """
+        argv = spec.get("argv") or []
+        ignore_errors = bool(spec.get("ignore_errors", False))
+
+        if not argv or not isinstance(argv, list):
+            return (
+                {"argv": argv, "success": False, "error": "no argv"},
+                f"Plan command missing/invalid 'argv': {spec!r}",
+                not ignore_errors,
+            )
+
+        timeout = int(spec.get("timeout", 60))
+        description = spec.get("description") or " ".join(argv)
+        run_argv = list(argv)
+        if spec.get("sudo") and os.geteuid() != 0:
+            run_argv = ["sudo", "-n"] + run_argv
+
+        # Per Sonar's structured-concurrency rule, the timeout is owned by
+        # the caller (this method) via `asyncio.timeout()` rather than
+        # passed down as a parameter to `_exec_plan_command`.
+        try:
+            async with asyncio.timeout(timeout):
+                return await self._exec_plan_command(
+                    argv,
+                    run_argv,
+                    description=description,
+                    ignore_errors=ignore_errors,
+                )
+        except asyncio.TimeoutError:
+            return (
+                {
+                    "argv": argv,
+                    "description": description,
+                    "success": False,
+                    "error": "timeout",
+                },
+                f"Command '{description}' timed out after {timeout}s",
+                not ignore_errors,
+            )
+        except FileNotFoundError as exc:
+            return (
+                {
+                    "argv": argv,
+                    "description": description,
+                    "success": False,
+                    "error": f"FileNotFoundError: {exc}",
+                },
+                f"Command '{description}' not found: {exc}",
+                not ignore_errors,
+            )
+        except Exception as exc:
+            return (
+                {
+                    "argv": argv,
+                    "description": description,
+                    "success": False,
+                    "error": str(exc),
+                },
+                f"Command '{description}' exception: {exc}",
+                not ignore_errors,
+            )
+
+    async def _exec_plan_command(
+        self,
+        argv: list,
+        run_argv: list,
+        *,
+        description: str,
+        ignore_errors: bool,
+    ) -> tuple:
+        """Spawn the subprocess and translate the exit code into a result tuple.
+
+        Timeout enforcement lives in the caller via `asyncio.timeout()`.
+        On cancellation we still need to reap the subprocess so it doesn't
+        outlive the deployment run, then re-raise so the timeout block
+        sees it.
+        """
+        proc = await asyncio.create_subprocess_exec(
+            *run_argv,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await proc.communicate()
+        except asyncio.CancelledError:
+            proc.kill()
+            await proc.wait()
+            raise
+
+        returncode = proc.returncode or 0
+        cmd_ok = returncode == 0
+        result = {
+            "argv": argv,
+            "description": description,
+            "returncode": returncode,
+            "stdout": stdout.decode(errors="replace")[-2000:],
+            "stderr": stderr.decode(errors="replace")[-2000:],
+            "success": cmd_ok,
+        }
+        if cmd_ok:
+            return result, None, False
+        err_msg = (
+            f"Command '{description}' exited {returncode}: "
+            f"{stderr.decode(errors='replace')[:300]}"
+        )
+        return result, err_msg, not ignore_errors
 
     async def _apply_plan_service_actions(self, actions: list) -> tuple:
         """
@@ -794,6 +873,26 @@ class GenericDeployment:
                     }
                 )
         return results, errors
+
+
+def _parse_octal_mode(permissions: Any) -> int:
+    """Parse an octal-string permission like '0644'; fall back to 0o644."""
+    try:
+        return int(permissions, 8)
+    except (ValueError, TypeError):
+        return 0o644
+
+
+def _parse_pkg_entry(entry: Any) -> tuple:
+    """Normalise a plan-package entry into (name, manager, error_msg)."""
+    if isinstance(entry, str):
+        return entry, None, None
+    if isinstance(entry, dict):
+        name = entry.get("name")
+        if not name:
+            return None, None, "Package entry missing 'name'"
+        return name, entry.get("manager"), None
+    return None, None, f"Bad package entry: {entry!r}"
 
 
 def _all_pkg_install_optional(pkgs: list) -> bool:

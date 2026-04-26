@@ -4,6 +4,7 @@ Tests shell execution, reboot, shutdown, and system update operations.
 """
 
 # pylint: disable=redefined-outer-name,protected-access
+# pylint: disable=missing-class-docstring,missing-function-docstring,unused-argument
 
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -466,3 +467,318 @@ class TestSendCommercialAntivirusStatusUpdate:
                 "product_name": "Test AV",
             }
         )
+
+
+# ---------------------------------------------------------------------------
+# Extended coverage: timeout path, update_agent dispatcher, distro detection
+# ---------------------------------------------------------------------------
+
+
+class TestExecuteShellCommandTimeout:
+    @pytest.mark.asyncio
+    async def test_timeout_kills_process_and_returns_error(self, system_control):
+        """Process exceeds timeout → kill + structured timeout payload."""
+        proc = Mock()
+        proc.kill = Mock()
+        proc.wait = AsyncMock()
+        proc.communicate = AsyncMock(side_effect=__import__("asyncio").TimeoutError())
+
+        with patch(
+            "src.sysmanage_agent.operations.system_control.asyncio.create_subprocess_shell",
+            return_value=proc,
+        ), patch(
+            "src.sysmanage_agent.operations.system_control.asyncio.wait_for",
+            side_effect=__import__("asyncio").TimeoutError(),
+        ):
+            result = await system_control.execute_shell_command(
+                {"command": "sleep 9999", "timeout": 1}
+            )
+        assert result["success"] is False
+        assert "timed out" in result["error"].lower()
+        proc.kill.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_timeout_with_already_dead_process_swallows_lookup_error(
+        self, system_control
+    ):
+        proc = Mock()
+        proc.kill = Mock(side_effect=ProcessLookupError())
+        proc.wait = AsyncMock()
+
+        with patch(
+            "src.sysmanage_agent.operations.system_control.asyncio.create_subprocess_shell",
+            return_value=proc,
+        ), patch(
+            "src.sysmanage_agent.operations.system_control.asyncio.wait_for",
+            side_effect=__import__("asyncio").TimeoutError(),
+        ):
+            result = await system_control.execute_shell_command(
+                {"command": "sleep 9999", "timeout": 1}
+            )
+        # Even when kill() raised, the function should still return a structured timeout.
+        assert result["exit_code"] == -1
+
+
+class TestGetDetailedSystemInfoExceptionArms:
+    @pytest.mark.asyncio
+    async def test_antivirus_collection_failure_logged_not_raised(
+        self, system_control, mock_agent
+    ):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.AntivirusCollector",
+            side_effect=RuntimeError("av broken"),
+        ), patch(
+            "src.sysmanage_agent.operations.system_control.CommercialAntivirusCollector"
+        ) as commercial:
+            commercial.return_value.collect_commercial_antivirus_status.return_value = (
+                None
+            )
+            result = await system_control.get_detailed_system_info()
+        # The outer call should still report success.
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_commercial_antivirus_failure_logged_not_raised(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.AntivirusCollector"
+        ) as av_cls, patch(
+            "src.sysmanage_agent.operations.system_control.CommercialAntivirusCollector",
+            side_effect=RuntimeError("commercial broken"),
+        ):
+            av_cls.return_value.collect_antivirus_status.return_value = {}
+            result = await system_control.get_detailed_system_info()
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_graylog_status_failure_logged_not_raised(
+        self, system_control, mock_agent
+    ):
+        mock_agent.data_collector._send_graylog_status_update = AsyncMock(
+            side_effect=RuntimeError("graylog down")
+        )
+        with patch(
+            "src.sysmanage_agent.operations.system_control.AntivirusCollector"
+        ) as av_cls, patch(
+            "src.sysmanage_agent.operations.system_control.CommercialAntivirusCollector"
+        ) as commercial:
+            av_cls.return_value.collect_antivirus_status.return_value = {}
+            commercial.return_value.collect_commercial_antivirus_status.return_value = (
+                None
+            )
+            result = await system_control.get_detailed_system_info()
+        assert result["success"] is True
+
+
+class TestUpdateAgentDispatcher:
+    @pytest.mark.asyncio
+    async def test_linux_dispatches_to_linux_helper(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            return_value="Linux",
+        ), patch.object(
+            system_control,
+            "_update_agent_linux",
+            new=AsyncMock(return_value={"success": True, "result": "ok"}),
+        ) as helper:
+            result = await system_control.update_agent()
+        assert result == {"success": True, "result": "ok"}
+        helper.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_freebsd_dispatches_to_freebsd_helper(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            return_value="FreeBSD",
+        ), patch.object(
+            system_control,
+            "_update_agent_freebsd",
+            new=AsyncMock(return_value={"success": True, "result": "ok"}),
+        ) as helper:
+            result = await system_control.update_agent()
+        assert result["success"] is True
+        helper.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_windows_returns_unsupported(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            return_value="Windows",
+        ):
+            result = await system_control.update_agent()
+        assert result["success"] is False
+        assert "Windows" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_darwin_returns_unsupported(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            return_value="Darwin",
+        ):
+            result = await system_control.update_agent()
+        assert result["success"] is False
+        assert "macOS" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_unknown_platform_returns_unsupported(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            return_value="Plan9",
+        ):
+            result = await system_control.update_agent()
+        assert result["success"] is False
+        assert (
+            "plan9" in result["error"].lower()
+            or "unsupported" in result["error"].lower()
+        )
+
+    @pytest.mark.asyncio
+    async def test_exception_during_dispatch_returns_failure(self, system_control):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.system",
+            side_effect=RuntimeError("platform down"),
+        ):
+            result = await system_control.update_agent()
+        assert result["success"] is False
+        assert "platform down" in result["error"]
+
+
+class TestDetectLinuxDistro:
+    def test_uses_freedesktop_when_available(self):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
+            return_value={"ID": "Ubuntu", "ID_LIKE": "Debian"},
+        ):
+            distro_id, distro_id_like = SystemControl._detect_linux_distro()
+        assert distro_id == "ubuntu"
+        assert distro_id_like == "debian"
+
+    def test_falls_back_to_os_release_file(self):
+        # freedesktop helper raises OSError → falls through to file parse.
+        os_release_content = 'ID="rocky"\nID_LIKE="rhel fedora"\n'
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
+            side_effect=OSError("no module"),
+        ), patch(
+            "builtins.open",
+            __import__("unittest").mock.mock_open(read_data=os_release_content),
+        ):
+            distro_id, distro_id_like = SystemControl._detect_linux_distro()
+        assert distro_id == "rocky"
+        assert distro_id_like == "rhel fedora"
+
+    def test_returns_none_tuple_when_no_os_release_file(self):
+        with patch(
+            "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
+            side_effect=OSError("no module"),
+        ), patch("builtins.open", side_effect=FileNotFoundError):
+            distro_id, distro_id_like = SystemControl._detect_linux_distro()
+        assert distro_id is None
+        assert distro_id_like is None
+
+
+class TestUpdateAgentLinux:
+    @pytest.mark.asyncio
+    async def test_unknown_distro_returns_failure(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=(None, None)
+        ):
+            result = await system_control._update_agent_linux()
+        assert result["success"] is False
+        assert "Cannot detect" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_debian_path_uses_apt_get(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("ubuntu", "debian")
+        ), patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as exec_cmd:
+            result = await system_control._update_agent_linux()
+        assert result["success"] is True
+        cmd = exec_cmd.call_args.args[0]["command"]
+        assert "apt-get" in cmd
+        assert "sysmanage-agent" in cmd
+
+    @pytest.mark.asyncio
+    async def test_fedora_path_uses_dnf(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("fedora", "")
+        ), patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as exec_cmd:
+            result = await system_control._update_agent_linux()
+        assert result["success"] is True
+        assert "dnf" in exec_cmd.call_args.args[0]["command"]
+
+    @pytest.mark.asyncio
+    async def test_suse_path_uses_zypper(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("opensuse", "suse")
+        ), patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as exec_cmd:
+            await system_control._update_agent_linux()
+        assert "zypper" in exec_cmd.call_args.args[0]["command"]
+
+    @pytest.mark.asyncio
+    async def test_alpine_path_uses_apk(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("alpine", "")
+        ), patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as exec_cmd:
+            await system_control._update_agent_linux()
+        assert "apk" in exec_cmd.call_args.args[0]["command"]
+
+    @pytest.mark.asyncio
+    async def test_unsupported_distro_returns_failure(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("plan9", "")
+        ):
+            result = await system_control._update_agent_linux()
+        assert result["success"] is False
+        assert "plan9" in result["error"].lower()
+
+    @pytest.mark.asyncio
+    async def test_command_failure_propagates(self, system_control):
+        with patch.object(
+            SystemControl, "_detect_linux_distro", return_value=("ubuntu", "debian")
+        ), patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": False, "error": "apt locked"}),
+        ):
+            result = await system_control._update_agent_linux()
+        assert result["success"] is False
+        assert result["error"] == "apt locked"
+
+
+class TestUpdateAgentFreebsd:
+    @pytest.mark.asyncio
+    async def test_success_uses_pkg(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as exec_cmd:
+            result = await system_control._update_agent_freebsd()
+        assert result["success"] is True
+        assert "pkg" in exec_cmd.call_args.args[0]["command"]
+
+    @pytest.mark.asyncio
+    async def test_failure_propagates(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": False, "error": "pkg broken"}),
+        ):
+            result = await system_control._update_agent_freebsd()
+        assert result["success"] is False

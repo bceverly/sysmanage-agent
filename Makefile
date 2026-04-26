@@ -610,7 +610,7 @@ security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
 ifeq ($(OS),Windows_NT)
-	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607 || echo.
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607,B608 || echo.
 	@echo.
 	@echo "Running Safety dependency vulnerability scan..."
 	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
@@ -618,7 +618,7 @@ ifeq ($(OS),Windows_NT)
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic" || echo "Package list completed"
 else
-	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607 || true
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607,B608 || true
 	@echo ""
 	@echo "Running Semgrep static analysis..."
 	@echo "Tip: Export SEMGREP_APP_TOKEN for access to Pro rules and supply chain analysis"

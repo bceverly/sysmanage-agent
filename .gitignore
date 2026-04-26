@@ -224,3 +224,6 @@ sbom/
 
 # SonarQube scanner working directory
 .scannerwork/
+
+# Claude Code workspace
+.claude/

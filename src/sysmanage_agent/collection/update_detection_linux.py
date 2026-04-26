@@ -287,6 +287,11 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             ``requires_reboot``, and ``timestamp`` keys, matching the
             shape produced by the BSD and Windows detectors.
         """
+        # `package_names` / `package_managers` exist purely for cross-
+        # platform signature symmetry — see docstring.  Discard them
+        # explicitly so static analysers don't flag them as unused.
+        del package_names, package_managers
+
         results: Dict[str, Any] = {
             "updated_packages": [],
             "failed_packages": [],
