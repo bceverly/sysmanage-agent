@@ -233,14 +233,17 @@ class SystemControl:
     @staticmethod
     def _detect_linux_distro() -> tuple:
         """Detect Linux distribution ID and ID_LIKE values."""
-        try:
-            os_release = platform.freedesktop_os_release()
-            return (
-                os_release.get("ID", "").lower(),
-                os_release.get("ID_LIKE", "").lower(),
-            )
-        except OSError:
-            pass
+        # platform.freedesktop_os_release() is Python 3.10+; fall through
+        # to the file parser on older interpreters rather than crashing.
+        if hasattr(platform, "freedesktop_os_release"):
+            try:
+                os_release = platform.freedesktop_os_release()
+                return (
+                    os_release.get("ID", "").lower(),
+                    os_release.get("ID_LIKE", "").lower(),
+                )
+            except OSError:
+                pass
 
         try:
             distro_id = ""

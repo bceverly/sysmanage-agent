@@ -643,10 +643,16 @@ class TestUpdateAgentDispatcher:
 
 
 class TestDetectLinuxDistro:
+    # `create=True` on the three patches below lets the tests run on
+    # Python 3.9, where platform.freedesktop_os_release does not exist
+    # in the stdlib.  The patch materializes the attribute so the
+    # production code's `hasattr(platform, ...)` guard sees it and
+    # exercises the freedesktop branch under test.
     def test_uses_freedesktop_when_available(self):
         with patch(
             "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
             return_value={"ID": "Ubuntu", "ID_LIKE": "Debian"},
+            create=True,
         ):
             distro_id, distro_id_like = SystemControl._detect_linux_distro()
         assert distro_id == "ubuntu"
@@ -658,6 +664,7 @@ class TestDetectLinuxDistro:
         with patch(
             "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
             side_effect=OSError("no module"),
+            create=True,
         ), patch(
             "builtins.open",
             __import__("unittest").mock.mock_open(read_data=os_release_content),
@@ -670,6 +677,7 @@ class TestDetectLinuxDistro:
         with patch(
             "src.sysmanage_agent.operations.system_control.platform.freedesktop_os_release",
             side_effect=OSError("no module"),
+            create=True,
         ), patch("builtins.open", side_effect=FileNotFoundError):
             distro_id, distro_id_like = SystemControl._detect_linux_distro()
         assert distro_id is None

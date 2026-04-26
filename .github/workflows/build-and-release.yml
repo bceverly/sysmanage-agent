@@ -1515,7 +1515,7 @@ jobs:
           echo "Building OpenBSD package for version: $VERSION"
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@9a8e4351a4a0dc6238e7c69276dcbf6c03bea576 # v1
+        uses: vmactions/openbsd-vm@d7d892b7b9ba97ed2747b0fc201be65037d64c3e # v1.4.0
         env:
           VERSION: ${{ steps.version.outputs.version }}
         with:
@@ -2297,7 +2297,7 @@ jobs:
           echo "" >> release_notes.md
 
       - name: Create consolidated GitHub Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: release-files/*
           body_path: release_notes.md
