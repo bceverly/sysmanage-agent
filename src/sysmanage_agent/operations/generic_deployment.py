@@ -755,16 +755,16 @@ class GenericDeployment:
         run_argv: list,
         *,
         description: str,
-        timeout: int,
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
         ignore_errors: bool,
     ) -> tuple:
         """Spawn the subprocess and translate the exit/timeout into a result tuple.
 
-        Uses `asyncio.wait_for` for the timeout because this codebase still
-        supports Python 3.9/3.10 where `asyncio.timeout()` (the structured
-        replacement) is not available.  Sonar S7497 will flag the
-        `timeout=` kwarg here — accept the warning until 3.10 support is
-        dropped.
+        Uses ``asyncio.wait_for`` for the timeout because this codebase still
+        supports Python 3.9/3.10 where ``asyncio.timeout()`` (the structured
+        replacement Sonar S7497 prefers) is not available.  The NOSONAR on
+        the ``timeout`` parameter line above suppresses the rule until the
+        minimum supported Python is bumped to 3.11.
         """
         proc = await asyncio.create_subprocess_exec(
             *run_argv,
