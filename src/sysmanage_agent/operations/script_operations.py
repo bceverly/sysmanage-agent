@@ -74,7 +74,7 @@ class ScriptOperations:
                     _("Script timeout capped at %d seconds"), max_timeout
                 )
                 timeout = max_timeout
-        except Exception:
+        except Exception:  # nosec B110
             # Config not available (e.g. tests with stub agents) — keep
             # the requested timeout as-is.
             pass
@@ -128,7 +128,7 @@ class ScriptOperations:
             # rename — a pre-existing symlink at this exact path is essentially
             # impossible AND would cause the rename to fail rather than
             # overwrite, so symlink attacks don't apply.
-            script_path = f"/tmp/sysmanage_script_{uuid4().hex}.sh"  # NOSONAR S5443 - see comment above
+            script_path = f"/tmp/sysmanage_script_{uuid4().hex}.sh"  # nosec B108 NOSONAR S5443 - see comment above
             argv = [f"/bin/{shell}", script_path]
             cleanup = ["rm", "-f", script_path]
         return {
