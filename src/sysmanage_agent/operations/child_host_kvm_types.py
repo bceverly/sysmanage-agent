@@ -5,6 +5,8 @@ KVM/libvirt type definitions for child host operations.
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from src.i18n import _
+
 
 @dataclass
 class KvmVmConfig:  # pylint: disable=too-many-instance-attributes
@@ -41,29 +43,33 @@ class KvmVmConfig:  # pylint: disable=too-many-instance-attributes
     def __post_init__(self):
         """Validate configuration after initialization."""
         if not self.vm_name:
-            raise ValueError("VM name is required")
+            raise ValueError(_("VM name is required"))
         if not self.hostname:
-            raise ValueError("Hostname is required")
+            raise ValueError(_("Hostname is required"))
         if not self.username:
-            raise ValueError("Username is required")
+            raise ValueError(_("Username is required"))
         if not self.password_hash:
-            raise ValueError("Password hash is required")
+            raise ValueError(_("Password hash is required"))
         if not self.distribution:
-            raise ValueError("Distribution is required")
+            raise ValueError(_("Distribution is required"))
 
         # Validate memory format
         if not self._parse_memory_mb(self.memory):
-            raise ValueError(f"Invalid memory format: {self.memory}")
+            raise ValueError(
+                _("Invalid memory format: {value}").format(value=self.memory)
+            )
 
         # Validate disk size format
         if not self._parse_disk_gb(self.disk_size):
-            raise ValueError(f"Invalid disk size format: {self.disk_size}")
+            raise ValueError(
+                _("Invalid disk size format: {value}").format(value=self.disk_size)
+            )
 
         # Validate CPUs
         if self.cpus < 1:
-            raise ValueError("CPUs must be at least 1")
+            raise ValueError(_("CPUs must be at least 1"))
         if self.cpus > 64:
-            raise ValueError("CPUs cannot exceed 64")
+            raise ValueError(_("CPUs cannot exceed 64"))
 
     def _parse_memory_mb(self, memory: str) -> int:
         """Parse memory string to MB. Returns 0 if invalid."""

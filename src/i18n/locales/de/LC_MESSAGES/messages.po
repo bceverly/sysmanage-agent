@@ -10,11 +10,6 @@ msgstr ""
 msgid "Unsupported platform: %s"
 msgstr "Nicht unterstützte Plattform für Software-Inventar: %s"
 
-#: hardware_collection.py:119 hardware_collection.py:122
-#, fuzzy, python-format
-msgid "Failed to collect hardware info: %s"
-msgstr "Fehler beim Erfassen des Software-Inventars: %s"
-
 #: hardware_collection.py:244
 #, fuzzy, python-format
 msgid "Failed to get macOS CPU info: %s"
@@ -68,16 +63,6 @@ msgstr "Fehler beim Erfassen des Software-Inventars: %s"
 #: hardware_collection.py:1062
 #, fuzzy, python-format
 msgid "Failed to get Windows memory info: %s"
-msgstr "Fehler beim Erfassen des Software-Inventars: %s"
-
-#: hardware_collection.py:1103
-#, fuzzy, python-format
-msgid "Failed to get Windows storage info: %s"
-msgstr "Fehler beim Erfassen des Software-Inventars: %s"
-
-#: hardware_collection.py:1214
-#, fuzzy, python-format
-msgid "Failed to get Windows network info: %s"
 msgstr "Fehler beim Erfassen des Software-Inventars: %s"
 
 #: hardware_collection.py:1305
@@ -163,36 +148,6 @@ msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
 #, python-format
 msgid "Detected package managers: %s"
 msgstr "Erkannte Paketmanager: %s"
-
-#: update_detection.py:219
-#, fuzzy
-msgid "Detecting apt updates"
-msgstr "Sammle apt-Pakete"
-
-#: update_detection.py:269
-#, fuzzy, python-format
-msgid "Failed to detect apt updates: %s"
-msgstr "Fehler beim Sammeln der apt-Pakete: %s"
-
-#: update_detection.py:310
-#, fuzzy
-msgid "Detecting snap updates"
-msgstr "Sammle snap-Pakete"
-
-#: update_detection.py:337
-#, fuzzy, python-format
-msgid "Failed to detect snap updates: %s"
-msgstr "Fehler beim Sammeln der snap-Pakete: %s"
-
-#: update_detection.py:342
-#, fuzzy
-msgid "Detecting flatpak updates"
-msgstr "Sammle flatpak-Pakete"
-
-#: update_detection.py:367
-#, fuzzy, python-format
-msgid "Failed to detect flatpak updates: %s"
-msgstr "Fehler beim Sammeln der flatpak-Pakete: %s"
 
 #: update_detection.py:372
 msgid "Detecting DNF updates"
@@ -298,11 +253,6 @@ msgstr ""
 msgid "No packages specified for update"
 msgstr ""
 
-#: update_detection.py:977
-#, fuzzy, python-format
-msgid "Failed to apply apt updates: %s"
-msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
-
 #: update_detection.py:1100
 #, fuzzy, python-format
 msgid "Failed to apply DNF updates: %s"
@@ -327,11 +277,6 @@ msgstr "Keine SysManage-Server im Netzwerk entdeckt"
 msgid "Server discovered at %s"
 msgstr "Server bei %s entdeckt"
 
-#: discovery.py:135
-#, fuzzy, python-format
-msgid "Invalid JSON response from %s"
-msgstr "Ungültige Antwort vom Server"
-
 #: discovery.py:145
 #, python-format
 msgid "Error during broadcast discovery: %s"
@@ -340,11 +285,6 @@ msgstr ""
 #: discovery.py:190
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
-
-#: discovery.py:196
-#, python-format
-msgid "Invalid JSON announcement from %s"
 msgstr ""
 
 #: discovery.py:206
@@ -479,54 +419,13 @@ msgstr ""
 msgid "Scoop package collection not yet implemented"
 msgstr ""
 
-#: software_inventory_collection.py:753
-#, fuzzy
-msgid "Collecting BSD pkg packages"
-msgstr "Sammle apt-Pakete"
-
-#: software_inventory_collection.py:781
-msgid "No BSD package manager output found"
-msgstr ""
-
-#: software_inventory_collection.py:784
-#, fuzzy, python-format
-msgid "Failed to collect BSD pkg packages: %s"
-msgstr "Fehler beim Sammeln der apt-Pakete: %s"
-
-#: software_inventory_collection.py:789
-#, fuzzy
-msgid "Collecting OpenBSD pkg_info packages"
-msgstr "Sammle snap-Pakete"
-
-#: software_inventory_collection.py:803
-msgid "Successfully collected OpenBSD packages"
-msgstr ""
-
-#: software_inventory_collection.py:806
-#, python-format
-msgid "No OpenBSD pkg_info output found. Return code: %d"
-msgstr ""
-
 #: software_inventory_collection.py:810
 #, python-format
 msgid "pkg_info stderr: %s"
 msgstr ""
 
-#: software_inventory_collection.py:813
-#, fuzzy, python-format
-msgid "Failed to collect OpenBSD pkg_info packages: %s"
-msgstr "Fehler beim Sammeln der snap-Pakete: %s"
-
 #: software_inventory_collection.py:877
 msgid "FreeBSD ports collection not yet implemented"
-msgstr ""
-
-#: main.py:41
-msgid "No configuration found, attempting auto-discovery..."
-msgstr ""
-
-#: main.py:45
-msgid "Unable to configure agent: no config file and auto-discovery failed"
 msgstr ""
 
 # Agent startup and connection
@@ -640,19 +539,9 @@ msgstr "Ausnahme beim Anwenden des Firmware-Updates für %s: %s"
 msgid "Updates started in background"
 msgstr "Updates im Hintergrund gestartet"
 
-#: main.py:741
-#, fuzzy, python-format
-msgid "Failed to start update process: %s"
-msgstr "Fehler beim Sammeln der apt-Pakete: %s"
-
 #: main.py:766
 msgid "No valid packages found for update"
 msgstr "Keine gültigen Pakete für Update gefunden"
-
-#: main.py:786
-#, python-format
-msgid "Update application completed: %d updated, %d failed"
-msgstr "Update-Anwendung abgeschlossen: %d aktualisiert, %d fehlgeschlagen"
 
 #: main.py:800
 msgid "Successfully sent update results to server"
@@ -672,34 +561,6 @@ msgstr "Warten auf Wiederverbindung zum Senden der Update-Ergebnisse (Versuch %d
 msgid "Failed to send update results after %d attempts"
 msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
 
-#: main.py:813
-#, fuzzy, python-format
-msgid "Failed to apply updates in background: %s"
-msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
-
-#: main.py:856
-msgid "Registering with SysManage server..."
-msgstr ""
-
-#: main.py:858
-msgid "Failed to register with server. Exiting."
-msgstr ""
-
-#: main.py:861
-msgid "Registration successful, checking certificates..."
-msgstr ""
-
-#: main.py:867
-msgid "Valid certificates found - secure authentication available"
-msgstr ""
-
-#: main.py:871
-msgid "No certificates found - using token-based authentication"
-msgstr ""
-#: main.py:879
-msgid "Starting WebSocket connection..."
-msgstr ""
-
 #: main.py:935
 msgid "Connected to server successfully"
 msgstr "Erfolgreich mit dem Server verbunden"
@@ -707,11 +568,6 @@ msgstr "Erfolgreich mit dem Server verbunden"
 #: client_registration.py:24
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
-
-# Queue-related messages
-#: queue_handler.py
-msgid "Queued message handler initialized"
-msgstr "Warteschlangen-Nachrichten-Handler initialisiert"
 #: queue_handler.py
 #, python-format
 msgid "Failed to send message directly: %s"
@@ -730,10 +586,6 @@ msgstr "Fehler im Warteschlangen-Prozessor: %s"
 #: queue_handler.py
 msgid "Connection established, starting queue processing"
 msgstr "Verbindung hergestellt, Warteschlangen-Verarbeitung wird gestartet"
-
-#: queue_handler.py
-msgid "Connection lost, stopping queue processing"
-msgstr "Verbindung verloren, Warteschlangen-Verarbeitung wird gestoppt"
 
 #: queue_handler.py
 #, python-format
@@ -1442,3 +1294,27 @@ msgstr "%d von %d konfigurierten VMs automatisch gestartet"
 msgid "Failed to auto-start child hosts: %s"
 msgstr "Automatischer Start der untergeordneten Hosts fehlgeschlagen: %s"
 
+
+msgid "Hostname is required"
+msgstr "Hostname ist erforderlich"
+
+msgid "Username is required"
+msgstr "Benutzername ist erforderlich"
+
+msgid "Password hash is required"
+msgstr "Passwort-Hash ist erforderlich"
+
+msgid "Distribution is required"
+msgstr "Distribution ist erforderlich"
+
+msgid "Invalid memory format: {value}"
+msgstr "Ungültiges Speicherformat: {value}"
+
+msgid "Invalid disk size format: {value}"
+msgstr "Ungültiges Festplattengrößenformat: {value}"
+
+msgid "CPUs must be at least 1"
+msgstr "CPUs müssen mindestens 1 sein"
+
+msgid "CPUs cannot exceed 64"
+msgstr "CPUs dürfen 64 nicht überschreiten"

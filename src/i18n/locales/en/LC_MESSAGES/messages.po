@@ -948,3 +948,27 @@ msgstr "Auto-started %d of %d configured VMs"
 msgid "Failed to auto-start child hosts: %s"
 msgstr "Failed to auto-start child hosts: %s"
 
+
+msgid "Hostname is required"
+msgstr "Hostname is required"
+
+msgid "Username is required"
+msgstr "Username is required"
+
+msgid "Password hash is required"
+msgstr "Password hash is required"
+
+msgid "Distribution is required"
+msgstr "Distribution is required"
+
+msgid "Invalid memory format: {value}"
+msgstr "Invalid memory format: {value}"
+
+msgid "Invalid disk size format: {value}"
+msgstr "Invalid disk size format: {value}"
+
+msgid "CPUs must be at least 1"
+msgstr "CPUs must be at least 1"
+
+msgid "CPUs cannot exceed 64"
+msgstr "CPUs cannot exceed 64"

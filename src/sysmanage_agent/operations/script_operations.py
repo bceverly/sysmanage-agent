@@ -24,6 +24,8 @@ and reformats it into a deploy plan for the existing
 """
 
 import logging
+import os
+import tempfile
 from typing import Any, Dict
 from uuid import uuid4
 
@@ -121,14 +123,14 @@ class ScriptOperations:
             argv = ["cmd.exe", "/c", script_path]
             cleanup = ["cmd.exe", "/c", "del", script_path]
         else:
-            # /tmp is fine here despite Sonar S5443: the path uses uuid4().hex
-            # (128 bits of cryptographic randomness, unpredictable to any local
-            # attacker) and the agent's deploy_files handler writes the file
-            # atomically (sibling-temp + rename) with mode 0o700 set before the
-            # rename — a pre-existing symlink at this exact path is essentially
-            # impossible AND would cause the rename to fail rather than
-            # overwrite, so symlink attacks don't apply.
-            script_path = f"/tmp/sysmanage_script_{uuid4().hex}.sh"  # nosec B108 NOSONAR S5443 - see comment above
+            # POSIX shells.  Use the platform's secure temp directory rather
+            # than hardcoding /tmp; combined with uuid4().hex (128 bits) and
+            # the deploy_files handler's atomic sibling-temp + rename with
+            # mode 0o700, this is symlink-safe by construction.
+            script_path = os.path.join(
+                tempfile.gettempdir(),
+                f"sysmanage_script_{uuid4().hex}.sh",
+            )
             argv = [f"/bin/{shell}", script_path]
             cleanup = ["rm", "-f", script_path]
         return {

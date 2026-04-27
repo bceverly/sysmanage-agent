@@ -10,11 +10,6 @@ msgstr ""
 msgid "Unsupported platform: %s"
 msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 
-#: hardware_collection.py:119 hardware_collection.py:122
-#, fuzzy, python-format
-msgid "Failed to collect hardware info: %s"
-msgstr "소프트웨어 인벤토리 수집 실패: %s"
-
 #: hardware_collection.py:244
 #, fuzzy, python-format
 msgid "Failed to get macOS CPU info: %s"
@@ -68,16 +63,6 @@ msgstr "소프트웨어 인벤토리 수집 실패: %s"
 #: hardware_collection.py:1062
 #, fuzzy, python-format
 msgid "Failed to get Windows memory info: %s"
-msgstr "소프트웨어 인벤토리 수집 실패: %s"
-
-#: hardware_collection.py:1103
-#, fuzzy, python-format
-msgid "Failed to get Windows storage info: %s"
-msgstr "소프트웨어 인벤토리 수집 실패: %s"
-
-#: hardware_collection.py:1214
-#, fuzzy, python-format
-msgid "Failed to get Windows network info: %s"
 msgstr "소프트웨어 인벤토리 수집 실패: %s"
 
 #: hardware_collection.py:1305
@@ -161,36 +146,6 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #, python-format
 msgid "Detected package managers: %s"
 msgstr "감지된 패키지 매니저: %s"
-
-#: update_detection.py:219
-#, fuzzy
-msgid "Detecting apt updates"
-msgstr "apt 패키지 수집 중"
-
-#: update_detection.py:269
-#, fuzzy, python-format
-msgid "Failed to detect apt updates: %s"
-msgstr "apt 패키지 수집 실패: %s"
-
-#: update_detection.py:310
-#, fuzzy
-msgid "Detecting snap updates"
-msgstr "snap 패키지 수집 중"
-
-#: update_detection.py:337
-#, fuzzy, python-format
-msgid "Failed to detect snap updates: %s"
-msgstr "snap 패키지 수집 실패: %s"
-
-#: update_detection.py:342
-#, fuzzy
-msgid "Detecting flatpak updates"
-msgstr "flatpak 패키지 수집 중"
-
-#: update_detection.py:367
-#, fuzzy, python-format
-msgid "Failed to detect flatpak updates: %s"
-msgstr "flatpak 패키지 수집 실패: %s"
 
 #: update_detection.py:372
 msgid "Detecting DNF updates"
@@ -296,11 +251,6 @@ msgstr ""
 msgid "No packages specified for update"
 msgstr ""
 
-#: update_detection.py:977
-#, fuzzy, python-format
-msgid "Failed to apply apt updates: %s"
-msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
-
 #: update_detection.py:1100
 #, fuzzy, python-format
 msgid "Failed to apply DNF updates: %s"
@@ -325,11 +275,6 @@ msgstr ""
 msgid "Server discovered at %s"
 msgstr ""
 
-#: discovery.py:135
-#, fuzzy, python-format
-msgid "Invalid JSON response from %s"
-msgstr "서버로부터 잘못된 응답"
-
 #: discovery.py:145
 #, python-format
 msgid "Error during broadcast discovery: %s"
@@ -338,11 +283,6 @@ msgstr ""
 #: discovery.py:190
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
-
-#: discovery.py:196
-#, python-format
-msgid "Invalid JSON announcement from %s"
 msgstr ""
 
 #: discovery.py:206
@@ -477,54 +417,13 @@ msgstr ""
 msgid "Scoop package collection not yet implemented"
 msgstr ""
 
-#: software_inventory_collection.py:753
-#, fuzzy
-msgid "Collecting BSD pkg packages"
-msgstr "apt 패키지 수집 중"
-
-#: software_inventory_collection.py:781
-msgid "No BSD package manager output found"
-msgstr ""
-
-#: software_inventory_collection.py:784
-#, fuzzy, python-format
-msgid "Failed to collect BSD pkg packages: %s"
-msgstr "apt 패키지 수집 실패: %s"
-
-#: software_inventory_collection.py:789
-#, fuzzy
-msgid "Collecting OpenBSD pkg_info packages"
-msgstr "snap 패키지 수집 중"
-
-#: software_inventory_collection.py:803
-msgid "Successfully collected OpenBSD packages"
-msgstr ""
-
-#: software_inventory_collection.py:806
-#, python-format
-msgid "No OpenBSD pkg_info output found. Return code: %d"
-msgstr ""
-
 #: software_inventory_collection.py:810
 #, python-format
 msgid "pkg_info stderr: %s"
 msgstr ""
 
-#: software_inventory_collection.py:813
-#, fuzzy, python-format
-msgid "Failed to collect OpenBSD pkg_info packages: %s"
-msgstr "snap 패키지 수집 실패: %s"
-
 #: software_inventory_collection.py:877
 msgid "FreeBSD ports collection not yet implemented"
-msgstr ""
-
-#: main.py:41
-msgid "No configuration found, attempting auto-discovery..."
-msgstr ""
-
-#: main.py:45
-msgid "Unable to configure agent: no config file and auto-discovery failed"
 msgstr ""
 
 # Agent startup and connection
@@ -638,19 +537,9 @@ msgstr "%s의 펌웨어 업데이트 적용 중 예외 발생: %s"
 msgid "Updates started in background"
 msgstr "백그라운드에서 업데이트가 시작되었습니다"
 
-#: main.py:741
-#, fuzzy, python-format
-msgid "Failed to start update process: %s"
-msgstr "apt 패키지 수집 실패: %s"
-
 #: main.py:766
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
-
-#: main.py:786
-#, python-format
-msgid "Update application completed: %d updated, %d failed"
-msgstr "업데이트 애플리케이션 완료: %d개 업데이트됨, %d개 실패"
 
 #: main.py:800
 msgid "Successfully sent update results to server"
@@ -670,34 +559,6 @@ msgstr "업데이트 결과 전송을 위한 재연결 대기 중 (시도 %d/%d)
 msgid "Failed to send update results after %d attempts"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: main.py:813
-#, fuzzy, python-format
-msgid "Failed to apply updates in background: %s"
-msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
-
-#: main.py:856
-msgid "Registering with SysManage server..."
-msgstr ""
-
-#: main.py:858
-msgid "Failed to register with server. Exiting."
-msgstr ""
-
-#: main.py:861
-msgid "Registration successful, checking certificates..."
-msgstr ""
-
-#: main.py:867
-msgid "Valid certificates found - secure authentication available"
-msgstr ""
-
-#: main.py:871
-msgid "No certificates found - using token-based authentication"
-msgstr ""
-#: main.py:879
-msgid "Starting WebSocket connection..."
-msgstr ""
-
 #: main.py:935
 msgid "Connected to server successfully"
 msgstr "서버에 성공적으로 연결되었습니다"
@@ -705,88 +566,6 @@ msgstr "서버에 성공적으로 연결되었습니다"
 #: client_registration.py:24
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
-
-#~ msgid "Connecting to server"
-#~ msgstr "서버에 연결 중입니다"
-
-#~ msgid "Connection failed"
-#~ msgstr "연결에 실패했습니다"
-
-#~ msgid "Disconnected from server"
-#~ msgstr "서버와의 연결이 끊어졌습니다"
-
-#~ msgid "Reconnecting to server"
-#~ msgstr "서버에 재연결 중입니다"
-
-#~ msgid "Configuration loaded successfully"
-#~ msgstr "구성이 성공적으로 로드되었습니다"
-
-#~ msgid "Configuration error"
-#~ msgstr "구성 오류"
-
-#~ msgid "Invalid server URL"
-#~ msgstr "잘못된 서버 URL"
-
-# System information
-#~ msgid "Gathering system information"
-#~ msgstr "시스템 정보를 수집하고 있습니다"
-
-#~ msgid "System information collected"
-#~ msgstr "시스템 정보가 수집되었습니다"
-
-#~ msgid "Failed to collect system information"
-#~ msgstr "시스템 정보 수집에 실패했습니다"
-
-# Command execution
-#~ msgid "Executing command"
-#~ msgstr "명령을 실행하고 있습니다"
-
-#~ msgid "Command executed successfully"
-#~ msgstr "명령이 성공적으로 실행되었습니다"
-
-#~ msgid "Command execution failed"
-#~ msgstr "명령 실행에 실패했습니다"
-
-#~ msgid "Command not permitted"
-#~ msgstr "명령이 허용되지 않습니다"
-
-# File operations
-#~ msgid "File not found"
-#~ msgstr "파일을 찾을 수 없습니다"
-
-#~ msgid "Permission denied"
-#~ msgstr "권한이 거부되었습니다"
-
-#~ msgid "File operation completed"
-#~ msgstr "파일 작업이 완료되었습니다"
-
-# Service management
-#~ msgid "Service started"
-#~ msgstr "서비스가 시작되었습니다"
-
-#~ msgid "Service stopped"
-#~ msgstr "서비스가 중지되었습니다"
-
-#~ msgid "Service installation completed"
-#~ msgstr "서비스 설치가 완료되었습니다"
-
-#~ msgid "Service removal completed"
-#~ msgstr "서비스 제거가 완료되었습니다"
-
-# Error messages
-#~ msgid "An unexpected error occurred"
-#~ msgstr "예상치 못한 오류가 발생했습니다"
-
-#~ msgid "Network error"
-#~ msgstr "네트워크 오류"
-
-#~ msgid "Authentication failed"
-#~ msgstr "인증에 실패했습니다"
-
-# Queue-related messages
-#: queue_handler.py
-msgid "Queued message handler initialized"
-msgstr "큐 메시지 핸들러가 초기화되었습니다"
 #: queue_handler.py
 #, python-format
 msgid "Failed to send message directly: %s"
@@ -805,10 +584,6 @@ msgstr "큐 프로세서에서 오류 발생: %s"
 #: queue_handler.py
 msgid "Connection established, starting queue processing"
 msgstr "연결이 설정되었습니다. 큐 처리를 시작합니다"
-
-#: queue_handler.py
-msgid "Connection lost, stopping queue processing"
-msgstr "연결이 끊어졌습니다. 큐 처리를 중지합니다"
 
 #: queue_handler.py
 #, python-format
@@ -1440,3 +1215,27 @@ msgstr "구성된 VM %d개 중 %d개 자동 시작됨"
 msgid "Failed to auto-start child hosts: %s"
 msgstr "하위 호스트 자동 시작 실패: %s"
 
+
+msgid "Hostname is required"
+msgstr "호스트 이름은 필수입니다"
+
+msgid "Username is required"
+msgstr "사용자 이름은 필수입니다"
+
+msgid "Password hash is required"
+msgstr "비밀번호 해시는 필수입니다"
+
+msgid "Distribution is required"
+msgstr "배포판은 필수입니다"
+
+msgid "Invalid memory format: {value}"
+msgstr "잘못된 메모리 형식: {value}"
+
+msgid "Invalid disk size format: {value}"
+msgstr "잘못된 디스크 크기 형식: {value}"
+
+msgid "CPUs must be at least 1"
+msgstr "CPU는 최소 1개 이상이어야 합니다"
+
+msgid "CPUs cannot exceed 64"
+msgstr "CPU는 64개를 초과할 수 없습니다"

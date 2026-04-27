@@ -10,11 +10,6 @@ msgstr ""
 msgid "Unsupported platform: %s"
 msgstr "軟體清單不支援的平台：%s"
 
-#: hardware_collection.py:119 hardware_collection.py:122
-#, fuzzy, python-format
-msgid "Failed to collect hardware info: %s"
-msgstr "收集軟體清單失敗：%s"
-
 #: hardware_collection.py:244
 #, fuzzy, python-format
 msgid "Failed to get macOS CPU info: %s"
@@ -68,16 +63,6 @@ msgstr "收集軟體清單失敗：%s"
 #: hardware_collection.py:1062
 #, fuzzy, python-format
 msgid "Failed to get Windows memory info: %s"
-msgstr "收集軟體清單失敗：%s"
-
-#: hardware_collection.py:1103
-#, fuzzy, python-format
-msgid "Failed to get Windows storage info: %s"
-msgstr "收集軟體清單失敗：%s"
-
-#: hardware_collection.py:1214
-#, fuzzy, python-format
-msgid "Failed to get Windows network info: %s"
 msgstr "收集軟體清單失敗：%s"
 
 #: hardware_collection.py:1305
@@ -161,36 +146,6 @@ msgstr "傳送初始資料更新失敗：%s"
 #, python-format
 msgid "Detected package managers: %s"
 msgstr "檢測到的套件管理器：%s"
-
-#: update_detection.py:219
-#, fuzzy
-msgid "Detecting apt updates"
-msgstr "正在收集 apt 軟體包"
-
-#: update_detection.py:269
-#, fuzzy, python-format
-msgid "Failed to detect apt updates: %s"
-msgstr "收集 apt 軟體包失敗：%s"
-
-#: update_detection.py:310
-#, fuzzy
-msgid "Detecting snap updates"
-msgstr "正在收集 snap 軟體包"
-
-#: update_detection.py:337
-#, fuzzy, python-format
-msgid "Failed to detect snap updates: %s"
-msgstr "收集 snap 軟體包失敗：%s"
-
-#: update_detection.py:342
-#, fuzzy
-msgid "Detecting flatpak updates"
-msgstr "正在收集 flatpak 軟體包"
-
-#: update_detection.py:367
-#, fuzzy, python-format
-msgid "Failed to detect flatpak updates: %s"
-msgstr "收集 flatpak 軟體包失敗：%s"
 
 #: update_detection.py:372
 msgid "Detecting DNF updates"
@@ -296,11 +251,6 @@ msgstr ""
 msgid "No packages specified for update"
 msgstr ""
 
-#: update_detection.py:977
-#, fuzzy, python-format
-msgid "Failed to apply apt updates: %s"
-msgstr "傳送初始資料更新失敗：%s"
-
 #: update_detection.py:1100
 #, fuzzy, python-format
 msgid "Failed to apply DNF updates: %s"
@@ -325,11 +275,6 @@ msgstr ""
 msgid "Server discovered at %s"
 msgstr ""
 
-#: discovery.py:135
-#, fuzzy, python-format
-msgid "Invalid JSON response from %s"
-msgstr "來自伺服器的無效回應"
-
 #: discovery.py:145
 #, python-format
 msgid "Error during broadcast discovery: %s"
@@ -338,11 +283,6 @@ msgstr ""
 #: discovery.py:190
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
-
-#: discovery.py:196
-#, python-format
-msgid "Invalid JSON announcement from %s"
 msgstr ""
 
 #: discovery.py:206
@@ -477,54 +417,13 @@ msgstr ""
 msgid "Scoop package collection not yet implemented"
 msgstr ""
 
-#: software_inventory_collection.py:753
-#, fuzzy
-msgid "Collecting BSD pkg packages"
-msgstr "正在收集 apt 軟體包"
-
-#: software_inventory_collection.py:781
-msgid "No BSD package manager output found"
-msgstr ""
-
-#: software_inventory_collection.py:784
-#, fuzzy, python-format
-msgid "Failed to collect BSD pkg packages: %s"
-msgstr "收集 apt 軟體包失敗：%s"
-
-#: software_inventory_collection.py:789
-#, fuzzy
-msgid "Collecting OpenBSD pkg_info packages"
-msgstr "正在收集 snap 軟體包"
-
-#: software_inventory_collection.py:803
-msgid "Successfully collected OpenBSD packages"
-msgstr ""
-
-#: software_inventory_collection.py:806
-#, python-format
-msgid "No OpenBSD pkg_info output found. Return code: %d"
-msgstr ""
-
 #: software_inventory_collection.py:810
 #, python-format
 msgid "pkg_info stderr: %s"
 msgstr ""
 
-#: software_inventory_collection.py:813
-#, fuzzy, python-format
-msgid "Failed to collect OpenBSD pkg_info packages: %s"
-msgstr "收集 snap 軟體包失敗：%s"
-
 #: software_inventory_collection.py:877
 msgid "FreeBSD ports collection not yet implemented"
-msgstr ""
-
-#: main.py:41
-msgid "No configuration found, attempting auto-discovery..."
-msgstr ""
-
-#: main.py:45
-msgid "Unable to configure agent: no config file and auto-discovery failed"
 msgstr ""
 
 # Agent startup and connection
@@ -636,19 +535,9 @@ msgstr "為%s套用韌體更新時發生例外：%s"
 msgid "Updates started in background"
 msgstr "背景開始更新"
 
-#: main.py:741
-#, fuzzy, python-format
-msgid "Failed to start update process: %s"
-msgstr "收集 apt 軟體包失敗：%s"
-
 #: main.py:766
 msgid "No valid packages found for update"
 msgstr "未找到有效的更新套件"
-
-#: main.py:786
-#, python-format
-msgid "Update application completed: %d updated, %d failed"
-msgstr "更新應用程式完成：%d 個已更新，%d 個失敗"
 
 #: main.py:800
 msgid "Successfully sent update results to server"
@@ -668,34 +557,6 @@ msgstr "等待重新連線以發送更新結果（嘗試 %d/%d）"
 msgid "Failed to send update results after %d attempts"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: main.py:813
-#, fuzzy, python-format
-msgid "Failed to apply updates in background: %s"
-msgstr "傳送初始資料更新失敗：%s"
-
-#: main.py:856
-msgid "Registering with SysManage server..."
-msgstr ""
-
-#: main.py:858
-msgid "Failed to register with server. Exiting."
-msgstr ""
-
-#: main.py:861
-msgid "Registration successful, checking certificates..."
-msgstr ""
-
-#: main.py:867
-msgid "Valid certificates found - secure authentication available"
-msgstr ""
-
-#: main.py:871
-msgid "No certificates found - using token-based authentication"
-msgstr ""
-#: main.py:879
-msgid "Starting WebSocket connection..."
-msgstr ""
-
 #: main.py:935
 msgid "Connected to server successfully"
 msgstr "成功連接到伺服器"
@@ -703,88 +564,6 @@ msgstr "成功連接到伺服器"
 #: client_registration.py:24
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
-
-#~ msgid "Connecting to server"
-#~ msgstr "正在連接伺服器"
-
-#~ msgid "Connection failed"
-#~ msgstr "連接失敗"
-
-#~ msgid "Disconnected from server"
-#~ msgstr "與伺服器斷開連接"
-
-#~ msgid "Reconnecting to server"
-#~ msgstr "正在重新連接伺服器"
-
-#~ msgid "Configuration loaded successfully"
-#~ msgstr "配置載入成功"
-
-#~ msgid "Configuration error"
-#~ msgstr "配置錯誤"
-
-#~ msgid "Invalid server URL"
-#~ msgstr "無效的伺服器 URL"
-
-# System information
-#~ msgid "Gathering system information"
-#~ msgstr "正在收集系統資訊"
-
-#~ msgid "System information collected"
-#~ msgstr "系統資訊收集完成"
-
-#~ msgid "Failed to collect system information"
-#~ msgstr "收集系統資訊失敗"
-
-# Command execution
-#~ msgid "Executing command"
-#~ msgstr "正在執行命令"
-
-#~ msgid "Command executed successfully"
-#~ msgstr "命令執行成功"
-
-#~ msgid "Command execution failed"
-#~ msgstr "命令執行失敗"
-
-#~ msgid "Command not permitted"
-#~ msgstr "命令不被允許"
-
-# File operations
-#~ msgid "File not found"
-#~ msgstr "找不到檔案"
-
-#~ msgid "Permission denied"
-#~ msgstr "存取被拒絕"
-
-#~ msgid "File operation completed"
-#~ msgstr "檔案操作完成"
-
-# Service management
-#~ msgid "Service started"
-#~ msgstr "服務已啟動"
-
-#~ msgid "Service stopped"
-#~ msgstr "服務已停止"
-
-#~ msgid "Service installation completed"
-#~ msgstr "服務安裝完成"
-
-#~ msgid "Service removal completed"
-#~ msgstr "服務移除完成"
-
-# Error messages
-#~ msgid "An unexpected error occurred"
-#~ msgstr "發生意外錯誤"
-
-#~ msgid "Network error"
-#~ msgstr "網路錯誤"
-
-#~ msgid "Authentication failed"
-#~ msgstr "驗證失敗"
-
-# Queue-related messages
-#: queue_handler.py
-msgid "Queued message handler initialized"
-msgstr "佇列訊息處理器已初始化"
 #: queue_handler.py
 #, python-format
 msgid "Failed to send message directly: %s"
@@ -803,10 +582,6 @@ msgstr "佇列處理器發生錯誤：%s"
 #: queue_handler.py
 msgid "Connection established, starting queue processing"
 msgstr "連線已建立，開始佇列處理"
-
-#: queue_handler.py
-msgid "Connection lost, stopping queue processing"
-msgstr "連線中斷，停止佇列處理"
 
 #: queue_handler.py
 #, python-format
@@ -1438,3 +1213,27 @@ msgstr "已自動啟動 %d/%d 個設定的虛擬機"
 msgid "Failed to auto-start child hosts: %s"
 msgstr "自動啟動子主機失敗: %s"
 
+
+msgid "Hostname is required"
+msgstr "需要主機名稱"
+
+msgid "Username is required"
+msgstr "需要使用者名稱"
+
+msgid "Password hash is required"
+msgstr "需要密碼雜湊"
+
+msgid "Distribution is required"
+msgstr "需要發行版"
+
+msgid "Invalid memory format: {value}"
+msgstr "無效的記憶體格式：{value}"
+
+msgid "Invalid disk size format: {value}"
+msgstr "無效的磁碟大小格式：{value}"
+
+msgid "CPUs must be at least 1"
+msgstr "CPU 至少為 1"
+
+msgid "CPUs cannot exceed 64"
+msgstr "CPU 不能超過 64"
