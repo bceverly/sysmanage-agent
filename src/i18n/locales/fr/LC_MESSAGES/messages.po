@@ -1316,3 +1316,48 @@ msgstr "Les CPU doivent être au moins 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "Les CPU ne peuvent pas dépasser 64"
+
+msgid "Checking status for service: %s"
+msgstr "Vérification de l'état du service : %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Erreur dans le gestionnaire de contrôle de service : %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Erreur dans le gestionnaire d'état de service : %s"
+
+msgid "Executing %s for service: %s"
+msgstr "Exécution de %s pour le service : %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "Échec de %s sur le service %s : %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Échec de la mise à jour des rôles après le contrôle de service : %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Erreur de contrôle de service pour %s : %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Contrôle de service demandé : %s pour les services : %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Délai dépassé pour le contrôle de service de %s : %s"
+
+msgid "Service %s status: %s"
+msgstr "Service %s état : %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Vérification d'état demandée pour le service : %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Erreur d'état de service pour %s : %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Délai dépassé pour l'état du service %s : %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Service %s : %s avec succès"
+
+msgid "Triggering role collection after service control"
+msgstr "Déclenchement de la collecte des rôles après le contrôle de service"

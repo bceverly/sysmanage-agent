@@ -279,3 +279,19 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
             UUID token string if configured, None otherwise
         """
         return self.get("auto_approve.token")
+
+    def get_registration_key(self) -> Optional[str]:
+        """
+        Get the pre-shared registration key if configured (Phase 8.1).
+
+        When set, the agent includes this key in its initial /host/register
+        POST.  The server validates against the RegistrationKey table and
+        — if the key is valid and ``auto_approve=True`` — skips the manual
+        approval gate and enrolls the host into the key's access group.
+
+        Read from ``security.registration_key`` in the YAML config.
+
+        Returns:
+            The registration-key string if configured, None otherwise.
+        """
+        return self.get("security.registration_key")

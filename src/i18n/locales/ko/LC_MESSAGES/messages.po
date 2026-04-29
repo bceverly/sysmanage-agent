@@ -1239,3 +1239,48 @@ msgstr "CPU는 최소 1개 이상이어야 합니다"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPU는 64개를 초과할 수 없습니다"
+
+msgid "Checking status for service: %s"
+msgstr "서비스 상태 확인 중: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "서비스 제어 핸들러 오류: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "서비스 상태 핸들러 오류: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "서비스 %s 에 대해 %s 실행 중"
+
+msgid "Failed to %s service %s: %s"
+msgstr "서비스 %s 의 %s 실패: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "서비스 제어 후 역할 업데이트 실패: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "%s 의 서비스 제어 오류: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "서비스 제어 요청됨: %s 대상 서비스: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "%s 의 서비스 제어 시간 초과: %s"
+
+msgid "Service %s status: %s"
+msgstr "서비스 %s 상태: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "서비스 상태 확인 요청됨: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "%s 의 서비스 상태 오류: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "%s 의 서비스 상태 시간 초과: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "서비스 %s 의 %s 성공"
+
+msgid "Triggering role collection after service control"
+msgstr "서비스 제어 후 역할 수집 트리거됨"

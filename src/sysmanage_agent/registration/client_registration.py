@@ -53,6 +53,18 @@ class ClientRegistration:
         # Load existing authentication data from database
         self._load_stored_auth_data()
 
+    def _get_registration_key_from_config(self) -> Optional[str]:
+        """Read the optional Phase 8.1 registration key from config.
+        Wraps the config getter so the registration code path doesn't
+        couple directly to the YAML key name."""
+        try:
+            return self.config.get_registration_key()
+        except AttributeError:
+            # Older config-manager builds don't have the helper.  Treat
+            # the absent key as "no registration key configured" rather
+            # than crashing — back-compat with pre-Phase-8.1 deployments.
+            return None
+
     def _create_basic_registration_dict(
         self, hostname: str, ipv4: str, ipv6: str
     ) -> Dict[str, Any]:
@@ -95,6 +107,17 @@ class ClientRegistration:
         if auto_approve_token:
             basic_info["auto_approve_token"] = auto_approve_token
             self.logger.info("Including auto_approve_token in registration data")
+
+        # Phase 8.1: pre-shared registration key.  When supplied via
+        # config (security.registration_key), the server validates it
+        # against the RegistrationKey table and enrolls the host into
+        # the matching access group with optional auto-approval.
+        registration_key = self._get_registration_key_from_config()
+        if registration_key:
+            basic_info["registration_key"] = registration_key
+            # Log presence only — never the value or its length, both of
+            # which leak information about the secret.
+            self.logger.info("Including registration_key in registration data")
 
         # Debug logging
         logger = logging.getLogger(__name__)

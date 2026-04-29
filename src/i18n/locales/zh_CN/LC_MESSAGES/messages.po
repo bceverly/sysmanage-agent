@@ -1239,3 +1239,48 @@ msgstr "CPU 至少为 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPU 不能超过 64"
+
+msgid "Checking status for service: %s"
+msgstr "正在检查服务状态：%s"
+
+msgid "Error in service control handler: %s"
+msgstr "服务控制处理程序错误：%s"
+
+msgid "Error in service status handler: %s"
+msgstr "服务状态处理程序错误：%s"
+
+msgid "Executing %s for service: %s"
+msgstr "正在对服务 %s 执行 %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "对服务 %s 执行 %s 失败：%s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "服务控制后更新角色失败：%s"
+
+msgid "Service control error for %s: %s"
+msgstr "%s 的服务控制错误：%s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "已请求服务控制：%s，目标服务：%s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "%s 的服务控制超时：%s"
+
+msgid "Service %s status: %s"
+msgstr "服务 %s 状态：%s"
+
+msgid "Service status check requested for: %s"
+msgstr "已请求服务状态检查：%s"
+
+msgid "Service status error for %s: %s"
+msgstr "%s 的服务状态错误：%s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "%s 的服务状态超时：%s"
+
+msgid "Successfully %s service: %s"
+msgstr "服务 %s 的 %s 成功"
+
+msgid "Triggering role collection after service control"
+msgstr "在服务控制后触发角色收集"

@@ -1241,3 +1241,48 @@ msgstr "CPU は少なくとも 1 つ必要です"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPU は 64 を超えることはできません"
+
+msgid "Checking status for service: %s"
+msgstr "サービスのステータスを確認しています: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "サービス制御ハンドラーのエラー: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "サービス状態ハンドラーのエラー: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "サービス %s に対して %s を実行しています"
+
+msgid "Failed to %s service %s: %s"
+msgstr "サービス %s の %s に失敗しました: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "サービス制御後のロール更新に失敗しました: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "%s のサービス制御エラー: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "サービス制御を要求されました: %s 対象サービス: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "%s のサービス制御がタイムアウトしました: %s"
+
+msgid "Service %s status: %s"
+msgstr "サービス %s のステータス: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "サービスのステータス確認を要求されました: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "%s のサービス状態エラー: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "%s のサービス状態取得がタイムアウトしました: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "サービス %s の %s に成功しました"
+
+msgid "Triggering role collection after service control"
+msgstr "サービス制御後のロール収集をトリガーします"

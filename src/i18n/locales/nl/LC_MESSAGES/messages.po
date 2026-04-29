@@ -1239,3 +1239,48 @@ msgstr "CPU's moeten ten minste 1 zijn"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPU's mogen niet meer dan 64 zijn"
+
+msgid "Checking status for service: %s"
+msgstr "Status controleren van service: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Fout in service-controlafhandelaar: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Fout in service-statusafhandelaar: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "%s uitvoeren voor service: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "%s van service %s mislukt: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Servicebesturingsfout voor %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Servicebeheer gevraagd: %s voor services: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Time-out bij servicebeheer voor %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Service %s status: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Statuscontrole gevraagd voor service: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Servicestatusfout voor %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Time-out bij servicestatus voor %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Service %s succesvol %s"
+
+msgid "Triggering role collection after service control"
+msgstr "Rollenverzameling activeren na servicebeheer"

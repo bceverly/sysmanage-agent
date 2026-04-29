@@ -1237,3 +1237,48 @@ msgstr "CPU कम से कम 1 होने चाहिए"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPU 64 से अधिक नहीं हो सकते"
+
+msgid "Checking status for service: %s"
+msgstr "सेवा की स्थिति की जाँच की जा रही है: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "सेवा %s के लिए %s निष्पादित किया जा रहा है"
+
+msgid "Failed to %s service %s: %s"
+msgstr "सेवा %s पर %s विफल: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "सेवा नियंत्रण अनुरोधित: %s सेवाओं के लिए: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
+
+msgid "Service %s status: %s"
+msgstr "सेवा %s स्थिति: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "सेवा के लिए स्थिति जाँच अनुरोधित: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "सेवा %s पर %s सफल"
+
+msgid "Triggering role collection after service control"
+msgstr "सेवा नियंत्रण के बाद भूमिका संग्रह सक्रिय किया जा रहा है"

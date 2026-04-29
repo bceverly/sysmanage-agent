@@ -1239,3 +1239,48 @@ msgstr "As CPUs devem ser pelo menos 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "As CPUs não podem exceder 64"
+
+msgid "Checking status for service: %s"
+msgstr "Verificando o estado do serviço: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Erro no manipulador de controlo de serviços: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Erro no manipulador de estado de serviços: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "A executar %s para o serviço: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "Falha ao %s o serviço %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Falha ao atualizar funções após controlo de serviço: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Erro de controlo de serviço para %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Controlo de serviço solicitado: %s para os serviços: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Tempo limite excedido no controlo de serviço para %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Estado do serviço %s: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Verificação de estado solicitada para o serviço: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Erro de estado do serviço para %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Tempo limite excedido ao consultar o estado do serviço %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Serviço %s: %s com sucesso"
+
+msgid "Triggering role collection after service control"
+msgstr "A acionar a recolha de funções após o controlo de serviço"

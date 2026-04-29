@@ -1318,3 +1318,48 @@ msgstr "CPUs müssen mindestens 1 sein"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPUs dürfen 64 nicht überschreiten"
+
+msgid "Checking status for service: %s"
+msgstr "Status für Dienst wird geprüft: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Fehler im Dienststeuerungs-Handler: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Fehler im Dienststatus-Handler: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "%s wird für Dienst ausgeführt: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "Fehler beim %s des Dienstes %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Fehler beim Aktualisieren der Rollen nach Dienststeuerung: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Dienststeuerungsfehler für %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Dienststeuerung angefordert: %s für Dienste: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Zeitüberschreitung bei Dienststeuerung für %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Dienst %s Status: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Statusabfrage für Dienst angefordert: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Dienststatusfehler für %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Zeitüberschreitung bei Dienststatusabfrage für %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Dienst %s erfolgreich %s"
+
+msgid "Triggering role collection after service control"
+msgstr "Rollensammlung nach Dienststeuerung wird ausgelöst"

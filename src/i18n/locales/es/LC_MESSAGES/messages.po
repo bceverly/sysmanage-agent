@@ -1317,3 +1317,48 @@ msgstr "Las CPU deben ser al menos 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "Las CPU no pueden exceder 64"
+
+msgid "Checking status for service: %s"
+msgstr "Comprobando el estado del servicio: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Error en el gestor de control de servicios: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Error en el gestor de estado de servicios: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "Ejecutando %s para el servicio: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "No se pudo %s el servicio %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "No se pudieron actualizar los roles tras el control de servicio: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Error de control de servicio para %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Control de servicio solicitado: %s para los servicios: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Tiempo de espera agotado en control de servicio para %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Estado del servicio %s: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Comprobación de estado solicitada para el servicio: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Error de estado del servicio para %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Tiempo de espera agotado al consultar estado del servicio %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Servicio %s: %s con éxito"
+
+msgid "Triggering role collection after service control"
+msgstr "Activando la recolección de roles tras el control de servicio"

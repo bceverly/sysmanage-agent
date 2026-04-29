@@ -1239,3 +1239,48 @@ msgstr "Процессоров должно быть не менее 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "Процессоров не может быть больше 64"
+
+msgid "Checking status for service: %s"
+msgstr "Проверка состояния службы: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Ошибка в обработчике управления службами: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Ошибка в обработчике статуса служб: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "Выполнение %s для службы: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "Не удалось выполнить %s для службы %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Не удалось обновить роли после управления службой: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Ошибка управления службой для %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Запрошено управление службой: %s для служб: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Тайм-аут управления службой для %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Служба %s состояние: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Запрошена проверка состояния службы: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Ошибка состояния службы для %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Тайм-аут получения состояния службы %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Служба %s: %s выполнено успешно"
+
+msgid "Triggering role collection after service control"
+msgstr "Запуск сбора ролей после управления службой"

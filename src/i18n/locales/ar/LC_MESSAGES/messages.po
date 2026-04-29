@@ -1240,3 +1240,48 @@ msgstr "يجب أن تكون وحدات المعالجة المركزية 1 عل
 
 msgid "CPUs cannot exceed 64"
 msgstr "لا يمكن أن تتجاوز وحدات المعالجة المركزية 64"
+
+msgid "Checking status for service: %s"
+msgstr "جارٍ التحقق من حالة الخدمة: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "خطأ في معالج التحكم بالخدمة: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "خطأ في معالج حالة الخدمة: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "جارٍ تنفيذ %s للخدمة: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "تعذّر %s للخدمة %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "تعذّر تحديث الأدوار بعد التحكم بالخدمة: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "خطأ التحكم بالخدمة لـ %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "طُلب التحكم بالخدمة: %s للخدمات: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "انتهت مهلة التحكم بالخدمة لـ %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "حالة الخدمة %s: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "طُلب فحص حالة الخدمة: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "خطأ في حالة الخدمة لـ %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "انتهت مهلة فحص حالة الخدمة %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "تم %s للخدمة %s بنجاح"
+
+msgid "Triggering role collection after service control"
+msgstr "تشغيل جمع الأدوار بعد التحكم بالخدمة"

@@ -972,3 +972,48 @@ msgstr "CPUs must be at least 1"
 
 msgid "CPUs cannot exceed 64"
 msgstr "CPUs cannot exceed 64"
+
+msgid "Checking status for service: %s"
+msgstr "Checking status for service: %s"
+
+msgid "Error in service control handler: %s"
+msgstr "Error in service control handler: %s"
+
+msgid "Error in service status handler: %s"
+msgstr "Error in service status handler: %s"
+
+msgid "Executing %s for service: %s"
+msgstr "Executing %s for service: %s"
+
+msgid "Failed to %s service %s: %s"
+msgstr "Failed to %s service %s: %s"
+
+msgid "Failed to update roles after service control: %s"
+msgstr "Failed to update roles after service control: %s"
+
+msgid "Service control error for %s: %s"
+msgstr "Service control error for %s: %s"
+
+msgid "Service control requested: %s for services: %s"
+msgstr "Service control requested: %s for services: %s"
+
+msgid "Service control timeout for %s: %s"
+msgstr "Service control timeout for %s: %s"
+
+msgid "Service %s status: %s"
+msgstr "Service %s status: %s"
+
+msgid "Service status check requested for: %s"
+msgstr "Service status check requested for: %s"
+
+msgid "Service status error for %s: %s"
+msgstr "Service status error for %s: %s"
+
+msgid "Service status timeout for %s: %s"
+msgstr "Service status timeout for %s: %s"
+
+msgid "Successfully %s service: %s"
+msgstr "Successfully %s service: %s"
+
+msgid "Triggering role collection after service control"
+msgstr "Triggering role collection after service control"
