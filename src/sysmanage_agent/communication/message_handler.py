@@ -369,6 +369,66 @@ class MessageHandler:
         self.logger.info("Disconnecting to trigger re-registration...")
         self.agent.running = False
 
+    async def _handle_broadcast_message(self, data: Dict[str, Any]) -> None:
+        """Handle a Phase 8.5 BROADCAST message from the server.
+
+        Broadcasts are server-fanned-out one-to-many messages used for
+        operator-initiated fleet actions like ``refresh_inventory`` or
+        a global banner.  The action semantic is encoded in
+        ``data["broadcast_action"]``;  the agent picks how to react.
+
+        Currently supported actions:
+
+          ``refresh_inventory``   Re-collect software inventory + push
+                                  an out-of-band ``software_inventory_update``
+                                  via the existing data collector.
+          ``banner``              Log the message at INFO level so it's
+                                  visible in agent logs / journalctl.
+          (anything else)         Logged as warning, no action taken.
+
+        New broadcast actions are added by name here — keeping the
+        dispatch in one place makes the supported-actions list easy to
+        document and audit."""
+        broadcast_id = data.get("broadcast_id", "unknown")
+        action = data.get("broadcast_action", "")
+        self.logger.info(
+            "Received broadcast %s action=%s issued_by=%s",
+            broadcast_id,
+            action,
+            data.get("issued_by", "unknown"),
+        )
+
+        if action == "refresh_inventory":
+            try:
+                await self.agent.data_collector.send_software_inventory_update()
+                self.logger.info(
+                    "Broadcast %s: software inventory refreshed", broadcast_id
+                )
+            except AttributeError:
+                # Older agent builds may not expose
+                # ``send_software_inventory_update``.  Best-effort:
+                # fall back to a no-op.
+                self.logger.warning(
+                    "Broadcast %s: inventory refresh requested but "
+                    "data_collector lacks send_software_inventory_update",
+                    broadcast_id,
+                )
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                self.logger.error(
+                    "Broadcast %s: inventory refresh failed: %s",
+                    broadcast_id,
+                    exc,
+                )
+        elif action == "banner":
+            message = data.get("message") or "(no message)"
+            self.logger.info("[BANNER] %s", message)
+        else:
+            self.logger.warning(
+                "Broadcast %s: unknown action '%s' — ignored",
+                broadcast_id,
+                action,
+            )
+
     async def _handle_command_message(self, data: Dict[str, Any]) -> None:
         """
         Handle a command message from the server.
@@ -461,6 +521,8 @@ class MessageHandler:
 
         if message_type == "command":
             await self._handle_command_message(data)
+        elif message_type == "broadcast":
+            await self._handle_broadcast_message(data)
         elif message_type == "ping":
             pong = self.create_message("pong", {"ping_id": data.get("message_id")})
             await self.send_message(pong)
