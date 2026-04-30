@@ -2513,8 +2513,23 @@ jobs:
           # Clean up passphrase file
           rm -f /tmp/gpg-passphrase-${RELEASE}
 
-          # Upload to Launchpad PPA
-          dput launchpad "sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+          # Upload to Launchpad PPA.  Launchpad's FTP endpoint
+          # occasionally drops mid-transfer with "cannot read from
+          # timed out object" — retry up to 3× with exponential
+          # backoff before failing the workflow.
+          changes_file="sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
+          attempt=1
+          max_attempts=3
+          until dput launchpad "$changes_file"; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "::error::dput failed after $attempt attempts uploading $changes_file"
+              exit 1
+            fi
+            sleep_for=$(( 30 * attempt ))
+            echo "::warning::dput attempt $attempt failed; retrying in ${sleep_for}s"
+            sleep "$sleep_for"
+            attempt=$(( attempt + 1 ))
+          done
 
           echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
 
