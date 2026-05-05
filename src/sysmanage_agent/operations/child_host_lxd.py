@@ -1,5 +1,18 @@
 """
 LXD-specific child host operations for Ubuntu hosts.
+
+LEGACY: this entire module is the "native handler" path the server's
+``create_child_host`` / ``initialize_lxd`` / ``start|stop|restart_child_host``
+/ ``delete_child_host`` command types route to.  As of the Pro+ engine
+migration, the server prefers the apply_deployment_plan path produced
+by ``container_engine`` (build_lxd_create_plan / _lifecycle_plan /
+_delete_plan / _init_plan) and only falls back here when the engine
+isn't loaded or its builder raised.
+
+DO NOT DELETE.  This file is the architectural reference for what the
+engine plan-builders need to express — every retry, sleep, idempotency
+check, and OS quirk encoded here was hard-won.  Once the engine path
+is fully validated in production, this module can be retired.
 """
 
 import asyncio

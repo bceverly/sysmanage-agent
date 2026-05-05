@@ -39,11 +39,11 @@ class TestPackageOperations:
             return_value=mock_host_approval
         )
 
-        # Mock send_message
-        self.mock_agent.send_message = AsyncMock()
-
-        # Mock call_server_api
-        self.mock_agent.call_server_api = AsyncMock(return_value={"success": True})
+        # Mock send_message — the agent's outbound queue path.  Both
+        # _send_installation_completion and _send_installation_status_update
+        # go through this; tests assert send_message rather than the
+        # removed call_server_api HTTP helper.
+        self.mock_agent.send_message = AsyncMock(return_value=True)
 
         self.package_ops = PackageOperations(self.mock_agent)
 
@@ -302,7 +302,8 @@ class TestPackageOperations:
             assert result["request_id"] == "req-123"
             assert len(result["successful_packages"]) == 2
             assert len(result["failed_packages"]) == 0
-            self.mock_agent.call_server_api.assert_called_once()
+            # Completion notification flows through send_message → outbound queue
+            self.mock_agent.send_message.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_install_packages_success_non_apt(self):
@@ -476,8 +477,8 @@ class TestPackageOperations:
             )
             mock_helpers.update_installation_tracking_record.return_value = None
 
-            # Make server notification fail
-            self.mock_agent.call_server_api.side_effect = Exception("Network error")
+            # Make queueing fail
+            self.mock_agent.send_message.side_effect = Exception("Queue error")
 
             parameters = {
                 "request_id": "req-notif-fail",
@@ -530,7 +531,8 @@ class TestPackageOperations:
             assert result["request_id"] == "uninstall-123"
             assert len(result["successful_packages"]) == 2
             assert len(result["failed_packages"]) == 0
-            self.mock_agent.call_server_api.assert_called_once()
+            # Completion notification flows through send_message → outbound queue
+            self.mock_agent.send_message.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_uninstall_packages_failure_apt(self):
@@ -750,7 +752,7 @@ class TestPackageOperations:
                 return_value={"success": True}
             )
 
-            self.mock_agent.call_server_api.side_effect = Exception("Network error")
+            self.mock_agent.send_message.side_effect = Exception("Queue error")
 
             parameters = {
                 "request_id": "uninstall-notif",
@@ -997,40 +999,38 @@ class TestPackageOperations:
 
     @pytest.mark.asyncio
     async def test_send_installation_completion_success(self):
-        """Test successful installation completion notification."""
-        self.mock_agent.call_server_api = AsyncMock(return_value={"success": True})
+        """Completion is queued via send_message with the right payload shape."""
+        self.mock_agent.send_message = AsyncMock(return_value=True)
 
         await self.package_ops._send_installation_completion(
             "req-123", True, "All packages installed"
         )
 
-        self.mock_agent.call_server_api.assert_called_once_with(
-            "agent/installation-complete",
-            "POST",
-            {
-                "request_id": "req-123",
-                "success": True,
-                "result_log": "All packages installed",
-            },
-        )
+        self.mock_agent.send_message.assert_called_once()
+        sent = self.mock_agent.send_message.call_args[0][0]
+        assert sent["message_type"] == "installation_complete"
+        assert sent["request_id"] == "req-123"
+        assert sent["success"] is True
+        assert sent["result_log"] == "All packages installed"
+        assert sent["host_id"] == "12345"
+        assert sent["hostname"] == "test-host"
 
     @pytest.mark.asyncio
-    async def test_send_installation_completion_no_response(self):
-        """Test installation completion when server returns no response."""
-        self.mock_agent.call_server_api = AsyncMock(return_value=None)
+    async def test_send_installation_completion_queue_returns_falsy(self):
+        """If send_message returns falsy (queue rejected the row), the
+        method still returns normally — error is logged, not raised."""
+        self.mock_agent.send_message = AsyncMock(return_value=False)
 
         await self.package_ops._send_installation_completion(
             "req-456", False, "Some packages failed"
         )
 
-        self.mock_agent.call_server_api.assert_called_once()
+        self.mock_agent.send_message.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_installation_completion_exception(self):
-        """Test installation completion with exception."""
-        self.mock_agent.call_server_api = AsyncMock(
-            side_effect=Exception("Network error")
-        )
+        """Exceptions raised by send_message are propagated."""
+        self.mock_agent.send_message = AsyncMock(side_effect=Exception("Queue error"))
 
         with pytest.raises(Exception):
             await self.package_ops._send_installation_completion(

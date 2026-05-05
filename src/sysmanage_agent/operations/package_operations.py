@@ -580,33 +580,47 @@ class PackageOperations:
     async def _send_installation_completion(
         self, request_id: str, success: bool, result_log: str
     ):
-        """Send completion notification to the server."""
+        """Send completion notification to the server via the outbound queue.
+
+        Architecture: agents must never POST directly to the server from
+        business-logic code; the SQLite outbound queue + background sender
+        is the only sanctioned path.  The server-side ``installation_complete``
+        message handler (``backend/api/handlers/software_package_handlers.py``)
+        records completion against the ``InstallationRequest``."""
         try:
-            # Prepare payload
-            payload = {
+            host_approval = self.agent_instance.get_host_approval_from_db()
+            try:
+                system_info = self.agent_instance.registration.get_system_info()
+                hostname = system_info.get("hostname") or socket.gethostname()
+            except Exception:
+                hostname = socket.gethostname()
+
+            completion_message = {
+                "message_type": "installation_complete",
+                "message_id": str(uuid.uuid4()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "request_id": request_id,
                 "success": success,
                 "result_log": result_log,
+                "hostname": hostname,
             }
+            if host_approval and host_approval.host_id:
+                completion_message["host_id"] = str(host_approval.host_id)
 
-            # Use centralized API method
-            response = await self.agent_instance.call_server_api(
-                "agent/installation-complete", "POST", payload
-            )
-
-            if response:
+            queued = await self.agent_instance.send_message(completion_message)
+            if queued:
                 self.logger.info(
-                    _("Installation completion sent successfully for request %s"),
+                    _("Queued installation completion for request %s"),
                     request_id,
                 )
             else:
                 self.logger.error(
-                    _("Failed to send installation completion for request %s"),
+                    _("Failed to queue installation completion for request %s"),
                     request_id,
                 )
 
         except Exception as error:
-            self.logger.error(_("Error sending installation completion: %s"), error)
+            self.logger.error(_("Error queueing installation completion: %s"), error)
             raise
 
     async def _send_installation_status_update(  # pylint: disable=too-many-positional-arguments

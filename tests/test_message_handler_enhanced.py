@@ -824,10 +824,18 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     async def test_message_receiver_general_exception(self):
-        """Test message_receiver handling general exception."""
+        """Test message_receiver handling general exception.
+
+        Unexpected exceptions are re-raised so the outer connection
+        lifecycle reconnects (rather than the receiver task quietly
+        dying while the sender keeps the WS pumping outbound traffic
+        — which leaves inbound commands silently disappearing).  See
+        the matching docstring in ``MessageHandler.message_receiver``.
+        """
         self.mock_agent.websocket.recv.side_effect = Exception("Unexpected error")
 
-        await self.handler.message_receiver()
+        with pytest.raises(Exception, match="Unexpected error"):
+            await self.handler.message_receiver()
 
         assert self.mock_agent.connected is False
         assert self.mock_agent.websocket is None

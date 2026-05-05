@@ -577,11 +577,22 @@ class SysManageAgent(
             )
 
     async def message_receiver(self):
-        """Handle incoming messages from server."""
+        """Handle incoming messages from server.
+
+        Note: this is currently dead code — ``_run_agent_tasks`` wires
+        ``self.message_handler.message_receiver`` instead.  Keeping it
+        in sync with the real one for hygiene; see the matching docstring
+        in ``message_handler.MessageHandler.message_receiver``.
+        """
         self.logger.debug("Message receiver started")
         try:
             while self.running:
-                message = await self.websocket.recv()
+                # Defensive None-check (see message_handler.message_receiver).
+                ws = self.websocket
+                if ws is None:
+                    self.logger.info("Message receiver: websocket cleared; exiting")
+                    raise websockets.ConnectionClosed(None, None)
+                message = await ws.recv()
                 self.logger.debug("Received: %s", message)
 
                 try:
@@ -590,7 +601,7 @@ class SysManageAgent(
                         return
                 except json.JSONDecodeError:
                     self.logger.error("Invalid JSON received: %s", message)
-                except Exception as error:
+                except Exception as error:  # pylint: disable=broad-exception-caught
                     self.logger.error("Error processing message: %s", error)
 
         except websockets.ConnectionClosed:
@@ -605,6 +616,8 @@ class SysManageAgent(
             )
             self.connected = False
             self.websocket = None
+            # Re-raise so the outer connection lifecycle reconnects.
+            raise
 
     async def message_sender(self):
         """Handle periodic outgoing messages to server."""

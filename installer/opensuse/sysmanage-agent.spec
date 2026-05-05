@@ -60,6 +60,13 @@ Requires(pre):  shadow
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
+# Optional: KVM host tooling — required when this agent manages KVM
+# child hosts via the SysManage server's Phase 10.1 virtualization_engine.
+# Recommends rather than Requires so non-virt hosts don't pull libvirt.
+Recommends:     genisoimage
+Recommends:     qemu-tools
+Recommends:     virt-install
+Recommends:     libvirt-client
 
 %description
 The SysManage agent provides comprehensive system management capabilities

@@ -29,7 +29,10 @@ deps: {
   py311-aiohttp: {origin: www/py-aiohttp},
   py311-sqlalchemy20: {origin: databases/py-sqlalchemy20},
   py311-alembic: {origin: databases/py-alembic},
-  py311-websockets: {origin: www/py-websockets}
+  py311-websockets: {origin: www/py-websockets},
+  py311-aiofiles: {origin: devel/py-aiofiles},
+  py311-psutil: {origin: sysutils/py-psutil},
+  py311-bcrypt: {origin: security/py-bcrypt}
 }
 categories: [sysutils, python]
 licenselogic: single
@@ -39,14 +42,14 @@ scripts: {
 #!/bin/sh
 echo "Installing SysManage Agent..."
 echo "Note: If installation fails due to missing dependencies, install them with:"
-echo "  pkg install py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets"
+echo "  pkg install py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets py311-aiofiles py311-psutil py311-bcrypt"
 echo ""
 EOD
   post-install: <<EOD
 #!/bin/sh
 # Check for required dependencies
 MISSING_DEPS=""
-REQUIRED_PACKAGES="py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets"
+REQUIRED_PACKAGES="py311-pip py311-aiosqlite py311-cryptography py311-pyyaml py311-aiohttp py311-sqlalchemy20 py311-alembic py311-websockets py311-aiofiles py311-psutil py311-bcrypt"
 
 for pkg in $REQUIRED_PACKAGES; do
     if ! pkg info -q "$pkg" >/dev/null 2>&1; then

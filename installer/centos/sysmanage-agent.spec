@@ -47,6 +47,13 @@ Requires(pre):  shadow-utils
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
+# Optional: KVM host tooling — required when this agent manages KVM
+# child hosts via the SysManage server's Phase 10.1 virtualization_engine.
+# Recommends rather than Requires so non-virt hosts don't pull libvirt.
+Recommends:     genisoimage
+Recommends:     qemu-img
+Recommends:     virt-install
+Recommends:     libvirt-client
 
 %description
 The SysManage agent provides comprehensive system management capabilities
@@ -150,12 +157,32 @@ cd /opt/sysmanage-agent
 rm -rf .venv
 %{python3_bin} -m venv .venv
 
-# Check if we have a vendor directory from the RPM (for COPR builds)
+# Install Python deps into the venv.
+#
+# Strategy: try vendored (offline) install first when a vendor/ dir
+# exists, and fall back to network install if it fails for ANY reason
+# (missing wheels for the system Python ABI, corrupt wheel, partial
+# download, etc).
+#
+# Why the fallback matters:  the vendor dir bundles wheels per Python
+# version (cp39, cp310, cp311, cp312, cp313, cp314).  If a dependency
+# resolves to a version that dropped a Python the host runs (e.g. an
+# unbounded ``websockets>=15.0.1`` resolving to 16.0, which has no cp39
+# wheel), pip's ``--no-index`` install reports
+# "No matching distribution found" and the venv ends up missing the
+# module.  Without a fallback, the unit crash-loops with ImportError
+# the moment systemd starts it, and there is no way for the user to
+# self-recover short of reinstalling.  With the fallback, an incomplete
+# vendor set degrades to a network install instead of a hard failure.
 if [ -d vendor ]; then
-  .venv/bin/pip install --quiet --upgrade pip --no-index --find-links=vendor
-  .venv/bin/pip install --quiet -r requirements-prod.txt --no-index --find-links=vendor
+  if ! .venv/bin/pip install --quiet --upgrade pip --no-index --find-links=vendor \
+     || ! .venv/bin/pip install --quiet -r requirements-prod.txt --no-index --find-links=vendor; then
+    echo "WARNING: offline (vendor/) install failed; falling back to network install"
+    .venv/bin/pip install --quiet --upgrade pip
+    .venv/bin/pip install --quiet -r requirements-prod.txt
+  fi
 else
-  # Fallback to network install (for direct RPM installs outside COPR)
+  # No vendor dir at all (direct RPM install outside COPR) → network only.
   .venv/bin/pip install --quiet --upgrade pip
   .venv/bin/pip install --quiet -r requirements-prod.txt
 fi

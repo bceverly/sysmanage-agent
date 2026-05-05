@@ -1,5 +1,12 @@
 """
 WSL-specific child host operations.
+
+LEGACY: superseded by container_engine.build_wsl_create_plan /
+_lifecycle_plan / _delete_plan.  Retained as the architectural
+reference for the systemd-on-WSL restart dance, /etc/wsl.conf
+ordering, exit-code-3010 reboot signaling, and UTF-16LE output
+decoding — every quirk encoded here was learned from production
+breakage.  DO NOT DELETE.
 """
 
 import asyncio

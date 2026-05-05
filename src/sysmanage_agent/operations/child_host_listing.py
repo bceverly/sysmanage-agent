@@ -393,19 +393,26 @@ class ChildHostListing:
             "ol": _ORACLE_LINUX,
         }
 
-        # Ubuntu codename to version mapping
+        # Ubuntu codename to version mapping.  Keep this in lockstep with
+        # the alembic migration ``t1ubu26nlts_unify_ubuntu_naming`` which
+        # cleans up host_child rows where a codename leaked into
+        # ``distribution_version`` because this map didn't know the codename.
         ubuntu_codename_map = {
-            "noble": "24.04",
+            "resolute": "26.04",  # 26.04 LTS
+            "questing": "25.10",
+            "plucky": "25.04",
+            "oracular": "24.10",
+            "noble": "24.04",  # 24.04 LTS
             "mantic": "23.10",
             "lunar": "23.04",
             "kinetic": "22.10",
-            "jammy": "22.04",
+            "jammy": "22.04",  # 22.04 LTS
             "impish": "21.10",
             "hirsute": "21.04",
             "groovy": "20.10",
-            "focal": "20.04",
-            "bionic": "18.04",
-            "xenial": "16.04",
+            "focal": "20.04",  # 20.04 LTS
+            "bionic": "18.04",  # 18.04 LTS
+            "xenial": "16.04",  # 16.04 LTS
         }
 
         # Debian codename to version mapping

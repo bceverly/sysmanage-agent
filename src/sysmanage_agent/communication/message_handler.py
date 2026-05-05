@@ -167,15 +167,19 @@ class MessageHandler:
 
     async def _send_command_acknowledgment(self, message_id: str) -> bool:
         """
-        Send acknowledgment to server confirming receipt of a command.
+        Queue an acknowledgment to the server confirming receipt of a command.
 
-        This allows the server to know the command was received and stop retrying.
+        Goes through the standard outbound queue rather than ``send_message_direct``
+        to honor the architectural rule that all agent → server traffic flows
+        through the SQLite outbound queue.  ``queue_outbound_message`` already
+        gives ack-class messages priority handling so the server still sees the
+        ack quickly enough to stop its retry loop.
 
         Args:
             message_id: The server's message_id that we're acknowledging
 
         Returns:
-            bool: True if acknowledgment was sent successfully
+            bool: True if acknowledgment was queued successfully
         """
         try:
             ack_message = {
@@ -184,23 +188,23 @@ class MessageHandler:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-            # Send directly to avoid queuing overhead for simple acks
-            success = await self.send_message_direct(ack_message)
+            success = await self.send_message(ack_message)
 
             if success:
                 self.logger.info(
-                    "Sent command acknowledgment for message: %s", message_id
+                    "Queued command acknowledgment for message: %s", message_id
                 )
             else:
                 self.logger.warning(
-                    "Failed to send command acknowledgment for message: %s", message_id
+                    "Failed to queue command acknowledgment for message: %s",
+                    message_id,
                 )
 
             return success
 
         except Exception as error:
             self.logger.error(
-                "Error sending command acknowledgment for %s: %s", message_id, error
+                "Error queueing command acknowledgment for %s: %s", message_id, error
             )
             return False
 
@@ -480,11 +484,36 @@ class MessageHandler:
             )
 
     async def message_receiver(self):  # pylint: disable=too-many-branches
-        """Handle incoming messages from server."""
+        """Handle incoming messages from server.
+
+        Exits cleanly on ``ConnectionClosed`` (the outer ``run()`` loop
+        treats that as a normal completion and reconnects).  Any other
+        exception is logged and **re-raised** so the connection-error
+        path in ``_run_agent_tasks`` / ``run()`` gets a chance to tear
+        down + reconnect.  Without the re-raise, the receiver task
+        quietly dies, the sender task keeps the WS pumping outbound
+        traffic, and inbound commands silently disappear forever
+        (observed: ``'NoneType' object has no attribute 'recv'`` race
+        when ``self.agent.websocket`` is cleared mid-loop by another
+        coroutine — the resulting ``AttributeError`` was being
+        swallowed and the agent stopped processing all server
+        commands until manual restart).
+        """
         self.logger.debug("Message receiver started")
         try:
             while self.agent.running:
-                message = await self.agent.websocket.recv()
+                # Defensive: if a concurrent disconnect cleared the
+                # websocket between iterations, surface that as a
+                # ConnectionClosed rather than letting recv() raise an
+                # AttributeError on None.
+                ws = self.agent.websocket
+                if ws is None:
+                    self.logger.info(
+                        "Message receiver: websocket cleared by concurrent "
+                        "disconnect; exiting receive loop to allow reconnect"
+                    )
+                    raise websockets.ConnectionClosed(None, None)
+                message = await ws.recv()
                 self.logger.debug("Received: %s", message)
 
                 try:
@@ -495,7 +524,7 @@ class MessageHandler:
 
                 except json.JSONDecodeError:
                     self.logger.error("Invalid JSON received: %s", message)
-                except Exception as error:
+                except Exception as error:  # pylint: disable=broad-exception-caught
                     self.logger.error("Error processing message: %s", error)
 
         except websockets.ConnectionClosed:
@@ -504,12 +533,22 @@ class MessageHandler:
             )
             self.agent.connected = False
             self.agent.websocket = None
+            # Returning normally here is intentional — the outer
+            # ``_run_agent_tasks`` waits with FIRST_COMPLETED and ``run()``
+            # reconnects via _handle_connection_error.
         except Exception as error:
             self.logger.error(
                 "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", error
             )
             self.agent.connected = False
             self.agent.websocket = None
+            # Re-raise so ``_run_agent_tasks`` sees the failure via
+            # ``task.exception()`` and propagates it to ``run()``'s
+            # connection-error handler.  Previously this was swallowed,
+            # leaving the receiver task dead but the sender alive — the
+            # net effect was inbound commands silently disappearing
+            # until the agent was manually restarted.
+            raise
 
     async def _dispatch_received_message(self, data: Dict[str, Any]) -> bool:
         """Dispatch a received message to the appropriate handler.

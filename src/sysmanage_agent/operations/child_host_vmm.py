@@ -1,6 +1,16 @@
 """
 VMM/vmd-specific child host operations for OpenBSD hosts.
 
+LEGACY: lifecycle, delete, and init are now produced by
+``virtualization_engine.build_vmm_(lifecycle|delete|init)_plan``.
+Create with autoinstall (root + user password hashes both present)
+goes through ``build_vmm_create_plan``; richer create flows
+(disk-only, ISO without autoinstall) still fall through to this
+file's ``create_vmm_vm`` flow as audit PR-14 wasn't migrated.
+DO NOT DELETE — this file remains both the fallback path and the
+architectural reference for OpenBSD-specific subtleties (subnet
+picker, /etc/hostname.vether0, /etc/vm.conf, vmd lifecycle).
+
 Supports creating VMs for:
 - OpenBSD 7.4, 7.5, 7.6, 7.7
 - Alpine Linux 3.19, 3.20, 3.21

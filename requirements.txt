@@ -1,4 +1,11 @@
-websockets>=15.0.1
+# Capped below 16.0 because websockets 16.x dropped Python 3.9 wheels.
+# OL9 / RHEL 9 / CentOS Stream 9 / Amazon Linux 2023 ship cp39 as the
+# default python3, and the rpm's vendor dir relies on per-Python wheel
+# downloads; a >=15.0.1 unbounded constraint resolved to 16.0, which has
+# no cp39 wheel, leaving cp39 targets without a websockets install and
+# crashing the agent with "No matching distribution". Bump the upper
+# bound only when cp39 is dropped from the supported Python matrix.
+websockets>=15.0.1,<16
 PyYAML>=6.0.2
 aiohttp>=3.12.15
 cryptography>=45.0.7

@@ -2,6 +2,16 @@
 KVM/libvirt-specific child host operations for Linux hosts.
 
 This module handles KVM/QEMU virtual machine management via libvirt/virsh.
+
+LEGACY: lifecycle (start/stop/restart) and delete are now produced by
+``virtualization_engine.build_kvm_lifecycle_plan`` and
+``build_kvm_delete_plan`` respectively; init is produced by
+``build_kvm_init_plan`` and modules enable/disable by
+``build_kvm_modules_(enable|disable)_plan``.  Create still uses the
+engine path (``build_kvm_create_plan``) for the supported flows.
+This file is retained as the architectural reference for per-distro
+LIBVIRT_PACKAGES, modprobe nested=1 sequencing, /dev/kvm probing,
+group adds, and other hard-won subtleties.  DO NOT DELETE.
 """
 
 import asyncio

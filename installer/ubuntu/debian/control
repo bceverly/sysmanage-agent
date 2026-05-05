@@ -17,6 +17,10 @@ Depends: ${misc:Depends},
  python3-venv,
  adduser,
  systemd
+Recommends: genisoimage | mkisofs | xorriso,
+ qemu-utils,
+ virtinst,
+ libvirt-clients
 Description: System management agent for SysManage
  The SysManage agent provides comprehensive system management capabilities
  including:

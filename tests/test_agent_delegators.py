@@ -796,50 +796,6 @@ class TestRegistrationDelegator:
         assert result == "sync-token"
         delegator.registration_manager.get_stored_host_token_sync.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_call_server_api_post(self, delegator):
-        """Test call_server_api delegation with POST method."""
-        delegator.registration_manager.call_server_api = AsyncMock(
-            return_value={"status": "ok"}
-        )
-
-        result = await delegator.call_server_api(
-            "test/endpoint", method="POST", data={"key": "value"}
-        )
-
-        assert result == {"status": "ok"}
-        delegator.registration_manager.call_server_api.assert_called_once_with(
-            "test/endpoint", "POST", {"key": "value"}
-        )
-
-    @pytest.mark.asyncio
-    async def test_call_server_api_get(self, delegator):
-        """Test call_server_api delegation with GET method."""
-        delegator.registration_manager.call_server_api = AsyncMock(
-            return_value={"data": "result"}
-        )
-
-        result = await delegator.call_server_api("test/endpoint", method="GET")
-
-        assert result == {"data": "result"}
-        delegator.registration_manager.call_server_api.assert_called_once_with(
-            "test/endpoint", "GET", None
-        )
-
-    @pytest.mark.asyncio
-    async def test_call_server_api_default_method(self, delegator):
-        """Test call_server_api delegation with default method."""
-        delegator.registration_manager.call_server_api = AsyncMock(
-            return_value={"success": True}
-        )
-
-        result = await delegator.call_server_api("test/endpoint")
-
-        assert result == {"success": True}
-        delegator.registration_manager.call_server_api.assert_called_once_with(
-            "test/endpoint", "POST", None
-        )
-
     def test_get_host_approval_from_db(self, delegator):
         """Test get_host_approval_from_db delegation."""
         mock_approval = Mock()
@@ -1122,7 +1078,6 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "get_stored_host_id")
         assert hasattr(delegator, "get_stored_host_token")
         assert hasattr(delegator, "get_stored_host_token_sync")
-        assert hasattr(delegator, "call_server_api")
         assert hasattr(delegator, "get_host_approval_from_db")
         assert hasattr(delegator, "get_stored_host_id_sync")
         assert hasattr(delegator, "cleanup_corrupt_database_entries")
@@ -1226,10 +1181,11 @@ class TestDelegatorReturnValues:
 
     @pytest.mark.asyncio
     async def test_none_return_value(self, delegator):
-        """Test handling of None return values."""
-        delegator.registration_manager.call_server_api = AsyncMock(return_value=None)
+        """A delegator surface that returns None propagates that None
+        through unchanged."""
+        delegator.registration_manager.get_stored_host_id = AsyncMock(return_value=None)
 
-        result = await delegator.call_server_api("endpoint")
+        result = await delegator.get_stored_host_id()
 
         assert result is None
 

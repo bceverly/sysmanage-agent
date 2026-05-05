@@ -1,6 +1,16 @@
 """
 bhyve-specific child host operations for FreeBSD hosts.
 
+LEGACY: lifecycle, delete, init, and disable are now produced by
+``virtualization_engine.build_bhyve_(lifecycle|delete|init|disable)_plan``.
+Create with raw_image_path or iso_path goes through
+``build_bhyve_create_plan``; the no-raw / no-iso fallback (FreeBSD
+SSH bootstrap with retry loops, pkg install retries, firstboot rc.d
+injection) still falls through to this file's ``create_bhyve_vm`` flow
+as audit PR-13 wasn't migrated.  DO NOT DELETE — this file remains
+both the active fallback path for the rich-create case and the
+architectural reference for the FreeBSD-specific subtleties.
+
 Supports creating VMs using FreeBSD's bhyve hypervisor.
 bhyve is FreeBSD's native hypervisor that supports running FreeBSD, Linux,
 and other guests with near-native performance.

@@ -294,22 +294,6 @@ class RegistrationDelegator:
         """Get the stored host_token from local database synchronously."""
         return self.registration_manager.get_stored_host_token_sync()
 
-    async def call_server_api(
-        self, endpoint: str, method: str = "POST", data: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
-        """
-        Centralized method for making API calls to the server.
-
-        Args:
-            endpoint: API endpoint (without /api prefix)
-            method: HTTP method (GET, POST, PUT, DELETE)
-            data: Request payload (for POST/PUT requests)
-
-        Returns:
-            Response data as dictionary, or None if request failed
-        """
-        return await self.registration_manager.call_server_api(endpoint, method, data)
-
     def get_host_approval_from_db(self):
         """Get the host approval record from local database."""
         return self.registration_manager.get_host_approval_from_db()
