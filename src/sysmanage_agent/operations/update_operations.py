@@ -27,8 +27,17 @@ class UpdateOperations:
             # Initialize update detector
             update_detector = UpdateDetector()
 
-            # Get available updates
-            update_info = update_detector.get_available_updates()
+            # ``get_available_updates`` shells out to the system package
+            # manager (``dnf check-update``, ``yum check-update``,
+            # ``apt-get -s upgrade``, etc.) and on a fresh OL9 host the
+            # full pass takes 3+ minutes — long enough that the asyncio
+            # event loop can't service the WebSocket keepalive ping/pong
+            # from the server, which then closes the connection with a
+            # 1011 internal error.  The agent reconnects, the
+            # SYSTEM_INFO handshake replays, and the cycle repeats.
+            # Run the blocking call in a thread so the event loop keeps
+            # delivering heartbeats while updates are being detected.
+            update_info = await asyncio.to_thread(update_detector.get_available_updates)
 
             # Add hostname to update data for server processing
             system_info = self.agent.registration.get_system_info()

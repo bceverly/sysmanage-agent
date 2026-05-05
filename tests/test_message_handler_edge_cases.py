@@ -37,12 +37,18 @@ class TestMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     async def test_queue_outbound_message_priority_mapping(self):
-        """Test automatic priority mapping based on message type."""
+        """Test automatic priority mapping based on message type.
+
+        ``system_info`` is URGENT because it is the WebSocket
+        registration handshake — it must drain before any other queued
+        message on a fresh connection or the server processes the
+        non-handshake messages with a NULL hostname and discards them.
+        """
         test_cases = [
+            ("system_info", Priority.URGENT),
             ("heartbeat", Priority.HIGH),
             ("command_result", Priority.HIGH),
             ("script_execution_result", Priority.HIGH),
-            ("system_info", Priority.NORMAL),
             ("error", Priority.URGENT),
             ("unknown_type", Priority.NORMAL),  # Default case
         ]

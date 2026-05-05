@@ -673,15 +673,28 @@ class MessageHandler:
         """
         message_type = message.get("message_type", "unknown")
 
-        # Priority mapping based on message type
-        if message_type == "heartbeat":
+        # Priority mapping based on message type.
+        #
+        # ``system_info`` is the WebSocket registration handshake — it
+        # binds the connection to a host on the server, populates
+        # ``connection.hostname`` / ``connection.host_id``, and unlocks
+        # processing for every other inbound message type.  It MUST go
+        # out before any other queued message on a fresh connection;
+        # giving it ``Priority.NORMAL`` previously meant the outbound
+        # drain shipped 11 other inventory messages first and registration
+        # arrived ~2 seconds late, so on the server side everything that
+        # raced ahead landed with a NULL ``_connection_info.hostname``
+        # and was dropped by the inbound processor as
+        # "Missing hostname and host_id".  ``URGENT`` puts it at the
+        # head of the queue so it always wins the drain order.
+        if message_type == "system_info":
+            priority = Priority.URGENT
+        elif message_type == "heartbeat":
             priority = Priority.HIGH
         elif message_type == "command_result":
             priority = Priority.HIGH
         elif message_type == "script_execution_result":
             priority = Priority.HIGH  # Script results are time-sensitive
-        elif message_type == "system_info":
-            priority = Priority.NORMAL
         elif message_type == "error":
             priority = Priority.URGENT
 

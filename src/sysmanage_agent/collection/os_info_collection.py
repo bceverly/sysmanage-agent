@@ -439,25 +439,69 @@ class OSInfoCollector:
         return ("Linux", friendly_release, os_info)
 
     def _collect_linux_os_info(self) -> Dict[str, Any]:
-        """Collect Linux distribution details and Ubuntu Pro info if applicable."""
+        """Collect Linux distribution details and Ubuntu Pro info if applicable.
+
+        Tries ``platform.freedesktop_os_release()`` first (Python 3.10+).
+        Falls back to parsing ``/etc/os-release`` manually for older
+        Pythons — Oracle Linux 9, RHEL 9, CentOS Stream 9 and Amazon
+        Linux 2023 ship Python 3.9 by default, where the new API is
+        absent.  Without the fallback, ``os_info`` returned ``{}`` on
+        every RHEL-family host and the server's "Operating System"
+        section in the UI was permanently blank.
+        """
         os_info = {}
+        os_release: Dict[str, str] = {}
         try:
             if hasattr(platform, "freedesktop_os_release"):
                 os_release = platform.freedesktop_os_release()
-                os_info["distribution"] = os_release.get("NAME", "")
-                os_info["distribution_version"] = os_release.get("VERSION_ID", "")
-                os_info["distribution_codename"] = os_release.get(
-                    "VERSION_CODENAME", ""
-                )
-
-                distribution = os_info.get("distribution", "")
-                if "ubuntu" in distribution.lower():
-                    os_info["ubuntu_pro"] = self._get_ubuntu_pro_info()
-
+            else:
+                os_release = self._parse_os_release_file()
         except (AttributeError, OSError):
-            pass
+            os_release = {}
+
+        if os_release:
+            os_info["distribution"] = os_release.get("NAME", "")
+            os_info["distribution_version"] = os_release.get("VERSION_ID", "")
+            os_info["distribution_codename"] = os_release.get("VERSION_CODENAME", "")
+
+            distribution = os_info.get("distribution", "")
+            if "ubuntu" in distribution.lower():
+                os_info["ubuntu_pro"] = self._get_ubuntu_pro_info()
 
         return os_info
+
+    @staticmethod
+    def _parse_os_release_file() -> Dict[str, str]:
+        """Manually parse ``/etc/os-release`` for Python <3.10 hosts.
+
+        Format: ``KEY=value`` per line, ``value`` optionally wrapped in
+        single or double quotes; lines starting with ``#`` are comments.
+        Falls back to ``/usr/lib/os-release`` per the os-release(5) spec
+        when ``/etc`` doesn't have one.  Returns an empty dict if neither
+        file is readable.
+        """
+        for path in ("/etc/os-release", "/usr/lib/os-release"):
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    parsed: Dict[str, str] = {}
+                    for raw in handle:
+                        line = raw.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        key, _, value = line.partition("=")
+                        value = value.strip()
+                        if (
+                            len(value) >= 2
+                            and value[0] == value[-1]
+                            and value[0] in ('"', "'")
+                        ):
+                            value = value[1:-1]
+                        parsed[key.strip()] = value
+                    if parsed:
+                        return parsed
+            except OSError:
+                continue
+        return {}
 
     def _collect_windows_info(self, system_release: str) -> tuple:
         """Collect Windows-specific platform information."""

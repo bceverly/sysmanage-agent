@@ -32,6 +32,22 @@ class LinuxPackageCollector(BasePackageCollector):
             ("flatpak", self._collect_flatpak_packages),
         ]
 
+        # On RHEL/Fedora 8+ ``yum`` is just a symlink to ``dnf`` and
+        # ``yum list available`` returns the same set of packages as
+        # ``dnf list available``.  Running both costs ~90s of subprocess
+        # blocking on a fresh OL9 host (1.5 min × 2) for zero new data
+        # and starves the asyncio heartbeat long enough for the server
+        # to kill the WebSocket with a 1011 keepalive timeout.  Skip
+        # ``yum`` whenever ``dnf`` is also present.
+        if self._is_package_manager_available("dnf"):
+            managers = [(n, f) for (n, f) in managers if n != "yum"]
+            logger.info(
+                _(
+                    "Skipping yum collection on host with dnf available "
+                    "(yum is a dnf wrapper on RHEL/Fedora 8+)"
+                )
+            )
+
         for manager_name, collector_func in managers:
             if self._is_package_manager_available(manager_name):
                 try:

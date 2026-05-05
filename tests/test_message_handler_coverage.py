@@ -91,7 +91,13 @@ class TestMessageHandler(
 
     @pytest.mark.asyncio
     async def test_queue_outbound_message_system_info(self):
-        """Test queuing outbound system info message."""
+        """Test queuing outbound system info message.
+
+        ``system_info`` carries Priority.URGENT so it always drains
+        before other queued messages — the registration handshake must
+        complete on the server side first or non-handshake messages
+        land with no hostname and are dropped.
+        """
         message = {"message_type": "system_info", "cpu": 50}
         self.handler.queue_manager.enqueue_message.return_value = "msg-101"
 
@@ -102,7 +108,7 @@ class TestMessageHandler(
             message_type="system_info",
             message_data=message,
             direction=QueueDirection.OUTBOUND,
-            priority=Priority.NORMAL,
+            priority=Priority.URGENT,
             correlation_id=None,
         )
 
