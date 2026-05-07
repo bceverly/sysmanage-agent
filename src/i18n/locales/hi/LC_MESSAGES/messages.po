@@ -1282,3 +1282,7 @@ msgstr "सेवा %s पर %s सफल"
 
 msgid "Triggering role collection after service control"
 msgstr "सेवा नियंत्रण के बाद भूमिका संग्रह सक्रिय किया जा रहा है"
+
+# Pro+ feature gate (post-cutover stub)
+msgid "Child host management requires Pro+ (engine path)."
+msgstr "चाइल्ड होस्ट प्रबंधन के लिए Pro+ (इंजन पथ) आवश्यक है।"

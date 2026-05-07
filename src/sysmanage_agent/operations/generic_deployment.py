@@ -12,9 +12,92 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import aiofiles
+
+# wsl.exe outputs UTF-16LE on Windows; subprocess returns raw bytes which we
+# must decode with the right encoding or we get garbled / null-byte-dotted
+# strings.  Originally lived in ``_virtualization_windows.WindowsVirtualizationMixin``
+# (legacy child-host path); promoted here so the generic apply_deployment_plan
+# handler decodes wsl.exe output correctly even when the legacy WSL handlers
+# are not in the import graph (post-cutover).
+_UTF16LE_BOM = b"\xff\xfe"
+
+
+def _argv_is_wsl_exe(argv: Optional[List[str]]) -> bool:
+    """Return True if argv[0] basename is ``wsl.exe`` or ``wsl``."""
+    if not argv:
+        return False
+    head = argv[0] if argv else ""
+    if not isinstance(head, str):
+        return False
+    base = head.rsplit("\\", 1)[-1].rsplit("/", 1)[-1].lower()
+    return base in ("wsl.exe", "wsl")
+
+
+def _decoded_looks_like_utf16le(decoded: str) -> bool:
+    """High-density-NUL heuristic: ``UTF-16LE-as-UTF-8`` smoking gun.
+
+    UTF-16LE bytes that happen to be ASCII-mappable decode as UTF-8 with
+    one NUL between every printable character.  If >= 5 % of the result
+    is NULs, treat it as misdecoded UTF-16LE.
+    """
+    null_count = decoded.count("\x00")
+    return bool(null_count) and null_count * 20 >= len(decoded)
+
+
+def _decode_utf16le(stream: bytes) -> Optional[str]:
+    """Strip BOM (if any) and decode as UTF-16LE; return None on failure."""
+    body = stream[2:] if stream.startswith(_UTF16LE_BOM) else stream
+    try:
+        return body.decode("utf-16-le").replace("\x00", "")
+    except (UnicodeDecodeError, LookupError):
+        return None
+
+
+def _decode_command_output(stream: bytes, argv: Optional[List[str]] = None) -> str:
+    """Decode subprocess stdout/stderr bytes into a string.
+
+    Tries UTF-8 first.  Falls back to UTF-16LE when the bytes look like
+    UTF-16LE output (argv[0] is ``wsl.exe`` / ``wsl``, the bytes start
+    with the UTF-16LE BOM, or the UTF-8 decode produced a string littered
+    with null characters — the smoking-gun signature of UTF-16LE bytes
+    decoded as UTF-8).  Last resort is latin-1, which never fails.
+
+    Args:
+        stream: Raw bytes from ``proc.stdout`` or ``proc.stderr``.
+        argv: The argv list of the spawned command (for the wsl.exe
+            heuristic).  Optional; pass None when not available.
+
+    Returns:
+        Decoded string.  Empty input returns an empty string.
+    """
+    if not stream:
+        return ""
+
+    looks_utf16 = stream.startswith(_UTF16LE_BOM) or _argv_is_wsl_exe(argv)
+
+    if not looks_utf16:
+        try:
+            decoded = stream.decode("utf-8")
+        except UnicodeDecodeError:
+            decoded = None
+        if decoded is not None:
+            if _decoded_looks_like_utf16le(decoded):
+                looks_utf16 = True
+            else:
+                return decoded
+
+    if looks_utf16:
+        utf16 = _decode_utf16le(stream)
+        if utf16 is not None:
+            return utf16
+
+    try:
+        return stream.decode("utf-8", errors="replace")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return stream.decode("latin-1")
 
 
 class GenericDeployment:
@@ -789,20 +872,21 @@ class GenericDeployment:
 
         returncode = proc.returncode or 0
         cmd_ok = returncode == 0
+        # UTF-16LE-aware decode so wsl.exe output (always UTF-16LE on
+        # Windows) doesn't come back as garbled null-littered bytes.
+        stdout_str = _decode_command_output(stdout, argv=run_argv)
+        stderr_str = _decode_command_output(stderr, argv=run_argv)
         result = {
             "argv": argv,
             "description": description,
             "returncode": returncode,
-            "stdout": stdout.decode(errors="replace")[-2000:],
-            "stderr": stderr.decode(errors="replace")[-2000:],
+            "stdout": stdout_str[-2000:],
+            "stderr": stderr_str[-2000:],
             "success": cmd_ok,
         }
         if cmd_ok:
             return result, None, False
-        err_msg = (
-            f"Command '{description}' exited {returncode}: "
-            f"{stderr.decode(errors='replace')[:300]}"
-        )
+        err_msg = f"Command '{description}' exited {returncode}: {stderr_str[:300]}"
         return result, err_msg, not ignore_errors
 
     async def _apply_plan_service_actions(self, actions: list) -> tuple:

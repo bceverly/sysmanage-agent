@@ -45,6 +45,17 @@ jobs:
         # Filter out known false positives from CodeQL results
         # - py/clear-text-storage-sensitive-data in cloud-init provisioning files
         #   (these write pre-hashed passwords to temp files for VM provisioning)
+        #
+        # CUTOVER-CLEANUP: the two file-name filters below
+        # (child_host_bhyve_freebsd.py + child_host_kvm_freebsd.py) target
+        # legacy child-host code that is being deleted as part of the
+        # Pro+ engine cutover.  Once those files are removed from the
+        # agent tree, the matching SARIF entries will no longer exist
+        # and these filter clauses become dead.  Delete the two
+        # `(.locations[]...contains("child_host_*_freebsd.py"))` lines
+        # in the same commit that removes the legacy files.  See
+        # legacy_reference/README.md in sysmanage-professional-plus for
+        # the full cutover plan.
         if [ -f "codeql-raw.sarif" ]; then
           jq '
             .runs[].results |= map(

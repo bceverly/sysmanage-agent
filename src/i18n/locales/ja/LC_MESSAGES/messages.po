@@ -1286,3 +1286,7 @@ msgstr "サービス %s の %s に成功しました"
 
 msgid "Triggering role collection after service control"
 msgstr "サービス制御後のロール収集をトリガーします"
+
+# Pro+ feature gate (post-cutover stub)
+msgid "Child host management requires Pro+ (engine path)."
+msgstr "子ホスト管理には Pro+ (エンジンパス) が必要です。"

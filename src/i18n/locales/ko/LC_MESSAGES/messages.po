@@ -1284,3 +1284,7 @@ msgstr "서비스 %s 의 %s 성공"
 
 msgid "Triggering role collection after service control"
 msgstr "서비스 제어 후 역할 수집 트리거됨"
+
+# Pro+ feature gate (post-cutover stub)
+msgid "Child host management requires Pro+ (engine path)."
+msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."

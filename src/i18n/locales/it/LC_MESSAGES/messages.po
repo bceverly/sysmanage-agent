@@ -1284,3 +1284,7 @@ msgstr "Servizio %s: %s con successo"
 
 msgid "Triggering role collection after service control"
 msgstr "Avvio della raccolta dei ruoli dopo il controllo del servizio"
+
+# Pro+ feature gate (post-cutover stub)
+msgid "Child host management requires Pro+ (engine path)."
+msgstr "La gestione dei child host richiede Pro+ (percorso engine)."

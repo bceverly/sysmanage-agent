@@ -1284,3 +1284,7 @@ msgstr "服务 %s 的 %s 成功"
 
 msgid "Triggering role collection after service control"
 msgstr "在服务控制后触发角色收集"
+
+# Pro+ feature gate (post-cutover stub)
+msgid "Child host management requires Pro+ (engine path)."
+msgstr "子主机管理需要 Pro+ (引擎路径)。"
