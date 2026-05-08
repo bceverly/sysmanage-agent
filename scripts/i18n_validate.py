@@ -299,12 +299,34 @@ def cmd_strip_fuzzy() -> int:
     return 0
 
 
+_PRINTF_SPEC = re.compile(
+    r"%[#0\-+ ]?\d*\.?\d*[diouxXeEfFgGcrsa%]|%\([^)]+\)[diouxXeEfFgGcrsa]"
+)
+
+
+def _format_specs(s: str) -> tuple:
+    """Return a sorted tuple of printf specs in ``s``, ignoring ``%%``.
+
+    Used to detect bad translations where the msgstr has dropped or
+    changed the format placeholders relative to the msgid.  Such
+    translations break ``logger.info(_(fmt), arg1, arg2)`` at runtime
+    with TypeError.
+    """
+    return tuple(sorted(m for m in _PRINTF_SPEC.findall(s) if m != "%%"))
+
+
 def _strip_fuzzy_block(block: list[str]) -> list[str]:
     if not block:
         return block
     msgid = _extract_quoted(block, "msgid")
     msgstr = _extract_quoted(block, "msgstr")
     if not msgid or not msgstr or msgstr == msgid:
+        return block
+    # CRITICAL safety check — if the msgstr's format specifiers don't match
+    # the msgid's, removing the ``fuzzy`` flag would expose a translation
+    # that crashes at runtime when the logger interpolates args.  Keep it
+    # fuzzy so a translator review fills it in (or wipes it).
+    if _format_specs(msgid) != _format_specs(msgstr):
         return block
     out: list[str] = []
     for line in block:
