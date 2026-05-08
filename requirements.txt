@@ -18,7 +18,11 @@ SQLAlchemy>=2.0.43
 alembic>=1.16.5
 
 # Development dependencies for linting and testing
-black>=26.3.1  # CVE-2026-32274 (arbitrary file writes via crafted cache filename); 26.3.1 is latest patched
+# black 26.x and 25.12+ require Python >=3.10; agent CI supports 3.9.
+# CVE-2026-32274 (arbitrary file writes via crafted cache filename) —
+# 26.3.1 is the latest patched on >=3.10; 25.11.0 is the latest on 3.9.
+black>=26.3.1; python_version >= '3.10'
+black==25.11.0; python_version < '3.10'
 pylint>=3.0.0
 isort>=5.12.0
 bandit>=1.8.6
