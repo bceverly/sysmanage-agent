@@ -48,6 +48,13 @@ def generate_plist():
     src_files = []
     src_dir = repo_root / "src"
 
+    # Build artifacts that exist locally (after ``make i18n-compile`` /
+    # pytest / pip install) but are NOT in the GitHub release tarball
+    # the OpenBSD port downloads.  Listing them in PLIST makes
+    # ``pkg_create`` fail at fake-install verification time because
+    # the fake-amd64 directory doesn't have them.
+    SKIP_FILE_EXTS = {".mo", ".pot", ".pyc", ".pyo"}
+
     if src_dir.exists():
         for root, dirs, files in os.walk(src_dir):
             # Exclude __pycache__ and other build artifacts
@@ -70,8 +77,10 @@ def generate_plist():
                 if dir_path not in src_files:
                     src_files.append(dir_path)
 
-            # Add file entries
+            # Add file entries — skip generated artifacts.
             for file in sorted(files):
+                if Path(file).suffix in SKIP_FILE_EXTS:
+                    continue
                 if str(rel_root) == ".":
                     file_path = f"libexec/sysmanage-agent/src/{file}"
                 else:
