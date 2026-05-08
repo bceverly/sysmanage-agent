@@ -32,7 +32,7 @@ class LinuxUpdateDetector:
         """Detect updates from APT."""
         updates = []
         try:
-            logger.debug(_("Detecting APT updates"))
+            logger.debug("Detecting APT updates")
 
             # Update package list
             subprocess.run(  # nosec B603, B607
@@ -91,7 +91,7 @@ class LinuxUpdateDetector:
         """Detect updates from Snap."""
         updates = []
         try:
-            logger.debug(_("Detecting Snap updates"))
+            logger.debug("Detecting Snap updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["snap", "refresh", "--list"],
@@ -124,7 +124,7 @@ class LinuxUpdateDetector:
         """Detect updates from Flatpak."""
         updates = []
         try:
-            logger.debug(_("Detecting Flatpak updates"))
+            logger.debug("Detecting Flatpak updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["flatpak", "update", "--appstream"],
@@ -165,7 +165,7 @@ class LinuxUpdateDetector:
         """Detect updates from DNF."""
         updates = []
         try:
-            logger.debug(_("Detecting DNF updates"))
+            logger.debug("Detecting DNF updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["dnf", "check-update", "--quiet"],
@@ -205,7 +205,7 @@ class LinuxUpdateDetector:
         """Detect updates from Zypper (openSUSE)."""
         updates = []
         try:
-            logger.debug(_("Detecting Zypper updates"))
+            logger.debug("Detecting Zypper updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["zypper", "list-updates"],
@@ -256,7 +256,7 @@ class LinuxUpdateDetector:
         """Detect updates from Pacman (Arch Linux)."""
         updates = []
         try:
-            logger.debug(_("Detecting Pacman updates"))
+            logger.debug("Detecting Pacman updates")
 
             # Sync package database
             subprocess.run(  # nosec B603, B607
@@ -312,7 +312,7 @@ class LinuxUpdateDetector:
         """Detect firmware updates from fwupd."""
         updates = []
         try:
-            logger.debug(_("Detecting fwupd firmware updates"))
+            logger.debug("Detecting fwupd firmware updates")
 
             # First, check if the daemon is running and we have permissions
             if not self.check_fwupd_daemon():
@@ -333,9 +333,9 @@ class LinuxUpdateDetector:
             if result.returncode == 0 and result.stdout.strip():
                 updates = self._parse_fwupd_updates_output(result.stdout)
             elif result.returncode == 2:
-                logger.debug(_("No firmware updates available"))
+                logger.debug("No firmware updates available")
             else:
-                logger.debug(_("fwupd get-updates failed: %s"), result.stderr.strip())
+                logger.debug("fwupd get-updates failed: %s", result.stderr.strip())
 
         except Exception as error:
             logger.error(_("Failed to detect fwupd updates: %s"), str(error))
@@ -358,7 +358,7 @@ class LinuxUpdateDetector:
                     refresh_result.stderr,
                 )
         except Exception:
-            logger.debug(_("Could not refresh fwupd metadata (may need privileges)"))
+            logger.debug("Could not refresh fwupd metadata (may need privileges)")
 
     def _parse_fwupd_updates_output(self, stdout: str) -> list:
         """Parse the JSON output from fwupdmgr get-updates."""

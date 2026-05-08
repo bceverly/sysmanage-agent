@@ -7,9 +7,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations.update_operations import UpdateOperations
+from src.i18n import _
 
 
 class UpdateManager:
@@ -87,7 +87,7 @@ class UpdateManager:
             requires_reboot: Boolean indicating if reboot is required
         """
         try:
-            self.logger.info(_("Sending reboot status update: %s"), requires_reboot)
+            self.logger.info("Sending reboot status update: %s", requires_reboot)
 
             # Get hostname for server processing
             system_info = self.agent.registration.get_system_info()

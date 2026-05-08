@@ -28,7 +28,6 @@ import os
 import tempfile
 from typing import Any, Dict
 from uuid import uuid4
-
 from src.i18n import _
 
 

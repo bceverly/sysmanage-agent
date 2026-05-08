@@ -15,6 +15,7 @@ from typing import Any, Dict
 import aiofiles
 
 from src.sysmanage_agent.operations.otel_base import OtelDeployerBase
+from src.i18n import _
 
 # Module-level constants for SonarQube compliance
 _DNF_PATH = "/usr/bin/dnf"
@@ -33,7 +34,7 @@ class LinuxOtelDeployer(OtelDeployerBase):
                 return await self._deploy_with_yum_dnf(grafana_url)
             return {
                 "success": False,
-                "error": "No supported package manager found (apt/yum/dnf)",
+                "error": _("No supported package manager found (apt/yum/dnf)"),
             }
         except Exception as error:  # pylint: disable=broad-exception-caught
             return {"success": False, "error": str(error)}
@@ -362,7 +363,8 @@ class LinuxOtelDeployer(OtelDeployerBase):
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": _("Failed to install OpenTelemetry collector: %s")
+                    % (stderr.decode()),
                 }
 
             # Create configuration file

@@ -140,13 +140,13 @@ class MacOSUpdateDetector(UpdateDetectorBase):
     def _detect_homebrew_updates(self):
         """Detect updates from Homebrew (macOS)."""
         try:
-            logger.debug(_("Detecting Homebrew updates"))
+            logger.debug("Detecting Homebrew updates")
 
             # Find the correct brew path
             brew_cmd = self._get_brew_command()
 
             # First update Homebrew to get the latest package information
-            logger.debug(_("Updating Homebrew package information"))
+            logger.debug("Updating Homebrew package information")
             # Split brew_cmd in case it contains sudo -u
             brew_args = brew_cmd.split() + ["update"]
             update_result = subprocess.run(  # nosec B603, B607
@@ -160,7 +160,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
             if update_result.returncode != 0:
                 logger.warning(_("Homebrew update failed: %s"), update_result.stderr)
             else:
-                logger.debug(_("Homebrew update completed successfully"))
+                logger.debug("Homebrew update completed successfully")
 
             # Get outdated formulas
             # Split brew_cmd in case it contains sudo -u
@@ -305,7 +305,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
     def _detect_macos_app_store_updates(self):
         """Detect Mac App Store updates."""
         try:
-            logger.debug(_("Detecting Mac App Store updates"))
+            logger.debug("Detecting Mac App Store updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["softwareupdate", "--list"],
@@ -342,7 +342,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
     def _detect_macports_updates(self):
         """Detect updates from MacPorts."""
         try:
-            logger.debug(_("Detecting MacPorts updates"))
+            logger.debug("Detecting MacPorts updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["port", "outdated"],

@@ -7,7 +7,6 @@ import asyncio
 import logging
 import platform
 from typing import Any, Dict
-
 from src.i18n import _
 
 # Module-level constants for repeated error messages

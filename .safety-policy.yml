@@ -1,0 +1,27 @@
+# SafetyCLI v3.0 policy file.  See sysmanage/.safety-policy.yml for
+# schema source-of-truth and cloud-precedence notes.
+
+version: "3.0"
+
+scanning-settings:
+  max-depth: 6
+  exclude:
+    - ".venv"
+    - "venv"
+    - "node_modules"
+    - "dist"
+    - "build"
+    - "__pycache__"
+    - ".tox"
+    - ".pytest_cache"
+
+report:
+  dependency-vulnerabilities:
+    enabled: true
+    auto-ignore-in-report:
+      vulnerabilities:
+        # aiohttp 3.13.5 is the latest published patched release.  The
+        # agent uses aiohttp for the WebSocket client connection.
+        "66704":
+          reason: "aiohttp 3.13.5 is the latest patched release; no upstream fix for newer advisory bucket"
+          expires: "2026-09-01"

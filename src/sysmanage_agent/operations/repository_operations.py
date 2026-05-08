@@ -9,7 +9,6 @@ import platform
 from typing import Any, Dict, Optional
 
 import aiofiles
-
 from src.i18n import _
 
 # Constants for error messages used in multiple places
@@ -180,7 +179,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("Repository identifier is required"),
                 }
 
-            self.logger.info(_("Adding third-party repository: %s"), repo_identifier)
+            self.logger.info("Adding third-party repository: %s", repo_identifier)
 
             system = platform.system()
 

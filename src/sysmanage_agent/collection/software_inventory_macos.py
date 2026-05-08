@@ -46,7 +46,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             managers.append("macports")
 
         self._package_managers = managers
-        logger.debug(_("Detected package managers: %s"), ", ".join(managers))
+        logger.debug("Detected package managers: %s", ", ".join(managers))
         return managers
 
     def collect_packages(self):
@@ -140,7 +140,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_homebrew_packages(self):
         """Collect packages from Homebrew (macOS)."""
         try:
-            logger.debug(_("Collecting Homebrew packages"))
+            logger.debug("Collecting Homebrew packages")
 
             brew_cmd = self._get_brew_command()
 
@@ -213,7 +213,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_macos_applications(self):
         """Collect applications from macOS Applications folder."""
         try:
-            logger.debug(_("Collecting macOS Applications"))
+            logger.debug("Collecting macOS Applications")
 
             apps_dirs = [APPLICATIONS_DIR, os.path.expanduser("~/Applications")]
 
@@ -304,7 +304,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_macos_app_store(self):
         """Collect Mac App Store applications."""
         try:
-            logger.debug(_("Collecting Mac App Store applications"))
+            logger.debug("Collecting Mac App Store applications")
 
             result = subprocess.run(
                 [
@@ -339,4 +339,4 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_macports_packages(self):
         """Collect packages from MacPorts."""
         # Implementation would use 'port installed'
-        logger.debug(_("MacPorts package collection not implemented"))
+        logger.debug("MacPorts package collection not implemented")

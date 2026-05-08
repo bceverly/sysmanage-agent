@@ -30,7 +30,7 @@ class AntivirusCollector:
                 - version: Version number (or None)
                 - enabled: Whether antivirus is enabled (or None)
         """
-        self.logger.info(_("Starting antivirus detection"))
+        self.logger.info("Starting antivirus detection")
 
         antivirus_info = {
             "software_name": None,

@@ -226,7 +226,7 @@ class WindowsPackageDetectorMixin:
     def _detect_winget_updates(self):
         """Detect updates from Windows Package Manager."""
         try:
-            logger.debug(_("Detecting winget updates"))
+            logger.debug("Detecting winget updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["winget", "upgrade", "--include-unknown"],
@@ -254,7 +254,7 @@ class WindowsPackageDetectorMixin:
                 try:
                     self._process_winget_update_line(line, cols)
                 except Exception as error:
-                    logger.debug(_("Failed to parse winget line '%s': %s"), line, error)
+                    logger.debug("Failed to parse winget line '%s': %s", line, error)
 
         except Exception as error:
             logger.error(_("Failed to detect winget updates: %s"), str(error))
@@ -262,12 +262,12 @@ class WindowsPackageDetectorMixin:
     def _detect_microsoft_store_updates(self):
         """Detect Microsoft Store updates."""
         # This would require PowerShell commands to check Windows Store updates
-        logger.debug(_("Microsoft Store update detection not yet implemented"))
+        logger.debug("Microsoft Store update detection not yet implemented")
 
     def _detect_chocolatey_updates(self):
         """Detect updates from Chocolatey."""
         try:
-            logger.debug(_("Detecting Chocolatey updates"))
+            logger.debug("Detecting Chocolatey updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["choco", "outdated", "-r"],
@@ -297,7 +297,7 @@ class WindowsPackageDetectorMixin:
     def _detect_scoop_updates(self):
         """Detect updates from Scoop."""
         try:
-            logger.debug(_("Detecting Scoop updates"))
+            logger.debug("Detecting Scoop updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["scoop", "status"],

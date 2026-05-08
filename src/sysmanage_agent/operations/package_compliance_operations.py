@@ -20,6 +20,7 @@ minimal Python installs.
 
 import logging
 from typing import Any, Dict, List, Tuple
+from src.i18n import _
 
 try:
     from packaging.specifiers import SpecifierSet
@@ -70,9 +71,9 @@ class PackageComplianceOperations:
         profile_name = parameters.get("profile_name", "")
 
         if not profile_id:
-            return {"success": False, "error": "profile_id is required"}
+            return {"success": False, "error": _("profile_id is required")}
         if not isinstance(constraints, list):
-            return {"success": False, "error": "constraints must be a list"}
+            return {"success": False, "error": _("constraints must be a list")}
 
         try:
             installed = self._collect_installed_packages()
@@ -82,7 +83,7 @@ class PackageComplianceOperations:
                 "success": False,
                 "profile_id": profile_id,
                 "profile_name": profile_name,
-                "error": f"package inventory collection failed: {exc}",
+                "error": _("package inventory collection failed: %s") % (exc),
             }
 
         status, violations = _evaluate(installed, constraints)

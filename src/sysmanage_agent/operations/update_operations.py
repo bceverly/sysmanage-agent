@@ -8,8 +8,8 @@ import concurrent.futures
 import logging
 from typing import Any, Dict
 
-from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.i18n import _
 
 
 class UpdateOperations:
@@ -189,7 +189,7 @@ class UpdateOperations:
             if self.agent.connected and self.agent.websocket:
                 success = await self.agent.send_message(update_message)
                 if success:
-                    self.logger.info(_("Successfully sent update results to server"))
+                    self.logger.info("Successfully sent update results to server")
                     return True
                 self.logger.warning(_("Failed to send update results, will retry..."))
             else:
@@ -229,7 +229,7 @@ class UpdateOperations:
 
         if self.agent.connected and self.agent.websocket:
             await self.agent.send_message(fresh_update_message)
-            self.logger.info(_("Successfully sent fresh update list to server"))
+            self.logger.info("Successfully sent fresh update list to server")
         else:
             self.logger.warning(_("Could not send fresh update list - not connected"))
 
@@ -238,7 +238,7 @@ class UpdateOperations:
     ):
         """Apply updates in background to avoid blocking WebSocket connection."""
         try:
-            self.logger.info(_("Starting background update process"))
+            self.logger.info("Starting background update process")
             update_detector = UpdateDetector()
 
             # Validate packages based on input format

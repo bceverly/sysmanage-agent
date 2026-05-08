@@ -13,11 +13,15 @@ import tempfile
 from typing import Any, Dict
 
 import aiofiles
+from src.i18n import _
 
 # Module-level constants for SonarQube compliance
 _DNF_PATH = "/usr/bin/dnf"
 _OTEL_REMOVED_SUCCESS = "OpenTelemetry collector removed successfully"
 _OTEL_DEPLOYED_SUCCESS = "OpenTelemetry collector deployed successfully"
+# Reused error message for install-step failures — same string used by
+# every per-OS deploy method (linux, macos, freebsd, windows).
+_FAILED_TO_INSTALL = "Failed to install: %s"
 
 
 class OtelDeploymentHelper:
@@ -166,7 +170,7 @@ class OtelDeploymentHelper:
                 return await self._deploy_apt(grafana_url, config_generator)
             if os.path.exists("/usr/bin/yum") or os.path.exists(_DNF_PATH):
                 return await self._deploy_yum_dnf(grafana_url, config_generator)
-            return {"success": False, "error": "No supported package manager found"}
+            return {"success": False, "error": _("No supported package manager found")}
         except Exception as error:
             return {"success": False, "error": str(error)}
 
@@ -192,7 +196,8 @@ class OtelDeploymentHelper:
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install prerequisites: {stderr.decode()}",
+                    "error": _("Failed to install prerequisites: %s")
+                    % (stderr.decode()),
                 }
 
             # Download and install OpenTelemetry
@@ -209,7 +214,7 @@ class OtelDeploymentHelper:
             if process.returncode != 0 or len(deb_content) == 0:
                 return {
                     "success": False,
-                    "error": "Failed to download OpenTelemetry package",
+                    "error": _("Failed to download OpenTelemetry package"),
                 }
 
             # Write to temp file and install
@@ -292,7 +297,7 @@ class OtelDeploymentHelper:
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install: {stderr.decode()}",
+                    "error": _(_FAILED_TO_INSTALL) % (stderr.decode()),
                 }
 
             config_result = await self._create_linux_config(
@@ -362,7 +367,7 @@ class OtelDeploymentHelper:
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install: {stderr.decode()}",
+                    "error": _(_FAILED_TO_INSTALL) % (stderr.decode()),
                 }
 
             config_file = "/usr/local/etc/otelcol-contrib/config.yaml"
@@ -407,7 +412,7 @@ class OtelDeploymentHelper:
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install: {stderr.decode()}",
+                    "error": _(_FAILED_TO_INSTALL) % (stderr.decode()),
                 }
 
             config_file = "/usr/local/etc/alloy/config.alloy"
@@ -459,7 +464,7 @@ class OtelDeploymentHelper:
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install: {stderr.decode()}",
+                    "error": _(_FAILED_TO_INSTALL) % (stderr.decode()),
                 }
 
             config_file = "C:\\Program Files\\OpenTelemetry Collector\\config.yaml"

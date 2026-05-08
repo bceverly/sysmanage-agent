@@ -38,7 +38,7 @@ from src.sysmanage_agent.core.agent_utils import (
 )
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
-from src.sysmanage_agent.operations.child_host_operations import ChildHostOperations
+from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.operations.update_manager import UpdateManager

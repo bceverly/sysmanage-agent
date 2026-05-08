@@ -78,7 +78,7 @@ class UpdateDetector:
         Returns:
             Dict containing available updates with metadata
         """
-        logger.info(_("Detecting available updates"))
+        logger.info("Detecting available updates")
 
         if self.detector is None:
             return {

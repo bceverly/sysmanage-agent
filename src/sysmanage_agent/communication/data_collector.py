@@ -46,13 +46,13 @@ class DataCollector:
             await self._send_initial_core_data()
             await self._send_initial_update_check()
             await self._send_initial_supplementary_data()
-            self.logger.info(_("Initial data updates sent successfully"))
+            self.logger.info("Initial data updates sent successfully")
         except Exception as error:
             self.logger.error(_("Failed to send initial data updates: %s"), error)
 
     async def _send_initial_core_data(self):
         """Send initial OS version, hardware, user access, and software data."""
-        self.logger.info(_("Sending initial OS version data..."))
+        self.logger.info("Sending initial OS version data...")
 
         # Send OS version data
         os_info = self.agent.registration.get_os_version_info()
@@ -65,7 +65,7 @@ class DataCollector:
         # Allow queue processing tasks to run
         await asyncio.sleep(0)
 
-        self.logger.info(_("Sending initial hardware data..."))
+        self.logger.info("Sending initial hardware data...")
 
         # Send hardware data
         hardware_info = self.agent.registration.get_hardware_info()
@@ -78,7 +78,7 @@ class DataCollector:
         # Allow time for the large hardware message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info(_("Sending initial user access data..."))
+        self.logger.info("Sending initial user access data...")
 
         # Send user access data
         user_access_info = self.agent.registration.get_user_access_info()
@@ -93,7 +93,7 @@ class DataCollector:
         # Allow time for the large user access message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info(_("Sending initial software inventory data..."))
+        self.logger.info("Sending initial software inventory data...")
 
         # Send software inventory data
         software_info = self.agent.registration.get_software_inventory_info()
@@ -107,7 +107,7 @@ class DataCollector:
 
     async def _send_initial_update_check(self):
         """Send initial update check and collect certificates and roles."""
-        self.logger.info(_("Sending initial update check..."))
+        self.logger.info("Sending initial update check...")
 
         try:
             update_result = await self.agent.check_updates()
@@ -124,7 +124,7 @@ class DataCollector:
         # Allow time for update check to complete before collecting certificates
         await asyncio.sleep(2)
 
-        self.logger.info(_("Collecting initial certificate data..."))
+        self.logger.info("Collecting initial certificate data...")
 
         try:
             certificate_result = await self.collect_certificates()
@@ -165,7 +165,7 @@ class DataCollector:
     async def _send_initial_supplementary_data(self):
         """Send initial third-party repos, firewall, Graylog, and child host data."""
         try:
-            self.logger.info(_("Collecting initial third-party repository data..."))
+            self.logger.info("Collecting initial third-party repository data...")
             await self._send_third_party_repository_update()
         except Exception as error:
             self.logger.error(
@@ -173,19 +173,19 @@ class DataCollector:
             )
 
         try:
-            self.logger.info(_("Collecting initial firewall status data..."))
+            self.logger.info("Collecting initial firewall status data...")
             await self._send_firewall_status_update()
         except Exception as error:
             self.logger.error("Failed to send initial firewall status data: %s", error)
 
         try:
-            self.logger.info(_("Collecting initial Graylog status data..."))
+            self.logger.info("Collecting initial Graylog status data...")
             await self._send_graylog_status_update()
         except Exception as error:
             self.logger.error("Failed to send initial Graylog status data: %s", error)
 
         try:
-            self.logger.info(_("Collecting initial child hosts data..."))
+            self.logger.info("Collecting initial child hosts data...")
             await self.child_host_collector.send_child_hosts_update()
         except Exception as error:
             self.logger.error("Failed to send initial child hosts data: %s", error)
@@ -801,7 +801,7 @@ class DataCollector:
                     )
                 )
 
-            self.logger.info(_("Collecting SSL certificates from system"))
+            self.logger.info("Collecting SSL certificates from system")
 
             # Collect certificate data
             certificates = self.agent.certificate_collector.collect_certificates()
@@ -814,7 +814,7 @@ class DataCollector:
                     "certificate_count": 0,
                 }
 
-            self.logger.info(_("Found %d certificates"), len(certificates))
+            self.logger.info("Found %d certificates", len(certificates))
 
             # Send certificate data to server
             system_info = self.agent.registration.get_system_info()
@@ -842,7 +842,7 @@ class DataCollector:
     async def collect_roles(self) -> Dict[str, Any]:
         """Collect server roles from the system and send to server."""
         try:
-            self.logger.info(_("Collecting server roles"))
+            self.logger.info("Collecting server roles")
 
             # Collect role data
             roles = self.agent.role_detector.detect_roles()
@@ -855,7 +855,7 @@ class DataCollector:
                     "role_count": 0,
                 }
 
-            self.logger.info(_("Found %d server roles"), len(roles))
+            self.logger.info("Found %d server roles", len(roles))
 
             # Get hostname for server validation
             system_info = self.agent.registration.get_system_info()

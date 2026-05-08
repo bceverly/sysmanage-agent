@@ -215,7 +215,7 @@ class WindowsUpdateApplierMixin:
                 )
 
                 if result.returncode == 0:
-                    logger.info(_("Successfully updated package '%s'"), package_name)
+                    logger.info("Successfully updated package '%s'", package_name)
                     results["updated_packages"].append(
                         {
                             "package_name": package_name,
@@ -357,7 +357,7 @@ class WindowsUpdateApplierMixin:
         )
 
         if is_success:
-            logger.info(_("Successfully installed Windows Update: %s"), package_name)
+            logger.info("Successfully installed Windows Update: %s", package_name)
             results["updated_packages"].append(
                 {
                     "package_name": package_name,

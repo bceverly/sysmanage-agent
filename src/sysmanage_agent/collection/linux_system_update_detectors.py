@@ -41,7 +41,7 @@ class LinuxSystemUpdateDetector:
         """Detect Debian/Ubuntu system updates (kernel, systemd, etc.)."""
         updates = []
         try:
-            logger.debug(_("Detecting Debian system updates"))
+            logger.debug("Detecting Debian system updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["apt", "list", "--upgradable"],
@@ -93,7 +93,7 @@ class LinuxSystemUpdateDetector:
         """Detect Red Hat/Fedora system updates."""
         updates = []
         try:
-            logger.debug(_("Detecting Red Hat system updates"))
+            logger.debug("Detecting Red Hat system updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["dnf", "check-update", "--quiet"],
@@ -128,7 +128,7 @@ class LinuxSystemUpdateDetector:
         """Detect Arch Linux system updates."""
         updates = []
         try:
-            logger.debug(_("Detecting Arch system updates"))
+            logger.debug("Detecting Arch system updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["pacman", "-Qu"],
@@ -164,7 +164,7 @@ class LinuxSystemUpdateDetector:
         """Detect SUSE system updates."""
         updates = []
         try:
-            logger.debug(_("Detecting SUSE system updates"))
+            logger.debug("Detecting SUSE system updates")
 
             result = subprocess.run(  # nosec B603, B607
                 ["zypper", "list-updates"],
@@ -200,7 +200,7 @@ class LinuxSystemUpdateDetector:
         """Detect available Ubuntu release upgrades."""
         updates = []
         try:
-            logger.debug(_("Detecting Ubuntu release upgrades"))
+            logger.debug("Detecting Ubuntu release upgrades")
 
             result = subprocess.run(  # nosec B603, B607
                 ["do-release-upgrade", "-c"],
@@ -256,7 +256,7 @@ class LinuxSystemUpdateDetector:
         """Detect available Fedora version upgrades."""
         updates = []
         try:
-            logger.debug(_("Detecting Fedora version upgrades"))
+            logger.debug("Detecting Fedora version upgrades")
 
             result = subprocess.run(  # nosec B603, B607
                 ["dnf", "system-upgrade", "list"],
@@ -290,7 +290,7 @@ class LinuxSystemUpdateDetector:
         """Detect available openSUSE version upgrades."""
         updates = []
         try:
-            logger.debug(_("Detecting openSUSE version upgrades"))
+            logger.debug("Detecting openSUSE version upgrades")
 
             result = subprocess.run(  # nosec B603, B607
                 ["zypper", "repos"],

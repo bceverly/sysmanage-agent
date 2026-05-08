@@ -15,6 +15,7 @@ import tempfile
 from typing import Any, Dict, List, Optional
 
 import aiofiles
+from src.i18n import _
 
 # wsl.exe outputs UTF-16LE on Windows; subprocess returns raw bytes which we
 # must decode with the right encoding or we get garbled / null-byte-dotted
@@ -129,7 +130,7 @@ class GenericDeployment:
         """
         files = parameters.get("files", [])
         if not files:
-            return {"success": False, "error": "No files provided"}
+            return {"success": False, "error": _("No files provided")}
 
         deployed_files = []
         errors = []
@@ -282,10 +283,28 @@ class GenericDeployment:
         owner_gid: int,
         dest_path: str,
     ) -> None:
-        """Write `content` to a sibling temp file, chmod/chown, then rename in place."""
-        file_descriptor, tmp_path = tempfile.mkstemp(
-            dir=parent_dir, prefix=".sysmanage_deploy_"
-        )
+        """Write `content` to a sibling temp file, chmod/chown, then rename in place.
+
+        Falls back to ``sudo install`` when the agent process can't write to
+        ``parent_dir`` directly (e.g. ``/etc/apt/sources.list.d/`` on a host
+        where the agent runs as the unprivileged ``sysmanage-agent`` user).
+        Triggered by ``PermissionError`` from the unprivileged path OR when
+        the spec declares root ownership and the directory isn't agent-
+        writable — keeps the unprivileged fast path for user-owned drops.
+        """
+        try:
+            file_descriptor, tmp_path = tempfile.mkstemp(
+                dir=parent_dir, prefix=".sysmanage_deploy_"
+            )
+        except PermissionError:
+            await self._write_via_sudo(
+                content,
+                mode=mode,
+                owner_uid=owner_uid,
+                owner_gid=owner_gid,
+                dest_path=dest_path,
+            )
+            return
         try:
             async with aiofiles.open(
                 file_descriptor, "w", encoding="utf-8", closefd=True
@@ -296,10 +315,82 @@ class GenericDeployment:
             os.chmod(tmp_path, mode)
             os.chown(tmp_path, owner_uid, owner_gid)
             os.rename(tmp_path, dest_path)
+        except PermissionError:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            await self._write_via_sudo(
+                content,
+                mode=mode,
+                owner_uid=owner_uid,
+                owner_gid=owner_gid,
+                dest_path=dest_path,
+            )
         except Exception:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
             raise
+
+    async def _write_via_sudo(
+        self,
+        content: str,
+        *,
+        mode: int,
+        owner_uid: int,
+        owner_gid: int,
+        dest_path: str,
+    ) -> None:
+        """Stage the content in /tmp, then ``sudo install`` it to ``dest_path``.
+
+        ``install(1)`` performs an atomic copy + chmod + chown in one shot, so
+        the destination is never visible with intermediate permissions.  The
+        staged tempfile is removed once install succeeds (or on any failure).
+        """
+        file_descriptor, staged_path = tempfile.mkstemp(prefix=".sysmanage_deploy_")
+        try:
+            async with aiofiles.open(
+                file_descriptor, "w", encoding="utf-8", closefd=True
+            ) as temp_file:
+                await temp_file.write(content)
+                if content and not content.endswith("\n"):
+                    await temp_file.write("\n")
+            # 0o600 — staging file lives in /tmp briefly before
+            # ``sudo install`` copies it to dest_path with the spec's
+            # final mode.  Owner-only on the staged copy denies other
+            # /tmp users a read window even though the destination
+            # mode may end up world-readable.
+            os.chmod(staged_path, 0o600)
+            argv = [
+                "sudo",
+                "-n",
+                "install",
+                "-m",
+                f"{mode:o}",
+                "-o",
+                str(owner_uid),
+                "-g",
+                str(owner_gid),
+                staged_path,
+                dest_path,
+            ]
+            proc = await asyncio.create_subprocess_exec(
+                *argv,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr_bytes = await proc.communicate()
+            if proc.returncode != 0:
+                stderr_text = (stderr_bytes or b"").decode("utf-8", "replace").strip()
+                raise PermissionError(
+                    f"sudo install failed (rc={proc.returncode}): {stderr_text}"
+                )
+        finally:
+            if os.path.exists(staged_path):
+                try:
+                    os.unlink(staged_path)
+                except OSError:
+                    self.logger.debug(
+                        "Could not remove staged tempfile %s", staged_path
+                    )
 
     def _verify_post_write_hash(
         self, path: str, expected_sha256: Optional[str], backup_path: Optional[str]
@@ -381,7 +472,7 @@ class GenericDeployment:
         """
         steps = parameters.get("steps", [])
         if not steps:
-            return {"success": False, "error": "No steps provided"}
+            return {"success": False, "error": _("No steps provided")}
 
         progress_type = parameters.get(
             "progress_message_type", "command_sequence_progress"
@@ -418,7 +509,7 @@ class GenericDeployment:
                 else:
                     result = {
                         "success": False,
-                        "error": f"Unknown step type: {step_type}",
+                        "error": _("Unknown step type: %s") % (step_type),
                     }
 
                 results.append(
@@ -490,7 +581,7 @@ class GenericDeployment:
         timeout = step.get("timeout", 300)
 
         if not command:
-            return {"success": False, "error": "Empty shell command"}
+            return {"success": False, "error": _("Empty shell command")}
 
         result = await self.agent.execute_shell_command(
             {"command": command, "timeout": timeout}
@@ -530,7 +621,7 @@ class GenericDeployment:
         interval = step.get("interval", 5)
 
         if not command:
-            return {"success": False, "error": "Empty wait_condition command"}
+            return {"success": False, "error": _("Empty wait_condition command")}
 
         elapsed = 0
         last_output = ""
@@ -790,7 +881,7 @@ class GenericDeployment:
 
         if not argv or not isinstance(argv, list):
             return (
-                {"argv": argv, "success": False, "error": "no argv"},
+                {"argv": argv, "success": False, "error": _("no argv")},
                 f"Plan command missing/invalid 'argv': {spec!r}",
                 not ignore_errors,
             )
@@ -815,7 +906,7 @@ class GenericDeployment:
                     "argv": argv,
                     "description": description,
                     "success": False,
-                    "error": f"FileNotFoundError: {exc}",
+                    "error": _("FileNotFoundError: %s") % (exc),
                 },
                 f"Command '{description}' not found: {exc}",
                 not ignore_errors,
@@ -864,7 +955,7 @@ class GenericDeployment:
                     "argv": argv,
                     "description": description,
                     "success": False,
-                    "error": "timeout",
+                    "error": _("timeout"),
                 },
                 f"Command '{description}' timed out after {timeout}s",
                 not ignore_errors,

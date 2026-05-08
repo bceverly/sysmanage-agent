@@ -9,8 +9,8 @@ import platform
 import socket
 from typing import Any, Dict
 
-from src.i18n import _
 from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
+from src.i18n import _
 from src.sysmanage_agent.collection.commercial_antivirus_collection import (
     CommercialAntivirusCollector,
 )
@@ -32,7 +32,7 @@ class SystemControl:
         timeout = parameters.get("timeout", 300)  # Default 5 minute timeout
 
         if not command:
-            return {"success": False, "error": "No command specified"}
+            return {"success": False, "error": _("No command specified")}
 
         try:
             process = await asyncio.create_subprocess_shell(

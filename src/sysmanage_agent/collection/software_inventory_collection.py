@@ -121,7 +121,7 @@ class SoftwareInventoryCollector:
         Returns:
             Dict containing software inventory data with timestamp and metadata
         """
-        logger.info(_("Collecting software inventory"))
+        logger.info("Collecting software inventory")
 
         if self.collector is None:
             return {

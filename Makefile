@@ -529,7 +529,7 @@ clean-whitespace: setup-venv
 	@$(PYTHON) scripts/clean_whitespace.py
 
 # Python linting
-lint: format-python
+lint: format-python i18n-validate
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
@@ -538,6 +538,27 @@ else
 	@$(PYTHON) -m pylint main.py src/ tests/ --rcfile=.pylintrc
 endif
 	@echo "[OK] Python linting completed"
+
+# i18n: extract _(...) calls from src/, verify translations exist in
+# every locale .po within budget, fail otherwise.  Run ``make i18n-extract``
+# then ``make i18n-merge`` to refresh the .pot template and merge new
+# msgids into all locales; ``make i18n-compile`` rebuilds .mo files.
+i18n-validate: setup-venv
+	@echo "=== i18n validation ==="
+	@$(PYTHON) scripts/i18n_validate.py --validate
+	@echo "[OK] i18n validation completed"
+
+i18n-extract: setup-venv
+	@$(PYTHON) scripts/i18n_validate.py --extract
+
+i18n-merge: setup-venv
+	@$(PYTHON) scripts/i18n_validate.py --merge
+
+i18n-compile: setup-venv
+	@$(PYTHON) scripts/i18n_validate.py --compile
+
+i18n-strip-fuzzy: setup-venv
+	@$(PYTHON) scripts/i18n_validate.py --strip-fuzzy
 
 # Format Python code
 format-python: setup-venv clean-whitespace

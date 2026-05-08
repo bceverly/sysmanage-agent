@@ -11,7 +11,6 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import aiofiles
-
 from src.i18n import _
 
 # Module-level constants for repeated strings

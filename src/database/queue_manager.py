@@ -217,7 +217,7 @@ class MessageQueueManager:
             message.status = QueueStatus.IN_PROGRESS.value
             message.started_at = datetime.now(timezone.utc)
 
-            logger.debug(_("Marked message as processing: %s"), message_id)
+            logger.debug("Marked message as processing: %s", message_id)
             return True
 
     def mark_completed(self, message_id: str) -> bool:
@@ -241,7 +241,7 @@ class MessageQueueManager:
             message.status = QueueStatus.COMPLETED.value
             message.completed_at = datetime.now(timezone.utc)
 
-            logger.debug(_("Marked message as completed: %s"), message_id)
+            logger.debug("Marked message as completed: %s", message_id)
             return True
 
     def mark_failed(

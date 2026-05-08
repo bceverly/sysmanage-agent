@@ -9,8 +9,8 @@ import platform
 import shutil
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.i18n import _
 
 # Constants for repeated error messages
 _INSTALLATION_FAILED = "Installation failed"

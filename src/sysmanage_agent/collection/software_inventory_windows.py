@@ -48,7 +48,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     break
 
         self._package_managers = managers
-        logger.debug(_("Detected package managers: %s"), ", ".join(managers))
+        logger.debug("Detected package managers: %s", ", ".join(managers))
         return managers
 
     def collect_packages(self):
@@ -150,14 +150,14 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         except FileNotFoundError:
             pass
         except PermissionError:
-            logger.debug(_("No permission to access registry key: %s"), subkey_path)
+            logger.debug("No permission to access registry key: %s", subkey_path)
 
     def _collect_windows_registry_programs(self):
         """Collect programs from Windows Registry."""
         try:
             import winreg  # pylint: disable=import-outside-toplevel
 
-            logger.debug(_("Collecting Windows Registry programs"))
+            logger.debug("Collecting Windows Registry programs")
 
             # Registry keys where installed programs are listed
             registry_keys = [
@@ -194,7 +194,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             )
 
         except ImportError:
-            logger.debug(_("winreg module not available (not on Windows)"))
+            logger.debug("winreg module not available (not on Windows)")
         except Exception as error:
             logger.error(
                 _("Failed to collect Windows Registry programs: %s"), str(error)
@@ -230,7 +230,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_microsoft_store_apps(self):
         """Collect Microsoft Store applications."""
         try:
-            logger.debug(_("Collecting Microsoft Store applications"))
+            logger.debug("Collecting Microsoft Store applications")
 
             # Use PowerShell to get AppxPackage information
             powershell_cmd = [
@@ -277,7 +277,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                         _("Failed to parse Microsoft Store apps JSON: %s"), str(error)
                     )
             else:
-                logger.debug(_("No Microsoft Store apps found or command failed"))
+                logger.debug("No Microsoft Store apps found or command failed")
 
         except FileNotFoundError:
             logger.debug(
@@ -353,7 +353,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_winget_packages(self):
         """Collect packages from Windows Package Manager."""
         try:
-            logger.debug(_("Collecting winget packages"))
+            logger.debug("Collecting winget packages")
 
             result = subprocess.run(
                 ["winget", "list"],  # nosec B603, B607
@@ -385,9 +385,9 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_chocolatey_packages(self):
         """Collect packages from Chocolatey."""
         # Implementation would use 'choco list --local-only'
-        logger.debug(_("Chocolatey package collection not yet implemented"))
+        logger.debug("Chocolatey package collection not yet implemented")
 
     def _collect_scoop_packages(self):
         """Collect packages from Scoop."""
         # Implementation would use 'scoop list'
-        logger.debug(_("Scoop package collection not yet implemented"))
+        logger.debug("Scoop package collection not yet implemented")

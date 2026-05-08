@@ -51,7 +51,7 @@ class UpdateChecker:
         if not (self.agent.running and self.agent.connected):
             return False
 
-        self.logger.info(_("Performing periodic update check"))
+        self.logger.info("Performing periodic update check")
         try:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
@@ -115,7 +115,7 @@ class PackageCollectionScheduler:
             self.logger.debug("Package collection is disabled in configuration")
             return False
 
-        self.logger.info(_("Starting package collection"))
+        self.logger.info("Starting package collection")
         try:
             # Run the blocking package collection in a thread pool executor
             # to prevent blocking the async event loop during long HTTP operations
@@ -632,7 +632,7 @@ class MessageProcessor:
             Dict with success status and message or error.
         """
         try:
-            self.logger.info(_("Executing %s for service: %s"), action, service)
+            self.logger.info("Executing %s for service: %s", action, service)
 
             cmd = self._build_service_control_cmd(action, service)
             if cmd is None:
@@ -643,7 +643,7 @@ class MessageProcessor:
             result = await run_command_async(cmd, timeout=30.0)
 
             if result.returncode == 0:
-                self.logger.info(_("Successfully %s service: %s"), action, service)
+                self.logger.info("Successfully %s service: %s", action, service)
                 return {
                     "success": True,
                     "message": f"Service {action} successful",
@@ -728,7 +728,7 @@ class MessageProcessor:
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""
         try:
-            self.logger.info(_("Triggering role collection after service control"))
+            self.logger.info("Triggering role collection after service control")
             await self.agent.collect_roles()
         except Exception as error:
             self.logger.warning(
@@ -784,7 +784,7 @@ class MessageProcessor:
             Dict with success, status, and active fields
         """
         try:
-            self.logger.info(_("Checking status for service: %s"), service)
+            self.logger.info("Checking status for service: %s", service)
 
             systemctl_path = shutil.which("systemctl")
             if not systemctl_path:

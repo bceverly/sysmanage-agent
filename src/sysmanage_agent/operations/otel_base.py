@@ -10,6 +10,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 from urllib.parse import urlparse
+from src.i18n import _
 
 
 class OtelDeployerBase(ABC):
@@ -145,7 +146,7 @@ otelcol.exporter.otlp "grafana" {{
         working_dir = parameters.get("working_directory")
 
         if not command:
-            return {"success": False, "error": "No command specified"}
+            return {"success": False, "error": _("No command specified")}
 
         try:
             process = await asyncio.create_subprocess_shell(

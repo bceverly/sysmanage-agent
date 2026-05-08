@@ -116,7 +116,7 @@ class OSInfoCollector:
             self.logger.warning(_("Ubuntu Pro status check timed out"))
         except FileNotFoundError:
             # pro command not available - this is normal on non-Ubuntu systems
-            self.logger.debug(_("Ubuntu Pro not available on this system"))
+            self.logger.debug("Ubuntu Pro not available on this system")
         except Exception as error:
             self.logger.warning(_("Failed to get Ubuntu Pro status: %s"), str(error))
 
@@ -369,7 +369,7 @@ class OSInfoCollector:
                 if proc.returncode == 0 and proc.stdout.strip():
                     return proc.stdout.strip()
         except Exception as error:
-            self.logger.debug(_("Processor detection fallback failed: %s"), error)
+            self.logger.debug("Processor detection fallback failed: %s", error)
 
         return platform.machine()
 

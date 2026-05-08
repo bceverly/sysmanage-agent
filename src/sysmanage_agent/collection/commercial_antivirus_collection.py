@@ -29,7 +29,7 @@ class CommercialAntivirusCollector:
         Returns:
             dict: Dictionary containing commercial antivirus status fields or None if not detected
         """
-        self.logger.info(_("Starting commercial antivirus detection"))
+        self.logger.info("Starting commercial antivirus detection")
 
         try:
             if self.system == "Windows":

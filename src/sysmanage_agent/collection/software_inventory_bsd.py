@@ -43,7 +43,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             managers.append("ports")
 
         self._package_managers = managers
-        logger.debug(_("Detected package managers: %s"), ", ".join(managers))
+        logger.debug("Detected package managers: %s", ", ".join(managers))
         return managers
 
     def collect_packages(self):
@@ -60,7 +60,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_pkg_packages(self):
         """Collect packages from FreeBSD pkg (modern pkg tool)."""
         try:
-            logger.debug(_("Collecting FreeBSD pkg packages"))
+            logger.debug("Collecting FreeBSD pkg packages")
 
             # Use FreeBSD style: pkg info -a
             # Note: This is only for FreeBSD's modern pkg tool, not OpenBSD/NetBSD pkg_info
@@ -75,9 +75,9 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             if result.returncode == 0 and result.stdout.strip():
                 source_name = "freebsd_packages"
                 self._parse_pkg_output(result.stdout, source_name)
-                logger.debug(_("Successfully collected FreeBSD pkg packages"))
+                logger.debug("Successfully collected FreeBSD pkg packages")
             else:
-                logger.debug(_("FreeBSD pkg tool not available or no packages found"))
+                logger.debug("FreeBSD pkg tool not available or no packages found")
 
         except Exception as error:
             logger.error(_("Failed to collect FreeBSD pkg packages: %s"), str(error))
@@ -101,7 +101,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         """Collect packages from OpenBSD/NetBSD pkg_info."""
         try:
             platform_name, source_name = self._detect_bsd_platform_source()
-            logger.debug(_("Collecting %s pkg_info packages"), platform_name.upper())
+            logger.debug("Collecting %s pkg_info packages", platform_name.upper())
 
             # Use pkg_info -a to list all installed packages
             result = subprocess.run(
@@ -190,4 +190,4 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_ports_packages(self):
         """Collect packages from FreeBSD ports."""
         # Implementation would parse /var/db/pkg
-        logger.debug(_("FreeBSD ports collection not yet implemented"))
+        logger.debug("FreeBSD ports collection not yet implemented")

@@ -16,6 +16,7 @@ from typing import Any, Dict
 from urllib.parse import urlparse
 
 from src.i18n import _
+
 from .otel_deployment_helper import OtelDeploymentHelper
 
 # Module-level constants for SonarQube compliance
@@ -39,7 +40,7 @@ class OpenTelemetryOperations:
             if not grafana_url:
                 return {
                     "success": False,
-                    "error": "No Grafana URL provided for OpenTelemetry deployment",
+                    "error": _("No Grafana URL provided for OpenTelemetry deployment"),
                 }
 
             self.logger.info(
@@ -62,7 +63,10 @@ class OpenTelemetryOperations:
             if system in ["openbsd", "netbsd"]:
                 return {
                     "success": False,
-                    "error": f"OpenTelemetry deployment on {system.upper()} is not currently supported. Manual installation required.",
+                    "error": _(
+                        "OpenTelemetry deployment on %s is not currently supported. Manual installation required."
+                    )
+                    % system.upper(),
                 }
             if system == "windows":
                 return await self.deployment_helper.deploy_windows(
@@ -70,14 +74,17 @@ class OpenTelemetryOperations:
                 )
             return {
                 "success": False,
-                "error": f"Unsupported operating system for OpenTelemetry deployment: {system}",
+                "error": _(
+                    "Unsupported operating system for OpenTelemetry deployment: %s"
+                )
+                % system,
             }
 
         except Exception as error:
             self.logger.error("Failed to deploy OpenTelemetry: %s", str(error))
             return {
                 "success": False,
-                "error": f"Failed to deploy OpenTelemetry: {str(error)}",
+                "error": _("Failed to deploy OpenTelemetry: %s") % str(error),
             }
 
     async def remove_opentelemetry(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -97,7 +104,7 @@ class OpenTelemetryOperations:
             else:
                 return {
                     "success": False,
-                    "error": f"Unsupported operating system: {system}",
+                    "error": _("Unsupported operating system: %s") % system,
                 }
 
             if removal_result.get("success"):
@@ -117,7 +124,7 @@ class OpenTelemetryOperations:
             self.logger.error("Failed to remove OpenTelemetry: %s", str(error))
             return {
                 "success": False,
-                "error": f"Failed to remove OpenTelemetry: {str(error)}",
+                "error": _("Failed to remove OpenTelemetry: %s") % str(error),
             }
 
     def _generate_otel_config(self, grafana_url: str) -> str:
@@ -207,7 +214,7 @@ otelcol.exporter.otlp "grafana" {{
     ) -> Dict[str, Any]:
         """Start OpenTelemetry service."""
         try:
-            self.logger.info(_("Starting OpenTelemetry service..."))
+            self.logger.info("Starting OpenTelemetry service...")
 
             if platform.system() == "Linux":
                 command = "sudo systemctl start otelcol-contrib"
@@ -363,7 +370,7 @@ otelcol.exporter.otlp "grafana" {{
     ) -> Dict[str, Any]:
         """Disconnect OpenTelemetry from Grafana server."""
         try:
-            self.logger.info(_("Disconnecting OpenTelemetry from Grafana"))
+            self.logger.info("Disconnecting OpenTelemetry from Grafana")
             restart_result = await self.restart_opentelemetry_service(parameters)
 
             if restart_result["success"]:
@@ -390,7 +397,7 @@ otelcol.exporter.otlp "grafana" {{
         working_dir = parameters.get("working_directory")
 
         if not command:
-            return {"success": False, "error": "No command specified"}
+            return {"success": False, "error": _("No command specified")}
 
         try:
             process = await asyncio.create_subprocess_shell(

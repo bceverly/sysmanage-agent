@@ -12,6 +12,7 @@ from typing import Any, Dict
 import aiofiles
 
 from src.sysmanage_agent.operations.otel_base import OtelDeployerBase
+from src.i18n import _
 
 
 class WindowsOtelDeployer(OtelDeployerBase):
@@ -36,7 +37,8 @@ class WindowsOtelDeployer(OtelDeployerBase):
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": _("Failed to install OpenTelemetry collector: %s")
+                    % (stderr.decode()),
                 }
 
             # Create configuration file

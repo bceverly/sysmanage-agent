@@ -231,7 +231,7 @@ class BasePackageCollector:
             return self._detect_command_available(path)
 
         if os.path.exists(path) and self._detect_command_available(path):
-            logger.info(_("Found winget at: %s"), path)
+            logger.info("Found winget at: %s", path)
             return True
 
         return False

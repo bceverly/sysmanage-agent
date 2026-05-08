@@ -23,7 +23,7 @@ class WindowsSystemDetectorMixin:
     def _detect_windows_system_updates(self):
         """Detect Windows system updates from Windows Update using PowerShell."""
         try:
-            logger.debug(_("Detecting Windows system updates"))
+            logger.debug("Detecting Windows system updates")
 
             result = self._run_windows_update_query()
 
@@ -123,7 +123,7 @@ class WindowsSystemDetectorMixin:
                 )
                 self.available_updates.append(update_entry)
 
-            logger.debug(_("Found %d Windows system updates"), len(updates_data))
+            logger.debug("Found %d Windows system updates", len(updates_data))
 
         except json.JSONDecodeError as error:
             logger.warning(_("Failed to parse Windows Update output: %s"), str(error))
@@ -237,7 +237,7 @@ class WindowsSystemDetectorMixin:
                         )
 
                 except json.JSONDecodeError:
-                    logger.debug(_("Could not parse Windows upgrade JSON output"))
+                    logger.debug("Could not parse Windows upgrade JSON output")
 
         except Exception as error:
             logger.error(_("Failed to detect Windows version upgrades: %s"), str(error))

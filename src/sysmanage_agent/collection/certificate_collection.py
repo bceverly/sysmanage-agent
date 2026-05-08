@@ -260,7 +260,7 @@ class CertificateCollector:
                 if os.path.exists(keychain_path):
                     cmd.append(keychain_path)
                 else:
-                    self.logger.debug(_("Keychain not found: %s"), keychain_path)
+                    self.logger.debug("Keychain not found: %s", keychain_path)
                     return []
 
             result = subprocess.run(  # nosec B603
@@ -394,7 +394,7 @@ class CertificateCollector:
     ) -> None:
         """Process a single certificate directory."""
         try:
-            self.logger.debug(_("Scanning certificate directory: %s"), cert_dir)
+            self.logger.debug("Scanning certificate directory: %s", cert_dir)
             cert_patterns = ["*.pem", "*.crt", "*.cer"]
 
             for pattern in cert_patterns:
@@ -502,7 +502,7 @@ class CertificateCollector:
                             _("No valid certificates found in store %s"), store
                         )
                 else:
-                    self.logger.debug(_("Certificate store %s is empty"), store)
+                    self.logger.debug("Certificate store %s is empty", store)
             else:
                 error_msg = (
                     result.stderr.strip()

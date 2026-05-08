@@ -7,7 +7,6 @@ This module contains Windows-specific repository operations for Chocolatey and w
 
 import logging
 from typing import Any, Dict, Optional
-
 from src.i18n import _
 
 

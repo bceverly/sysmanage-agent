@@ -49,7 +49,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     break
 
         self._package_managers = managers
-        logger.debug(_("Detected package managers: %s"), ", ".join(managers))
+        logger.debug("Detected package managers: %s", ", ".join(managers))
         return managers
 
     # Mapping of package manager name to its collection method name
@@ -107,7 +107,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_apt_packages(self):
         """Collect packages from apt/dpkg (Debian/Ubuntu)."""
         try:
-            logger.debug(_("Collecting apt packages"))
+            logger.debug("Collecting apt packages")
 
             # Use dpkg-query for detailed package information
             result = subprocess.run(
@@ -164,7 +164,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_snap_packages(self):
         """Collect packages from Snap."""
         try:
-            logger.debug(_("Collecting snap packages"))
+            logger.debug("Collecting snap packages")
 
             result = subprocess.run(
                 ["snap", "list", "--unicode=never"],  # nosec B603, B607
@@ -221,7 +221,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_flatpak_packages(self):
         """Collect packages from Flatpak."""
         try:
-            logger.debug(_("Collecting flatpak packages"))
+            logger.debug("Collecting flatpak packages")
 
             result = subprocess.run(
                 [
@@ -250,7 +250,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_yum_packages(self):
         """Collect packages from YUM (Red Hat/CentOS)."""
         # Implementation would use 'yum list installed' or 'rpm -qa'
-        logger.debug(_("YUM package collection not implemented"))
+        logger.debug("YUM package collection not implemented")
 
     def _parse_dnf_package_line(self, parts):
         """Parse a single DNF installed package line into a package dict.
@@ -281,7 +281,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_dnf_packages(self):
         """Collect packages from DNF (Fedora)."""
         try:
-            logger.debug(_("Collecting DNF packages"))
+            logger.debug("Collecting DNF packages")
 
             result = subprocess.run(
                 ["dnf", "list", "installed"],  # nosec B603, B607
@@ -333,7 +333,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_pacman_packages(self):
         """Collect packages from Pacman (Arch Linux)."""
         try:
-            logger.debug(_("Collecting Pacman packages"))
+            logger.debug("Collecting Pacman packages")
 
             result = subprocess.run(
                 ["pacman", "-Q"],  # nosec B603, B607
@@ -387,7 +387,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_zypper_packages(self):
         """Collect packages from Zypper (openSUSE)."""
         try:
-            logger.debug(_("Collecting Zypper packages"))
+            logger.debug("Collecting Zypper packages")
 
             # Use rpm -qa for comprehensive package listing
             result = subprocess.run(
@@ -422,7 +422,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     if p.get("package_manager") == "zypper"
                 ]
             )
-            logger.debug(_("Successfully collected %d Zypper packages"), zypper_count)
+            logger.debug("Successfully collected %d Zypper packages", zypper_count)
 
         except Exception as error:
             logger.error(_("Failed to collect Zypper packages: %s"), str(error))
@@ -430,7 +430,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_portage_packages(self):
         """Collect packages from Portage (Gentoo)."""
         # Implementation would use 'equery list "*"'
-        logger.debug(_("Portage package collection not implemented"))
+        logger.debug("Portage package collection not implemented")
 
     def _parse_apk_name_version(self, line):
         """Parse an APK package line into (name, version) tuple.
@@ -462,7 +462,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _collect_apk_packages(self):
         """Collect packages from APK (Alpine Linux)."""
         try:
-            logger.debug(_("Collecting APK packages"))
+            logger.debug("Collecting APK packages")
 
             # Use 'apk info -v' to get package names with versions
             result = subprocess.run(
@@ -500,7 +500,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     if p.get("package_manager") == "apk"
                 ]
             )
-            logger.debug(_("Successfully collected %d APK packages"), apk_count)
+            logger.debug("Successfully collected %d APK packages", apk_count)
 
         except Exception as error:
             logger.error(_("Failed to collect APK packages: %s"), str(error))

@@ -13,9 +13,9 @@ from typing import Any, Dict, List, Tuple
 
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
-from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations import package_installation_helpers
+from src.i18n import _
 
 _DEBIAN_FRONTEND_ENV = "DEBIAN_FRONTEND=noninteractive"
 _DEBCONF_SEEN_ENV = "DEBCONF_NONINTERACTIVE_SEEN=true"
@@ -53,7 +53,7 @@ def _validate_uninstall_packages(
         package_name = package.get("package_name")
         if not package_name:
             logger.warning("Skipping package with no name")
-            failed_packages.append({"package": package, "error": "No package name"})
+            failed_packages.append({"package": package, "error": _("No package name")})
             continue
         valid_packages.append(package)
     return valid_packages, failed_packages
@@ -114,7 +114,8 @@ def _process_non_apt_uninstall(
         failed_packages.append(
             {
                 "package_name": package_name,
-                "error": f"Uninstall not implemented for {pkg_manager} package manager",
+                "error": _("Uninstall not implemented for %s package manager")
+                % pkg_manager,
             }
         )
         uninstall_log.append(
@@ -363,12 +364,12 @@ class PackageOperations:
         requested_by = parameters.get("requested_by")
 
         if not request_id:
-            return {"success": False, "error": "No request_id specified"}
+            return {"success": False, "error": _("No request_id specified")}
 
         if not packages:
             return {
                 "success": False,
-                "error": "No packages specified for uninstallation",
+                "error": _("No packages specified for uninstallation"),
             }
 
         self.logger.info(
@@ -474,7 +475,7 @@ class PackageOperations:
         """Install multiple packages with a single apt-get command."""
         try:
             if not package_names:
-                return {"success": False, "error": "No packages to install"}
+                return {"success": False, "error": _("No packages to install")}
 
             self.logger.info(
                 "Installing packages with apt-get: %s", ", ".join(package_names)
@@ -520,7 +521,7 @@ class PackageOperations:
 
             return {
                 "success": False,
-                "error": f"apt-get install failed: {stderr_text or stdout_text}",
+                "error": _("apt-get install failed: %s") % (stderr_text or stdout_text),
                 "output": stderr_text or stdout_text,
             }
 
@@ -528,14 +529,14 @@ class PackageOperations:
             self.logger.error("Failed to install packages with apt-get: %s", error)
             return {
                 "success": False,
-                "error": f"Exception during apt-get install: {str(error)}",
+                "error": _("Exception during apt-get install: %s") % str(error),
             }
 
     async def _uninstall_packages_with_apt(self, package_names: list) -> Dict[str, Any]:
         """Uninstall multiple packages with a single apt-get command."""
         try:
             if not package_names:
-                return {"success": False, "error": "No packages to uninstall"}
+                return {"success": False, "error": _("No packages to uninstall")}
 
             self.logger.info(
                 "Uninstalling packages with apt-get: %s", ", ".join(package_names)
@@ -566,7 +567,7 @@ class PackageOperations:
 
             return {
                 "success": False,
-                "error": f"apt-get remove failed: {stderr_text or stdout_text}",
+                "error": _("apt-get remove failed: %s") % (stderr_text or stdout_text),
                 "output": stderr_text or stdout_text,
             }
 
@@ -574,7 +575,7 @@ class PackageOperations:
             self.logger.error("Failed to uninstall packages with apt-get: %s", error)
             return {
                 "success": False,
-                "error": f"Exception during apt-get remove: {str(error)}",
+                "error": _("Exception during apt-get remove: %s") % str(error),
             }
 
     async def _send_installation_completion(

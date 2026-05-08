@@ -195,7 +195,7 @@ def initialize_database(config_manager) -> bool:
     try:
         # Get database path from configuration
         db_path = get_database_path_from_config(config_manager)
-        logger.info(_("Initializing database at: %s"), db_path)
+        logger.info("Initializing database at: %s", db_path)
 
         # Initialize the global database manager with the correct path FIRST
         # This ensures all subsequent get_database_manager() calls use this path

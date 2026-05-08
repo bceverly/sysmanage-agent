@@ -12,8 +12,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
-from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ def validate_packages(
         package_name = package.get("package_name")
         if not package_name:
             logger_instance.warning(_("Skipping package with no name"))
-            failed_packages.append({"package": package, "error": "No package name"})
+            failed_packages.append({"package": package, "error": _("No package name")})
             continue
         valid_packages.append(package)
 

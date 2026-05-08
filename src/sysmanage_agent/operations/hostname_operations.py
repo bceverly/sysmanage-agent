@@ -9,8 +9,8 @@ import re
 import socket
 from typing import Any, Dict
 
-from src.i18n import _
 from src.sysmanage_agent.core.async_utils import run_command_async
+from src.i18n import _
 
 # Message constants
 _MSG_HOSTNAME_CHANGED = "Hostname changed to %s"
@@ -109,7 +109,7 @@ class HostnameOperations:
         )
 
         if result.returncode == 0:
-            self.logger.info(_("Successfully changed hostname using hostnamectl"))
+            self.logger.info("Successfully changed hostname using hostnamectl")
             return {
                 "success": True,
                 "result": _(_MSG_HOSTNAME_CHANGED) % hostname,
@@ -355,7 +355,7 @@ class HostnameOperations:
                 },
             )
             await self.agent_instance.send_message(message)
-            self.logger.info(_("Sent hostname change confirmation to server"))
+            self.logger.info("Sent hostname change confirmation to server")
         except Exception as error:
             self.logger.error(
                 _("Failed to send hostname change confirmation: %s"), error

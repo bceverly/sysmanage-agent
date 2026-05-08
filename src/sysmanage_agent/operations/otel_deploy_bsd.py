@@ -12,6 +12,7 @@ from typing import Any, Dict
 import aiofiles
 
 from src.sysmanage_agent.operations.otel_base import OtelDeployerBase
+from src.i18n import _
 
 # Module-level constants for SonarQube compliance
 _OTEL_REMOVED_SUCCESS = "OpenTelemetry collector removed successfully"
@@ -41,7 +42,8 @@ class FreeBSDOtelDeployer(OtelDeployerBase):
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install Grafana Alloy: {stderr.decode()}",
+                    "error": _("Failed to install Grafana Alloy: %s")
+                    % (stderr.decode()),
                 }
 
             # Create configuration file for Alloy
@@ -132,7 +134,8 @@ class OpenBSDOtelDeployer(OtelDeployerBase):
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": _("Failed to install OpenTelemetry collector: %s")
+                    % (stderr.decode()),
                 }
 
             # Create configuration file
@@ -234,7 +237,8 @@ class NetBSDOtelDeployer(OtelDeployerBase):
             if process.returncode != 0:
                 return {
                     "success": False,
-                    "error": f"Failed to install OpenTelemetry collector: {stderr.decode()}",
+                    "error": _("Failed to install OpenTelemetry collector: %s")
+                    % (stderr.decode()),
                 }
 
             # Create configuration file
@@ -305,7 +309,7 @@ class BSDOtelDeployer(OtelDeployerBase):
         # This is handled by the factory in opentelemetry_operations.py
         return {
             "success": False,
-            "error": "BSDOtelDeployer should not be called directly",
+            "error": _("BSDOtelDeployer should not be called directly"),
         }
 
     async def remove(self) -> Dict[str, Any]:
