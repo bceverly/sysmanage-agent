@@ -3,6 +3,12 @@ Agent version detection module.
 Provides the running agent version for heartbeat and registration messages.
 """
 
+# PEP 604 ``X | None`` and PEP 585 ``list[str]`` syntax used below need
+# either Python 3.10+ or this future import.  Agent CI matrix includes
+# 3.9 (Rocky/RHEL/Amazon Linux 9 default), so the future import keeps
+# annotations as strings and the types stay valid at runtime.
+from __future__ import annotations
+
 import logging
 import subprocess
 from importlib.metadata import version as pkg_version
