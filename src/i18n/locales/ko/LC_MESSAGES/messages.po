@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
@@ -8,37 +9,37 @@ msgstr ""
 #: src/database/init.py:37
 #, python-format
 msgid "Using database path from SYSMANAGE_DB_PATH: %s"
-msgstr ""
+msgstr "SYSMANAGE_DB_PATH에서 데이터베이스 경로 사용: %s"
 
 #: src/database/init.py:47
 #, python-format
 msgid "Using configured database path: %s"
-msgstr ""
+msgstr "구성된 데이터베이스 경로 사용: %s"
 
 #: src/database/init.py:53
 #, python-format
 msgid "Using configured relative database path: %s"
-msgstr ""
+msgstr "구성된 상대 데이터베이스 경로 사용: %s"
 
 #: src/database/init.py:59
 #, python-format
 msgid "Using system database path: %s"
-msgstr ""
+msgstr "시스템 데이터베이스 경로 사용: %s"
 
 #: src/database/init.py:67
 #, python-format
 msgid "System directory exists, using system database path: %s"
-msgstr ""
+msgstr "시스템 디렉터리 존재, 시스템 데이터베이스 경로 사용: %s"
 
 #: src/database/init.py:74
 #, python-format
 msgid "Falling back to local database path: %s"
-msgstr ""
+msgstr "로컬 데이터베이스 경로로 대체: %s"
 
 #: src/database/init.py:79
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
-msgstr ""
+msgstr "구성에서 데이터베이스 경로 가져오기 실패: %s, 로컬 대체 사용"
 
 #: src/database/init.py:146
 #, python-format
@@ -48,42 +49,42 @@ msgstr "펌웨어 업데이트 명령 실행 중: %s"
 #: src/database/init.py:163
 #, python-format
 msgid "Alembic %s completed successfully"
-msgstr ""
+msgstr "Alembic %s 성공적으로 완료"
 
 #: src/database/init.py:169
 #, python-format
 msgid "Alembic %s failed with return code %d"
-msgstr ""
+msgstr "Alembic %s 반환 코드 %d로 실패"
 
 #: src/database/init.py:178
 #, python-format
 msgid "Alembic %s timed out after 60 seconds"
-msgstr ""
+msgstr "Alembic %s 60초 후 시간 초과"
 
 #: src/database/init.py:181
 #, python-format
 msgid "Failed to run alembic %s: %s"
-msgstr ""
+msgstr "alembic %s 실행 실패: %s"
 
 #: src/database/init.py:208
 msgid "Database does not exist, creating new database"
-msgstr ""
+msgstr "데이터베이스가 없음, 새 데이터베이스 생성 중"
 
 #: src/database/init.py:210
 msgid "Database exists, checking for migrations"
-msgstr ""
+msgstr "데이터베이스 존재, 마이그레이션 확인 중"
 
 #: src/database/init.py:214
 msgid "Auto-migration is enabled"
-msgstr ""
+msgstr "자동 마이그레이션 활성화됨"
 
 #: src/database/init.py:218
 msgid "Failed to run database migrations"
-msgstr ""
+msgstr "데이터베이스 마이그레이션 실행 실패"
 
 #: src/database/init.py:221
 msgid "Auto-migration is disabled, skipping migrations"
-msgstr ""
+msgstr "자동 마이그레이션 비활성화, 마이그레이션 건너뜀"
 
 #: src/database/init.py:223
 msgid "Database initialized successfully"
@@ -142,21 +143,21 @@ msgstr "%d개의 멈춘 메시지 복구됨"
 #: src/database/queue_manager.py:534
 #, python-format
 msgid "Duplicate message detected: %s (status: %s)"
-msgstr ""
+msgstr "중복 메시지 감지됨: %s (상태: %s)"
 
 #: src/security/certificate_store.py:64
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
-msgstr ""
+msgstr "⚠️  {config_dir}에 접근 불가, {fallback_dir}로 대체"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:54
 #, python-format
 msgid "Detected antivirus: %s (enabled: %s)"
-msgstr ""
+msgstr "안티바이러스 감지됨: %s (활성: %s)"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:59
 msgid "No antivirus software detected"
-msgstr ""
+msgstr "안티바이러스 소프트웨어가 감지되지 않음"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:62
 #, python-format
@@ -171,7 +172,7 @@ msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:54
 #, python-format
 msgid "Collected %d certificates"
-msgstr ""
+msgstr "%d개의 인증서 수집됨"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:58
 #: src/sysmanage_agent/communication/data_collector.py:839
@@ -182,17 +183,17 @@ msgstr "파티션 감지 오류: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:232
 #, python-format
 msgid "Collected %d certificates from keychain: %s"
-msgstr ""
+msgstr "키체인에서 %d개의 인증서 수집됨: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:238
 #, python-format
 msgid "Failed to collect certificates from keychain %s: %s"
-msgstr ""
+msgstr "키체인 %s에서 인증서 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:272
 #, python-format
 msgid "Security command failed for keychain %s: %s"
-msgstr ""
+msgstr "키체인 %s에 대한 security 명령 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:283
 #, python-format
@@ -202,12 +203,12 @@ msgstr "ramdisk 작업 중 시간 초과: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Error extracting certificates from keychain %s: %s"
-msgstr ""
+msgstr "키체인 %s에서 인증서 추출 오류: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:351
 #, python-format
 msgid "OpenSSL failed to parse certificate: %s"
-msgstr ""
+msgstr "OpenSSL이 인증서 구문 분석 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:369
 #, python-format
@@ -222,12 +223,12 @@ msgstr "큐 메시지 %s 처리 중 오류 발생: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:407
 #, python-format
 msgid "Failed to scan certificate directory %s: %s"
-msgstr ""
+msgstr "인증서 디렉터리 %s 스캔 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:445
 #, python-format
 msgid "Failed to process certificate %s: %s"
-msgstr ""
+msgstr "인증서 %s 처리 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:473
 #, python-format
@@ -242,12 +243,12 @@ msgstr "파티션 감지 오류: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:498
 #, python-format
 msgid "Found %d certificates in store %s"
-msgstr ""
+msgstr "%d개의 인증서 발견됨, 저장소: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:502
 #, python-format
 msgid "No valid certificates found in store %s"
-msgstr ""
+msgstr "저장소 %s에서 유효한 인증서를 찾을 수 없음"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:513
 #, python-format
@@ -262,7 +263,7 @@ msgstr "ramdisk 작업 중 시간 초과: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:522
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr ""
+msgstr "Windows 인증서 저장소 %s 쿼리 실패: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:569
 #, python-format
@@ -282,27 +283,27 @@ msgstr "Failed to write %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
-msgstr ""
+msgstr "인증서 정보 추출 시간 초과: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:620
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
-msgstr ""
+msgstr "OpenSSL/LibreSSL 찾을 수 없음, 인증서 건너뜀: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:625
 #, python-format
 msgid "Error extracting certificate info from %s: %s"
-msgstr ""
+msgstr "%s에서 인증서 정보 추출 오류: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:695
 #, python-format
 msgid "Failed to parse %s date '%s': %s"
-msgstr ""
+msgstr "%s 날짜 '%s' 구문 분석 실패: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:41
 #, python-format
 msgid "Commercial antivirus detection not applicable for %s"
-msgstr ""
+msgstr "%s에 상용 안티바이러스 감지가 적용되지 않음"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:48
 #, python-format
@@ -311,7 +312,7 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:80
 msgid "Microsoft Defender service not detected or not running"
-msgstr ""
+msgstr "Microsoft Defender 서비스를 감지할 수 없거나 실행되지 않음"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:99
 #, python-format
@@ -321,7 +322,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:152
 #, python-format
 msgid "Detected Microsoft Defender (version: %s, enabled: %s)"
-msgstr ""
+msgstr "Microsoft Defender 감지됨 (버전: %s, 활성: %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:161
 #, python-format
@@ -330,7 +331,7 @@ msgstr "fwupd JSON 출력 파싱에 실패했습니다: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 msgid "Timeout while querying Microsoft Defender status"
-msgstr ""
+msgstr "Microsoft Defender 상태 쿼리 시간 초과"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 #, python-format
@@ -345,11 +346,11 @@ msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:211
 #, python-format
 msgid "Error parsing datetime %s: %s"
-msgstr ""
+msgstr "datetime %s 구문 분석 오류: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:263
 msgid "Microsoft Defender CLI (mdatp) not found on macOS"
-msgstr ""
+msgstr "macOS에서 Microsoft Defender CLI (mdatp)를 찾을 수 없음"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:275
 #, python-format
@@ -359,13 +360,14 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:320
 #, python-format
 msgid ""
-"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, "
-"licensed: %s)"
+"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+" licensed: %s)"
 msgstr ""
+"macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이선스: %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:331
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr ""
+msgstr "macOS에서 Microsoft Defender 상태 쿼리 시간 초과"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:336
 #, python-format
@@ -380,7 +382,7 @@ msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:382
 #, python-format
 msgid "Error parsing macOS datetime %s: %s"
-msgstr ""
+msgstr "macOS datetime %s 구문 분석 오류: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
@@ -418,7 +420,7 @@ msgstr "소프트웨어 인벤토리 수집 실패: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:167
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr ""
+msgstr "Linux CPU 정보 가져오기 실패: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:184
 #, python-format
@@ -566,7 +568,7 @@ msgstr "%s의 펌웨어 업데이트 적용 중 예외 발생: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:282
 #, python-format
 msgid "Applying Ubuntu release upgrade to: %s"
-msgstr ""
+msgstr "Ubuntu 릴리스 업그레이드 적용 중: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:307
 #, python-format
@@ -586,7 +588,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:368
 #, python-format
 msgid "Applying openSUSE release upgrade to: %s"
-msgstr ""
+msgstr "openSUSE 릴리스 업그레이드 적용 중: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:393
 #, python-format
@@ -654,7 +656,7 @@ msgstr "알 수 없는 디바이스"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:116
 msgid "Ubuntu Pro status check timed out"
-msgstr ""
+msgstr "Ubuntu Pro 상태 확인 시간 초과"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:121
 #, python-format
@@ -664,7 +666,7 @@ msgstr "Ubuntu Pro 분리 실패: %s"
 #: src/sysmanage_agent/collection/os_info_collection.py:143
 #, python-format
 msgid "Ubuntu Pro status collected: attached=%s, services=%d"
-msgstr ""
+msgstr "Ubuntu Pro 상태 수집됨: attached=%s, services=%d"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:150
 #, python-format
@@ -701,7 +703,7 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:194
 msgid "winget not found in any common location"
-msgstr ""
+msgstr "winget을 일반적인 위치에서 찾을 수 없음"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:270
 #, python-format
@@ -711,7 +713,7 @@ msgstr "%s의 펌웨어 업데이트에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/package_collector_base.py:300
 #, python-format
 msgid "Failed to get packages for %s: %s"
-msgstr ""
+msgstr "%s 패키지 가져오기 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:324
 #, python-format
@@ -731,7 +733,7 @@ msgstr "macOS 애플리케이션 수집 실패: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:33
 #, python-format
 msgid "Collected %d packages from pkg_info"
-msgstr ""
+msgstr "pkg_info에서 %d개의 패키지 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:35
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:129
@@ -742,7 +744,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:42
 #, python-format
 msgid "Collected %d packages from pkg"
-msgstr ""
+msgstr "pkg에서 %d개의 패키지 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:44
 #, python-format
@@ -752,7 +754,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:51
 #, python-format
 msgid "Collected %d packages from pkgin"
-msgstr ""
+msgstr "pkgin에서 %d개의 패키지 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:53
 #, python-format
@@ -761,11 +763,11 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:74
 msgid "Failed to get OpenBSD package list"
-msgstr ""
+msgstr "OpenBSD 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:90
 msgid "Failed to get pkg package list"
-msgstr ""
+msgstr "pkg 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:97
 #, python-format
@@ -774,7 +776,7 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:113
 msgid "Failed to get pkgin package list"
-msgstr ""
+msgstr "pkgin 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:120
 #, python-format
@@ -785,23 +787,23 @@ msgstr "apt 패키지 수집 실패: %s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
+msgstr "dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 dnf 래퍼)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:56
 #: src/sysmanage_agent/collection/package_collector_windows.py:51
 #, python-format
 msgid "Collected %d packages from %s"
-msgstr ""
+msgstr "%d개의 패키지 수집됨, 출처: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:59
 #: src/sysmanage_agent/collection/package_collector_windows.py:54
 #, python-format
 msgid "Failed to collect packages from %s: %s"
-msgstr ""
+msgstr "%s에서 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:82
 msgid "Failed to get APT package information"
-msgstr ""
+msgstr "APT 패키지 정보 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:89
 #, python-format
@@ -810,7 +812,7 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:104
 msgid "Failed to get YUM package list"
-msgstr ""
+msgstr "YUM 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:111
 #, python-format
@@ -819,16 +821,16 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:126
 msgid "Failed to get DNF package list"
-msgstr ""
+msgstr "DNF 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:135
 #, python-format
 msgid "Error collecting DNF packages: %s"
-msgstr ""
+msgstr "DNF 패키지 수집 오류: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:150
 msgid "Failed to get Zypper package list"
-msgstr ""
+msgstr "Zypper 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:157
 #, python-format
@@ -837,35 +839,35 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:172
 msgid "Failed to get Pacman package list"
-msgstr ""
+msgstr "Pacman 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:179
 #, python-format
 msgid "Error collecting Pacman packages: %s"
-msgstr ""
+msgstr "Pacman 패키지 수집 오류: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:195
 msgid "Failed to get Snap package list"
-msgstr ""
+msgstr "Snap 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:202
 #, python-format
 msgid "Error collecting Snap packages: %s"
-msgstr ""
+msgstr "Snap 패키지 수집 오류: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:217
 msgid "Failed to get Flatpak package list"
-msgstr ""
+msgstr "Flatpak 패키지 목록 가져오기 실패"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:224
 #, python-format
 msgid "Error collecting Flatpak packages: %s"
-msgstr ""
+msgstr "Flatpak 패키지 수집 오류: %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:29
 #, python-format
 msgid "Collected %d packages from Homebrew"
-msgstr ""
+msgstr "Homebrew에서 %d개의 패키지 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:31
 #: src/sysmanage_agent/collection/software_inventory_macos.py:151
@@ -875,35 +877,35 @@ msgstr "Homebrew 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:41
 msgid "Homebrew command not found"
-msgstr ""
+msgstr "Homebrew 명령을 찾을 수 없음"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:63
 #, python-format
 msgid "Collected %d Homebrew formulae"
-msgstr ""
+msgstr "%d개의 Homebrew formulae 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:82
 #, python-format
 msgid "Collected %d Homebrew casks"
-msgstr ""
+msgstr "%d개의 Homebrew casks 수집됨"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:87
 #, python-format
 msgid "Error collecting Homebrew packages: %s"
-msgstr ""
+msgstr "Homebrew 패키지 수집 오류: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:62
 msgid "Fetching winget catalog via REST API"
-msgstr ""
+msgstr "REST API를 통해 winget 카탈로그 가져오는 중"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
 #, python-format
 msgid "Successfully collected %d packages from winget REST API"
-msgstr ""
+msgstr "winget REST API에서 %d개의 패키지를 성공적으로 수집"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:74
 msgid "No packages collected from winget REST API"
-msgstr ""
+msgstr "winget REST API에서 패키지가 수집되지 않음"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:78
 #, python-format
@@ -913,20 +915,21 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:114
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
-msgstr ""
+msgstr "winget 페이지 %d 가져오기 오류 (현재까지 %d개의 패키지 수집): %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:166
 msgid "Fetching Chocolatey catalog via community repository API"
-msgstr ""
+msgstr "커뮤니티 저장소 API를 통해 Chocolatey 카탈로그 가져오는 중"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:174
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
-msgstr ""
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
+msgstr "Chocolatey 커뮤니티 저장소에서 %d개의 패키지를 성공적으로 수집"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:181
 msgid "No packages collected from Chocolatey community repository"
-msgstr ""
+msgstr "Chocolatey 커뮤니티 저장소에서 패키지가 수집되지 않음"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:186
 #, python-format
@@ -936,7 +939,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:212
 #, python-format
 msgid "Error fetching page at skip %d: %s"
-msgstr ""
+msgstr "skip %d에서 페이지 가져오기 오류: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:83
 #, python-format
@@ -946,17 +949,17 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:118
 #, python-format
 msgid "Successfully collected %s packages"
-msgstr ""
+msgstr "%s개의 패키지를 성공적으로 수집"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:122
 #, python-format
 msgid "No pkg_info output found. Return code: %d"
-msgstr ""
+msgstr "pkg_info 출력을 찾을 수 없음. 반환 코드: %d"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:126
 #, python-format
 msgid "pkg_info stderr: %s"
-msgstr ""
+msgstr "pkg_info stderr: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_collection.py:58
 #, python-format
@@ -1015,7 +1018,7 @@ msgstr "macOS 애플리케이션 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:332
 msgid "Failed to parse system_profiler JSON output"
-msgstr ""
+msgstr "system_profiler JSON 출력 구문 분석 실패"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:336
 #, python-format
@@ -1025,7 +1028,7 @@ msgstr "macOS 애플리케이션 수집 실패: %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:186
 #, python-format
 msgid "Collected %d programs from Windows Registry"
-msgstr ""
+msgstr "Windows 레지스트리에서 %d개의 프로그램 수집됨"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:200
 #, python-format
@@ -1035,7 +1038,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:265
 #, python-format
 msgid "Collected %d apps from Microsoft Store"
-msgstr ""
+msgstr "Microsoft Store에서 %d개의 앱 수집됨"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:277
 #, python-format
@@ -1044,7 +1047,7 @@ msgstr "fwupd JSON 출력 파싱에 실패했습니다: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:284
 msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-msgstr ""
+msgstr "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:287
 #, python-format
@@ -1066,7 +1069,7 @@ msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
-msgstr ""
+msgstr "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로그램)"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1078,7 +1081,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/operations/package_operations.py:227
 #, python-format
 msgid "Failed to install package %s: %s"
-msgstr ""
+msgstr "패키지 %s 설치 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_base.py:108
 #, python-format
@@ -1093,12 +1096,12 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "pkgin update failed (code %d): %s"
-msgstr ""
+msgstr "pkgin 업데이트 실패 (코드 %d): %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:178
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
-msgstr ""
+msgstr "pkgin list -u 실패 (코드 %d): %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:197
 #, python-format
@@ -1113,7 +1116,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:249
 #, python-format
 msgid "Applying OpenBSD upgrade: %s"
-msgstr ""
+msgstr "OpenBSD 업그레이드 적용 중: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
@@ -1123,11 +1126,11 @@ msgstr "펌웨어 업데이트 명령 실행 중: %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:268
 #, python-format
 msgid "Successfully applied OpenBSD upgrade: %s"
-msgstr ""
+msgstr "OpenBSD 업그레이드 성공적으로 적용됨: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:283
 msgid "OpenBSD upgrade failed"
-msgstr ""
+msgstr "OpenBSD 업그레이드 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:298
 msgid "OpenBSD upgrade timed out after 30 minutes"
@@ -1149,7 +1152,7 @@ msgstr "펌웨어 업데이트에 실패했습니다"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:410
 msgid "FreeBSD upgrade install failed"
-msgstr ""
+msgstr "FreeBSD 업그레이드 설치 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "FreeBSD upgrade timed out"
@@ -1158,17 +1161,17 @@ msgstr "삭제 작업 시간 초과"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:470
 #, python-format
 msgid "Found %d OpenBSD system patches (combined into single update)"
-msgstr ""
+msgstr "%d개의 OpenBSD 시스템 패치 발견 (단일 업데이트로 결합)"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:480
 #, python-format
 msgid "syspatch command failed with exit code %d"
-msgstr ""
+msgstr "syspatch 명령 종료 코드 %d로 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:483
 #, python-format
 msgid "syspatch stderr: %s"
-msgstr ""
+msgstr "syspatch stderr: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:486
 msgid "OpenBSD system update detection timed out"
@@ -1181,39 +1184,39 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:506
 msgid "Failed to get current OpenBSD version"
-msgstr ""
+msgstr "현재 OpenBSD 버전 가져오기 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 #, python-format
 msgid "Current OpenBSD version: %s"
-msgstr ""
+msgstr "현재 OpenBSD 버전: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:515
 msgid "Fetching https://www.openbsd.org/ to check for updates"
-msgstr ""
+msgstr "업데이트 확인을 위해 https://www.openbsd.org/ 가져오는 중"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:530
 #, python-format
 msgid "Latest OpenBSD version from website: %s"
-msgstr ""
+msgstr "웹사이트의 최신 OpenBSD 버전: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:536
 #, python-format
 msgid "OpenBSD upgrade available: %s -> %s"
-msgstr ""
+msgstr "OpenBSD 업그레이드 사용 가능: %s -> %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:554
 msgid "Added OpenBSD upgrade to available_updates list"
-msgstr ""
+msgstr "OpenBSD 업그레이드를 available_updates 목록에 추가"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:557
 #, python-format
 msgid "OpenBSD is up to date: %s"
-msgstr ""
+msgstr "OpenBSD이 최신 상태입니다: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:559
 msgid "Could not parse OpenBSD version from website"
-msgstr ""
+msgstr "웹사이트에서 OpenBSD 버전을 구문 분석할 수 없음"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
@@ -1232,28 +1235,28 @@ msgstr "apt 패키지 수집 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:625
 msgid "Calling _detect_openbsd_system_updates"
-msgstr ""
+msgstr "_detect_openbsd_system_updates 호출 중"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:628
 msgid "Calling _detect_openbsd_version_upgrades"
-msgstr ""
+msgstr "_detect_openbsd_version_upgrades 호출 중"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:633
 msgid "Calling _detect_freebsd_version_upgrades"
-msgstr ""
+msgstr "_detect_freebsd_version_upgrades 호출 중"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:645
 #, python-format
 msgid "=== BSD detect_updates finished, total updates: %d ==="
-msgstr ""
+msgstr "=== BSD detect_updates 완료, 총 업데이트: %d ==="
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:714
 msgid "Applying OpenBSD syspatch updates"
-msgstr ""
+msgstr "OpenBSD syspatch 업데이트 적용 중"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:744
 msgid "syspatch command failed"
-msgstr ""
+msgstr "syspatch 명령 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:746
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
@@ -1275,7 +1278,7 @@ msgstr "펌웨어 업데이트가 10분 후 타임아웃되었습니다"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:546
 #, python-format
 msgid "Applying updates for %d packages: %s"
-msgstr ""
+msgstr "%d개의 패키지에 업데이트 적용 중: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:908
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -1288,14 +1291,14 @@ msgstr "지원되지 않는 패키지 관리자: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:700
 #, python-format
 msgid "Applying %d updates using %s"
-msgstr ""
+msgstr "%d개의 업데이트 적용 중, 사용: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:958
 #: src/sysmanage_agent/collection/update_detection_linux.py:344
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:705
 #, python-format
 msgid "Update process completed: %d updated, %d failed"
-msgstr ""
+msgstr "업데이트 프로세스 완료: %d개 업데이트됨, %d개 실패"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:966
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:713
@@ -1316,7 +1319,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/update_detection_linux.py:323
 #, python-format
 msgid "Failed to apply %s updates: %s"
-msgstr ""
+msgstr "%s 업데이트 적용 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:367
 #, python-format
@@ -1326,11 +1329,11 @@ msgstr "지원되지 않는 패키지 관리자: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:161
 #, python-format
 msgid "Homebrew update failed: %s"
-msgstr ""
+msgstr "Homebrew 업데이트 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:209
 msgid "Failed to parse Homebrew JSON output"
-msgstr ""
+msgstr "Homebrew JSON 출력 구문 분석 실패"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:212
 #, python-format
@@ -1355,17 +1358,17 @@ msgstr "펌웨어 업데이트 명령 실행 중: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:397
 #, python-format
 msgid "Homebrew command completed. Return code: %d"
-msgstr ""
+msgstr "Homebrew 명령 완료. 반환 코드: %d"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:400
 #, python-format
 msgid "Homebrew stdout: %s"
-msgstr ""
+msgstr "Homebrew stdout: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:402
 #, python-format
 msgid "Homebrew stderr: %s"
-msgstr ""
+msgstr "Homebrew stderr: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:414
 #, python-format
@@ -1375,7 +1378,7 @@ msgstr "펌웨어 업데이트 성공: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:425
 #, python-format
 msgid "Failed to update package %s: %s"
-msgstr ""
+msgstr "패키지 %s 업데이트 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:444
 #, python-format
@@ -1408,17 +1411,17 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:62
 #, python-format
 msgid "Package '%s' update timed out after %d seconds. Partial output: %s"
-msgstr ""
+msgstr "패키지 '%s' 업데이트가 %d초 후 시간 초과. 부분 출력: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:79
 #, python-format
 msgid "Update still running for '%s' (%d seconds elapsed)"
-msgstr ""
+msgstr "'%s'에 대한 업데이트가 아직 실행 중 (%d초 경과)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:100
 #, python-format
 msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Winget 명령 결과: returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:108
 #, python-format
@@ -1429,12 +1432,12 @@ msgstr "펌웨어 업데이트 성공: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:234
 #, python-format
 msgid "Failed to update package '%s': %s"
-msgstr ""
+msgstr "패키지 '%s' 업데이트 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:144
 #, python-format
 msgid "Applying winget update for package '%s' (ID: %s)"
-msgstr ""
+msgstr "패키지 '%s'에 winget 업데이트 적용 중 (ID: %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:179
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
@@ -1450,35 +1453,35 @@ msgstr "디바이스용 펌웨어 업데이트 적용 중: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:210
 #, python-format
 msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Chocolatey 명령 결과: returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:347
 #, python-format
 msgid "Windows Update command result: returncode=%d, output='%s'"
-msgstr ""
+msgstr "Windows Update 명령 결과: returncode=%d, output='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
-msgstr ""
+msgstr "Windows Update 설치 실패"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:378
 #, python-format
 msgid "Failed to install Windows Update '%s': %s"
-msgstr ""
+msgstr "Windows Update '%s' 설치 실패: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:398
 #, python-format
 msgid "Applying Windows Update: %s (UpdateID: %s)"
-msgstr ""
+msgstr "Windows Update 적용 중: %s (UpdateID: %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:408
 msgid "Running Windows Update installation command"
-msgstr ""
+msgstr "Windows Update 설치 명령 실행 중"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:429
 #, python-format
 msgid "Windows Update '%s' timed out after 30 minutes"
-msgstr ""
+msgstr "Windows Update '%s' 30분 후 시간 초과"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
@@ -1496,7 +1499,7 @@ msgstr "디바이스용 펌웨어 업데이트 적용 중: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:466
 msgid "Running Windows upgrade command"
-msgstr ""
+msgstr "Windows 업그레이드 명령 실행 중"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:478
 #, python-format
@@ -1543,7 +1546,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:120
 #, python-format
 msgid "Windows Update detected: '%s' with UpdateID='%s'"
-msgstr ""
+msgstr "Windows Update 감지됨: '%s', UpdateID='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:129
 #, python-format
@@ -1569,15 +1572,15 @@ msgstr "apt 패키지 수집 실패: %s"
 msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
-msgstr ""
+msgstr "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있음"
 
 #: src/sysmanage_agent/communication/data_collector.py:810
 msgid "No certificates found on system"
-msgstr ""
+msgstr "시스템에서 인증서를 찾을 수 없음"
 
 #: src/sysmanage_agent/communication/data_collector.py:851
 msgid "No server roles detected on system"
-msgstr ""
+msgstr "시스템에서 서버 역할이 감지되지 않음"
 
 #: src/sysmanage_agent/communication/data_collector.py:885
 #, python-format
@@ -1590,7 +1593,7 @@ msgstr "메시지 큐 매니저가 초기화되었습니다"
 
 #: src/sysmanage_agent/communication/message_handler.py:847
 msgid "Cannot send message: not connected to server"
-msgstr ""
+msgstr "메시지를 보낼 수 없음: 서버에 연결되지 않음"
 
 #: src/sysmanage_agent/communication/message_handler.py:855
 #, python-format
@@ -1623,17 +1626,17 @@ msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 #: src/sysmanage_agent/core/agent_utils.py:59
 #, python-format
 msgid "Found %d available updates during periodic check"
-msgstr ""
+msgstr "주기적 확인 중 %d개의 사용 가능한 업데이트 발견"
 
 #: src/sysmanage_agent/core/agent_utils.py:64
 #, python-format
 msgid "Error during periodic update check: %s"
-msgstr ""
+msgstr "주기적 업데이트 확인 중 오류: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:92
 #, python-format
 msgid "Update checker error: %s"
-msgstr ""
+msgstr "업데이트 검사기 오류: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:128
 msgid "Package collection completed successfully"
@@ -1641,7 +1644,7 @@ msgstr "에이전트가 성공적으로 업데이트되었습니다"
 
 #: src/sysmanage_agent/core/agent_utils.py:130
 msgid "Package collection completed with some issues"
-msgstr ""
+msgstr "패키지 수집이 일부 문제와 함께 완료됨"
 
 #: src/sysmanage_agent/core/agent_utils.py:133
 #, python-format
@@ -1651,36 +1654,36 @@ msgstr "파티션 감지 오류: %s"
 #: src/sysmanage_agent/core/agent_utils.py:172
 #, python-format
 msgid "Package collection scheduler error: %s"
-msgstr ""
+msgstr "패키지 수집 스케줄러 오류: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:227
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr ""
+msgstr "상태 %s로 인증 실패: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:247
 #, python-format
 msgid "Received command: %s with parameters: %s"
-msgstr ""
+msgstr "명령 수신: %s, 매개변수: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:365
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
-msgstr ""
+msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
 #: src/sysmanage_agent/core/agent_utils.py:402
 msgid "Generic command missing nested command_type"
-msgstr ""
+msgstr "일반 명령에 중첩된 command_type 누락"
 
 #: src/sysmanage_agent/core/agent_utils.py:414
 #, python-format
 msgid "Unknown command type: %s"
-msgstr ""
+msgstr "알 수 없는 명령 유형: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
-msgstr ""
+msgstr "execution_id에 대한 스크립트 실행 결과가 큐에 추가됨: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:473
 #, python-format
@@ -1694,17 +1697,17 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:506
 msgid "No execution UUID provided, cannot track"
-msgstr ""
+msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
 #: src/sysmanage_agent/core/agent_utils.py:521
 #, python-format
 msgid "Execution UUID %s already exists in database"
-msgstr ""
+msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
 #: src/sysmanage_agent/core/agent_utils.py:540
 #, python-format
 msgid "Stored execution UUID %s for tracking"
-msgstr ""
+msgstr "추적을 위해 실행 UUID %s 저장됨"
 
 #: src/sysmanage_agent/core/agent_utils.py:546
 #, python-format
@@ -1769,33 +1772,33 @@ msgstr "%s 의 서비스 상태 오류: %s"
 #: src/sysmanage_agent/core/config.py:71
 #, python-format
 msgid "Configuration file '%s' not found. Expected locations: %s"
-msgstr ""
+msgstr "구성 파일 '%s'을(를) 찾을 수 없음. 예상 위치: %s"
 
 # Configuration
 #: src/sysmanage_agent/core/config.py:80
 #, python-format
 msgid "Invalid YAML in configuration file: %s"
-msgstr ""
+msgstr "구성 파일의 유효하지 않은 YAML: %s"
 
 #: src/sysmanage_agent/core/config.py:84
 #, python-format
 msgid "Failed to load configuration file: %s"
-msgstr ""
+msgstr "구성 파일 로드 실패: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:39
 #, python-format
 msgid "Starting diagnostics collection for ID: %s"
-msgstr ""
+msgstr "ID에 대한 진단 수집 시작: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:41
 #, python-format
 msgid "Collection types requested: %s"
-msgstr ""
+msgstr "요청된 수집 유형: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:66
 #, python-format
 msgid "Diagnostics collection completed for ID: %s"
-msgstr ""
+msgstr "ID에 대한 진단 수집 완료: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:76
 #, python-format
@@ -1805,22 +1808,22 @@ msgstr "apt 패키지 수집 실패: %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:122
 #, python-format
 msgid "Unknown collection type: %s"
-msgstr ""
+msgstr "알 수 없는 수집 유형: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:136
 #, python-format
 msgid "Starting collection %d/%d: %s"
-msgstr ""
+msgstr "수집 %d/%d 시작: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:149
 #, python-format
 msgid "Completed collection of %s in %.2f seconds"
-msgstr ""
+msgstr "%s 수집을 %.2f초 만에 완료"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:157
 #, python-format
 msgid "Failed to collect %s after %.2f seconds: %s"
-msgstr ""
+msgstr "%s 수집 실패 (%.2f초 후): %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:240
 #, python-format
@@ -1836,7 +1839,7 @@ msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:431
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr ""
+msgstr "구성 파일 수집 오류: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:551
 #, python-format
@@ -1856,7 +1859,7 @@ msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:725
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr ""
+msgstr "환경 변수 수집 오류: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:756
 #, python-format
@@ -1870,7 +1873,7 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:38
 msgid "Homebrew is not installed"
-msgstr ""
+msgstr "Homebrew이 설치되지 않음"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:66
 #, python-format
@@ -1879,7 +1882,7 @@ msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:77
 msgid "Invalid tap format. Use 'user/repo' format"
-msgstr ""
+msgstr "잘못된 tap 형식. 'user/repo' 형식을 사용하세요"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:97
 msgid "Tap added successfully"
@@ -1905,11 +1908,11 @@ msgstr "큐 프로세서에서 오류 발생: %s"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:437
 #, python-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "%s 읽기 오류: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:176
 msgid "Repository URL is required for FreeBSD pkg"
-msgstr ""
+msgstr "FreeBSD pkg에는 저장소 URL이 필요함"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:206
 #: src/sysmanage_agent/operations/windows_repository_operations.py:161
@@ -1928,7 +1931,7 @@ msgstr "기본 네트워크 설정 중 오류: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:268
 msgid "Repository URL is required for NetBSD pkgsrc"
-msgstr ""
+msgstr "NetBSD pkgsrc에는 저장소 URL이 필요함"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:277
 #, python-format
@@ -1956,7 +1959,7 @@ msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."
 
 #: src/sysmanage_agent/operations/generic_deployment.py:133
 msgid "No files provided"
-msgstr ""
+msgstr "파일이 제공되지 않음"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:470
 msgid "No steps provided"
@@ -1965,28 +1968,28 @@ msgstr "사용자 프로필을 찾을 수 없습니다"
 #: src/sysmanage_agent/operations/generic_deployment.py:507
 #, python-format
 msgid "Unknown step type: %s"
-msgstr ""
+msgstr "알 수 없는 단계 유형: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:579
 msgid "Empty shell command"
-msgstr ""
+msgstr "빈 셸 명령"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:619
 msgid "Empty wait_condition command"
-msgstr ""
+msgstr "빈 wait_condition 명령"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:879
 msgid "no argv"
-msgstr ""
+msgstr "argv 없음"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:904
 #, python-format
 msgid "FileNotFoundError: %s"
-msgstr ""
+msgstr "FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:953
 msgid "timeout"
-msgstr ""
+msgstr "시간 초과"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -1994,7 +1997,7 @@ msgstr "호스트 이름은 필수입니다"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "Invalid hostname format"
-msgstr "잘못된 메모리 형식: {value}"
+msgstr "잘못된 호스트 이름 형식"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:73
 #, python-format
@@ -2009,7 +2012,7 @@ msgstr "소프트웨어 인벤토리 수집 실패: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:120
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr ""
+msgstr "hostnamectl 실패, 수동 호스트 이름 변경 시도: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:134
 #: src/sysmanage_agent/operations/hostname_operations.py:140
@@ -2040,7 +2043,7 @@ msgstr "HTTP 서버 중지 실패: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:218
 #, python-format
 msgid "Changing Windows hostname to: %s"
-msgstr ""
+msgstr "Windows 호스트 이름 변경 중: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:231
 #, python-format
@@ -2051,7 +2054,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr ""
+msgstr "호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:250
 #, python-format
@@ -2061,7 +2064,7 @@ msgstr "FreeBSD sda4 사용: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:272
 #, python-format
 msgid "sysrc failed, trying sed: %s"
-msgstr ""
+msgstr "sysrc 실패, sed 시도: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:287
 #, python-format
@@ -2071,7 +2074,7 @@ msgstr "에이전트 업데이트 실패: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:303
 #, python-format
 msgid "Changing BSD hostname to: %s"
-msgstr ""
+msgstr "BSD 호스트 이름 변경 중: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:326
 #: src/sysmanage_agent/operations/hostname_operations.py:332
@@ -2145,7 +2148,7 @@ msgstr "기본 네트워크 설정 중 오류: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:618
 msgid "Repository URL is required for Zypper"
-msgstr ""
+msgstr "Zypper에는 저장소 URL이 필요함"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:653
 #, python-format
@@ -2169,14 +2172,14 @@ msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:43
 msgid "No Grafana URL provided for OpenTelemetry deployment"
-msgstr ""
+msgstr "OpenTelemetry 배포를 위한 Grafana URL이 제공되지 않음"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:67
 #, python-format
 msgid ""
 "OpenTelemetry deployment on %s is not currently supported. Manual "
 "installation required."
-msgstr ""
+msgstr "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니다."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:78
 #, python-format
@@ -2211,7 +2214,7 @@ msgstr "기본 네트워크 설정 중 오류: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:260
 msgid "Stopping OpenTelemetry service..."
-msgstr ""
+msgstr "OpenTelemetry 서비스 중지 중..."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:279
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:282
@@ -2256,7 +2259,7 @@ msgstr "사용자 이름은 필수입니다"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:352
 #, python-format
 msgid "Connecting OpenTelemetry to Grafana at %s"
-msgstr ""
+msgstr "%s에서 OpenTelemetry를 Grafana에 연결 중"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:357
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:360
@@ -2266,23 +2269,23 @@ msgstr "서버에 성공적으로 연결되었습니다"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:365
 #, python-format
 msgid "Error connecting OpenTelemetry to Grafana: %s"
-msgstr ""
+msgstr "OpenTelemetry를 Grafana에 연결하는 중 오류: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:378
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:382
 msgid "OpenTelemetry disconnected from Grafana successfully"
-msgstr ""
+msgstr "OpenTelemetry가 Grafana에서 성공적으로 연결 해제됨"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:388
 #, python-format
 msgid "Error disconnecting OpenTelemetry from Grafana: %s"
-msgstr ""
+msgstr "OpenTelemetry를 Grafana에서 연결 해제하는 중 오류: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:400
 #: src/sysmanage_agent/operations/otel_base.py:149
 #: src/sysmanage_agent/operations/system_control.py:35
 msgid "No command specified"
-msgstr ""
+msgstr "명령이 지정되지 않음"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:45
 #, python-format
@@ -2300,15 +2303,15 @@ msgstr "libvirt 패키지 설치 실패: %s"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:312
 msgid "BSDOtelDeployer should not be called directly"
-msgstr ""
+msgstr "BSDOtelDeployer는 직접 호출되어서는 안 됩니다"
 
 #: src/sysmanage_agent/operations/otel_deploy_linux.py:37
 msgid "No supported package manager found (apt/yum/dnf)"
-msgstr ""
+msgstr "지원되는 패키지 관리자를 찾을 수 없음 (apt/yum/dnf)"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:170
 msgid "No supported package manager found"
-msgstr ""
+msgstr "지원되는 패키지 관리자를 찾을 수 없음"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:196
 #, python-format
@@ -2317,7 +2320,7 @@ msgstr "libvirt 패키지 설치 실패: %s"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:214
 msgid "Failed to download OpenTelemetry package"
-msgstr ""
+msgstr "OpenTelemetry 패키지 다운로드 실패"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:297
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:367
@@ -2338,7 +2341,7 @@ msgstr "CPU는 최소 1개 이상이어야 합니다"
 #: src/sysmanage_agent/operations/package_compliance_operations.py:86
 #, python-format
 msgid "package inventory collection failed: %s"
-msgstr ""
+msgstr "패키지 인벤토리 수집 실패: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:50
 #, python-format
@@ -2352,17 +2355,17 @@ msgstr "자동 설치 작업 디렉토리 정리 실패: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:103
 msgid "Skipping package with no name"
-msgstr ""
+msgstr "이름이 없는 패키지 건너뜀"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:104
 #: src/sysmanage_agent/operations/package_operations.py:56
 msgid "No package name"
-msgstr ""
+msgstr "패키지 이름 없음"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:214
 #, python-format
 msgid "Installing package: %s"
-msgstr ""
+msgstr "패키지 설치 중: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:99
 msgid "Package manager name is required"
@@ -2371,7 +2374,7 @@ msgstr "사용자 이름은 필수입니다"
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 #, python-format
 msgid "Enabling package manager '%s' for OS '%s'"
-msgstr ""
+msgstr "OS '%s'에 대한 패키지 관리자 '%s' 활성화 중"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:110
 msgid "Enabling package managers requires privileged mode"
@@ -2385,7 +2388,7 @@ msgstr "지원되지 않는 패키지 관리자: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:133
 #, python-format
 msgid "Error enabling package manager '%s': %s"
-msgstr ""
+msgstr "패키지 관리자 '%s' 활성화 오류: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:145
 msgid "Flatpak is only supported on Linux systems"
@@ -2405,11 +2408,11 @@ msgstr "지원되지 않는 패키지 관리자: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:207
 #, python-format
 msgid "%s installed successfully"
-msgstr ""
+msgstr "%s 성공적으로 설치됨"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:239
 msgid "Flathub repository added"
-msgstr ""
+msgstr "Flathub 저장소 추가됨"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:241
 #, python-format
@@ -2437,10 +2440,12 @@ msgstr "KVM이 이미 초기화되었습니다"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
+"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -2474,30 +2479,30 @@ msgstr "libvirt 패키지가 성공적으로 설치되었습니다"
 #: src/sysmanage_agent/operations/package_operations.py:117
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
-msgstr ""
+msgstr "%s 패키지 관리자에 대한 제거가 구현되지 않음"
 
 #: src/sysmanage_agent/operations/package_operations.py:169
 msgid "No package name specified"
-msgstr ""
+msgstr "패키지 이름이 지정되지 않음"
 
 #: src/sysmanage_agent/operations/package_operations.py:172
 #, python-format
 msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-msgstr ""
+msgstr "패키지 %s 설치 중 (installation_id: %s, requested_by: %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:259
 #: src/sysmanage_agent/operations/package_operations.py:367
 msgid "No request_id specified"
-msgstr ""
+msgstr "request_id가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/package_operations.py:264
 msgid "No packages specified for installation"
-msgstr ""
+msgstr "설치할 패키지가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/package_operations.py:268
 #, python-format
 msgid "Installing %d packages for request %s (requested_by: %s)"
-msgstr ""
+msgstr "%d개의 패키지 설치 중, 요청 %s (requested_by: %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:343
 #, python-format
@@ -2506,7 +2511,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:372
 msgid "No packages specified for uninstallation"
-msgstr ""
+msgstr "제거할 패키지가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/package_operations.py:478
 msgid "No packages to install"
@@ -2520,7 +2525,7 @@ msgstr "자동 설치 디렉토리 생성됨: %s"
 #: src/sysmanage_agent/operations/package_operations.py:532
 #, python-format
 msgid "Exception during apt-get install: %s"
-msgstr ""
+msgstr "apt-get install 중 예외: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:539
 msgid "No packages to uninstall"
@@ -2534,12 +2539,12 @@ msgstr "fwupd get-updates가 실패했습니다: %s"
 #: src/sysmanage_agent/operations/package_operations.py:578
 #, python-format
 msgid "Exception during apt-get remove: %s"
-msgstr ""
+msgstr "apt-get remove 중 예외: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:614
 #, python-format
 msgid "Queued installation completion for request %s"
-msgstr ""
+msgstr "요청 %s에 대한 설치 완료가 큐에 추가됨"
 
 #: src/sysmanage_agent/operations/package_operations.py:619
 #, python-format
@@ -2554,7 +2559,7 @@ msgstr "파티션 감지 오류: %s"
 #: src/sysmanage_agent/operations/package_operations.py:673
 #, python-format
 msgid "Sent package installation status update: %s for %s"
-msgstr ""
+msgstr "패키지 설치 상태 업데이트 전송됨: %s (%s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:680
 #, python-format
@@ -2575,7 +2580,7 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:85
 msgid "Listing third-party repositories"
-msgstr ""
+msgstr "타사 저장소 목록 표시 중"
 
 #: src/sysmanage_agent/operations/repository_operations.py:99
 #, python-format
@@ -2585,7 +2590,7 @@ msgstr "파티션 감지 오류: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:117
 #, python-format
 msgid "Error detecting Linux distribution: %s"
-msgstr ""
+msgstr "Linux 배포판 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:179
 msgid "Repository identifier is required"
@@ -2598,17 +2603,17 @@ msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:229
 msgid "No repositories specified for deletion"
-msgstr ""
+msgstr "삭제할 저장소가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 #, python-format
 msgid "Deleting %d third-party repositories"
-msgstr ""
+msgstr "%d개의 타사 저장소 삭제 중"
 
 #: src/sysmanage_agent/operations/repository_operations.py:260
 #, python-format
 msgid "Deleted %d of %d repositories"
-msgstr ""
+msgstr "%d / %d 저장소 삭제됨"
 
 #: src/sysmanage_agent/operations/repository_operations.py:265
 #, python-format
@@ -2617,17 +2622,17 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:293
 msgid "No repositories specified for enabling"
-msgstr ""
+msgstr "활성화할 저장소가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/repository_operations.py:297
 #, python-format
 msgid "Enabling %d third-party repositories"
-msgstr ""
+msgstr "%d개의 타사 저장소 활성화 중"
 
 #: src/sysmanage_agent/operations/repository_operations.py:325
 #, python-format
 msgid "Enabled %d of %d repositories"
-msgstr ""
+msgstr "%d / %d 저장소 활성화됨"
 
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
@@ -2636,17 +2641,17 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
-msgstr ""
+msgstr "비활성화할 저장소가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/repository_operations.py:362
 #, python-format
 msgid "Disabling %d third-party repositories"
-msgstr ""
+msgstr "%d개의 타사 저장소 비활성화 중"
 
 #: src/sysmanage_agent/operations/repository_operations.py:390
 #, python-format
 msgid "Disabled %d of %d repositories"
-msgstr ""
+msgstr "%d / %d 저장소 비활성화됨"
 
 #: src/sysmanage_agent/operations/repository_operations.py:395
 #, python-format
@@ -2660,7 +2665,7 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:66
 msgid "Missing required parameter 'script_content'"
-msgstr ""
+msgstr "필수 매개변수 'script_content' 누락"
 
 #: src/sysmanage_agent/operations/script_operations.py:75
 #, python-format
@@ -2669,7 +2674,7 @@ msgstr "%d초 후 명령이 시간 초과되었습니다"
 
 #: src/sysmanage_agent/operations/script_operations.py:90
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
-msgstr ""
+msgstr "에이전트가 apply_deployment_plan을 노출하지 않음; 업그레이드 필요"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 #, python-format
@@ -2693,25 +2698,25 @@ msgstr "에이전트 업데이트 실패: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:146
 msgid "No service name specified"
-msgstr ""
+msgstr "서비스 이름이 지정되지 않음"
 
 #: src/sysmanage_agent/operations/system_control.py:155
 #, python-format
 msgid "Failed to restart service %s: %s"
-msgstr ""
+msgstr "서비스 %s 재시작 실패: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:176
 msgid "System reboot scheduled in 1 minute"
-msgstr ""
+msgstr "1분 후 시스템 재부팅 예정"
 
 #: src/sysmanage_agent/operations/system_control.py:180
 #, python-format
 msgid "Failed to reboot system: %s"
-msgstr ""
+msgstr "시스템 재부팅 실패: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:200
 msgid "System shutdown scheduled in 1 minute"
-msgstr ""
+msgstr "1분 후 시스템 종료 예정"
 
 #: src/sysmanage_agent/operations/system_control.py:204
 #, python-format
@@ -2804,24 +2809,24 @@ msgstr "사용자 이름은 필수입니다"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:110
 #, python-format
 msgid "Enabling Ubuntu Pro service: %s"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 활성화 중: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:128
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 성공적으로 활성화됨"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:134
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:140
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 활성화 실패: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:146
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 활성화 오류: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:160
 #, python-format
@@ -2832,18 +2837,18 @@ msgstr "서비스 상태 확인 중: %s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:178
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 성공적으로 비활성화됨"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:184
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:190
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 비활성화 실패: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:196
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ubuntu Pro 서비스 %s 비활성화 오류: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
 msgid "Updated OS information sent to server after Ubuntu Pro change"
@@ -2866,7 +2871,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:90
 msgid "No packages specified for update"
-msgstr ""
+msgstr "업데이트할 패키지가 지정되지 않음"
 
 #: src/sysmanage_agent/operations/update_operations.py:103
 msgid "Updates started in background"
@@ -2880,7 +2885,7 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 #: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-msgstr ""
+msgstr "업데이트 요청 수신: package='%s', manager='%s', bundle_id='%s'"
 
 #: src/sysmanage_agent/operations/update_operations.py:149
 #, python-format
@@ -2890,13 +2895,13 @@ msgstr "감지된 패키지 매니저: %s"
 #: src/sysmanage_agent/operations/update_operations.py:172
 #, python-format
 msgid "Using detected package manager '%s' for %s"
-msgstr ""
+msgstr "%s에 감지된 패키지 관리자 '%s' 사용"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:181
 #, python-format
 msgid "Could not determine package manager for %s"
-msgstr ""
+msgstr "%s에 대한 패키지 관리자를 확인할 수 없음"
 
 #: src/sysmanage_agent/operations/update_operations.py:194
 msgid "Failed to send update results, will retry..."
@@ -2910,20 +2915,20 @@ msgstr "업데이트 결과 전송을 위한 재연결 대기 중 (시도 %d/%d)
 #: src/sysmanage_agent/operations/update_operations.py:206
 #, python-format
 msgid "Failed to send update results after %d attempts"
-msgstr ""
+msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
 #: src/sysmanage_agent/operations/update_operations.py:212
 msgid "Rescanning for available updates after batch completion"
-msgstr ""
+msgstr "배치 완료 후 사용 가능한 업데이트 재스캔 중"
 
 #: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Post-update scan completed: %d updates remaining"
-msgstr ""
+msgstr "업데이트 후 스캔 완료: %d개의 업데이트 남음"
 
 #: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
-msgstr ""
+msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
 #: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
@@ -2931,7 +2936,7 @@ msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
 #: src/sysmanage_agent/operations/update_operations.py:270
 msgid "Background update process completed"
-msgstr ""
+msgstr "백그라운드 업데이트 프로세스 완료"
 
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
@@ -2946,7 +2951,7 @@ msgstr "fwupd get-updates가 실패했습니다: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:14
 #, python-format
 msgid "User %s and default group deleted successfully"
-msgstr ""
+msgstr "사용자 %s 및 기본 그룹 성공적으로 삭제됨"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:119
@@ -2971,22 +2976,22 @@ msgstr "Bridged network '%s' created successfully"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:398
 msgid "Password is required for Windows user creation"
-msgstr ""
+msgstr "Windows 사용자 생성에 비밀번호가 필요함"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:618
 #, python-format
 msgid "User %s deleted successfully"
-msgstr ""
+msgstr "사용자 %s 성공적으로 삭제됨"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:638
 #, python-format
 msgid "Group %s deleted successfully"
-msgstr ""
+msgstr "그룹 %s 성공적으로 삭제됨"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:767
 #, python-format
 msgid "Successfully executed: %s"
-msgstr ""
+msgstr "성공적으로 실행됨: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:35
 #, python-format
@@ -2995,16 +3000,16 @@ msgstr "Error creating bridged network: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:137
 msgid "Repository URL is required for Windows repositories"
-msgstr ""
+msgstr "Windows 저장소에는 저장소 URL이 필요함"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:143
 msgid "Repository type must be 'chocolatey' or 'winget'"
-msgstr ""
+msgstr "저장소 유형은 'chocolatey' 또는 'winget'이어야 함"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:172
 #, python-format
 msgid "Failed to add repository: %s"
-msgstr ""
+msgstr "저장소 추가 실패: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:178
 #, python-format
@@ -3013,68 +3018,68 @@ msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 
 #: src/sysmanage_agent/registration/client_registration.py:34
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
-msgstr ""
+msgstr "⚠️  경고: aiohttp 사용 불가, 등록이 건너뜀"
 
 #: src/sysmanage_agent/registration/discovery.py:70
 #, python-format
 msgid "Discovered %s SysManage server(s)"
-msgstr ""
+msgstr "%s개의 SysManage 서버 발견됨"
 
 #: src/sysmanage_agent/registration/discovery.py:72
 msgid "No SysManage servers discovered on the network"
-msgstr ""
+msgstr "네트워크에서 SysManage 서버를 찾을 수 없음"
 
 #: src/sysmanage_agent/registration/discovery.py:117
 #, python-format
 msgid "Server discovered at %s"
-msgstr ""
+msgstr "%s에서 서버 발견됨"
 
 #: src/sysmanage_agent/registration/discovery.py:121
 msgid "Invalid JSON response from unknown source"
-msgstr ""
+msgstr "알 수 없는 출처에서 유효하지 않은 JSON 응답"
 
 #: src/sysmanage_agent/registration/discovery.py:156
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr ""
+msgstr "브로드캐스트 검색 중 오류: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:205
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
+msgstr "%s에서 서버 공지 수신"
 
 #: src/sysmanage_agent/registration/discovery.py:210
 msgid "Invalid JSON announcement from unknown source"
-msgstr ""
+msgstr "알 수 없는 출처에서 유효하지 않은 JSON 공지"
 
 #: src/sysmanage_agent/registration/discovery.py:218
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr ""
+msgstr "공지 수신 중 오류: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:272
 #, python-format
 msgid "Selected server at %s (score: %s)"
-msgstr ""
+msgstr "%s에서 서버 선택됨 (점수: %s)"
 
 #: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Received registration success notification from server"
-msgstr ""
+msgstr "서버로부터 등록 성공 알림 수신"
 
 #: src/sysmanage_agent/registration/registration_manager.py:205
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr ""
+msgstr "등록 성공 알림 처리 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:217
 #, python-format
 msgid "Received host approval notification: host_id=%s, status=%s"
-msgstr ""
+msgstr "호스트 승인 알림 수신: host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:226
 #, python-format
 msgid "Host approval information stored successfully. Host ID: %s"
-msgstr ""
+msgstr "호스트 승인 정보 성공적으로 저장됨. Host ID: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:238
 #, python-format
@@ -3090,17 +3095,17 @@ msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:283
 #, python-format
 msgid "Deleted %d old host approval record(s) before storing new approval"
-msgstr ""
+msgstr "새 승인을 저장하기 전에 %d개의 이전 호스트 승인 레코드 삭제됨"
 
 #: src/sysmanage_agent/registration/registration_manager.py:306
 #, python-format
 msgid "Host approval record stored in database: host_id=%s, status=%s"
-msgstr ""
+msgstr "호스트 승인 레코드가 데이터베이스에 저장됨: host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:315
 #, python-format
 msgid "Error storing host approval in database: %s"
-msgstr ""
+msgstr "데이터베이스에 호스트 승인 저장 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:347
 #, python-format
@@ -3110,12 +3115,12 @@ msgstr "Error creating bridged network: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:379
 #: src/sysmanage_agent/registration/registration_manager.py:436
 msgid "Error retrieving stored credentials"
-msgstr ""
+msgstr "저장된 자격 증명 검색 오류"
 
 #: src/sysmanage_agent/registration/registration_manager.py:408
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
-msgstr ""
+msgstr "저장된 host_id를 동기적으로 검색하는 중 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:461
 #, python-format
@@ -3124,11 +3129,11 @@ msgstr "Ubuntu Pro 분리 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:491
 msgid "Host approval records and related data cleared from database"
-msgstr ""
+msgstr "호스트 승인 레코드 및 관련 데이터가 데이터베이스에서 지워짐"
 
 #: src/sysmanage_agent/registration/registration_manager.py:500
 msgid "Continuing despite cleanup error..."
-msgstr ""
+msgstr "정리 오류에도 불구하고 계속 진행..."
 
 #~ msgid "Starting antivirus detection"
 #~ msgstr "libvirtd 서비스 시작 중"
@@ -3280,9 +3285,7 @@ msgstr ""
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정"
-#~ "도 소요될 수 있습니다."
+#~ msgstr "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정도 소요될 수 있습니다."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "자동 설치 HTTP 요청: %s에서 %s"
@@ -3412,8 +3415,7 @@ msgstr ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU "
-#~ "가상화가 활성화되어 있는지 확인하세요."
+#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU 가상화가 활성화되어 있는지 확인하세요."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM이 이미 초기화되어 사용할 준비가 되었습니다"
@@ -3523,8 +3525,7 @@ msgstr ""
 #~ msgstr "중첩 가상화가 활성화된 상태로 KVM 커널 모듈이 로드되었습니다"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
-#~ msgstr ""
-#~ " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
+#~ msgstr " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -3575,12 +3576,10 @@ msgstr ""
 
 # libguestfs-tools (guestmount) support
 #~ msgid "guestmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "guestunmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "Found FreeBSD root: %s"
 #~ msgstr "FreeBSD 루트 발견: %s"
@@ -3601,8 +3600,7 @@ msgstr ""
 #~ msgstr "FreeBSD 표준 루트 기본값: /dev/sda4"
 
 #~ msgid "Cannot send virtualization status update: host not approved"
-#~ msgstr ""
-#~ "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
+#~ msgstr "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr "가상화 상태 업데이트가 서버로 전송 대기열에 추가되었습니다"

@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
@@ -9,36 +10,41 @@ msgstr ""
 #, python-format
 msgid "Using database path from SYSMANAGE_DB_PATH: %s"
 msgstr ""
+"Utilisation du chemin de base de données depuis SYSMANAGE_DB_PATH : %s"
 
 #: src/database/init.py:47
 #, python-format
 msgid "Using configured database path: %s"
-msgstr ""
+msgstr "Utilisation du chemin de base de données configuré : %s"
 
 #: src/database/init.py:53
 #, python-format
 msgid "Using configured relative database path: %s"
-msgstr ""
+msgstr "Utilisation du chemin relatif de base de données configuré : %s"
 
 #: src/database/init.py:59
 #, python-format
 msgid "Using system database path: %s"
-msgstr ""
+msgstr "Utilisation du chemin de base de données système : %s"
 
 #: src/database/init.py:67
 #, python-format
 msgid "System directory exists, using system database path: %s"
 msgstr ""
+"Le répertoire système existe, utilisation du chemin de base de données "
+"système : %s"
 
 #: src/database/init.py:74
 #, python-format
 msgid "Falling back to local database path: %s"
-msgstr ""
+msgstr "Repli sur le chemin de base de données local : %s"
 
 #: src/database/init.py:79
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr ""
+"Échec de l'obtention du chemin de BD depuis la config : %s, utilisation du "
+"repli local"
 
 #: src/database/init.py:146
 #, python-format
@@ -48,30 +54,31 @@ msgstr "Exécution de la commande de mise à jour du firmware : %s"
 #: src/database/init.py:163
 #, python-format
 msgid "Alembic %s completed successfully"
-msgstr ""
+msgstr "Alembic %s terminé avec succès"
 
 #: src/database/init.py:169
 #, python-format
 msgid "Alembic %s failed with return code %d"
-msgstr ""
+msgstr "Alembic %s a échoué avec le code de retour %d"
 
 #: src/database/init.py:178
 #, python-format
 msgid "Alembic %s timed out after 60 seconds"
-msgstr ""
+msgstr "Alembic %s a expiré après 60 secondes"
 
 #: src/database/init.py:181
 #, python-format
 msgid "Failed to run alembic %s: %s"
-msgstr ""
+msgstr "Échec de l'exécution d'alembic %s : %s"
 
 #: src/database/init.py:208
 msgid "Database does not exist, creating new database"
 msgstr ""
+"La base de données n'existe pas, création d'une nouvelle base de données"
 
 #: src/database/init.py:210
 msgid "Database exists, checking for migrations"
-msgstr ""
+msgstr "La base de données existe, vérification des migrations"
 
 #: src/database/init.py:214
 msgid "Auto-migration is enabled"
@@ -79,11 +86,11 @@ msgstr "Échec de l'authentification"
 
 #: src/database/init.py:218
 msgid "Failed to run database migrations"
-msgstr ""
+msgstr "Échec de l'exécution des migrations de base de données"
 
 #: src/database/init.py:221
 msgid "Auto-migration is disabled, skipping migrations"
-msgstr ""
+msgstr "Migration automatique désactivée, migrations ignorées"
 
 #: src/database/init.py:223
 msgid "Database initialized successfully"
@@ -147,21 +154,21 @@ msgstr "%d messages bloqués récupérés"
 #: src/database/queue_manager.py:534
 #, python-format
 msgid "Duplicate message detected: %s (status: %s)"
-msgstr ""
+msgstr "Message en double détecté : %s (statut : %s)"
 
 #: src/security/certificate_store.py:64
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
-msgstr ""
+msgstr "⚠️  Impossible d'accéder à {config_dir}, repli sur {fallback_dir}"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:54
 #, python-format
 msgid "Detected antivirus: %s (enabled: %s)"
-msgstr ""
+msgstr "Antivirus détecté : %s (activé : %s)"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:59
 msgid "No antivirus software detected"
-msgstr ""
+msgstr "Aucun logiciel antivirus détecté"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:62
 #, python-format
@@ -176,7 +183,7 @@ msgstr "Plateforme non prise en charge pour l'inventaire logiciel : %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:54
 #, python-format
 msgid "Collected %d certificates"
-msgstr ""
+msgstr "%d certificats collectés"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:58
 #: src/sysmanage_agent/communication/data_collector.py:839
@@ -187,17 +194,17 @@ msgstr "Erreur de détection des partitions: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:232
 #, python-format
 msgid "Collected %d certificates from keychain: %s"
-msgstr ""
+msgstr "%d certificats collectés depuis le trousseau : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:238
 #, python-format
 msgid "Failed to collect certificates from keychain %s: %s"
-msgstr ""
+msgstr "Échec de la collecte des certificats depuis le trousseau %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:272
 #, python-format
 msgid "Security command failed for keychain %s: %s"
-msgstr ""
+msgstr "Échec de la commande security pour le trousseau %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:283
 #, python-format
@@ -207,12 +214,12 @@ msgstr "Délai d'attente dépassé lors des opérations ramdisk : %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Error extracting certificates from keychain %s: %s"
-msgstr ""
+msgstr "Erreur lors de l'extraction des certificats du trousseau %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:351
 #, python-format
 msgid "OpenSSL failed to parse certificate: %s"
-msgstr ""
+msgstr "Échec de l'analyse du certificat par OpenSSL : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:369
 #, python-format
@@ -227,12 +234,12 @@ msgstr "Erreur lors du traitement du message en file d'attente %s : %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:407
 #, python-format
 msgid "Failed to scan certificate directory %s: %s"
-msgstr ""
+msgstr "Échec du scan du répertoire de certificats %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:445
 #, python-format
 msgid "Failed to process certificate %s: %s"
-msgstr ""
+msgstr "Échec du traitement du certificat %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:473
 #, python-format
@@ -247,12 +254,12 @@ msgstr "Erreur de détection des partitions: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:498
 #, python-format
 msgid "Found %d certificates in store %s"
-msgstr ""
+msgstr "%d certificats trouvés dans le magasin %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:502
 #, python-format
 msgid "No valid certificates found in store %s"
-msgstr ""
+msgstr "Aucun certificat valide trouvé dans le magasin %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:513
 #, python-format
@@ -267,7 +274,7 @@ msgstr "Délai d'attente dépassé lors des opérations ramdisk : %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:522
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr ""
+msgstr "Échec de l'interrogation du magasin de certificats Windows %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:569
 #, python-format
@@ -288,26 +295,27 @@ msgstr "Failed to write %s: %s"
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
 msgstr ""
+"Délai dépassé lors de l'extraction des infos de certificat depuis : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:620
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
-msgstr ""
+msgstr "OpenSSL/LibreSSL introuvable, certificat ignoré : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:625
 #, python-format
 msgid "Error extracting certificate info from %s: %s"
-msgstr ""
+msgstr "Erreur lors de l'extraction des infos de certificat depuis %s : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:695
 #, python-format
 msgid "Failed to parse %s date '%s': %s"
-msgstr ""
+msgstr "Échec de l'analyse de la date %s '%s' : %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:41
 #, python-format
 msgid "Commercial antivirus detection not applicable for %s"
-msgstr ""
+msgstr "Détection d'antivirus commercial non applicable pour %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:48
 #, python-format
@@ -316,7 +324,7 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:80
 msgid "Microsoft Defender service not detected or not running"
-msgstr ""
+msgstr "Service Microsoft Defender non détecté ou non en cours d'exécution"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:99
 #, python-format
@@ -326,7 +334,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:152
 #, python-format
 msgid "Detected Microsoft Defender (version: %s, enabled: %s)"
-msgstr ""
+msgstr "Microsoft Defender détecté (version : %s, activé : %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:161
 #, python-format
@@ -335,7 +343,7 @@ msgstr "Échec de l'analyse de la sortie JSON fwupd : %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 msgid "Timeout while querying Microsoft Defender status"
-msgstr ""
+msgstr "Délai dépassé lors de l'interrogation de l'état Microsoft Defender"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 #, python-format
@@ -350,11 +358,11 @@ msgstr "Impossible de définir le démarrage automatique du réseau : %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:211
 #, python-format
 msgid "Error parsing datetime %s: %s"
-msgstr ""
+msgstr "Erreur lors de l'analyse de datetime %s : %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:263
 msgid "Microsoft Defender CLI (mdatp) not found on macOS"
-msgstr ""
+msgstr "Microsoft Defender CLI (mdatp) introuvable sur macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:275
 #, python-format
@@ -364,13 +372,16 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:320
 #, python-format
 msgid ""
-"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, "
-"licensed: %s)"
+"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+" licensed: %s)"
 msgstr ""
+"Microsoft Defender for Endpoint détecté sur macOS (version : %s, activé : "
+"%s, sous licence : %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:331
 msgid "Timeout while querying Microsoft Defender status on macOS"
 msgstr ""
+"Délai dépassé lors de l'interrogation de l'état Microsoft Defender sur macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:336
 #, python-format
@@ -385,7 +396,7 @@ msgstr "Impossible de définir le démarrage automatique du réseau : %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:382
 #, python-format
 msgid "Error parsing macOS datetime %s: %s"
-msgstr ""
+msgstr "Erreur lors de l'analyse du datetime macOS %s : %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
@@ -398,7 +409,7 @@ msgstr "Plateforme non prise en charge pour l'inventaire logiciel : %s"
 #: src/sysmanage_agent/collection/hardware_collection.py:116
 #, python-format
 msgid "Failed to collect hardware information: %s"
-msgstr ""
+msgstr "Échec de la collecte des informations matérielles : %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:109
 #, python-format
@@ -423,7 +434,7 @@ msgstr "Échec de la collecte de l'inventaire logiciel : %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:167
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr ""
+msgstr "Échec de l'obtention des informations CPU Linux : %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:184
 #, python-format
@@ -572,7 +583,7 @@ msgstr ""
 #: src/sysmanage_agent/collection/linux_update_applicators.py:282
 #, python-format
 msgid "Applying Ubuntu release upgrade to: %s"
-msgstr ""
+msgstr "Application de la mise à niveau de version Ubuntu vers : %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:307
 #, python-format
@@ -592,7 +603,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:368
 #, python-format
 msgid "Applying openSUSE release upgrade to: %s"
-msgstr ""
+msgstr "Application de la mise à niveau de version openSUSE vers : %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:393
 #, python-format
@@ -661,7 +672,7 @@ msgstr "Périphérique Inconnu"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:116
 msgid "Ubuntu Pro status check timed out"
-msgstr ""
+msgstr "Délai dépassé pour la vérification du statut Ubuntu Pro"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:121
 #, python-format
@@ -671,7 +682,7 @@ msgstr "Échec du détachement d'Ubuntu Pro : %s"
 #: src/sysmanage_agent/collection/os_info_collection.py:143
 #, python-format
 msgid "Ubuntu Pro status collected: attached=%s, services=%d"
-msgstr ""
+msgstr "Statut Ubuntu Pro collecté : attached=%s, services=%d"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:150
 #, python-format
@@ -708,7 +719,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:194
 msgid "winget not found in any common location"
-msgstr ""
+msgstr "winget introuvable dans les emplacements habituels"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:270
 #, python-format
@@ -718,7 +729,7 @@ msgstr "Échec de la mise à jour du firmware pour %s : %s"
 #: src/sysmanage_agent/collection/package_collector_base.py:300
 #, python-format
 msgid "Failed to get packages for %s: %s"
-msgstr ""
+msgstr "Échec de l'obtention des paquets pour %s : %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:324
 #, python-format
@@ -738,7 +749,7 @@ msgstr "Échec de la collecte des applications macOS : %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:33
 #, python-format
 msgid "Collected %d packages from pkg_info"
-msgstr ""
+msgstr "%d paquets collectés depuis pkg_info"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:35
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:129
@@ -749,7 +760,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:42
 #, python-format
 msgid "Collected %d packages from pkg"
-msgstr ""
+msgstr "%d paquets collectés depuis pkg"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:44
 #, python-format
@@ -759,7 +770,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:51
 #, python-format
 msgid "Collected %d packages from pkgin"
-msgstr ""
+msgstr "%d paquets collectés depuis pkgin"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:53
 #, python-format
@@ -768,11 +779,11 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:74
 msgid "Failed to get OpenBSD package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets OpenBSD"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:90
 msgid "Failed to get pkg package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets pkg"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:97
 #, python-format
@@ -781,7 +792,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:113
 msgid "Failed to get pkgin package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets pkgin"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:120
 #, python-format
@@ -793,18 +804,20 @@ msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
 msgstr ""
+"Collecte yum ignorée sur l'hôte avec dnf disponible (yum est un wrapper dnf "
+"sur RHEL/Fedora 8+)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:56
 #: src/sysmanage_agent/collection/package_collector_windows.py:51
 #, python-format
 msgid "Collected %d packages from %s"
-msgstr ""
+msgstr "%d paquets collectés depuis %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:59
 #: src/sysmanage_agent/collection/package_collector_windows.py:54
 #, python-format
 msgid "Failed to collect packages from %s: %s"
-msgstr ""
+msgstr "Échec de la collecte des paquets depuis %s : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:82
 msgid "Failed to get APT package information"
@@ -817,7 +830,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:104
 msgid "Failed to get YUM package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets YUM"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:111
 #, python-format
@@ -826,16 +839,16 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:126
 msgid "Failed to get DNF package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets DNF"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:135
 #, python-format
 msgid "Error collecting DNF packages: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des paquets DNF : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:150
 msgid "Failed to get Zypper package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets Zypper"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:157
 #, python-format
@@ -844,35 +857,35 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:172
 msgid "Failed to get Pacman package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets Pacman"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:179
 #, python-format
 msgid "Error collecting Pacman packages: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des paquets Pacman : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:195
 msgid "Failed to get Snap package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets Snap"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:202
 #, python-format
 msgid "Error collecting Snap packages: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des paquets Snap : %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:217
 msgid "Failed to get Flatpak package list"
-msgstr ""
+msgstr "Échec de l'obtention de la liste des paquets Flatpak"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:224
 #, python-format
 msgid "Error collecting Flatpak packages: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des paquets Flatpak : %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:29
 #, python-format
 msgid "Collected %d packages from Homebrew"
-msgstr ""
+msgstr "%d paquets collectés depuis Homebrew"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:31
 #: src/sysmanage_agent/collection/software_inventory_macos.py:151
@@ -882,35 +895,35 @@ msgstr "Échec de la collecte des paquets Homebrew : %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:41
 msgid "Homebrew command not found"
-msgstr ""
+msgstr "Commande Homebrew introuvable"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:63
 #, python-format
 msgid "Collected %d Homebrew formulae"
-msgstr ""
+msgstr "%d formules Homebrew collectées"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:82
 #, python-format
 msgid "Collected %d Homebrew casks"
-msgstr ""
+msgstr "%d casks Homebrew collectés"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:87
 #, python-format
 msgid "Error collecting Homebrew packages: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des paquets Homebrew : %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:62
 msgid "Fetching winget catalog via REST API"
-msgstr ""
+msgstr "Récupération du catalogue winget via API REST"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
 #, python-format
 msgid "Successfully collected %d packages from winget REST API"
-msgstr ""
+msgstr "%d paquets collectés avec succès via winget REST API"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:74
 msgid "No packages collected from winget REST API"
-msgstr ""
+msgstr "Aucun paquet collecté depuis winget REST API"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:78
 #, python-format
@@ -921,19 +934,23 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
 msgstr ""
+"Erreur lors de la récupération de la page winget %d (%d paquets collectés "
+"jusqu'à présent) : %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:166
 msgid "Fetching Chocolatey catalog via community repository API"
-msgstr ""
+msgstr "Récupération du catalogue Chocolatey via l'API du dépôt communautaire"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:174
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
 msgstr ""
+"%d paquets collectés avec succès depuis le dépôt communautaire Chocolatey"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:181
 msgid "No packages collected from Chocolatey community repository"
-msgstr ""
+msgstr "Aucun paquet collecté depuis le dépôt communautaire Chocolatey"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:186
 #, python-format
@@ -943,7 +960,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:212
 #, python-format
 msgid "Error fetching page at skip %d: %s"
-msgstr ""
+msgstr "Erreur lors de la récupération de la page au skip %d : %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:83
 #, python-format
@@ -953,17 +970,17 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:118
 #, python-format
 msgid "Successfully collected %s packages"
-msgstr ""
+msgstr "%s paquets collectés avec succès"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:122
 #, python-format
 msgid "No pkg_info output found. Return code: %d"
-msgstr ""
+msgstr "Aucune sortie pkg_info trouvée. Code de retour : %d"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:126
 #, python-format
 msgid "pkg_info stderr: %s"
-msgstr ""
+msgstr "pkg_info stderr : %s"
 
 #: src/sysmanage_agent/collection/software_inventory_collection.py:58
 #, python-format
@@ -1022,7 +1039,7 @@ msgstr "Échec de la collecte des applications macOS : %s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:332
 msgid "Failed to parse system_profiler JSON output"
-msgstr ""
+msgstr "Échec de l'analyse de la sortie JSON system_profiler"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:336
 #, python-format
@@ -1032,7 +1049,7 @@ msgstr "Échec de la collecte des applications macOS : %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:186
 #, python-format
 msgid "Collected %d programs from Windows Registry"
-msgstr ""
+msgstr "%d programmes collectés depuis le Registre Windows"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:200
 #, python-format
@@ -1042,7 +1059,7 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:265
 #, python-format
 msgid "Collected %d apps from Microsoft Store"
-msgstr ""
+msgstr "%d applications collectées depuis Microsoft Store"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:277
 #, python-format
@@ -1051,7 +1068,7 @@ msgstr "Échec de l'analyse de la sortie JSON fwupd : %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:284
 msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-msgstr ""
+msgstr "PowerShell introuvable (pas sur Windows ou PowerShell non installé)"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:287
 #, python-format
@@ -1074,6 +1091,8 @@ msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
 msgstr ""
+"Détection des mises à jour terminée : %d mises à jour trouvées (%d sécurité,"
+" %d système, %d application)"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1085,7 +1104,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/operations/package_operations.py:227
 #, python-format
 msgid "Failed to install package %s: %s"
-msgstr ""
+msgstr "Échec de l'installation du paquet %s : %s"
 
 #: src/sysmanage_agent/collection/update_detection_base.py:108
 #, python-format
@@ -1100,12 +1119,12 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "pkgin update failed (code %d): %s"
-msgstr ""
+msgstr "Échec de la mise à jour pkgin (code %d) : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:178
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
-msgstr ""
+msgstr "Échec de pkgin list -u (code %d) : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:197
 #, python-format
@@ -1120,7 +1139,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:249
 #, python-format
 msgid "Applying OpenBSD upgrade: %s"
-msgstr ""
+msgstr "Application de la mise à niveau OpenBSD : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
@@ -1130,11 +1149,11 @@ msgstr "Exécution de la commande de mise à jour du firmware : %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:268
 #, python-format
 msgid "Successfully applied OpenBSD upgrade: %s"
-msgstr ""
+msgstr "Mise à niveau OpenBSD appliquée avec succès : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:283
 msgid "OpenBSD upgrade failed"
-msgstr ""
+msgstr "Échec de la mise à niveau OpenBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:298
 msgid "OpenBSD upgrade timed out after 30 minutes"
@@ -1156,7 +1175,7 @@ msgstr "La mise à jour du firmware a échoué"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:410
 msgid "FreeBSD upgrade install failed"
-msgstr ""
+msgstr "Échec de l'installation de la mise à niveau FreeBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "FreeBSD upgrade timed out"
@@ -1166,16 +1185,17 @@ msgstr "Délai d'opération de suppression dépassé"
 #, python-format
 msgid "Found %d OpenBSD system patches (combined into single update)"
 msgstr ""
+"%d correctifs système OpenBSD trouvés (combinés en une seule mise à jour)"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:480
 #, python-format
 msgid "syspatch command failed with exit code %d"
-msgstr ""
+msgstr "La commande syspatch a échoué avec le code de sortie %d"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:483
 #, python-format
 msgid "syspatch stderr: %s"
-msgstr ""
+msgstr "syspatch stderr : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:486
 msgid "OpenBSD system update detection timed out"
@@ -1188,39 +1208,40 @@ msgstr "Échec de l'envoi des données initiales : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:506
 msgid "Failed to get current OpenBSD version"
-msgstr ""
+msgstr "Échec de l'obtention de la version OpenBSD actuelle"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 #, python-format
 msgid "Current OpenBSD version: %s"
-msgstr ""
+msgstr "Version OpenBSD actuelle : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:515
 msgid "Fetching https://www.openbsd.org/ to check for updates"
 msgstr ""
+"Récupération de https://www.openbsd.org/ pour vérifier les mises à jour"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:530
 #, python-format
 msgid "Latest OpenBSD version from website: %s"
-msgstr ""
+msgstr "Dernière version OpenBSD du site web : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:536
 #, python-format
 msgid "OpenBSD upgrade available: %s -> %s"
-msgstr ""
+msgstr "Mise à niveau OpenBSD disponible : %s -> %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:554
 msgid "Added OpenBSD upgrade to available_updates list"
-msgstr ""
+msgstr "Mise à niveau OpenBSD ajoutée à la liste available_updates"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:557
 #, python-format
 msgid "OpenBSD is up to date: %s"
-msgstr ""
+msgstr "OpenBSD est à jour : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:559
 msgid "Could not parse OpenBSD version from website"
-msgstr ""
+msgstr "Impossible d'analyser la version OpenBSD depuis le site web"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
@@ -1239,28 +1260,28 @@ msgstr "Échec de la collecte des paquets apt : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:625
 msgid "Calling _detect_openbsd_system_updates"
-msgstr ""
+msgstr "Appel de _detect_openbsd_system_updates"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:628
 msgid "Calling _detect_openbsd_version_upgrades"
-msgstr ""
+msgstr "Appel de _detect_openbsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:633
 msgid "Calling _detect_freebsd_version_upgrades"
-msgstr ""
+msgstr "Appel de _detect_freebsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:645
 #, python-format
 msgid "=== BSD detect_updates finished, total updates: %d ==="
-msgstr ""
+msgstr "=== BSD detect_updates terminé, total des mises à jour : %d ==="
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:714
 msgid "Applying OpenBSD syspatch updates"
-msgstr ""
+msgstr "Application des mises à jour OpenBSD syspatch"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:744
 msgid "syspatch command failed"
-msgstr ""
+msgstr "Échec de la commande syspatch"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:746
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
@@ -1282,7 +1303,7 @@ msgstr "La mise à jour du firmware a expiré après 10 minutes"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:546
 #, python-format
 msgid "Applying updates for %d packages: %s"
-msgstr ""
+msgstr "Application des mises à jour pour %d paquets : %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:908
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -1295,14 +1316,14 @@ msgstr "Gestionnaire de paquets non supporté : %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:700
 #, python-format
 msgid "Applying %d updates using %s"
-msgstr ""
+msgstr "Application de %d mises à jour avec %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:958
 #: src/sysmanage_agent/collection/update_detection_linux.py:344
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:705
 #, python-format
 msgid "Update process completed: %d updated, %d failed"
-msgstr ""
+msgstr "Processus de mise à jour terminé : %d mis à jour, %d échoués"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:966
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:713
@@ -1323,7 +1344,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/update_detection_linux.py:323
 #, python-format
 msgid "Failed to apply %s updates: %s"
-msgstr ""
+msgstr "Échec de l'application des mises à jour %s : %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:367
 #, python-format
@@ -1333,11 +1354,11 @@ msgstr "Gestionnaire de paquets non supporté : %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:161
 #, python-format
 msgid "Homebrew update failed: %s"
-msgstr ""
+msgstr "Échec de la mise à jour Homebrew : %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:209
 msgid "Failed to parse Homebrew JSON output"
-msgstr ""
+msgstr "Échec de l'analyse de la sortie JSON Homebrew"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:212
 #, python-format
@@ -1362,17 +1383,17 @@ msgstr "Exécution de la commande de mise à jour du firmware : %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:397
 #, python-format
 msgid "Homebrew command completed. Return code: %d"
-msgstr ""
+msgstr "Commande Homebrew terminée. Code de retour : %d"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:400
 #, python-format
 msgid "Homebrew stdout: %s"
-msgstr ""
+msgstr "Homebrew stdout : %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:402
 #, python-format
 msgid "Homebrew stderr: %s"
-msgstr ""
+msgstr "Homebrew stderr : %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:414
 #, python-format
@@ -1382,7 +1403,7 @@ msgstr "Firmware mis à jour avec succès pour : %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:425
 #, python-format
 msgid "Failed to update package %s: %s"
-msgstr ""
+msgstr "Échec de la mise à jour du paquet %s : %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:444
 #, python-format
@@ -1416,16 +1437,19 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #, python-format
 msgid "Package '%s' update timed out after %d seconds. Partial output: %s"
 msgstr ""
+"La mise à jour du paquet '%s' a expiré après %d secondes. Sortie partielle :"
+" %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:79
 #, python-format
 msgid "Update still running for '%s' (%d seconds elapsed)"
-msgstr ""
+msgstr "Mise à jour toujours en cours pour '%s' (%d secondes écoulées)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:100
 #, python-format
 msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
 msgstr ""
+"Résultat de la commande Winget : returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:108
 #, python-format
@@ -1436,12 +1460,12 @@ msgstr "Firmware mis à jour avec succès pour : %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:234
 #, python-format
 msgid "Failed to update package '%s': %s"
-msgstr ""
+msgstr "Échec de la mise à jour du paquet '%s' : %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:144
 #, python-format
 msgid "Applying winget update for package '%s' (ID: %s)"
-msgstr ""
+msgstr "Application de la mise à jour winget pour le paquet '%s' (ID : %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:179
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
@@ -1459,34 +1483,35 @@ msgstr "Application de la mise à jour du firmware pour le périphérique : %s"
 #, python-format
 msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
 msgstr ""
+"Résultat de la commande Chocolatey : returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:347
 #, python-format
 msgid "Windows Update command result: returncode=%d, output='%s'"
-msgstr ""
+msgstr "Résultat de la commande Windows Update : returncode=%d, output='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
-msgstr ""
+msgstr "Échec de l'installation de Windows Update"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:378
 #, python-format
 msgid "Failed to install Windows Update '%s': %s"
-msgstr ""
+msgstr "Échec de l'installation de Windows Update '%s' : %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:398
 #, python-format
 msgid "Applying Windows Update: %s (UpdateID: %s)"
-msgstr ""
+msgstr "Application de Windows Update : %s (UpdateID : %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:408
 msgid "Running Windows Update installation command"
-msgstr ""
+msgstr "Exécution de la commande d'installation Windows Update"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:429
 #, python-format
 msgid "Windows Update '%s' timed out after 30 minutes"
-msgstr ""
+msgstr "Windows Update '%s' a expiré après 30 minutes"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
@@ -1505,7 +1530,7 @@ msgstr "Application de la mise à jour du firmware pour le périphérique : %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:466
 msgid "Running Windows upgrade command"
-msgstr ""
+msgstr "Exécution de la commande de mise à niveau Windows"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:478
 #, python-format
@@ -1552,7 +1577,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:120
 #, python-format
 msgid "Windows Update detected: '%s' with UpdateID='%s'"
-msgstr ""
+msgstr "Windows Update détecté : '%s' avec UpdateID='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:129
 #, python-format
@@ -1579,14 +1604,16 @@ msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
 msgstr ""
+"Exécution de la collecte de certificats en mode non privilégié - certains "
+"certificats peuvent ne pas être accessibles"
 
 #: src/sysmanage_agent/communication/data_collector.py:810
 msgid "No certificates found on system"
-msgstr ""
+msgstr "Aucun certificat trouvé sur le système"
 
 #: src/sysmanage_agent/communication/data_collector.py:851
 msgid "No server roles detected on system"
-msgstr ""
+msgstr "Aucun rôle de serveur détecté sur le système"
 
 #: src/sysmanage_agent/communication/data_collector.py:885
 #, python-format
@@ -1599,7 +1626,7 @@ msgstr "Gestionnaire de file d'attente de messages initialisé"
 
 #: src/sysmanage_agent/communication/message_handler.py:847
 msgid "Cannot send message: not connected to server"
-msgstr ""
+msgstr "Impossible d'envoyer le message : non connecté au serveur"
 
 #: src/sysmanage_agent/communication/message_handler.py:855
 #, python-format
@@ -1633,16 +1660,17 @@ msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
 #, python-format
 msgid "Found %d available updates during periodic check"
 msgstr ""
+"%d mises à jour disponibles trouvées lors de la vérification périodique"
 
 #: src/sysmanage_agent/core/agent_utils.py:64
 #, python-format
 msgid "Error during periodic update check: %s"
-msgstr ""
+msgstr "Erreur lors de la vérification périodique des mises à jour : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:92
 #, python-format
 msgid "Update checker error: %s"
-msgstr ""
+msgstr "Erreur du vérificateur de mises à jour : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:128
 msgid "Package collection completed successfully"
@@ -1650,7 +1678,7 @@ msgstr "Agent mis à jour avec succès"
 
 #: src/sysmanage_agent/core/agent_utils.py:130
 msgid "Package collection completed with some issues"
-msgstr ""
+msgstr "Collecte de paquets terminée avec quelques problèmes"
 
 #: src/sysmanage_agent/core/agent_utils.py:133
 #, python-format
@@ -1660,36 +1688,36 @@ msgstr "Erreur de détection des partitions: %s"
 #: src/sysmanage_agent/core/agent_utils.py:172
 #, python-format
 msgid "Package collection scheduler error: %s"
-msgstr ""
+msgstr "Erreur du planificateur de collecte de paquets : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:227
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr ""
+msgstr "Échec de l'authentification avec le statut %s : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:247
 #, python-format
 msgid "Received command: %s with parameters: %s"
-msgstr ""
+msgstr "Commande reçue : %s avec paramètres : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:365
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
-msgstr ""
+msgstr "UUID d'exécution de script %s déjà traité, doublon ignoré"
 
 #: src/sysmanage_agent/core/agent_utils.py:402
 msgid "Generic command missing nested command_type"
-msgstr ""
+msgstr "Commande générique manquant du command_type imbriqué"
 
 #: src/sysmanage_agent/core/agent_utils.py:414
 #, python-format
 msgid "Unknown command type: %s"
-msgstr ""
+msgstr "Type de commande inconnu : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
-msgstr ""
+msgstr "Résultat d'exécution de script mis en file pour execution_id : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:473
 #, python-format
@@ -1703,17 +1731,17 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:506
 msgid "No execution UUID provided, cannot track"
-msgstr ""
+msgstr "Aucun UUID d'exécution fourni, impossible de suivre"
 
 #: src/sysmanage_agent/core/agent_utils.py:521
 #, python-format
 msgid "Execution UUID %s already exists in database"
-msgstr ""
+msgstr "L'UUID d'exécution %s existe déjà dans la base de données"
 
 #: src/sysmanage_agent/core/agent_utils.py:540
 #, python-format
 msgid "Stored execution UUID %s for tracking"
-msgstr ""
+msgstr "UUID d'exécution %s stocké pour le suivi"
 
 #: src/sysmanage_agent/core/agent_utils.py:546
 #, python-format
@@ -1778,33 +1806,33 @@ msgstr "Erreur d'état de service pour %s : %s"
 #: src/sysmanage_agent/core/config.py:71
 #, python-format
 msgid "Configuration file '%s' not found. Expected locations: %s"
-msgstr ""
+msgstr "Fichier de configuration '%s' introuvable. Emplacements attendus : %s"
 
 # Configuration
 #: src/sysmanage_agent/core/config.py:80
 #, python-format
 msgid "Invalid YAML in configuration file: %s"
-msgstr ""
+msgstr "YAML invalide dans le fichier de configuration : %s"
 
 #: src/sysmanage_agent/core/config.py:84
 #, python-format
 msgid "Failed to load configuration file: %s"
-msgstr ""
+msgstr "Échec du chargement du fichier de configuration : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:39
 #, python-format
 msgid "Starting diagnostics collection for ID: %s"
-msgstr ""
+msgstr "Démarrage de la collecte de diagnostics pour l'ID : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:41
 #, python-format
 msgid "Collection types requested: %s"
-msgstr ""
+msgstr "Types de collecte demandés : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:66
 #, python-format
 msgid "Diagnostics collection completed for ID: %s"
-msgstr ""
+msgstr "Collecte de diagnostics terminée pour l'ID : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:76
 #, python-format
@@ -1814,22 +1842,22 @@ msgstr "Échec de la collecte des paquets apt : %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:122
 #, python-format
 msgid "Unknown collection type: %s"
-msgstr ""
+msgstr "Type de collecte inconnu : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:136
 #, python-format
 msgid "Starting collection %d/%d: %s"
-msgstr ""
+msgstr "Démarrage de la collecte %d/%d : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:149
 #, python-format
 msgid "Completed collection of %s in %.2f seconds"
-msgstr ""
+msgstr "Collecte de %s terminée en %.2f secondes"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:157
 #, python-format
 msgid "Failed to collect %s after %.2f seconds: %s"
-msgstr ""
+msgstr "Échec de la collecte de %s après %.2f secondes : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:240
 #, python-format
@@ -1845,7 +1873,7 @@ msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:431
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des fichiers de configuration : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:551
 #, python-format
@@ -1865,7 +1893,7 @@ msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:725
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr ""
+msgstr "Erreur lors de la collecte des variables d'environnement : %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:756
 #, python-format
@@ -1879,7 +1907,7 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:38
 msgid "Homebrew is not installed"
-msgstr ""
+msgstr "Homebrew n'est pas installé"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:66
 #, python-format
@@ -1888,7 +1916,7 @@ msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:77
 msgid "Invalid tap format. Use 'user/repo' format"
-msgstr ""
+msgstr "Format tap invalide. Utilisez le format 'user/repo'"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:97
 msgid "Tap added successfully"
@@ -1914,11 +1942,11 @@ msgstr "Erreur dans le processeur de file d'attente : %s"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:437
 #, python-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Erreur lors de la lecture de %s : %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:176
 msgid "Repository URL is required for FreeBSD pkg"
-msgstr ""
+msgstr "L'URL du dépôt est requise pour FreeBSD pkg"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:206
 #: src/sysmanage_agent/operations/windows_repository_operations.py:161
@@ -1937,7 +1965,7 @@ msgstr "Erreur lors de la configuration du réseau par défaut : %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:268
 msgid "Repository URL is required for NetBSD pkgsrc"
-msgstr ""
+msgstr "L'URL du dépôt est requise pour NetBSD pkgsrc"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:277
 #, python-format
@@ -1965,7 +1993,7 @@ msgstr "La gestion des hôtes enfants nécessite Pro+ (chemin du moteur)."
 
 #: src/sysmanage_agent/operations/generic_deployment.py:133
 msgid "No files provided"
-msgstr ""
+msgstr "Aucun fichier fourni"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:470
 msgid "No steps provided"
@@ -1974,28 +2002,28 @@ msgstr "Aucun profil utilisateur trouvé"
 #: src/sysmanage_agent/operations/generic_deployment.py:507
 #, python-format
 msgid "Unknown step type: %s"
-msgstr ""
+msgstr "Type d'étape inconnu : %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:579
 msgid "Empty shell command"
-msgstr ""
+msgstr "Commande shell vide"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:619
 msgid "Empty wait_condition command"
-msgstr ""
+msgstr "Commande wait_condition vide"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:879
 msgid "no argv"
-msgstr ""
+msgstr "pas d'argv"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:904
 #, python-format
 msgid "FileNotFoundError: %s"
-msgstr ""
+msgstr "FileNotFoundError : %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:953
 msgid "timeout"
-msgstr ""
+msgstr "délai dépassé"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -2003,7 +2031,7 @@ msgstr "Le nom d'hôte est requis"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "Invalid hostname format"
-msgstr "Format de mémoire invalide : {value}"
+msgstr "Format de nom d'hôte invalide"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:73
 #, python-format
@@ -2019,6 +2047,7 @@ msgstr "Échec de la collecte de l'inventaire logiciel : %s"
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
 msgstr ""
+"Échec de hostnamectl, tentative de changement manuel de nom d'hôte : %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:134
 #: src/sysmanage_agent/operations/hostname_operations.py:140
@@ -2049,7 +2078,7 @@ msgstr "Échec de l'arrêt du serveur HTTP: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:218
 #, python-format
 msgid "Changing Windows hostname to: %s"
-msgstr ""
+msgstr "Changement du nom d'hôte Windows vers : %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:231
 #, python-format
@@ -2061,6 +2090,8 @@ msgstr "Échec de la collecte des paquets apt : %s"
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
 msgstr ""
+"Nom d'hôte changé en %s. Un redémarrage est requis pour que le changement "
+"prenne effet."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:250
 #, python-format
@@ -2070,7 +2101,7 @@ msgstr "Utilisation de FreeBSD sda4: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:272
 #, python-format
 msgid "sysrc failed, trying sed: %s"
-msgstr ""
+msgstr "Échec de sysrc, tentative de sed : %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:287
 #, python-format
@@ -2080,7 +2111,7 @@ msgstr "Échec de la mise à jour de l'agent : %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:303
 #, python-format
 msgid "Changing BSD hostname to: %s"
-msgstr ""
+msgstr "Changement du nom d'hôte BSD vers : %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:326
 #: src/sysmanage_agent/operations/hostname_operations.py:332
@@ -2154,7 +2185,7 @@ msgstr "Erreur lors de la configuration du réseau par défaut : %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:618
 msgid "Repository URL is required for Zypper"
-msgstr ""
+msgstr "L'URL du dépôt est requise pour Zypper"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:653
 #, python-format
@@ -2178,7 +2209,7 @@ msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:43
 msgid "No Grafana URL provided for OpenTelemetry deployment"
-msgstr ""
+msgstr "Aucune URL Grafana fournie pour le déploiement OpenTelemetry"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:67
 #, python-format
@@ -2186,6 +2217,8 @@ msgid ""
 "OpenTelemetry deployment on %s is not currently supported. Manual "
 "installation required."
 msgstr ""
+"Le déploiement d'OpenTelemetry sur %s n'est pas actuellement pris en charge."
+" Installation manuelle requise."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:78
 #, python-format
@@ -2220,7 +2253,7 @@ msgstr "Erreur lors de la configuration du réseau par défaut : %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:260
 msgid "Stopping OpenTelemetry service..."
-msgstr ""
+msgstr "Arrêt du service OpenTelemetry..."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:279
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:282
@@ -2265,7 +2298,7 @@ msgstr "Le nom d'utilisateur est requis"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:352
 #, python-format
 msgid "Connecting OpenTelemetry to Grafana at %s"
-msgstr ""
+msgstr "Connexion d'OpenTelemetry à Grafana sur %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:357
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:360
@@ -2275,17 +2308,17 @@ msgstr "Connecté au serveur avec succès"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:365
 #, python-format
 msgid "Error connecting OpenTelemetry to Grafana: %s"
-msgstr ""
+msgstr "Erreur lors de la connexion d'OpenTelemetry à Grafana : %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:378
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:382
 msgid "OpenTelemetry disconnected from Grafana successfully"
-msgstr ""
+msgstr "OpenTelemetry déconnecté de Grafana avec succès"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:388
 #, python-format
 msgid "Error disconnecting OpenTelemetry from Grafana: %s"
-msgstr ""
+msgstr "Erreur lors de la déconnexion d'OpenTelemetry de Grafana : %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:400
 #: src/sysmanage_agent/operations/otel_base.py:149
@@ -2309,15 +2342,15 @@ msgstr "Échec de l'installation des paquets libvirt : %s"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:312
 msgid "BSDOtelDeployer should not be called directly"
-msgstr ""
+msgstr "BSDOtelDeployer ne doit pas être appelé directement"
 
 #: src/sysmanage_agent/operations/otel_deploy_linux.py:37
 msgid "No supported package manager found (apt/yum/dnf)"
-msgstr ""
+msgstr "Aucun gestionnaire de paquets pris en charge trouvé (apt/yum/dnf)"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:170
 msgid "No supported package manager found"
-msgstr ""
+msgstr "Aucun gestionnaire de paquets pris en charge trouvé"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:196
 #, python-format
@@ -2326,7 +2359,7 @@ msgstr "Échec de l'installation des paquets libvirt : %s"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:214
 msgid "Failed to download OpenTelemetry package"
-msgstr ""
+msgstr "Échec du téléchargement du paquet OpenTelemetry"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:297
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:367
@@ -2347,7 +2380,7 @@ msgstr "Les CPU doivent être au moins 1"
 #: src/sysmanage_agent/operations/package_compliance_operations.py:86
 #, python-format
 msgid "package inventory collection failed: %s"
-msgstr ""
+msgstr "Échec de la collecte d'inventaire des paquets : %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:50
 #, python-format
@@ -2362,17 +2395,17 @@ msgstr ""
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:103
 msgid "Skipping package with no name"
-msgstr ""
+msgstr "Ignorer le paquet sans nom"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:104
 #: src/sysmanage_agent/operations/package_operations.py:56
 msgid "No package name"
-msgstr ""
+msgstr "Aucun nom de paquet"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:214
 #, python-format
 msgid "Installing package: %s"
-msgstr ""
+msgstr "Installation du paquet : %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:99
 msgid "Package manager name is required"
@@ -2381,7 +2414,7 @@ msgstr "Le nom d'utilisateur est requis"
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 #, python-format
 msgid "Enabling package manager '%s' for OS '%s'"
-msgstr ""
+msgstr "Activation du gestionnaire de paquets '%s' pour l'OS '%s'"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:110
 msgid "Enabling package managers requires privileged mode"
@@ -2395,7 +2428,7 @@ msgstr "Gestionnaire de paquets non supporté : %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:133
 #, python-format
 msgid "Error enabling package manager '%s': %s"
-msgstr ""
+msgstr "Erreur lors de l'activation du gestionnaire de paquets '%s' : %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:145
 msgid "Flatpak is only supported on Linux systems"
@@ -2415,11 +2448,11 @@ msgstr "Gestionnaire de paquets non supporté : %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:207
 #, python-format
 msgid "%s installed successfully"
-msgstr ""
+msgstr "%s installé avec succès"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:239
 msgid "Flathub repository added"
-msgstr ""
+msgstr "Dépôt Flathub ajouté"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:241
 #, python-format
@@ -2447,10 +2480,13 @@ msgstr "KVM est déjà initialisé"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
+"L'installation de Homebrew nécessite une intervention manuelle. Veuillez "
+"installer avec : /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -2484,30 +2520,30 @@ msgstr "Paquets libvirt installés avec succès"
 #: src/sysmanage_agent/operations/package_operations.py:117
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
-msgstr ""
+msgstr "Désinstallation non implémentée pour le gestionnaire de paquets %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:169
 msgid "No package name specified"
-msgstr ""
+msgstr "Aucun nom de paquet spécifié"
 
 #: src/sysmanage_agent/operations/package_operations.py:172
 #, python-format
 msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-msgstr ""
+msgstr "Installation du paquet %s (installation_id : %s, requested_by : %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:259
 #: src/sysmanage_agent/operations/package_operations.py:367
 msgid "No request_id specified"
-msgstr ""
+msgstr "Aucun request_id spécifié"
 
 #: src/sysmanage_agent/operations/package_operations.py:264
 msgid "No packages specified for installation"
-msgstr ""
+msgstr "Aucun paquet spécifié pour l'installation"
 
 #: src/sysmanage_agent/operations/package_operations.py:268
 #, python-format
 msgid "Installing %d packages for request %s (requested_by: %s)"
-msgstr ""
+msgstr "Installation de %d paquets pour la requête %s (requested_by : %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:343
 #, python-format
@@ -2516,7 +2552,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:372
 msgid "No packages specified for uninstallation"
-msgstr ""
+msgstr "Aucun paquet spécifié pour la désinstallation"
 
 #: src/sysmanage_agent/operations/package_operations.py:478
 msgid "No packages to install"
@@ -2530,7 +2566,7 @@ msgstr "Répertoire d'installation automatique créé: %s"
 #: src/sysmanage_agent/operations/package_operations.py:532
 #, python-format
 msgid "Exception during apt-get install: %s"
-msgstr ""
+msgstr "Exception lors d'apt-get install : %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:539
 msgid "No packages to uninstall"
@@ -2544,13 +2580,12 @@ msgstr "fwupd get-updates a échoué : %s"
 #: src/sysmanage_agent/operations/package_operations.py:578
 #, python-format
 msgid "Exception during apt-get remove: %s"
-msgstr ""
-
+msgstr "Exception lors d'apt-get remove : %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:614
 #, python-format
 msgid "Queued installation completion for request %s"
-msgstr ""
+msgstr "Finalisation d'installation mise en file pour la requête %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:619
 #, python-format
@@ -2561,12 +2596,12 @@ msgstr "Échec de l'intégration de install.conf : %s"
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr ""
+"Erreur lors de la mise en file de la finalisation de l'installation : %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:673
 #, python-format
 msgid "Sent package installation status update: %s for %s"
-msgstr ""
-
+msgstr "Mise à jour de statut d'installation de paquet envoyée : %s pour %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:680
 #, python-format
@@ -2587,7 +2622,7 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:85
 msgid "Listing third-party repositories"
-msgstr ""
+msgstr "Liste des dépôts tiers"
 
 #: src/sysmanage_agent/operations/repository_operations.py:99
 #, python-format
@@ -2597,7 +2632,7 @@ msgstr "Erreur de détection des partitions: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:117
 #, python-format
 msgid "Error detecting Linux distribution: %s"
-msgstr ""
+msgstr "Erreur lors de la détection de la distribution Linux : %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:179
 msgid "Repository identifier is required"
@@ -2610,17 +2645,17 @@ msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:229
 msgid "No repositories specified for deletion"
-msgstr ""
+msgstr "Aucun dépôt spécifié pour la suppression"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 #, python-format
 msgid "Deleting %d third-party repositories"
-msgstr ""
+msgstr "Suppression de %d dépôts tiers"
 
 #: src/sysmanage_agent/operations/repository_operations.py:260
 #, python-format
 msgid "Deleted %d of %d repositories"
-msgstr ""
+msgstr "%d sur %d dépôts supprimés"
 
 #: src/sysmanage_agent/operations/repository_operations.py:265
 #, python-format
@@ -2629,17 +2664,17 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:293
 msgid "No repositories specified for enabling"
-msgstr ""
+msgstr "Aucun dépôt spécifié pour l'activation"
 
 #: src/sysmanage_agent/operations/repository_operations.py:297
 #, python-format
 msgid "Enabling %d third-party repositories"
-msgstr ""
+msgstr "Activation de %d dépôts tiers"
 
 #: src/sysmanage_agent/operations/repository_operations.py:325
 #, python-format
 msgid "Enabled %d of %d repositories"
-msgstr ""
+msgstr "%d sur %d dépôts activés"
 
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
@@ -2648,17 +2683,17 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
-msgstr ""
+msgstr "Aucun dépôt spécifié pour la désactivation"
 
 #: src/sysmanage_agent/operations/repository_operations.py:362
 #, python-format
 msgid "Disabling %d third-party repositories"
-msgstr ""
+msgstr "Désactivation de %d dépôts tiers"
 
 #: src/sysmanage_agent/operations/repository_operations.py:390
 #, python-format
 msgid "Disabled %d of %d repositories"
-msgstr ""
+msgstr "%d sur %d dépôts désactivés"
 
 #: src/sysmanage_agent/operations/repository_operations.py:395
 #, python-format
@@ -2672,7 +2707,7 @@ msgstr "Erreur de détection des partitions: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:66
 msgid "Missing required parameter 'script_content'"
-msgstr ""
+msgstr "Paramètre requis 'script_content' manquant"
 
 #: src/sysmanage_agent/operations/script_operations.py:75
 #, python-format
@@ -2681,7 +2716,7 @@ msgstr "La commande a expiré après %d secondes"
 
 #: src/sysmanage_agent/operations/script_operations.py:90
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
-msgstr ""
+msgstr "L'agent n'expose pas apply_deployment_plan ; mise à niveau requise"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 #, python-format
@@ -2705,25 +2740,25 @@ msgstr "Échec de la mise à jour de l'agent : %s"
 
 #: src/sysmanage_agent/operations/system_control.py:146
 msgid "No service name specified"
-msgstr ""
+msgstr "Aucun nom de service spécifié"
 
 #: src/sysmanage_agent/operations/system_control.py:155
 #, python-format
 msgid "Failed to restart service %s: %s"
-msgstr ""
+msgstr "Échec du redémarrage du service %s : %s"
 
 #: src/sysmanage_agent/operations/system_control.py:176
 msgid "System reboot scheduled in 1 minute"
-msgstr ""
+msgstr "Redémarrage du système prévu dans 1 minute"
 
 #: src/sysmanage_agent/operations/system_control.py:180
 #, python-format
 msgid "Failed to reboot system: %s"
-msgstr ""
+msgstr "Échec du redémarrage du système : %s"
 
 #: src/sysmanage_agent/operations/system_control.py:200
 msgid "System shutdown scheduled in 1 minute"
-msgstr ""
+msgstr "Arrêt du système prévu dans 1 minute"
 
 #: src/sysmanage_agent/operations/system_control.py:204
 #, python-format
@@ -2816,24 +2851,24 @@ msgstr "Le nom d'utilisateur est requis"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:110
 #, python-format
 msgid "Enabling Ubuntu Pro service: %s"
-msgstr ""
+msgstr "Activation du service Ubuntu Pro : %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:128
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
-msgstr ""
+msgstr "Service Ubuntu Pro %s activé avec succès"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:134
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:140
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Échec de l'activation du service Ubuntu Pro %s : %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:146
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Erreur lors de l'activation du service Ubuntu Pro %s : %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:160
 #, python-format
@@ -2844,18 +2879,18 @@ msgstr "Vérification de l'état du service : %s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:178
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
-msgstr ""
+msgstr "Service Ubuntu Pro %s désactivé avec succès"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:184
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:190
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Échec de la désactivation du service Ubuntu Pro %s : %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:196
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Erreur lors de la désactivation du service Ubuntu Pro %s : %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
 msgid "Updated OS information sent to server after Ubuntu Pro change"
@@ -2866,7 +2901,8 @@ msgstr ""
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:225
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
-msgstr "Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
+msgstr ""
+"Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
 
 #: src/sysmanage_agent/operations/update_manager.py:75
 #, python-format
@@ -2880,7 +2916,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:90
 msgid "No packages specified for update"
-msgstr ""
+msgstr "Aucun paquet spécifié pour la mise à jour"
 
 #: src/sysmanage_agent/operations/update_operations.py:103
 msgid "Updates started in background"
@@ -2895,6 +2931,7 @@ msgstr "Échec de l'envoi des données initiales : %s"
 #, python-format
 msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
 msgstr ""
+"Requête de mise à jour reçue : package='%s', manager='%s', bundle_id='%s'"
 
 #: src/sysmanage_agent/operations/update_operations.py:149
 #, python-format
@@ -2904,13 +2941,13 @@ msgstr "Gestionnaires de paquets détectés : %s"
 #: src/sysmanage_agent/operations/update_operations.py:172
 #, python-format
 msgid "Using detected package manager '%s' for %s"
-msgstr ""
+msgstr "Utilisation du gestionnaire de paquets détecté '%s' pour %s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:181
 #, python-format
 msgid "Could not determine package manager for %s"
-msgstr ""
+msgstr "Impossible de déterminer le gestionnaire de paquets pour %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:194
 msgid "Failed to send update results, will retry..."
@@ -2926,20 +2963,20 @@ msgstr ""
 #: src/sysmanage_agent/operations/update_operations.py:206
 #, python-format
 msgid "Failed to send update results after %d attempts"
-msgstr ""
+msgstr "Échec de l'envoi des résultats de mise à jour après %d tentatives"
 
 #: src/sysmanage_agent/operations/update_operations.py:212
 msgid "Rescanning for available updates after batch completion"
-msgstr ""
+msgstr "Nouveau scan des mises à jour disponibles après la fin du lot"
 
 #: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Post-update scan completed: %d updates remaining"
-msgstr ""
+msgstr "Scan post-mise à jour terminé : %d mises à jour restantes"
 
 #: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
-msgstr ""
+msgstr "Impossible d'envoyer la nouvelle liste de mises à jour - non connecté"
 
 #: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
@@ -2947,12 +2984,13 @@ msgstr "Aucun paquet valide trouvé pour la mise à jour"
 
 #: src/sysmanage_agent/operations/update_operations.py:270
 msgid "Background update process completed"
-msgstr ""
+msgstr "Processus de mise à jour en arrière-plan terminé"
 
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
-msgstr "Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
+msgstr ""
+"Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:286
 #, python-format
@@ -2962,7 +3000,7 @@ msgstr "fwupd get-updates a échoué : %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:14
 #, python-format
 msgid "User %s and default group deleted successfully"
-msgstr ""
+msgstr "Utilisateur %s et groupe par défaut supprimés avec succès"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:119
@@ -2987,22 +3025,22 @@ msgstr "Bridged network '%s' created successfully"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:398
 msgid "Password is required for Windows user creation"
-msgstr ""
+msgstr "Le mot de passe est requis pour la création d'utilisateur Windows"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:618
 #, python-format
 msgid "User %s deleted successfully"
-msgstr ""
+msgstr "Utilisateur %s supprimé avec succès"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:638
 #, python-format
 msgid "Group %s deleted successfully"
-msgstr ""
+msgstr "Groupe %s supprimé avec succès"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:767
 #, python-format
 msgid "Successfully executed: %s"
-msgstr ""
+msgstr "Exécuté avec succès : %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:35
 #, python-format
@@ -3011,16 +3049,16 @@ msgstr "Error creating bridged network: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:137
 msgid "Repository URL is required for Windows repositories"
-msgstr ""
+msgstr "L'URL du dépôt est requise pour les dépôts Windows"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:143
 msgid "Repository type must be 'chocolatey' or 'winget'"
-msgstr ""
+msgstr "Le type de dépôt doit être 'chocolatey' ou 'winget'"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:172
 #, python-format
 msgid "Failed to add repository: %s"
-msgstr ""
+msgstr "Échec de l'ajout du dépôt : %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:178
 #, python-format
@@ -3030,67 +3068,69 @@ msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 #: src/sysmanage_agent/registration/client_registration.py:34
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
+"⚠️  AVERTISSEMENT : aiohttp non disponible, l'enregistrement sera ignoré"
 
 #: src/sysmanage_agent/registration/discovery.py:70
 #, python-format
 msgid "Discovered %s SysManage server(s)"
-msgstr ""
+msgstr "%s serveur(s) SysManage découvert(s)"
 
 #: src/sysmanage_agent/registration/discovery.py:72
 msgid "No SysManage servers discovered on the network"
-msgstr ""
+msgstr "Aucun serveur SysManage découvert sur le réseau"
 
 #: src/sysmanage_agent/registration/discovery.py:117
 #, python-format
 msgid "Server discovered at %s"
-msgstr ""
+msgstr "Serveur découvert à %s"
 
 #: src/sysmanage_agent/registration/discovery.py:121
 msgid "Invalid JSON response from unknown source"
-msgstr ""
+msgstr "Réponse JSON invalide de source inconnue"
 
 #: src/sysmanage_agent/registration/discovery.py:156
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr ""
+msgstr "Erreur lors de la découverte par broadcast : %s"
 
 #: src/sysmanage_agent/registration/discovery.py:205
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
+msgstr "Annonce de serveur reçue de %s"
 
 #: src/sysmanage_agent/registration/discovery.py:210
 msgid "Invalid JSON announcement from unknown source"
-msgstr ""
+msgstr "Annonce JSON invalide de source inconnue"
 
 #: src/sysmanage_agent/registration/discovery.py:218
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr ""
+msgstr "Erreur lors de l'écoute des annonces : %s"
 
 #: src/sysmanage_agent/registration/discovery.py:272
 #, python-format
 msgid "Selected server at %s (score: %s)"
-msgstr ""
+msgstr "Serveur sélectionné à %s (score : %s)"
 
 #: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Received registration success notification from server"
-msgstr ""
+msgstr "Notification de succès d'enregistrement reçue du serveur"
 
 #: src/sysmanage_agent/registration/registration_manager.py:205
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr ""
+"Erreur lors du traitement de la notification de succès d'enregistrement : %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:217
 #, python-format
 msgid "Received host approval notification: host_id=%s, status=%s"
-msgstr ""
+msgstr "Notification d'approbation d'hôte reçue : host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:226
 #, python-format
 msgid "Host approval information stored successfully. Host ID: %s"
-msgstr ""
+msgstr "Informations d'approbation d'hôte stockées avec succès. Host ID : %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:238
 #, python-format
@@ -3107,16 +3147,21 @@ msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 #, python-format
 msgid "Deleted %d old host approval record(s) before storing new approval"
 msgstr ""
+"%d ancien(s) enregistrement(s) d'approbation d'hôte supprimé(s) avant de "
+"stocker la nouvelle approbation"
 
 #: src/sysmanage_agent/registration/registration_manager.py:306
 #, python-format
 msgid "Host approval record stored in database: host_id=%s, status=%s"
 msgstr ""
+"Enregistrement d'approbation d'hôte stocké dans la base de données : "
+"host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:315
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr ""
+"Erreur lors du stockage de l'approbation d'hôte dans la base de données : %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:347
 #, python-format
@@ -3126,12 +3171,12 @@ msgstr "Error creating bridged network: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:379
 #: src/sysmanage_agent/registration/registration_manager.py:436
 msgid "Error retrieving stored credentials"
-msgstr ""
+msgstr "Erreur lors de la récupération des identifiants stockés"
 
 #: src/sysmanage_agent/registration/registration_manager.py:408
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
-msgstr ""
+msgstr "Erreur lors de la récupération synchrone du host_id stocké : %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:461
 #, python-format
@@ -3141,10 +3186,12 @@ msgstr "Erreur lors du détachement d'Ubuntu Pro : %s"
 #: src/sysmanage_agent/registration/registration_manager.py:491
 msgid "Host approval records and related data cleared from database"
 msgstr ""
+"Enregistrements d'approbation d'hôte et données associées effacés de la base"
+" de données"
 
 #: src/sysmanage_agent/registration/registration_manager.py:500
 msgid "Continuing despite cleanup error..."
-msgstr ""
+msgstr "Poursuite malgré l'erreur de nettoyage..."
 
 #~ msgid "Starting antivirus detection"
 #~ msgstr "Démarrage du service libvirtd"
@@ -3484,8 +3531,7 @@ msgstr ""
 
 #~ msgid "Network setup attempted but may need manual verification"
 #~ msgstr ""
-#~ "Configuration réseau tentée mais vérification manuelle peut être "
-#~ "nécessaire"
+#~ "Configuration réseau tentée mais vérification manuelle peut être nécessaire"
 
 #~ msgid "Network setup timed out"
 #~ msgstr "Délai de configuration réseau dépassé"
@@ -3497,8 +3543,8 @@ msgstr ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM n'est pas disponible sur ce système. Assurez-vous que /dev/kvm existe "
-#~ "et que la virtualisation CPU est activée dans le BIOS."
+#~ "KVM n'est pas disponible sur ce système. Assurez-vous que /dev/kvm existe et"
+#~ " que la virtualisation CPU est activée dans le BIOS."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM est déjà initialisé et prêt à l'emploi"
@@ -3607,8 +3653,7 @@ msgstr ""
 
 #~ msgid "Error configuring persistent nested virtualization: %s"
 #~ msgstr ""
-#~ "Erreur lors de la configuration persistante de virtualisation imbriquée: "
-#~ "%s"
+#~ "Erreur lors de la configuration persistante de virtualisation imbriquée: %s"
 
 #~ msgid "KVM kernel modules loaded with nested virtualization enabled"
 #~ msgstr "Modules KVM chargés avec virtualisation imbriquée activée"
@@ -3692,13 +3737,13 @@ msgstr ""
 
 #~ msgid "Cannot send virtualization status update: host not approved"
 #~ msgstr ""
-#~ "Impossible d'envoyer la mise à jour du statut de virtualisation : hôte "
-#~ "non approuvé"
+#~ "Impossible d'envoyer la mise à jour du statut de virtualisation : hôte non "
+#~ "approuvé"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Mise à jour du statut de virtualisation mise en file d'attente pour envoi "
-#~ "au serveur"
+#~ "Mise à jour du statut de virtualisation mise en file d'attente pour envoi au"
+#~ " serveur"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img non trouvé, tentative d'installation : %s"
@@ -3706,25 +3751,21 @@ msgstr ""
 # LXD default profile configuration
 #~ msgid "Configuring LXD default profile for container compatibility"
 #~ msgstr ""
-#~ "Configuration du profil par défaut LXD pour la compatibilité des "
-#~ "conteneurs"
+#~ "Configuration du profil par défaut LXD pour la compatibilité des conteneurs"
 
 #~ msgid "Could not set security.nesting on default profile: %s"
-#~ msgstr ""
-#~ "Impossible de définir security.nesting sur le profil par défaut : %s"
+#~ msgstr "Impossible de définir security.nesting sur le profil par défaut : %s"
 
 #~ msgid "LXD default profile configured with security.nesting=true"
 #~ msgstr "Profil par défaut LXD configuré avec security.nesting=true"
 
 #~ msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
 #~ msgstr ""
-#~ "Mise à jour de l'agent sur l'hôte enfant : type=%s, nom=%s, "
-#~ "distribution=%s"
+#~ "Mise à jour de l'agent sur l'hôte enfant : type=%s, nom=%s, distribution=%s"
 
 #~ msgid "Unsupported child distribution for agent update: %s"
 #~ msgstr ""
-#~ "Distribution enfant non prise en charge pour la mise à jour de l'agent : "
-#~ "%s"
+#~ "Distribution enfant non prise en charge pour la mise à jour de l'agent : %s"
 
 #~ msgid "Child agent updated successfully: %s"
 #~ msgstr "Agent enfant mis à jour avec succès : %s"

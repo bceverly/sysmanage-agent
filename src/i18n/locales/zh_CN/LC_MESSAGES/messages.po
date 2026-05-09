@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
@@ -8,37 +9,37 @@ msgstr ""
 #: src/database/init.py:37
 #, python-format
 msgid "Using database path from SYSMANAGE_DB_PATH: %s"
-msgstr ""
+msgstr "使用 SYSMANAGE_DB_PATH 中的数据库路径：%s"
 
 #: src/database/init.py:47
 #, python-format
 msgid "Using configured database path: %s"
-msgstr ""
+msgstr "使用配置的数据库路径：%s"
 
 #: src/database/init.py:53
 #, python-format
 msgid "Using configured relative database path: %s"
-msgstr ""
+msgstr "使用配置的相对数据库路径：%s"
 
 #: src/database/init.py:59
 #, python-format
 msgid "Using system database path: %s"
-msgstr ""
+msgstr "使用系统数据库路径：%s"
 
 #: src/database/init.py:67
 #, python-format
 msgid "System directory exists, using system database path: %s"
-msgstr ""
+msgstr "系统目录存在，使用系统数据库路径：%s"
 
 #: src/database/init.py:74
 #, python-format
 msgid "Falling back to local database path: %s"
-msgstr ""
+msgstr "回退到本地数据库路径：%s"
 
 #: src/database/init.py:79
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
-msgstr ""
+msgstr "从配置获取数据库路径失败：%s，使用本地回退"
 
 #: src/database/init.py:146
 #, python-format
@@ -48,42 +49,42 @@ msgstr "正在运行固件更新命令：%s"
 #: src/database/init.py:163
 #, python-format
 msgid "Alembic %s completed successfully"
-msgstr ""
+msgstr "Alembic %s 成功完成"
 
 #: src/database/init.py:169
 #, python-format
 msgid "Alembic %s failed with return code %d"
-msgstr ""
+msgstr "Alembic %s 失败，返回码 %d"
 
 #: src/database/init.py:178
 #, python-format
 msgid "Alembic %s timed out after 60 seconds"
-msgstr ""
+msgstr "Alembic %s 在 60 秒后超时"
 
 #: src/database/init.py:181
 #, python-format
 msgid "Failed to run alembic %s: %s"
-msgstr ""
+msgstr "运行 alembic %s 失败：%s"
 
 #: src/database/init.py:208
 msgid "Database does not exist, creating new database"
-msgstr ""
+msgstr "数据库不存在，正在创建新数据库"
 
 #: src/database/init.py:210
 msgid "Database exists, checking for migrations"
-msgstr ""
+msgstr "数据库存在，正在检查迁移"
 
 #: src/database/init.py:214
 msgid "Auto-migration is enabled"
-msgstr ""
+msgstr "自动迁移已启用"
 
 #: src/database/init.py:218
 msgid "Failed to run database migrations"
-msgstr ""
+msgstr "运行数据库迁移失败"
 
 #: src/database/init.py:221
 msgid "Auto-migration is disabled, skipping migrations"
-msgstr ""
+msgstr "自动迁移已禁用，跳过迁移"
 
 #: src/database/init.py:223
 msgid "Database initialized successfully"
@@ -142,21 +143,21 @@ msgstr "已恢复 %d 条卡住的消息"
 #: src/database/queue_manager.py:534
 #, python-format
 msgid "Duplicate message detected: %s (status: %s)"
-msgstr ""
+msgstr "检测到重复消息：%s（状态：%s）"
 
 #: src/security/certificate_store.py:64
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
-msgstr ""
+msgstr "⚠️  无法访问 {config_dir}，回退到 {fallback_dir}"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:54
 #, python-format
 msgid "Detected antivirus: %s (enabled: %s)"
-msgstr ""
+msgstr "检测到反病毒软件：%s（已启用：%s）"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:59
 msgid "No antivirus software detected"
-msgstr ""
+msgstr "未检测到反病毒软件"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:62
 #, python-format
@@ -171,7 +172,7 @@ msgstr "软件清单不支持的平台：%s"
 #: src/sysmanage_agent/collection/certificate_collection.py:54
 #, python-format
 msgid "Collected %d certificates"
-msgstr ""
+msgstr "已收集 %d 个证书"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:58
 #: src/sysmanage_agent/communication/data_collector.py:839
@@ -182,17 +183,17 @@ msgstr "检测分区时出错: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:232
 #, python-format
 msgid "Collected %d certificates from keychain: %s"
-msgstr ""
+msgstr "已从钥匙串收集 %d 个证书：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:238
 #, python-format
 msgid "Failed to collect certificates from keychain %s: %s"
-msgstr ""
+msgstr "从钥匙串 %s 收集证书失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:272
 #, python-format
 msgid "Security command failed for keychain %s: %s"
-msgstr ""
+msgstr "security 命令对钥匙串 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:283
 #, python-format
@@ -202,12 +203,12 @@ msgstr "ramdisk 操作超时: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Error extracting certificates from keychain %s: %s"
-msgstr ""
+msgstr "从钥匙串 %s 提取证书时出错：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:351
 #, python-format
 msgid "OpenSSL failed to parse certificate: %s"
-msgstr ""
+msgstr "OpenSSL 解析证书失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:369
 #, python-format
@@ -222,12 +223,12 @@ msgstr "处理队列消息 %s 时出错：%s"
 #: src/sysmanage_agent/collection/certificate_collection.py:407
 #, python-format
 msgid "Failed to scan certificate directory %s: %s"
-msgstr ""
+msgstr "扫描证书目录 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:445
 #, python-format
 msgid "Failed to process certificate %s: %s"
-msgstr ""
+msgstr "处理证书 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:473
 #, python-format
@@ -242,12 +243,12 @@ msgstr "检测分区时出错: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:498
 #, python-format
 msgid "Found %d certificates in store %s"
-msgstr ""
+msgstr "找到 %d 个证书，存储：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:502
 #, python-format
 msgid "No valid certificates found in store %s"
-msgstr ""
+msgstr "在存储 %s 中未找到有效证书"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:513
 #, python-format
@@ -262,7 +263,7 @@ msgstr "ramdisk 操作超时: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:522
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr ""
+msgstr "查询 Windows 证书存储 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:569
 #, python-format
@@ -282,27 +283,27 @@ msgstr "Failed to write %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
-msgstr ""
+msgstr "从以下位置提取证书信息超时：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:620
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
-msgstr ""
+msgstr "未找到 OpenSSL/LibreSSL，跳过证书：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:625
 #, python-format
 msgid "Error extracting certificate info from %s: %s"
-msgstr ""
+msgstr "从 %s 提取证书信息时出错：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:695
 #, python-format
 msgid "Failed to parse %s date '%s': %s"
-msgstr ""
+msgstr "解析 %s 日期 '%s' 失败：%s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:41
 #, python-format
 msgid "Commercial antivirus detection not applicable for %s"
-msgstr ""
+msgstr "商业反病毒检测不适用于 %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:48
 #, python-format
@@ -311,7 +312,7 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:80
 msgid "Microsoft Defender service not detected or not running"
-msgstr ""
+msgstr "未检测到 Microsoft Defender 服务或未运行"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:99
 #, python-format
@@ -321,7 +322,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:152
 #, python-format
 msgid "Detected Microsoft Defender (version: %s, enabled: %s)"
-msgstr ""
+msgstr "检测到 Microsoft Defender（版本：%s，已启用：%s）"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:161
 #, python-format
@@ -330,7 +331,7 @@ msgstr "解析fwupd JSON输出失败：%s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 msgid "Timeout while querying Microsoft Defender status"
-msgstr ""
+msgstr "查询 Microsoft Defender 状态超时"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 #, python-format
@@ -345,11 +346,11 @@ msgstr "无法设置网络自动启动: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:211
 #, python-format
 msgid "Error parsing datetime %s: %s"
-msgstr ""
+msgstr "解析 datetime %s 时出错：%s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:263
 msgid "Microsoft Defender CLI (mdatp) not found on macOS"
-msgstr ""
+msgstr "在 macOS 上未找到 Microsoft Defender CLI (mdatp)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:275
 #, python-format
@@ -359,13 +360,13 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:320
 #, python-format
 msgid ""
-"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, "
-"licensed: %s)"
-msgstr ""
+"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+" licensed: %s)"
+msgstr "在 macOS 上检测到 Microsoft Defender for Endpoint（版本：%s，已启用：%s，已授权：%s）"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:331
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr ""
+msgstr "在 macOS 上查询 Microsoft Defender 状态超时"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:336
 #, python-format
@@ -380,7 +381,7 @@ msgstr "无法设置网络自动启动: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:382
 #, python-format
 msgid "Error parsing macOS datetime %s: %s"
-msgstr ""
+msgstr "解析 macOS datetime %s 时出错：%s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
@@ -418,7 +419,7 @@ msgstr "收集软件清单失败：%s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:167
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr ""
+msgstr "获取 Linux CPU 信息失败：%s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:184
 #, python-format
@@ -566,7 +567,7 @@ msgstr "为%s应用固件更新时出现异常：%s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:282
 #, python-format
 msgid "Applying Ubuntu release upgrade to: %s"
-msgstr ""
+msgstr "正在应用 Ubuntu 版本升级到：%s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:307
 #, python-format
@@ -586,7 +587,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:368
 #, python-format
 msgid "Applying openSUSE release upgrade to: %s"
-msgstr ""
+msgstr "正在应用 openSUSE 版本升级到：%s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:393
 #, python-format
@@ -654,7 +655,7 @@ msgstr "未知设备"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:116
 msgid "Ubuntu Pro status check timed out"
-msgstr ""
+msgstr "Ubuntu Pro 状态检查超时"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:121
 #, python-format
@@ -664,7 +665,7 @@ msgstr "分离 Ubuntu Pro 失败：%s"
 #: src/sysmanage_agent/collection/os_info_collection.py:143
 #, python-format
 msgid "Ubuntu Pro status collected: attached=%s, services=%d"
-msgstr ""
+msgstr "已收集 Ubuntu Pro 状态：attached=%s，services=%d"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:150
 #, python-format
@@ -701,7 +702,7 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:194
 msgid "winget not found in any common location"
-msgstr ""
+msgstr "在任何常见位置都未找到 winget"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:270
 #, python-format
@@ -711,7 +712,7 @@ msgstr "更新%s固件失败：%s"
 #: src/sysmanage_agent/collection/package_collector_base.py:300
 #, python-format
 msgid "Failed to get packages for %s: %s"
-msgstr ""
+msgstr "获取 %s 的软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:324
 #, python-format
@@ -731,7 +732,7 @@ msgstr "收集 macOS 应用程序失败：%s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:33
 #, python-format
 msgid "Collected %d packages from pkg_info"
-msgstr ""
+msgstr "已从 pkg_info 收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:35
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:129
@@ -742,7 +743,7 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:42
 #, python-format
 msgid "Collected %d packages from pkg"
-msgstr ""
+msgstr "已从 pkg 收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:44
 #, python-format
@@ -752,7 +753,7 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:51
 #, python-format
 msgid "Collected %d packages from pkgin"
-msgstr ""
+msgstr "已从 pkgin 收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:53
 #, python-format
@@ -761,11 +762,11 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:74
 msgid "Failed to get OpenBSD package list"
-msgstr ""
+msgstr "获取 OpenBSD 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:90
 msgid "Failed to get pkg package list"
-msgstr ""
+msgstr "获取 pkg 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:97
 #, python-format
@@ -774,7 +775,7 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:113
 msgid "Failed to get pkgin package list"
-msgstr ""
+msgstr "获取 pkgin 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:120
 #, python-format
@@ -785,23 +786,23 @@ msgstr "收集 apt 软件包失败：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
+msgstr "在有 dnf 可用的主机上跳过 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包装器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:56
 #: src/sysmanage_agent/collection/package_collector_windows.py:51
 #, python-format
 msgid "Collected %d packages from %s"
-msgstr ""
+msgstr "已收集 %d 个软件包，来源：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:59
 #: src/sysmanage_agent/collection/package_collector_windows.py:54
 #, python-format
 msgid "Failed to collect packages from %s: %s"
-msgstr ""
+msgstr "从 %s 收集软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:82
 msgid "Failed to get APT package information"
-msgstr ""
+msgstr "获取 APT 软件包信息失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:89
 #, python-format
@@ -810,7 +811,7 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:104
 msgid "Failed to get YUM package list"
-msgstr ""
+msgstr "获取 YUM 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:111
 #, python-format
@@ -819,16 +820,16 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:126
 msgid "Failed to get DNF package list"
-msgstr ""
+msgstr "获取 DNF 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:135
 #, python-format
 msgid "Error collecting DNF packages: %s"
-msgstr ""
+msgstr "收集 DNF 软件包时出错：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:150
 msgid "Failed to get Zypper package list"
-msgstr ""
+msgstr "获取 Zypper 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:157
 #, python-format
@@ -837,35 +838,35 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:172
 msgid "Failed to get Pacman package list"
-msgstr ""
+msgstr "获取 Pacman 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:179
 #, python-format
 msgid "Error collecting Pacman packages: %s"
-msgstr ""
+msgstr "收集 Pacman 软件包时出错：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:195
 msgid "Failed to get Snap package list"
-msgstr ""
+msgstr "获取 Snap 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:202
 #, python-format
 msgid "Error collecting Snap packages: %s"
-msgstr ""
+msgstr "收集 Snap 软件包时出错：%s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:217
 msgid "Failed to get Flatpak package list"
-msgstr ""
+msgstr "获取 Flatpak 软件包列表失败"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:224
 #, python-format
 msgid "Error collecting Flatpak packages: %s"
-msgstr ""
+msgstr "收集 Flatpak 软件包时出错：%s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:29
 #, python-format
 msgid "Collected %d packages from Homebrew"
-msgstr ""
+msgstr "已从 Homebrew 收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:31
 #: src/sysmanage_agent/collection/software_inventory_macos.py:151
@@ -875,35 +876,35 @@ msgstr "收集 Homebrew 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:41
 msgid "Homebrew command not found"
-msgstr ""
+msgstr "未找到 Homebrew 命令"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:63
 #, python-format
 msgid "Collected %d Homebrew formulae"
-msgstr ""
+msgstr "已收集 %d 个 Homebrew formulae"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:82
 #, python-format
 msgid "Collected %d Homebrew casks"
-msgstr ""
+msgstr "已收集 %d 个 Homebrew casks"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:87
 #, python-format
 msgid "Error collecting Homebrew packages: %s"
-msgstr ""
+msgstr "收集 Homebrew 软件包时出错：%s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:62
 msgid "Fetching winget catalog via REST API"
-msgstr ""
+msgstr "通过 REST API 获取 winget 目录"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
 #, python-format
 msgid "Successfully collected %d packages from winget REST API"
-msgstr ""
+msgstr "已成功从 winget REST API 收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:74
 msgid "No packages collected from winget REST API"
-msgstr ""
+msgstr "未从 winget REST API 收集到任何软件包"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:78
 #, python-format
@@ -913,20 +914,21 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:114
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
-msgstr ""
+msgstr "获取 winget 页 %d 时出错（目前已收集 %d 个软件包）：%s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:166
 msgid "Fetching Chocolatey catalog via community repository API"
-msgstr ""
+msgstr "通过社区仓库 API 获取 Chocolatey 目录"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:174
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
-msgstr ""
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
+msgstr "已成功从 Chocolatey 社区仓库收集 %d 个软件包"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:181
 msgid "No packages collected from Chocolatey community repository"
-msgstr ""
+msgstr "未从 Chocolatey 社区仓库收集到任何软件包"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:186
 #, python-format
@@ -936,7 +938,7 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:212
 #, python-format
 msgid "Error fetching page at skip %d: %s"
-msgstr ""
+msgstr "在跳过 %d 处获取页面时出错：%s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:83
 #, python-format
@@ -946,17 +948,17 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:118
 #, python-format
 msgid "Successfully collected %s packages"
-msgstr ""
+msgstr "已成功收集 %s 个软件包"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:122
 #, python-format
 msgid "No pkg_info output found. Return code: %d"
-msgstr ""
+msgstr "未找到 pkg_info 输出。返回码：%d"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:126
 #, python-format
 msgid "pkg_info stderr: %s"
-msgstr ""
+msgstr "pkg_info stderr：%s"
 
 #: src/sysmanage_agent/collection/software_inventory_collection.py:58
 #, python-format
@@ -1015,7 +1017,7 @@ msgstr "收集 macOS 应用程序失败：%s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:332
 msgid "Failed to parse system_profiler JSON output"
-msgstr ""
+msgstr "解析 system_profiler JSON 输出失败"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:336
 #, python-format
@@ -1025,7 +1027,7 @@ msgstr "收集 macOS 应用程序失败：%s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:186
 #, python-format
 msgid "Collected %d programs from Windows Registry"
-msgstr ""
+msgstr "已从 Windows 注册表收集 %d 个程序"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:200
 #, python-format
@@ -1035,7 +1037,7 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:265
 #, python-format
 msgid "Collected %d apps from Microsoft Store"
-msgstr ""
+msgstr "已从 Microsoft Store 收集 %d 个应用"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:277
 #, python-format
@@ -1044,7 +1046,7 @@ msgstr "解析fwupd JSON输出失败：%s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:284
 msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-msgstr ""
+msgstr "未找到 PowerShell（非 Windows 或未安装 PowerShell）"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:287
 #, python-format
@@ -1066,7 +1068,7 @@ msgstr "软件清单不支持的平台：%s"
 msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
-msgstr ""
+msgstr "更新检测完成：发现 %d 个更新（%d 安全，%d 系统，%d 应用程序）"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1078,7 +1080,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/operations/package_operations.py:227
 #, python-format
 msgid "Failed to install package %s: %s"
-msgstr ""
+msgstr "安装软件包 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_base.py:108
 #, python-format
@@ -1093,12 +1095,12 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "pkgin update failed (code %d): %s"
-msgstr ""
+msgstr "pkgin 更新失败（代码 %d）：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:178
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
-msgstr ""
+msgstr "pkgin list -u 失败（代码 %d）：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:197
 #, python-format
@@ -1113,7 +1115,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:249
 #, python-format
 msgid "Applying OpenBSD upgrade: %s"
-msgstr ""
+msgstr "正在应用 OpenBSD 升级：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
@@ -1123,11 +1125,11 @@ msgstr "正在运行固件更新命令：%s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:268
 #, python-format
 msgid "Successfully applied OpenBSD upgrade: %s"
-msgstr ""
+msgstr "已成功应用 OpenBSD 升级：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:283
 msgid "OpenBSD upgrade failed"
-msgstr ""
+msgstr "OpenBSD 升级失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:298
 msgid "OpenBSD upgrade timed out after 30 minutes"
@@ -1149,7 +1151,7 @@ msgstr "固件更新失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:410
 msgid "FreeBSD upgrade install failed"
-msgstr ""
+msgstr "FreeBSD 升级安装失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "FreeBSD upgrade timed out"
@@ -1158,17 +1160,17 @@ msgstr "删除操作超时"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:470
 #, python-format
 msgid "Found %d OpenBSD system patches (combined into single update)"
-msgstr ""
+msgstr "找到 %d 个 OpenBSD 系统补丁（合并为单个更新）"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:480
 #, python-format
 msgid "syspatch command failed with exit code %d"
-msgstr ""
+msgstr "syspatch 命令以退出码 %d 失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:483
 #, python-format
 msgid "syspatch stderr: %s"
-msgstr ""
+msgstr "syspatch stderr：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:486
 msgid "OpenBSD system update detection timed out"
@@ -1181,39 +1183,39 @@ msgstr "发送初始数据更新失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:506
 msgid "Failed to get current OpenBSD version"
-msgstr ""
+msgstr "获取当前 OpenBSD 版本失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 #, python-format
 msgid "Current OpenBSD version: %s"
-msgstr ""
+msgstr "当前 OpenBSD 版本：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:515
 msgid "Fetching https://www.openbsd.org/ to check for updates"
-msgstr ""
+msgstr "正在获取 https://www.openbsd.org/ 以检查更新"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:530
 #, python-format
 msgid "Latest OpenBSD version from website: %s"
-msgstr ""
+msgstr "网站上的最新 OpenBSD 版本：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:536
 #, python-format
 msgid "OpenBSD upgrade available: %s -> %s"
-msgstr ""
+msgstr "OpenBSD 升级可用：%s -> %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:554
 msgid "Added OpenBSD upgrade to available_updates list"
-msgstr ""
+msgstr "已将 OpenBSD 升级添加到 available_updates 列表"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:557
 #, python-format
 msgid "OpenBSD is up to date: %s"
-msgstr ""
+msgstr "OpenBSD 已是最新：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:559
 msgid "Could not parse OpenBSD version from website"
-msgstr ""
+msgstr "无法从网站解析 OpenBSD 版本"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
@@ -1232,28 +1234,28 @@ msgstr "收集 apt 软件包失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:625
 msgid "Calling _detect_openbsd_system_updates"
-msgstr ""
+msgstr "正在调用 _detect_openbsd_system_updates"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:628
 msgid "Calling _detect_openbsd_version_upgrades"
-msgstr ""
+msgstr "正在调用 _detect_openbsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:633
 msgid "Calling _detect_freebsd_version_upgrades"
-msgstr ""
+msgstr "正在调用 _detect_freebsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:645
 #, python-format
 msgid "=== BSD detect_updates finished, total updates: %d ==="
-msgstr ""
+msgstr "=== BSD detect_updates 完成，更新总数：%d ==="
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:714
 msgid "Applying OpenBSD syspatch updates"
-msgstr ""
+msgstr "正在应用 OpenBSD syspatch 更新"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:744
 msgid "syspatch command failed"
-msgstr ""
+msgstr "syspatch 命令失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:746
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
@@ -1275,7 +1277,7 @@ msgstr "固件更新在10分钟后超时"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:546
 #, python-format
 msgid "Applying updates for %d packages: %s"
-msgstr ""
+msgstr "正在为 %d 个软件包应用更新：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:908
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -1288,14 +1290,14 @@ msgstr "不支持的包管理器: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:700
 #, python-format
 msgid "Applying %d updates using %s"
-msgstr ""
+msgstr "正在应用 %d 个更新，使用：%s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:958
 #: src/sysmanage_agent/collection/update_detection_linux.py:344
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:705
 #, python-format
 msgid "Update process completed: %d updated, %d failed"
-msgstr ""
+msgstr "更新过程完成：%d 个已更新，%d 个失败"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:966
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:713
@@ -1316,7 +1318,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/update_detection_linux.py:323
 #, python-format
 msgid "Failed to apply %s updates: %s"
-msgstr ""
+msgstr "应用 %s 更新失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:367
 #, python-format
@@ -1326,11 +1328,11 @@ msgstr "不支持的包管理器: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:161
 #, python-format
 msgid "Homebrew update failed: %s"
-msgstr ""
+msgstr "Homebrew 更新失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:209
 msgid "Failed to parse Homebrew JSON output"
-msgstr ""
+msgstr "解析 Homebrew JSON 输出失败"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:212
 #, python-format
@@ -1355,17 +1357,17 @@ msgstr "正在运行固件更新命令：%s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:397
 #, python-format
 msgid "Homebrew command completed. Return code: %d"
-msgstr ""
+msgstr "Homebrew 命令完成。返回码：%d"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:400
 #, python-format
 msgid "Homebrew stdout: %s"
-msgstr ""
+msgstr "Homebrew stdout：%s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:402
 #, python-format
 msgid "Homebrew stderr: %s"
-msgstr ""
+msgstr "Homebrew stderr：%s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:414
 #, python-format
@@ -1375,7 +1377,7 @@ msgstr "成功更新固件：%s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:425
 #, python-format
 msgid "Failed to update package %s: %s"
-msgstr ""
+msgstr "更新软件包 %s 失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:444
 #, python-format
@@ -1408,17 +1410,17 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:62
 #, python-format
 msgid "Package '%s' update timed out after %d seconds. Partial output: %s"
-msgstr ""
+msgstr "软件包 '%s' 更新在 %d 秒后超时。部分输出：%s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:79
 #, python-format
 msgid "Update still running for '%s' (%d seconds elapsed)"
-msgstr ""
+msgstr "'%s' 的更新仍在运行（已用 %d 秒）"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:100
 #, python-format
 msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Winget 命令结果：returncode=%d，stdout='%s'，stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:108
 #, python-format
@@ -1429,12 +1431,12 @@ msgstr "成功更新固件：%s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:234
 #, python-format
 msgid "Failed to update package '%s': %s"
-msgstr ""
+msgstr "更新软件包 '%s' 失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:144
 #, python-format
 msgid "Applying winget update for package '%s' (ID: %s)"
-msgstr ""
+msgstr "正在为软件包 '%s' 应用 winget 更新（ID：%s）"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:179
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
@@ -1450,35 +1452,35 @@ msgstr "正在为设备应用固件更新：%s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:210
 #, python-format
 msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Chocolatey 命令结果：returncode=%d，stdout='%s'，stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:347
 #, python-format
 msgid "Windows Update command result: returncode=%d, output='%s'"
-msgstr ""
+msgstr "Windows Update 命令结果：returncode=%d，output='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
-msgstr ""
+msgstr "Windows Update 安装失败"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:378
 #, python-format
 msgid "Failed to install Windows Update '%s': %s"
-msgstr ""
+msgstr "安装 Windows Update '%s' 失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:398
 #, python-format
 msgid "Applying Windows Update: %s (UpdateID: %s)"
-msgstr ""
+msgstr "正在应用 Windows Update：%s（UpdateID：%s）"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:408
 msgid "Running Windows Update installation command"
-msgstr ""
+msgstr "正在运行 Windows Update 安装命令"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:429
 #, python-format
 msgid "Windows Update '%s' timed out after 30 minutes"
-msgstr ""
+msgstr "Windows Update '%s' 在 30 分钟后超时"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
@@ -1496,7 +1498,7 @@ msgstr "正在为设备应用固件更新：%s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:466
 msgid "Running Windows upgrade command"
-msgstr ""
+msgstr "正在运行 Windows 升级命令"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:478
 #, python-format
@@ -1543,7 +1545,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:120
 #, python-format
 msgid "Windows Update detected: '%s' with UpdateID='%s'"
-msgstr ""
+msgstr "检测到 Windows Update：'%s'，UpdateID='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:129
 #, python-format
@@ -1569,15 +1571,15 @@ msgstr "收集 apt 软件包失败：%s"
 msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
-msgstr ""
+msgstr "在非特权模式下运行证书收集 - 某些证书可能无法访问"
 
 #: src/sysmanage_agent/communication/data_collector.py:810
 msgid "No certificates found on system"
-msgstr ""
+msgstr "在系统上未找到证书"
 
 #: src/sysmanage_agent/communication/data_collector.py:851
 msgid "No server roles detected on system"
-msgstr ""
+msgstr "在系统上未检测到服务器角色"
 
 #: src/sysmanage_agent/communication/data_collector.py:885
 #, python-format
@@ -1590,7 +1592,7 @@ msgstr "消息队列管理器已初始化"
 
 #: src/sysmanage_agent/communication/message_handler.py:847
 msgid "Cannot send message: not connected to server"
-msgstr ""
+msgstr "无法发送消息：未连接到服务器"
 
 #: src/sysmanage_agent/communication/message_handler.py:855
 #, python-format
@@ -1623,17 +1625,17 @@ msgstr "关闭消息处理器时出错：%s"
 #: src/sysmanage_agent/core/agent_utils.py:59
 #, python-format
 msgid "Found %d available updates during periodic check"
-msgstr ""
+msgstr "在定期检查中发现 %d 个可用更新"
 
 #: src/sysmanage_agent/core/agent_utils.py:64
 #, python-format
 msgid "Error during periodic update check: %s"
-msgstr ""
+msgstr "定期更新检查期间出错：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:92
 #, python-format
 msgid "Update checker error: %s"
-msgstr ""
+msgstr "更新检查器错误：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:128
 msgid "Package collection completed successfully"
@@ -1641,7 +1643,7 @@ msgstr "代理更新成功"
 
 #: src/sysmanage_agent/core/agent_utils.py:130
 msgid "Package collection completed with some issues"
-msgstr ""
+msgstr "软件包收集完成，但存在一些问题"
 
 #: src/sysmanage_agent/core/agent_utils.py:133
 #, python-format
@@ -1651,36 +1653,36 @@ msgstr "检测分区时出错: %s"
 #: src/sysmanage_agent/core/agent_utils.py:172
 #, python-format
 msgid "Package collection scheduler error: %s"
-msgstr ""
+msgstr "软件包收集调度器错误：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:227
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr ""
+msgstr "认证失败，状态 %s：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:247
 #, python-format
 msgid "Received command: %s with parameters: %s"
-msgstr ""
+msgstr "已接收命令：%s，参数：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:365
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
-msgstr ""
+msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
 #: src/sysmanage_agent/core/agent_utils.py:402
 msgid "Generic command missing nested command_type"
-msgstr ""
+msgstr "通用命令缺少嵌套的 command_type"
 
 #: src/sysmanage_agent/core/agent_utils.py:414
 #, python-format
 msgid "Unknown command type: %s"
-msgstr ""
+msgstr "未知的命令类型：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
-msgstr ""
+msgstr "已为 execution_id 排队脚本执行结果：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:473
 #, python-format
@@ -1694,17 +1696,17 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:506
 msgid "No execution UUID provided, cannot track"
-msgstr ""
+msgstr "未提供执行 UUID，无法跟踪"
 
 #: src/sysmanage_agent/core/agent_utils.py:521
 #, python-format
 msgid "Execution UUID %s already exists in database"
-msgstr ""
+msgstr "执行 UUID %s 已存在于数据库中"
 
 #: src/sysmanage_agent/core/agent_utils.py:540
 #, python-format
 msgid "Stored execution UUID %s for tracking"
-msgstr ""
+msgstr "已为跟踪存储执行 UUID %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:546
 #, python-format
@@ -1769,33 +1771,33 @@ msgstr "%s 的服务状态错误：%s"
 #: src/sysmanage_agent/core/config.py:71
 #, python-format
 msgid "Configuration file '%s' not found. Expected locations: %s"
-msgstr ""
+msgstr "未找到配置文件 '%s'。预期位置：%s"
 
 # Configuration
 #: src/sysmanage_agent/core/config.py:80
 #, python-format
 msgid "Invalid YAML in configuration file: %s"
-msgstr ""
+msgstr "配置文件中的 YAML 无效：%s"
 
 #: src/sysmanage_agent/core/config.py:84
 #, python-format
 msgid "Failed to load configuration file: %s"
-msgstr ""
+msgstr "加载配置文件失败：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:39
 #, python-format
 msgid "Starting diagnostics collection for ID: %s"
-msgstr ""
+msgstr "正在为 ID 开始诊断收集：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:41
 #, python-format
 msgid "Collection types requested: %s"
-msgstr ""
+msgstr "请求的收集类型：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:66
 #, python-format
 msgid "Diagnostics collection completed for ID: %s"
-msgstr ""
+msgstr "ID 的诊断收集完成：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:76
 #, python-format
@@ -1805,22 +1807,22 @@ msgstr "收集 apt 软件包失败：%s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:122
 #, python-format
 msgid "Unknown collection type: %s"
-msgstr ""
+msgstr "未知的收集类型：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:136
 #, python-format
 msgid "Starting collection %d/%d: %s"
-msgstr ""
+msgstr "开始收集 %d/%d：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:149
 #, python-format
 msgid "Completed collection of %s in %.2f seconds"
-msgstr ""
+msgstr "已完成 %s 的收集，用时 %.2f 秒"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:157
 #, python-format
 msgid "Failed to collect %s after %.2f seconds: %s"
-msgstr ""
+msgstr "收集 %s 失败，用时 %.2f 秒：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:240
 #, python-format
@@ -1836,7 +1838,7 @@ msgstr "关闭消息处理器时出错：%s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:431
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr ""
+msgstr "收集配置文件时出错：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:551
 #, python-format
@@ -1856,7 +1858,7 @@ msgstr "关闭消息处理器时出错：%s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:725
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr ""
+msgstr "收集环境变量时出错：%s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:756
 #, python-format
@@ -1870,7 +1872,7 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:38
 msgid "Homebrew is not installed"
-msgstr ""
+msgstr "未安装 Homebrew"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:66
 #, python-format
@@ -1879,7 +1881,7 @@ msgstr "关闭消息处理器时出错：%s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:77
 msgid "Invalid tap format. Use 'user/repo' format"
-msgstr ""
+msgstr "无效的 tap 格式。使用 'user/repo' 格式"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:97
 msgid "Tap added successfully"
@@ -1905,11 +1907,11 @@ msgstr "队列处理器出错：%s"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:437
 #, python-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "读取 %s 时出错：%s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:176
 msgid "Repository URL is required for FreeBSD pkg"
-msgstr ""
+msgstr "FreeBSD pkg 需要仓库 URL"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:206
 #: src/sysmanage_agent/operations/windows_repository_operations.py:161
@@ -1928,7 +1930,7 @@ msgstr "设置默认网络时出错: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:268
 msgid "Repository URL is required for NetBSD pkgsrc"
-msgstr ""
+msgstr "NetBSD pkgsrc 需要仓库 URL"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:277
 #, python-format
@@ -1956,7 +1958,7 @@ msgstr "子主机管理需要 Pro+ (引擎路径)。"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:133
 msgid "No files provided"
-msgstr ""
+msgstr "未提供文件"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:470
 msgid "No steps provided"
@@ -1965,28 +1967,28 @@ msgstr "未找到用户配置文件"
 #: src/sysmanage_agent/operations/generic_deployment.py:507
 #, python-format
 msgid "Unknown step type: %s"
-msgstr ""
+msgstr "未知的步骤类型：%s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:579
 msgid "Empty shell command"
-msgstr ""
+msgstr "空的 shell 命令"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:619
 msgid "Empty wait_condition command"
-msgstr ""
+msgstr "空的 wait_condition 命令"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:879
 msgid "no argv"
-msgstr ""
+msgstr "无 argv"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:904
 #, python-format
 msgid "FileNotFoundError: %s"
-msgstr ""
+msgstr "FileNotFoundError：%s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:953
 msgid "timeout"
-msgstr ""
+msgstr "超时"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -1994,7 +1996,7 @@ msgstr "需要主机名"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "Invalid hostname format"
-msgstr "无效的内存格式: {value}"
+msgstr "无效的主机名格式"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:73
 #, python-format
@@ -2009,7 +2011,7 @@ msgstr "收集软件清单失败：%s"
 #: src/sysmanage_agent/operations/hostname_operations.py:120
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr ""
+msgstr "hostnamectl 失败，尝试手动更改主机名：%s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:134
 #: src/sysmanage_agent/operations/hostname_operations.py:140
@@ -2040,7 +2042,7 @@ msgstr "停止 HTTP 服务器失败: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:218
 #, python-format
 msgid "Changing Windows hostname to: %s"
-msgstr ""
+msgstr "正在将 Windows 主机名更改为：%s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:231
 #, python-format
@@ -2051,7 +2053,7 @@ msgstr "收集 apt 软件包失败：%s"
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr ""
+msgstr "主机名已更改为 %s。需要重启才能使更改生效。"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:250
 #, python-format
@@ -2061,7 +2063,7 @@ msgstr "使用FreeBSD sda4: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:272
 #, python-format
 msgid "sysrc failed, trying sed: %s"
-msgstr ""
+msgstr "sysrc 失败，尝试 sed：%s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:287
 #, python-format
@@ -2071,7 +2073,7 @@ msgstr "更新代理失败：%s"
 #: src/sysmanage_agent/operations/hostname_operations.py:303
 #, python-format
 msgid "Changing BSD hostname to: %s"
-msgstr ""
+msgstr "正在将 BSD 主机名更改为：%s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:326
 #: src/sysmanage_agent/operations/hostname_operations.py:332
@@ -2145,7 +2147,7 @@ msgstr "设置默认网络时出错: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:618
 msgid "Repository URL is required for Zypper"
-msgstr ""
+msgstr "Zypper 需要仓库 URL"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:653
 #, python-format
@@ -2169,14 +2171,14 @@ msgstr "将用户添加到组时出错: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:43
 msgid "No Grafana URL provided for OpenTelemetry deployment"
-msgstr ""
+msgstr "未提供 OpenTelemetry 部署的 Grafana URL"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:67
 #, python-format
 msgid ""
 "OpenTelemetry deployment on %s is not currently supported. Manual "
 "installation required."
-msgstr ""
+msgstr "目前不支持在 %s 上部署 OpenTelemetry。需要手动安装。"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:78
 #, python-format
@@ -2211,7 +2213,7 @@ msgstr "设置默认网络时出错: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:260
 msgid "Stopping OpenTelemetry service..."
-msgstr ""
+msgstr "正在停止 OpenTelemetry 服务……"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:279
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:282
@@ -2256,7 +2258,7 @@ msgstr "需要用户名"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:352
 #, python-format
 msgid "Connecting OpenTelemetry to Grafana at %s"
-msgstr ""
+msgstr "正在将 OpenTelemetry 连接到 %s 上的 Grafana"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:357
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:360
@@ -2266,23 +2268,23 @@ msgstr "成功连接到服务器"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:365
 #, python-format
 msgid "Error connecting OpenTelemetry to Grafana: %s"
-msgstr ""
+msgstr "将 OpenTelemetry 连接到 Grafana 时出错：%s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:378
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:382
 msgid "OpenTelemetry disconnected from Grafana successfully"
-msgstr ""
+msgstr "OpenTelemetry 已成功从 Grafana 断开连接"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:388
 #, python-format
 msgid "Error disconnecting OpenTelemetry from Grafana: %s"
-msgstr ""
+msgstr "断开 OpenTelemetry 与 Grafana 连接时出错：%s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:400
 #: src/sysmanage_agent/operations/otel_base.py:149
 #: src/sysmanage_agent/operations/system_control.py:35
 msgid "No command specified"
-msgstr ""
+msgstr "未指定命令"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:45
 #, python-format
@@ -2300,15 +2302,15 @@ msgstr "安装 libvirt 包失败: %s"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:312
 msgid "BSDOtelDeployer should not be called directly"
-msgstr ""
+msgstr "BSDOtelDeployer 不应直接调用"
 
 #: src/sysmanage_agent/operations/otel_deploy_linux.py:37
 msgid "No supported package manager found (apt/yum/dnf)"
-msgstr ""
+msgstr "未找到支持的软件包管理器（apt/yum/dnf）"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:170
 msgid "No supported package manager found"
-msgstr ""
+msgstr "未找到支持的软件包管理器"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:196
 #, python-format
@@ -2317,7 +2319,7 @@ msgstr "安装 libvirt 包失败: %s"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:214
 msgid "Failed to download OpenTelemetry package"
-msgstr ""
+msgstr "下载 OpenTelemetry 软件包失败"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:297
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:367
@@ -2338,7 +2340,7 @@ msgstr "CPU 至少为 1"
 #: src/sysmanage_agent/operations/package_compliance_operations.py:86
 #, python-format
 msgid "package inventory collection failed: %s"
-msgstr ""
+msgstr "软件包清单收集失败：%s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:50
 #, python-format
@@ -2352,17 +2354,17 @@ msgstr "清理自动安装工作目录失败: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:103
 msgid "Skipping package with no name"
-msgstr ""
+msgstr "跳过没有名称的软件包"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:104
 #: src/sysmanage_agent/operations/package_operations.py:56
 msgid "No package name"
-msgstr ""
+msgstr "无软件包名称"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:214
 #, python-format
 msgid "Installing package: %s"
-msgstr ""
+msgstr "正在安装软件包：%s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:99
 msgid "Package manager name is required"
@@ -2371,7 +2373,7 @@ msgstr "需要用户名"
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 #, python-format
 msgid "Enabling package manager '%s' for OS '%s'"
-msgstr ""
+msgstr "正在为操作系统 '%s' 启用软件包管理器 '%s'"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:110
 msgid "Enabling package managers requires privileged mode"
@@ -2385,7 +2387,7 @@ msgstr "不支持的包管理器: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:133
 #, python-format
 msgid "Error enabling package manager '%s': %s"
-msgstr ""
+msgstr "启用软件包管理器 '%s' 时出错：%s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:145
 msgid "Flatpak is only supported on Linux systems"
@@ -2405,11 +2407,11 @@ msgstr "不支持的包管理器: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:207
 #, python-format
 msgid "%s installed successfully"
-msgstr ""
+msgstr "%s 安装成功"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:239
 msgid "Flathub repository added"
-msgstr ""
+msgstr "已添加 Flathub 仓库"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:241
 #, python-format
@@ -2437,10 +2439,12 @@ msgstr "KVM 已初始化"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
+"Homebrew 安装需要手动干预。请使用以下命令安装：/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -2474,30 +2478,30 @@ msgstr "libvirt 包安装成功"
 #: src/sysmanage_agent/operations/package_operations.py:117
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
-msgstr ""
+msgstr "%s 软件包管理器未实现卸载"
 
 #: src/sysmanage_agent/operations/package_operations.py:169
 msgid "No package name specified"
-msgstr ""
+msgstr "未指定软件包名称"
 
 #: src/sysmanage_agent/operations/package_operations.py:172
 #, python-format
 msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-msgstr ""
+msgstr "正在安装软件包 %s（installation_id: %s，requested_by: %s）"
 
 #: src/sysmanage_agent/operations/package_operations.py:259
 #: src/sysmanage_agent/operations/package_operations.py:367
 msgid "No request_id specified"
-msgstr ""
+msgstr "未指定 request_id"
 
 #: src/sysmanage_agent/operations/package_operations.py:264
 msgid "No packages specified for installation"
-msgstr ""
+msgstr "未指定要安装的软件包"
 
 #: src/sysmanage_agent/operations/package_operations.py:268
 #, python-format
 msgid "Installing %d packages for request %s (requested_by: %s)"
-msgstr ""
+msgstr "正在安装 %d 个软件包，请求 %s (requested_by: %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:343
 #, python-format
@@ -2506,7 +2510,7 @@ msgstr "发送初始数据更新失败：%s"
 
 #: src/sysmanage_agent/operations/package_operations.py:372
 msgid "No packages specified for uninstallation"
-msgstr ""
+msgstr "未指定要卸载的软件包"
 
 #: src/sysmanage_agent/operations/package_operations.py:478
 msgid "No packages to install"
@@ -2520,7 +2524,7 @@ msgstr "已创建自动安装目录: %s"
 #: src/sysmanage_agent/operations/package_operations.py:532
 #, python-format
 msgid "Exception during apt-get install: %s"
-msgstr ""
+msgstr "apt-get install 期间出现异常：%s"
 
 #: src/sysmanage_agent/operations/package_operations.py:539
 msgid "No packages to uninstall"
@@ -2534,12 +2538,12 @@ msgstr "fwupd get-updates失败：%s"
 #: src/sysmanage_agent/operations/package_operations.py:578
 #, python-format
 msgid "Exception during apt-get remove: %s"
-msgstr ""
+msgstr "apt-get remove 期间出现异常：%s"
 
 #: src/sysmanage_agent/operations/package_operations.py:614
 #, python-format
 msgid "Queued installation completion for request %s"
-msgstr ""
+msgstr "已为请求 %s 排队安装完成"
 
 #: src/sysmanage_agent/operations/package_operations.py:619
 #, python-format
@@ -2554,7 +2558,7 @@ msgstr "检测分区时出错: %s"
 #: src/sysmanage_agent/operations/package_operations.py:673
 #, python-format
 msgid "Sent package installation status update: %s for %s"
-msgstr ""
+msgstr "已发送软件包安装状态更新：%s 用于 %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:680
 #, python-format
@@ -2575,7 +2579,7 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:85
 msgid "Listing third-party repositories"
-msgstr ""
+msgstr "正在列出第三方仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:99
 #, python-format
@@ -2585,7 +2589,7 @@ msgstr "检测分区时出错: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:117
 #, python-format
 msgid "Error detecting Linux distribution: %s"
-msgstr ""
+msgstr "检测 Linux 发行版时出错：%s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:179
 msgid "Repository identifier is required"
@@ -2598,17 +2602,17 @@ msgstr "将用户添加到组时出错: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:229
 msgid "No repositories specified for deletion"
-msgstr ""
+msgstr "未指定要删除的仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 #, python-format
 msgid "Deleting %d third-party repositories"
-msgstr ""
+msgstr "正在删除 %d 个第三方仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:260
 #, python-format
 msgid "Deleted %d of %d repositories"
-msgstr ""
+msgstr "已删除 %d / %d 个仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:265
 #, python-format
@@ -2617,17 +2621,17 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:293
 msgid "No repositories specified for enabling"
-msgstr ""
+msgstr "未指定要启用的仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:297
 #, python-format
 msgid "Enabling %d third-party repositories"
-msgstr ""
+msgstr "正在启用 %d 个第三方仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:325
 #, python-format
 msgid "Enabled %d of %d repositories"
-msgstr ""
+msgstr "已启用 %d / %d 个仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
@@ -2636,17 +2640,17 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
-msgstr ""
+msgstr "未指定要禁用的仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:362
 #, python-format
 msgid "Disabling %d third-party repositories"
-msgstr ""
+msgstr "正在禁用 %d 个第三方仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:390
 #, python-format
 msgid "Disabled %d of %d repositories"
-msgstr ""
+msgstr "已禁用 %d / %d 个仓库"
 
 #: src/sysmanage_agent/operations/repository_operations.py:395
 #, python-format
@@ -2660,7 +2664,7 @@ msgstr "检测分区时出错: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:66
 msgid "Missing required parameter 'script_content'"
-msgstr ""
+msgstr "缺少必需参数 'script_content'"
 
 #: src/sysmanage_agent/operations/script_operations.py:75
 #, python-format
@@ -2669,7 +2673,7 @@ msgstr "命令在 %d 秒后超时"
 
 #: src/sysmanage_agent/operations/script_operations.py:90
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
-msgstr ""
+msgstr "代理未公开 apply_deployment_plan；需要升级"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 #, python-format
@@ -2693,25 +2697,25 @@ msgstr "更新代理失败：%s"
 
 #: src/sysmanage_agent/operations/system_control.py:146
 msgid "No service name specified"
-msgstr ""
+msgstr "未指定服务名称"
 
 #: src/sysmanage_agent/operations/system_control.py:155
 #, python-format
 msgid "Failed to restart service %s: %s"
-msgstr ""
+msgstr "重启服务 %s 失败：%s"
 
 #: src/sysmanage_agent/operations/system_control.py:176
 msgid "System reboot scheduled in 1 minute"
-msgstr ""
+msgstr "系统将在 1 分钟后重启"
 
 #: src/sysmanage_agent/operations/system_control.py:180
 #, python-format
 msgid "Failed to reboot system: %s"
-msgstr ""
+msgstr "重启系统失败：%s"
 
 #: src/sysmanage_agent/operations/system_control.py:200
 msgid "System shutdown scheduled in 1 minute"
-msgstr ""
+msgstr "系统将在 1 分钟后关闭"
 
 #: src/sysmanage_agent/operations/system_control.py:204
 #, python-format
@@ -2804,24 +2808,24 @@ msgstr "需要用户名"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:110
 #, python-format
 msgid "Enabling Ubuntu Pro service: %s"
-msgstr ""
+msgstr "正在启用 Ubuntu Pro 服务：%s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:128
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
-msgstr ""
+msgstr "Ubuntu Pro 服务 %s 已成功启用"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:134
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:140
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "启用 Ubuntu Pro 服务 %s 失败：%s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:146
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "启用 Ubuntu Pro 服务 %s 时出错：%s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:160
 #, python-format
@@ -2832,18 +2836,18 @@ msgstr "正在检查服务状态：%s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:178
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
-msgstr ""
+msgstr "Ubuntu Pro 服务 %s 已成功禁用"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:184
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:190
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "禁用 Ubuntu Pro 服务 %s 失败：%s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:196
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "禁用 Ubuntu Pro 服务 %s 时出错：%s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
 msgid "Updated OS information sent to server after Ubuntu Pro change"
@@ -2866,7 +2870,7 @@ msgstr "发送初始数据更新失败：%s"
 
 #: src/sysmanage_agent/operations/update_operations.py:90
 msgid "No packages specified for update"
-msgstr ""
+msgstr "未指定要更新的软件包"
 
 #: src/sysmanage_agent/operations/update_operations.py:103
 msgid "Updates started in background"
@@ -2880,7 +2884,7 @@ msgstr "发送初始数据更新失败：%s"
 #: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-msgstr ""
+msgstr "已收到更新请求：package='%s'，manager='%s'，bundle_id='%s'"
 
 #: src/sysmanage_agent/operations/update_operations.py:149
 #, python-format
@@ -2890,13 +2894,13 @@ msgstr "检测到的包管理器：%s"
 #: src/sysmanage_agent/operations/update_operations.py:172
 #, python-format
 msgid "Using detected package manager '%s' for %s"
-msgstr ""
+msgstr "使用检测到的软件包管理器 '%s' 用于 %s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:181
 #, python-format
 msgid "Could not determine package manager for %s"
-msgstr ""
+msgstr "无法确定 %s 的软件包管理器"
 
 #: src/sysmanage_agent/operations/update_operations.py:194
 msgid "Failed to send update results, will retry..."
@@ -2910,20 +2914,20 @@ msgstr "等待重连以发送更新结果（尝试 %d/%d）"
 #: src/sysmanage_agent/operations/update_operations.py:206
 #, python-format
 msgid "Failed to send update results after %d attempts"
-msgstr ""
+msgstr "%d 次尝试后发送更新结果失败"
 
 #: src/sysmanage_agent/operations/update_operations.py:212
 msgid "Rescanning for available updates after batch completion"
-msgstr ""
+msgstr "批处理完成后重新扫描可用更新"
 
 #: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Post-update scan completed: %d updates remaining"
-msgstr ""
+msgstr "更新后扫描完成：剩余 %d 个更新"
 
 #: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
-msgstr ""
+msgstr "无法发送新的更新列表 - 未连接"
 
 #: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
@@ -2931,7 +2935,7 @@ msgstr "未找到有效的更新包"
 
 #: src/sysmanage_agent/operations/update_operations.py:270
 msgid "Background update process completed"
-msgstr ""
+msgstr "后台更新过程完成"
 
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
@@ -2946,7 +2950,7 @@ msgstr "fwupd get-updates失败：%s"
 #: src/sysmanage_agent/operations/user_account_operations.py:14
 #, python-format
 msgid "User %s and default group deleted successfully"
-msgstr ""
+msgstr "用户 %s 和默认组删除成功"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:119
@@ -2971,22 +2975,22 @@ msgstr "Bridged network '%s' created successfully"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:398
 msgid "Password is required for Windows user creation"
-msgstr ""
+msgstr "创建 Windows 用户需要密码"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:618
 #, python-format
 msgid "User %s deleted successfully"
-msgstr ""
+msgstr "用户 %s 删除成功"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:638
 #, python-format
 msgid "Group %s deleted successfully"
-msgstr ""
+msgstr "组 %s 删除成功"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:767
 #, python-format
 msgid "Successfully executed: %s"
-msgstr ""
+msgstr "成功执行：%s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:35
 #, python-format
@@ -2995,16 +2999,16 @@ msgstr "Error creating bridged network: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:137
 msgid "Repository URL is required for Windows repositories"
-msgstr ""
+msgstr "Windows 仓库需要仓库 URL"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:143
 msgid "Repository type must be 'chocolatey' or 'winget'"
-msgstr ""
+msgstr "仓库类型必须为 'chocolatey' 或 'winget'"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:172
 #, python-format
 msgid "Failed to add repository: %s"
-msgstr ""
+msgstr "添加仓库失败：%s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:178
 #, python-format
@@ -3013,68 +3017,68 @@ msgstr "将用户添加到组时出错: %s"
 
 #: src/sysmanage_agent/registration/client_registration.py:34
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
-msgstr ""
+msgstr "⚠️  警告：aiohttp 不可用，将跳过注册"
 
 #: src/sysmanage_agent/registration/discovery.py:70
 #, python-format
 msgid "Discovered %s SysManage server(s)"
-msgstr ""
+msgstr "已发现 %s 个 SysManage 服务器"
 
 #: src/sysmanage_agent/registration/discovery.py:72
 msgid "No SysManage servers discovered on the network"
-msgstr ""
+msgstr "在网络上未发现 SysManage 服务器"
 
 #: src/sysmanage_agent/registration/discovery.py:117
 #, python-format
 msgid "Server discovered at %s"
-msgstr ""
+msgstr "在 %s 发现服务器"
 
 #: src/sysmanage_agent/registration/discovery.py:121
 msgid "Invalid JSON response from unknown source"
-msgstr ""
+msgstr "来自未知来源的无效 JSON 响应"
 
 #: src/sysmanage_agent/registration/discovery.py:156
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr ""
+msgstr "广播发现期间出错：%s"
 
 #: src/sysmanage_agent/registration/discovery.py:205
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
+msgstr "已从 %s 收到服务器公告"
 
 #: src/sysmanage_agent/registration/discovery.py:210
 msgid "Invalid JSON announcement from unknown source"
-msgstr ""
+msgstr "来自未知来源的无效 JSON 公告"
 
 #: src/sysmanage_agent/registration/discovery.py:218
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr ""
+msgstr "监听公告时出错：%s"
 
 #: src/sysmanage_agent/registration/discovery.py:272
 #, python-format
 msgid "Selected server at %s (score: %s)"
-msgstr ""
+msgstr "已选择 %s 上的服务器（分数：%s）"
 
 #: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Received registration success notification from server"
-msgstr ""
+msgstr "已从服务器收到注册成功通知"
 
 #: src/sysmanage_agent/registration/registration_manager.py:205
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr ""
+msgstr "处理注册成功通知时出错：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:217
 #, python-format
 msgid "Received host approval notification: host_id=%s, status=%s"
-msgstr ""
+msgstr "已收到主机批准通知：host_id=%s，status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:226
 #, python-format
 msgid "Host approval information stored successfully. Host ID: %s"
-msgstr ""
+msgstr "主机批准信息存储成功。Host ID：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:238
 #, python-format
@@ -3090,17 +3094,17 @@ msgstr "将用户添加到组时出错: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:283
 #, python-format
 msgid "Deleted %d old host approval record(s) before storing new approval"
-msgstr ""
+msgstr "在存储新批准前删除了 %d 条旧主机批准记录"
 
 #: src/sysmanage_agent/registration/registration_manager.py:306
 #, python-format
 msgid "Host approval record stored in database: host_id=%s, status=%s"
-msgstr ""
+msgstr "主机批准记录已存储到数据库：host_id=%s，status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:315
 #, python-format
 msgid "Error storing host approval in database: %s"
-msgstr ""
+msgstr "在数据库中存储主机批准时出错：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:347
 #, python-format
@@ -3110,12 +3114,12 @@ msgstr "Error creating bridged network: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:379
 #: src/sysmanage_agent/registration/registration_manager.py:436
 msgid "Error retrieving stored credentials"
-msgstr ""
+msgstr "检索已存储凭据时出错"
 
 #: src/sysmanage_agent/registration/registration_manager.py:408
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
-msgstr ""
+msgstr "同步检索已存储 host_id 时出错：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:461
 #, python-format
@@ -3124,11 +3128,11 @@ msgstr "分离 Ubuntu Pro 时出错：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:491
 msgid "Host approval records and related data cleared from database"
-msgstr ""
+msgstr "已从数据库清除主机批准记录和相关数据"
 
 #: src/sysmanage_agent/registration/registration_manager.py:500
 msgid "Continuing despite cleanup error..."
-msgstr ""
+msgstr "尽管出现清理错误，仍继续进行……"
 
 #~ msgid "Starting antivirus detection"
 #~ msgstr "正在启动 libvirtd 服务"
@@ -3280,8 +3284,7 @@ msgstr ""
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 自动安装进行中。虚拟机将自动安装并重启。这可能需要 10-15 分钟。"
+#~ msgstr "OpenBSD 自动安装进行中。虚拟机将自动安装并重启。这可能需要 10-15 分钟。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自动安装 HTTP 请求: %s 来自 %s"
@@ -3410,8 +3413,7 @@ msgstr ""
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr ""
-#~ "此系统上不可用 KVM。请确保 /dev/kvm 存在且 BIOS 中已启用 CPU 虚拟化。"
+#~ msgstr "此系统上不可用 KVM。请确保 /dev/kvm 存在且 BIOS 中已启用 CPU 虚拟化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化并可以使用"

@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
@@ -8,37 +9,39 @@ msgstr ""
 #: src/database/init.py:37
 #, python-format
 msgid "Using database path from SYSMANAGE_DB_PATH: %s"
-msgstr ""
+msgstr "Используется путь к БД из SYSMANAGE_DB_PATH: %s"
 
 #: src/database/init.py:47
 #, python-format
 msgid "Using configured database path: %s"
-msgstr ""
+msgstr "Используется настроенный путь к БД: %s"
 
 #: src/database/init.py:53
 #, python-format
 msgid "Using configured relative database path: %s"
-msgstr ""
+msgstr "Используется настроенный относительный путь к БД: %s"
 
 #: src/database/init.py:59
 #, python-format
 msgid "Using system database path: %s"
-msgstr ""
+msgstr "Используется системный путь к БД: %s"
 
 #: src/database/init.py:67
 #, python-format
 msgid "System directory exists, using system database path: %s"
-msgstr ""
+msgstr "Системный каталог существует, используется системный путь к БД: %s"
 
 #: src/database/init.py:74
 #, python-format
 msgid "Falling back to local database path: %s"
-msgstr ""
+msgstr "Возврат к локальному пути базы данных: %s"
 
 #: src/database/init.py:79
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr ""
+"Не удалось получить путь к БД из конфигурации: %s, используется локальный "
+"резерв"
 
 #: src/database/init.py:146
 #, python-format
@@ -48,42 +51,42 @@ msgstr "Выполнение команды обновления прошивк�
 #: src/database/init.py:163
 #, python-format
 msgid "Alembic %s completed successfully"
-msgstr ""
+msgstr "Alembic %s успешно завершен"
 
 #: src/database/init.py:169
 #, python-format
 msgid "Alembic %s failed with return code %d"
-msgstr ""
+msgstr "Alembic %s завершился с кодом %d"
 
 #: src/database/init.py:178
 #, python-format
 msgid "Alembic %s timed out after 60 seconds"
-msgstr ""
+msgstr "Тайм-аут Alembic %s после 60 секунд"
 
 #: src/database/init.py:181
 #, python-format
 msgid "Failed to run alembic %s: %s"
-msgstr ""
+msgstr "Не удалось выполнить alembic %s: %s"
 
 #: src/database/init.py:208
 msgid "Database does not exist, creating new database"
-msgstr ""
+msgstr "База данных не существует, создается новая"
 
 #: src/database/init.py:210
 msgid "Database exists, checking for migrations"
-msgstr ""
+msgstr "База данных существует, проверяются миграции"
 
 #: src/database/init.py:214
 msgid "Auto-migration is enabled"
-msgstr ""
+msgstr "Автомиграция включена"
 
 #: src/database/init.py:218
 msgid "Failed to run database migrations"
-msgstr ""
+msgstr "Не удалось выполнить миграции БД"
 
 #: src/database/init.py:221
 msgid "Auto-migration is disabled, skipping migrations"
-msgstr ""
+msgstr "Автомиграция отключена, миграции пропускаются"
 
 #: src/database/init.py:223
 msgid "Database initialized successfully"
@@ -129,7 +132,8 @@ msgstr "Ошибка десериализации сообщения %s: %s"
 #: src/database/queue_manager.py:474
 #, python-format
 msgid "Recovered stuck message %s (type: %s), will retry"
-msgstr "Зависшее сообщение %s (тип: %s) восстановлено, будет повторная попытка"
+msgstr ""
+"Зависшее сообщение %s (тип: %s) восстановлено, будет повторная попытка"
 
 #: src/database/queue_manager.py:488
 #, python-format
@@ -146,21 +150,21 @@ msgstr "Восстановлено %d зависших сообщений"
 #: src/database/queue_manager.py:534
 #, python-format
 msgid "Duplicate message detected: %s (status: %s)"
-msgstr ""
+msgstr "Обнаружено дублирующееся сообщение: %s (статус: %s)"
 
 #: src/security/certificate_store.py:64
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
-msgstr ""
+msgstr "⚠️  Нет доступа к {config_dir}, возврат к {fallback_dir}"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:54
 #, python-format
 msgid "Detected antivirus: %s (enabled: %s)"
-msgstr ""
+msgstr "Обнаружен антивирус: %s (включен: %s)"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:59
 msgid "No antivirus software detected"
-msgstr ""
+msgstr "Антивирусное ПО не обнаружено"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:62
 #, python-format
@@ -175,7 +179,7 @@ msgstr "Неподдерживаемая платформа для инвент�
 #: src/sysmanage_agent/collection/certificate_collection.py:54
 #, python-format
 msgid "Collected %d certificates"
-msgstr ""
+msgstr "Собрано %d сертификатов"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:58
 #: src/sysmanage_agent/communication/data_collector.py:839
@@ -186,17 +190,17 @@ msgstr "Ошибка обнаружения разделов: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:232
 #, python-format
 msgid "Collected %d certificates from keychain: %s"
-msgstr ""
+msgstr "Собрано %d сертификатов из связки ключей: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:238
 #, python-format
 msgid "Failed to collect certificates from keychain %s: %s"
-msgstr ""
+msgstr "Не удалось собрать сертификаты из связки ключей %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:272
 #, python-format
 msgid "Security command failed for keychain %s: %s"
-msgstr ""
+msgstr "Команда security не выполнена для связки ключей %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:283
 #, python-format
@@ -206,12 +210,12 @@ msgstr "Тайм-аут во время операций с ramdisk: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Error extracting certificates from keychain %s: %s"
-msgstr ""
+msgstr "Ошибка извлечения сертификатов из связки ключей %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:351
 #, python-format
 msgid "OpenSSL failed to parse certificate: %s"
-msgstr ""
+msgstr "OpenSSL не смог разобрать сертификат: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:369
 #, python-format
@@ -226,12 +230,12 @@ msgstr "Ошибка обработки сообщения в очереди %s:
 #: src/sysmanage_agent/collection/certificate_collection.py:407
 #, python-format
 msgid "Failed to scan certificate directory %s: %s"
-msgstr ""
+msgstr "Не удалось сканировать каталог сертификатов %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:445
 #, python-format
 msgid "Failed to process certificate %s: %s"
-msgstr ""
+msgstr "Не удалось обработать сертификат %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:473
 #, python-format
@@ -246,12 +250,12 @@ msgstr "Ошибка обнаружения разделов: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:498
 #, python-format
 msgid "Found %d certificates in store %s"
-msgstr ""
+msgstr "Найдено %d сертификатов в хранилище %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:502
 #, python-format
 msgid "No valid certificates found in store %s"
-msgstr ""
+msgstr "В хранилище %s не найдено действительных сертификатов"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:513
 #, python-format
@@ -266,7 +270,7 @@ msgstr "Тайм-аут во время операций с ramdisk: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:522
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr ""
+msgstr "Не удалось запросить хранилище сертификатов Windows %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:569
 #, python-format
@@ -286,27 +290,27 @@ msgstr "Failed to write %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
-msgstr ""
+msgstr "Тайм-аут при извлечении информации о сертификате из: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:620
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
-msgstr ""
+msgstr "OpenSSL/LibreSSL не найден, сертификат пропущен: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:625
 #, python-format
 msgid "Error extracting certificate info from %s: %s"
-msgstr ""
+msgstr "Ошибка извлечения информации о сертификате из %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:695
 #, python-format
 msgid "Failed to parse %s date '%s': %s"
-msgstr ""
+msgstr "Не удалось разобрать дату %s '%s': %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:41
 #, python-format
 msgid "Commercial antivirus detection not applicable for %s"
-msgstr ""
+msgstr "Обнаружение коммерческого антивируса неприменимо для %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:48
 #, python-format
@@ -315,7 +319,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:80
 msgid "Microsoft Defender service not detected or not running"
-msgstr ""
+msgstr "Служба Microsoft Defender не обнаружена или не запущена"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:99
 #, python-format
@@ -325,7 +329,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:152
 #, python-format
 msgid "Detected Microsoft Defender (version: %s, enabled: %s)"
-msgstr ""
+msgstr "Обнаружен Microsoft Defender (версия: %s, включен: %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:161
 #, python-format
@@ -334,7 +338,7 @@ msgstr "Не удалось разобрать JSON вывод fwupd: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 msgid "Timeout while querying Microsoft Defender status"
-msgstr ""
+msgstr "Тайм-аут при запросе статуса Microsoft Defender"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 #, python-format
@@ -349,11 +353,11 @@ msgstr "Не удалось установить автозапуск сети: 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:211
 #, python-format
 msgid "Error parsing datetime %s: %s"
-msgstr ""
+msgstr "Ошибка разбора datetime %s: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:263
 msgid "Microsoft Defender CLI (mdatp) not found on macOS"
-msgstr ""
+msgstr "Microsoft Defender CLI (mdatp) не найден на macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:275
 #, python-format
@@ -363,13 +367,15 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:320
 #, python-format
 msgid ""
-"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, "
-"licensed: %s)"
+"Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+" licensed: %s)"
 msgstr ""
+"Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: %s,"
+" лицензирован: %s)"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:331
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr ""
+msgstr "Тайм-аут при запросе статуса Microsoft Defender на macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:336
 #, python-format
@@ -384,7 +390,7 @@ msgstr "Не удалось установить автозапуск сети: 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:382
 #, python-format
 msgid "Error parsing macOS datetime %s: %s"
-msgstr ""
+msgstr "Ошибка разбора datetime macOS %s: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
@@ -422,7 +428,7 @@ msgstr "Не удалось собрать инвентарь ПО: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:167
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr ""
+msgstr "Не удалось получить информацию о ЦП Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:184
 #, python-format
@@ -570,7 +576,7 @@ msgstr "Исключение при применении обновления п
 #: src/sysmanage_agent/collection/linux_update_applicators.py:282
 #, python-format
 msgid "Applying Ubuntu release upgrade to: %s"
-msgstr ""
+msgstr "Применение обновления версии Ubuntu до: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:307
 #, python-format
@@ -590,7 +596,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/linux_update_applicators.py:368
 #, python-format
 msgid "Applying openSUSE release upgrade to: %s"
-msgstr ""
+msgstr "Применение обновления версии openSUSE до: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:393
 #, python-format
@@ -658,7 +664,7 @@ msgstr "Неизвестное Устройство"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:116
 msgid "Ubuntu Pro status check timed out"
-msgstr ""
+msgstr "Тайм-аут проверки статуса Ubuntu Pro"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:121
 #, python-format
@@ -668,7 +674,7 @@ msgstr "Ошибка отключения Ubuntu Pro: %s"
 #: src/sysmanage_agent/collection/os_info_collection.py:143
 #, python-format
 msgid "Ubuntu Pro status collected: attached=%s, services=%d"
-msgstr ""
+msgstr "Статус Ubuntu Pro собран: attached=%s, services=%d"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:150
 #, python-format
@@ -705,7 +711,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:194
 msgid "winget not found in any common location"
-msgstr ""
+msgstr "winget не найден ни в одном обычном расположении"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:270
 #, python-format
@@ -715,7 +721,7 @@ msgstr "Не удалось обновить прошивку для %s: %s"
 #: src/sysmanage_agent/collection/package_collector_base.py:300
 #, python-format
 msgid "Failed to get packages for %s: %s"
-msgstr ""
+msgstr "Не удалось получить пакеты для %s: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:324
 #, python-format
@@ -735,7 +741,7 @@ msgstr "Не удалось собрать приложения macOS: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:33
 #, python-format
 msgid "Collected %d packages from pkg_info"
-msgstr ""
+msgstr "Собрано %d пакетов из pkg_info"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:35
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:129
@@ -746,7 +752,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:42
 #, python-format
 msgid "Collected %d packages from pkg"
-msgstr ""
+msgstr "Собрано %d пакетов из pkg"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:44
 #, python-format
@@ -756,7 +762,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:51
 #, python-format
 msgid "Collected %d packages from pkgin"
-msgstr ""
+msgstr "Собрано %d пакетов из pkgin"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:53
 #, python-format
@@ -765,11 +771,11 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:74
 msgid "Failed to get OpenBSD package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов OpenBSD"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:90
 msgid "Failed to get pkg package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов pkg"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:97
 #, python-format
@@ -778,7 +784,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:113
 msgid "Failed to get pkgin package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов pkgin"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:120
 #, python-format
@@ -790,22 +796,23 @@ msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
 msgstr ""
+"Сбор yum пропущен на хосте с dnf (yum это обёртка над dnf в RHEL/Fedora 8+)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:56
 #: src/sysmanage_agent/collection/package_collector_windows.py:51
 #, python-format
 msgid "Collected %d packages from %s"
-msgstr ""
+msgstr "Собрано %d пакетов из %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:59
 #: src/sysmanage_agent/collection/package_collector_windows.py:54
 #, python-format
 msgid "Failed to collect packages from %s: %s"
-msgstr ""
+msgstr "Не удалось собрать пакеты из %s: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:82
 msgid "Failed to get APT package information"
-msgstr ""
+msgstr "Не удалось получить информацию о пакетах APT"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:89
 #, python-format
@@ -814,7 +821,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:104
 msgid "Failed to get YUM package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов YUM"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:111
 #, python-format
@@ -823,16 +830,16 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:126
 msgid "Failed to get DNF package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов DNF"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:135
 #, python-format
 msgid "Error collecting DNF packages: %s"
-msgstr ""
+msgstr "Ошибка сбора пакетов DNF: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:150
 msgid "Failed to get Zypper package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов Zypper"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:157
 #, python-format
@@ -841,35 +848,35 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:172
 msgid "Failed to get Pacman package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов Pacman"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:179
 #, python-format
 msgid "Error collecting Pacman packages: %s"
-msgstr ""
+msgstr "Ошибка сбора пакетов Pacman: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:195
 msgid "Failed to get Snap package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов Snap"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:202
 #, python-format
 msgid "Error collecting Snap packages: %s"
-msgstr ""
+msgstr "Ошибка сбора пакетов Snap: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:217
 msgid "Failed to get Flatpak package list"
-msgstr ""
+msgstr "Не удалось получить список пакетов Flatpak"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:224
 #, python-format
 msgid "Error collecting Flatpak packages: %s"
-msgstr ""
+msgstr "Ошибка сбора пакетов Flatpak: %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:29
 #, python-format
 msgid "Collected %d packages from Homebrew"
-msgstr ""
+msgstr "Собрано %d пакетов из Homebrew"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:31
 #: src/sysmanage_agent/collection/software_inventory_macos.py:151
@@ -879,35 +886,35 @@ msgstr "Не удалось собрать пакеты Homebrew: %s"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:41
 msgid "Homebrew command not found"
-msgstr ""
+msgstr "Команда Homebrew не найдена"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:63
 #, python-format
 msgid "Collected %d Homebrew formulae"
-msgstr ""
+msgstr "Собрано %d формул Homebrew"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:82
 #, python-format
 msgid "Collected %d Homebrew casks"
-msgstr ""
+msgstr "Собрано %d casks Homebrew"
 
 #: src/sysmanage_agent/collection/package_collector_macos.py:87
 #, python-format
 msgid "Error collecting Homebrew packages: %s"
-msgstr ""
+msgstr "Ошибка сбора пакетов Homebrew: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:62
 msgid "Fetching winget catalog via REST API"
-msgstr ""
+msgstr "Получение каталога winget через REST API"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
 #, python-format
 msgid "Successfully collected %d packages from winget REST API"
-msgstr ""
+msgstr "Успешно собрано %d пакетов из winget REST API"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:74
 msgid "No packages collected from winget REST API"
-msgstr ""
+msgstr "Из winget REST API не собрано пакетов"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:78
 #, python-format
@@ -917,20 +924,21 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:114
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
-msgstr ""
+msgstr "Ошибка получения страницы winget %d (собрано %d пакетов): %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:166
 msgid "Fetching Chocolatey catalog via community repository API"
-msgstr ""
+msgstr "Получение каталога Chocolatey через API репозитория сообщества"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:174
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
-msgstr ""
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
+msgstr "Успешно собрано %d пакетов из репозитория сообщества Chocolatey"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:181
 msgid "No packages collected from Chocolatey community repository"
-msgstr ""
+msgstr "Из репозитория сообщества Chocolatey не собрано пакетов"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:186
 #, python-format
@@ -940,7 +948,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:212
 #, python-format
 msgid "Error fetching page at skip %d: %s"
-msgstr ""
+msgstr "Ошибка получения страницы на пропуске %d: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:83
 #, python-format
@@ -950,17 +958,17 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:118
 #, python-format
 msgid "Successfully collected %s packages"
-msgstr ""
+msgstr "Успешно собрано %s пакетов"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:122
 #, python-format
 msgid "No pkg_info output found. Return code: %d"
-msgstr ""
+msgstr "Вывод pkg_info не найден. Код возврата: %d"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:126
 #, python-format
 msgid "pkg_info stderr: %s"
-msgstr ""
+msgstr "pkg_info stderr: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_collection.py:58
 #, python-format
@@ -1019,7 +1027,7 @@ msgstr "Не удалось собрать приложения macOS: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:332
 msgid "Failed to parse system_profiler JSON output"
-msgstr ""
+msgstr "Не удалось разобрать JSON-вывод system_profiler"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:336
 #, python-format
@@ -1029,7 +1037,7 @@ msgstr "Не удалось собрать приложения macOS: %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:186
 #, python-format
 msgid "Collected %d programs from Windows Registry"
-msgstr ""
+msgstr "Собрано %d программ из реестра Windows"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:200
 #, python-format
@@ -1039,7 +1047,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/software_inventory_windows.py:265
 #, python-format
 msgid "Collected %d apps from Microsoft Store"
-msgstr ""
+msgstr "Собрано %d приложений из Microsoft Store"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:277
 #, python-format
@@ -1048,7 +1056,7 @@ msgstr "Не удалось разобрать JSON вывод fwupd: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:284
 msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-msgstr ""
+msgstr "PowerShell не найден (не Windows или PowerShell не установлен)"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:287
 #, python-format
@@ -1071,6 +1079,8 @@ msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
 msgstr ""
+"Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, %d"
+" системных, %d приложений)"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1082,7 +1092,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/operations/package_operations.py:227
 #, python-format
 msgid "Failed to install package %s: %s"
-msgstr ""
+msgstr "Не удалось установить пакет %s: %s"
 
 #: src/sysmanage_agent/collection/update_detection_base.py:108
 #, python-format
@@ -1097,12 +1107,12 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "pkgin update failed (code %d): %s"
-msgstr ""
+msgstr "Не удалось обновить pkgin (код %d): %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:178
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
-msgstr ""
+msgstr "pkgin list -u не выполнен (код %d): %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:197
 #, python-format
@@ -1117,7 +1127,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/update_detection_bsd.py:249
 #, python-format
 msgid "Applying OpenBSD upgrade: %s"
-msgstr ""
+msgstr "Применение обновления OpenBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
@@ -1127,11 +1137,11 @@ msgstr "Выполнение команды обновления прошивк�
 #: src/sysmanage_agent/collection/update_detection_bsd.py:268
 #, python-format
 msgid "Successfully applied OpenBSD upgrade: %s"
-msgstr ""
+msgstr "Обновление OpenBSD успешно применено: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:283
 msgid "OpenBSD upgrade failed"
-msgstr ""
+msgstr "Не удалось обновить OpenBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:298
 msgid "OpenBSD upgrade timed out after 30 minutes"
@@ -1153,7 +1163,7 @@ msgstr "Обновление прошивки не удалось"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:410
 msgid "FreeBSD upgrade install failed"
-msgstr ""
+msgstr "Не удалось установить обновление FreeBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "FreeBSD upgrade timed out"
@@ -1162,17 +1172,17 @@ msgstr "Время ожидания операции удаления истек
 #: src/sysmanage_agent/collection/update_detection_bsd.py:470
 #, python-format
 msgid "Found %d OpenBSD system patches (combined into single update)"
-msgstr ""
+msgstr "Найдено %d системных патчей OpenBSD (объединены в одно обновление)"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:480
 #, python-format
 msgid "syspatch command failed with exit code %d"
-msgstr ""
+msgstr "Команда syspatch не выполнена с кодом %d"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:483
 #, python-format
 msgid "syspatch stderr: %s"
-msgstr ""
+msgstr "syspatch stderr: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:486
 msgid "OpenBSD system update detection timed out"
@@ -1185,39 +1195,39 @@ msgstr "Ошибка отправки начальных обновлений д
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:506
 msgid "Failed to get current OpenBSD version"
-msgstr ""
+msgstr "Не удалось получить текущую версию OpenBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 #, python-format
 msgid "Current OpenBSD version: %s"
-msgstr ""
+msgstr "Текущая версия OpenBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:515
 msgid "Fetching https://www.openbsd.org/ to check for updates"
-msgstr ""
+msgstr "Получение https://www.openbsd.org/ для проверки обновлений"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:530
 #, python-format
 msgid "Latest OpenBSD version from website: %s"
-msgstr ""
+msgstr "Последняя версия OpenBSD с сайта: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:536
 #, python-format
 msgid "OpenBSD upgrade available: %s -> %s"
-msgstr ""
+msgstr "Доступно обновление OpenBSD: %s -> %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:554
 msgid "Added OpenBSD upgrade to available_updates list"
-msgstr ""
+msgstr "Обновление OpenBSD добавлено в список available_updates"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:557
 #, python-format
 msgid "OpenBSD is up to date: %s"
-msgstr ""
+msgstr "OpenBSD актуален: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:559
 msgid "Could not parse OpenBSD version from website"
-msgstr ""
+msgstr "Не удалось разобрать версию OpenBSD с сайта"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
@@ -1236,28 +1246,28 @@ msgstr "Не удалось собрать пакеты apt: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:625
 msgid "Calling _detect_openbsd_system_updates"
-msgstr ""
+msgstr "Вызов _detect_openbsd_system_updates"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:628
 msgid "Calling _detect_openbsd_version_upgrades"
-msgstr ""
+msgstr "Вызов _detect_openbsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:633
 msgid "Calling _detect_freebsd_version_upgrades"
-msgstr ""
+msgstr "Вызов _detect_freebsd_version_upgrades"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:645
 #, python-format
 msgid "=== BSD detect_updates finished, total updates: %d ==="
-msgstr ""
+msgstr "=== BSD detect_updates завершён, всего обновлений: %d ==="
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:714
 msgid "Applying OpenBSD syspatch updates"
-msgstr ""
+msgstr "Применение обновлений OpenBSD syspatch"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:744
 msgid "syspatch command failed"
-msgstr ""
+msgstr "Команда syspatch не выполнена"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:746
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
@@ -1279,7 +1289,7 @@ msgstr "Обновление прошивки прервано по таймау
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:546
 #, python-format
 msgid "Applying updates for %d packages: %s"
-msgstr ""
+msgstr "Применение обновлений для %d пакетов: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:908
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -1292,14 +1302,14 @@ msgstr "Неподдерживаемый менеджер пакетов: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:700
 #, python-format
 msgid "Applying %d updates using %s"
-msgstr ""
+msgstr "Применение %d обновлений с использованием %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:958
 #: src/sysmanage_agent/collection/update_detection_linux.py:344
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:705
 #, python-format
 msgid "Update process completed: %d updated, %d failed"
-msgstr ""
+msgstr "Процесс обновления завершён: %d обновлено, %d не удалось"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:966
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:713
@@ -1320,7 +1330,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/update_detection_linux.py:323
 #, python-format
 msgid "Failed to apply %s updates: %s"
-msgstr ""
+msgstr "Не удалось применить обновления %s: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:367
 #, python-format
@@ -1330,11 +1340,11 @@ msgstr "Неподдерживаемый менеджер пакетов: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:161
 #, python-format
 msgid "Homebrew update failed: %s"
-msgstr ""
+msgstr "Не удалось обновить Homebrew: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:209
 msgid "Failed to parse Homebrew JSON output"
-msgstr ""
+msgstr "Не удалось разобрать JSON-вывод Homebrew"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:212
 #, python-format
@@ -1359,17 +1369,17 @@ msgstr "Выполнение команды обновления прошивк�
 #: src/sysmanage_agent/collection/update_detection_macos.py:397
 #, python-format
 msgid "Homebrew command completed. Return code: %d"
-msgstr ""
+msgstr "Команда Homebrew завершена. Код возврата: %d"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:400
 #, python-format
 msgid "Homebrew stdout: %s"
-msgstr ""
+msgstr "Homebrew stdout: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:402
 #, python-format
 msgid "Homebrew stderr: %s"
-msgstr ""
+msgstr "Homebrew stderr: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:414
 #, python-format
@@ -1379,7 +1389,7 @@ msgstr "Успешно обновлена прошивка для: %s"
 #: src/sysmanage_agent/collection/update_detection_macos.py:425
 #, python-format
 msgid "Failed to update package %s: %s"
-msgstr ""
+msgstr "Не удалось обновить пакет %s: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:444
 #, python-format
@@ -1412,17 +1422,17 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:62
 #, python-format
 msgid "Package '%s' update timed out after %d seconds. Partial output: %s"
-msgstr ""
+msgstr "Тайм-аут обновления пакета '%s' через %d секунд. Частичный вывод: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:79
 #, python-format
 msgid "Update still running for '%s' (%d seconds elapsed)"
-msgstr ""
+msgstr "Обновление '%s' ещё выполняется (%d секунд прошло)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:100
 #, python-format
 msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Результат команды Winget: returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:108
 #, python-format
@@ -1433,12 +1443,12 @@ msgstr "Успешно обновлена прошивка для: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:234
 #, python-format
 msgid "Failed to update package '%s': %s"
-msgstr ""
+msgstr "Не удалось обновить пакет '%s': %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:144
 #, python-format
 msgid "Applying winget update for package '%s' (ID: %s)"
-msgstr ""
+msgstr "Применение обновления winget для пакета '%s' (ID: %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:179
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
@@ -1454,35 +1464,35 @@ msgstr "Применение обновления прошивки для уст
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:210
 #, python-format
 msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-msgstr ""
+msgstr "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:347
 #, python-format
 msgid "Windows Update command result: returncode=%d, output='%s'"
-msgstr ""
+msgstr "Результат команды Windows Update: returncode=%d, output='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
-msgstr ""
+msgstr "Не удалось установить Windows Update"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:378
 #, python-format
 msgid "Failed to install Windows Update '%s': %s"
-msgstr ""
+msgstr "Не удалось установить Windows Update '%s': %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:398
 #, python-format
 msgid "Applying Windows Update: %s (UpdateID: %s)"
-msgstr ""
+msgstr "Применение Windows Update: %s (UpdateID: %s)"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:408
 msgid "Running Windows Update installation command"
-msgstr ""
+msgstr "Выполнение команды установки Windows Update"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:429
 #, python-format
 msgid "Windows Update '%s' timed out after 30 minutes"
-msgstr ""
+msgstr "Тайм-аут Windows Update '%s' через 30 минут"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
@@ -1500,7 +1510,7 @@ msgstr "Применение обновления прошивки для уст
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:466
 msgid "Running Windows upgrade command"
-msgstr ""
+msgstr "Выполнение команды обновления Windows"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:478
 #, python-format
@@ -1547,7 +1557,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:120
 #, python-format
 msgid "Windows Update detected: '%s' with UpdateID='%s'"
-msgstr ""
+msgstr "Обнаружен Windows Update: '%s' с UpdateID='%s'"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:129
 #, python-format
@@ -1574,14 +1584,16 @@ msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
 msgstr ""
+"Сбор сертификатов в непривилегированном режиме - некоторые сертификаты могут"
+" быть недоступны"
 
 #: src/sysmanage_agent/communication/data_collector.py:810
 msgid "No certificates found on system"
-msgstr ""
+msgstr "В системе не найдено сертификатов"
 
 #: src/sysmanage_agent/communication/data_collector.py:851
 msgid "No server roles detected on system"
-msgstr ""
+msgstr "Серверные роли в системе не обнаружены"
 
 #: src/sysmanage_agent/communication/data_collector.py:885
 #, python-format
@@ -1594,7 +1606,7 @@ msgstr "Менеджер очереди сообщений инициализи�
 
 #: src/sysmanage_agent/communication/message_handler.py:847
 msgid "Cannot send message: not connected to server"
-msgstr ""
+msgstr "Не удаётся отправить сообщение: нет соединения с сервером"
 
 #: src/sysmanage_agent/communication/message_handler.py:855
 #, python-format
@@ -1627,17 +1639,17 @@ msgstr "Ошибка закрытия обработчика сообщений:
 #: src/sysmanage_agent/core/agent_utils.py:59
 #, python-format
 msgid "Found %d available updates during periodic check"
-msgstr ""
+msgstr "Найдено %d доступных обновлений при периодической проверке"
 
 #: src/sysmanage_agent/core/agent_utils.py:64
 #, python-format
 msgid "Error during periodic update check: %s"
-msgstr ""
+msgstr "Ошибка периодической проверки обновлений: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:92
 #, python-format
 msgid "Update checker error: %s"
-msgstr ""
+msgstr "Ошибка проверки обновлений: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:128
 msgid "Package collection completed successfully"
@@ -1645,7 +1657,7 @@ msgstr "Агент успешно обновлён"
 
 #: src/sysmanage_agent/core/agent_utils.py:130
 msgid "Package collection completed with some issues"
-msgstr ""
+msgstr "Сбор пакетов завершён с некоторыми проблемами"
 
 #: src/sysmanage_agent/core/agent_utils.py:133
 #, python-format
@@ -1655,36 +1667,36 @@ msgstr "Ошибка обнаружения разделов: %s"
 #: src/sysmanage_agent/core/agent_utils.py:172
 #, python-format
 msgid "Package collection scheduler error: %s"
-msgstr ""
+msgstr "Ошибка планировщика сбора пакетов: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:227
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr ""
+msgstr "Аутентификация не удалась со статусом %s: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:247
 #, python-format
 msgid "Received command: %s with parameters: %s"
-msgstr ""
+msgstr "Получена команда: %s с параметрами: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:365
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
-msgstr ""
+msgstr "UUID выполнения скрипта %s уже обработан, дубликат пропущен"
 
 #: src/sysmanage_agent/core/agent_utils.py:402
 msgid "Generic command missing nested command_type"
-msgstr ""
+msgstr "У общей команды отсутствует вложенный command_type"
 
 #: src/sysmanage_agent/core/agent_utils.py:414
 #, python-format
 msgid "Unknown command type: %s"
-msgstr ""
+msgstr "Неизвестный тип команды: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
-msgstr ""
+msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:473
 #, python-format
@@ -1698,17 +1710,17 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:506
 msgid "No execution UUID provided, cannot track"
-msgstr ""
+msgstr "Не указан UUID выполнения, отслеживание невозможно"
 
 #: src/sysmanage_agent/core/agent_utils.py:521
 #, python-format
 msgid "Execution UUID %s already exists in database"
-msgstr ""
+msgstr "UUID выполнения %s уже существует в БД"
 
 #: src/sysmanage_agent/core/agent_utils.py:540
 #, python-format
 msgid "Stored execution UUID %s for tracking"
-msgstr ""
+msgstr "UUID выполнения %s сохранён для отслеживания"
 
 #: src/sysmanage_agent/core/agent_utils.py:546
 #, python-format
@@ -1773,33 +1785,33 @@ msgstr "Ошибка состояния службы для %s: %s"
 #: src/sysmanage_agent/core/config.py:71
 #, python-format
 msgid "Configuration file '%s' not found. Expected locations: %s"
-msgstr ""
+msgstr "Файл конфигурации '%s' не найден. Ожидаемые расположения: %s"
 
 # Configuration
 #: src/sysmanage_agent/core/config.py:80
 #, python-format
 msgid "Invalid YAML in configuration file: %s"
-msgstr ""
+msgstr "Недопустимый YAML в файле конфигурации: %s"
 
 #: src/sysmanage_agent/core/config.py:84
 #, python-format
 msgid "Failed to load configuration file: %s"
-msgstr ""
+msgstr "Не удалось загрузить файл конфигурации: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:39
 #, python-format
 msgid "Starting diagnostics collection for ID: %s"
-msgstr ""
+msgstr "Запуск сбора диагностики для ID: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:41
 #, python-format
 msgid "Collection types requested: %s"
-msgstr ""
+msgstr "Запрошенные типы сбора: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:66
 #, python-format
 msgid "Diagnostics collection completed for ID: %s"
-msgstr ""
+msgstr "Сбор диагностики завершён для ID: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:76
 #, python-format
@@ -1809,22 +1821,22 @@ msgstr "Не удалось собрать пакеты apt: %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:122
 #, python-format
 msgid "Unknown collection type: %s"
-msgstr ""
+msgstr "Неизвестный тип сбора: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:136
 #, python-format
 msgid "Starting collection %d/%d: %s"
-msgstr ""
+msgstr "Запуск сбора %d/%d: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:149
 #, python-format
 msgid "Completed collection of %s in %.2f seconds"
-msgstr ""
+msgstr "Сбор %s завершён за %.2f секунд"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:157
 #, python-format
 msgid "Failed to collect %s after %.2f seconds: %s"
-msgstr ""
+msgstr "Не удалось собрать %s после %.2f секунд: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:240
 #, python-format
@@ -1840,7 +1852,7 @@ msgstr "Ошибка закрытия обработчика сообщений:
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:431
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr ""
+msgstr "Ошибка сбора файлов конфигурации: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:551
 #, python-format
@@ -1860,7 +1872,7 @@ msgstr "Ошибка закрытия обработчика сообщений:
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:725
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr ""
+msgstr "Ошибка сбора переменных окружения: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:756
 #, python-format
@@ -1874,7 +1886,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:38
 msgid "Homebrew is not installed"
-msgstr ""
+msgstr "Homebrew не установлен"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:66
 #, python-format
@@ -1883,7 +1895,7 @@ msgstr "Ошибка закрытия обработчика сообщений:
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:77
 msgid "Invalid tap format. Use 'user/repo' format"
-msgstr ""
+msgstr "Недопустимый формат tap. Используйте формат 'user/repo'"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:97
 msgid "Tap added successfully"
@@ -1909,11 +1921,11 @@ msgstr "Ошибка в обработчике очереди: %s"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:437
 #, python-format
 msgid "Error reading %s: %s"
-msgstr ""
+msgstr "Ошибка чтения %s: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:176
 msgid "Repository URL is required for FreeBSD pkg"
-msgstr ""
+msgstr "Для FreeBSD pkg требуется URL репозитория"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:206
 #: src/sysmanage_agent/operations/windows_repository_operations.py:161
@@ -1932,7 +1944,7 @@ msgstr "Ошибка при настройке сети по умолчанию:
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:268
 msgid "Repository URL is required for NetBSD pkgsrc"
-msgstr ""
+msgstr "Для NetBSD pkgsrc требуется URL репозитория"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:277
 #, python-format
@@ -1960,7 +1972,7 @@ msgstr "Управление дочерними хостами требует Pr
 
 #: src/sysmanage_agent/operations/generic_deployment.py:133
 msgid "No files provided"
-msgstr ""
+msgstr "Файлы не предоставлены"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:470
 msgid "No steps provided"
@@ -1969,28 +1981,28 @@ msgstr "Профили пользователей не найдены"
 #: src/sysmanage_agent/operations/generic_deployment.py:507
 #, python-format
 msgid "Unknown step type: %s"
-msgstr ""
+msgstr "Неизвестный тип шага: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:579
 msgid "Empty shell command"
-msgstr ""
+msgstr "Пустая команда оболочки"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:619
 msgid "Empty wait_condition command"
-msgstr ""
+msgstr "Пустая команда wait_condition"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:879
 msgid "no argv"
-msgstr ""
+msgstr "нет argv"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:904
 #, python-format
 msgid "FileNotFoundError: %s"
-msgstr ""
+msgstr "FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:953
 msgid "timeout"
-msgstr ""
+msgstr "тайм-аут"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -1998,7 +2010,7 @@ msgstr "Требуется имя хоста"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "Invalid hostname format"
-msgstr "Недопустимый формат памяти: {value}"
+msgstr "Недопустимый формат имени узла"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:73
 #, python-format
@@ -2013,7 +2025,7 @@ msgstr "Не удалось собрать инвентарь ПО: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:120
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr ""
+msgstr "hostnamectl не удался, попытка ручной смены имени узла: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:134
 #: src/sysmanage_agent/operations/hostname_operations.py:140
@@ -2044,7 +2056,7 @@ msgstr "Не удалось остановить HTTP-сервер: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:218
 #, python-format
 msgid "Changing Windows hostname to: %s"
-msgstr ""
+msgstr "Изменение имени узла Windows на: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:231
 #, python-format
@@ -2056,6 +2068,7 @@ msgstr "Не удалось собрать пакеты apt: %s"
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
 msgstr ""
+"Имя узла изменено на %s. Для применения изменений требуется перезагрузка."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:250
 #, python-format
@@ -2065,7 +2078,7 @@ msgstr "Использование FreeBSD sda4: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:272
 #, python-format
 msgid "sysrc failed, trying sed: %s"
-msgstr ""
+msgstr "sysrc не удался, попытка sed: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:287
 #, python-format
@@ -2075,7 +2088,7 @@ msgstr "Не удалось обновить агент: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:303
 #, python-format
 msgid "Changing BSD hostname to: %s"
-msgstr ""
+msgstr "Изменение имени узла BSD на: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:326
 #: src/sysmanage_agent/operations/hostname_operations.py:332
@@ -2149,7 +2162,7 @@ msgstr "Ошибка при настройке сети по умолчанию:
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:618
 msgid "Repository URL is required for Zypper"
-msgstr ""
+msgstr "Для Zypper требуется URL репозитория"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:653
 #, python-format
@@ -2173,7 +2186,7 @@ msgstr "Ошибка при добавлении пользователя в г�
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:43
 msgid "No Grafana URL provided for OpenTelemetry deployment"
-msgstr ""
+msgstr "Не указан URL Grafana для развёртывания OpenTelemetry"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:67
 #, python-format
@@ -2181,6 +2194,8 @@ msgid ""
 "OpenTelemetry deployment on %s is not currently supported. Manual "
 "installation required."
 msgstr ""
+"Развёртывание OpenTelemetry на %s в настоящее время не поддерживается. "
+"Требуется ручная установка."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:78
 #, python-format
@@ -2215,7 +2230,7 @@ msgstr "Ошибка при настройке сети по умолчанию:
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:260
 msgid "Stopping OpenTelemetry service..."
-msgstr ""
+msgstr "Остановка службы OpenTelemetry..."
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:279
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:282
@@ -2260,7 +2275,7 @@ msgstr "Требуется имя пользователя"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:352
 #, python-format
 msgid "Connecting OpenTelemetry to Grafana at %s"
-msgstr ""
+msgstr "Подключение OpenTelemetry к Grafana по %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:357
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:360
@@ -2270,23 +2285,23 @@ msgstr "Успешно подключен к серверу"
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:365
 #, python-format
 msgid "Error connecting OpenTelemetry to Grafana: %s"
-msgstr ""
+msgstr "Ошибка подключения OpenTelemetry к Grafana: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:378
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:382
 msgid "OpenTelemetry disconnected from Grafana successfully"
-msgstr ""
+msgstr "OpenTelemetry успешно отключён от Grafana"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:388
 #, python-format
 msgid "Error disconnecting OpenTelemetry from Grafana: %s"
-msgstr ""
+msgstr "Ошибка отключения OpenTelemetry от Grafana: %s"
 
 #: src/sysmanage_agent/operations/opentelemetry_operations.py:400
 #: src/sysmanage_agent/operations/otel_base.py:149
 #: src/sysmanage_agent/operations/system_control.py:35
 msgid "No command specified"
-msgstr ""
+msgstr "Команда не указана"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:45
 #, python-format
@@ -2304,15 +2319,15 @@ msgstr "Не удалось установить пакеты libvirt: %s"
 
 #: src/sysmanage_agent/operations/otel_deploy_bsd.py:312
 msgid "BSDOtelDeployer should not be called directly"
-msgstr ""
+msgstr "BSDOtelDeployer не должен вызываться напрямую"
 
 #: src/sysmanage_agent/operations/otel_deploy_linux.py:37
 msgid "No supported package manager found (apt/yum/dnf)"
-msgstr ""
+msgstr "Поддерживаемый менеджер пакетов не найден (apt/yum/dnf)"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:170
 msgid "No supported package manager found"
-msgstr ""
+msgstr "Поддерживаемый менеджер пакетов не найден"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:196
 #, python-format
@@ -2321,7 +2336,7 @@ msgstr "Не удалось установить пакеты libvirt: %s"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:214
 msgid "Failed to download OpenTelemetry package"
-msgstr ""
+msgstr "Не удалось загрузить пакет OpenTelemetry"
 
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:297
 #: src/sysmanage_agent/operations/otel_deployment_helper.py:367
@@ -2342,7 +2357,7 @@ msgstr "Процессоров должно быть не менее 1"
 #: src/sysmanage_agent/operations/package_compliance_operations.py:86
 #, python-format
 msgid "package inventory collection failed: %s"
-msgstr ""
+msgstr "Не удалось собрать инвентарь пакетов: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:50
 #, python-format
@@ -2356,17 +2371,17 @@ msgstr "Не удалось очистить рабочий каталог ав�
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:103
 msgid "Skipping package with no name"
-msgstr ""
+msgstr "Пропуск пакета без имени"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:104
 #: src/sysmanage_agent/operations/package_operations.py:56
 msgid "No package name"
-msgstr ""
+msgstr "Нет имени пакета"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:214
 #, python-format
 msgid "Installing package: %s"
-msgstr ""
+msgstr "Установка пакета: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:99
 msgid "Package manager name is required"
@@ -2375,7 +2390,7 @@ msgstr "Требуется имя пользователя"
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 #, python-format
 msgid "Enabling package manager '%s' for OS '%s'"
-msgstr ""
+msgstr "Включение менеджера пакетов '%s' для ОС '%s'"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:110
 msgid "Enabling package managers requires privileged mode"
@@ -2389,7 +2404,7 @@ msgstr "Неподдерживаемый менеджер пакетов: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:133
 #, python-format
 msgid "Error enabling package manager '%s': %s"
-msgstr ""
+msgstr "Ошибка включения менеджера пакетов '%s': %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:145
 msgid "Flatpak is only supported on Linux systems"
@@ -2409,11 +2424,11 @@ msgstr "Неподдерживаемый менеджер пакетов: %s"
 #: src/sysmanage_agent/operations/package_manager_operations.py:207
 #, python-format
 msgid "%s installed successfully"
-msgstr ""
+msgstr "%s успешно установлен"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:239
 msgid "Flathub repository added"
-msgstr ""
+msgstr "Репозиторий Flathub добавлен"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:241
 #, python-format
@@ -2441,10 +2456,13 @@ msgstr "KVM уже инициализирован"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
+"Установка Homebrew требует ручного вмешательства. Установите с помощью: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -2478,30 +2496,30 @@ msgstr "Пакеты libvirt успешно установлены"
 #: src/sysmanage_agent/operations/package_operations.py:117
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
-msgstr ""
+msgstr "Удаление не реализовано для менеджера пакетов %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:169
 msgid "No package name specified"
-msgstr ""
+msgstr "Имя пакета не указано"
 
 #: src/sysmanage_agent/operations/package_operations.py:172
 #, python-format
 msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-msgstr ""
+msgstr "Установка пакета %s (installation_id: %s, requested_by: %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:259
 #: src/sysmanage_agent/operations/package_operations.py:367
 msgid "No request_id specified"
-msgstr ""
+msgstr "request_id не указан"
 
 #: src/sysmanage_agent/operations/package_operations.py:264
 msgid "No packages specified for installation"
-msgstr ""
+msgstr "Не указаны пакеты для установки"
 
 #: src/sysmanage_agent/operations/package_operations.py:268
 #, python-format
 msgid "Installing %d packages for request %s (requested_by: %s)"
-msgstr ""
+msgstr "Установка %d пакетов для запроса %s (requested_by: %s)"
 
 #: src/sysmanage_agent/operations/package_operations.py:343
 #, python-format
@@ -2510,7 +2528,7 @@ msgstr "Ошибка отправки начальных обновлений д
 
 #: src/sysmanage_agent/operations/package_operations.py:372
 msgid "No packages specified for uninstallation"
-msgstr ""
+msgstr "Не указаны пакеты для удаления"
 
 #: src/sysmanage_agent/operations/package_operations.py:478
 msgid "No packages to install"
@@ -2524,7 +2542,7 @@ msgstr "Создан каталог автоустановки: %s"
 #: src/sysmanage_agent/operations/package_operations.py:532
 #, python-format
 msgid "Exception during apt-get install: %s"
-msgstr ""
+msgstr "Исключение при apt-get install: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:539
 msgid "No packages to uninstall"
@@ -2538,12 +2556,12 @@ msgstr "fwupd get-updates не удалось: %s"
 #: src/sysmanage_agent/operations/package_operations.py:578
 #, python-format
 msgid "Exception during apt-get remove: %s"
-msgstr ""
+msgstr "Исключение при apt-get remove: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:614
 #, python-format
 msgid "Queued installation completion for request %s"
-msgstr ""
+msgstr "Завершение установки поставлено в очередь для запроса %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:619
 #, python-format
@@ -2558,7 +2576,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 #: src/sysmanage_agent/operations/package_operations.py:673
 #, python-format
 msgid "Sent package installation status update: %s for %s"
-msgstr ""
+msgstr "Отправлено обновление статуса установки пакета: %s для %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:680
 #, python-format
@@ -2579,7 +2597,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:85
 msgid "Listing third-party repositories"
-msgstr ""
+msgstr "Получение списка сторонних репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:99
 #, python-format
@@ -2589,7 +2607,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:117
 #, python-format
 msgid "Error detecting Linux distribution: %s"
-msgstr ""
+msgstr "Ошибка определения дистрибутива Linux: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:179
 msgid "Repository identifier is required"
@@ -2602,17 +2620,17 @@ msgstr "Ошибка при добавлении пользователя в г�
 
 #: src/sysmanage_agent/operations/repository_operations.py:229
 msgid "No repositories specified for deletion"
-msgstr ""
+msgstr "Не указаны репозитории для удаления"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 #, python-format
 msgid "Deleting %d third-party repositories"
-msgstr ""
+msgstr "Удаление %d сторонних репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:260
 #, python-format
 msgid "Deleted %d of %d repositories"
-msgstr ""
+msgstr "Удалено %d из %d репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:265
 #, python-format
@@ -2621,17 +2639,17 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:293
 msgid "No repositories specified for enabling"
-msgstr ""
+msgstr "Не указаны репозитории для включения"
 
 #: src/sysmanage_agent/operations/repository_operations.py:297
 #, python-format
 msgid "Enabling %d third-party repositories"
-msgstr ""
+msgstr "Включение %d сторонних репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:325
 #, python-format
 msgid "Enabled %d of %d repositories"
-msgstr ""
+msgstr "Включено %d из %d репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
@@ -2640,17 +2658,17 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
-msgstr ""
+msgstr "Не указаны репозитории для отключения"
 
 #: src/sysmanage_agent/operations/repository_operations.py:362
 #, python-format
 msgid "Disabling %d third-party repositories"
-msgstr ""
+msgstr "Отключение %d сторонних репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:390
 #, python-format
 msgid "Disabled %d of %d repositories"
-msgstr ""
+msgstr "Отключено %d из %d репозиториев"
 
 #: src/sysmanage_agent/operations/repository_operations.py:395
 #, python-format
@@ -2664,7 +2682,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:66
 msgid "Missing required parameter 'script_content'"
-msgstr ""
+msgstr "Отсутствует обязательный параметр 'script_content'"
 
 #: src/sysmanage_agent/operations/script_operations.py:75
 #, python-format
@@ -2673,7 +2691,7 @@ msgstr "Превышено время ожидания команды через
 
 #: src/sysmanage_agent/operations/script_operations.py:90
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
-msgstr ""
+msgstr "Агент не предоставляет apply_deployment_plan; требуется обновление"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 #, python-format
@@ -2697,25 +2715,25 @@ msgstr "Не удалось обновить агент: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:146
 msgid "No service name specified"
-msgstr ""
+msgstr "Имя службы не указано"
 
 #: src/sysmanage_agent/operations/system_control.py:155
 #, python-format
 msgid "Failed to restart service %s: %s"
-msgstr ""
+msgstr "Не удалось перезапустить службу %s: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:176
 msgid "System reboot scheduled in 1 minute"
-msgstr ""
+msgstr "Перезагрузка системы запланирована через 1 минуту"
 
 #: src/sysmanage_agent/operations/system_control.py:180
 #, python-format
 msgid "Failed to reboot system: %s"
-msgstr ""
+msgstr "Не удалось перезагрузить систему: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:200
 msgid "System shutdown scheduled in 1 minute"
-msgstr ""
+msgstr "Выключение системы запланировано через 1 минуту"
 
 #: src/sysmanage_agent/operations/system_control.py:204
 #, python-format
@@ -2808,24 +2826,24 @@ msgstr "Требуется имя пользователя"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:110
 #, python-format
 msgid "Enabling Ubuntu Pro service: %s"
-msgstr ""
+msgstr "Включение службы Ubuntu Pro: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:128
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
-msgstr ""
+msgstr "Служба Ubuntu Pro %s успешно включена"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:134
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:140
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Не удалось включить службу Ubuntu Pro %s: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:146
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ошибка включения службы Ubuntu Pro %s: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:160
 #, python-format
@@ -2836,18 +2854,18 @@ msgstr "Проверка состояния службы: %s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:178
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
-msgstr ""
+msgstr "Служба Ubuntu Pro %s успешно отключена"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:184
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:190
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Не удалось отключить службу Ubuntu Pro %s: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:196
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
-msgstr ""
+msgstr "Ошибка отключения службы Ubuntu Pro %s: %s"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
 msgid "Updated OS information sent to server after Ubuntu Pro change"
@@ -2871,7 +2889,7 @@ msgstr "Ошибка отправки начальных обновлений д
 
 #: src/sysmanage_agent/operations/update_operations.py:90
 msgid "No packages specified for update"
-msgstr ""
+msgstr "Не указаны пакеты для обновления"
 
 #: src/sysmanage_agent/operations/update_operations.py:103
 msgid "Updates started in background"
@@ -2885,7 +2903,7 @@ msgstr "Ошибка отправки начальных обновлений д
 #: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-msgstr ""
+msgstr "Получен запрос обновления: package='%s', manager='%s', bundle_id='%s'"
 
 #: src/sysmanage_agent/operations/update_operations.py:149
 #, python-format
@@ -2895,13 +2913,13 @@ msgstr "Обнаружены менеджеры пакетов: %s"
 #: src/sysmanage_agent/operations/update_operations.py:172
 #, python-format
 msgid "Using detected package manager '%s' for %s"
-msgstr ""
+msgstr "Используется обнаруженный менеджер пакетов '%s' для %s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:181
 #, python-format
 msgid "Could not determine package manager for %s"
-msgstr ""
+msgstr "Не удалось определить менеджер пакетов для %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:194
 msgid "Failed to send update results, will retry..."
@@ -2916,20 +2934,20 @@ msgstr ""
 #: src/sysmanage_agent/operations/update_operations.py:206
 #, python-format
 msgid "Failed to send update results after %d attempts"
-msgstr ""
+msgstr "Не удалось отправить результаты обновления после %d попыток"
 
 #: src/sysmanage_agent/operations/update_operations.py:212
 msgid "Rescanning for available updates after batch completion"
-msgstr ""
+msgstr "Повторное сканирование доступных обновлений после завершения пакета"
 
 #: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Post-update scan completed: %d updates remaining"
-msgstr ""
+msgstr "Сканирование после обновления завершено: осталось %d обновлений"
 
 #: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
-msgstr ""
+msgstr "Не удалось отправить актуальный список обновлений - нет соединения"
 
 #: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
@@ -2937,7 +2955,7 @@ msgstr "Не найдены действительные пакеты для о�
 
 #: src/sysmanage_agent/operations/update_operations.py:270
 msgid "Background update process completed"
-msgstr ""
+msgstr "Фоновый процесс обновления завершён"
 
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
@@ -2952,7 +2970,7 @@ msgstr "fwupd get-updates не удалось: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:14
 #, python-format
 msgid "User %s and default group deleted successfully"
-msgstr ""
+msgstr "Пользователь %s и группа по умолчанию успешно удалены"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:119
@@ -2977,22 +2995,22 @@ msgstr "Bridged network '%s' created successfully"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:398
 msgid "Password is required for Windows user creation"
-msgstr ""
+msgstr "Для создания пользователя Windows требуется пароль"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:618
 #, python-format
 msgid "User %s deleted successfully"
-msgstr ""
+msgstr "Пользователь %s успешно удалён"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:638
 #, python-format
 msgid "Group %s deleted successfully"
-msgstr ""
+msgstr "Группа %s успешно удалена"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:767
 #, python-format
 msgid "Successfully executed: %s"
-msgstr ""
+msgstr "Успешно выполнено: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:35
 #, python-format
@@ -3001,16 +3019,16 @@ msgstr "Error creating bridged network: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:137
 msgid "Repository URL is required for Windows repositories"
-msgstr ""
+msgstr "Для репозиториев Windows требуется URL репозитория"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:143
 msgid "Repository type must be 'chocolatey' or 'winget'"
-msgstr ""
+msgstr "Тип репозитория должен быть 'chocolatey' или 'winget'"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:172
 #, python-format
 msgid "Failed to add repository: %s"
-msgstr ""
+msgstr "Не удалось добавить репозиторий: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:178
 #, python-format
@@ -3019,68 +3037,68 @@ msgstr "Ошибка при добавлении пользователя в г�
 
 #: src/sysmanage_agent/registration/client_registration.py:34
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
-msgstr ""
+msgstr "⚠️  ПРЕДУПРЕЖДЕНИЕ: aiohttp недоступен, регистрация будет пропущена"
 
 #: src/sysmanage_agent/registration/discovery.py:70
 #, python-format
 msgid "Discovered %s SysManage server(s)"
-msgstr ""
+msgstr "Обнаружено %s SysManage-серверов"
 
 #: src/sysmanage_agent/registration/discovery.py:72
 msgid "No SysManage servers discovered on the network"
-msgstr ""
+msgstr "В сети не обнаружено серверов SysManage"
 
 #: src/sysmanage_agent/registration/discovery.py:117
 #, python-format
 msgid "Server discovered at %s"
-msgstr ""
+msgstr "Сервер обнаружен на %s"
 
 #: src/sysmanage_agent/registration/discovery.py:121
 msgid "Invalid JSON response from unknown source"
-msgstr ""
+msgstr "Недопустимый JSON-ответ из неизвестного источника"
 
 #: src/sysmanage_agent/registration/discovery.py:156
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr ""
+msgstr "Ошибка широковещательного обнаружения: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:205
 #, python-format
 msgid "Server announcement received from %s"
-msgstr ""
+msgstr "Получено объявление сервера от %s"
 
 #: src/sysmanage_agent/registration/discovery.py:210
 msgid "Invalid JSON announcement from unknown source"
-msgstr ""
+msgstr "Недопустимое JSON-объявление из неизвестного источника"
 
 #: src/sysmanage_agent/registration/discovery.py:218
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr ""
+msgstr "Ошибка прослушивания объявлений: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:272
 #, python-format
 msgid "Selected server at %s (score: %s)"
-msgstr ""
+msgstr "Выбран сервер на %s (оценка: %s)"
 
 #: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Received registration success notification from server"
-msgstr ""
+msgstr "Получено уведомление об успешной регистрации от сервера"
 
 #: src/sysmanage_agent/registration/registration_manager.py:205
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr ""
+msgstr "Ошибка обработки уведомления об успешной регистрации: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:217
 #, python-format
 msgid "Received host approval notification: host_id=%s, status=%s"
-msgstr ""
+msgstr "Получено уведомление об одобрении узла: host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:226
 #, python-format
 msgid "Host approval information stored successfully. Host ID: %s"
-msgstr ""
+msgstr "Информация одобрения узла успешно сохранена. Host ID: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:238
 #, python-format
@@ -3096,17 +3114,17 @@ msgstr "Ошибка при добавлении пользователя в г�
 #: src/sysmanage_agent/registration/registration_manager.py:283
 #, python-format
 msgid "Deleted %d old host approval record(s) before storing new approval"
-msgstr ""
+msgstr "Удалено %d старых записей одобрения узла перед сохранением нового"
 
 #: src/sysmanage_agent/registration/registration_manager.py:306
 #, python-format
 msgid "Host approval record stored in database: host_id=%s, status=%s"
-msgstr ""
+msgstr "Запись одобрения узла сохранена в БД: host_id=%s, status=%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:315
 #, python-format
 msgid "Error storing host approval in database: %s"
-msgstr ""
+msgstr "Ошибка сохранения одобрения узла в БД: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:347
 #, python-format
@@ -3116,12 +3134,12 @@ msgstr "Error creating bridged network: %s"
 #: src/sysmanage_agent/registration/registration_manager.py:379
 #: src/sysmanage_agent/registration/registration_manager.py:436
 msgid "Error retrieving stored credentials"
-msgstr ""
+msgstr "Ошибка извлечения сохранённых учётных данных"
 
 #: src/sysmanage_agent/registration/registration_manager.py:408
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
-msgstr ""
+msgstr "Ошибка синхронного извлечения сохранённого host_id: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:461
 #, python-format
@@ -3130,11 +3148,11 @@ msgstr "Ошибка при отключении Ubuntu Pro: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:491
 msgid "Host approval records and related data cleared from database"
-msgstr ""
+msgstr "Записи одобрения узла и связанные данные удалены из БД"
 
 #: src/sysmanage_agent/registration/registration_manager.py:500
 msgid "Continuing despite cleanup error..."
-msgstr ""
+msgstr "Продолжение несмотря на ошибку очистки..."
 
 #~ msgid "Starting antivirus detection"
 #~ msgstr "Запуск службы libvirtd"
@@ -3176,8 +3194,7 @@ msgstr ""
 #~ msgstr "Отправка начальных данных доступа пользователей..."
 
 #~ msgid "Sending initial software inventory data..."
-#~ msgstr ""
-#~ "Отправка начальных данных инвентаризации программного обеспечения..."
+#~ msgstr "Отправка начальных данных инвентаризации программного обеспечения..."
 
 # OS Version Update Messages
 #~ msgid "Sending initial update check..."
@@ -3257,8 +3274,7 @@ msgstr ""
 #~ msgstr "Обнаружение обновлений прошивки fwupd"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
-#~ msgstr ""
-#~ "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
+#~ msgstr "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Обновления прошивки недоступны"
@@ -3534,8 +3550,7 @@ msgstr ""
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 #~ msgstr ""
-#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения "
-#~ "настроек"
+#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения настроек"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -3615,8 +3630,7 @@ msgstr ""
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Обновление статуса виртуализации добавлено в очередь для отправки на "
-#~ "сервер"
+#~ "Обновление статуса виртуализации добавлено в очередь для отправки на сервер"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img не найден, попытка установки: %s"
