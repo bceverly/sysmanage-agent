@@ -33,16 +33,13 @@ LOCALES_DIR = REPO_ROOT / "src" / "i18n" / "locales"
 POT_PATH = LOCALES_DIR / "messages.pot"
 BABEL_CFG = REPO_ROOT / "babel.cfg"
 
-# Hard limits.  These are "don't make it worse" budgets, not aspirational
-# targets — current state has been measured and locked in here.  Lower
-# these as the corresponding debt is paid down.
-FUZZY_BUDGET = 50
-# Number of code msgids allowed to be absent from a single locale's
-# messages.po.  Most of the current "missing" pool is internal debug
-# breadcrumbs like "=== BSD detect_updates called ===" that should be
-# unwrapped from _() rather than translated; the cleanup is tracked
-# separately.  Until then, lock in the current ceiling.
-MISSING_BUDGET = 700
+# Hard limits, locked at zero (Phase 10 close-out, May 2026): every
+# code-extracted msgid must be translated in every locale, and no
+# fuzzy entries are tolerated.  CI fails on any drift.  If you need
+# to bypass temporarily, fix the strings instead — the auto-translate
+# tooling in ``scripts/`` can fill new keys across all 14 locales.
+FUZZY_BUDGET = 0
+MISSING_BUDGET = 0
 
 
 def list_locales() -> list[str]:
@@ -246,21 +243,19 @@ def cmd_validate() -> int:
         translated, fuzzy = parse_po_msgids(po_path)
         missing = sorted(code_msgids - translated)
         if missing:
-            severity = "FAIL" if len(missing) > MISSING_BUDGET else "WARN"
             print(
-                f"{lang} [{severity}]: {len(missing)} msgid(s) untranslated "
-                f"in messages.po (budget {MISSING_BUDGET})",
+                f"{lang} [FAIL]: {len(missing)} msgid(s) untranslated "
+                f"in messages.po",
                 file=sys.stderr,
             )
             for msgid in missing[:5]:
                 print(f"  - {msgid!r}", file=sys.stderr)
             if len(missing) > 5:
                 print(f"  ... and {len(missing) - 5} more", file=sys.stderr)
-            if len(missing) > MISSING_BUDGET:
-                failures += 1
+            failures += 1
         if fuzzy > FUZZY_BUDGET:
             print(
-                f"{lang}: {fuzzy} fuzzy entries (budget {FUZZY_BUDGET})",
+                f"{lang} [FAIL]: {fuzzy} fuzzy entries",
                 file=sys.stderr,
             )
             failures += 1
