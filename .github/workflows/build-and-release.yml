@@ -3448,12 +3448,22 @@ jobs:
           echo "=========================================="
           cat "$STAGE/PKGBUILD"
 
-          # Regenerate .SRCINFO inside an archlinux:base-devel container so
-          # the GH runner doesn't need pacman/makepkg installed.  ``makepkg
-          # --printsrcinfo`` reads PKGBUILD and emits the canonical .SRCINFO.
+          # Regenerate .SRCINFO inside an archlinux:base-devel container.
+          # makepkg refuses to run as root ("permanent, catastrophic
+          # damage to your system"), so we create a non-privileged
+          # ``builder`` user inside the container, chown the work dir to
+          # it, and run makepkg via ``su``.  The output .SRCINFO is
+          # written back to the bind-mounted $STAGE so the host can
+          # pick it up.
           docker run --rm -v "$STAGE:/work" -w /work archlinux:base-devel \
-            bash -c 'pacman -Sy --noconfirm --needed pacman-contrib >/dev/null && \
-                     makepkg --printsrcinfo > .SRCINFO && cat .SRCINFO'
+            bash -c '
+              set -e
+              pacman -Sy --noconfirm --needed pacman-contrib >/dev/null
+              useradd -m builder
+              chown -R builder:builder /work
+              su builder -c "cd /work && makepkg --printsrcinfo > .SRCINFO"
+              cat /work/.SRCINFO
+            '
 
           if [ "$MODE" != "publish" ]; then
             echo "DRY-RUN mode: not pushing to aur.archlinux.org/sysmanage-agent.git."

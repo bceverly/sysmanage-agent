@@ -18,20 +18,19 @@ aiofiles>=24.1.0
 # pattern semgrep ``use-defused-xml`` (correctly) flags.  defusedxml
 # rejects external-entity references + billion-laughs payloads.
 defusedxml>=0.7.1
-# python_multipart is a transitive dep (not directly imported here), but
-# the same CVE chain that bit the server (0.0.20 DoS + form-parser bypass)
-# applies anywhere it gets installed.  Mirror sysmanage/requirements.txt:55
-# so the agent venv can't drift below the fixed line.  Defense-in-depth.
-#
-# Gated on python_version >= '3.10' because all CVE-fixed releases
-# (0.0.21 and above) require Python 3.10+.  On Python 3.9 the only
-# resolvable versions are 0.0.20 and below — the vulnerable ones — so
-# we deliberately apply no pin there.  Acceptable risk: the agent does
-# not expose an HTTP form-parser surface to untrusted input, so the
-# DoS/bypass class doesn't reach it even if 0.0.20 lands in the
-# transitive resolution.  Matches the same pattern this file uses for
-# ``black`` and ``semgrep`` on the 3.9 line.
-python_multipart>=0.0.27; python_version >= '3.10'
+# python_multipart was briefly pinned here as defense-in-depth against
+# the 0.0.20 DoS + form-parser-bypass CVE chain that affected the
+# server.  Removed because:
+#   1. ``pip download --python-version 3.9.21`` evaluates env markers
+#      against the CI HOST's python (3.12), not the target — so a
+#      ``; python_version >= '3.10'`` gate doesn't actually skip the
+#      pin in the Python-3.9 wheel-download passes that the RPM
+#      builder uses.  pip then can't find a 0.0.27+ wheel for cp39
+#      (no such release exists) and the build fails.
+#   2. The agent has no untrusted-form-parser surface, so the CVE
+#      class doesn't reach it even if 0.0.20 lands transitively.
+# If a future code change starts parsing multipart input on the
+# agent, add the pin back AND split requirements per Python version.
 
 # Database dependencies
 SQLAlchemy>=2.0.43
