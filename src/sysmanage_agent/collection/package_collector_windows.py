@@ -16,11 +16,14 @@ from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
 
 if TYPE_CHECKING:
-    # Type-only import — pulled in by mypy / pyright but NEVER at
-    # runtime.  Lets us annotate the parameter as ``ET.Element``
-    # without bandit B405 flagging ``xml.etree`` as a runtime import.
-    # The actual parser (``DET.fromstring``) is defusedxml.
-    import xml.etree.ElementTree as ET  # noqa: N811
+    # Type-only import — only mypy / pyright evaluates this block;
+    # the runtime interpreter skips it entirely (TYPE_CHECKING is
+    # always False at runtime).  Bandit's B405 rule does a textual
+    # match on the import statement without flow analysis, so the
+    # ``# nosec B405`` annotation documents that no actual XML parse
+    # ever uses this import — the runtime parser is defusedxml
+    # (``DET.fromstring`` above).
+    import xml.etree.ElementTree as ET  # nosec B405  # noqa: N811
 
 logger = logging.getLogger(__name__)
 
