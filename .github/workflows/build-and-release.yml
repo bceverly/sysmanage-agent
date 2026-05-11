@@ -3238,7 +3238,7 @@ jobs:
 
       - name: Publish via komac
         env:
-          MODE: ${{ github.event.inputs.winget_mode || 'dry_run' }}
+          MODE: ${{ github.event.inputs.winget_mode || 'publish' }}
           VERSION: ${{ steps.version.outputs.version }}
           MSI_URL: ${{ steps.render.outputs.msi_url }}
           WINGET_PKGS_TOKEN: ${{ secrets.WINGET_PKGS_TOKEN }}
@@ -3344,7 +3344,7 @@ jobs:
 
       - name: Publish to bceverly/homebrew-tap
         env:
-          MODE: ${{ github.event.inputs.homebrew_mode || 'dry_run' }}
+          MODE: ${{ github.event.inputs.homebrew_mode || 'publish' }}
           VERSION: ${{ steps.version.outputs.version }}
           HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
         run: |
@@ -3419,7 +3419,7 @@ jobs:
 
       - name: Render PKGBUILD + .SRCINFO and publish
         env:
-          MODE: ${{ github.event.inputs.aur_mode || 'dry_run' }}
+          MODE: ${{ github.event.inputs.aur_mode || 'publish' }}
           VERSION: ${{ steps.version.outputs.version }}
           AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
         run: |
