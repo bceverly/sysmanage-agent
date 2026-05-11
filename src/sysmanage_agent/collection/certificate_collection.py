@@ -51,7 +51,7 @@ class CertificateCollector:
                     _("Unsupported platform for certificate collection: %s"), system
                 )
 
-            self.logger.info(_("Collected %d certificates"), len(certificates))
+            self.logger.info("Collected %d certificates", len(certificates))
             return certificates
 
         except Exception as error:
@@ -229,13 +229,13 @@ class CertificateCollector:
                 keychain_certs = self._extract_certificates_from_keychain(keychain)
                 certificates.extend(keychain_certs)
                 self.logger.debug(
-                    _("Collected %d certificates from keychain: %s"),
+                    "Collected %d certificates from keychain: %s",
                     len(keychain_certs),
                     keychain["name"],
                 )
             except Exception as error:
                 self.logger.debug(
-                    _("Failed to collect certificates from keychain %s: %s"),
+                    "Failed to collect certificates from keychain %s: %s",
                     keychain["name"],
                     error,
                 )
@@ -269,7 +269,7 @@ class CertificateCollector:
 
             if result.returncode != 0:
                 self.logger.debug(
-                    _("Security command failed for keychain %s: %s"),
+                    "Security command failed for keychain %s: %s",
                     keychain["name"],
                     result.stderr,
                 )
@@ -284,7 +284,7 @@ class CertificateCollector:
             )
         except Exception as error:
             self.logger.debug(
-                _("Error extracting certificates from keychain %s: %s"),
+                "Error extracting certificates from keychain %s: %s",
                 keychain["name"],
                 error,
             )
@@ -348,7 +348,7 @@ class CertificateCollector:
 
             if result.returncode != 0:
                 self.logger.debug(
-                    _("OpenSSL failed to parse certificate: %s"), result.stderr
+                    "OpenSSL failed to parse certificate: %s", result.stderr
                 )
                 return None
 
@@ -366,12 +366,12 @@ class CertificateCollector:
 
         except subprocess.TimeoutExpired:
             self.logger.debug(
-                _("Timeout parsing certificate from keychain: %s"), keychain["name"]
+                "Timeout parsing certificate from keychain: %s", keychain["name"]
             )
             return None
         except Exception as error:
             self.logger.debug(
-                _("Error parsing certificate from keychain %s: %s"),
+                "Error parsing certificate from keychain %s: %s",
                 keychain["name"],
                 error,
             )
@@ -441,9 +441,7 @@ class CertificateCollector:
                     certificates.append(cert_info)
 
         except Exception as error:
-            self.logger.debug(
-                _("Failed to process certificate %s: %s"), cert_file, error
-            )
+            self.logger.debug("Failed to process certificate %s: %s", cert_file, error)
 
     def _collect_windows_certificates(self) -> List[Dict[str, Any]]:
         """Collect certificates from Windows Certificate Store."""
@@ -470,7 +468,7 @@ class CertificateCollector:
                 self._process_windows_certificate_store(store, certificates)
 
             self.logger.info(
-                _("Windows certificate collection completed: %d certificates found"),
+                "Windows certificate collection completed: %d certificates found",
                 len(certificates),
             )
 
@@ -495,11 +493,11 @@ class CertificateCollector:
                     added_certs = cert_count_after - cert_count_before
                     if added_certs > 0:
                         self.logger.debug(
-                            _("Found %d certificates in store %s"), added_certs, store
+                            "Found %d certificates in store %s", added_certs, store
                         )
                     else:
                         self.logger.debug(
-                            _("No valid certificates found in store %s"), store
+                            "No valid certificates found in store %s", store
                         )
                 else:
                     self.logger.debug("Certificate store %s is empty", store)
@@ -510,7 +508,7 @@ class CertificateCollector:
                     else "Unknown error"
                 )
                 self.logger.debug(
-                    _("Failed to query certificate store %s: %s"), store, error_msg
+                    "Failed to query certificate store %s: %s", store, error_msg
                 )
 
         except subprocess.TimeoutExpired:
@@ -566,12 +564,12 @@ class CertificateCollector:
                         certificates.append(cert_info)
                 except json.JSONDecodeError:
                     self.logger.debug(
-                        _("Failed to parse certificate JSON: %s"), line[:100]
+                        "Failed to parse certificate JSON: %s", line[:100]
                     )
                     continue
                 except Exception as error:
                     self.logger.debug(
-                        _("Error processing certificate data: %s"), str(error)
+                        "Error processing certificate data: %s", str(error)
                     )
                     continue
 
@@ -603,9 +601,7 @@ class CertificateCollector:
             )
 
             if result.returncode != 0:
-                self.logger.debug(
-                    _("OpenSSL failed for %s: %s"), cert_file, result.stderr
-                )
+                self.logger.debug("OpenSSL failed for %s: %s", cert_file, result.stderr)
                 return None
 
             return self._parse_openssl_output(cert_file, result.stdout)
@@ -622,7 +618,7 @@ class CertificateCollector:
             return None
         except Exception as error:
             self.logger.debug(
-                _("Error extracting certificate info from %s: %s"), cert_file, error
+                "Error extracting certificate info from %s: %s", cert_file, error
             )
             return None
 
@@ -692,7 +688,7 @@ class CertificateCollector:
             return date_time.replace(tzinfo=timezone.utc).isoformat()
         except ValueError as error:
             self.logger.debug(
-                _("Failed to parse %s date '%s': %s"), field_name, date_str, error
+                "Failed to parse %s date '%s': %s", field_name, date_str, error
             )
             return None
 

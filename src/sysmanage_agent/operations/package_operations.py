@@ -169,7 +169,7 @@ class PackageOperations:
             return {"success": False, "error": _("No package name specified")}
 
         self.logger.info(
-            _("Installing package %s (installation_id: %s, requested_by: %s)"),
+            "Installing package %s (installation_id: %s, requested_by: %s)",
             package_name,
             installation_id,
             requested_by,
@@ -265,7 +265,7 @@ class PackageOperations:
             }
 
         self.logger.info(
-            _("Installing %d packages for request %s (requested_by: %s)"),
+            "Installing %d packages for request %s (requested_by: %s)",
             len(packages),
             request_id,
             requested_by,
@@ -611,7 +611,7 @@ class PackageOperations:
             queued = await self.agent_instance.send_message(completion_message)
             if queued:
                 self.logger.info(
-                    _("Queued installation completion for request %s"),
+                    "Queued installation completion for request %s",
                     request_id,
                 )
             else:
@@ -670,7 +670,7 @@ class PackageOperations:
             await self.agent_instance.send_message(update_message)
 
             self.logger.info(
-                _("Sent package installation status update: %s for %s"),
+                "Sent package installation status update: %s for %s",
                 status,
                 package_name,
             )

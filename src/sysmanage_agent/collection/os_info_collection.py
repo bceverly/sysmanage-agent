@@ -140,7 +140,7 @@ class OSInfoCollector:
             ubuntu_pro_info["services"] = service_list
 
             self.logger.debug(
-                _("Ubuntu Pro status collected: attached=%s, services=%d"),
+                "Ubuntu Pro status collected: attached=%s, services=%d",
                 ubuntu_pro_info["attached"],
                 len(service_list),
             )

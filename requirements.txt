@@ -18,6 +18,11 @@ aiofiles>=24.1.0
 # pattern semgrep ``use-defused-xml`` (correctly) flags.  defusedxml
 # rejects external-entity references + billion-laughs payloads.
 defusedxml>=0.7.1
+# python_multipart is a transitive dep (not directly imported here), but
+# the same CVE chain that bit the server (0.0.20 DoS + form-parser bypass)
+# applies anywhere it gets installed.  Mirror sysmanage/requirements.txt:55
+# so the agent venv can't drift below the fixed line.  Defense-in-depth.
+python_multipart>=0.0.27
 
 # Database dependencies
 SQLAlchemy>=2.0.43

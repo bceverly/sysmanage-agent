@@ -1,0 +1,14 @@
+#!/bin/ksh
+#
+# $OpenBSD$
+
+daemon="${TRUEPREFIX}/bin/python3 ${TRUEPREFIX}/libexec/sysmanage-agent/main.py"
+daemon_user="_sysmanage"
+daemon_flags="--config /etc/sysmanage-agent.yaml"
+
+. /etc/rc.d/rc.subr
+
+rc_bg=YES
+rc_reload=NO
+
+rc_cmd $1

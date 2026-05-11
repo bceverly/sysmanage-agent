@@ -233,7 +233,7 @@ otelcol.exporter.otlp "grafana" {{
             result = await self._execute_shell_command({"command": command})
 
             if result["success"]:
-                self.logger.info(_("OpenTelemetry service started successfully"))
+                self.logger.info("OpenTelemetry service started successfully")
                 return {
                     "success": True,
                     "result": _("OpenTelemetry service started successfully"),
@@ -257,7 +257,7 @@ otelcol.exporter.otlp "grafana" {{
     ) -> Dict[str, Any]:
         """Stop OpenTelemetry service."""
         try:
-            self.logger.info(_("Stopping OpenTelemetry service..."))
+            self.logger.info("Stopping OpenTelemetry service...")
 
             if platform.system() == "Linux":
                 command = "sudo systemctl stop otelcol-contrib"
@@ -276,7 +276,7 @@ otelcol.exporter.otlp "grafana" {{
             result = await self._execute_shell_command({"command": command})
 
             if result["success"]:
-                self.logger.info(_("OpenTelemetry service stopped successfully"))
+                self.logger.info("OpenTelemetry service stopped successfully")
                 return {
                     "success": True,
                     "result": _("OpenTelemetry service stopped successfully"),
@@ -300,7 +300,7 @@ otelcol.exporter.otlp "grafana" {{
     ) -> Dict[str, Any]:
         """Restart OpenTelemetry service."""
         try:
-            self.logger.info(_("Restarting OpenTelemetry service..."))
+            self.logger.info("Restarting OpenTelemetry service...")
 
             if platform.system() == "Linux":
                 command = "sudo systemctl restart otelcol-contrib"
@@ -319,7 +319,7 @@ otelcol.exporter.otlp "grafana" {{
             result = await self._execute_shell_command({"command": command})
 
             if result["success"]:
-                self.logger.info(_("OpenTelemetry service restarted successfully"))
+                self.logger.info("OpenTelemetry service restarted successfully")
                 return {
                     "success": True,
                     "result": _("OpenTelemetry service restarted successfully"),
@@ -348,13 +348,11 @@ otelcol.exporter.otlp "grafana" {{
             return {"success": False, "error": _("Grafana URL is required")}
 
         try:
-            self.logger.info(
-                _("Connecting OpenTelemetry to Grafana at %s"), grafana_url
-            )
+            self.logger.info("Connecting OpenTelemetry to Grafana at %s", grafana_url)
             restart_result = await self.restart_opentelemetry_service(parameters)
 
             if restart_result["success"]:
-                self.logger.info(_("OpenTelemetry connected to Grafana successfully"))
+                self.logger.info("OpenTelemetry connected to Grafana successfully")
                 return {
                     "success": True,
                     "result": _("OpenTelemetry connected to Grafana successfully"),
@@ -374,9 +372,7 @@ otelcol.exporter.otlp "grafana" {{
             restart_result = await self.restart_opentelemetry_service(parameters)
 
             if restart_result["success"]:
-                self.logger.info(
-                    _("OpenTelemetry disconnected from Grafana successfully")
-                )
+                self.logger.info("OpenTelemetry disconnected from Grafana successfully")
                 return {
                     "success": True,
                     "result": _("OpenTelemetry disconnected from Grafana successfully"),

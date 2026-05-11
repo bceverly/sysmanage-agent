@@ -21,8 +21,6 @@ try:
 except ImportError:
     pwd = None  # Windows
 
-from src.i18n import _
-
 logger = logging.getLogger(__name__)
 
 HOMEBREW_ARM_PATH = "/opt/homebrew/bin/brew"
@@ -105,7 +103,7 @@ class UpdateDetectorBase:
 
         self._package_managers = managers
         logger.info(
-            _("Detected package managers: %s"),
+            "Detected package managers: %s",
             ", ".join(managers) if managers else "none",
         )
         return managers

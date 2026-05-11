@@ -1,0 +1,15 @@
+SysManage Agent is a lightweight, secure, cross-platform system management
+daemon that connects to the SysManage server via WebSocket for real-time
+remote management.
+
+Features:
+  * Real-time WebSocket communication (TLS, optional mTLS)
+  * System inventory and metrics (CPU, memory, disk, network)
+  * Package management and update orchestration
+  * Remote command execution with audit logging
+  * Firewall / antivirus / certificate management hooks
+  * Declarative deployment plans driven by the SysManage server
+  * Auto-discovery of SysManage servers on the LAN
+
+The agent runs as a system service and requires no inbound ports — all
+communication is agent-initiated, simplifying firewall configuration.

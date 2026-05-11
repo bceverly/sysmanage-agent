@@ -183,7 +183,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 )
 
             logger.info(
-                _("Collected %d programs from Windows Registry"),
+                "Collected %d programs from Windows Registry",
                 len(
                     [
                         p
@@ -262,7 +262,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
                     logger.info(
-                        _("Collected %d apps from Microsoft Store"),
+                        "Collected %d apps from Microsoft Store",
                         len(
                             [
                                 p
@@ -281,7 +281,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
         except FileNotFoundError:
             logger.debug(
-                _("PowerShell not found (not on Windows or PowerShell not installed)")
+                "PowerShell not found (not on Windows or PowerShell not installed)"
             )
         except Exception as error:
             logger.error(_("Failed to collect Microsoft Store apps: %s"), str(error))

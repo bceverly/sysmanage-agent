@@ -155,9 +155,7 @@ class RegistrationManager:
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
         try:
-            self.logger.info(
-                _("Received registration success notification from server")
-            )
+            self.logger.info("Received registration success notification from server")
 
             # Record the registration timestamp
             self.agent.last_registration_time = datetime.now(timezone.utc)
@@ -214,7 +212,7 @@ class RegistrationManager:
             certificate = data.get("certificate")
 
             self.logger.info(
-                _("Received host approval notification: host_id=%s, status=%s"),
+                "Received host approval notification: host_id=%s, status=%s",
                 host_id,
                 approval_status,
             )
@@ -223,7 +221,7 @@ class RegistrationManager:
             await self.store_host_approval(host_id, approval_status, certificate)
 
             self.logger.info(
-                _("Host approval information stored successfully. Host ID: %s"), host_id
+                "Host approval information stored successfully. Host ID: %s", host_id
             )
 
             # Re-send system_info so backend sets connection.host_id
@@ -279,9 +277,7 @@ class RegistrationManager:
                 deleted_count = session.query(HostApproval).delete()
                 if deleted_count > 0:
                     self.logger.info(
-                        _(
-                            "Deleted %d old host approval record(s) before storing new approval"
-                        ),
+                        "Deleted %d old host approval record(s) before storing new approval",
                         deleted_count,
                     )
 
@@ -303,7 +299,7 @@ class RegistrationManager:
 
                 session.commit()
                 self.logger.info(
-                    _("Host approval record stored in database: host_id=%s, status=%s"),
+                    "Host approval record stored in database: host_id=%s, status=%s",
                     host_id,
                     approval_status,
                 )
@@ -488,7 +484,7 @@ class RegistrationManager:
 
                 session.commit()
                 self.logger.info(
-                    _("Host approval records and related data cleared from database")
+                    "Host approval records and related data cleared from database"
                 )
 
             finally:

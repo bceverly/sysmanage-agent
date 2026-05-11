@@ -100,7 +100,7 @@ class HostnameOperations:
         - Static hostname (/etc/hostname)
         - Pretty hostname
         """
-        self.logger.info(_("Changing Linux hostname to: %s"), hostname)
+        self.logger.info("Changing Linux hostname to: %s", hostname)
 
         # Try hostnamectl first (systemd systems)
         result = await run_command_async(
@@ -166,7 +166,7 @@ class HostnameOperations:
         - LocalHostName (Bonjour name, no dots allowed)
         - HostName (DNS hostname)
         """
-        self.logger.info(_("Changing macOS hostname to: %s"), hostname)
+        self.logger.info("Changing macOS hostname to: %s", hostname)
 
         # Extract short hostname (without domain) for LocalHostName
         short_hostname = hostname.split(".")[0]
@@ -215,7 +215,7 @@ class HostnameOperations:
 
         Note: This requires a reboot to take full effect.
         """
-        self.logger.info(_("Changing Windows hostname to: %s"), hostname)
+        self.logger.info("Changing Windows hostname to: %s", hostname)
 
         # Use PowerShell Rename-Computer
         ps_command = f'Rename-Computer -NewName "{hostname}" -Force'
@@ -247,7 +247,7 @@ class HostnameOperations:
         - Runtime hostname via hostname command
         - Persistent hostname in /etc/rc.conf
         """
-        self.logger.info(_("Changing FreeBSD hostname to: %s"), hostname)
+        self.logger.info("Changing FreeBSD hostname to: %s", hostname)
 
         # Set runtime hostname
         result = await run_command_async(
@@ -300,7 +300,7 @@ class HostnameOperations:
         - Runtime hostname via hostname command
         - Persistent hostname in /etc/myname
         """
-        self.logger.info(_("Changing BSD hostname to: %s"), hostname)
+        self.logger.info("Changing BSD hostname to: %s", hostname)
 
         # Set runtime hostname
         result = await run_command_async(

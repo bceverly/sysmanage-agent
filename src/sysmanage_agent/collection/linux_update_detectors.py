@@ -354,7 +354,7 @@ class LinuxUpdateDetector:
             )
             if refresh_result.returncode != 0:
                 logger.debug(
-                    _("fwupd refresh failed (may need privileges): %s"),
+                    "fwupd refresh failed (may need privileges): %s",
                     refresh_result.stderr,
                 )
         except Exception:

@@ -36,9 +36,9 @@ class DiagnosticCollector:
             collection_types = parameters.get("collection_types", [])
 
             self.logger.info(
-                _("Starting diagnostics collection for ID: %s"), collection_id
+                "Starting diagnostics collection for ID: %s", collection_id
             )
-            self.logger.info(_("Collection types requested: %s"), collection_types)
+            self.logger.info("Collection types requested: %s", collection_types)
 
             # Dictionary to store collected data
             system_info = self.registration.get_system_info()
@@ -63,7 +63,7 @@ class DiagnosticCollector:
             await self._send_diagnostic_result(diagnostic_data)
 
             self.logger.info(
-                _("Diagnostics collection completed for ID: %s"), collection_id
+                "Diagnostics collection completed for ID: %s", collection_id
             )
 
             return {
@@ -133,7 +133,7 @@ class DiagnosticCollector:
         for i, collection_type in enumerate(collection_types, 1):
             try:
                 self.logger.info(
-                    _("Starting collection %d/%d: %s"),
+                    "Starting collection %d/%d: %s",
                     i,
                     len(collection_types),
                     collection_type,
@@ -146,7 +146,7 @@ class DiagnosticCollector:
 
                 elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
                 self.logger.info(
-                    _("Completed collection of %s in %.2f seconds"),
+                    "Completed collection of %s in %.2f seconds",
                     collection_type,
                     elapsed,
                 )

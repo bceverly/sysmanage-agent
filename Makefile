@@ -528,8 +528,20 @@ endif
 clean-whitespace: setup-venv
 	@$(PYTHON) scripts/clean_whitespace.py
 
+# Version-drift check: every on-disk version marker must equal the
+# highest GitHub release tag (queried via curl, never git).  Offline
+# runs soft-skip rather than fail so dev workflow isn't blocked.
+lint-version:
+	@echo "=== Version drift check ==="
+	@$(PYTHON) scripts/check_version_drift.py
+
+# Surgically update drifted version markers to the current GitHub
+# release tag.  Leaves changes unstaged.
+lint-version-fix:
+	@$(PYTHON) scripts/check_version_drift.py --fix
+
 # Python linting
-lint: format-python i18n-validate
+lint: format-python i18n-validate lint-version
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)

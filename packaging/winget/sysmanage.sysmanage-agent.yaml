@@ -1,0 +1,71 @@
+# sysmanage-agent winget manifest — Phase 11.8 stub.
+#
+# This single-file (singleton) form is acceptable for early submissions
+# per https://learn.microsoft.com/en-us/windows/package-manager/package/manifest.
+# Once the package matures we'll switch to the three-file form
+# (Version + Installer + Locale) so multiple installer architectures /
+# locales can be published from one manifest set.
+#
+# *** USER ACTION REQUIRED ***
+#
+# To publish a new release to winget:
+#   1. Bump ``PackageVersion`` below to match the release tag.
+#   2. Update ``InstallerUrl`` to point at the GitHub release MSI.
+#   3. Re-compute ``InstallerSha256`` against the MSI:
+#         certutil -hashfile sysmanage-agent.msi SHA256
+#      (PowerShell:  Get-FileHash sysmanage-agent.msi -Algorithm SHA256)
+#   4. Fork https://github.com/microsoft/winget-pkgs (one-time).
+#   5. Drop this manifest at:
+#         manifests/s/sysmanage/sysmanage-agent/<PackageVersion>/
+#         sysmanage.sysmanage-agent.yaml
+#   6. Open a PR against ``microsoft/winget-pkgs``.  Validation bot
+#      ``wingetbot`` will smoke-install in a sandbox and report status
+#      on the PR within a few minutes.
+#   7. After merge, ``winget install --id sysmanage.sysmanage-agent``
+#      will work on every up-to-date Windows 10/11 client globally.
+#
+# This is a one-time-per-release manual workflow until we wire it into
+# build-and-release.yml (Phase 11.8 follow-up; see the
+# ``winget-manifest`` job that currently DRY-RUNs only).
+#
+# Microsoft Store submission is a separate, sandboxed pipeline — see
+# ROADMAP.md §11.8 Mac-App-Store-and-Microsoft-Store note.
+PackageIdentifier: sysmanage.sysmanage-agent
+PackageVersion: 0.0.0
+PackageLocale: en-US
+Publisher: Bryan Everly
+PublisherUrl: https://github.com/bceverly/sysmanage-agent
+PublisherSupportUrl: https://github.com/bceverly/sysmanage-agent/issues
+PackageName: SysManage Agent
+PackageUrl: https://github.com/bceverly/sysmanage-agent
+License: AGPL-3.0-or-later
+LicenseUrl: https://github.com/bceverly/sysmanage-agent/blob/main/LICENSE
+Copyright: Copyright (c) Bryan Everly
+ShortDescription: Cross-platform system management agent for SysManage.
+Description: |-
+  SysManage Agent is the host-side daemon for the SysManage open-source
+  fleet management platform.  It registers the host with a SysManage
+  server, reports inventory, applies declarative deployment plans
+  (package install, firewall config, antivirus deployment, VM
+  lifecycle), and surfaces real-time health metrics.
+Moniker: sysmanage-agent
+Tags:
+  - sysmanage
+  - fleet-management
+  - agent
+  - automation
+  - linux
+  - windows
+  - macos
+Installers:
+  - Architecture: x64
+    InstallerType: msi
+    Scope: machine
+    InstallerUrl: https://github.com/bceverly/sysmanage-agent/releases/download/v0.0.0/sysmanage-agent-0.0.0-x64.msi
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSwitches:
+      Silent: /quiet /norestart
+      SilentWithProgress: /passive /norestart
+    UpgradeBehavior: install
+ManifestType: singleton
+ManifestVersion: 1.6.0

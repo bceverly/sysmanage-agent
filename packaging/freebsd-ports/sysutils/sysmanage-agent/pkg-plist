@@ -1,0 +1,3 @@
+libexec/sysmanage-agent/main.py
+libexec/sysmanage-agent/alembic.ini
+@sample etc/sysmanage-agent.yaml.sample

@@ -211,7 +211,7 @@ def install_non_apt_packages(
         package_name = package.get("package_name")
         try:
             installation_log.append(f"Installing {package_name}...")
-            logger_instance.info(_("Installing package: %s"), package_name)
+            logger_instance.info("Installing package: %s", package_name)
 
             update_detector = UpdateDetector()
             result = update_detector.install_package(package_name, pkg_manager)

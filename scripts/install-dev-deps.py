@@ -87,21 +87,11 @@ def main():
     print(f"Platform detected: {system}")
     print("=" * 60)
 
-    # Standard dev dependencies (no special handling needed)
-    standard_deps = [
-        "pytest",
-        "pytest-cov",
-        "pytest-asyncio",
-        "pylint",
-        "black",
-        "isort",
-        "bandit",
-        "safety",
-    ]
-
-    # Install standard deps
+    # Standard dev dependencies live in requirements-dev.txt so the same
+    # pins (notably black) apply locally and in CI.  Keep this script as
+    # the entry point for platform-specific extras (grpcio/semgrep below).
     print("\n=== Installing standard development dependencies ===")
-    if not install_packages_with_env(standard_deps):
+    if not install_packages_with_env(["-r", "requirements-dev.txt"]):
         print("ERROR: Failed to install standard dependencies")
         sys.exit(1)
     print("✓ Standard dependencies installed")

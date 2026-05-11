@@ -109,9 +109,7 @@ class UpdateDetector:
             ]
 
             logger.info(
-                _(
-                    "Update detection completed: %d updates found (%d security, %d system, %d application)"
-                ),
+                "Update detection completed: %d updates found (%d security, %d system, %d application)",
                 len(self.detector.available_updates),
                 len(security_updates),
                 len(system_updates),

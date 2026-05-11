@@ -1,0 +1,14 @@
+# Development / lint / test tooling.  Pinned versions appear here when a
+# version mismatch between local and CI has caused real friction; the rest
+# float on purpose so security updates roll in without manual bumps.
+#
+# black is pinned because point releases reshape formatting and a local /
+# CI version skew silently produces diffs that only surface in CI.
+pytest
+pytest-cov
+pytest-asyncio
+pylint
+black==26.3.1
+isort
+bandit
+safety

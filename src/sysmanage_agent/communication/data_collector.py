@@ -796,9 +796,7 @@ class DataCollector:
             # Only some certificates in restricted directories may require privileged access
             if not is_running_privileged():
                 self.logger.info(
-                    _(
-                        "Running certificate collection in unprivileged mode - some certificates may not be accessible"
-                    )
+                    "Running certificate collection in unprivileged mode - some certificates may not be accessible"
                 )
 
             self.logger.info("Collecting SSL certificates from system")
@@ -807,7 +805,7 @@ class DataCollector:
             certificates = self.agent.certificate_collector.collect_certificates()
 
             if not certificates:
-                self.logger.info(_("No certificates found on system"))
+                self.logger.info("No certificates found on system")
                 return {
                     "success": True,
                     "result": "No certificates found",
@@ -848,7 +846,7 @@ class DataCollector:
             roles = self.agent.role_detector.detect_roles()
 
             if not roles:
-                self.logger.info(_("No server roles detected on system"))
+                self.logger.info("No server roles detected on system")
                 return {
                     "success": True,
                     "result": "No server roles detected",

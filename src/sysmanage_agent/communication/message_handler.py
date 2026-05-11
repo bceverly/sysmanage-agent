@@ -52,7 +52,7 @@ class MessageHandler:
         self.inbound_queue_processor_running = False
         self.inbound_processing_task = None
 
-        self.logger.info(_("Message handler initialized"))
+        self.logger.info("Message handler initialized")
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
@@ -956,7 +956,7 @@ class MessageHandler:
 
         Note: async is required because callers await this method.
         """
-        self.logger.info(_("Connection established, starting queue processing"))
+        self.logger.info("Connection established, starting queue processing")
 
         # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
         try:
@@ -1021,7 +1021,7 @@ class MessageHandler:
         Called when WebSocket connection is lost.
         Stops outbound queue processing (inbound continues to process any pending commands).
         """
-        self.logger.info(_("Connection lost, stopping outbound queue processing"))
+        self.logger.info("Connection lost, stopping outbound queue processing")
 
         # Stop outbound queue processing
         if self.processing_task and not self.processing_task.done():

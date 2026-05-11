@@ -150,7 +150,7 @@ class SoftwareInventoryCollector:
             self.collector.collect_packages()
 
             logger.info(
-                _("Software inventory collection completed: %d packages found"),
+                "Software inventory collection completed: %d packages found",
                 len(self.collector.collected_packages),
             )
 

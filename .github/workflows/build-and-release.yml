@@ -5,6 +5,50 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  # Phase 11.8 — manual dispatch with extra channel gates.  The
+  # ``winget`` / ``homebrew`` inputs default to ``dry_run`` so a
+  # routine tag push never accidentally hits external accounts that
+  # aren't fully wired yet.  Flip to ``publish`` once
+  # ``WINGET_PKGS_TOKEN`` / ``HOMEBREW_TAP_DEPLOY_KEY`` secrets are
+  # configured (see packaging/winget/ and packaging/homebrew/ stubs).
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (without the leading v)"
+        required: false
+        default: ""
+      winget_mode:
+        description: "winget-pkgs PR submission (Phase 11.8)"
+        required: false
+        type: choice
+        default: "publish"
+        options:
+          - "dry_run"
+          - "publish"
+      homebrew_mode:
+        description: "Homebrew tap formula update (Phase 11.8)"
+        required: false
+        type: choice
+        default: "publish"
+        options:
+          - "dry_run"
+          - "publish"
+      aur_mode:
+        description: "AUR (Arch User Repository) submission (Phase 11.9)"
+        required: false
+        type: choice
+        default: "publish"
+        options:
+          - "dry_run"
+          - "publish"
+      bsd_ports_artifacts:
+        description: "Render BSD port submission tarballs (Phase 11.9)"
+        required: false
+        type: choice
+        default: "yes"
+        options:
+          - "yes"
+          - "no"
 
 permissions:
   contents: write  # Needed for creating releases and pushing to repos
@@ -3100,3 +3144,641 @@ jobs:
           echo ""
           echo "Install with:"
           echo "  sudo snap install sysmanage-agent-strict --edge"
+
+  # ============================================================================
+  # PHASE 11.8 / 11.9 — upstream-channel auto-publish
+  # ============================================================================
+  #
+  # These jobs handle the channels that don't live in
+  # bceverly/sysmanage-docs:
+  #
+  #   * winget-manifest    -> microsoft/winget-pkgs (komac --submit)
+  #   * homebrew-tap       -> bceverly/homebrew-tap (deploy-key push)
+  #   * aur                -> aur.archlinux.org/sysmanage-agent.git (ssh push)
+  #   * freebsd-ports      -> render port tarball, attach to release
+  #   * openbsd-ports      -> render port tarball, attach to release
+  #   * netbsd-pkgsrc      -> render pkgsrc tarball, attach to release
+  #
+  # Each "real publish" job is gated behind both (a) a workflow_dispatch
+  # input set to ``publish`` (or the default-on bsd_ports_artifacts flag
+  # for BSD ports) AND (b) the corresponding secret being non-empty.
+  # If the secret isn't wired yet, the job emits a ``::warning`` and
+  # exits 0 instead of failing the workflow — a fresh release tag must
+  # never red-X just because one upstream tap isn't configured yet.
+  #
+  # One-time "prime the pump" setup per channel:
+  #   homebrew : create ``bceverly/homebrew-tap`` repo, generate an
+  #              SSH deploy key with push access, paste private half
+  #              into ``HOMEBREW_TAP_DEPLOY_KEY`` repo secret.
+  #   winget   : create a GitHub PAT with public_repo on the user's
+  #              fork of microsoft/winget-pkgs, paste into
+  #              ``WINGET_PKGS_TOKEN``.
+  #   aur      : register an SSH key on aur.archlinux.org/account/,
+  #              create the ``sysmanage-agent`` AUR repo (initial
+  #              ``git push``), paste private half into ``AUR_SSH_KEY``.
+  #   BSD      : no secret needed — jobs render submission tarballs
+  #              and attach to the GitHub release.  User downloads,
+  #              files Bugzilla / ports@ / pkgsrc-wip PR manually.
+  winget-manifest:
+    name: winget-pkgs manifest (Phase 11.8)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Render winget manifest
+        id: render
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          MSI_URL="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-x64.msi"
+
+          # Download the MSI to compute its sha256 — what winget-pkgs requires.
+          curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
+            echo "::warning::Could not download MSI from $MSI_URL — falling back to placeholder sha256"
+            SHA="0000000000000000000000000000000000000000000000000000000000000000"
+          }
+          if [ -f /tmp/sysmanage-agent.msi ]; then
+            SHA=$(sha256sum /tmp/sysmanage-agent.msi | awk '{print toupper($1)}')
+          fi
+
+          # Render the manifest from the stub.
+          mkdir -p /tmp/winget-out
+          sed \
+            -e "s/^PackageVersion: .*/PackageVersion: ${VERSION}/" \
+            -e "s|InstallerUrl: .*|InstallerUrl: ${MSI_URL}|" \
+            -e "s/InstallerSha256: .*/InstallerSha256: ${SHA}/" \
+            packaging/winget/sysmanage.sysmanage-agent.yaml \
+            > /tmp/winget-out/sysmanage.sysmanage-agent.yaml
+
+          echo "=========================================="
+          echo "Rendered winget manifest (v${VERSION}):"
+          echo "=========================================="
+          cat /tmp/winget-out/sysmanage.sysmanage-agent.yaml
+
+          echo "msi_url=$MSI_URL" >> $GITHUB_OUTPUT
+
+      - name: Publish via komac
+        env:
+          MODE: ${{ github.event.inputs.winget_mode || 'dry_run' }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MSI_URL: ${{ steps.render.outputs.msi_url }}
+          WINGET_PKGS_TOKEN: ${{ secrets.WINGET_PKGS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" != "publish" ]; then
+            echo "DRY-RUN mode: not submitting to microsoft/winget-pkgs."
+            echo "To go live: dispatch with winget_mode=publish AND set WINGET_PKGS_TOKEN."
+            exit 0
+          fi
+          if [ -z "${WINGET_PKGS_TOKEN:-}" ]; then
+            echo "::warning::winget_mode=publish requested but WINGET_PKGS_TOKEN is unset."
+            echo "::warning::One-time setup: create a PAT with public_repo scope on your"
+            echo "::warning::fork of microsoft/winget-pkgs, then add it as repo secret"
+            echo "::warning::WINGET_PKGS_TOKEN.  This run will exit 0 (not a hard failure)."
+            exit 0
+          fi
+
+          # Download prebuilt komac (linux-x64 musl) — building from source
+          # via ``cargo install`` takes ~6 min on a GH runner.  Pin to the
+          # ``latest`` redirect; komac follows semver and the ``update
+          # --submit`` interface has been stable since v2.x.
+          echo "Fetching latest komac release..."
+          KOMAC_URL=$(curl -fsSL https://api.github.com/repos/russellbanks/Komac/releases/latest \
+            | grep -oE '"browser_download_url": "[^"]+linux-x86_64-musl[^"]*\.tar\.gz"' \
+            | head -1 \
+            | cut -d'"' -f4)
+          if [ -z "$KOMAC_URL" ]; then
+            echo "::error::Could not resolve latest komac linux-x86_64 musl tarball URL"
+            exit 1
+          fi
+          echo "Downloading $KOMAC_URL"
+          curl -fsSL -o /tmp/komac.tar.gz "$KOMAC_URL"
+          mkdir -p /tmp/komac-bin
+          tar xzf /tmp/komac.tar.gz -C /tmp/komac-bin
+          KOMAC=$(find /tmp/komac-bin -type f -name komac | head -1)
+          chmod +x "$KOMAC"
+          "$KOMAC" --version
+
+          echo "Submitting sysmanage.sysmanage-agent v${VERSION} to microsoft/winget-pkgs..."
+          "$KOMAC" update \
+            --identifier sysmanage.sysmanage-agent \
+            --version "${VERSION}" \
+            --urls "${MSI_URL}" \
+            --submit \
+            --token "${WINGET_PKGS_TOKEN}"
+
+          echo "winget submission complete; check the PR on microsoft/winget-pkgs."
+
+  homebrew-tap:
+    name: Homebrew tap formula (Phase 11.8)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Render Homebrew formula
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
+
+          # Pull the source tarball to compute sha256 — Homebrew refuses
+          # to install a formula whose sha256 doesn't match.
+          curl -sSfL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
+            echo "::warning::Could not download tarball from $TARBALL_URL"
+            SHA="0000000000000000000000000000000000000000000000000000000000000000"
+          }
+          if [ -f /tmp/sysmanage-agent.tar.gz ]; then
+            SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
+          fi
+
+          mkdir -p /tmp/homebrew-out
+          sed \
+            -e "s|url \".*\"|url \"${TARBALL_URL}\"|" \
+            -e "s|sha256 \".*\"|sha256 \"${SHA}\"|" \
+            -e "s|version \".*\"|version \"${VERSION}\"|" \
+            packaging/homebrew/sysmanage-agent.rb \
+            > /tmp/homebrew-out/sysmanage-agent.rb
+
+          echo "=========================================="
+          echo "Rendered Homebrew formula (v${VERSION}):"
+          echo "=========================================="
+          cat /tmp/homebrew-out/sysmanage-agent.rb
+
+      - name: Publish to bceverly/homebrew-tap
+        env:
+          MODE: ${{ github.event.inputs.homebrew_mode || 'dry_run' }}
+          VERSION: ${{ steps.version.outputs.version }}
+          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" != "publish" ]; then
+            echo "DRY-RUN mode: not pushing to bceverly/homebrew-tap."
+            echo "To go live: dispatch with homebrew_mode=publish AND set HOMEBREW_TAP_DEPLOY_KEY."
+            exit 0
+          fi
+          if [ -z "${HOMEBREW_TAP_DEPLOY_KEY:-}" ]; then
+            echo "::warning::homebrew_mode=publish requested but HOMEBREW_TAP_DEPLOY_KEY is unset."
+            echo "::warning::One-time setup: create bceverly/homebrew-tap repo, generate an"
+            echo "::warning::SSH deploy key with WRITE access, paste private half into"
+            echo "::warning::HOMEBREW_TAP_DEPLOY_KEY repo secret.  This run will exit 0."
+            exit 0
+          fi
+
+          # Write the deploy key to a temp file with 0600 perms and arrange
+          # for it to be shredded on exit (even if a later step fails).
+          KEYFILE=$(mktemp /tmp/homebrew-tap-deploy.XXXXXX)
+          chmod 600 "$KEYFILE"
+          # shellcheck disable=SC2064  # we want KEYFILE expanded at trap-set time
+          trap "shred -u '$KEYFILE' 2>/dev/null || rm -f '$KEYFILE'" EXIT
+          printf '%s\n' "$HOMEBREW_TAP_DEPLOY_KEY" > "$KEYFILE"
+
+          export GIT_SSH_COMMAND="ssh -i $KEYFILE -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes"
+
+          TAP_DIR=$(mktemp -d /tmp/homebrew-tap.XXXXXX)
+          git clone git@github.com:bceverly/homebrew-tap.git "$TAP_DIR"
+
+          mkdir -p "$TAP_DIR/Formula"
+          cp /tmp/homebrew-out/sysmanage-agent.rb "$TAP_DIR/Formula/sysmanage-agent.rb"
+
+          cd "$TAP_DIR"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/sysmanage-agent.rb
+          if git diff --cached --quiet; then
+            echo "No formula changes for v${VERSION}; nothing to commit."
+            exit 0
+          fi
+          git commit -m "sysmanage-agent v${VERSION}"
+          git push origin main
+
+          echo "Homebrew tap updated: bceverly/homebrew-tap@main now ships v${VERSION}."
+
+  # AUR (Arch User Repository) submission.  Pushes an updated PKGBUILD +
+  # .SRCINFO to ssh://aur@aur.archlinux.org/sysmanage-agent.git.
+  aur:
+    name: AUR submission (Phase 11.9)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Render PKGBUILD + .SRCINFO and publish
+        env:
+          MODE: ${{ github.event.inputs.aur_mode || 'dry_run' }}
+          VERSION: ${{ steps.version.outputs.version }}
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
+
+          # Compute the upstream tarball sha256 for sha256sums=().
+          curl -fsSL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
+            echo "::warning::Could not download $TARBALL_URL — using placeholder sha256"
+            TARBALL_SHA="0000000000000000000000000000000000000000000000000000000000000000"
+          }
+          if [ -f /tmp/sysmanage-agent.tar.gz ]; then
+            TARBALL_SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
+          fi
+
+          # Render PKGBUILD into a staging dir.
+          STAGE=$(mktemp -d /tmp/aur-stage.XXXXXX)
+          cp packaging/aur/PKGBUILD "$STAGE/PKGBUILD"
+          sed -i \
+            -e "s/^pkgver=.*/pkgver=${VERSION}/" \
+            -e "s/^sha256sums=.*/sha256sums=('${TARBALL_SHA}')/" \
+            "$STAGE/PKGBUILD"
+
+          echo "=========================================="
+          echo "Rendered PKGBUILD (v${VERSION}):"
+          echo "=========================================="
+          cat "$STAGE/PKGBUILD"
+
+          # Regenerate .SRCINFO inside an archlinux:base-devel container so
+          # the GH runner doesn't need pacman/makepkg installed.  ``makepkg
+          # --printsrcinfo`` reads PKGBUILD and emits the canonical .SRCINFO.
+          docker run --rm -v "$STAGE:/work" -w /work archlinux:base-devel \
+            bash -c 'pacman -Sy --noconfirm --needed pacman-contrib >/dev/null && \
+                     makepkg --printsrcinfo > .SRCINFO && cat .SRCINFO'
+
+          if [ "$MODE" != "publish" ]; then
+            echo "DRY-RUN mode: not pushing to aur.archlinux.org/sysmanage-agent.git."
+            echo "To go live: dispatch with aur_mode=publish AND set AUR_SSH_KEY."
+            exit 0
+          fi
+          if [ -z "${AUR_SSH_KEY:-}" ]; then
+            echo "::warning::aur_mode=publish requested but AUR_SSH_KEY is unset."
+            echo "::warning::One-time setup: register an SSH key on aur.archlinux.org,"
+            echo "::warning::create the sysmanage-agent AUR repo with an initial push,"
+            echo "::warning::then paste the private half into AUR_SSH_KEY repo secret."
+            echo "::warning::This run will exit 0 (not a hard failure)."
+            exit 0
+          fi
+
+          # Stage the SSH key on disk with 0600 perms, configure ssh to use
+          # it for aur.archlinux.org, and arrange for shredding on exit.
+          KEYFILE=$(mktemp /tmp/aur-ssh.XXXXXX)
+          chmod 600 "$KEYFILE"
+          # shellcheck disable=SC2064
+          trap "shred -u '$KEYFILE' 2>/dev/null || rm -f '$KEYFILE'" EXIT
+          printf '%s\n' "$AUR_SSH_KEY" > "$KEYFILE"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          {
+            printf 'Host aur.archlinux.org\n'
+            printf '    User aur\n'
+            printf '    IdentityFile %s\n' "$KEYFILE"
+            printf '    IdentitiesOnly yes\n'
+            printf '    StrictHostKeyChecking accept-new\n'
+            printf '    UserKnownHostsFile /dev/null\n'
+          } > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          AUR_DIR=$(mktemp -d /tmp/aur-clone.XXXXXX)
+          git clone ssh://aur@aur.archlinux.org/sysmanage-agent.git "$AUR_DIR"
+
+          cp "$STAGE/PKGBUILD" "$AUR_DIR/PKGBUILD"
+          cp "$STAGE/.SRCINFO" "$AUR_DIR/.SRCINFO"
+
+          cd "$AUR_DIR"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "No PKGBUILD changes for v${VERSION}; nothing to commit."
+            exit 0
+          fi
+          git commit -m "sysmanage-agent v${VERSION}"
+          git push origin master
+
+          echo "AUR submission complete: aur/sysmanage-agent now ships v${VERSION}."
+
+  # ============================================================================
+  # BSD port submission tarballs (FreeBSD ports, OpenBSD ports, NetBSD pkgsrc).
+  #
+  # Full automation is not feasible — FreeBSD takes patches via Bugzilla,
+  # OpenBSD via ports@ mailing list, NetBSD via pkgsrc-wip (GitHub PR).
+  # Each job renders the per-release port tree (Makefile + distinfo with
+  # real hashes), tars it up, uploads as a workflow artifact AND attaches
+  # to the GitHub release.  User downloads, files the submission manually.
+  # ============================================================================
+  freebsd-ports:
+    name: FreeBSD ports submission tarball (Phase 11.9)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Render FreeBSD port tree
+        id: render
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ENABLED: ${{ github.event.inputs.bsd_ports_artifacts || 'yes' }}
+        run: |
+          set -euo pipefail
+          if [ "$ENABLED" != "yes" ]; then
+            echo "bsd_ports_artifacts=no — skipping FreeBSD port render."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
+          curl -fsSL -o /tmp/upstream.tar.gz "$TARBALL_URL"
+          SHA=$(sha256sum /tmp/upstream.tar.gz | awk '{print $1}')
+          SIZE=$(stat -c%s /tmp/upstream.tar.gz)
+
+          STAGE=$(mktemp -d /tmp/fbsd-port.XXXXXX)
+          cp -r packaging/freebsd-ports/sysutils/sysmanage-agent "$STAGE/sysmanage-agent"
+
+          # Bump DISTVERSION from 0.0.0 to ${VERSION}.
+          sed -i "s/^DISTVERSION=.*/DISTVERSION=\t${VERSION}/" \
+            "$STAGE/sysmanage-agent/Makefile"
+
+          # Rewrite distinfo with real SHA256 + SIZE.  FreeBSD distinfo
+          # references DISTFILES paths under DIST_SUBDIR, so the filename
+          # in the distinfo lines stays ``sysmanage-agent/v${VERSION}.tar.gz``.
+          NOW=$(date -u +%s)
+          {
+            printf 'TIMESTAMP = %s\n' "$NOW"
+            printf 'SHA256 (sysmanage-agent/v%s.tar.gz) = %s\n' "$VERSION" "$SHA"
+            printf 'SIZE (sysmanage-agent/v%s.tar.gz) = %s\n' "$VERSION" "$SIZE"
+          } > "$STAGE/sysmanage-agent/distinfo"
+
+          OUT="sysmanage-agent-v${VERSION}-freebsd-port.tar.gz"
+          tar czf "$OUT" -C "$STAGE" sysmanage-agent
+          sha256sum "$OUT" > "${OUT}.sha256"
+
+          ls -lh "$OUT" "${OUT}.sha256"
+          echo "tarball=$OUT" >> $GITHUB_OUTPUT
+          echo "skipped=false" >> $GITHUB_OUTPUT
+
+      - name: Upload as workflow artifact
+        if: steps.render.outputs.skipped != 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: sysmanage-agent-freebsd-port
+          path: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-freebsd-port.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-freebsd-port.tar.gz.sha256
+
+      - name: Attach to GitHub release
+        if: steps.render.outputs.skipped != 'true' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-freebsd-port.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-freebsd-port.tar.gz.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  openbsd-ports:
+    name: OpenBSD ports submission tarball (Phase 11.9)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Render OpenBSD port tree
+        id: render
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ENABLED: ${{ github.event.inputs.bsd_ports_artifacts || 'yes' }}
+        run: |
+          set -euo pipefail
+          if [ "$ENABLED" != "yes" ]; then
+            echo "bsd_ports_artifacts=no — skipping OpenBSD port render."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
+          curl -fsSL -o /tmp/upstream.tar.gz "$TARBALL_URL"
+          SHA=$(sha256sum /tmp/upstream.tar.gz | awk '{print $1}')
+          SIZE=$(stat -c%s /tmp/upstream.tar.gz)
+
+          STAGE=$(mktemp -d /tmp/obsd-port.XXXXXX)
+          cp -r packaging/openbsd-ports/sysutils/sysmanage-agent "$STAGE/sysmanage-agent"
+
+          # Bump GH_TAGNAME from v0.0.0 to v${VERSION}.
+          sed -i "s|^GH_TAGNAME =.*|GH_TAGNAME =\t\tv${VERSION}|" \
+            "$STAGE/sysmanage-agent/Makefile"
+
+          # OpenBSD distinfo: SHA256 (base64) + SIZE.  ``cksum -a sha256 -b``
+          # produces the base64 form OpenBSD's bsd.port.mk expects; emulate
+          # with openssl on the ubuntu runner (matches ``cksum -a sha256 -b``
+          # output: 44-char base64 with one trailing ``=``).
+          B64=$(openssl dgst -sha256 -binary /tmp/upstream.tar.gz | base64 -w0)
+          {
+            printf 'SHA256 (sysmanage-agent-%s.tar.gz) = %s\n' "$VERSION" "$B64"
+            printf 'SIZE (sysmanage-agent-%s.tar.gz) = %s\n' "$VERSION" "$SIZE"
+          } > "$STAGE/sysmanage-agent/distinfo"
+
+          OUT="sysmanage-agent-v${VERSION}-openbsd-port-submission.tar.gz"
+          tar czf "$OUT" -C "$STAGE" sysmanage-agent
+          sha256sum "$OUT" > "${OUT}.sha256"
+
+          ls -lh "$OUT" "${OUT}.sha256"
+          echo "tarball=$OUT" >> $GITHUB_OUTPUT
+          echo "skipped=false" >> $GITHUB_OUTPUT
+
+      - name: Upload as workflow artifact
+        if: steps.render.outputs.skipped != 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: sysmanage-agent-openbsd-port-submission
+          path: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-openbsd-port-submission.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-openbsd-port-submission.tar.gz.sha256
+
+      - name: Attach to GitHub release
+        if: steps.render.outputs.skipped != 'true' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-openbsd-port-submission.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-openbsd-port-submission.tar.gz.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  netbsd-pkgsrc:
+    name: NetBSD pkgsrc submission tarball (Phase 11.9)
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            VERSION="${REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install BLAKE2s helper
+        run: |
+          # pkgsrc distinfo uses BLAKE2s + SHA512 + Size.  The ``b2sum``
+          # binary from coreutils on Ubuntu 24.04 supports BLAKE2b but
+          # *not* BLAKE2s; install ``rhash`` which provides BLAKE2s.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends rhash
+
+      - name: Render NetBSD pkgsrc tree
+        id: render
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ENABLED: ${{ github.event.inputs.bsd_ports_artifacts || 'yes' }}
+        run: |
+          set -euo pipefail
+          if [ "$ENABLED" != "yes" ]; then
+            echo "bsd_ports_artifacts=no — skipping NetBSD pkgsrc render."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
+          curl -fsSL -o "/tmp/sysmanage-agent-${VERSION}.tar.gz" "$TARBALL_URL"
+          DISTFILE="/tmp/sysmanage-agent-${VERSION}.tar.gz"
+          BLAKE2S=$(rhash --blake2s "$DISTFILE" | awk '{print $1}')
+          SHA512=$(sha512sum "$DISTFILE" | awk '{print $1}')
+          SIZE=$(stat -c%s "$DISTFILE")
+
+          STAGE=$(mktemp -d /tmp/nbsd-pkgsrc.XXXXXX)
+          cp -r packaging/netbsd-pkgsrc/sysutils/sysmanage-agent "$STAGE/sysmanage-agent"
+
+          # Bump DISTNAME + GITHUB_TAG from 0.0.0 to ${VERSION}.
+          sed -i \
+            -e "s/^DISTNAME=.*/DISTNAME=\tsysmanage-agent-${VERSION}/" \
+            -e "s/^GITHUB_TAG=.*/GITHUB_TAG=\tv${VERSION}/" \
+            "$STAGE/sysmanage-agent/Makefile"
+
+          # pkgsrc distinfo (modern post-2024 format): BLAKE2s + SHA512 + Size.
+          {
+            printf '$NetBSD$\n'
+            printf '\n'
+            printf 'BLAKE2s (sysmanage-agent-%s.tar.gz) = %s\n' "$VERSION" "$BLAKE2S"
+            printf 'SHA512 (sysmanage-agent-%s.tar.gz) = %s\n' "$VERSION" "$SHA512"
+            printf 'Size (sysmanage-agent-%s.tar.gz) = %s bytes\n' "$VERSION" "$SIZE"
+          } > "$STAGE/sysmanage-agent/distinfo"
+
+          OUT="sysmanage-agent-v${VERSION}-netbsd-pkgsrc.tar.gz"
+          tar czf "$OUT" -C "$STAGE" sysmanage-agent
+          sha256sum "$OUT" > "${OUT}.sha256"
+
+          ls -lh "$OUT" "${OUT}.sha256"
+          echo "tarball=$OUT" >> $GITHUB_OUTPUT
+          echo "skipped=false" >> $GITHUB_OUTPUT
+
+      - name: Upload as workflow artifact
+        if: steps.render.outputs.skipped != 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: sysmanage-agent-netbsd-pkgsrc
+          path: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-netbsd-pkgsrc.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-netbsd-pkgsrc.tar.gz.sha256
+
+      - name: Attach to GitHub release
+        if: steps.render.outputs.skipped != 'true' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: |
+            sysmanage-agent-v${{ steps.version.outputs.version }}-netbsd-pkgsrc.tar.gz
+            sysmanage-agent-v${{ steps.version.outputs.version }}-netbsd-pkgsrc.tar.gz.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

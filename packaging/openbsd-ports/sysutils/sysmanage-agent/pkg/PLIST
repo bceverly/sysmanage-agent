@@ -1,0 +1,8 @@
+@comment $OpenBSD$
+@rcscript ${RCDIR}/sysmanage_agent
+libexec/sysmanage-agent/
+libexec/sysmanage-agent/main.py
+libexec/sysmanage-agent/alembic.ini
+libexec/sysmanage-agent/src/
+share/examples/sysmanage-agent/
+share/examples/sysmanage-agent/sysmanage-agent.yaml

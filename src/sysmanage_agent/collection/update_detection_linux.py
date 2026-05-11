@@ -315,7 +315,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             packages_by_manager.setdefault(mgr, []).append(pkg)
 
         for pkg_manager, pkg_list in packages_by_manager.items():
-            logger.info(_("Applying %d updates using %s"), len(pkg_list), pkg_manager)
+            logger.info("Applying %d updates using %s", len(pkg_list), pkg_manager)
             try:
                 self._process_linux_manager_updates(pkg_manager, pkg_list, results)
             except Exception as error:  # pragma: no cover - defensive
@@ -341,7 +341,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             )
 
         logger.info(
-            _("Update process completed: %d updated, %d failed"),
+            "Update process completed: %d updated, %d failed",
             len(results["updated_packages"]),
             len(results["failed_packages"]),
         )

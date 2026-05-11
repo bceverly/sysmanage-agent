@@ -57,7 +57,7 @@ class UpdateChecker:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
-                    _("Found %d available updates during periodic check"),
+                    "Found %d available updates during periodic check",
                     update_result["total_updates"],
                 )
             return True
@@ -126,7 +126,7 @@ class PackageCollectionScheduler:
                 self.package_collector.collect_all_available_packages,
             )
             if success:
-                self.logger.info(_("Package collection completed successfully"))
+                self.logger.info("Package collection completed successfully")
             else:
                 self.logger.warning(_("Package collection completed with some issues"))
             return success
@@ -245,7 +245,7 @@ class MessageProcessor:
         parameters = command_data.get("parameters", {})
 
         self.logger.info(
-            _("Received command: %s with parameters: %s"), command_type, parameters
+            "Received command: %s with parameters: %s", command_type, parameters
         )
 
         # Phase 11.6: long-running plans use an in-flight journal keyed by
@@ -476,7 +476,7 @@ class MessageProcessor:
             )
 
             self.logger.info(
-                _("Queued script execution result for execution_id: %s"), execution_id
+                "Queued script execution result for execution_id: %s", execution_id
             )
 
         except Exception as error:
@@ -547,7 +547,7 @@ class MessageProcessor:
                 session.commit()
 
                 self.logger.info(
-                    _("Stored execution UUID %s for tracking"), execution_uuid
+                    "Stored execution UUID %s for tracking", execution_uuid
                 )
             finally:
                 session.close()
@@ -585,7 +585,7 @@ class MessageProcessor:
                 return {"success": False, "error": "No services specified"}
 
             self.logger.info(
-                _("Service control requested: %s for services: %s"), action, services
+                "Service control requested: %s for services: %s", action, services
             )
 
             # Check if running in privileged mode
@@ -755,7 +755,7 @@ class MessageProcessor:
             if not services:
                 return {"success": False, "error": "No services specified"}
 
-            self.logger.info(_("Service status check requested for: %s"), services)
+            self.logger.info("Service status check requested for: %s", services)
 
             # Check if running in privileged mode
             if not is_running_privileged():
@@ -814,7 +814,7 @@ class MessageProcessor:
             # - other codes for failed, unknown, etc.
             status = result.stdout.strip()  # active, inactive, failed, unknown, etc.
 
-            self.logger.info(_("Service %s status: %s"), service, status)
+            self.logger.info("Service %s status: %s", service, status)
             return {
                 "success": True,
                 "status": status,
@@ -1067,7 +1067,7 @@ async def reconcile_inflight_journal(agent) -> Dict[str, Any]:
 
     if classified["live"] or classified["dead"]:
         logger.info(
-            _("In-flight journal reconciliation: %d live, %d dead"),
+            "In-flight journal reconciliation: %d live, %d dead",
             len(classified["live"]),
             len(classified["dead"]),
         )

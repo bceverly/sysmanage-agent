@@ -66,7 +66,7 @@ class PackageCollector:
             collected_count = self.collector.collect_packages()
 
             logger.info(
-                _("Package collection completed. Collected %d packages"),
+                "Package collection completed. Collected %d packages",
                 collected_count,
             )
             return True

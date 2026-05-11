@@ -38,7 +38,7 @@ class CommercialAntivirusCollector:
                 return self._detect_macos_commercial_antivirus()
             # For other systems, return None to indicate no commercial AV
             self.logger.info(
-                _("Commercial antivirus detection not applicable for %s"),
+                "Commercial antivirus detection not applicable for %s",
                 self.system,
             )
             return None
@@ -77,7 +77,7 @@ class CommercialAntivirusCollector:
             # If service doesn't exist or isn't running, no Microsoft Defender
             if service_result.returncode != 0 or "Running" not in service_result.stdout:
                 self.logger.info(
-                    _("Microsoft Defender service not detected or not running")
+                    "Microsoft Defender service not detected or not running"
                 )
                 return None
 
@@ -149,7 +149,7 @@ class CommercialAntivirusCollector:
             }
 
             self.logger.info(
-                _("Detected Microsoft Defender (version: %s, enabled: %s)"),
+                "Detected Microsoft Defender (version: %s, enabled: %s)",
                 product_version,
                 antivirus_info["antivirus_enabled"],
             )
@@ -260,7 +260,7 @@ class CommercialAntivirusCollector:
             )  # nosec B603 B607
 
             if which_result.returncode != 0:
-                self.logger.info(_("Microsoft Defender CLI (mdatp) not found on macOS"))
+                self.logger.info("Microsoft Defender CLI (mdatp) not found on macOS")
                 return None
 
             # Get health status from mdatp
@@ -316,9 +316,7 @@ class CommercialAntivirusCollector:
             }
 
             self.logger.info(
-                _(
-                    "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, licensed: %s)"
-                ),
+                "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s, licensed: %s)",
                 product_version,
                 realtime_protection,
                 licensed,

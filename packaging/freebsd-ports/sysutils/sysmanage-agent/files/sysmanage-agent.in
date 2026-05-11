@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# $FreeBSD$
+#
+# PROVIDE: sysmanage_agent
+# REQUIRE: NETWORKING SERVERS DAEMON
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# sysmanage_agent_enable (bool):       Set to NO by default.
+#               Set it to YES to enable sysmanage-agent.
+# sysmanage_agent_user (str):          Set to "sysmanage" by default.
+# sysmanage_agent_config (str):        Set to "%%PREFIX%%/etc/sysmanage-agent.yaml" by default.
+
+. /etc/rc.subr
+
+name=sysmanage_agent
+rcvar=sysmanage_agent_enable
+
+load_rc_config $name
+
+: ${sysmanage_agent_enable:="NO"}
+: ${sysmanage_agent_user:="sysmanage"}
+: ${sysmanage_agent_config:="%%PREFIX%%/etc/sysmanage-agent.yaml"}
+
+pidfile="/var/run/${name}.pid"
+command="/usr/sbin/daemon"
+command_args="-c -p ${pidfile} -u ${sysmanage_agent_user} \
+    %%PYTHON_CMD%% %%PREFIX%%/libexec/sysmanage-agent/main.py \
+    --config ${sysmanage_agent_config}"
+
+run_rc_command "$1"

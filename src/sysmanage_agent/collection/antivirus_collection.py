@@ -51,12 +51,12 @@ class AntivirusCollector:
 
             if antivirus_info["software_name"]:
                 self.logger.info(
-                    _("Detected antivirus: %s (enabled: %s)"),
+                    "Detected antivirus: %s (enabled: %s)",
                     antivirus_info["software_name"],
                     antivirus_info["enabled"],
                 )
             else:
-                self.logger.info(_("No antivirus software detected"))
+                self.logger.info("No antivirus software detected")
 
         except Exception as error:
             self.logger.error(_("Error detecting antivirus: %s"), error, exc_info=True)

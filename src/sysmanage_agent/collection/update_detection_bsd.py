@@ -246,13 +246,13 @@ class BSDUpdateDetector(UpdateDetectorBase):
         """Apply OpenBSD version upgrades using sysupgrade."""
         for package in packages:
             package_name = package.get("package_name")
-            logger.info(_("Applying OpenBSD upgrade: %s"), package_name)
+            logger.info("Applying OpenBSD upgrade: %s", package_name)
 
             try:
                 # Run sysupgrade
                 upgrade_cmd = ["sysupgrade"]
                 logger.info(
-                    _("Running OpenBSD sysupgrade command: %s"), " ".join(upgrade_cmd)
+                    "Running OpenBSD sysupgrade command: %s", " ".join(upgrade_cmd)
                 )
 
                 result = subprocess.run(  # nosec B603, B607
@@ -265,7 +265,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
                 if result.returncode == 0:
                     logger.info(
-                        _("Successfully applied OpenBSD upgrade: %s"), package_name
+                        "Successfully applied OpenBSD upgrade: %s", package_name
                     )
                     results["updated_packages"].append(
                         {
@@ -314,7 +314,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
             CompletedProcess with the result of the upgrade command.
         """
         upgrade_cmd = ["freebsd-update", "upgrade", "-r", "RELEASE"]
-        logger.info(_("Running FreeBSD upgrade command: %s"), " ".join(upgrade_cmd))
+        logger.info("Running FreeBSD upgrade command: %s", " ".join(upgrade_cmd))
         return subprocess.run(  # nosec B603, B607
             upgrade_cmd,
             capture_output=True,
@@ -385,7 +385,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
             results: Results dict to populate.
         """
         package_name = package.get("package_name")
-        logger.info(_("Applying FreeBSD upgrade: %s"), package_name)
+        logger.info("Applying FreeBSD upgrade: %s", package_name)
 
         try:
             result = self._run_freebsd_upgrade_command()
@@ -466,9 +466,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     )
 
                     logger.debug(
-                        _(
-                            "Found %d OpenBSD system patches (combined into single update)"
-                        ),
+                        "Found %d OpenBSD system patches (combined into single update)",
                         patch_count,
                     )
 
@@ -507,13 +505,11 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 return
 
             current_version = version_result.stdout.strip()
-            logger.info(_("Current OpenBSD version: %s"), current_version)
+            logger.info("Current OpenBSD version: %s", current_version)
 
             # Fetch the OpenBSD homepage to find the current release
             try:
-                logger.debug(
-                    _("Fetching https://www.openbsd.org/ to check for updates")
-                )
+                logger.debug("Fetching https://www.openbsd.org/ to check for updates")
                 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 with urllib.request.urlopen(
                     "https://www.openbsd.org/", timeout=10
@@ -527,13 +523,13 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 if match:
                     latest_version = match.group(1)
                     logger.info(
-                        _("Latest OpenBSD version from website: %s"), latest_version
+                        "Latest OpenBSD version from website: %s", latest_version
                     )
 
                     # Compare versions
                     if latest_version != current_version:
                         logger.info(
-                            _("OpenBSD upgrade available: %s -> %s"),
+                            "OpenBSD upgrade available: %s -> %s",
                             current_version,
                             latest_version,
                         )
@@ -550,11 +546,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
                                 "requires_reboot": True,
                             }
                         )
-                        logger.info(
-                            _("Added OpenBSD upgrade to available_updates list")
-                        )
+                        logger.info("Added OpenBSD upgrade to available_updates list")
                     else:
-                        logger.info(_("OpenBSD is up to date: %s"), current_version)
+                        logger.info("OpenBSD is up to date: %s", current_version)
                 else:
                     logger.warning(_("Could not parse OpenBSD version from website"))
 
@@ -622,15 +616,15 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
         # OpenBSD-specific detection
         if platform.system() == "OpenBSD":
-            logger.info(_("Calling _detect_openbsd_system_updates"))
+            logger.info("Calling _detect_openbsd_system_updates")
             self._detect_openbsd_system_updates()
 
-            logger.info(_("Calling _detect_openbsd_version_upgrades"))
+            logger.info("Calling _detect_openbsd_version_upgrades")
             self._detect_openbsd_version_upgrades()
 
         # FreeBSD-specific detection
         if platform.system() == "FreeBSD":
-            logger.info(_("Calling _detect_freebsd_version_upgrades"))
+            logger.info("Calling _detect_freebsd_version_upgrades")
             self._detect_freebsd_version_upgrades()
 
         # Package managers
@@ -642,7 +636,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
             self._detect_pkgin_updates()
 
         logger.info(
-            _("=== BSD detect_updates finished, total updates: %d ==="),
+            "=== BSD detect_updates finished, total updates: %d ===",
             len(self.available_updates),
         )
 
@@ -711,7 +705,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
     def _apply_syspatch_updates(self, packages: List[Dict], results: Dict):
         """Apply OpenBSD syspatch updates."""
-        logger.info(_("Applying OpenBSD syspatch updates"))
+        logger.info("Applying OpenBSD syspatch updates")
 
         try:
             # syspatch applies all available patches when run without arguments
@@ -792,7 +786,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
         """
         if packages:
             logger.info(
-                _("Applying updates for %d packages: %s"),
+                "Applying updates for %d packages: %s",
                 len(packages),
                 ", ".join([pkg.get("name", "unknown") for pkg in packages]),
             )
@@ -800,7 +794,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
         if package_names:
             logger.info(
-                _("Applying updates for %d packages: %s"),
+                "Applying updates for %d packages: %s",
                 len(package_names),
                 ", ".join(package_names),
             )
@@ -949,13 +943,11 @@ class BSDUpdateDetector(UpdateDetectorBase):
             packages_by_manager = self._collect_packages_by_manager(packages_to_update)
 
             for pkg_manager, pkg_list in packages_by_manager.items():
-                logger.info(
-                    _("Applying %d updates using %s"), len(pkg_list), pkg_manager
-                )
+                logger.info("Applying %d updates using %s", len(pkg_list), pkg_manager)
                 self._process_bsd_manager_updates(pkg_manager, pkg_list, results)
 
             logger.info(
-                _("Update process completed: %d updated, %d failed"),
+                "Update process completed: %d updated, %d failed",
                 len(results["updated_packages"]),
                 len(results["failed_packages"]),
             )

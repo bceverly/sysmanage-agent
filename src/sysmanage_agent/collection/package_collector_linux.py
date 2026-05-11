@@ -42,10 +42,8 @@ class LinuxPackageCollector(BasePackageCollector):
         if self._is_package_manager_available("dnf"):
             managers = [(n, f) for (n, f) in managers if n != "yum"]
             logger.info(
-                _(
-                    "Skipping yum collection on host with dnf available "
-                    "(yum is a dnf wrapper on RHEL/Fedora 8+)"
-                )
+                "Skipping yum collection on host with dnf available "
+                "(yum is a dnf wrapper on RHEL/Fedora 8+)"
             )
 
         for manager_name, collector_func in managers:
@@ -53,7 +51,7 @@ class LinuxPackageCollector(BasePackageCollector):
                 try:
                     count = collector_func()
                     total_collected += count
-                    logger.info(_("Collected %d packages from %s"), count, manager_name)
+                    logger.info("Collected %d packages from %s", count, manager_name)
                 except Exception as error:
                     logger.error(
                         _("Failed to collect packages from %s: %s"), manager_name, error

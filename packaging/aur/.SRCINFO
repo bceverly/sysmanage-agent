@@ -1,0 +1,24 @@
+pkgbase = sysmanage-agent
+	pkgdesc = Cross-platform system management agent for SysManage
+	pkgver = 0.0.0
+	pkgrel = 1
+	url = https://github.com/bceverly/sysmanage-agent
+	arch = any
+	license = AGPL-3.0-or-later
+	makedepends = python-setuptools
+	depends = python>=3.9
+	depends = python-aiohttp
+	depends = python-yaml
+	depends = python-bcrypt
+	depends = python-psutil
+	depends = python-cryptography
+	depends = python-websockets
+	depends = python-sqlalchemy
+	depends = python-aiofiles
+	depends = python-alembic
+	depends = python-defusedxml
+	backup = etc/sysmanage-agent.yaml
+	source = sysmanage-agent-0.0.0.tar.gz::https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v0.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = sysmanage-agent

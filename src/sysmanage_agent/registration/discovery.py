@@ -67,7 +67,7 @@ class ServerDiscoveryClient:
         unique_servers = self._deduplicate_servers(discovered_servers)
 
         if unique_servers:
-            logger.info(_("Discovered %s SysManage server(s)"), len(unique_servers))
+            logger.info("Discovered %s SysManage server(s)", len(unique_servers))
         else:
             logger.warning(_("No SysManage servers discovered on the network"))
 
@@ -114,7 +114,7 @@ class ServerDiscoveryClient:
                     response["discovered_via"] = "broadcast"
                     response["server_ip"] = addr[0]
                     servers.append(response)
-                    logger.info(_("Server discovered at %s"), addr[0])
+                    logger.info("Server discovered at %s", addr[0])
             except socket.timeout:
                 continue
             except json.JSONDecodeError:
@@ -202,7 +202,7 @@ class ServerDiscoveryClient:
                             "server_ip": addr[0],
                         }
                         servers.append(server_info)
-                        logger.info(_("Server announcement received from %s"), addr[0])
+                        logger.info("Server announcement received from %s", addr[0])
 
                 except socket.timeout:
                     continue
@@ -269,7 +269,7 @@ class ServerDiscoveryClient:
         best_server = scored_servers[0][1]
 
         logger.info(
-            _("Selected server at %s (score: %s)"),
+            "Selected server at %s (score: %s)",
             best_server.get("server_ip"),
             scored_servers[0][0],
         )

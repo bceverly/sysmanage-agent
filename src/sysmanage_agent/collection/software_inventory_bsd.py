@@ -115,7 +115,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             if result.returncode == 0 and result.stdout.strip():
                 self._parse_pkg_output(result.stdout, source_name)
                 logger.debug(
-                    _("Successfully collected %s packages"), platform_name.upper()
+                    "Successfully collected %s packages", platform_name.upper()
                 )
             else:
                 logger.warning(

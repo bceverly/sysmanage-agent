@@ -432,7 +432,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                 ]
         except (json.JSONDecodeError, OSError) as error:
             self.logger.debug(
-                _("ip -j addr show failed, falling back to sysfs: %s"), error
+                "ip -j addr show failed, falling back to sysfs: %s", error
             )
 
         # Fallback to sysfs-only collection

@@ -1,0 +1,4 @@
+@comment $NetBSD$
+libexec/sysmanage-agent/main.py
+libexec/sysmanage-agent/alembic.ini
+share/examples/sysmanage-agent/sysmanage-agent.yaml

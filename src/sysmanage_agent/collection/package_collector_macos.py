@@ -26,7 +26,7 @@ class MacOSPackageCollector(BasePackageCollector):
             try:
                 count = self._collect_homebrew_packages()
                 total_collected += count
-                logger.info(_("Collected %d packages from Homebrew"), count)
+                logger.info("Collected %d packages from Homebrew", count)
             except Exception as error:
                 logger.error(_("Failed to collect Homebrew packages: %s"), error)
 
@@ -60,7 +60,7 @@ class MacOSPackageCollector(BasePackageCollector):
                 )
                 formulae_count = self._store_packages("homebrew", formulae_packages)
                 total_packages += formulae_count
-                logger.info(_("Collected %d Homebrew formulae"), formulae_count)
+                logger.info("Collected %d Homebrew formulae", formulae_count)
 
             # Collect casks (applications)
             # Split brew_cmd in case it contains sudo -u
@@ -79,7 +79,7 @@ class MacOSPackageCollector(BasePackageCollector):
                 )
                 casks_count = self._store_packages("homebrew-cask", casks_packages)
                 total_packages += casks_count
-                logger.info(_("Collected %d Homebrew casks"), casks_count)
+                logger.info("Collected %d Homebrew casks", casks_count)
 
             return total_packages
 

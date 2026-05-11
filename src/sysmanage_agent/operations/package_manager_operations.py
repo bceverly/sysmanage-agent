@@ -100,7 +100,7 @@ class PackageManagerOperations:
             }
 
         self.logger.info(
-            _("Enabling package manager '%s' for OS '%s'"), package_manager, os_name
+            "Enabling package manager '%s' for OS '%s'", package_manager, os_name
         )
 
         # Check if running privileged
@@ -148,7 +148,7 @@ class PackageManagerOperations:
         # Check if flatpak is already installed
         flatpak_path = shutil.which("flatpak")
         if flatpak_path:
-            self.logger.info(_("Flatpak is already installed"))
+            self.logger.info("Flatpak is already installed")
             await self._add_flathub_repo()
             return {
                 "success": True,
@@ -201,7 +201,7 @@ class PackageManagerOperations:
             if post_install_hook:
                 await post_install_hook()
 
-            self.logger.info(_("%s installed successfully"), display_name)
+            self.logger.info("%s installed successfully", display_name)
             return {
                 "success": True,
                 "message": _("%s installed successfully") % display_name,
@@ -236,7 +236,7 @@ class PackageManagerOperations:
                 stderr=asyncio.subprocess.PIPE,
             )
             await asyncio.wait_for(process.communicate(), timeout=60)
-            self.logger.info(_("Flathub repository added"))
+            self.logger.info("Flathub repository added")
         except Exception as err:
             self.logger.warning(_("Could not add Flathub repository: %s"), err)
 
@@ -251,7 +251,7 @@ class PackageManagerOperations:
         # Check if snapd is already installed
         snap_path = shutil.which("snap")
         if snap_path:
-            self.logger.info(_("Snap is already installed"))
+            self.logger.info("Snap is already installed")
             return {
                 "success": True,
                 "message": _("Snap is already installed"),
@@ -287,7 +287,7 @@ class PackageManagerOperations:
         # Check if homebrew is already installed
         brew_path = shutil.which("brew")
         if brew_path:
-            self.logger.info(_("Homebrew is already installed"))
+            self.logger.info("Homebrew is already installed")
             return {
                 "success": True,
                 "message": _("Homebrew is already installed"),
@@ -317,7 +317,7 @@ class PackageManagerOperations:
         # Check if chocolatey is already installed
         choco_path = shutil.which("choco")
         if choco_path:
-            self.logger.info(_("Chocolatey is already installed"))
+            self.logger.info("Chocolatey is already installed")
             return {
                 "success": True,
                 "message": _("Chocolatey is already installed"),
@@ -351,7 +351,7 @@ class PackageManagerOperations:
                     "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
-            self.logger.info(_("Chocolatey installed successfully"))
+            self.logger.info("Chocolatey installed successfully")
             return {
                 "success": True,
                 "message": _("Chocolatey installed successfully"),
@@ -379,7 +379,7 @@ class PackageManagerOperations:
         # Check if scoop is already installed
         scoop_path = shutil.which("scoop")
         if scoop_path:
-            self.logger.info(_("Scoop is already installed"))
+            self.logger.info("Scoop is already installed")
             return {
                 "success": True,
                 "message": _("Scoop is already installed"),
@@ -410,7 +410,7 @@ class PackageManagerOperations:
                     "error": stderr_text or stdout_text or _(_INSTALLATION_FAILED),
                 }
 
-            self.logger.info(_("Scoop installed successfully"))
+            self.logger.info("Scoop installed successfully")
             return {
                 "success": True,
                 "message": _("Scoop installed successfully"),

@@ -34,7 +34,7 @@ def get_database_path_from_config(config_manager) -> str:
         # Check environment variable first (highest priority)
         env_path = os.environ.get("SYSMANAGE_DB_PATH")
         if env_path:
-            logger.info(_("Using database path from SYSMANAGE_DB_PATH: %s"), env_path)
+            logger.info("Using database path from SYSMANAGE_DB_PATH: %s", env_path)
             return env_path
 
         # Get database path from config
@@ -44,19 +44,19 @@ def get_database_path_from_config(config_manager) -> str:
         # If configured path is specified and absolute, use it
         # (database will be created if it doesn't exist)
         if config_path and os.path.isabs(config_path):
-            logger.info(_("Using configured database path: %s"), config_path)
+            logger.info("Using configured database path: %s", config_path)
             return config_path
 
         # If configured path is relative, join with current directory
         if config_path:
             abs_path = os.path.join(os.getcwd(), config_path)
-            logger.info(_("Using configured relative database path: %s"), abs_path)
+            logger.info("Using configured relative database path: %s", abs_path)
             return abs_path
 
         # Try system path: /var/lib/sysmanage-agent/agent.db
         system_path = "/var/lib/sysmanage-agent/agent.db"
         if os.path.exists(system_path):
-            logger.info(_("Using system database path: %s"), system_path)
+            logger.info("Using system database path: %s", system_path)
             return system_path
 
         # If system directory exists but database doesn't, use system path
@@ -64,14 +64,14 @@ def get_database_path_from_config(config_manager) -> str:
         system_dir = "/var/lib/sysmanage-agent"
         if os.path.exists(system_dir) and os.access(system_dir, os.W_OK):
             logger.info(
-                _("System directory exists, using system database path: %s"),
+                "System directory exists, using system database path: %s",
                 system_path,
             )
             return system_path
 
         # Fallback to local directory
         local_path = os.path.join(os.getcwd(), "agent.db")
-        logger.info(_("Falling back to local database path: %s"), local_path)
+        logger.info("Falling back to local database path: %s", local_path)
         return local_path
 
     except Exception as error:
@@ -143,7 +143,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
                 python_exe = sys.exec_prefix + "\\python.exe"
 
         cmd = [python_exe, "-m", "alembic", operation, revision]
-        logger.info(_("Running alembic command: %s"), " ".join(cmd))
+        logger.info("Running alembic command: %s", " ".join(cmd))
 
         # Set environment variable for alembic to find the database
         env = os.environ.copy()
@@ -160,7 +160,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         )
 
         if result.returncode == 0:
-            logger.info(_("Alembic %s completed successfully"), operation)
+            logger.info("Alembic %s completed successfully", operation)
             if result.stdout:
                 logger.debug("Alembic output: %s", result.stdout)
             return True
@@ -205,22 +205,22 @@ def initialize_database(config_manager) -> bool:
         db_exists = os.path.exists(db_path)
 
         if not db_exists:
-            logger.info(_("Database does not exist, creating new database"))
+            logger.info("Database does not exist, creating new database")
         else:
-            logger.info(_("Database exists, checking for migrations"))
+            logger.info("Database exists, checking for migrations")
 
         # Check if auto-migration is enabled
         if should_auto_migrate(config_manager):
-            logger.info(_("Auto-migration is enabled"))
+            logger.info("Auto-migration is enabled")
 
             # Run alembic upgrade to latest
             if not run_alembic_migration("upgrade", "head"):
                 logger.error(_("Failed to run database migrations"))
                 return False
         else:
-            logger.info(_("Auto-migration is disabled, skipping migrations"))
+            logger.info("Auto-migration is disabled, skipping migrations")
 
-        logger.info(_("Database initialized successfully"))
+        logger.info("Database initialized successfully")
 
         return True
 
