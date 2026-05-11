@@ -22,7 +22,16 @@ defusedxml>=0.7.1
 # the same CVE chain that bit the server (0.0.20 DoS + form-parser bypass)
 # applies anywhere it gets installed.  Mirror sysmanage/requirements.txt:55
 # so the agent venv can't drift below the fixed line.  Defense-in-depth.
-python_multipart>=0.0.27
+#
+# Gated on python_version >= '3.10' because all CVE-fixed releases
+# (0.0.21 and above) require Python 3.10+.  On Python 3.9 the only
+# resolvable versions are 0.0.20 and below — the vulnerable ones — so
+# we deliberately apply no pin there.  Acceptable risk: the agent does
+# not expose an HTTP form-parser surface to untrusted input, so the
+# DoS/bypass class doesn't reach it even if 0.0.20 lands in the
+# transitive resolution.  Matches the same pattern this file uses for
+# ``black`` and ``semgrep`` on the 3.9 line.
+python_multipart>=0.0.27; python_version >= '3.10'
 
 # Database dependencies
 SQLAlchemy>=2.0.43
