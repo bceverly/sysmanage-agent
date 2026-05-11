@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 import aiofiles
 from src.i18n import _
+from src.sysmanage_agent.operations import inflight_journal
 
 # wsl.exe outputs UTF-16LE on Windows; subprocess returns raw bytes which we
 # must decode with the right encoding or we get garbled / null-byte-dotted
@@ -108,6 +109,10 @@ class GenericDeployment:
         """Initialize generic deployment with agent instance."""
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
+        # Set by ``apply_deployment_plan`` while a plan is in flight; read
+        # by ``_exec_plan_command`` so each subprocess in the plan can
+        # write/refresh the per-plan in-flight journal under that ID.
+        self._current_plan_message_id: Optional[str] = None
 
     # ================================================================
     # deploy_files handler
@@ -699,6 +704,12 @@ class GenericDeployment:
                                 packages_to_remove}, errors: [...]}
         """
         plan = parameters.get("plan") or parameters
+        # The dispatcher injects ``_message_id`` into parameters so the
+        # in-flight journal (Phase 11.6) can name its file by it.  The
+        # heartbeat watchdog refreshes the journal every 30s while any
+        # subprocess in the plan runs, and a clean exit clears it.
+        message_id = parameters.get("_message_id")
+        self._current_plan_message_id = message_id
         results: Dict[str, Any] = {}
         errors: list = []
 
@@ -712,12 +723,21 @@ class GenericDeployment:
             self._phase_service_actions,
             self._phase_remove_packages,
         )
-        for phase in phases:
-            failed_step = await phase(plan, results, errors)
-            if failed_step:
-                return _plan_result(False, results, errors, failed_step)
+        try:
+            for phase in phases:
+                failed_step = await phase(plan, results, errors)
+                if failed_step:
+                    return _plan_result(False, results, errors, failed_step)
 
-        return _plan_result(True, results, errors, None)
+            return _plan_result(True, results, errors, None)
+        finally:
+            # Always clear the journal on any plan exit (success, hard
+            # failure, or exception).  The synthetic-result path is only
+            # taken when the agent restarts mid-plan; if we got here at
+            # all, ``handle_command`` is about to send a real result.
+            if message_id:
+                inflight_journal.journal_clear(message_id)
+            self._current_plan_message_id = None
 
     async def _phase_install_packages(
         self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
@@ -888,9 +908,22 @@ class GenericDeployment:
 
         timeout = int(spec.get("timeout", 60))
         description = spec.get("description") or " ".join(argv)
+        # Phase 11 B7 — engine plan-description envelope.  Pro+ engines
+        # may emit ``description_key`` + ``description_params`` alongside
+        # the legacy English ``description`` so the OSS frontend can
+        # localize the description.  We pass these through verbatim
+        # (no validation, no rendering) — the OSS resolver decides how
+        # to display them.
+        description_key = spec.get("description_key")
+        description_params = spec.get("description_params")
         run_argv = list(argv)
         if spec.get("sudo") and os.geteuid() != 0:
             run_argv = ["sudo", "-n"] + run_argv
+
+        envelope_extras = {}
+        if description_key:
+            envelope_extras["description_key"] = description_key
+            envelope_extras["description_params"] = description_params or {}
 
         try:
             return await self._exec_plan_command(
@@ -899,6 +932,7 @@ class GenericDeployment:
                 description=description,
                 timeout=timeout,
                 ignore_errors=ignore_errors,
+                envelope_extras=envelope_extras,
             )
         except FileNotFoundError as exc:
             return (
@@ -907,6 +941,7 @@ class GenericDeployment:
                     "description": description,
                     "success": False,
                     "error": _("FileNotFoundError: %s") % (exc),
+                    **envelope_extras,
                 },
                 f"Command '{description}' not found: {exc}",
                 not ignore_errors,
@@ -918,10 +953,27 @@ class GenericDeployment:
                     "description": description,
                     "success": False,
                     "error": str(exc),
+                    **envelope_extras,
                 },
                 f"Command '{description}' exception: {exc}",
                 not ignore_errors,
             )
+
+    async def _heartbeat_watchdog(self, message_id: str) -> None:
+        """Refresh the in-flight journal heartbeat every 30 s while a subprocess runs.
+
+        Cancelled by ``_exec_plan_command``'s ``finally`` block once the
+        subprocess returns or times out.  No try/except for
+        ``CancelledError`` here — the journal is stateless from the
+        watchdog's perspective (``journal_heartbeat`` is a single
+        atomic file write owned by ``_exec_plan_command``'s lifetime),
+        so we let the cancellation propagate naturally.  This satisfies
+        both SonarQube ``python:S7483`` (no silent swallowing) and
+        pylint ``W0706`` (no pointless catch-and-rethrow).
+        """
+        while True:
+            await asyncio.sleep(inflight_journal.HEARTBEAT_INTERVAL_SECONDS)
+            inflight_journal.journal_heartbeat(message_id)
 
     async def _exec_plan_command(
         self,
@@ -931,6 +983,7 @@ class GenericDeployment:
         description: str,
         timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
         ignore_errors: bool,
+        envelope_extras: Optional[Dict[str, Any]] = None,
     ) -> tuple:
         """Spawn the subprocess and translate the exit/timeout into a result tuple.
 
@@ -939,27 +992,62 @@ class GenericDeployment:
         replacement Sonar S7497 prefers) is not available.  The NOSONAR on
         the ``timeout`` parameter line above suppresses the rule until the
         minimum supported Python is bumped to 3.11.
+
+        Phase 11.6: every spawn is wrapped by an in-flight journal write
+        + 30 s heartbeat watchdog so an agent restart mid-subprocess can
+        clear the server's DISPATCHED row instead of hanging forever.
         """
+        message_id = self._current_plan_message_id
+        if message_id:
+            inflight_journal.journal_write(
+                message_id=message_id,
+                plan={"argv": list(argv), "description": description},
+                command_argv=list(run_argv),
+                working_dir=os.getcwd(),
+            )
+
         proc = await asyncio.create_subprocess_exec(
             *run_argv,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+        if message_id and proc.pid:
+            inflight_journal.journal_set_pid(message_id, proc.pid)
+
+        watchdog_task = (
+            asyncio.create_task(self._heartbeat_watchdog(message_id))
+            if message_id
+            else None
+        )
         try:
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
-            return (
-                {
-                    "argv": argv,
-                    "description": description,
-                    "success": False,
-                    "error": _("timeout"),
-                },
-                f"Command '{description}' timed out after {timeout}s",
-                not ignore_errors,
-            )
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    proc.communicate(), timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                return (
+                    {
+                        "argv": argv,
+                        "description": description,
+                        "success": False,
+                        "error": _("timeout"),
+                        **(envelope_extras or {}),
+                    },
+                    f"Command '{description}' timed out after {timeout}s",
+                    not ignore_errors,
+                )
+        finally:
+            if watchdog_task is not None:
+                watchdog_task.cancel()
+                try:
+                    await watchdog_task
+                except (
+                    asyncio.CancelledError,
+                    Exception,
+                ):  # pylint: disable=broad-exception-caught
+                    pass
 
         returncode = proc.returncode or 0
         cmd_ok = returncode == 0
@@ -974,6 +1062,7 @@ class GenericDeployment:
             "stdout": stdout_str[-2000:],
             "stderr": stderr_str[-2000:],
             "success": cmd_ok,
+            **(envelope_extras or {}),
         }
         if cmd_ok:
             return result, None, False

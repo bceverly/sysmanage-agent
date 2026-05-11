@@ -3135,6 +3135,18 @@ msgstr "ホスト承認レコードと関連データをデータベースから
 msgid "Continuing despite cleanup error..."
 msgstr "クリーンアップエラーにもかかわらず続行..."
 
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "agent restart while plan was in-flight; subprocess killed"
+msgstr "プラン実行中にエージェントが再起動しました。サブプロセスは終了しました"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "Failed to queue synthetic command_result for in-flight journal: %s"
+msgstr "実行中ジャーナルの合成 command_result をキューに入れられませんでした: %s"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "In-flight journal reconciliation: %d live, %d dead"
+msgstr "実行中ジャーナルの照合: 稼働中 %d 件、終了 %d 件"
+
 #~ msgid "Starting antivirus detection"
 #~ msgstr "libvirtd サービスを開始しています"
 

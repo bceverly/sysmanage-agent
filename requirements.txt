@@ -12,6 +12,12 @@ cryptography>=48.0.0  # 3 CVEs in 45.0.7-47.x (buffer overflow + DNS name-constr
 psutil>=5.9.0
 bcrypt>=4.0.0
 aiofiles>=24.1.0
+# defusedxml is used by package_collector_windows when parsing the
+# Chocolatey API XML response — even though Chocolatey is a trusted
+# endpoint, parsing untrusted XML via stdlib ``xml.etree`` is the
+# pattern semgrep ``use-defused-xml`` (correctly) flags.  defusedxml
+# rejects external-entity references + billion-laughs payloads.
+defusedxml>=0.7.1
 
 # Database dependencies
 SQLAlchemy>=2.0.43

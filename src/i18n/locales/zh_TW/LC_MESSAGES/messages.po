@@ -3134,6 +3134,18 @@ msgstr "已從資料庫清除主機批准記錄和相關資料"
 msgid "Continuing despite cleanup error..."
 msgstr "儘管出現清理錯誤，仍繼續進行……"
 
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "agent restart while plan was in-flight; subprocess killed"
+msgstr "計畫進行中代理重啟；子處理程序已被終止"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "Failed to queue synthetic command_result for in-flight journal: %s"
+msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "In-flight journal reconciliation: %d live, %d dead"
+msgstr "執行中日誌對帳：活動 %d 個，已死 %d 個"
+
 #~ msgid "Starting antivirus detection"
 #~ msgstr "正在啟動 libvirtd 服務"
 

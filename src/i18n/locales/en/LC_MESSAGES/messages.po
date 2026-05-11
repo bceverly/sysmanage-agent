@@ -3147,6 +3147,18 @@ msgstr "Host approval records and related data cleared from database"
 msgid "Continuing despite cleanup error..."
 msgstr "Continuing despite cleanup error..."
 
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "agent restart while plan was in-flight; subprocess killed"
+msgstr "agent restart while plan was in-flight; subprocess killed"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "Failed to queue synthetic command_result for in-flight journal: %s"
+msgstr "Failed to queue synthetic command_result for in-flight journal: %s"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "In-flight journal reconciliation: %d live, %d dead"
+msgstr "In-flight journal reconciliation: %d live, %d dead"
+
 #~ msgid "Starting antivirus detection"
 #~ msgstr "Starting libvirtd service"
 

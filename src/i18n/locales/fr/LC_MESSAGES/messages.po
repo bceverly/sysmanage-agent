@@ -3193,6 +3193,18 @@ msgstr ""
 msgid "Continuing despite cleanup error..."
 msgstr "Poursuite malgré l'erreur de nettoyage..."
 
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "agent restart while plan was in-flight; subprocess killed"
+msgstr "redémarrage de l'agent pendant l'exécution du plan ; sous-processus tué"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "Failed to queue synthetic command_result for in-flight journal: %s"
+msgstr "Échec de la mise en file d'attente du command_result synthétique pour le journal en vol : %s"
+
+#: src/sysmanage_agent/operations/inflight_journal.py:1
+msgid "In-flight journal reconciliation: %d live, %d dead"
+msgstr "Réconciliation du journal en vol : %d actifs, %d morts"
+
 #~ msgid "Starting antivirus detection"
 #~ msgstr "Démarrage du service libvirtd"
 

@@ -35,6 +35,7 @@ from src.sysmanage_agent.core.agent_utils import (
     PackageCollectionScheduler,
     UpdateChecker,
     is_running_privileged,
+    reconcile_inflight_journal,
 )
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
@@ -830,6 +831,16 @@ class SysManageAgent(
         self.logger.info("Platform: %s", system_info["platform"])
         self.logger.info("IPv4: %s", system_info["ipv4"])
         self.logger.info("IPv6: %s", system_info["ipv6"])
+
+        # Phase 11.6: reconcile any in-flight subprocess journal entries
+        # left behind by a prior agent run.  Runs before the WebSocket is
+        # established so dead subprocesses get a synthetic command_result
+        # queued for delivery as soon as we connect, clearing the
+        # server's DISPATCHED row instead of leaving it hung forever.
+        try:
+            await reconcile_inflight_journal(self)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("In-flight journal reconciliation failed: %s"), error)
 
         self.logger.info(_("Registering with SysManage server..."))
         if not await self.registration.register_with_retry():

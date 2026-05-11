@@ -129,9 +129,17 @@ class ClientRegistration:
         )
         logger.info("Is privileged: %s", is_privileged)
         logger.info("Enabled shells: %s", enabled_shells)
-        # nosemgrep: python.lang.security.audit.python-logger-credential-disclosure
-        # Safe: only logs boolean (is not None), not the actual token value
-        logger.info("Auto-approve token present: %s", auto_approve_token is not None)
+        # Safe: the second argument is the boolean ``token is not
+        # None``, never the token value itself — only the presence
+        # check is logged.  Semgrep's Pro rule pattern-matches on
+        # several keywords ("token", "credential", "secret", etc.) in
+        # the format string regardless of what's actually substituted,
+        # so suppress here with the fully-qualified rule id.
+        # nosemgrep: python.lang.security.audit.logging.logger-credential-leak.python-logger-credential-disclosure
+        logger.info(
+            "Auto-approve credential supplied: %s",
+            auto_approve_token is not None,
+        )
         logger.info("=================================")
 
         return basic_info

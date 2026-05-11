@@ -8,11 +8,19 @@ import json
 import logging
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET  # nosec B405 # Parsing trusted Chocolatey API XML
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+import defusedxml.ElementTree as DET  # secure parser for fromstring()
 
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
+
+if TYPE_CHECKING:
+    # Type-only import — pulled in by mypy / pyright but NEVER at
+    # runtime.  Lets us annotate the parameter as ``ET.Element``
+    # without bandit B405 flagging ``xml.etree`` as a runtime import.
+    # The actual parser (``DET.fromstring``) is defusedxml.
+    import xml.etree.ElementTree as ET  # noqa: N811
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +242,10 @@ class WindowsPackageCollector(BasePackageCollector):
         Extracts package name and version from the Atom feed entries using
         the OData namespace conventions.
         """
-        root = ET.fromstring(xml_data)  # nosec B314 # Trusted Chocolatey API XML
+        # Phase 11 hardening — parse via defusedxml so XXE / billion-laughs
+        # in a hijacked Chocolatey response can't escalate.  ``ET`` is
+        # only kept around for the ``ET.Element`` type annotation below.
+        root = DET.fromstring(xml_data)
 
         namespace = {
             "atom": "http://www.w3.org/2005/Atom",  # NOSONAR - XML namespace URI, not network connection
@@ -255,7 +266,7 @@ class WindowsPackageCollector(BasePackageCollector):
         return packages
 
     def _parse_chocolatey_entry(
-        self, entry: ET.Element, namespace: dict
+        self, entry: "ET.Element", namespace: dict
     ) -> Optional[Dict[str, str]]:
         """Parse a single Atom entry element into a package dict.
 
