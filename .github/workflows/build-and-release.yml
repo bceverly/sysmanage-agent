@@ -3209,7 +3209,13 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          MSI_URL="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-x64.msi"
+          # MSI is uploaded by ``build-windows`` as
+          # ``sysmanage-agent-<version>-windows-<arch>.msi`` (see the
+          # Windows build job's $msiFile assignment).  Earlier versions
+          # of this URL omitted the ``-windows-`` segment and 404'd at
+          # the render step, falling back to a placeholder sha256;
+          # komac itself would also fail to fetch.
+          MSI_URL="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-x64.msi"
 
           # Download the MSI to compute its sha256 — what winget-pkgs requires.
           curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
@@ -3288,12 +3294,15 @@ jobs:
           "$KOMAC" --version
 
           echo "Submitting sysmanage.sysmanage-agent v${VERSION} to microsoft/winget-pkgs..."
+          # komac v2.16 dropped ``--identifier <id>`` — the package
+          # identifier is now the trailing positional argument
+          # (``komac update [OPTIONS] ... <PACKAGE_IDENTIFIER>``).
           "$KOMAC" update \
-            --identifier sysmanage.sysmanage-agent \
             --version "${VERSION}" \
             --urls "${MSI_URL}" \
             --submit \
-            --token "${WINGET_PKGS_TOKEN}"
+            --token "${WINGET_PKGS_TOKEN}" \
+            sysmanage.sysmanage-agent
 
           echo "winget submission complete; check the PR on microsoft/winget-pkgs."
 
