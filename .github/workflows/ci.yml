@@ -1,11 +1,17 @@
 name: CI/CD Pipeline
 
 on:
+  # Tag-push only.  Day-to-day branch pushes and pull requests are
+  # covered by ``multi-os-ci.yml`` (Python 3.12 on
+  # ubuntu/macos/windows).  This workflow runs the *exhaustive*
+  # Python-version matrix (3.9 through 3.14) plus the full lint
+  # suite + coverage badge updates only when an installer is being
+  # cut — that's the moment a regression in any of those dimensions
+  # actually gates a release.  The same trigger satisfies
+  # ``build-and-release.yml``'s wait-on-check step, which polls for
+  # these check names against the tag's commit SHA.
   push:
-    branches: [ main, develop ]
     tags: [ 'v*.*.*', 'v*.*.*.*' ]
-  pull_request:
-    branches: [ main, develop ]
 
 permissions:
   contents: read
@@ -83,16 +89,25 @@ jobs:
         echo "Badge color: $COLOR"
 
     - name: Update README badge
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12'
+      if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' && matrix.python-version == '3.12'
       run: |
         sed -i "s/test%20coverage-[0-9]*%25-[a-z]*/test%20coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.coverage.outputs.color }}/g" README.md
 
     - name: Create Pull Request for coverage badge update
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12'
+      if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' && matrix.python-version == '3.12'
       id: coverage-pr
       uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8
       with:
         token: ${{ secrets.AUTO_MERGE_TOKEN }}
+        # ``base: main`` is required because this step only runs on
+        # tag pushes (per the ``if:`` guard).  The job's initial
+        # checkout pulled the tag's commit in detached-HEAD state, so
+        # peter-evans can't derive the base from a symbolic ref and
+        # errors out with "When the repository is checked out on a
+        # commit instead of a branch, the 'base' input must be
+        # supplied."  Supplying it explicitly here makes the badge PR
+        # target main, which is where the README lives.
+        base: main
         commit-message: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}% [skip ci]"
         title: "Update test coverage badge to ${{ steps.coverage.outputs.percentage }}%"
         body: |
@@ -106,7 +121,7 @@ jobs:
         delete-branch: true
 
     - name: Enable auto-merge for coverage badge PR
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push' && matrix.python-version == '3.12' && steps.coverage-pr.outputs.pull-request-number
+      if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' && matrix.python-version == '3.12' && steps.coverage-pr.outputs.pull-request-number
       run: |
         gh pr merge ${{ steps.coverage-pr.outputs.pull-request-number }} --auto --squash
       env:

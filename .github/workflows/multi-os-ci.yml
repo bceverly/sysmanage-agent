@@ -1,0 +1,78 @@
+name: Multi-OS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Per-PR / per-push correctness coverage across the three OSes the
+# agent ships to from GitHub-hosted runners (Linux, macOS, Windows).
+# Pinned to a single Python version (3.12) so the matrix axis here
+# is OS rather than Python — the exhaustive Python-version matrix
+# (3.9–3.14) lives in ``ci.yml`` and only fires on release tag pushes
+# so we're not paying for a 3 × 6 = 18-cell matrix on every commit.
+#
+# BSD coverage (FreeBSD / OpenBSD / NetBSD) is handled separately
+# — GitHub-hosted runners don't natively support BSDs, and the
+# build-openbsd-packages.yml + server-side bsd-tests.yml workflows
+# already exercise those targets.
+
+permissions:
+  contents: read
+
+jobs:
+  test-backend:
+    name: Backend Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Don't bail out of the macOS run because Windows happened to
+      # fail first — these are independent OS-specific paths and
+      # surfacing both failures in a single run is more useful than
+      # the second one being a "cancelled" result.
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: '3.12'
+
+    - name: Cache pip packages
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        # ``~/.cache/pip`` is the Linux/macOS pip cache; on Windows
+        # this misses (cache lives under AppData) but the build still
+        # succeeds — slightly slower Windows runs vs. perfect parity
+        # is an acceptable trade for keeping the cache step simple.
+        path: ~/.cache/pip
+        key: ${{ matrix.os }}-pip-3.12-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ matrix.os }}-pip-3.12-
+          ${{ matrix.os }}-pip-
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio pytest-xdist
+
+    - name: Run backend tests
+      # Mirrors the test invocation in ``ci.yml`` so the per-OS
+      # coverage here exercises exactly the same suite the per-
+      # Python-version matrix exercises on tag push.
+      run: |
+        python -m pytest tests/ -v -n auto --dist=loadfile --cov=src --cov=main --cov-report=xml --cov-report=term-missing
+
+    - name: Upload backend coverage to Codecov
+      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: backend-${{ matrix.os }}
+        name: backend-coverage-${{ matrix.os }}
