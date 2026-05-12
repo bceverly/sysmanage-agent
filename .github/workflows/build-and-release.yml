@@ -3182,6 +3182,12 @@ jobs:
   winget-manifest:
     name: winget-pkgs manifest (Phase 11.8)
     runs-on: ubuntu-latest
+    # Publish failures (transient network, upstream outage, missing
+    # secrets, first-time submission gates, etc.) must NOT mark the
+    # release workflow red or cancel sibling publish jobs.  The
+    # release page itself is created by the ``release`` job earlier
+    # in the chain; downstream publish jobs are best-effort fan-out.
+    continue-on-error: true
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
@@ -3318,13 +3324,35 @@ jobs:
 
           if [ "$update_rc" -ne 0 ]; then
             if grep -q "does not exist in microsoft/winget-pkgs" /tmp/komac.out; then
-              echo "Package not in catalog yet — falling through to komac new"
-              "$KOMAC" new \
-                --version "${VERSION}" \
-                --urls "${MSI_URL}" \
-                --submit \
-                --token "${WINGET_PKGS_TOKEN}" \
-                sysmanage.sysmanage-agent
+              # ``komac new`` is interactive — it prompts for Publisher,
+              # License, ShortDescription, etc. and fails in CI with
+              # "The input device is not a TTY".  This matches
+              # winget-pkgs's design: first-time submissions are
+              # manually reviewed by Microsoft as anti-squatting
+              # protection.  Emit a clear one-time-setup warning,
+              # exit 0 so the rest of the release pipeline keeps
+              # flowing, and document the one-shot manual command.
+              echo "::warning::sysmanage.sysmanage-agent not in microsoft/winget-pkgs yet."
+              echo "::warning::CI can only auto-update EXISTING packages."
+              echo "::warning::One-time manual submission required (do this once):"
+              echo "::warning::"
+              echo "::warning::  # On any machine with a terminal:"
+              echo "::warning::  KOMAC_URL=\$(curl -fsSL https://api.github.com/repos/russellbanks/Komac/releases/latest \\"
+              echo "::warning::    | grep browser_download_url | grep linux | grep x86_64 | grep tar.gz | grep -v setup | head -1 | cut -d'\"' -f4)"
+              echo "::warning::  curl -fsSL -o /tmp/komac.tar.gz \"\$KOMAC_URL\""
+              echo "::warning::  tar xzf /tmp/komac.tar.gz -C /tmp"
+              echo "::warning::  /tmp/komac-*/komac new \\"
+              echo "::warning::    --version ${VERSION} \\"
+              echo "::warning::    --urls ${MSI_URL} \\"
+              echo "::warning::    --submit \\"
+              echo "::warning::    --token <your WINGET_PKGS_TOKEN> \\"
+              echo "::warning::    sysmanage.sysmanage-agent"
+              echo "::warning::"
+              echo "::warning::Answer the prompts (Publisher: Bryan Everly, License:"
+              echo "::warning::AGPL-3.0-or-later, etc.).  Microsoft will review the PR"
+              echo "::warning::within 24-72h.  After it merges, ALL future releases"
+              echo "::warning::auto-update via komac update in this workflow."
+              exit 0
             else
               echo "::error::komac update failed for non-first-submission reason"
               exit "$update_rc"
@@ -3336,6 +3364,7 @@ jobs:
   homebrew-tap:
     name: Homebrew tap formula (Phase 11.8)
     runs-on: ubuntu-latest
+    continue-on-error: true  # Best-effort publish — see winget-manifest rationale.
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
@@ -3441,6 +3470,7 @@ jobs:
   aur:
     name: AUR submission (Phase 11.9)
     runs-on: ubuntu-latest
+    continue-on-error: true  # Best-effort publish — see winget-manifest rationale.
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
@@ -3585,6 +3615,7 @@ jobs:
   freebsd-ports:
     name: FreeBSD ports submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
+    continue-on-error: true  # Best-effort publish — see winget-manifest rationale.
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
@@ -3670,6 +3701,7 @@ jobs:
   openbsd-ports:
     name: OpenBSD ports submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
+    continue-on-error: true  # Best-effort publish — see winget-manifest rationale.
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
@@ -3755,6 +3787,7 @@ jobs:
   netbsd-pkgsrc:
     name: NetBSD pkgsrc submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
+    continue-on-error: true  # Best-effort publish — see winget-manifest rationale.
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
