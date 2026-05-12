@@ -3294,15 +3294,42 @@ jobs:
           "$KOMAC" --version
 
           echo "Submitting sysmanage.sysmanage-agent v${VERSION} to microsoft/winget-pkgs..."
-          # komac v2.16 dropped ``--identifier <id>`` — the package
-          # identifier is now the trailing positional argument
-          # (``komac update [OPTIONS] ... <PACKAGE_IDENTIFIER>``).
+          # komac splits "new package" and "version update" into
+          # separate subcommands (``komac new`` vs ``komac update``).
+          # ``update`` requires the package identifier to already
+          # exist in microsoft/winget-pkgs and fails with
+          # ``<id> does not exist in microsoft/winget-pkgs`` on first
+          # submission.  Try update first; if it fails specifically
+          # because the package isn't in the catalog yet, fall through
+          # to ``komac new`` for the first submission.  Subsequent
+          # releases succeed on the update path.
+          #
+          # komac v2.16 also dropped ``--identifier <id>`` — the
+          # identifier is the trailing positional now.
+          set +e
           "$KOMAC" update \
             --version "${VERSION}" \
             --urls "${MSI_URL}" \
             --submit \
             --token "${WINGET_PKGS_TOKEN}" \
-            sysmanage.sysmanage-agent
+            sysmanage.sysmanage-agent 2>&1 | tee /tmp/komac.out
+          update_rc=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$update_rc" -ne 0 ]; then
+            if grep -q "does not exist in microsoft/winget-pkgs" /tmp/komac.out; then
+              echo "Package not in catalog yet — falling through to komac new"
+              "$KOMAC" new \
+                --version "${VERSION}" \
+                --urls "${MSI_URL}" \
+                --submit \
+                --token "${WINGET_PKGS_TOKEN}" \
+                sysmanage.sysmanage-agent
+            else
+              echo "::error::komac update failed for non-first-submission reason"
+              exit "$update_rc"
+            fi
+          fi
 
           echo "winget submission complete; check the PR on microsoft/winget-pkgs."
 
