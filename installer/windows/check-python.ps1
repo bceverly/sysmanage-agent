@@ -222,11 +222,32 @@ try {
 
         exit 0
     } else {
-        Write-Log "ERROR: Python installation failed with exit code $($process.ExitCode)"
-        exit 1
+        # Soft-fail: do NOT kill the MSI install just because auto-
+        # installing Python failed.  This commonly happens in:
+        #   * winget's sandboxed validation environment (no internet
+        #     access to python.org from the sandbox)
+        #   * offline / air-gapped install scenarios
+        #   * corporate-proxy environments that block the download
+        # The MSI continues and the agent service is registered.
+        # The service will fail to start until Python 3.9+ is on PATH;
+        # the operator can install Python manually then restart the
+        # service.  Surface a clear message in the install log so the
+        # failure mode is diagnosable.
+        Write-Log "WARNING: Python installer returned exit code $($process.ExitCode)"
+        Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
+        Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
+        Write-Log "WARNING:   sc.exe start SysManageAgent"
+        exit 0
     }
 
 } catch {
-    Write-Log "ERROR: Failed to download or install Python: $_"
-    exit 1
+    # Same soft-fail rationale as above — the most common cause of
+    # this branch firing is sandboxed/restricted-network environments
+    # where the Python download couldn't complete.  Don't abort the
+    # MSI install; surface the manual-recovery steps in the log.
+    Write-Log "WARNING: Failed to download or install Python: $_"
+    Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
+    Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
+    Write-Log "WARNING:   sc.exe start SysManageAgent"
+    exit 0
 }

@@ -16,8 +16,19 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sysmanage-agent
 
-# Security hardening
-NoNewPrivileges=true
+# Security hardening — note that NoNewPrivileges is intentionally NOT
+# set here.  The agent is designed around a "non-root user + sudoers
+# NOPASSWD allowlist" privilege model (see sysmanage-agent.sudoers):
+# the agent runs as ``sysmanage-agent``, but every privileged
+# operation (zypper/rpm, systemctl, install, firewall-cmd, etc.) is
+# invoked via ``sudo -n``, which the sudoers file restricts to a
+# specific command allowlist.  NoNewPrivileges=true would make the
+# kernel reject those sudo elevations regardless of the sudoers
+# config, breaking every privileged operation the agent is designed
+# to perform (mirror apply, package install, service restart,
+# firewall config, etc.).  Hardening here is provided by the
+# sudoers allowlist scope rather than the systemd
+# ``NoNewPrivileges`` flag.
 PrivateTmp=true
 ProtectHome=true
 

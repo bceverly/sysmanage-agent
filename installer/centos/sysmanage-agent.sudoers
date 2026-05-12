@@ -28,6 +28,19 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/yum.repos.d/*
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/yum.repos.d/*
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm -f /etc/yum.repos.d/*
 
+# Generic file deployment via ``sudo install`` (used by repository
+# mirror apply, agent config push, and any other plan that uses the
+# ``generic_deployment.deploy_files`` step).  Source is restricted to
+# the agent's staging-tmp prefix (``/tmp/.sysmanage_deploy_*``, which
+# the agent creates with mkstemp and 0600 mode); destination is
+# restricted to the system config dirs the engine actually targets.
+# Without these rules, ``sudo install`` returns "user not allowed"
+# and every deploy_files step fails.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/apt/sources.list.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/yum.repos.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/zypp/repos.d/*
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /usr/local/etc/pkg/repos/*
+
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl stop *
