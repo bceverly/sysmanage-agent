@@ -3262,10 +3262,19 @@ jobs:
           # ``latest`` redirect; komac follows semver and the ``update
           # --submit`` interface has been stable since v2.x.
           echo "Fetching latest komac release..."
+          # komac v2.16+ dropped the musl build — current Linux assets
+          # ship as ``x86_64-unknown-linux-gnu.tar.gz`` (glibc) only.
+          # Match by individual substrings instead of the legacy
+          # hyphenated full name so naming flips (gnu↔musl) don't
+          # break this again.  ``setup`` is excluded so we don't match
+          # the Windows installer variant.
           KOMAC_URL=$(curl -fsSL https://api.github.com/repos/russellbanks/Komac/releases/latest \
-            | grep -oE '"browser_download_url": "[^"]+linux-x86_64-musl[^"]*\.tar\.gz"' \
-            | head -1 \
-            | cut -d'"' -f4)
+            | grep -oE '"browser_download_url": "[^"]+\.tar\.gz"' \
+            | cut -d'"' -f4 \
+            | grep -iE 'linux' \
+            | grep -iE 'x86_64' \
+            | grep -viE 'setup' \
+            | head -1)
           if [ -z "$KOMAC_URL" ]; then
             echo "::error::Could not resolve latest komac linux-x86_64 musl tarball URL"
             exit 1
@@ -3455,14 +3464,24 @@ jobs:
           # it, and run makepkg via ``su``.  The output .SRCINFO is
           # written back to the bind-mounted $STAGE so the host can
           # pick it up.
+          #
+          # IMPORTANT: capture the host runner's UID/GID via ``stat``
+          # on the bind-mount *before* chown'ing to builder, and
+          # restore that ownership on exit.  Without this restore,
+          # the GH runner can't read the files back (``cp: ...
+          # Permission denied``) because container-side ``builder``
+          # has a UID outside the host's known users.
           docker run --rm -v "$STAGE:/work" -w /work archlinux:base-devel \
             bash -c '
               set -e
+              HOST_UID=$(stat -c %u /work)
+              HOST_GID=$(stat -c %g /work)
               pacman -Sy --noconfirm --needed pacman-contrib >/dev/null
               useradd -m builder
               chown -R builder:builder /work
               su builder -c "cd /work && makepkg --printsrcinfo > .SRCINFO"
               cat /work/.SRCINFO
+              chown -R "$HOST_UID:$HOST_GID" /work
             '
 
           if [ "$MODE" != "publish" ]; then
