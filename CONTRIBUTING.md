@@ -28,6 +28,13 @@ Fork the repo, then:
 git checkout -b feature/your-change
 ```
 
+After cloning, run **`make install-dev`** to install Python
+dependencies AND activate the in-repo git hooks (see
+`.githooks/README.md`).  The `pre-push` hook runs `make lint`
+before allowing pushes; this catches the same things CI catches
+without burning a cycle to find out.  Skip the hook in genuine
+emergencies with `git push --no-verify`.
+
 ### 3. Key Development Guidelines
 - Use `bandit` for security linting:
   ```bash

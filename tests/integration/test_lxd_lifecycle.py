@@ -252,9 +252,7 @@ def _run(deployment: GenericDeployment, plan: dict) -> dict:
     """
     loop = asyncio.new_event_loop()
     try:
-        return loop.run_until_complete(
-            deployment.apply_deployment_plan({"plan": plan})
-        )
+        return loop.run_until_complete(deployment.apply_deployment_plan({"plan": plan}))
     finally:
         loop.close()
 

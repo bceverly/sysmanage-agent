@@ -129,6 +129,43 @@ class TestDeployFiles:
         assert len(result["errors"]) == 0
 
     @pytest.mark.asyncio
+    async def test_deploy_files_skips_chown_when_unavailable(self, file_deploy_mocks):
+        """Windows safety: ``os.chown`` doesn't exist on Windows.
+        ``_write_atomic`` must guard the call behind a ``hasattr``
+        check rather than crash with ``AttributeError``.  Simulated
+        by patching ``builtins.hasattr`` to return False for the
+        ``(os, 'chown')`` query."""
+        file_deploy_mocks["mkstemp"].return_value = (
+            10,
+            "/tmp/.sysmanage_deploy_abc",
+        )
+
+        _real_hasattr = hasattr
+
+        def _fake_hasattr(obj, name):
+            if name == "chown":
+                return False
+            return _real_hasattr(obj, name)
+
+        with patch("builtins.hasattr", side_effect=_fake_hasattr):
+            result = await self.deployment.deploy_files(
+                {
+                    "files": [
+                        {
+                            "path": "/tmp/myapp.conf",
+                            "content": "key=value",
+                            "permissions": "0644",
+                        }
+                    ]
+                }
+            )
+
+        assert result["success"] is True
+        # The chown mock was never called — confirms we took the
+        # Windows-safe branch instead of the unguarded path.
+        file_deploy_mocks["chown"].assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_deploy_files_empty_list(self):
         """Pass empty files list, expect success False."""
         result = await self.deployment.deploy_files({"files": []})

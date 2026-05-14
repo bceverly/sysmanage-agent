@@ -126,8 +126,33 @@ endif
 
 setup-venv: $(VENV_ACTIVATE)
 
+# Activate the in-repo .githooks/ directory by pointing
+# core.hooksPath at it.  Idempotent and silently no-ops when run
+# outside a git working tree (e.g. from a tarball extract during
+# an offline build).  install-dev calls this as its final step,
+# so most contributors never invoke it directly.
+install-hooks:
+ifeq ($(OS),Windows_NT)
+	@if exist .git ( \
+		git config core.hooksPath .githooks && \
+		echo [OK] Git hooks installed ^(core.hooksPath = .githooks^) \
+	) else ( \
+		echo [INFO] Not in a git working tree -- skipping hook install. \
+	)
+else
+	@if git rev-parse --git-dir >/dev/null 2>&1; then \
+		git config core.hooksPath .githooks; \
+		chmod +x .githooks/* 2>/dev/null || true; \
+		echo "[OK] Git hooks installed (core.hooksPath = .githooks)"; \
+		echo "Active hooks:"; \
+		ls -1 .githooks/ 2>/dev/null | grep -v '^README' | sed 's/^/  /' || true; \
+	else \
+		echo "[INFO] Not in a git working tree — skipping hook install."; \
+	fi
+endif
+
 # Install development dependencies (auto-detects platform)
-install-dev: setup-venv
+install-dev: setup-venv install-hooks
 	@echo "Installing Python development dependencies..."
 ifeq ($(OS),Windows_NT)
 	@$(PYTHON) scripts/install-dev-deps.py

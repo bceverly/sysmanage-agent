@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Pre-push hook — runs `make lint` in the repo root and blocks the push
+# if linting fails.  Designed to be installed via `core.hooksPath` in
+# the sysmanage / sysmanage-agent / sysmanage-professional-plus repos.
+#
+# Behaviour:
+#   * No Makefile, or no `lint:` target  → silent pass (so this hook
+#     can be safely set globally without breaking other repos).
+#   * `make lint` exit 0                 → push proceeds.
+#   * `make lint` non-zero               → push blocked; error message
+#     points at the failing tool and reminds about --no-verify for
+#     genuine emergencies.
+#
+# Pre-push is the right moment for this — pre-commit runs on every
+# `git commit` and would slow down the WIP-commit-often workflow,
+# whereas pre-push runs once per push to remote.  CI-style coverage
+# without the per-commit tax.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "${REPO_ROOT}" ]; then
+    # Not in a git working tree (shouldn't happen for pre-push but
+    # guard anyway).  Let git handle it.
+    exit 0
+fi
+
+cd "${REPO_ROOT}"
+
+# Skip the check unless the repo declares a `lint:` target.  Three
+# practical reasons:
+#   1. If someone sets this globally (`git config --global
+#      core.hooksPath ~/.git-hooks`), other repos without a lint
+#      target shouldn't be punished.
+#   2. Lets us add the hook to a new repo by simply landing a
+#      Makefile + lint target there — no per-repo config dance.
+#   3. The check is fast (a grep) so the overhead is negligible.
+if [ ! -f Makefile ] || ! grep -qE '^lint:[[:space:]]*' Makefile; then
+    exit 0
+fi
+
+REPO_NAME="$(basename "${REPO_ROOT}")"
+echo ""
+echo "============================================================"
+echo " Pre-push: running 'make lint' in ${REPO_NAME}..."
+echo "============================================================"
+
+if make lint; then
+    echo ""
+    echo "============================================================"
+    echo " Pre-push: lint clean — pushing."
+    echo "============================================================"
+    exit 0
+fi
+
+echo ""
+echo "============================================================"
+echo " Pre-push: 'make lint' FAILED in ${REPO_NAME}."
+echo "============================================================"
+echo ""
+echo " Fix the errors above, then push again.  In a genuine"
+echo " emergency you can bypass this hook with:"
+echo ""
+echo "     git push --no-verify"
+echo ""
+echo " (but the next make-lint run on CI will fail the same way,"
+echo " so the bypass only buys you time, not a real fix.)"
+echo ""
+exit 1

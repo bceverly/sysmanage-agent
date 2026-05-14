@@ -318,7 +318,14 @@ class GenericDeployment:
                 if content and not content.endswith("\n"):
                     await temp_file.write("\n")
             os.chmod(tmp_path, mode)
-            os.chown(tmp_path, owner_uid, owner_gid)
+            # os.chown is Unix-only — Python doesn't even expose the
+            # attribute on Windows.  Skip it there; the file's owner is
+            # whatever the agent process is running as, which is what we
+            # want anyway (Windows uses ACLs, not numeric UID/GID, and
+            # the agent typically runs as LocalSystem or the configured
+            # service account).
+            if hasattr(os, "chown"):
+                os.chown(tmp_path, owner_uid, owner_gid)
             os.rename(tmp_path, dest_path)
         except PermissionError:
             if os.path.exists(tmp_path):
@@ -917,7 +924,10 @@ class GenericDeployment:
         description_key = spec.get("description_key")
         description_params = spec.get("description_params")
         run_argv = list(argv)
-        if spec.get("sudo") and os.geteuid() != 0:
+        # ``os.geteuid`` is Unix-only.  On Windows ``spec.get("sudo")``
+        # is meaningless anyway — there's no sudo — so short-circuit
+        # the whole branch when ``geteuid`` isn't available.
+        if spec.get("sudo") and hasattr(os, "geteuid") and os.geteuid() != 0:
             run_argv = ["sudo", "-n"] + run_argv
 
         envelope_extras = {}
