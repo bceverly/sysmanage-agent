@@ -6,6 +6,7 @@ Tests CPU, memory, storage, and network information gathering on Linux systems.
 # pylint: disable=redefined-outer-name,protected-access
 
 import json
+import sys
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
@@ -518,6 +519,10 @@ class TestGetNetworkInfo:
         assert net_info[0]["ipv4_address"] is None
         assert net_info[0]["ipv6_address"] is None
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Tests the Linux /sys/class/net sysfs fallback path",
+    )
     def test_get_network_info_sysfs_fallback(self, collector):
         """Test fallback to sysfs when ip command fails."""
 

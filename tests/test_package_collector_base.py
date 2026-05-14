@@ -5,6 +5,7 @@ Tests common functionality for package collection.
 
 # pylint: disable=redefined-outer-name,protected-access,unused-argument
 
+import sys
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 
@@ -167,6 +168,10 @@ class TestCheckWingetAvailable:
         assert result is False
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew is macOS/Linux only; test imports POSIX-only pwd module",
+)
 class TestGetHomebrewOwner:
     """Tests for _get_homebrew_owner method."""
 
@@ -191,6 +196,10 @@ class TestGetHomebrewOwner:
         assert result == ""
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew is macOS/Linux only; test patches POSIX-only os.geteuid",
+)
 class TestGetBrewCommand:
     """Tests for _get_brew_command method."""
 

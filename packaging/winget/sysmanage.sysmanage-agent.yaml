@@ -33,7 +33,14 @@
 PackageIdentifier: sysmanage.sysmanage-agent
 PackageVersion: 0.0.0
 PackageLocale: en-US
-Publisher: Bryan Everly
+# ``Publisher`` MUST match the MSI's ARP metadata (``Manufacturer``
+# in the WiX source) — winget's post-install Installation Verification
+# step compares the manifest against the Add/Remove Programs entry and
+# rejects mismatches.  The WiX source declares
+# ``Manufacturer="SysManage"`` at ``installer/windows/sysmanage-agent.wxs:9``;
+# the manifest mirrors that exactly.  Changing either name requires
+# changing both places.
+Publisher: SysManage
 PublisherUrl: https://github.com/bceverly/sysmanage-agent
 PublisherSupportUrl: https://github.com/bceverly/sysmanage-agent/issues
 PackageName: SysManage Agent

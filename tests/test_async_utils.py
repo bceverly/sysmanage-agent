@@ -7,6 +7,7 @@ Tests async subprocess execution and file I/O operations.
 
 import asyncio
 import subprocess
+import sys
 import tempfile
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -831,6 +832,10 @@ class TestIntegration:
         with pytest.raises(subprocess.CalledProcessError):
             await run_command_async(["false"], check=True)
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Uses POSIX shell syntax ($TEST_VAR); cmd.exe expands %TEST_VAR%",
+    )
     @pytest.mark.asyncio
     async def test_run_command_with_env_integration(self):
         """Integration test: command with custom environment variable."""
@@ -842,6 +847,10 @@ class TestIntegration:
         assert result.returncode == 0
         assert "test_value_12345" in result.stdout
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Uses POSIX paths (/tmp) and the pwd command; no Windows equivalents in this assertion",
+    )
     @pytest.mark.asyncio
     async def test_run_command_cwd_integration(self):
         """Integration test: command with custom working directory."""

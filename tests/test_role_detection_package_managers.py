@@ -5,6 +5,7 @@ Tests for package manager detection utilities.
 # pylint: disable=redefined-outer-name,protected-access
 
 import logging
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -232,6 +233,10 @@ snap-pkg2  2.0      456  stable    canonical  -
         assert result == {"snap-pkg1": "1.0", "snap-pkg2": "2.0"}
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew is macOS/Linux only; test patches POSIX-only os.getuid",
+)
 class TestGetHomebrewPackages:
     """Tests for _get_homebrew_packages method."""
 

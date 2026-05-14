@@ -10,12 +10,21 @@ This module covers:
 # pylint: disable=redefined-outer-name,protected-access,too-many-public-methods
 
 import subprocess
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
 
 from src.sysmanage_agent.collection.update_detection_bsd import (
     BSDUpdateDetector,
+)
+
+# These tests patch os.geteuid (POSIX-only) to simulate BSD root/non-root code
+# paths.  patch() can't acquire the original attribute on Windows where
+# os.geteuid doesn't exist, so the whole file is skipped there.
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="BSD update detection tests rely on os.geteuid which is POSIX-only",
 )
 
 

@@ -5,6 +5,7 @@ Tests for base update detection module.
 # pylint: disable=redefined-outer-name,protected-access
 
 import subprocess
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -177,6 +178,10 @@ class TestIsHomebrewAvailable:
         assert result is False
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew is macOS/Linux only; test imports the POSIX-only pwd module",
+)
 class TestGetHomebrewOwner:
     """Tests for _get_homebrew_owner method."""
 
@@ -203,6 +208,10 @@ class TestGetHomebrewOwner:
         assert result == ""
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew is macOS/Linux only; test patches POSIX-only os.geteuid",
+)
 class TestGetBrewCommand:
     """Tests for _get_brew_command method."""
 

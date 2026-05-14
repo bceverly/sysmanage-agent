@@ -10,6 +10,7 @@ DNS configuration, multi-platform support, and error handling.
 
 import socket
 import subprocess
+import sys
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
@@ -336,6 +337,10 @@ class TestLinuxNetworkCollection:
         """Set up test fixtures."""
         self.collector = HardwareCollectorLinux()
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Linux sysfs fallback test patches /sys/class/net paths; on Windows the iproute2 mock path produces a different result shape",
+    )
     def test_get_network_info_success(self):
         """Test successful network interface collection on Linux (sysfs fallback)."""
         interfaces = ["eth0", "wlan0", "lo"]

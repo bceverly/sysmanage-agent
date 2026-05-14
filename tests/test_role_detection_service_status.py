@@ -5,6 +5,7 @@ Tests for service status detection utilities.
 # pylint: disable=redefined-outer-name,protected-access
 
 import logging
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -186,6 +187,10 @@ class TestGetMacosServiceStatus:
         assert result == "running"
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Homebrew services are macOS/Linux only; test patches POSIX-only os.getuid",
+)
 class TestCheckBrewServices:
     """Tests for _check_brew_services method."""
 

@@ -14,14 +14,48 @@ import pytest
 
 from src.sysmanage_agent.operations.generic_deployment import GenericDeployment
 
+
+def _fake_subprocess_exec():
+    """Return a fake ``asyncio.create_subprocess_exec`` for plan tests.
+
+    macOS/Python 3.12's ``ThreadedChildWatcher`` interacts poorly with the
+    per-test ``event_loop`` fixture in conftest.py, causing real subprocess
+    spawns to non-deterministically return the wrong returncode.  The plan
+    tests don't actually exercise real exec — they exercise the success/
+    failure plumbing — so we stub the spawner instead of touching the OS.
+
+    Returncode is derived from argv[0]'s basename: ``true`` -> 0,
+    ``false`` -> 1, anything else -> 0.
+    """
+
+    async def _fake(*argv, **_kwargs):
+        head = argv[0] if argv else ""
+        base = ""
+        if isinstance(head, str):
+            base = head.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
+        returncode = 1 if base == "false" else 0
+        proc = AsyncMock()
+        proc.returncode = returncode
+        proc.pid = 12345
+        proc.communicate = AsyncMock(return_value=(b"", b""))
+        proc.kill = Mock()
+        proc.wait = AsyncMock()
+        return proc
+
+    return _fake
+
+
 _MOD = "src.sysmanage_agent.operations.generic_deployment"
 
 # Used by Section 8.6 SHA-256 / backup-rollback tests below. Tests there use
 # real temp files (no mocking of chown/chmod/rename) to exercise the real
 # atomic-write + rollback paths. We force owner to the current user so chown
 # doesn't require root.
-_CURRENT_UID = _real_os.getuid()
-_CURRENT_GID = _real_os.getgid()
+# getuid/getgid are POSIX-only; on Windows the file still has to import (the
+# Windows-only tests in this file don't touch _CURRENT_UID/_GID, and the
+# chown-using tests are gated with skipif).
+_CURRENT_UID = _real_os.getuid() if hasattr(_real_os, "getuid") else 0
+_CURRENT_GID = _real_os.getgid() if hasattr(_real_os, "getgid") else 0
 
 
 @pytest.fixture
@@ -534,7 +568,8 @@ class TestApplyDeploymentPlan:
                 "errors": [],
             }
         )
-        result = await self.deployment.apply_deployment_plan({"plan": plan})
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            result = await self.deployment.apply_deployment_plan({"plan": plan})
 
         assert result["success"] is True
         assert "packages" in result["results"]
@@ -577,7 +612,8 @@ class TestApplyDeploymentPlan:
                 {"argv": ["/bin/true"]},
             ],
         }
-        result = await self.deployment.apply_deployment_plan({"plan": plan})
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            result = await self.deployment.apply_deployment_plan({"plan": plan})
         assert result["success"] is True
         assert result["failed_step"] is None
         # Both commands should have run.
@@ -653,13 +689,14 @@ class TestApplyDeploymentPlan:
     @pytest.mark.asyncio
     async def test_plan_can_be_passed_inline_or_under_plan_key(self):
         """parameters['plan'] and parameters itself both work as the plan dict."""
-        # Inline (no "plan" wrapper)
-        result_inline = await self.deployment.apply_deployment_plan(
-            {"commands": [{"argv": ["/bin/true"]}]}
-        )
-        # Wrapped
-        result_wrapped = await self.deployment.apply_deployment_plan(
-            {"plan": {"commands": [{"argv": ["/bin/true"]}]}}
-        )
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            # Inline (no "plan" wrapper)
+            result_inline = await self.deployment.apply_deployment_plan(
+                {"commands": [{"argv": ["/bin/true"]}]}
+            )
+            # Wrapped
+            result_wrapped = await self.deployment.apply_deployment_plan(
+                {"plan": {"commands": [{"argv": ["/bin/true"]}]}}
+            )
         assert result_inline["success"] is True
         assert result_wrapped["success"] is True

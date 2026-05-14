@@ -8,6 +8,7 @@ Tests focus on uncovered code paths to improve coverage beyond 51%.
 import asyncio
 import ssl
 import subprocess
+import sys
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -775,6 +776,10 @@ class TestMessageProcessorServiceStatus:
                 assert "Command failed" in result["error"]
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Tests the POSIX privilege-detection path (os.geteuid + pwd); both are unavailable on Windows",
+)
 class TestPrivilegeDetectionAdvanced:
     """Advanced test cases for privilege detection functions."""
 

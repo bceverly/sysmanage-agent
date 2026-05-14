@@ -17,6 +17,7 @@ This module covers:
 # pylint: disable=protected-access,redefined-outer-name
 
 import subprocess
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -701,6 +702,10 @@ class TestPackageInstallation:
 # =============================================================================
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Tests POSIX-only BSD package install (patches os.geteuid which is absent on Windows)",
+)
 class TestBsdPackageInstallation:
     """Tests for BSD package installation functionality."""
 

@@ -3054,6 +3054,14 @@ jobs:
     name: Build and Publish Snap (Strict)
     runs-on: ubuntu-22.04
     needs: release
+    env:
+      # snapcore/action-build@v1 is pinned on Node.js 20, which GitHub
+      # removes from runners on 2026-09-16.  This flag tells the runner
+      # to force-run JS actions on Node.js 24 until snapcore ships a
+      # Node 24-native release.  Drop this env once we bump to a
+      # snapcore action SHA that targets Node 24.
+      # See: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
       - name: Checkout code
