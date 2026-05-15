@@ -311,8 +311,20 @@ class GenericDeployment:
             )
             return
         try:
+            # ``newline=""`` disables Python's universal-newlines
+            # translation on the write side.  Without it, Python in
+            # text mode on Windows converts every ``\n`` in ``content``
+            # to ``\r\n`` on disk — which then breaks the post-write
+            # SHA-256 verification (the server computed the hash from
+            # the LF-only bytes; the on-disk bytes have extra CRs).
+            # Same fix applies regardless of whether content itself
+            # has any newlines; cheap to set unconditionally.
             async with aiofiles.open(
-                file_descriptor, "w", encoding="utf-8", closefd=True
+                file_descriptor,
+                "w",
+                encoding="utf-8",
+                newline="",
+                closefd=True,
             ) as temp_file:
                 await temp_file.write(content)
                 if content and not content.endswith("\n"):
@@ -326,7 +338,12 @@ class GenericDeployment:
             # service account).
             if hasattr(os, "chown"):
                 os.chown(tmp_path, owner_uid, owner_gid)
-            os.rename(tmp_path, dest_path)
+            # ``os.replace`` rather than ``os.rename``: rename refuses
+            # to overwrite an existing destination on Windows
+            # (WinError 183), which breaks every re-deploy.  replace
+            # is the documented cross-platform atomic rename — same
+            # semantics as rename on POSIX, allows replace on Windows.
+            os.replace(tmp_path, dest_path)
         except PermissionError:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -359,8 +376,20 @@ class GenericDeployment:
         """
         file_descriptor, staged_path = tempfile.mkstemp(prefix=".sysmanage_deploy_")
         try:
+            # ``newline=""`` disables Python's universal-newlines
+            # translation on the write side.  Without it, Python in
+            # text mode on Windows converts every ``\n`` in ``content``
+            # to ``\r\n`` on disk — which then breaks the post-write
+            # SHA-256 verification (the server computed the hash from
+            # the LF-only bytes; the on-disk bytes have extra CRs).
+            # Same fix applies regardless of whether content itself
+            # has any newlines; cheap to set unconditionally.
             async with aiofiles.open(
-                file_descriptor, "w", encoding="utf-8", closefd=True
+                file_descriptor,
+                "w",
+                encoding="utf-8",
+                newline="",
+                closefd=True,
             ) as temp_file:
                 await temp_file.write(content)
                 if content and not content.endswith("\n"):

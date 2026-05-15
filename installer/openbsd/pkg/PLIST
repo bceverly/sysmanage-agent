@@ -156,17 +156,9 @@ libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_collector.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_linux_parsers.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/firewall_port_helpers.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/generic_deployment.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/graylog_attachment.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/hostname_operations.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/linux_repository_operations.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/lxd_firewall_helper.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/opentelemetry_operations.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_base.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_bsd.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_linux.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_macos.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deploy_windows.py
-libexec/sysmanage-agent/src/sysmanage_agent/operations/otel_deployment_helper.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/package_compliance_operations.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/package_installation_helpers.py
 libexec/sysmanage-agent/src/sysmanage_agent/operations/package_manager_operations.py

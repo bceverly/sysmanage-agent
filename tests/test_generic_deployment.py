@@ -7,6 +7,7 @@ Tests for the GenericDeployment.deploy_files() handler.
 
 import hashlib
 import os as _real_os
+import sys
 import tempfile as _real_tempfile
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -60,15 +61,29 @@ _CURRENT_GID = _real_os.getgid() if hasattr(_real_os, "getgid") else 0
 
 @pytest.fixture
 def file_deploy_mocks():
-    """Provide consolidated mocks for file deployment tests."""
+    """Provide consolidated mocks for file deployment tests.
+
+    ``os.chown`` is Unix-only — on Windows the attribute literally
+    doesn't exist on the os module, and ``unittest.mock.patch``
+    refuses to patch a missing attribute unless told to with
+    ``create=True``.  The production code in ``_write_atomic``
+    guards chown behind ``hasattr(os, "chown")`` so this test-side
+    ``create=True`` doesn't materially change behaviour — it just
+    teaches the patch context manager to install a mock at the
+    name and tear it down cleanly afterwards.
+    """
     with (
         patch(f"{_MOD}.tempfile.mkstemp") as mkstemp,
         patch(f"{_MOD}.os.unlink") as _unlink,
         patch(f"{_MOD}.os.path.exists", return_value=False) as _exists,
         patch(f"{_MOD}.os.makedirs") as makedirs,
-        patch(f"{_MOD}.os.chown") as chown,
+        patch(f"{_MOD}.os.chown", create=True) as chown,
         patch(f"{_MOD}.os.chmod") as chmod,
-        patch(f"{_MOD}.os.rename") as rename,
+        # Production uses ``os.replace`` (cross-platform atomic rename
+        # — same as rename on POSIX, allows overwrite on Windows).
+        # Keep the fixture key name ``rename`` so test bodies don't
+        # have to change.
+        patch(f"{_MOD}.os.replace") as rename,
         patch(f"{_MOD}.aiofiles.open") as aiofiles_open,
     ):
         mock_file = AsyncMock()
@@ -280,6 +295,15 @@ class TestDeployFiles:
             "/etc/.sysmanage_deploy_abc", 0o600
         )
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "os.chown is Unix-only; the production code skips the call "
+            "via hasattr(os, 'chown') on Windows, so the chown mock is "
+            "never invoked there.  The Windows-safe behaviour is "
+            "covered by test_deploy_files_skips_chown_when_unavailable."
+        ),
+    )
     @pytest.mark.asyncio
     async def test_deploy_files_sets_ownership(self, file_deploy_mocks):
         """Verify os.chown called with correct uid/gid."""
@@ -659,9 +683,24 @@ class TestApplyDeploymentPlan:
     @pytest.mark.asyncio
     async def test_plan_command_timeout_kills_process(self):
         """A command exceeding its timeout is killed and reported as failure."""
+        # ``/bin/sleep`` isn't on Windows.  Use ``python -c
+        # "import time; time.sleep(5)"`` — Python is by definition on
+        # PATH wherever this test suite runs (we ARE Python), and the
+        # behaviour (sleep 5 seconds, timeout at 1) is identical to
+        # the sleep binary.  ``sys.executable`` is the absolute path
+        # to the Python interpreter the test runner is using; works
+        # on Linux, macOS, and Windows alike.
         plan = {
             "commands": [
-                {"argv": ["/bin/sleep", "5"], "timeout": 1, "ignore_errors": True},
+                {
+                    "argv": [
+                        sys.executable,
+                        "-c",
+                        "import time; time.sleep(5)",
+                    ],
+                    "timeout": 1,
+                    "ignore_errors": True,
+                },
             ],
         }
         result = await self.deployment.apply_deployment_plan({"plan": plan})

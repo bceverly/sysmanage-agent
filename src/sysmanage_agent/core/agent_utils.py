@@ -321,8 +321,14 @@ class MessageProcessor:
             "deploy_files": self.agent.deploy_files,
             "execute_command_sequence": self.agent.execute_command_sequence,
             "apply_deployment_plan": self.agent.apply_deployment_plan,
-            "deploy_opentelemetry": self.agent.deploy_opentelemetry,
-            "remove_opentelemetry": self.agent.remove_opentelemetry,
+            # Phase 10.2 step 7 close-out (2026-05-14): the legacy
+            # "deploy_opentelemetry" / "remove_opentelemetry" /
+            # "attach_to_graylog" handlers were removed when the
+            # underlying ``opentelemetry_operations.py`` /
+            # ``graylog_attachment.py`` agent modules were deleted.
+            # Every observability operation is now driven server-
+            # side by the Pro+ ``observability_engine`` plan-builders
+            # and dispatched via ``apply_deployment_plan`` above.
             "list_third_party_repositories": self.agent.list_third_party_repositories,
             "add_third_party_repository": self.agent.add_third_party_repository,
             "delete_third_party_repositories": self.agent.delete_third_party_repositories,
@@ -332,7 +338,6 @@ class MessageProcessor:
             # sends a declarative deploy plan via "apply_deployment_plan" and
             # the agent runs it via deploy_files+execute_command_sequence+
             # service_control under the hood.
-            "attach_to_graylog": self.agent.attach_to_graylog,
             "enable_package_manager": self.agent.enable_package_manager,
             "create_host_user": self.agent.create_host_user,
             "create_host_group": self.agent.create_host_group,

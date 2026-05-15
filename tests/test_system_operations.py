@@ -861,110 +861,16 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             assert result == {"vim": "8.2", "curl": "7.68"}
             mock_versions.assert_called_once_with(["vim", "curl"])
 
-    # ========== OpenTelemetry Operations Delegation Tests ==========
-
-    @pytest.mark.asyncio
-    async def test_deploy_opentelemetry_delegation(self):
-        """Test deploy_opentelemetry delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops, "deploy_opentelemetry", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.return_value = {"success": True, "result": "OTel deployed"}
-
-            parameters = {"config": "test-config"}
-            result = await self.system_ops.deploy_opentelemetry(parameters)
-
-            assert result["success"] is True
-            mock_deploy.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_remove_opentelemetry_delegation(self):
-        """Test remove_opentelemetry delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops, "remove_opentelemetry", new_callable=AsyncMock
-        ) as mock_remove:
-            mock_remove.return_value = {"success": True, "result": "OTel removed"}
-
-            result = await self.system_ops.remove_opentelemetry({})
-
-            assert result["success"] is True
-            mock_remove.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_start_opentelemetry_service_delegation(self):
-        """Test start_opentelemetry_service delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "start_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_start:
-            mock_start.return_value = {"success": True, "result": "Service started"}
-
-            result = await self.system_ops.start_opentelemetry_service({})
-
-            assert result["success"] is True
-            mock_start.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_stop_opentelemetry_service_delegation(self):
-        """Test stop_opentelemetry_service delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "stop_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_stop:
-            mock_stop.return_value = {"success": True, "result": "Service stopped"}
-
-            result = await self.system_ops.stop_opentelemetry_service({})
-
-            assert result["success"] is True
-            mock_stop.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_restart_opentelemetry_service_delegation(self):
-        """Test restart_opentelemetry_service delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "restart_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_restart:
-            mock_restart.return_value = {"success": True, "result": "Service restarted"}
-
-            result = await self.system_ops.restart_opentelemetry_service({})
-
-            assert result["success"] is True
-            mock_restart.assert_called_once_with({})
-
-    @pytest.mark.asyncio
-    async def test_connect_opentelemetry_grafana_delegation(self):
-        """Test connect_opentelemetry_grafana delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "connect_opentelemetry_grafana",
-            new_callable=AsyncMock,
-        ) as mock_connect:
-            mock_connect.return_value = {"success": True, "result": "Connected"}
-
-            parameters = {"grafana_url": "http://grafana:3000"}
-            result = await self.system_ops.connect_opentelemetry_grafana(parameters)
-
-            assert result["success"] is True
-            mock_connect.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_disconnect_opentelemetry_grafana_delegation(self):
-        """Test disconnect_opentelemetry_grafana delegates to otel_ops."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "disconnect_opentelemetry_grafana",
-            new_callable=AsyncMock,
-        ) as mock_disconnect:
-            mock_disconnect.return_value = {"success": True, "result": "Disconnected"}
-
-            result = await self.system_ops.disconnect_opentelemetry_grafana({})
-
-            assert result["success"] is True
-            mock_disconnect.assert_called_once_with({})
+    # ========== OpenTelemetry Operations Delegation Tests (REMOVED) ==========
+    #
+    # The 7 OTEL delegation tests (deploy/remove/start/stop/restart_*
+    # _opentelemetry_service / connect/disconnect_opentelemetry_grafana)
+    # were removed in the Phase 10.2 step 7 close-out (2026-05-14)
+    # alongside the methods they exercised — every OTEL operation
+    # now flows server-side through the Pro+ observability_engine
+    # plan-builders + apply_deployment_plan.  Engine-side coverage
+    # lives in the sysmanage repo's tests/services/test_observability_shim.py
+    # and the Pro+ repo's module-source/observability_engine/.
 
     # NOTE: Antivirus delegation tests removed in Phase 3 — SystemOperations
     # no longer has an antivirus_ops attribute. The open-source server now
@@ -1186,8 +1092,9 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
         """Test that all operation handlers are initialized."""
         assert self.system_ops.system_control is not None
         assert self.system_ops.package_ops is not None
-        assert self.system_ops.otel_ops is not None
         # antivirus_ops and firewall_ops removed in Phase 3.
+        # otel_ops removed in the Phase 10.2 step 7 close-out — engine
+        # path replaces it.
         assert self.system_ops.repo_ops is not None
         assert self.system_ops.ubuntu_pro_ops is not None
         assert self.system_ops.user_account_ops is not None
@@ -1278,19 +1185,10 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
     # ========== Exception Handling Tests ==========
 
-    @pytest.mark.asyncio
-    async def test_deploy_opentelemetry_exception(self):
-        """Test deploy_opentelemetry when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops, "deploy_opentelemetry", new_callable=AsyncMock
-        ) as mock_deploy:
-            mock_deploy.side_effect = Exception("Deployment failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.deploy_opentelemetry({})
-
-            assert "Deployment failed" in str(excinfo.value)
-
+    # NOTE: OTEL deploy/remove/service-control/grafana-connection
+    # exception tests removed in the Phase 10.2 step 7 close-out
+    # (2026-05-14) — every OTEL operation routes server-side through
+    # the Pro+ engine + apply_deployment_plan now.
     # NOTE: deploy_firewall / deploy_antivirus exception tests removed in
     # Phase 3 — those delegators no longer exist on SystemOperations.
 
@@ -1433,94 +1331,6 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
 
     # NOTE: enable/disable/remove_antivirus exception tests removed in
     # Phase 3 — those delegators no longer exist on SystemOperations.
-
-    @pytest.mark.asyncio
-    async def test_remove_opentelemetry_exception(self):
-        """Test remove_opentelemetry when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops, "remove_opentelemetry", new_callable=AsyncMock
-        ) as mock_remove:
-            mock_remove.side_effect = Exception("Remove failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.remove_opentelemetry({})
-
-            assert "Remove failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_start_opentelemetry_service_exception(self):
-        """Test start_opentelemetry_service when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "start_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_start:
-            mock_start.side_effect = Exception("Start failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.start_opentelemetry_service({})
-
-            assert "Start failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_stop_opentelemetry_service_exception(self):
-        """Test stop_opentelemetry_service when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "stop_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_stop:
-            mock_stop.side_effect = Exception("Stop failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.stop_opentelemetry_service({})
-
-            assert "Stop failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_restart_opentelemetry_service_exception(self):
-        """Test restart_opentelemetry_service when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "restart_opentelemetry_service",
-            new_callable=AsyncMock,
-        ) as mock_restart:
-            mock_restart.side_effect = Exception("Restart failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.restart_opentelemetry_service({})
-
-            assert "Restart failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_connect_opentelemetry_grafana_exception(self):
-        """Test connect_opentelemetry_grafana when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "connect_opentelemetry_grafana",
-            new_callable=AsyncMock,
-        ) as mock_connect:
-            mock_connect.side_effect = Exception("Connect failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.connect_opentelemetry_grafana({})
-
-            assert "Connect failed" in str(excinfo.value)
-
-    @pytest.mark.asyncio
-    async def test_disconnect_opentelemetry_grafana_exception(self):
-        """Test disconnect_opentelemetry_grafana when exception is raised."""
-        with patch.object(
-            self.system_ops.otel_ops,
-            "disconnect_opentelemetry_grafana",
-            new_callable=AsyncMock,
-        ) as mock_disconnect:
-            mock_disconnect.side_effect = Exception("Disconnect failed")
-
-            with pytest.raises(Exception) as excinfo:
-                await self.system_ops.disconnect_opentelemetry_grafana({})
-
-            assert "Disconnect failed" in str(excinfo.value)
 
     # NOTE: enable/disable/restart_firewall exception tests removed in
     # Phase 3 — those delegators no longer exist on SystemOperations.

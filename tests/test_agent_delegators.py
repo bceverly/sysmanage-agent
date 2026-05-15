@@ -221,31 +221,14 @@ class TestSystemOperationsDelegator:
             parameters
         )
 
-    @pytest.mark.asyncio
-    async def test_deploy_opentelemetry(self, delegator):
-        """Test deploy_opentelemetry delegation."""
-        delegator.system_ops.deploy_opentelemetry = AsyncMock(
-            return_value={"success": True, "result": "OpenTelemetry deployed"}
-        )
-        parameters = {"endpoint": "http://collector:4317"}
-
-        result = await delegator.deploy_opentelemetry(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.deploy_opentelemetry.assert_called_once_with(parameters)
-
-    @pytest.mark.asyncio
-    async def test_remove_opentelemetry(self, delegator):
-        """Test remove_opentelemetry delegation."""
-        delegator.system_ops.remove_opentelemetry = AsyncMock(
-            return_value={"success": True, "result": "OpenTelemetry removed"}
-        )
-        parameters = {}
-
-        result = await delegator.remove_opentelemetry(parameters)
-
-        assert result["success"] is True
-        delegator.system_ops.remove_opentelemetry.assert_called_once_with(parameters)
+    # Phase 10.2 step 7 close-out (2026-05-14): tests for
+    # ``test_deploy_opentelemetry``, ``test_remove_opentelemetry``,
+    # and ``test_attach_to_graylog`` are removed.  The delegators
+    # they exercised are gone — every observability operation now
+    # flows through the Pro+ engine's plan-builders +
+    # apply_deployment_plan path.  Engine-path coverage lives in
+    # the sysmanage repo at ``tests/services/test_observability_shim.py``
+    # and the Pro+ repo's ``module-source/observability_engine/``.
 
     @pytest.mark.asyncio
     async def test_list_third_party_repositories_with_params(self, delegator):
@@ -961,24 +944,8 @@ class TestMiscDelegator:
             parameters
         )
 
-    @pytest.mark.asyncio
-    async def test_attach_to_graylog(self, delegator):
-        """Test attach_to_graylog with dynamic import."""
-        mock_graylog_ops = Mock()
-        mock_graylog_ops.attach_to_graylog = AsyncMock(
-            return_value={"success": True, "result": "Attached to Graylog"}
-        )
-
-        with patch(
-            "src.sysmanage_agent.operations.graylog_attachment.GraylogAttachmentOperations",
-            return_value=mock_graylog_ops,
-        ):
-            parameters = {"server": "graylog.example.com", "port": 12201}
-
-            result = await delegator.attach_to_graylog(parameters)
-
-            assert result["success"] is True
-            mock_graylog_ops.attach_to_graylog.assert_called_once_with(parameters)
+    # ``test_attach_to_graylog`` removed in Phase 10.2 step 7
+    # close-out (see comment above the deploy/remove OTEL block).
 
     @pytest.mark.asyncio
     async def test_enable_package_manager(self, delegator):
@@ -1029,8 +996,10 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "ubuntu_pro_detach")
         assert hasattr(delegator, "ubuntu_pro_enable_service")
         assert hasattr(delegator, "ubuntu_pro_disable_service")
-        assert hasattr(delegator, "deploy_opentelemetry")
-        assert hasattr(delegator, "remove_opentelemetry")
+        # ``deploy_opentelemetry`` and ``remove_opentelemetry``
+        # delegators removed in the Phase 10.2 step 7 close-out;
+        # those operations route server-side through the Pro+
+        # observability_engine + apply_deployment_plan now.
         assert hasattr(delegator, "list_third_party_repositories")
         assert hasattr(delegator, "add_third_party_repository")
         assert hasattr(delegator, "delete_third_party_repositories")
@@ -1095,7 +1064,8 @@ class TestAgentDelegatorMixin:
         assert hasattr(delegator, "handle_command")
         assert hasattr(delegator, "execute_script")
         assert hasattr(delegator, "collect_diagnostics")
-        assert hasattr(delegator, "attach_to_graylog")
+        # ``attach_to_graylog`` delegator removed in Phase 10.2 step 7
+        # close-out (engine path now handles Graylog attaches).
         assert hasattr(delegator, "enable_package_manager")
 
 

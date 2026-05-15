@@ -88,13 +88,19 @@ class SystemOperationsDelegator:
         """Apply a declarative deployment plan (packages+files+commands+services)."""
         return await self.system_ops.apply_deployment_plan(parameters)
 
-    async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy OpenTelemetry collector to the system."""
-        return await self.system_ops.deploy_opentelemetry(parameters)
-
-    async def remove_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove OpenTelemetry collector from the system."""
-        return await self.system_ops.remove_opentelemetry(parameters)
+    # Phase 10.2 step 7 close-out (2026-05-14): the legacy
+    # ``deploy_opentelemetry`` / ``remove_opentelemetry`` /
+    # ``attach_to_graylog`` delegators here used to route to
+    # ``operations/opentelemetry_operations.py`` and
+    # ``operations/graylog_attachment.py``.  Both modules are
+    # deleted now — every observability operation goes through the
+    # Pro+ ``observability_engine`` plan-builders + ``apply_deployment_plan``
+    # path.  The matching WS-command handlers in agent_utils.py are
+    # also gone; an OSS-tier host that receives a stale
+    # ``deploy_opentelemetry`` / ``remove_opentelemetry`` /
+    # ``attach_to_graylog`` WS command now sees
+    # ``Unknown command type`` back, matching what the never-wired
+    # ``start_opentelemetry_service`` etc. siblings always did.
 
     async def list_third_party_repositories(
         self, parameters: Dict[str, Any] = None
@@ -346,15 +352,11 @@ class MiscDelegator:
         """Collect system diagnostics and send to server."""
         return await self.diagnostic_collector.collect_diagnostics(parameters)
 
-    async def attach_to_graylog(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Attach host to Graylog log aggregation server."""
-        # pylint: disable=import-outside-toplevel
-        from src.sysmanage_agent.operations.graylog_attachment import (
-            GraylogAttachmentOperations,
-        )
-
-        graylog_ops = GraylogAttachmentOperations(self, self.logger)
-        return await graylog_ops.attach_to_graylog(parameters)
+    # Phase 10.2 step 7 close-out: see the block-comment above the
+    # apply_deployment_plan delegator for the rationale on why this
+    # method, plus the matching agent_utils.py dispatch entry, are
+    # gone.  Graylog attaches go through the Pro+ engine's
+    # ``build_graylog_*_plan`` family + apply_deployment_plan path.
 
     async def enable_package_manager(
         self, parameters: Dict[str, Any]

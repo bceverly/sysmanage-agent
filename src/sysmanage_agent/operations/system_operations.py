@@ -10,9 +10,6 @@ from typing import Any, Dict
 
 from src.sysmanage_agent.operations.generic_deployment import GenericDeployment
 from src.sysmanage_agent.operations.hostname_operations import HostnameOperations
-from src.sysmanage_agent.operations.opentelemetry_operations import (
-    OpenTelemetryOperations,
-)
 from src.sysmanage_agent.operations.package_operations import PackageOperations
 from src.sysmanage_agent.operations.repository_operations import (
     ThirdPartyRepositoryOperations,
@@ -33,7 +30,10 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         # Initialize specialized operation handlers
         self.system_control = SystemControl(agent_instance)
         self.package_ops = PackageOperations(agent_instance)
-        self.otel_ops = OpenTelemetryOperations(agent_instance)
+        # ``self.otel_ops`` (legacy OpenTelemetryOperations) was
+        # removed in the Phase 10.2 step 7 close-out — every OTEL
+        # operation now flows through the Pro+ observability_engine
+        # plan-builders + apply_deployment_plan.
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)
         self.ubuntu_pro_ops = UbuntuProOperations(agent_instance)
         self.user_account_ops = UserAccountOperations(agent_instance)
@@ -171,45 +171,16 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
             await self.ubuntu_pro_ops._send_os_update_after_pro_change()  # pylint: disable=protected-access
         )
 
-    # ========== OpenTelemetry Operations Delegation ==========
-
-    async def deploy_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Deploy OpenTelemetry collector to the system."""
-        return await self.otel_ops.deploy_opentelemetry(parameters)
-
-    async def remove_opentelemetry(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove OpenTelemetry collector from the system."""
-        return await self.otel_ops.remove_opentelemetry(parameters)
-
-    async def start_opentelemetry_service(
-        self, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Start the OpenTelemetry collector service."""
-        return await self.otel_ops.start_opentelemetry_service(parameters)
-
-    async def stop_opentelemetry_service(
-        self, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Stop the OpenTelemetry collector service."""
-        return await self.otel_ops.stop_opentelemetry_service(parameters)
-
-    async def restart_opentelemetry_service(
-        self, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Restart the OpenTelemetry collector service."""
-        return await self.otel_ops.restart_opentelemetry_service(parameters)
-
-    async def connect_opentelemetry_grafana(
-        self, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Connect OpenTelemetry to a Grafana instance."""
-        return await self.otel_ops.connect_opentelemetry_grafana(parameters)
-
-    async def disconnect_opentelemetry_grafana(
-        self, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Disconnect OpenTelemetry from Grafana."""
-        return await self.otel_ops.disconnect_opentelemetry_grafana(parameters)
+    # ========== OpenTelemetry Operations (REMOVED) ==========
+    #
+    # The 7 OTEL delegator methods (deploy_opentelemetry,
+    # remove_opentelemetry, start/stop/restart_opentelemetry_service,
+    # connect/disconnect_opentelemetry_grafana) were removed in the
+    # Phase 10.2 step 7 close-out (2026-05-14).  Every OTEL operation
+    # now flows server-side through the Pro+ observability_engine
+    # plan-builders + the agent's ``apply_deployment_plan`` runtime.
+    # See ``backend/services/observability_shim.py`` for the OSS-side
+    # try_engine_* helpers that dispatch the engine plans.
 
     # ========== Repository Operations Delegation ==========
 
