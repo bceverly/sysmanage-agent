@@ -44,8 +44,34 @@ try {
     # Find Python executable in venv
     $VenvPython = Join-Path $InstallDir ".venv\Scripts\python.exe"
     if (-not (Test-Path $VenvPython)) {
-        Write-Log "ERROR: Virtual environment Python not found at: $VenvPython"
-        throw "Virtual environment not found"
+        # Soft-fail: same rationale as install.ps1 / check-python.ps1.
+        # When Python isn't available at MSI-install time (e.g., the
+        # winget-pkgs sandboxed validation environment, where
+        # check-python.ps1 can't reach python.org to install Python),
+        # install.ps1 skipped the venv create.  Without a venv we
+        # can't register the service to point at one — so log the
+        # situation and exit 0 cleanly rather than failing the MSI
+        # with the misleading 1722/1603 chain.  The operator can
+        # install Python and re-run the MSI to register the service
+        # at that point.
+        Write-Log ""
+        Write-Log "WARNING: Virtual environment not found at $VenvPython"
+        Write-Log "WARNING: install.ps1 likely soft-failed because Python 3.9+"
+        Write-Log "WARNING: was not on PATH at install time."
+        Write-Log "WARNING: Skipping Windows service registration."
+        Write-Log ""
+        Write-Log "To complete setup:"
+        Write-Log "  1. Install Python 3.9+ from https://www.python.org/downloads/"
+        Write-Log "  2. Re-run the SysManage Agent MSI installer"
+        Write-Log ""
+        Stop-Transcript
+        Write-Host ""
+        Write-Host "=====================================" -ForegroundColor Yellow
+        Write-Host "Service NOT registered — Python missing" -ForegroundColor Yellow
+        Write-Host "See $LogFile for recovery steps." -ForegroundColor Yellow
+        Write-Host "=====================================" -ForegroundColor Yellow
+        Write-Host ""
+        exit 0
     }
     Write-Log "Found Python: $VenvPython"
 
