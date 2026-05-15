@@ -475,7 +475,12 @@ class GenericDeployment:
         if not backup_path:
             return "No backup available; failed file left in place."
         try:
-            os.rename(backup_path, path)
+            # ``os.replace`` rather than ``os.rename``: target file
+            # always exists in the rollback path (we just wrote
+            # corrupted content there), and Windows ``os.rename``
+            # refuses to overwrite an existing destination (WinError
+            # 183).  Same fix as the primary _write_atomic path.
+            os.replace(backup_path, path)
             self.logger.warning(
                 "Rolled back %s from backup %s after failed deployment",
                 path,
