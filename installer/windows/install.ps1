@@ -285,9 +285,21 @@ try {
     Write-Host ""
 }
 
-# Exit with appropriate code
-if ($InstallSuccess) {
-    exit 0
-} else {
-    exit 1
+# NEVER exit non-zero — the WiX CustomAction uses ``Return="check"``,
+# which rolls back the entire MSI on any non-zero return.  That cascades
+# into ``Installation Verification: Completed`` / ``##[error] Failed`` on
+# winget-pkgs validation (PR #375773 burn, 2026-05-17) because the MSI
+# rolls back, no ARP entry is written, and the verifier sees nothing.
+# Any failure inside this script (venv create, pip install, config
+# write, etc.) leaves the MSI partially set up but landed; operator
+# can re-run the MSI after fixing whatever broke (typically: install
+# Python 3.9+ and re-run for MajorUpgrade to re-fire the CAs).
+if (-not $InstallSuccess) {
+    Write-Host ""
+    Write-Host "=====================================" -ForegroundColor Yellow
+    Write-Host "Install step had errors — MSI install will still complete." -ForegroundColor Yellow
+    Write-Host "See $LogFile for the failure and recovery steps." -ForegroundColor Yellow
+    Write-Host "=====================================" -ForegroundColor Yellow
+    Write-Host ""
 }
+exit 0

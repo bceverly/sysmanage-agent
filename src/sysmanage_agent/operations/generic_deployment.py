@@ -421,7 +421,19 @@ class GenericDeployment:
                 if not os.access(shim_cwd, os.R_OK | os.X_OK):
                     raise OSError("cwd not accessible")
             except OSError:
-                shim_cwd = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
+                # B108 false positive: ``/tmp`` here is a fallback CWD
+                # for the subprocess, not a temp-file target.  We don't
+                # create, read, or write any file at this path — we
+                # only use it as ``cwd=`` so the child process has a
+                # valid working directory when the agent's inherited
+                # CWD is unreadable.  Bandit's hardcoded-temp-dir
+                # detector flags any literal ``/tmp`` regardless of
+                # how it's used.
+                shim_cwd = (
+                    os.environ.get("TEMP")
+                    or os.environ.get("TMP")
+                    or "/tmp"  # nosec B108
+                )
             shim_env = os.environ.copy()
             shim_home = shim_env.get("HOME", "")
             if not shim_home or not os.path.isdir(shim_home):
@@ -1081,7 +1093,14 @@ class GenericDeployment:
             if not os.access(safe_cwd, os.R_OK | os.X_OK):
                 raise OSError("cwd not accessible")
         except OSError:
-            safe_cwd = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
+            # B108 false positive: ``/tmp`` here is a fallback CWD for
+            # the subprocess (passed via ``cwd=``), not a temp-file
+            # target.  We don't create, read, or write any file at
+            # this path.  See the matching shim in ``_write_via_sudo``
+            # for the full rationale.
+            safe_cwd = (
+                os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"  # nosec B108
+            )
 
         # Build a sanitised env for the child.  Only overwrite HOME if
         # the current value isn't a real directory; preserve everything

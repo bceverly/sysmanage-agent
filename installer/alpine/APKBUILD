@@ -1,6 +1,6 @@
 # Maintainer: SysManage <support@sysmanage.org>
 pkgname=sysmanage-agent
-pkgver=2.3.0.16
+pkgver=2.3.0.17
 pkgrel=0
 pkgdesc="Lightweight system monitoring agent for SysManage"
 url="https://sysmanage.org"

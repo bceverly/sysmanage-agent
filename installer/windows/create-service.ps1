@@ -243,8 +243,30 @@ try {
 
 if ($ServiceCreated) {
     Write-Log "Windows Service creation complete"
-    exit 0
 } else {
-    Write-Log "Windows Service creation FAILED"
-    exit 1
+    # NEVER exit non-zero from this custom action.  The WiX CustomAction
+    # for ``CreateService`` uses ``Return="check"`` (sysmanage-agent.wxs
+    # line 177), which means any non-zero return rolls back the entire
+    # MSI install — files removed, ARP entry never written.  winget-pkgs
+    # validation then reports ``Installation Verification: Completed``
+    # followed by ``##[error] Failed`` (PR #375773, 2026-05-17), because
+    # there's no package to verify.
+    #
+    # Service registration is post-install ergonomics, not an install-
+    # blocking step.  Any failure here (missing venv from install.ps1
+    # soft-fail, NSSM error, permission glitch, transient I/O issue)
+    # should leave the MSI landed and let the operator finish the
+    # service-register step manually.  Logged WARNING is the contract
+    # so operators see what to do.
+    Write-Log "WARNING: Windows Service creation FAILED — MSI install will still complete."
+    Write-Log "WARNING: To register the service manually after installing Python 3.9+:"
+    Write-Log "WARNING:   1. Re-run the MSI (MajorUpgrade detects the install, re-fires CAs)"
+    Write-Log "WARNING:   2. Or run create-service.ps1 directly as administrator"
+    Write-Host ""
+    Write-Host "=====================================" -ForegroundColor Yellow
+    Write-Host "Service NOT registered — see log for recovery steps" -ForegroundColor Yellow
+    Write-Host "  $LogFile" -ForegroundColor Gray
+    Write-Host "=====================================" -ForegroundColor Yellow
+    Write-Host ""
 }
+exit 0
