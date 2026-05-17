@@ -1,0 +1,75 @@
+name: Probe ARP DisplayVersion (one-shot)
+
+# Throwaway workflow used to verify what DisplayVersion the
+# v2.3.0.17 agent MSI registers in Add/Remove Programs after a
+# clean Windows install.  Deletable after a single use — the only
+# reason this exists is to break the "guess and resubmit to
+# winget-pkgs" loop that's been costing PR cycles since 2026-05-15.
+
+on:
+  workflow_dispatch:
+    inputs:
+      msi_url:
+        description: 'MSI URL to install + probe'
+        required: true
+        default: 'https://github.com/bceverly/sysmanage-agent/releases/download/v2.3.0.17/sysmanage-agent-2.3.0.17-windows-x64.msi'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - name: Download MSI
+        shell: pwsh
+        run: |
+          $url = "${{ inputs.msi_url }}"
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile "agent.msi"
+          Get-ChildItem agent.msi | Format-List Name, Length
+
+      - name: Install MSI silently
+        shell: pwsh
+        run: |
+          # /qn = quiet + no UI; /norestart = never reboot; /l*v = verbose log
+          $proc = Start-Process msiexec.exe `
+            -ArgumentList '/i','agent.msi','/qn','/norestart','/l*v','install.log' `
+            -Wait -PassThru
+          Write-Host "msiexec exit code: $($proc.ExitCode)"
+          # Don't fail the job on non-zero — we still want the ARP probe to run.
+          if ($proc.ExitCode -ne 0) {
+            Write-Host "WARNING: msiexec exited $($proc.ExitCode) — continuing to ARP probe anyway."
+          }
+
+      - name: Probe ARP for SysManage Agent entries
+        shell: pwsh
+        run: |
+          Write-Host '=== Add/Remove Programs entries matching "SysManage Agent" ==='
+          $entries = Get-ItemProperty `
+            HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* `
+            HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* `
+            -ErrorAction SilentlyContinue |
+            Where-Object DisplayName -like "*SysManage*"
+          if ($null -eq $entries) {
+            Write-Host "NO ARP ENTRY FOUND — winget verifier wouldn't see the package."
+          } else {
+            $entries | Select DisplayName, DisplayVersion, Publisher, ProductCode, UninstallString | Format-List
+          }
+
+      - name: Tail install log on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          if (Test-Path install.log) {
+            Write-Host '=== Last 200 lines of MSI install log ==='
+            Get-Content install.log -Tail 200
+          }
+
+      - name: Upload MSI install log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi-install-log
+          path: install.log
+          if-no-files-found: ignore
