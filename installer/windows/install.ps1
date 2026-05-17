@@ -3,8 +3,39 @@
 # Sets up Python virtual environment and installs dependencies
 #
 
+# === PROBE-STAGE DEBUG (remove after PR #375773 winget burn resolves) ===
+# Writes a heartbeat line to a fixed path on each major decision
+# point.  Path is outside the MSI install dir so MSI rollback can't
+# wipe it — the next probe-arp.yml run uploads it as an artifact so
+# we can see exactly where the script died on the validator.
+$ProbeStageLog = "C:\Windows\Temp\sysmanage-agent-install-stages.log"
+function Write-Stage([string]$tag, [string]$msg = "") {
+    $line = "[$([DateTime]::Now.ToString('HH:mm:ss.fff'))] [STAGE $tag] $msg"
+    try { $line | Out-File -FilePath $ProbeStageLog -Append -Encoding UTF8 } catch { }
+    Write-Host "[PROBE-STAGE $tag] $msg"
+}
+# Truncate stage log on each fresh run so we only see the latest attempt.
+try { Set-Content -Path $ProbeStageLog -Value '' -Encoding UTF8 } catch { }
+Write-Stage "00" "script entrypoint reached"
+
+# Top-level trap: catch ANY unhandled exception escaping any scope
+# below and exit 0.  Belt-and-suspenders on top of the structured
+# try/catch below — covers the case where an exception escapes
+# ``finally`` (eg Stop-Transcript terminating-error edge case), which
+# otherwise causes PowerShell to exit with code 1 regardless of any
+# ``exit 0`` we put at the end of the script.  When the MSI sees
+# exit 1 it triggers Error 1722 + rollback (see PR #375773 burn,
+# 2026-05-17 — that failure's root cause was exactly this).
+trap {
+    Write-Stage "TRAP" "unhandled exception: $($_.Exception.Message)"
+    Write-Host "WARNING: unhandled exception trapped at top level: $_"
+    Write-Host "Install step had errors but MSI install will still complete."
+    exit 0
+}
+
 # Set error action preference - Continue so we always reach the pause
 $ErrorActionPreference = "Continue"
+Write-Stage "01" "ErrorActionPreference=Continue set"
 
 # Get the installation directory
 $InstallDir = "C:\Program Files\SysManage Agent"
@@ -36,10 +67,13 @@ $InstallSuccess = $false
 Write-Log "=== SysManage Agent Installation ==="
 Write-Log "Installation Directory: $InstallDir"
 Write-Log "Configuration Directory: C:\ProgramData\SysManage"
+Write-Stage "02" "Write-Log/transcript ready, about to enter outer try"
 
 try {
+    Write-Stage "03" "entered outer try block"
     # Change to installation directory
     Set-Location $InstallDir
+    Write-Stage "04" "Set-Location $InstallDir done"
 
     # Extract source files from ZIP
     Write-Log "Extracting source files..."
@@ -47,6 +81,7 @@ try {
     $SrcDir = Join-Path $InstallDir "src"
 
     if (Test-Path $SrcZip) {
+        Write-Stage "05" "src.zip found, expanding"
         if (Test-Path $SrcDir) {
             Remove-Item -Path $SrcDir -Recurse -Force
         }
@@ -55,15 +90,18 @@ try {
         Expand-Archive -Path $SrcZip -DestinationPath $SrcDir -Force
         $ProgressPreference = 'Continue'
         Write-Log "Source files extracted successfully"
+        Write-Stage "06" "src.zip expanded OK"
 
         # Keep ZIP file - it's needed as the KeyPath for Windows Installer component
         # Deleting it would cause Windows Installer to remove all installed files
     } else {
         Write-Log "WARNING: src.zip not found at $SrcZip"
+        Write-Stage "06b" "src.zip not present, skipped"
     }
 
     # Find Python executable
     Write-Log "Searching for Python 3.9+..."
+    Write-Stage "07" "Python search loop entry"
     $PythonExe = $null
     $PythonCommands = @("python", "python3", "py")
 
@@ -87,7 +125,9 @@ try {
         }
     }
 
+    Write-Stage "08" "Python search loop exit; PythonExe=$($PythonExe)"
     if ($PythonExe) {
+        Write-Stage "09" "Python-found branch entered"
         # Create virtual environment
         Write-Log "Creating Python virtual environment..."
         $VenvPath = Join-Path $InstallDir ".venv"
@@ -151,7 +191,9 @@ try {
             }
         }
 
+        Write-Stage "10" "venv create — invoking python -m venv"
         & $PythonExe -m venv $VenvPath 2>&1 | Out-File -FilePath $LogFile -Append
+        Write-Stage "11" "venv create LASTEXITCODE=$LASTEXITCODE"
         if ($LASTEXITCODE -ne 0) {
             Write-Log "ERROR: Failed to create virtual environment (exit code $LASTEXITCODE)"
             throw "Failed to create virtual environment"
@@ -172,7 +214,9 @@ try {
 
         # Use python -m pip for better reliability, redirect ALL output to log
         Write-Log "Running: pip install -r requirements-prod.txt"
+        Write-Stage "12" "pip install starting"
         & $VenvPython -m pip install -r $RequirementsFile --disable-pip-version-check 2>&1 | Tee-Object -FilePath $LogFile -Append
+        Write-Stage "13" "pip install LASTEXITCODE=$LASTEXITCODE"
 
         if ($LASTEXITCODE -eq 0) {
             Write-Log "Dependencies installed successfully"
@@ -183,7 +227,9 @@ try {
             Write-Log "  $TranscriptFile"
             throw "Failed to install dependencies"
         }
+        Write-Stage "14" "Python branch complete"
     } else {
+        Write-Stage "09b" "Python-not-found soft-fail branch"
         # Soft-fail: same rationale as check-python.ps1's matching
         # block.  Without Python on PATH we cannot build the venv
         # or install Python dependencies, but the MSI install
@@ -203,6 +249,7 @@ try {
         Write-Log "WARNING: then re-run the SysManage Agent MSI to finish setup."
     }
 
+    Write-Stage "15" "post-python block, starting config file step"
     # Create configuration file if it doesn't exist
     $ConfigDir = "C:\ProgramData\SysManage"
     $ConfigFile = Join-Path $ConfigDir "sysmanage-agent.yaml"
@@ -229,15 +276,18 @@ try {
         Write-Log "Configuration file already exists: $ConfigFile"
     }
 
+    Write-Stage "16" "config file step done"
     # Create database directory
     $DbDir = "C:\ProgramData\SysManage\db"
     if (-not (Test-Path $DbDir)) {
         Write-Log "Creating database directory..."
         New-Item -ItemType Directory -Path $DbDir -Force | Out-Null
     }
+    Write-Stage "17" "db dir step done"
 
     # Mark installation as successful
     $InstallSuccess = $true
+    Write-Stage "18" "InstallSuccess=true"
 
     Write-Log ""
     Write-Log "=== Installation Complete ==="
@@ -257,6 +307,7 @@ try {
     Write-Log ""
 
 } catch {
+    Write-Stage "19" "outer catch entered: $($_.Exception.Message)"
     Write-Log ""
     Write-Log "=== INSTALLATION FAILED ==="
     Write-Log "Error: $_"
@@ -266,8 +317,12 @@ try {
     Write-Log "  $TranscriptFile"
     Write-Log ""
 } finally {
-    # Stop transcript
-    Stop-Transcript
+    Write-Stage "20" "finally entered, about to Stop-Transcript"
+    # Stop transcript — wrapped so a "no active transcript" terminating
+    # error never escapes finally (would otherwise make the script exit
+    # with code 1 regardless of the explicit ``exit 0`` after this block).
+    try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
+    Write-Stage "21" "Stop-Transcript wrapper done"
 
     # ALWAYS pause so user can see output
     Write-Host ""
@@ -294,6 +349,7 @@ try {
 # write, etc.) leaves the MSI partially set up but landed; operator
 # can re-run the MSI after fixing whatever broke (typically: install
 # Python 3.9+ and re-run for MajorUpgrade to re-fire the CAs).
+Write-Stage "22" "post-finally code reached; InstallSuccess=$InstallSuccess"
 if (-not $InstallSuccess) {
     Write-Host ""
     Write-Host "=====================================" -ForegroundColor Yellow
@@ -302,4 +358,5 @@ if (-not $InstallSuccess) {
     Write-Host "=====================================" -ForegroundColor Yellow
     Write-Host ""
 }
+Write-Stage "23" "about to exit 0"
 exit 0

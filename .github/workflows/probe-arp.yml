@@ -73,3 +73,19 @@ jobs:
           name: msi-install-log
           path: install.log
           if-no-files-found: ignore
+
+      - name: Upload SysManage transcript + stage logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysmanage-script-logs
+          # Glob deliberately picks up:
+          #   * the PROBE-STAGE log at C:\Windows\Temp\sysmanage-agent-install-stages.log
+          #   * any transcript files at C:\ProgramData\SysManage\logs\*
+          # The Temp file survives MSI rollback because it lives outside
+          # the install dir.  Transcripts may or may not — capture both.
+          path: |
+            C:\Windows\Temp\sysmanage-agent-install-stages.log
+            C:\Windows\Temp\sysmanage-agent-create-service-stages.log
+            C:\ProgramData\SysManage\logs\*
+          if-no-files-found: warn

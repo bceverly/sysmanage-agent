@@ -2,6 +2,17 @@
 # Create Windows Service for SysManage Agent using NSSM
 #
 
+# Top-level trap: catch ANY unhandled exception escaping any scope
+# below and exit 0.  Same rationale as install.ps1's top-level trap
+# — covers the case where an exception escapes ``finally`` and would
+# otherwise make PowerShell exit with code 1, triggering MSI Error 1722
+# and rollback (PR #375773 winget-pkgs validation burn, 2026-05-17).
+trap {
+    Write-Host "WARNING: unhandled exception trapped at top level: $_"
+    Write-Host "Service NOT registered but MSI install will still complete."
+    exit 0
+}
+
 $ErrorActionPreference = "Continue"
 
 # Service details
@@ -64,7 +75,7 @@ try {
         Write-Log "  1. Install Python 3.9+ from https://www.python.org/downloads/"
         Write-Log "  2. Re-run the SysManage Agent MSI installer"
         Write-Log ""
-        Stop-Transcript
+        try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
         Write-Host ""
         Write-Host "=====================================" -ForegroundColor Yellow
         Write-Host "Service NOT registered — Python missing" -ForegroundColor Yellow
@@ -223,7 +234,10 @@ try {
     Write-Log "ERROR: Exception during service creation: $_"
     Write-Log "Stack trace: $($_.ScriptStackTrace)"
 } finally {
-    Stop-Transcript
+    # Stop-Transcript wrapped so a "no active transcript" or other
+    # terminating error never escapes finally (would otherwise make
+    # PowerShell exit code 1 → MSI Error 1722 → rollback).
+    try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
 
     Write-Host ""
     Write-Host "=====================================" -ForegroundColor Yellow
