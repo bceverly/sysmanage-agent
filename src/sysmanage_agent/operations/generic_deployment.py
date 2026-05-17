@@ -413,10 +413,25 @@ class GenericDeployment:
                 staged_path,
                 dest_path,
             ]
+            # Same safe-cwd / safe-HOME shim as ``_exec_plan_command``;
+            # see the docstring there for why ``/nonexistent`` HOME on
+            # service-user accounts breaks sudo's PAM session module.
+            try:
+                shim_cwd = os.getcwd()
+                if not os.access(shim_cwd, os.R_OK | os.X_OK):
+                    raise OSError("cwd not accessible")
+            except OSError:
+                shim_cwd = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
+            shim_env = os.environ.copy()
+            shim_home = shim_env.get("HOME", "")
+            if not shim_home or not os.path.isdir(shim_home):
+                shim_env["HOME"] = shim_cwd
             proc = await asyncio.create_subprocess_exec(
                 *argv,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                cwd=shim_cwd,
+                env=shim_env,
             )
             _, stderr_bytes = await proc.communicate()
             if proc.returncode != 0:
@@ -1040,20 +1055,58 @@ class GenericDeployment:
         Phase 11.6: every spawn is wrapped by an in-flight journal write
         + 30 s heartbeat watchdog so an agent restart mid-subprocess can
         clear the server's DISPATCHED row instead of hanging forever.
+
+        Safe-cwd / safe-HOME shim:
+            Debian/Ubuntu give unprivileged system users
+            ``HOME=/nonexistent`` by convention.  When systemd's unit
+            for sysmanage-agent inherits that as its WorkingDirectory,
+            ``os.getcwd()`` raises ``OSError: [Errno 13] Permission
+            denied: '/nonexistent'`` *before* we even reach
+            ``create_subprocess_exec`` — and the outer
+            ``except Exception`` swallows the call as
+            ``"Command 'X' exception: [Errno 13] Permission denied:
+            '/nonexistent'"`` (this was the root cause of the
+            phase-11 offline-mirror auto-apply ``apt-get update``
+            failure on test2404, 2026-05-17).  We also override
+            ``HOME`` for the child process: sudo's PAM ``session``
+            module chdirs into the caller's ``$HOME`` and fails the
+            entire call with EACCES when that dir doesn't exist, so
+            ``sudo apt-get update`` was bouncing under the agent even
+            though it works from an interactive shell on the same VM.
         """
+        # Compute a safe cwd we can actually stat.  /tmp is universally
+        # writable + readable on Unix; %TEMP% is the Windows equivalent.
+        try:
+            safe_cwd = os.getcwd()
+            if not os.access(safe_cwd, os.R_OK | os.X_OK):
+                raise OSError("cwd not accessible")
+        except OSError:
+            safe_cwd = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
+
+        # Build a sanitised env for the child.  Only overwrite HOME if
+        # the current value isn't a real directory; preserve everything
+        # else so plan commands that read PATH / LANG / proxy vars still
+        # behave as configured.
+        safe_env = os.environ.copy()
+        home = safe_env.get("HOME", "")
+        if not home or not os.path.isdir(home):
+            safe_env["HOME"] = safe_cwd
+
         message_id = self._current_plan_message_id
         if message_id:
             inflight_journal.journal_write(
                 message_id=message_id,
                 plan={"argv": list(argv), "description": description},
                 command_argv=list(run_argv),
-                working_dir=os.getcwd(),
+                working_dir=safe_cwd,
             )
 
         proc = await asyncio.create_subprocess_exec(
             *run_argv,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            cwd=safe_cwd,
+            env=safe_env,
         )
         if message_id and proc.pid:
             inflight_journal.journal_set_pid(message_id, proc.pid)

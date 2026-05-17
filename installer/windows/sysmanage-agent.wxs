@@ -23,6 +23,24 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
                   Schedule="afterInstallValidate" />
 
+    <!--
+      Force ARP DisplayVersion to the full 4-segment string.
+
+      Windows Installer's ProductVersion property is defined as
+      ``major.minor.build`` (3 segments).  When WiX is given a 4-segment
+      Version (e.g. ``2.3.0.16``), the MSI engine truncates the value
+      it writes to Add/Remove Programs ``DisplayVersion``, so ARP shows
+      ``2.3.0``.  winget's installation-validation pipeline then
+      compares ARP's ``DisplayVersion`` against the manifest's
+      ``PackageVersion`` (``2.3.0.16``), sees the mismatch, and fails
+      validation with the cryptic ``Installation Verification:
+      Completed`` / ``##[error] Failed`` pair (PR #375717 burn,
+      2026-05-17).  Setting ``ARPDISPLAYVERSION`` explicitly overrides
+      what MSI would derive from ProductVersion so ARP shows the full
+      4-segment string and matches the manifest exactly.
+    -->
+    <Property Id="ARPDISPLAYVERSION" Value="$(var.VERSION)" />
+
     <!-- Embed CAB file in MSI -->
     <MediaTemplate EmbedCab="yes" />
 

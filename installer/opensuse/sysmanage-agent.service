@@ -40,6 +40,10 @@ LimitNPROC=512
 Environment="PYTHONUNBUFFERED=1"
 Environment="SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml"
 Environment="PATH=/opt/sysmanage-agent/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# HOME override — see Ubuntu service file for rationale.
+# (openSUSE doesn't use /nonexistent by default, but pinning HOME
+# here keeps every distro's agent unit identical.)
+Environment="HOME=/opt/sysmanage-agent"
 
 [Install]
 WantedBy=multi-user.target

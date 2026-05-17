@@ -39,6 +39,18 @@ LimitNPROC=512
 Environment="PYTHONUNBUFFERED=1"
 Environment="SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml"
 Environment="PATH=/opt/sysmanage-agent/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# HOME override.  Debian/Ubuntu give the ``sysmanage-agent`` system
+# user ``HOME=/nonexistent`` by convention.  When the agent calls
+# ``sudo -n apt-get ...``, sudo's PAM session module attempts to
+# chdir / read files relative to the caller's HOME and fails with
+# ``[Errno 13] Permission denied: '/nonexistent'`` — observed during
+# the Phase 11 offline-mirror auto-apply on test2404 (2026-05-17),
+# where every ``sudo`` invocation the agent issued bounced before
+# the wrapped command ever ran.  Pointing HOME at the install dir
+# (which the unit's WorkingDirectory already uses) is a system-wide
+# fix that complements the runtime safe-cwd / safe-HOME shim in
+# ``generic_deployment.py::_exec_plan_command``.
+Environment="HOME=/opt/sysmanage-agent"
 
 [Install]
 WantedBy=multi-user.target
