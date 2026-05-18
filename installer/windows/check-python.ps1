@@ -241,7 +241,7 @@ try {
     }
 
 } catch {
-    # Same soft-fail rationale as above — the most common cause of
+    # Same soft-fail rationale as above -- the most common cause of
     # this branch firing is sandboxed/restricted-network environments
     # where the Python download couldn't complete.  Don't abort the
     # MSI install; surface the manual-recovery steps in the log.

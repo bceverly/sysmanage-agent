@@ -4,7 +4,7 @@
 
 # Top-level trap: catch ANY unhandled exception escaping any scope
 # below and exit 0.  Same rationale as install.ps1's top-level trap
-# — covers the case where an exception escapes ``finally`` and would
+# -- covers the case where an exception escapes ``finally`` and would
 # otherwise make PowerShell exit with code 1, triggering MSI Error 1722
 # and rollback (PR #375773 winget-pkgs validation burn, 2026-05-17).
 trap {
@@ -60,7 +60,7 @@ try {
         # winget-pkgs sandboxed validation environment, where
         # check-python.ps1 can't reach python.org to install Python),
         # install.ps1 skipped the venv create.  Without a venv we
-        # can't register the service to point at one — so log the
+        # can't register the service to point at one -- so log the
         # situation and exit 0 cleanly rather than failing the MSI
         # with the misleading 1722/1603 chain.  The operator can
         # install Python and re-run the MSI to register the service
@@ -78,7 +78,7 @@ try {
         try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
         Write-Host ""
         Write-Host "=====================================" -ForegroundColor Yellow
-        Write-Host "Service NOT registered — Python missing" -ForegroundColor Yellow
+        Write-Host "Service NOT registered -- Python missing" -ForegroundColor Yellow
         Write-Host "See $LogFile for recovery steps." -ForegroundColor Yellow
         Write-Host "=====================================" -ForegroundColor Yellow
         Write-Host ""
@@ -236,7 +236,7 @@ try {
 } finally {
     # Stop-Transcript wrapped so a "no active transcript" or other
     # terminating error never escapes finally (would otherwise make
-    # PowerShell exit code 1 → MSI Error 1722 → rollback).
+    # PowerShell exit code 1 -> MSI Error 1722 -> rollback).
     try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
 
     Write-Host ""
@@ -261,7 +261,7 @@ if ($ServiceCreated) {
     # NEVER exit non-zero from this custom action.  The WiX CustomAction
     # for ``CreateService`` uses ``Return="check"`` (sysmanage-agent.wxs
     # line 177), which means any non-zero return rolls back the entire
-    # MSI install — files removed, ARP entry never written.  winget-pkgs
+    # MSI install -- files removed, ARP entry never written.  winget-pkgs
     # validation then reports ``Installation Verification: Completed``
     # followed by ``##[error] Failed`` (PR #375773, 2026-05-17), because
     # there's no package to verify.
@@ -272,13 +272,13 @@ if ($ServiceCreated) {
     # should leave the MSI landed and let the operator finish the
     # service-register step manually.  Logged WARNING is the contract
     # so operators see what to do.
-    Write-Log "WARNING: Windows Service creation FAILED — MSI install will still complete."
+    Write-Log "WARNING: Windows Service creation FAILED -- MSI install will still complete."
     Write-Log "WARNING: To register the service manually after installing Python 3.9+:"
     Write-Log "WARNING:   1. Re-run the MSI (MajorUpgrade detects the install, re-fires CAs)"
     Write-Log "WARNING:   2. Or run create-service.ps1 directly as administrator"
     Write-Host ""
     Write-Host "=====================================" -ForegroundColor Yellow
-    Write-Host "Service NOT registered — see log for recovery steps" -ForegroundColor Yellow
+    Write-Host "Service NOT registered -- see log for recovery steps" -ForegroundColor Yellow
     Write-Host "  $LogFile" -ForegroundColor Gray
     Write-Host "=====================================" -ForegroundColor Yellow
     Write-Host ""

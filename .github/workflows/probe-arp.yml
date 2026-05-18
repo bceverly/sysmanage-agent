@@ -12,7 +12,7 @@ on:
       msi_url:
         description: 'MSI URL to install + probe'
         required: true
-        default: 'https://github.com/bceverly/sysmanage-agent/releases/download/v2.3.0.17/sysmanage-agent-2.3.0.17-windows-x64.msi'
+        default: 'https://github.com/bceverly/sysmanage-agent/releases/download/v2.3.0.18/sysmanage-agent-2.3.0.18-windows-x64.msi'
 
 permissions:
   contents: read

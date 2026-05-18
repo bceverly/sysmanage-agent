@@ -6,26 +6,41 @@
 # === PROBE-STAGE DEBUG (remove after PR #375773 winget burn resolves) ===
 # Writes a heartbeat line to a fixed path on each major decision
 # point.  Path is outside the MSI install dir so MSI rollback can't
-# wipe it — the next probe-arp.yml run uploads it as an artifact so
+# wipe it -- the next probe-arp.yml run uploads it as an artifact so
 # we can see exactly where the script died on the validator.
-$ProbeStageLog = "C:\Windows\Temp\sysmanage-agent-install-stages.log"
+$ProbeStageLog = "C:\ProgramData\SysManage-Probe\install-stages.log"
 function Write-Stage([string]$tag, [string]$msg = "") {
     $line = "[$([DateTime]::Now.ToString('HH:mm:ss.fff'))] [STAGE $tag] $msg"
     try { $line | Out-File -FilePath $ProbeStageLog -Append -Encoding UTF8 } catch { }
     Write-Host "[PROBE-STAGE $tag] $msg"
 }
+# Create the probe dir with Everyone:R ACL so the GitHub Actions runner
+# user can read what SYSTEM (the MSI CA's user) writes.  Without this,
+# the artifact upload silently skips a SYSTEM-only-readable file.
+try {
+    $probeDir = Split-Path $ProbeStageLog -Parent
+    if (-not (Test-Path $probeDir)) {
+        New-Item -ItemType Directory -Path $probeDir -Force | Out-Null
+    }
+    $acl = Get-Acl $probeDir
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "Everyone","ReadAndExecute","ContainerInherit,ObjectInherit","None","Allow"
+    )
+    $acl.AddAccessRule($rule)
+    Set-Acl -Path $probeDir -AclObject $acl
+} catch { }
 # Truncate stage log on each fresh run so we only see the latest attempt.
 try { Set-Content -Path $ProbeStageLog -Value '' -Encoding UTF8 } catch { }
 Write-Stage "00" "script entrypoint reached"
 
 # Top-level trap: catch ANY unhandled exception escaping any scope
 # below and exit 0.  Belt-and-suspenders on top of the structured
-# try/catch below — covers the case where an exception escapes
+# try/catch below -- covers the case where an exception escapes
 # ``finally`` (eg Stop-Transcript terminating-error edge case), which
 # otherwise causes PowerShell to exit with code 1 regardless of any
 # ``exit 0`` we put at the end of the script.  When the MSI sees
 # exit 1 it triggers Error 1722 + rollback (see PR #375773 burn,
-# 2026-05-17 — that failure's root cause was exactly this).
+# 2026-05-17 -- that failure's root cause was exactly this).
 trap {
     Write-Stage "TRAP" "unhandled exception: $($_.Exception.Message)"
     Write-Host "WARNING: unhandled exception trapped at top level: $_"
@@ -191,7 +206,7 @@ try {
             }
         }
 
-        Write-Stage "10" "venv create — invoking python -m venv"
+        Write-Stage "10" "venv create -- invoking python -m venv"
         & $PythonExe -m venv $VenvPath 2>&1 | Out-File -FilePath $LogFile -Append
         Write-Stage "11" "venv create LASTEXITCODE=$LASTEXITCODE"
         if ($LASTEXITCODE -ne 0) {
@@ -318,7 +333,7 @@ try {
     Write-Log ""
 } finally {
     Write-Stage "20" "finally entered, about to Stop-Transcript"
-    # Stop transcript — wrapped so a "no active transcript" terminating
+    # Stop transcript -- wrapped so a "no active transcript" terminating
     # error never escapes finally (would otherwise make the script exit
     # with code 1 regardless of the explicit ``exit 0`` after this block).
     try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
@@ -340,7 +355,7 @@ try {
     Write-Host ""
 }
 
-# NEVER exit non-zero — the WiX CustomAction uses ``Return="check"``,
+# NEVER exit non-zero -- the WiX CustomAction uses ``Return="check"``,
 # which rolls back the entire MSI on any non-zero return.  That cascades
 # into ``Installation Verification: Completed`` / ``##[error] Failed`` on
 # winget-pkgs validation (PR #375773 burn, 2026-05-17) because the MSI
@@ -353,7 +368,7 @@ Write-Stage "22" "post-finally code reached; InstallSuccess=$InstallSuccess"
 if (-not $InstallSuccess) {
     Write-Host ""
     Write-Host "=====================================" -ForegroundColor Yellow
-    Write-Host "Install step had errors — MSI install will still complete." -ForegroundColor Yellow
+    Write-Host "Install step had errors -- MSI install will still complete." -ForegroundColor Yellow
     Write-Host "See $LogFile for the failure and recovery steps." -ForegroundColor Yellow
     Write-Host "=====================================" -ForegroundColor Yellow
     Write-Host ""
