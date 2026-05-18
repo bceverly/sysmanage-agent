@@ -46,13 +46,18 @@ jobs:
         shell: pwsh
         run: |
           Write-Host '=== Add/Remove Programs entries matching "SysManage Agent" ==='
-          $entries = Get-ItemProperty `
-            HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* `
-            HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* `
-            -ErrorAction SilentlyContinue |
+          # NB: Get-ItemProperty's positional parameters are
+          # (-Path, -Name) — passing two paths positionally treats the
+          # second as a property-name filter, returning zero results.
+          # Pass the paths via an explicit array to -Path instead.
+          $paths = @(
+            'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+            'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+          )
+          $entries = Get-ItemProperty -Path $paths -ErrorAction SilentlyContinue |
             Where-Object DisplayName -like "*SysManage*"
           if ($null -eq $entries) {
-            Write-Host "NO ARP ENTRY FOUND — winget verifier wouldn't see the package."
+            Write-Host "NO ARP ENTRY FOUND -- winget verifier wouldn't see the package."
           } else {
             $entries | Select DisplayName, DisplayVersion, Publisher, ProductCode, UninstallString | Format-List
           }
