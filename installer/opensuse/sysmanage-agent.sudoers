@@ -1,4 +1,4 @@
-# SysManage Agent Sudoers Configuration for CentOS/RHEL/Fedora/Rocky/AlmaLinux
+# SysManage Agent Sudoers Configuration for openSUSE Leap / Tumbleweed / SLES
 # This file grants the sysmanage-agent user necessary privileges for system management
 # File location: /etc/sudoers.d/sysmanage-agent
 # Permissions: 0440 (enforced by package installer)
@@ -6,12 +6,23 @@
 # Allow non-interactive sudo
 Defaults:sysmanage-agent !requiretty
 
-# Package Management (DNF/YUM)
+# Package Management (Zypper — the native openSUSE/SLES package manager).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper refresh
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper update *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper dup *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper patch *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper list-updates *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper list-patches *
+
+# Package Management (DNF/YUM) — available as alternatives on Tumbleweed.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf update
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf install *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf remove *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf upgrade *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf check-update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf system-upgrade *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum update
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum install *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum remove *
@@ -20,6 +31,13 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum check-update
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -i *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -U *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -e *
+
+# Firmware updates via fwupd (apply_fwupd_updates).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/fwupdmgr update *
+
+# Snap / Flatpak — supported on openSUSE when installed.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/snap refresh *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/flatpak update -y *
 
 # Repository Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf config-manager *

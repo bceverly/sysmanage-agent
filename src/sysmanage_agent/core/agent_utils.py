@@ -849,15 +849,26 @@ class MessageProcessor:
 
 def is_running_privileged() -> bool:
     """
-    Detect if the agent is running with elevated/privileged access.
+    Detect if the agent has the privileges needed for system management.
 
     For Unix systems, checks:
     1. If running as root (UID 0) - always privileged
     2. If sudoers file grants necessary permissions - privileged
     3. Otherwise - not privileged
 
+    NOTE: ``True`` does NOT mean the process is running as root.  It can
+    also mean the process is running as ``sysmanage-agent`` (uid != 0)
+    with a sudoers fragment that permits passwordless ``apt``/``systemctl``/
+    etc.  Code that shells out to root-only commands MUST still prefix
+    those commands with ``sudo`` (or use a helper such as
+    ``linux_update_applicators._sudo_prefix()``) — do NOT use this flag
+    as a "skip sudo when True" signal.  The flag exists for the server's
+    benefit (the heartbeat reports it so the server knows whether the
+    agent can fulfil privileged operations); it is not a euid check.
+
     Returns:
-        bool: True if running with elevated privileges, False otherwise
+        bool: True if the agent can execute privileged ops via root
+              OR sudoers, False otherwise.
     """
     try:
         if sys.platform == "win32":

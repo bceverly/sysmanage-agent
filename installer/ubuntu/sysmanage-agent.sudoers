@@ -17,6 +17,25 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get install -f
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dpkg -i *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/add-apt-repository *
 
+# Snap package updates (apply_snap_updates).  ``snap refresh <name>``
+# requires root to swap the system-wide snap symlinks.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/snap refresh *
+sysmanage-agent ALL=(ALL) NOPASSWD: /snap/bin/snap refresh *
+
+# Flatpak system-installed app updates (apply_flatpak_updates).  User-
+# scope flatpaks don't need sudo, but system-scope ones do; the agent
+# can't always tell which scope a given bundle_id is in until it tries,
+# so we authorize sudo for both call patterns.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/flatpak update -y *
+
+# Firmware updates via fwupd (apply_fwupd_updates).  Writes to EFI vars
+# / firmware partitions, which require root.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/fwupdmgr update *
+
+# Distribution release upgrade (apply_ubuntu_release_updates).  Rewrites
+# /etc/apt/sources.list and runs apt-get dist-upgrade under the hood.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/do-release-upgrade *
+
 # Repository File Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/apt/sources.list.d/*
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/apt/sources.list.d/*

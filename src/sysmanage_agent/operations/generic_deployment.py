@@ -421,19 +421,13 @@ class GenericDeployment:
                 if not os.access(shim_cwd, os.R_OK | os.X_OK):
                     raise OSError("cwd not accessible")
             except OSError:
-                # B108 false positive: ``/tmp`` here is a fallback CWD
-                # for the subprocess, not a temp-file target.  We don't
-                # create, read, or write any file at this path — we
-                # only use it as ``cwd=`` so the child process has a
-                # valid working directory when the agent's inherited
-                # CWD is unreadable.  Bandit's hardcoded-temp-dir
-                # detector flags any literal ``/tmp`` regardless of
-                # how it's used.
-                shim_cwd = (
-                    os.environ.get("TEMP")
-                    or os.environ.get("TMP")
-                    or "/tmp"  # nosec B108
-                )
+                # ``tempfile.gettempdir()`` resolves ``$TMPDIR`` /
+                # ``$TEMP`` / ``$TMP`` and falls back to the platform
+                # default (``/tmp`` on Unix, ``%TEMP%`` on Windows)
+                # without a hardcoded literal.  We use this only as
+                # ``cwd=`` for the subprocess — no temp file is
+                # created here.
+                shim_cwd = tempfile.gettempdir()
             shim_env = os.environ.copy()
             shim_home = shim_env.get("HOME", "")
             if not shim_home or not os.path.isdir(shim_home):
@@ -1046,71 +1040,56 @@ class GenericDeployment:
             await asyncio.sleep(inflight_journal.HEARTBEAT_INTERVAL_SECONDS)
             inflight_journal.journal_heartbeat(message_id)
 
-    async def _exec_plan_command(
-        self,
-        argv: list,
-        run_argv: list,
-        *,
-        description: str,
-        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
-        ignore_errors: bool,
-        envelope_extras: Optional[Dict[str, Any]] = None,
-    ) -> tuple:
-        """Spawn the subprocess and translate the exit/timeout into a result tuple.
+    @staticmethod
+    def _safe_cwd_and_env() -> tuple:
+        """Compute a (cwd, env) pair safe for a plan subprocess.
 
-        Uses ``asyncio.wait_for`` for the timeout because this codebase still
-        supports Python 3.9/3.10 where ``asyncio.timeout()`` (the structured
-        replacement Sonar S7497 prefers) is not available.  The NOSONAR on
-        the ``timeout`` parameter line above suppresses the rule until the
-        minimum supported Python is bumped to 3.11.
-
-        Phase 11.6: every spawn is wrapped by an in-flight journal write
-        + 30 s heartbeat watchdog so an agent restart mid-subprocess can
-        clear the server's DISPATCHED row instead of hanging forever.
-
-        Safe-cwd / safe-HOME shim:
-            Debian/Ubuntu give unprivileged system users
-            ``HOME=/nonexistent`` by convention.  When systemd's unit
-            for sysmanage-agent inherits that as its WorkingDirectory,
-            ``os.getcwd()`` raises ``OSError: [Errno 13] Permission
-            denied: '/nonexistent'`` *before* we even reach
-            ``create_subprocess_exec`` — and the outer
-            ``except Exception`` swallows the call as
-            ``"Command 'X' exception: [Errno 13] Permission denied:
-            '/nonexistent'"`` (this was the root cause of the
-            phase-11 offline-mirror auto-apply ``apt-get update``
-            failure on test2404, 2026-05-17).  We also override
-            ``HOME`` for the child process: sudo's PAM ``session``
-            module chdirs into the caller's ``$HOME`` and fails the
-            entire call with EACCES when that dir doesn't exist, so
-            ``sudo apt-get update`` was bouncing under the agent even
-            though it works from an interactive shell on the same VM.
+        Debian/Ubuntu give unprivileged system users
+        ``HOME=/nonexistent`` by convention.  When systemd's unit for
+        sysmanage-agent inherits that as its WorkingDirectory,
+        ``os.getcwd()`` raises ``OSError: [Errno 13] Permission denied:
+        '/nonexistent'`` *before* we even reach
+        ``create_subprocess_exec`` (this was the root cause of the
+        phase-11 offline-mirror auto-apply ``apt-get update`` failure
+        on test2404, 2026-05-17).  We also override ``HOME`` for the
+        child: sudo's PAM ``session`` module chdirs into the caller's
+        ``$HOME`` and fails the entire call with EACCES when that dir
+        doesn't exist.
         """
-        # Compute a safe cwd we can actually stat.  /tmp is universally
-        # writable + readable on Unix; %TEMP% is the Windows equivalent.
         try:
             safe_cwd = os.getcwd()
             if not os.access(safe_cwd, os.R_OK | os.X_OK):
                 raise OSError("cwd not accessible")
         except OSError:
-            # B108 false positive: ``/tmp`` here is a fallback CWD for
-            # the subprocess (passed via ``cwd=``), not a temp-file
-            # target.  We don't create, read, or write any file at
-            # this path.  See the matching shim in ``_write_via_sudo``
-            # for the full rationale.
-            safe_cwd = (
-                os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"  # nosec B108
-            )
+            # ``tempfile.gettempdir()`` resolves ``$TMPDIR`` / ``$TEMP`` /
+            # ``$TMP`` and falls back to the platform default without a
+            # hardcoded literal.  See the matching shim in
+            # ``_write_via_sudo`` for the full rationale.
+            safe_cwd = tempfile.gettempdir()
 
-        # Build a sanitised env for the child.  Only overwrite HOME if
-        # the current value isn't a real directory; preserve everything
-        # else so plan commands that read PATH / LANG / proxy vars still
-        # behave as configured.
         safe_env = os.environ.copy()
         home = safe_env.get("HOME", "")
         if not home or not os.path.isdir(home):
             safe_env["HOME"] = safe_cwd
+        return safe_cwd, safe_env
 
+    async def _spawn_and_communicate(
+        self,
+        *,
+        argv: list,
+        run_argv: list,
+        description: str,
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
+        safe_cwd: str,
+        safe_env: dict,
+    ) -> Optional[tuple]:
+        """Spawn ``run_argv`` and return ``(returncode, stdout, stderr)``,
+        or ``None`` on timeout (process already killed + reaped).
+
+        Wraps the spawn in the Phase 11.6 in-flight-journal write + 30 s
+        heartbeat watchdog so an agent restart mid-subprocess can clear
+        the server's DISPATCHED row instead of hanging forever.
+        """
         message_id = self._current_plan_message_id
         if message_id:
             inflight_journal.journal_write(
@@ -1143,17 +1122,7 @@ class GenericDeployment:
             except asyncio.TimeoutError:
                 proc.kill()
                 await proc.wait()
-                return (
-                    {
-                        "argv": argv,
-                        "description": description,
-                        "success": False,
-                        "error": _("timeout"),
-                        **(envelope_extras or {}),
-                    },
-                    f"Command '{description}' timed out after {timeout}s",
-                    not ignore_errors,
-                )
+                return None
         finally:
             if watchdog_task is not None:
                 watchdog_task.cancel()
@@ -1165,7 +1134,56 @@ class GenericDeployment:
                 ):  # pylint: disable=broad-exception-caught
                     pass
 
-        returncode = proc.returncode or 0
+        return proc.returncode or 0, stdout, stderr
+
+    async def _exec_plan_command(
+        self,
+        argv: list,
+        run_argv: list,
+        *,
+        description: str,
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
+        ignore_errors: bool,
+        envelope_extras: Optional[Dict[str, Any]] = None,
+    ) -> tuple:
+        """Spawn the subprocess and translate the exit/timeout into a result tuple.
+
+        Uses ``asyncio.wait_for`` for the timeout because this codebase still
+        supports Python 3.9/3.10 where ``asyncio.timeout()`` (the structured
+        replacement Sonar S7497 prefers) is not available.  The NOSONAR on
+        the ``timeout`` parameter line above suppresses the rule until the
+        minimum supported Python is bumped to 3.11.
+
+        The cwd/HOME sanitisation and the subprocess-with-watchdog dance
+        are factored into ``_safe_cwd_and_env`` and
+        ``_spawn_and_communicate`` to keep this function's cognitive
+        complexity under Sonar's threshold.
+        """
+        safe_cwd, safe_env = self._safe_cwd_and_env()
+        extras = envelope_extras or {}
+
+        outcome = await self._spawn_and_communicate(
+            argv=argv,
+            run_argv=run_argv,
+            description=description,
+            timeout=timeout,
+            safe_cwd=safe_cwd,
+            safe_env=safe_env,
+        )
+        if outcome is None:
+            return (
+                {
+                    "argv": argv,
+                    "description": description,
+                    "success": False,
+                    "error": _("timeout"),
+                    **extras,
+                },
+                f"Command '{description}' timed out after {timeout}s",
+                not ignore_errors,
+            )
+
+        returncode, stdout, stderr = outcome
         cmd_ok = returncode == 0
         # UTF-16LE-aware decode so wsl.exe output (always UTF-16LE on
         # Windows) doesn't come back as garbled null-littered bytes.
@@ -1178,7 +1196,7 @@ class GenericDeployment:
             "stdout": stdout_str[-2000:],
             "stderr": stderr_str[-2000:],
             "success": cmd_ok,
-            **(envelope_extras or {}),
+            **extras,
         }
         if cmd_ok:
             return result, None, False

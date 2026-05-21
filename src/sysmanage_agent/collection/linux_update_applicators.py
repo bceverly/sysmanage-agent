@@ -7,12 +7,39 @@ across different package managers.
 """
 
 import logging
+import os
 import subprocess  # nosec B404
 from typing import Dict, List
 
 from src.i18n import _
 
 logger = logging.getLogger(__name__)
+
+
+def _sudo_prefix() -> List[str]:
+    """Return the privilege-escalation prefix appropriate for the current process.
+
+    The package-manager invocations below need root to take the
+    dpkg/rpm/zypper transaction lock.  Linux deb/rpm installers ship a
+    sudoers fragment (``/etc/sudoers.d/sysmanage-agent``) that grants
+    the ``sysmanage-agent`` system user NOPASSWD entries for the
+    specific package-manager commands; Alpine's OpenRC unit runs the
+    agent as root and ships no sudoers file (so ``sudo`` may not even
+    be installed).
+
+    Returning an empty list when we're already euid 0 keeps the Alpine
+    path working without requiring sudo to be present.  Non-root agents
+    get ``["sudo", "-n"]`` (``-n`` so a misconfigured sudoers fragment
+    fails fast rather than hanging waiting for a TTY password prompt).
+    """
+    try:
+        if os.geteuid() == 0:
+            return []
+    except AttributeError:  # pragma: no cover - non-POSIX path
+        # ``os.geteuid`` doesn't exist on Windows; this module is
+        # Linux-only, so the fallthrough only matters defensively.
+        return []
+    return ["sudo", "-n"]
 
 
 class LinuxUpdateApplicator:
@@ -26,6 +53,7 @@ class LinuxUpdateApplicator:
 
             result = subprocess.run(  # nosec B603, B607
                 [
+                    *_sudo_prefix(),
                     "apt-get",
                     "install",
                     "--only-upgrade",
@@ -75,7 +103,7 @@ class LinuxUpdateApplicator:
         for package in packages:
             try:
                 result = subprocess.run(  # nosec B603, B607
-                    ["snap", "refresh", package["package_name"]],
+                    [*_sudo_prefix(), "snap", "refresh", package["package_name"]],
                     capture_output=True,
                     text=True,
                     timeout=300,
@@ -116,7 +144,7 @@ class LinuxUpdateApplicator:
             try:
                 bundle_id = package.get("bundle_id", package["package_name"])
                 result = subprocess.run(  # nosec B603, B607
-                    ["flatpak", "update", "-y", bundle_id],
+                    [*_sudo_prefix(), "flatpak", "update", "-y", bundle_id],
                     capture_output=True,
                     text=True,
                     timeout=300,
@@ -157,7 +185,7 @@ class LinuxUpdateApplicator:
             package_names = [pkg["package_name"] for pkg in packages]
 
             result = subprocess.run(  # nosec B603, B607
-                ["dnf", "upgrade", "-y", *package_names],
+                [*_sudo_prefix(), "dnf", "upgrade", "-y", *package_names],
                 capture_output=True,
                 text=True,
                 timeout=600,
@@ -219,7 +247,7 @@ class LinuxUpdateApplicator:
                 logger.info("Applying firmware update for device: %s", device_id)
 
                 result = subprocess.run(  # nosec B603, B607
-                    ["fwupdmgr", "update", device_id, "--assume-yes"],
+                    [*_sudo_prefix(), "fwupdmgr", "update", device_id, "--assume-yes"],
                     capture_output=True,
                     text=True,
                     timeout=600,
@@ -282,7 +310,12 @@ class LinuxUpdateApplicator:
                 )
 
                 result = subprocess.run(  # nosec B603, B607
-                    ["do-release-upgrade", "-f", "DistUpgradeViewNonInteractive"],
+                    [
+                        *_sudo_prefix(),
+                        "do-release-upgrade",
+                        "-f",
+                        "DistUpgradeViewNonInteractive",
+                    ],
                     capture_output=True,
                     text=True,
                     timeout=3600,
@@ -319,6 +352,7 @@ class LinuxUpdateApplicator:
 
                 result = subprocess.run(  # nosec B603, B607
                     [
+                        *_sudo_prefix(),
                         "dnf",
                         "system-upgrade",
                         "download",
@@ -334,7 +368,7 @@ class LinuxUpdateApplicator:
                 if result.returncode == 0:
                     # Start the upgrade (requires reboot)
                     subprocess.run(  # nosec B603, B607
-                        ["dnf", "system-upgrade", "reboot"],
+                        [*_sudo_prefix(), "dnf", "system-upgrade", "reboot"],
                         capture_output=True,
                         text=True,
                         timeout=60,
@@ -368,7 +402,7 @@ class LinuxUpdateApplicator:
                 )
 
                 result = subprocess.run(  # nosec B603, B607
-                    ["zypper", "dup", "-y", "--no-recommends"],
+                    [*_sudo_prefix(), "zypper", "dup", "-y", "--no-recommends"],
                     capture_output=True,
                     text=True,
                     timeout=1800,

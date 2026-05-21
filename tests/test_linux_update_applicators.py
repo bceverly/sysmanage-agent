@@ -12,9 +12,32 @@ both outcome buckets per applicator, plus the exception-recovery arm.
 import subprocess
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from src.sysmanage_agent.collection import linux_update_applicators
 from src.sysmanage_agent.collection.linux_update_applicators import (
     LinuxUpdateApplicator,
 )
+
+
+@pytest.fixture(autouse=True)
+def _no_sudo_prefix(request):
+    """Force ``_sudo_prefix()`` to return ``[]`` for every test in this file
+    except those in ``TestSudoPrefix``, which verify the helper itself.
+
+    The applicators add ``["sudo", "-n"]`` when the process isn't running
+    as root, but every assertion below was written against the bare
+    package-manager command.  Patching the helper to no-op keeps those
+    assertions stable regardless of the test runner's EUID.
+    """
+    if request.cls is not None and request.cls.__name__ == "TestSudoPrefix":
+        yield
+        return
+    with patch(
+        "src.sysmanage_agent.collection.linux_update_applicators._sudo_prefix",
+        return_value=[],
+    ):
+        yield
 
 
 def _completed(returncode=0, stdout="", stderr=""):
@@ -372,3 +395,41 @@ class TestApplyOpensuseReleaseUpdates:
                 [_pkg("opensuse")], results
             )
         assert "zypper crashed" in results["errors"][0]
+
+
+# ---------------------------------------------------------------------------
+# _sudo_prefix — privilege-escalation helper
+# ---------------------------------------------------------------------------
+
+
+class TestSudoPrefix:
+    """Verify the applicators add ``sudo -n`` when not running as root, and
+    don't when they are.  Skipping sudo for EUID 0 is what keeps the
+    Alpine path (OpenRC runs the agent as root, no sudo installed) from
+    breaking.
+    """
+
+    # pylint: disable=protected-access
+
+    def test_returns_empty_when_euid_zero(self):
+        with patch.object(linux_update_applicators.os, "geteuid", return_value=0):
+            assert not linux_update_applicators._sudo_prefix()
+
+    def test_returns_sudo_when_non_root(self):
+        with patch.object(linux_update_applicators.os, "geteuid", return_value=1000):
+            assert linux_update_applicators._sudo_prefix() == ["sudo", "-n"]
+
+    def test_apt_invocation_uses_sudo_when_non_root(self):
+        """Regression guard for the test2404 dpkg-lock-permission incident:
+        apply_apt_updates' argv must begin with ``sudo -n`` when EUID != 0."""
+        with patch.object(
+            linux_update_applicators.os, "geteuid", return_value=1000
+        ), patch(
+            "src.sysmanage_agent.collection.linux_update_applicators.subprocess.run",
+            return_value=_completed(0),
+        ) as run:
+            LinuxUpdateApplicator.apply_apt_updates([_pkg("nginx")], {})
+        argv = run.call_args.args[0]
+        assert argv[:2] == ["sudo", "-n"]
+        assert argv[2:6] == ["apt-get", "install", "--only-upgrade", "-y"]
+        assert "nginx" in argv

@@ -25,6 +25,9 @@ from src.i18n import _, set_language
 from src.security.certificate_store import CertificateStore
 from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
+from src.sysmanage_agent.collection.public_ip_fetcher import (
+    public_ip_refresh_service,
+)
 from src.sysmanage_agent.collection.role_detection import RoleDetector
 from src.sysmanage_agent.communication.data_collector import DataCollector
 from src.sysmanage_agent.communication.message_handler import MessageHandler
@@ -106,6 +109,7 @@ class SysManageAgent(
         self.running = False
         self.connection_failures = 0
         self._autostart_task = None
+        self._public_ip_task = None
 
         # Registration state tracking
         self.registration_status = None
@@ -841,6 +845,17 @@ class SysManageAgent(
             await reconcile_inflight_journal(self)
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.logger.error(_("In-flight journal reconciliation failed: %s"), error)
+
+        # Phase 12.7: launch the public-IP refresh service.  Fires an
+        # immediate fetch so the first heartbeat carries the value, then
+        # re-fetches every 24h to catch dynamic-IP rotations.  On airgapped
+        # agents the fetch silently returns None and the heartbeat just
+        # omits public_ip — no penalty.
+        try:
+            self._public_ip_task = asyncio.create_task(public_ip_refresh_service())
+            self.logger.info("Public-IP refresh service started")
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.warning("Failed to start public-IP refresh service: %s", error)
 
         self.logger.info(_("Registering with SysManage server..."))
         if not await self.registration.register_with_retry():

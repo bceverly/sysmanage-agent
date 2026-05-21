@@ -17,6 +17,7 @@ import websockets
 from src.database.models import Priority, QueueDirection
 from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
+from src.sysmanage_agent.collection import public_ip_fetcher
 from src.sysmanage_agent.communication.message_logging_helpers import (
     log_child_host_received,
     log_duplicate_message,
@@ -133,20 +134,27 @@ class MessageHandler:
         """Create heartbeat message."""
         # Include system info in heartbeat to allow server to recreate deleted hosts
         system_info = self.agent.registration.get_system_info()
-        return self.create_message(
-            "heartbeat",
-            {
-                "agent_status": "healthy",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "hostname": system_info["hostname"],
-                "ipv4": system_info["ipv4"],
-                "ipv6": system_info["ipv6"],
-                "is_privileged": is_running_privileged(),
-                "script_execution_enabled": self.agent.config.is_script_execution_enabled(),
-                "enabled_shells": self.agent.config.get_allowed_shells(),
-                "agent_version": get_agent_version(),
-            },
-        )
+        # Phase 12.7: include the cached public IP so the server can
+        # resolve it to (country, subdivision, city, lat/lon) via the
+        # GeoLite2 chain.  ``public_ip_fetcher.get()`` returns the
+        # last value fetched by the background refresh service (or
+        # None on airgapped agents — server-side just skips the geo
+        # update in that case).
+        payload = {
+            "agent_status": "healthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "hostname": system_info["hostname"],
+            "ipv4": system_info["ipv4"],
+            "ipv6": system_info["ipv6"],
+            "is_privileged": is_running_privileged(),
+            "script_execution_enabled": self.agent.config.is_script_execution_enabled(),
+            "enabled_shells": self.agent.config.get_allowed_shells(),
+            "agent_version": get_agent_version(),
+        }
+        public_ip = public_ip_fetcher.get()
+        if public_ip:
+            payload["public_ip"] = public_ip
+        return self.create_message("heartbeat", payload)
 
     async def send_message(self, message: Dict[str, Any]):
         """Send a message to the server using persistent queue."""
