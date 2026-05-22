@@ -109,7 +109,7 @@ class RegistrationManager:
 
             protocol = "https" if use_https else "http"
             fingerprint_url = (
-                f"{protocol}://{hostname}:{port}/certificates/server-fingerprint"
+                f"{protocol}://{hostname}:{port}/api/certificates/server-fingerprint"
             )
 
             ssl_context = None

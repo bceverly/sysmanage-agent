@@ -201,7 +201,7 @@ class ClientRegistration:
         use_https = server_config.get("use_https", False)
         protocol = "https" if use_https else "http"
         base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/host/register"
+        registration_url = f"{base_url}/api/host/register"
 
         # Use minimal registration data
         basic_info = self.get_basic_registration_info()

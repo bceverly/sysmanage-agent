@@ -191,7 +191,7 @@ class AuthenticationHelper:
         use_https = server_config.get("use_https", False)
 
         protocol = "https" if use_https else "http"
-        return f"{protocol}://{hostname}:{port}/agent/auth"
+        return f"{protocol}://{hostname}:{port}/api/agent/auth"
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""

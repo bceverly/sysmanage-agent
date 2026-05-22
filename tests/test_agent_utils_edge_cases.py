@@ -106,7 +106,7 @@ class TestAuthenticationHelperEdgeCases:
         self.mock_agent.config.get_server_config.return_value = {}
 
         url = self.auth_helper.build_auth_url()
-        assert url == "http://localhost:8000/agent/auth"
+        assert url == "http://localhost:8000/api/agent/auth"
 
     def test_build_auth_url_https(self):
         """Test build_auth_url with HTTPS enabled."""
@@ -117,7 +117,7 @@ class TestAuthenticationHelperEdgeCases:
         }
 
         url = self.auth_helper.build_auth_url()
-        assert url == "https://server.example.com:443/agent/auth"
+        assert url == "https://server.example.com:443/api/agent/auth"
 
 
 class TestMessageProcessorEdgeCases:

@@ -164,7 +164,7 @@ class TestAuthenticationHelper:
         """Test building HTTP auth URL."""
         result = self.auth_helper.build_auth_url()
 
-        assert result == "http://test-server:8080/agent/auth"
+        assert result == "http://test-server:8080/api/agent/auth"
 
     def test_build_auth_url_https(self):
         """Test building HTTPS auth URL."""
@@ -176,7 +176,7 @@ class TestAuthenticationHelper:
 
         result = self.auth_helper.build_auth_url()
 
-        assert result == "https://secure-server:8443/agent/auth"
+        assert result == "https://secure-server:8443/api/agent/auth"
 
     def test_build_auth_url_defaults(self):
         """Test building auth URL with default values."""
@@ -184,7 +184,7 @@ class TestAuthenticationHelper:
 
         result = self.auth_helper.build_auth_url()
 
-        assert result == "http://localhost:8000/agent/auth"
+        assert result == "http://localhost:8000/api/agent/auth"
 
     # Note: Comprehensive aiohttp async context manager mocking is complex.
     # The build_auth_url method provides good coverage of the auth logic.

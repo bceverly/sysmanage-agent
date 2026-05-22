@@ -297,9 +297,9 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         protocol = "https" if use_https else "http"
         base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/host/register"
+        registration_url = f"{base_url}/api/host/register"
 
-        assert registration_url == "https://test.example.com:8080/host/register"
+        assert registration_url == "https://test.example.com:8080/api/host/register"
 
         # Test with HTTP configuration
         self.mock_config.get_server_config.return_value = {
@@ -315,9 +315,9 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         protocol = "https" if use_https else "http"
         base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/host/register"
+        registration_url = f"{base_url}/api/host/register"
 
-        assert registration_url == "http://localhost:8000/host/register"
+        assert registration_url == "http://localhost:8000/api/host/register"
 
     def test_config_methods_delegation(self):
         """Test that configuration methods are properly delegated."""
@@ -448,9 +448,9 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         protocol = "https" if use_https else "http"
         base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/host/register"
+        registration_url = f"{base_url}/api/host/register"
 
-        assert registration_url == "https://test.example.com:8080/host/register"
+        assert registration_url == "https://test.example.com:8080/api/host/register"
 
     def test_server_url_construction_http(self):
         """Test server URL construction with HTTP."""
@@ -467,9 +467,9 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
         protocol = "https" if use_https else "http"
         base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/host/register"
+        registration_url = f"{base_url}/api/host/register"
 
-        assert registration_url == "http://localhost:8000/host/register"
+        assert registration_url == "http://localhost:8000/api/host/register"
 
     def test_ssl_context_configuration_logic(self):
         """Test SSL context configuration logic without actual HTTP calls."""
