@@ -9,6 +9,7 @@ both outcome buckets per applicator, plus the exception-recovery arm.
 
 # pylint: disable=missing-class-docstring,missing-function-docstring
 
+import os
 import subprocess
 from unittest.mock import MagicMock, patch
 
@@ -402,6 +403,10 @@ class TestApplyOpensuseReleaseUpdates:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not hasattr(os, "geteuid"),
+    reason="os.geteuid is POSIX-only; _sudo_prefix() is a no-op on Windows",
+)
 class TestSudoPrefix:
     """Verify the applicators add ``sudo -n`` when not running as root, and
     don't when they are.  Skipping sudo for EUID 0 is what keeps the
