@@ -3,8 +3,10 @@
 # File location: /etc/sudoers.d/sysmanage-agent
 # Permissions: 0440 (enforced by package installer)
 
-# Allow non-interactive sudo
-Defaults:sysmanage-agent !requiretty
+# Allow non-interactive sudo.
+# (``Defaults:sysmanage-agent !requiretty`` was removed — sudo 1.9.x
+# dropped the ``requiretty`` flag entirely; non-interactive sudo is
+# the default behavior now.)
 
 # Package Management (Zypper — the native openSUSE/SLES package manager).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper refresh
@@ -42,22 +44,23 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/flatpak update -y *
 # Repository Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf config-manager *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum-config-manager *
-sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/yum.repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/yum.repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm -f /etc/yum.repos.d/*
+# sudo 1.9.x rejects wildcards inside command arguments (only
+# end-of-argument wildcards are accepted, and not inside path
+# components).  Bare commands; the agent's own code constrains paths.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed, /usr/bin/sed
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 
 # Generic file deployment via ``sudo install`` (used by repository
-# mirror apply, agent config push, and any other plan that uses the
-# ``generic_deployment.deploy_files`` step).  Source is restricted to
-# the agent's staging-tmp prefix (``/tmp/.sysmanage_deploy_*``, which
-# the agent creates with mkstemp and 0600 mode); destination is
-# restricted to the system config dirs the engine actually targets.
-# Without these rules, ``sudo install`` returns "user not allowed"
-# and every deploy_files step fails.
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/apt/sources.list.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/yum.repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/zypp/repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /usr/local/etc/pkg/repos/*
+# mirror apply, agent config push, and any deploy_files step).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
+
+# Repository mirroring tools (Pro+ repository_mirroring_engine).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
 
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *

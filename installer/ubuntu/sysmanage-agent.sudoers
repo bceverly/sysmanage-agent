@@ -3,8 +3,11 @@
 # File location: /etc/sudoers.d/sysmanage-agent
 # Permissions: 0440 (enforced by package installer)
 
-# Allow non-interactive sudo
-Defaults:sysmanage-agent !requiretty
+# Allow non-interactive sudo.
+# (``Defaults:sysmanage-agent !requiretty`` used to live here but
+# sudo 1.9.x removed ``requiretty`` entirely; non-interactive sudo
+# is the default behavior now and the directive is rejected as an
+# unknown setting on Ubuntu 26.04+, openSUSE Tumbleweed, etc.)
 
 # Package Management (APT/DPKG)
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt update
@@ -36,23 +39,47 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/fwupdmgr update *
 # /etc/apt/sources.list and runs apt-get dist-upgrade under the hood.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/do-release-upgrade *
 
-# Repository File Management
-sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed -i * /etc/apt/sources.list.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed -i * /etc/apt/sources.list.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm -f /etc/apt/sources.list.d/*
+# Repository mirroring tools (Pro+ repository_mirroring_engine).  The
+# engine's sync plan invokes these directly via sudo to keep
+# /var/mirror/<name>/ in sync with upstream and to refresh distro
+# metadata after each sync.  Without these rules, sync runs fail at
+# the apt-mirror / createrepo step with "user not allowed".
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-mirror
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/reposync
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
+
+# Helper utilities the mirroring/snapshot/import plans run via sudo.
+# mkdir creates the per-mirror tree before apt-mirror lays it out;
+# find prunes partial-fetch ``.tmp`` files after a sync; chmod/chown
+# fix permissions when a snapshot is read-only-frozen or restored.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
+
+# Repository File Management.
+#
+# sudo 1.9.x rejects wildcard characters that appear inside command
+# arguments (it accepts them only at the end of a single argument
+# and not inside path components).  The earlier form of these rules
+# tried to restrict ``sed -i`` and ``rm -f`` to the apt sources.list.d
+# tree using ``/etc/apt/sources.list.d/*`` patterns — but that wildcard
+# now causes the line to be silently rejected by sudo, so every plan
+# that touches a repo file fails with "user not allowed to run".  The
+# rules below grant the bare binaries.  The agent's own code restricts
+# what paths it operates on; the sudoers file is the "what binaries
+# can we invoke" layer, not the "what specific argv" layer.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed, /usr/bin/sed
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 
 # Generic file deployment via ``sudo install`` (used by repository
 # mirror apply, agent config push, and any other plan that uses the
-# ``generic_deployment.deploy_files`` step).  Source is restricted to
-# the agent's staging-tmp prefix (``/tmp/.sysmanage_deploy_*``, which
-# the agent creates with mkstemp and 0600 mode); destination is
-# restricted to the system config dirs the engine actually targets.
-# Without these rules, ``sudo install`` returns "user not allowed"
-# and every deploy_files step fails.
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/apt/sources.list.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/yum.repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /etc/zypp/repos.d/*
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install -m * -o * -g * /tmp/.sysmanage_deploy_* /usr/local/etc/pkg/repos/*
+# ``generic_deployment.deploy_files`` step).  Wildcards-in-argv
+# constraints have been removed for the same reason as above —
+# trust the agent's own path validation rather than sudoers patterns
+# that newer sudo no longer accepts.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *

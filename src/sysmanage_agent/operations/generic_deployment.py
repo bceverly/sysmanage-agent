@@ -201,7 +201,20 @@ class GenericDeployment:
 
         parent_dir = os.path.dirname(path)
         if parent_dir:
-            os.makedirs(parent_dir, mode=0o755, exist_ok=True)
+            try:
+                os.makedirs(parent_dir, mode=0o755, exist_ok=True)
+            except PermissionError:
+                # Agent can't create the parent dir as its unprivileged
+                # user (e.g. /var/mirror/<name> when /var/mirror is
+                # root-owned).  Don't fail here — ``_write_via_sudo``
+                # uses ``install -D`` which creates intermediate
+                # directories as root, so a missing parent is fine
+                # as long as we fall through to that path.
+                self.logger.debug(
+                    "Parent dir %s not creatable by agent user; will "
+                    "rely on sudo install -D to create it",
+                    parent_dir,
+                )
 
         backup_path, backup_err = self._maybe_backup(path, backup_requested)
         if backup_err:
@@ -301,7 +314,13 @@ class GenericDeployment:
             file_descriptor, tmp_path = tempfile.mkstemp(
                 dir=parent_dir, prefix=".sysmanage_deploy_"
             )
-        except PermissionError:
+        except (PermissionError, FileNotFoundError):
+            # PermissionError: parent_dir exists but agent can't write
+            # to it.  FileNotFoundError: parent_dir doesn't exist yet
+            # because deploy_file caught the os.makedirs PermissionError
+            # and skipped creating it.  Both cases hand off to the
+            # privileged path, which uses ``sudo install -D`` to
+            # create the parent + drop the file as root.
             await self._write_via_sudo(
                 content,
                 mode=mode,
@@ -404,6 +423,12 @@ class GenericDeployment:
                 "sudo",
                 "-n",
                 "install",
+                # ``-D`` creates any missing parent directories under
+                # dest_path as root, with mode 0755 by default.
+                # Required when the destination tree (e.g.
+                # /var/mirror/<name>/) doesn't exist yet and the
+                # agent's unprivileged user can't make it itself.
+                "-D",
                 "-m",
                 f"{mode:o}",
                 "-o",

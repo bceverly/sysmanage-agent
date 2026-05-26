@@ -635,6 +635,26 @@ class DataCollector:
         """Handle periodic data collection and sending."""
         self.logger.debug("Data collector started")
 
+        # Wait for the WebSocket handshake to complete before the
+        # first collection — otherwise ``_collect_and_send_periodic_data``
+        # sees ``self.agent.connected == False`` and bails silently,
+        # which is why fresh installs show "OS Updated: never" on the
+        # server even hours after the agent connected.  Poll briefly
+        # (1s interval, 60s ceiling) and then fire the first collect.
+        for _ in range(60):
+            if not self.agent.running:
+                return
+            if self.agent.connected:
+                break
+            await asyncio.sleep(1)
+
+        if self.agent.running and self.agent.connected:
+            try:
+                self.logger.info("Initial periodic data collection (post-connect)")
+                await self._collect_and_send_periodic_data()
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                self.logger.error("Initial data collection error: %s", error)
+
         # Send periodic data updates every 5 minutes
         data_collection_interval = 300  # 5 minutes
 

@@ -686,9 +686,14 @@ class SysManageAgent(
         sender_task = asyncio.create_task(self.message_handler.message_sender())
         receiver_task = asyncio.create_task(self.message_handler.message_receiver())
         update_checker_task = asyncio.create_task(self.update_checker())
-        data_collector_task = asyncio.create_task(
-            self._collect_and_send_periodic_data()
-        )
+        # data_collector() is the LOOP variant — it waits for the
+        # initial sleep (5 min) BEFORE collecting, which gives the
+        # WebSocket handshake time to complete.  Previously this
+        # scheduled the one-shot ``_collect_and_send_periodic_data``
+        # which raced ``self.agent.connected`` and silently bailed,
+        # so OS / hardware / software inventory never landed on the
+        # server (Hosts page stayed at "OS Updated: never").
+        data_collector_task = asyncio.create_task(self.data_collector.data_collector())
         package_collector_task = asyncio.create_task(self.package_collector())
         child_host_heartbeat_task = asyncio.create_task(self.child_host_heartbeat())
 
