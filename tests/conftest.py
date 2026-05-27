@@ -305,6 +305,31 @@ def cleanup_temp_files():
             pass
 
 
+@pytest.fixture(autouse=True)
+def _reset_privilege_cache():
+    """Clear ``is_running_privileged``'s process-lifetime cache between tests.
+
+    The runtime cache is correct for production (privileges can't change
+    without a restart) but it leaks across tests that mock
+    ``os.geteuid`` / ``pwd.getpwuid`` / etc. — once the first test under
+    a given mock landed a value in the cache, every subsequent test
+    sees that value regardless of its own mocks.  Resetting before
+    each test gives each test a fresh slate.
+    """
+    # Late import — top-level imports run before conftest's i18n
+    # passthrough patch installs, and agent_utils transitively imports
+    # ``src.i18n``.  Pulling the reset hook in here keeps the conftest
+    # importable on a cold start; the per-test cost is one attribute
+    # lookup against an already-cached module.
+    from src.sysmanage_agent.core.agent_utils import (  # pylint: disable=import-outside-toplevel
+        _reset_priv_cache_for_tests,
+    )
+
+    _reset_priv_cache_for_tests()
+    yield
+    _reset_priv_cache_for_tests()
+
+
 # Test isolation helpers
 def isolate_database_operations():
     """Context manager to isolate database operations in tests."""

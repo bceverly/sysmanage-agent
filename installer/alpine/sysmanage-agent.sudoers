@@ -1,0 +1,61 @@
+# SysManage Agent Sudoers Configuration for Alpine Linux
+# This file grants the sysmanage-agent user necessary privileges for system management
+# File location: /etc/sudoers.d/sysmanage-agent
+# Permissions: 0440 (enforced by package installer)
+#
+# Alpine ships with sudo as an optional package but most installs use
+# doas; this file is consulted only on hosts where sudo was installed
+# alongside the agent.  The Alpine APKBUILD's post-install script
+# detects which is present.
+
+# Package Management (APK).
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/apk update
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/apk add *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/apk del *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/apk upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/apk fix *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk add *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk del *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk upgrade *
+
+# Repository mirroring tools (Pro+ repository_mirroring_engine).
+# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# plans fail at the live-tree -> .snapshots/<id>/ copy with the
+# "user not allowed to run" error.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/reposync
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
+
+# Helper utilities the mirroring/snapshot/import plans run via sudo.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/mkdir, /usr/bin/mkdir
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/chmod, /usr/bin/chmod
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/chown, /usr/bin/chown
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/sed, /usr/bin/sed
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
+
+# Generic file deployment via ``sudo install`` (used by deploy_files).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
+
+# Service Management (OpenRC).
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * start
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * stop
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * restart
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * status
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-update add *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-update del *
+
+# Firewall Management (iptables / nftables).
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/iptables *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/nft *
+
+# System Power Management.
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/reboot
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff
+
+# Certificate Management.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates

@@ -55,8 +55,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
+# rsync is the snapshot + restore workhorse — without it,
+# ``snapshot`` plans fail at the live-tree -> .snapshots/<id>/ copy
+# with sudo's "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod

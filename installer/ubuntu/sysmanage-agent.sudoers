@@ -52,11 +52,14 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
 # Helper utilities the mirroring/snapshot/import plans run via sudo.
 # mkdir creates the per-mirror tree before apt-mirror lays it out;
 # find prunes partial-fetch ``.tmp`` files after a sync; chmod/chown
-# fix permissions when a snapshot is read-only-frozen or restored.
+# fix permissions when a snapshot is read-only-frozen or restored;
+# rsync copies the live mirror tree into .snapshots/<id>/ (snapshot
+# action) and back out again (restore action).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 
 # Repository File Management.
 #

@@ -847,6 +847,29 @@ class MessageProcessor:
             }
 
 
+# Cache the privilege check.  ``is_running_privileged`` is called from
+# every heartbeat / basic-info / data-collection cycle (see
+# message_handler.create_basic_info_message), and the sudoers path
+# inside the function spawns ``sudo -n systemctl is-active
+# sysmanage-agent`` as a fallback whenever the sudoers file isn't
+# directly readable — which is the default state (mode 0440, root-
+# owned) when the agent runs as the unprivileged ``sysmanage-agent``
+# user.  Without this cache we burn one fork+exec+pam-session per
+# heartbeat (observed: multiple per second on a healthy agent), which
+# floods auth.log + journalctl and steals CPU.  Privilege state
+# genuinely cannot change while the process is running, so caching the
+# first answer for the lifetime of the process is correct.  Use
+# ``_reset_priv_cache_for_tests`` from unit tests that toggle
+# os.geteuid / sudoers state mid-run.
+_PRIVILEGED_CACHE: Optional[bool] = None
+
+
+def _reset_priv_cache_for_tests() -> None:
+    """Test-only hook to clear ``is_running_privileged``'s cached result."""
+    global _PRIVILEGED_CACHE  # pylint: disable=global-statement
+    _PRIVILEGED_CACHE = None
+
+
 def is_running_privileged() -> bool:
     """
     Detect if the agent has the privileges needed for system management.
@@ -866,9 +889,26 @@ def is_running_privileged() -> bool:
     benefit (the heartbeat reports it so the server knows whether the
     agent can fulfil privileged operations); it is not a euid check.
 
+    Result is cached for the lifetime of the process — privileges
+    cannot change without a restart and the sudoers-file probe is too
+    expensive to repeat on every heartbeat.
+
     Returns:
         bool: True if the agent can execute privileged ops via root
               OR sudoers, False otherwise.
+    """
+    global _PRIVILEGED_CACHE  # pylint: disable=global-statement
+    if _PRIVILEGED_CACHE is not None:
+        return _PRIVILEGED_CACHE
+    _PRIVILEGED_CACHE = _compute_running_privileged()
+    return _PRIVILEGED_CACHE
+
+
+def _compute_running_privileged() -> bool:
+    """Uncached worker for ``is_running_privileged``.
+
+    Split out so the cache wrapper above stays a 3-line lookup; this
+    function is exactly the previous body of ``is_running_privileged``.
     """
     try:
         if sys.platform == "win32":

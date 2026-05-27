@@ -1,0 +1,58 @@
+# SysManage Agent Sudoers Configuration for FreeBSD
+# This file grants the sysmanage user necessary privileges for system management
+# File location: /usr/local/etc/sudoers.d/sysmanage-agent
+# Permissions: 0440 (enforced by package installer)
+#
+# The agent runs as the ``sysmanage`` user when ``sysmanage_agent_user``
+# is set in /etc/rc.conf — see installer/freebsd/sysmanage-agent.rc.
+# When the operator runs the agent as root no sudo is needed; this
+# file is only consulted under the non-root deployment.
+
+# Package Management (pkg).
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg update
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg install *
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg delete *
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg upgrade *
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
+
+# Repository mirroring tools (Pro+ repository_mirroring_engine).
+# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# plans fail at the live-tree -> .snapshots/<id>/ copy with the
+# "user not allowed to run" error.
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/createrepo_c
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/trickle
+
+# Helper utilities the mirroring/snapshot/import plans run via sudo.
+sysmanage ALL=(ALL) NOPASSWD: /bin/mkdir
+sysmanage ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage ALL=(ALL) NOPASSWD: /bin/chmod
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/chown
+sysmanage ALL=(ALL) NOPASSWD: /usr/bin/sed
+sysmanage ALL=(ALL) NOPASSWD: /bin/rm
+
+# Generic file deployment via ``sudo install``.
+sysmanage ALL=(ALL) NOPASSWD: /usr/bin/install
+
+# Service Management (rc.d / service).
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * start
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * stop
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * restart
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * status
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * onestart
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * onestop
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/sysrc *
+
+# Firewall Management (pf / ipfw).
+sysmanage ALL=(ALL) NOPASSWD: /sbin/pfctl *
+sysmanage ALL=(ALL) NOPASSWD: /sbin/ipfw *
+
+# System Power Management.
+sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -p *
+sysmanage ALL=(ALL) NOPASSWD: /sbin/reboot
+sysmanage ALL=(ALL) NOPASSWD: /sbin/poweroff
+
+# Certificate Management.
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/certctl rehash

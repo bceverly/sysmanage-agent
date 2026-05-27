@@ -1,0 +1,52 @@
+# SysManage Agent doas Configuration for OpenBSD
+# This file grants the _sysmanage user the privileges the agent needs
+# to manage the system without prompting for a password.
+#
+# Install via the port post-install: copy this file to /etc/doas.d/sysmanage-agent
+# (or append its contents to /etc/doas.conf).  OpenBSD doesn't read
+# /etc/doas.d by default — the operator must include it from
+# /etc/doas.conf with:  permit nopass keepenv _sysmanage as root
+# or paste these lines directly.
+#
+# Format reference: doas(5).  The user is ``_sysmanage`` per the
+# port's PLIST (@newuser _sysmanage:827).  Each line authorizes a
+# specific command argv; doas matches on the exact ``cmd`` and
+# (optionally) the leading ``args`` tokens.
+
+# Package Management (pkg_add / pkg_delete).
+permit nopass _sysmanage as root cmd /usr/sbin/pkg_add
+permit nopass _sysmanage as root cmd /usr/sbin/pkg_delete
+permit nopass _sysmanage as root cmd /usr/sbin/pkg_info
+
+# System update via syspatch.
+permit nopass _sysmanage as root cmd /usr/sbin/syspatch
+permit nopass _sysmanage as root cmd /usr/sbin/sysupgrade
+
+# Repository mirroring tools (Pro+ repository_mirroring_engine).
+# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# plans fail at the live-tree -> .snapshots/<id>/ copy with a
+# "doas: command not permitted" error.
+permit nopass _sysmanage as root cmd /usr/local/bin/rsync
+permit nopass _sysmanage as root cmd /usr/bin/rsync
+
+# Helper utilities the mirroring/snapshot/import plans run via doas.
+permit nopass _sysmanage as root cmd /bin/mkdir
+permit nopass _sysmanage as root cmd /usr/bin/find
+permit nopass _sysmanage as root cmd /bin/chmod
+permit nopass _sysmanage as root cmd /sbin/chown
+permit nopass _sysmanage as root cmd /usr/bin/sed
+permit nopass _sysmanage as root cmd /bin/rm
+
+# Generic file deployment.
+permit nopass _sysmanage as root cmd /usr/bin/install
+
+# Service Management (rcctl).
+permit nopass _sysmanage as root cmd /usr/sbin/rcctl
+
+# Firewall Management (pf).
+permit nopass _sysmanage as root cmd /sbin/pfctl
+
+# System Power Management.
+permit nopass _sysmanage as root cmd /sbin/shutdown
+permit nopass _sysmanage as root cmd /sbin/reboot
+permit nopass _sysmanage as root cmd /sbin/halt
