@@ -9,17 +9,17 @@
 # the default behavior now.)
 
 # Package Management (DNF/YUM)
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf check-update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf system-upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum check-update
+#
+# Bare-binary grant rather than per-subcommand.  sudo matches argv
+# positionally, so a rule like ``/usr/bin/dnf install *`` only matches
+# when ``install`` is the first argument — the moment the engine
+# prepends an option (as the apt-get and zypper setup_install plans
+# already do with ``-o``/``--non-interactive``), the positional rule
+# stops matching and sudo denies.  Granting the bare binary matches
+# the engine's documented assumption and keeps dnf/yum aligned with
+# apt-get/zypper.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -i *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -U *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -e *
@@ -56,6 +56,13 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
+
+# Air-gap repository ingestion (Pro+ airgap_repository_engine).  The
+# repository ingestion orchestrator loop-mounts the transferred ISO
+# read-only, rsyncs the verified payload into the local mirror tree,
+# then unmounts.  Bare-binary grants, same philosophy as rsync above.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mount, /bin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/umount, /bin/umount
 
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *

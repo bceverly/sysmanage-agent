@@ -10,13 +10,22 @@
 # unknown setting on Ubuntu 26.04+, openSUSE Tumbleweed, etc.)
 
 # Package Management (APT/DPKG)
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get install -f
+#
+# Grant the bare apt / apt-get binaries rather than scoping to
+# individual subcommands.  sudo matches command arguments
+# POSITIONALLY: a rule like ``/usr/bin/apt-get update`` only matches
+# when ``update`` is the FIRST argument.  But the
+# repository_mirroring_engine's setup_install plan runs
+# ``apt-get -o Dpkg::Options::=--force-confold update`` (and the same
+# ``-o`` prefix on ``install``) — the option sits before the
+# subcommand, so the positional rule never matches and sudo denies
+# with "user not allowed to run" / "I'm afraid I can't do that".
+# Bare-binary grant matches what the engine's docstring already
+# assumes ("authorizes specific binaries: apt-get, dnf, zypper, pkg")
+# and the same philosophy used for sed/rm/install below — the agent's
+# own code decides the argv; sudoers is the "which binary" gate.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dpkg -i *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/add-apt-repository *
 
@@ -60,6 +69,15 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
+
+# Air-gap repository ingestion (Pro+ airgap_repository_engine).  The
+# repository ingestion orchestrator dispatches a loop-mount of the
+# transferred ISO read-only, rsyncs the verified payload into the
+# local mirror tree, then unmounts.  Bare-binary grants (same
+# philosophy as the mirroring tools above): the orchestrator's own
+# code decides the argv; sudoers gates which binary may run as root.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mount, /bin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/umount, /bin/umount
 
 # Repository File Management.
 #

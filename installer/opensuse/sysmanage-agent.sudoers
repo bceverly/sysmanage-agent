@@ -9,27 +9,20 @@
 # the default behavior now.)
 
 # Package Management (Zypper — the native openSUSE/SLES package manager).
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper refresh
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper update *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper dup *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper patch *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper list-updates *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper list-patches *
+#
+# Bare-binary grant: the repository_mirroring_engine's setup_install
+# plan runs ``zypper --non-interactive install …`` — the
+# ``--non-interactive`` option sits BEFORE the ``install`` subcommand,
+# so a positional rule like ``/usr/bin/zypper install *`` (which
+# requires ``install`` to be the first argument) never matches and
+# sudo denies the command.  Granting the bare binary matches what the
+# engine's docstring assumes and what apt-get/dnf/pkg do here too.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/zypper *
 
 # Package Management (DNF/YUM) — available as alternatives on Tumbleweed.
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf check-update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf system-upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum check-update
+# Bare-binary grant for the same positional-matching reason.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dnf *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/yum *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -i *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -U *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -e *
@@ -65,6 +58,13 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
+
+# Air-gap repository ingestion (Pro+ airgap_repository_engine).  The
+# repository ingestion orchestrator loop-mounts the transferred ISO
+# read-only, rsyncs the verified payload into the local mirror tree,
+# then unmounts.  Bare-binary grants, same philosophy as rsync above.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mount, /bin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/umount, /bin/umount
 
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/systemctl start *
