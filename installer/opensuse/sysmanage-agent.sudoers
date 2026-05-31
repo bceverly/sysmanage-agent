@@ -53,6 +53,15 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 # with sudo's "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
+# Memory containment for mirror syncs (repository_mirroring_engine).
+# zypper download / createrepo can parse the full upstream index into
+# RAM and OOM a small mirror host, taking the sysmanage-agent down with
+# it.  The engine wraps the sync in a transient systemd scope
+# (``systemd-run --scope -p MemoryMax=…``) so a runaway sync is
+# contained to a cgroup OOM instead of a machine-wide one.  Bare-binary
+# grant; the engine decides the argv and skips the wrap at run time
+# when this grant is absent, so older hosts simply run uncapped.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemd-run, /bin/systemd-run
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find

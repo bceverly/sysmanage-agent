@@ -533,7 +533,18 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          RPM_FILE=$(ls sysmanage-agent-*.rpm | head -1)
+          # All three openSUSE matrix targets (leap/tumbleweed/sles) build
+          # from the same spec and produce an identical
+          # sysmanage-agent-<ver>-0.x86_64.rpm.  Rename to embed the target
+          # so they (a) don't collide as release assets — only one would
+          # survive — and (b) are distinguishable from the CentOS RPM to the
+          # air-gap bundle builder.  Without this, the Fedora/RHEL builders
+          # can grab the openSUSE RPM, whose python311-pip dependency is
+          # unsatisfiable there, and the openSUSE builder cannot find an
+          # *opensuse-leap*-named RPM at all.
+          ORIG=$(ls sysmanage-agent-*.rpm | head -1)
+          RPM_FILE="${ORIG%.x86_64.rpm}.${TARGET}.x86_64.rpm"
+          if [ "$ORIG" != "$RPM_FILE" ]; then mv "$ORIG" "$RPM_FILE"; fi
           echo "rpm_file=$RPM_FILE" >> $GITHUB_OUTPUT
           echo "target=$TARGET" >> $GITHUB_OUTPUT
 

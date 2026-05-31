@@ -58,6 +58,18 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/reposync
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
 
+# Memory containment for mirror syncs (repository_mirroring_engine).
+# apt-mirror (especially the ``apt-mirror2`` Python rewrite that ships
+# as ``apt-mirror`` on recent distros) parses the full upstream package
+# index into RAM per worker and can OOM a small mirror host, taking the
+# sysmanage-agent down with it.  The engine wraps the sync in a
+# transient systemd scope (``systemd-run --scope -p MemoryMax=…``) so a
+# runaway sync is contained to a cgroup OOM instead of a machine-wide
+# one.  Bare-binary grant (same philosophy as the tools above); the
+# engine decides the argv and skips the wrap at run time when this
+# grant is absent, so older hosts simply run uncapped.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemd-run, /bin/systemd-run
+
 # Helper utilities the mirroring/snapshot/import plans run via sudo.
 # mkdir creates the per-mirror tree before apt-mirror lays it out;
 # find prunes partial-fetch ``.tmp`` files after a sync; chmod/chown
