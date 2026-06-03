@@ -68,6 +68,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 # BUILDING_ISO with a sudo password prompt.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum
+# Optical-disc burn (build_iso_plan with a burn_device set): ``sudo
+# growisofs`` writes the ISO, ``sudo eject`` ejects the disc.  The
+# CVE/compliance snapshot fetch uses ``sudo curl``.  Bare-binary grants.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/growisofs
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/eject
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/curl
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod

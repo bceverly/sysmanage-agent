@@ -29,6 +29,15 @@ sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
 # ``coreutils`` pkg, which installs /usr/local/bin/sha256sum.
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/xorriso
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/sha256sum
+# Optical-disc burn (build_iso_plan with a burn_device): ``sudo
+# growisofs`` (dvd+rw-tools pkg) writes the ISO, ``sudo eject``
+# (sysutils/eject pkg) ejects it.  CVE/compliance snapshot fetch uses
+# ``sudo curl``.  Repository ingestion loop-mounts media read-only.
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/growisofs
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/eject
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/curl
+sysmanage ALL=(ALL) NOPASSWD: /sbin/mount
+sysmanage ALL=(ALL) NOPASSWD: /sbin/umount
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/createrepo_c
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/trickle
 

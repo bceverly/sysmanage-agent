@@ -32,6 +32,17 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 # apk packages; busybox sha256sum path included as a fallback.)
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum, /bin/sha256sum
+# Optical-disc burn (build_iso_plan with a burn_device set): ``sudo
+# growisofs`` writes the ISO, ``sudo eject`` ejects the disc.  The
+# CVE/compliance snapshot fetch uses ``sudo curl``.  Bare-binary grants.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/growisofs
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/eject
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/curl
+# Air-gap repository ingestion (Pro+ airgap_repository_engine): loop-mount
+# the transferred ISO / optical media read-only then unmount.  busybox +
+# util-linux paths.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/mount, /usr/bin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/umount, /usr/bin/umount
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/reposync
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle

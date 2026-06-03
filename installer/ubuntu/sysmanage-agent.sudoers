@@ -92,6 +92,14 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 # BUILDING_ISO.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum
+# Optical-disc burn (build_iso_plan with a burn_device set): write the
+# ISO with ``sudo growisofs`` and eject the disc with ``sudo eject``.
+# The CVE/compliance snapshot fetch uses ``sudo curl``.  Bare-binary
+# grants (any args) -- without these the burn stage / snapshot fetch
+# hits a sudo password prompt and the run fails.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/growisofs
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/eject
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/curl
 
 # Air-gap repository ingestion (Pro+ airgap_repository_engine).  The
 # repository ingestion orchestrator dispatches a loop-mount of the
