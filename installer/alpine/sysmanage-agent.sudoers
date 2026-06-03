@@ -24,6 +24,14 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk upgrade *
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
+
+# Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
+# bundles the staging tree with ``sudo xorriso`` and checksums it with
+# ``sudo sha256sum``.  Bare-binary grants; without them the run dies at
+# BUILDING_ISO with a sudo password prompt.  (Needs the xorriso + coreutils
+# apk packages; busybox sha256sum path included as a fallback.)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum, /bin/sha256sum
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/reposync
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
@@ -40,10 +48,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Service Management (OpenRC).
-sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * start
-sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * stop
-sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * restart
-sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service * status
+# Bare-binary grant: ``rc-service <name> start`` places a wildcard in the
+# MIDDLE of the arguments, which sudo 1.9.x rejects -- and a single rejected
+# line invalidates the WHOLE sudoers file (agent then loses every grant).
+# Grant the bare binary; the agent's own code constrains service + action.
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-service
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-update add *
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/rc-update del *
 

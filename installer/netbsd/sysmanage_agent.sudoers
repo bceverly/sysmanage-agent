@@ -21,6 +21,15 @@ sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg_delete *
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/rsync
+
+# Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
+# bundles the staging tree with ``sudo xorriso`` and checksums it with
+# ``sudo sha256sum``.  Bare-binary grants; without them the run dies at
+# BUILDING_ISO with a sudo password prompt.  NOTE: NetBSD base has no
+# ``sha256sum``; a NetBSD collector needs the pkgsrc ``coreutils`` pkg,
+# which installs /usr/pkg/bin/sha256sum (and xorriso via the xorriso pkg).
+sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/xorriso
+sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/sha256sum
 sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/createrepo_c
 sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/trickle
 

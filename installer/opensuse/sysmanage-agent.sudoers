@@ -63,6 +63,13 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/trickle
 # when this grant is absent, so older hosts simply run uncapped.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemd-run, /bin/systemd-run
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
+
+# Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
+# bundles the staging tree with ``sudo xorriso`` and checksums it with
+# ``sudo sha256sum``.  Bare-binary grants; without them the run dies at
+# BUILDING_ISO with a sudo password prompt.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /bin/mkdir
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod

@@ -20,6 +20,15 @@ sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
+
+# Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
+# bundles the staging tree with ``sudo xorriso`` and checksums it with
+# ``sudo sha256sum``.  Bare-binary grants; without them the run dies at
+# BUILDING_ISO with a sudo password prompt.  NOTE: FreeBSD base has no
+# ``sha256sum`` (it ships ``sha256``); a FreeBSD collector needs the
+# ``coreutils`` pkg, which installs /usr/local/bin/sha256sum.
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/xorriso
+sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/sha256sum
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/createrepo_c
 sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/trickle
 
@@ -35,12 +44,11 @@ sysmanage ALL=(ALL) NOPASSWD: /bin/rm
 sysmanage ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Service Management (rc.d / service).
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * start
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * stop
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * restart
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * status
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * onestart
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service * onestop
+# Bare-binary grant: ``service <name> start`` places a wildcard in the MIDDLE
+# of the arguments, which sudo 1.9.x rejects -- and a single rejected line
+# invalidates the WHOLE sudoers file (agent then loses every grant).  Grant
+# the bare binary; the agent's own code constrains service + action.
+sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service
 sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/sysrc *
 
 # Firewall Management (pf / ipfw).

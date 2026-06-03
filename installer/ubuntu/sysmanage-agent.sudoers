@@ -82,6 +82,17 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chmod, /bin/chmod
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync
 
+# Air-gap collector ISO build (Pro+ airgap_collector_engine).  The
+# build_iso_plan step bundles the staging tree into an ISO with
+# ``sudo xorriso`` and checksums it with ``sudo sha256sum`` (the
+# manifest write uses ``sudo install``, already granted below).  Bare-
+# binary grants, same philosophy as the mirroring tools: the engine
+# decides the argv; sudoers only gates which binary may run as root.
+# Without these the build hits the password prompt and the run dies at
+# BUILDING_ISO.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/xorriso
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sha256sum
+
 # Air-gap repository ingestion (Pro+ airgap_repository_engine).  The
 # repository ingestion orchestrator dispatches a loop-mount of the
 # transferred ISO read-only, rsyncs the verified payload into the
