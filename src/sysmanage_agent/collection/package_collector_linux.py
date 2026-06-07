@@ -4,9 +4,10 @@ Linux package collection module for SysManage Agent.
 This module handles the collection of available packages from Linux package managers.
 """
 
+import io
 import logging
 import subprocess  # nosec B404
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
@@ -60,30 +61,42 @@ class LinuxPackageCollector(BasePackageCollector):
         return total_collected
 
     def _collect_apt_packages(self) -> int:
-        """Collect packages from APT (Ubuntu/Debian)."""
+        """Collect packages from APT (Ubuntu/Debian).
+
+        ``apt-cache dumpavail`` is the ENTIRE available-package universe with
+        descriptions — hundreds of MB of text on Ubuntu (universe/multiverse).
+        We STREAM it: parse the subprocess output stanza-by-stanza and store in
+        batches, so peak memory stays flat instead of holding the whole dump +
+        parsed list + ORM objects at once (which OOM-killed the agent on small
+        hosts).
+        """
         try:
             # Update package lists first
             subprocess.run(  # nosec B603, B607
                 ["apt", "update"], capture_output=True, timeout=300, check=False
             )
 
-            # Get all available packages with descriptions using apt-cache dumpavail
-            result = subprocess.run(  # nosec B603, B607
+            with subprocess.Popen(  # nosec B603, B607
                 ["apt-cache", "dumpavail"],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
                 text=True,
-                timeout=600,  # Increased timeout for larger output
-                check=False,
-            )
+            ) as proc:
+                # The generator pulls lines lazily from proc.stdout, so the
+                # dump is never fully buffered in the agent.
+                count = self._store_packages_streaming(
+                    "apt", self._iter_apt_dumpavail(proc.stdout)
+                )
+                try:
+                    proc.wait(timeout=600)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                if proc.returncode not in (0, None):
+                    logger.error(_("Failed to get APT package information"))
 
-            if result.returncode != 0:
-                logger.error(_("Failed to get APT package information"))
-                return 0
+            return count
 
-            packages = self._parse_apt_dumpavail_output(result.stdout)
-            return self._store_packages("apt", packages)
-
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-exception-caught
             logger.error(_("Error collecting APT packages: %s"), error)
             return 0
 
@@ -251,90 +264,73 @@ class LinuxPackageCollector(BasePackageCollector):
 
         return packages
 
-    def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
-        """Parse apt-cache dumpavail output to extract package info with descriptions."""
-        packages = []
-        current_package = {}
+    def _iter_apt_dumpavail(
+        self, line_stream: Iterable[str]
+    ) -> Iterator[Dict[str, str]]:
+        """Yield ``{name, version, description}`` dicts from an apt-cache
+        dumpavail line stream, one stanza at a time.
 
-        # Split output into lines and process each package block
-        lines = output.splitlines()
-        i = 0
-
-        while i < len(lines):
-            line = lines[i].strip()
-
-            # Skip empty lines at the start
-            if not line:
-                i += 1
-                continue
-
-            # Start of a new package block - process all its fields
-            current_package, i = self._parse_apt_package_block(lines, i)
-
-            # Add package if we have minimum required fields
-            if current_package.get("name") and current_package.get("version"):
-                if "description" not in current_package:
-                    current_package["description"] = ""
-                packages.append(current_package)
-
-            # Skip empty line after package block
-            i += 1
-
-        return packages
-
-    def _parse_apt_package_block(self, lines: List[str], start: int) -> tuple:
-        """Parse a single package block from apt-cache dumpavail output.
-
-        Reads fields (Package, Version, Description, etc.) from consecutive
-        non-empty lines starting at the given index.
-
-        Returns a tuple of (package_dict, next_line_index).
+        Accepts any iterable of lines — a live ``Popen.stdout`` or an in-memory
+        ``io.StringIO`` — so the multi-hundred-MB dump never has to live in
+        memory all at once.  Description fields span continuation lines that
+        start with a space; they're joined with spaces (matching the previous
+        list-based parser).
         """
-        current_package = {}
-        i = start
+        name: Optional[str] = None
+        version: Optional[str] = None
+        description_parts: List[str] = []
+        in_description = False
 
-        while i < len(lines) and lines[i].strip():
-            line = lines[i].strip()
+        def _record() -> Optional[Dict[str, str]]:
+            if name and version:
+                return {
+                    "name": name,
+                    "version": version,
+                    "description": " ".join(description_parts).strip(),
+                }
+            return None
 
+        for raw in line_stream:
+            line = raw.rstrip("\n")
+            if not line.strip():
+                # Stanza boundary — emit the package we just finished.
+                record = _record()
+                if record is not None:
+                    yield record
+                name = version = None
+                description_parts = []
+                in_description = False
+                continue
+            if in_description and line[:1] in (" ", "\t"):
+                cont = line.strip()
+                if cont:
+                    description_parts.append(cont)
+                continue
             if ":" in line:
                 field, value = line.split(":", 1)
                 field = field.strip().lower()
                 value = value.strip()
-
+                in_description = False
                 if field == "package":
-                    current_package["name"] = value
+                    name = value
                 elif field == "version":
-                    current_package["version"] = value
+                    version = value
                 elif field == "description":
-                    description, i = self._parse_apt_description(lines, i, value)
-                    current_package["description"] = description
-                    continue  # i already incremented in _parse_apt_description
+                    description_parts = [value]
+                    in_description = True
 
-            i += 1
+        # Final stanza (dumpavail may not end with a blank line).
+        record = _record()
+        if record is not None:
+            yield record
 
-        return current_package, i
+    def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse a full apt-cache dumpavail string into package dicts.
 
-    def _parse_apt_description(
-        self, lines: List[str], current_index: int, first_line: str
-    ) -> tuple:
-        """Parse a multi-line description field from apt-cache dumpavail output.
-
-        Description fields can span multiple continuation lines that start
-        with a space character.
-
-        Returns a tuple of (description_string, next_line_index).
+        Thin wrapper over the streaming :meth:`_iter_apt_dumpavail` — kept for
+        callers/tests that already hold the whole output as a string.
         """
-        description_lines = [first_line]
-        i = current_index + 1
-
-        # Collect continuation lines (start with space)
-        while i < len(lines) and lines[i].startswith(" "):
-            desc_line = lines[i][1:]  # Remove leading space
-            if desc_line.strip():  # Skip empty description lines
-                description_lines.append(desc_line.strip())
-            i += 1
-
-        return " ".join(description_lines).strip(), i
+        return list(self._iter_apt_dumpavail(io.StringIO(output)))
 
     def _parse_yum_output(self, output: str) -> List[Dict[str, str]]:
         """Parse YUM/DNF package list output."""

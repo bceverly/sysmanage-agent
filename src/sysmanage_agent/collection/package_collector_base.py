@@ -272,6 +272,62 @@ class BasePackageCollector:
 
         return stored_count
 
+    def _store_packages_streaming(
+        self, manager: str, package_iter, batch_size: int = 1000
+    ) -> int:
+        """Replace stored packages for ``manager`` from an ITERATOR of dicts.
+
+        Same end result as :meth:`_store_packages` (delete-then-insert in one
+        transaction) but never materialises the whole package list: it flushes
+        + expunges every ``batch_size`` rows so peak memory stays flat
+        regardless of catalog size.  ``apt-cache dumpavail`` is the entire
+        Ubuntu universe with descriptions — building the full list (and all the
+        ORM objects) at once OOM-killed the agent on small hosts.
+        """
+        collection_date = datetime.now(timezone.utc)
+        stored_count = 0
+        pending = 0
+
+        try:
+            with self.db_manager.get_session() as session:
+                # Delete existing packages for this manager (bulk, no load).
+                session.query(AvailablePackage).filter(
+                    AvailablePackage.package_manager == manager
+                ).delete()
+
+                for package in package_iter:
+                    name = package.get("name")
+                    version = package.get("version")
+                    if not name or not version:
+                        continue
+                    session.add(
+                        AvailablePackage(
+                            package_manager=manager,
+                            package_name=name,
+                            package_version=version,
+                            package_description=package.get("description", ""),
+                            collection_date=collection_date,
+                            created_at=collection_date,
+                        )
+                    )
+                    stored_count += 1
+                    pending += 1
+                    if pending >= batch_size:
+                        # Push this batch to the DB and drop the Python objects
+                        # so the session's identity map doesn't grow unbounded.
+                        # Still one transaction — committed at the end.
+                        session.flush()
+                        session.expunge_all()
+                        pending = 0
+
+                session.commit()
+
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            logger.error(_("Failed to store packages for %s: %s"), manager, error)
+            return 0
+
+        return stored_count
+
     def get_packages_for_manager(self, manager: str) -> List[AvailablePackage]:
         """Get all packages for a specific package manager."""
         try:

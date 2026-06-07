@@ -5,7 +5,7 @@ Tests the PackageCollector class and related methods.
 
 # pylint: disable=wrong-import-position,protected-access,import-outside-toplevel,too-many-lines
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -95,9 +95,10 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
 
             assert result is False  # Should return False for unsupported OS
 
+    @patch("subprocess.Popen")
     @patch("subprocess.run")
-    def test_collect_apt_packages_success(self, mock_run, mock_db_manager):
-        """Test successful APT package collection."""
+    def test_collect_apt_packages_success(self, mock_run, mock_popen, mock_db_manager):
+        """Test successful APT package collection (streamed dumpavail)."""
         # Create a Linux-specific collector directly
         # pylint: disable=import-outside-toplevel
         from src.sysmanage_agent.collection.package_collector_linux import (
@@ -106,36 +107,32 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
 
         _, mock_session = mock_db_manager
 
+        # ``apt update`` still goes through subprocess.run; the dumpavail dump
+        # is now STREAMED through subprocess.Popen.
+        mock_run.return_value = Mock(returncode=0, stdout="")
+
+        dumpavail = (
+            "Package: nginx\n"
+            "Version: 1.18.0-6ubuntu14.4\n"
+            "Description: small, powerful, scalable web/proxy server\n"
+            "\n"
+            "Package: python3\n"
+            "Version: 3.10.6-1~22.04\n"
+            "Description: interactive high-level object-oriented language\n"
+            "\n"
+        )
+        proc = MagicMock()
+        proc.__enter__.return_value = proc
+        proc.__exit__.return_value = False
+        proc.stdout = iter(dumpavail.splitlines(keepends=True))
+        proc.returncode = 0
+        mock_popen.return_value = proc
+
         with patch(
             "src.sysmanage_agent.collection.package_collector_base.get_database_manager",
             return_value=mock_db_manager[0],
         ):
             linux_collector = LinuxPackageCollector()
-
-            # Mock subprocess calls for apt update and apt list
-            def mock_subprocess_run(cmd, **_kwargs):
-                _ = _kwargs
-                result = Mock()
-                if cmd == ["apt", "update"]:
-                    result.returncode = 0
-                    result.stdout = ""
-                elif cmd == ["apt-cache", "dumpavail"]:
-                    result.returncode = 0
-                    result.stdout = """Package: nginx
-Version: 1.18.0-6ubuntu14.4
-Description: small, powerful, scalable web/proxy server
-
-Package: python3
-Version: 3.10.6-1~22.04
-Description: interactive high-level object-oriented language
-
-"""
-                else:
-                    result.returncode = 1
-                    result.stdout = ""
-                return result
-
-            mock_run.side_effect = mock_subprocess_run
 
             count = (
                 linux_collector._collect_apt_packages()
@@ -148,20 +145,27 @@ Description: interactive high-level object-oriented language
             assert mock_session.add.called
             assert mock_session.commit.called
 
+    @patch("subprocess.Popen")
     @patch("subprocess.run")
-    def test_collect_apt_packages_command_failure(self, mock_run):
-        """Test APT package collection when command fails."""
+    def test_collect_apt_packages_command_failure(self, mock_run, mock_popen):
+        """Test APT package collection when dumpavail fails (no output)."""
         # Create a Linux-specific collector directly
         from src.sysmanage_agent.collection.package_collector_linux import (
             LinuxPackageCollector,
         )
 
+        mock_run.return_value = Mock(returncode=0, stdout="")
+        proc = MagicMock()
+        proc.__enter__.return_value = proc
+        proc.__exit__.return_value = False
+        proc.stdout = iter([])  # dumpavail produced nothing
+        proc.returncode = 1  # ...and exited non-zero
+        mock_popen.return_value = proc
+
         with patch(
             "src.sysmanage_agent.collection.package_collector_base.get_database_manager"
         ):
             linux_collector = LinuxPackageCollector()
-            mock_run.return_value.returncode = 1
-            mock_run.return_value.stderr = "Package list error"
 
             count = (
                 linux_collector._collect_apt_packages()
@@ -1170,10 +1174,18 @@ Description: Apache HTTP Server
     def test_package_collection_error_handling(self, linux_package_collector):
         """Test error handling in various package collection scenarios."""
 
-        # Test command failure
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 1
-            mock_run.return_value.stderr = "Command failed"
+        # Test command failure — dumpavail is streamed via Popen now, so mock
+        # that too (otherwise the real apt-cache would run).
+        with patch("subprocess.run") as mock_run, patch(
+            "subprocess.Popen"
+        ) as mock_popen:
+            mock_run.return_value = Mock(returncode=1, stderr="Command failed")
+            proc = MagicMock()
+            proc.__enter__.return_value = proc
+            proc.__exit__.return_value = False
+            proc.stdout = iter([])
+            proc.returncode = 1
+            mock_popen.return_value = proc
 
             count = (
                 linux_package_collector._collect_apt_packages()
