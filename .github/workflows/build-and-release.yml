@@ -3563,6 +3563,11 @@ jobs:
           # the GH runner can't read the files back (``cp: ...
           # Permission denied``) because container-side ``builder``
           # has a UID outside the host's known users.
+          # Docker Hub pulls flake on CI runners (registry timeout →
+          # "docker run" exits 125 before the container starts).  Pull the
+          # image explicitly first, with retries, so a transient blip doesn't
+          # fail the whole AUR job.
+          n=0; until [ "$n" -ge 5 ]; do docker pull archlinux:base-devel && break; n=$((n+1)); echo "docker pull attempt $n failed; retrying in 15s..."; sleep 15; done
           docker run --rm -v "$STAGE:/work" -w /work archlinux:base-devel \
             bash -c '
               set -e
