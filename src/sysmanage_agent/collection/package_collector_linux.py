@@ -7,7 +7,7 @@ This module handles the collection of available packages from Linux package mana
 import io
 import logging
 import subprocess  # nosec B404
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
@@ -276,53 +276,60 @@ class LinuxPackageCollector(BasePackageCollector):
         start with a space; they're joined with spaces (matching the previous
         list-based parser).
         """
-        name: Optional[str] = None
-        version: Optional[str] = None
-        description_parts: List[str] = []
-        in_description = False
-
-        def _record() -> Optional[Dict[str, str]]:
-            if name and version:
-                return {
-                    "name": name,
-                    "version": version,
-                    "description": " ".join(description_parts).strip(),
-                }
-            return None
+        stanza: Dict[str, Any] = {}
 
         for raw in line_stream:
             line = raw.rstrip("\n")
             if not line.strip():
                 # Stanza boundary — emit the package we just finished.
-                record = _record()
+                record = self._dumpavail_record(stanza)
                 if record is not None:
                     yield record
-                name = version = None
-                description_parts = []
-                in_description = False
+                stanza = {}
                 continue
-            if in_description and line[:1] in (" ", "\t"):
-                cont = line.strip()
-                if cont:
-                    description_parts.append(cont)
-                continue
-            if ":" in line:
-                field, value = line.split(":", 1)
-                field = field.strip().lower()
-                value = value.strip()
-                in_description = False
-                if field == "package":
-                    name = value
-                elif field == "version":
-                    version = value
-                elif field == "description":
-                    description_parts = [value]
-                    in_description = True
+            self._dumpavail_consume_line(line, stanza)
 
         # Final stanza (dumpavail may not end with a blank line).
-        record = _record()
+        record = self._dumpavail_record(stanza)
         if record is not None:
             yield record
+
+    @staticmethod
+    def _dumpavail_record(stanza: Dict[str, Any]) -> Optional[Dict[str, str]]:
+        """Build a package dict from an accumulated stanza, or None if it lacks
+        a name/version (a partial or non-package stanza)."""
+        name = stanza.get("name")
+        version = stanza.get("version")
+        if name and version:
+            return {
+                "name": name,
+                "version": version,
+                "description": " ".join(stanza.get("description_parts", [])).strip(),
+            }
+        return None
+
+    @staticmethod
+    def _dumpavail_consume_line(line: str, stanza: Dict[str, Any]) -> None:
+        """Fold one non-blank dumpavail line into the in-progress stanza dict
+        (a continuation of a Description, or a ``Field: value`` line)."""
+        if stanza.get("in_description") and line[:1] in (" ", "\t"):
+            cont = line.strip()
+            if cont:
+                stanza.setdefault("description_parts", []).append(cont)
+            return
+        if ":" not in line:
+            return
+        field, value = line.split(":", 1)
+        field = field.strip().lower()
+        value = value.strip()
+        stanza["in_description"] = False
+        if field == "package":
+            stanza["name"] = value
+        elif field == "version":
+            stanza["version"] = value
+        elif field == "description":
+            stanza["description_parts"] = [value]
+            stanza["in_description"] = True
 
     def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
         """Parse a full apt-cache dumpavail string into package dicts.
