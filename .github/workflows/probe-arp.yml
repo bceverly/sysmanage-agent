@@ -23,8 +23,14 @@ jobs:
     steps:
       - name: Download MSI
         shell: pwsh
+        # Pass the dispatch input via the environment, NOT ``${{ }}`` inline in
+        # the script: interpolating it into the run block lets a crafted msi_url
+        # break out of the string literal and inject PowerShell.  As an env var
+        # it arrives as opaque data and is never re-parsed as code.
+        env:
+          MSI_URL: ${{ inputs.msi_url }}
         run: |
-          $url = "${{ inputs.msi_url }}"
+          $url = $env:MSI_URL
           Write-Host "Downloading $url"
           Invoke-WebRequest -Uri $url -OutFile "agent.msi"
           Get-ChildItem agent.msi | Format-List Name, Length
