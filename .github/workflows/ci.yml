@@ -216,11 +216,17 @@ jobs:
       run: |
         python -c "import main; print('Imports successful')"
 
-  # Job 4: SonarCloud Analysis (runs after all other jobs succeed)
+  # Job 4: SonarCloud Analysis (runs after the other jobs, but NOT gated on
+  # their success).  ``needs`` only orders it last; ``if: !cancelled()`` lets
+  # the scan run even when an upstream job failed, so a single flaky test no
+  # longer leaves sonarcloud.io (and the README badges) stale.  The job is
+  # self-contained — it regenerates its own coverage — so it doesn't depend on
+  # the other jobs' artifacts.
   sonarcloud:
     name: SonarCloud Code Analysis
     runs-on: ubuntu-latest
-    needs: [test-backend, lint-backend, build]  # Only runs when all jobs succeed
+    needs: [test-backend, lint-backend, build]
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
 
