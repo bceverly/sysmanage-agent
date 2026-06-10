@@ -1,0 +1,84 @@
+name: SonarCloud
+
+# Runs the SonarCloud analysis on every push to ``main`` (and on demand).
+#
+# WHY a dedicated workflow instead of the tag-triggered ci.yml:
+# A tag checkout is detached-HEAD with GITHUB_REF=refs/tags/vX.Y.Z, so the
+# scanner auto-detected the *tag* as the branch and filed each analysis under
+# a throwaway ``refs/tags/vX.Y.Z`` branch — the MAIN branch never got
+# re-analyzed (it sat stale from 2026-05-12 onward, with ~30 junk tag
+# branches piling up in SonarCloud).  Scanning on push to ``main`` (a
+# long-lived branch, GITHUB_REF=refs/heads/main) keeps the main-branch
+# dashboard + README badges current.  ``sonar.branch.name=main`` is forced
+# below for zero ambiguity.  Unlike the old job, this one does NOT silently
+# skip when SONAR_TOKEN is missing — a misconfigured token fails loudly.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        fetch-depth: 0  # full history for accurate SCM blame / new-code detection
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: '3.12'
+
+    - name: Cache pip packages
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-3.12-
+          ${{ runner.os }}-pip-
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest tests/ -v -n auto --dist=loadfile --cov=src --cov=main --cov-report=xml --cov-report=term-missing
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: SonarCloud Scan
+      # SHA-pinned to a verified release; semgrep misreads the 40-char SHA as a
+      # SonarQube API key.  Real auth is SONAR_TOKEN from GitHub Secrets.
+      # nosemgrep: generic.secrets.security.detected-sonarqube-docs-api-key.detected-sonarqube-docs-api-key
+      uses: SonarSource/sonarqube-scan-action@dcc5211de53084482f1c6779dda263459f5274f6 # master-2026-02-22
+      with:
+        args: >
+          -Dsonar.branch.name=main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: SonarCloud summary
+      if: success()
+      run: |
+        echo "================================================"
+        echo "SonarCloud analysis complete (branch: main)"
+        echo "https://sonarcloud.io/project/overview?id=bceverly_sysmanage-agent"
+        echo "================================================"
