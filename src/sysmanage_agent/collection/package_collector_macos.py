@@ -28,7 +28,7 @@ class MacOSPackageCollector(BasePackageCollector):
                 total_collected += count
                 logger.info("Collected %d packages from Homebrew", count)
             except Exception as error:
-                logger.error(_("Failed to collect Homebrew packages: %s"), error)
+                logger.exception(_("Failed to collect Homebrew packages: %s"), error)
 
         return total_collected
 
@@ -84,7 +84,7 @@ class MacOSPackageCollector(BasePackageCollector):
             return total_packages
 
         except Exception as error:
-            logger.error(_("Error collecting Homebrew packages: %s"), error)
+            logger.exception(_("Error collecting Homebrew packages: %s"), error)
             return 0
 
     def _parse_homebrew_list_output(

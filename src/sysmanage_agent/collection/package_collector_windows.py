@@ -61,7 +61,7 @@ class WindowsPackageCollector(BasePackageCollector):
                     total_collected += count
                     logger.info("Collected %d packages from %s", count, manager_name)
                 except Exception as error:
-                    logger.error(
+                    logger.exception(
                         _("Failed to collect packages from %s: %s"), manager_name, error
                     )
 
@@ -86,7 +86,9 @@ class WindowsPackageCollector(BasePackageCollector):
             return 0
 
         except Exception as error:
-            logger.error(_("Error collecting winget packages via REST API: %s"), error)
+            logger.exception(
+                _("Error collecting winget packages via REST API: %s"), error
+            )
             return 0
 
     def _collect_winget_pages(self, api_url: str) -> List[Dict[str, str]]:
@@ -120,7 +122,7 @@ class WindowsPackageCollector(BasePackageCollector):
                 page += 1
 
             except Exception as error:
-                logger.error(
+                logger.exception(
                     _(
                         "Error fetching winget page %d (collected %d packages so far): %s"
                     ),
@@ -192,7 +194,9 @@ class WindowsPackageCollector(BasePackageCollector):
             return 0
 
         except Exception as error:
-            logger.error(_("Error collecting Chocolatey packages via API: %s"), error)
+            logger.exception(
+                _("Error collecting Chocolatey packages via API: %s"), error
+            )
             return 0
 
     def _collect_chocolatey_pages(self, api_url: str) -> List[Dict[str, str]]:

@@ -533,7 +533,7 @@ class HardwareCollectorBSD(HardwareCollectorBase):
             # Empty dict means skip (e.g., loopback)
             return header if header else None
 
-        is_detail_line = original_line.startswith("\t") or original_line.startswith(" ")
+        is_detail_line = original_line.startswith(("\t", " "))
         if current_interface and is_detail_line:
             self._parse_interface_detail_line(line, current_interface)
 

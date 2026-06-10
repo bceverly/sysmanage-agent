@@ -221,7 +221,7 @@ class SysManageAgent(
             return True
 
         except Exception as error:
-            logger.error("Auto-discovery failed: %s", error)
+            logger.exception("Auto-discovery failed: %s", error)
             return False
 
     def setup_logging(self):

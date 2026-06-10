@@ -72,5 +72,5 @@ class PackageCollector:
             return True
 
         except Exception as error:
-            logger.error(_("Failed to collect available packages: %s"), error)
+            logger.exception(_("Failed to collect available packages: %s"), error)
             return False

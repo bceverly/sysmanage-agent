@@ -162,7 +162,7 @@ class SoftwareInventoryCollector:
             }
 
         except Exception as error:
-            logger.error(_("Failed to collect software inventory: %s"), str(error))
+            logger.exception(_("Failed to collect software inventory: %s"), str(error))
             return {
                 "software_packages": [],
                 "collection_timestamp": datetime.now(timezone.utc).isoformat(),

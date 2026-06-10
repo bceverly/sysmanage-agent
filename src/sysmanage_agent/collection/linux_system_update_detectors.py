@@ -84,7 +84,9 @@ class LinuxSystemUpdateDetector:
                             updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Debian system updates: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Debian system updates: %s"), str(error)
+            )
 
         return updates
 
@@ -119,7 +121,9 @@ class LinuxSystemUpdateDetector:
                             updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Red Hat system updates: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Red Hat system updates: %s"), str(error)
+            )
 
         return updates
 
@@ -155,7 +159,7 @@ class LinuxSystemUpdateDetector:
                             updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Arch system updates: %s"), str(error))
+            logger.exception(_("Failed to detect Arch system updates: %s"), str(error))
 
         return updates
 
@@ -191,7 +195,7 @@ class LinuxSystemUpdateDetector:
                             updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect SUSE system updates: %s"), str(error))
+            logger.exception(_("Failed to detect SUSE system updates: %s"), str(error))
 
         return updates
 
@@ -247,7 +251,9 @@ class LinuxSystemUpdateDetector:
                     updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Ubuntu release upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Ubuntu release upgrades: %s"), str(error)
+            )
 
         return updates
 
@@ -281,7 +287,9 @@ class LinuxSystemUpdateDetector:
                     updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Fedora version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Fedora version upgrades: %s"), str(error)
+            )
 
         return updates
 
@@ -316,7 +324,7 @@ class LinuxSystemUpdateDetector:
                     updates.append(update)
 
         except Exception as error:
-            logger.error(
+            logger.exception(
                 _("Failed to detect openSUSE version upgrades: %s"), str(error)
             )
 

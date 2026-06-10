@@ -153,7 +153,7 @@ class ServerDiscoveryClient:
             sock.close()
 
         except Exception as error:
-            logger.error(_("Error during broadcast discovery: %s"), error)
+            logger.exception(_("Error during broadcast discovery: %s"), error)
 
         return servers
 
@@ -215,7 +215,7 @@ class ServerDiscoveryClient:
             sock.close()
 
         except Exception as error:
-            logger.error(_("Error listening for announcements: %s"), error)
+            logger.exception(_("Error listening for announcements: %s"), error)
 
         return servers
 
@@ -255,11 +255,7 @@ class ServerDiscoveryClient:
                 score += 5
 
             # Local network bonus
-            if (
-                server_ip.startswith("192.168.")
-                or server_ip.startswith("10.")
-                or server_ip.startswith("172.")
-            ):
+            if server_ip.startswith(("192.168.", "10.", "172.")):
                 score += 3
 
             scored_servers.append((score, server))

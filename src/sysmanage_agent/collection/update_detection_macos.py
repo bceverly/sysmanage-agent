@@ -209,7 +209,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                     logger.warning(_("Failed to parse Homebrew JSON output"))
 
         except Exception as error:
-            logger.error(_("Failed to detect Homebrew updates: %s"), str(error))
+            logger.exception(_("Failed to detect Homebrew updates: %s"), str(error))
 
     def _parse_softwareupdate_details(self, details_line):
         """Parse the details line from softwareupdate output.
@@ -337,7 +337,9 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                 self.available_updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Mac App Store updates: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Mac App Store updates: %s"), str(error)
+            )
 
     def _detect_macports_updates(self):
         """Detect updates from MacPorts."""
@@ -367,7 +369,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                         self.available_updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect MacPorts updates: %s"), str(error))
+            logger.exception(_("Failed to detect MacPorts updates: %s"), str(error))
 
     # Windows Update Detection Implementations
 
@@ -592,7 +594,9 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                     self._add_macos_upgrade_update(available_version)
 
         except Exception as error:
-            logger.error(_("Failed to detect macOS version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect macOS version upgrades: %s"), str(error)
+            )
 
     def _install_with_brew(self, package_name: str) -> Dict[str, Any]:
         """Install package using Homebrew package manager."""

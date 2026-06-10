@@ -68,7 +68,9 @@ class DatabaseManager:
         try:
             Path(directory).mkdir(parents=True, exist_ok=True)
         except OSError as error:
-            logger.error("Failed to create database directory %s: %s", directory, error)
+            logger.exception(
+                "Failed to create database directory %s: %s", directory, error
+            )
             raise
 
     def create_tables(self):
@@ -77,7 +79,7 @@ class DatabaseManager:
             Base.metadata.create_all(bind=self.engine)
             logger.info("Database tables created successfully")
         except Exception as error:
-            logger.error("Failed to create database tables: %s", error)
+            logger.exception("Failed to create database tables: %s", error)
             raise
 
     def get_session(self):

@@ -48,7 +48,7 @@ def create_installation_tracking_record(  # pylint: disable=invalid-name
         return True, None
     except Exception as error:
         error_msg = _("Failed to store installation request: %s") % str(error)
-        logger.error(error_msg)
+        logger.exception(error_msg)
         return False, error_msg
 
 
@@ -78,7 +78,7 @@ def update_installation_tracking_record(  # pylint: disable=invalid-name
                 tracking_record.success = "true" if overall_success else "false"
                 session.commit()
     except Exception as error:
-        logger.error(_("Failed to update installation tracking record: %s"), error)
+        logger.exception(_("Failed to update installation tracking record: %s"), error)
 
 
 def validate_packages(
@@ -238,7 +238,7 @@ def install_non_apt_packages(
 
         except Exception as error:
             error_msg = str(error)
-            logger_instance.error(
+            logger_instance.exception(
                 _("Failed to install package %s: %s"), package_name, error
             )
             failed_packages.append({"package_name": package_name, "error": error_msg})

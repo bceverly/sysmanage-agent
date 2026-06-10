@@ -229,7 +229,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
                 self._detect_suse_system_updates()
 
         except Exception as error:
-            logger.error(_("Failed to detect Linux system updates: %s"), str(error))
+            logger.exception(_("Failed to detect Linux system updates: %s"), str(error))
 
     def _detect_linux_version_upgrades(self):
         """Detect available Linux distribution version upgrades."""
@@ -254,7 +254,9 @@ class LinuxUpdateDetector(UpdateDetectorBase):
                 self._detect_opensuse_version_upgrades()
 
         except Exception as error:
-            logger.error(_("Failed to detect Linux version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Linux version upgrades: %s"), str(error)
+            )
 
     # ========== Update Application (Delegated) ==========
 
@@ -319,7 +321,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             try:
                 self._process_linux_manager_updates(pkg_manager, pkg_list, results)
             except Exception as error:  # pragma: no cover - defensive
-                logger.error(
+                logger.exception(
                     _("Failed to apply %s updates: %s"), pkg_manager, str(error)
                 )
                 for pkg in pkg_list:

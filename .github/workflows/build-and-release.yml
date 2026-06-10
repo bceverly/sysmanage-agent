@@ -3248,6 +3248,11 @@ jobs:
           # the render step, falling back to a placeholder sha256;
           # komac itself would also fail to fetch.
           MSI_URL="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-x64.msi"
+          # ARM64 MSI is built by the same matrix job and uploaded alongside x64.
+          # BOTH must be submitted to winget — the package shipped arm64 in
+          # earlier versions, so dropping it trips winget's
+          # Manifest-Metadata-Consistency check ("Missing arm64 installer").
+          MSI_URL_ARM64="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-arm64.msi"
 
           # Download the MSI to compute its sha256 — what winget-pkgs requires.
           curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
@@ -3273,12 +3278,14 @@ jobs:
           cat /tmp/winget-out/sysmanage.sysmanage-agent.yaml
 
           echo "msi_url=$MSI_URL" >> $GITHUB_OUTPUT
+          echo "msi_url_arm64=$MSI_URL_ARM64" >> $GITHUB_OUTPUT
 
       - name: Publish via komac
         env:
           MODE: ${{ github.event.inputs.winget_mode || 'publish' }}
           VERSION: ${{ steps.version.outputs.version }}
           MSI_URL: ${{ steps.render.outputs.msi_url }}
+          MSI_URL_ARM64: ${{ steps.render.outputs.msi_url_arm64 }}
           WINGET_PKGS_TOKEN: ${{ secrets.WINGET_PKGS_TOKEN }}
         run: |
           set -euo pipefail
@@ -3341,7 +3348,7 @@ jobs:
           set +e
           "$KOMAC" update \
             --version "${VERSION}" \
-            --urls "${MSI_URL}" \
+            --urls "${MSI_URL}" "${MSI_URL_ARM64}" \
             --submit \
             --token "${WINGET_PKGS_TOKEN}" \
             sysmanage.sysmanage-agent 2>&1 | tee /tmp/komac.out
@@ -3369,7 +3376,7 @@ jobs:
               echo "::warning::  tar xzf /tmp/komac.tar.gz -C /tmp"
               echo "::warning::  /tmp/komac-*/komac new \\"
               echo "::warning::    --version ${VERSION} \\"
-              echo "::warning::    --urls ${MSI_URL} \\"
+              echo "::warning::    --urls ${MSI_URL} ${MSI_URL_ARM64} \\"
               echo "::warning::    --submit \\"
               echo "::warning::    --token <your WINGET_PKGS_TOKEN> \\"
               echo "::warning::    sysmanage.sysmanage-agent"

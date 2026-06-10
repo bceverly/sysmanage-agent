@@ -128,7 +128,7 @@ class UpdateDetector:
             }
 
         except Exception as error:
-            logger.error(_("Failed to detect available updates: %s"), str(error))
+            logger.exception(_("Failed to detect available updates: %s"), str(error))
             return {
                 "available_updates": [],
                 "detection_timestamp": datetime.now(timezone.utc).isoformat(),
@@ -174,7 +174,7 @@ class UpdateDetector:
             }
 
         except Exception as error:
-            logger.error(
+            logger.exception(
                 _("Failed to install package %s: %s"), package_name, str(error)
             )
             return {"success": False, "error": str(error)}

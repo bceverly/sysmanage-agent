@@ -147,7 +147,7 @@ def _update_uninstall_record(
                 tracking_record.success = "true" if overall_success else "false"
                 session.commit()
     except Exception as error:
-        logger.error("Failed to update uninstall tracking record: %s", error)
+        logger.exception("Failed to update uninstall tracking record: %s", error)
 
 
 class PackageOperations:

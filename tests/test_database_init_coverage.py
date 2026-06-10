@@ -65,7 +65,7 @@ class TestDatabaseInitCoverage:
 
             assert result is False
             # Should log timeout error (line 102)
-            mock_logger.error.assert_called_with(
+            mock_logger.exception.assert_called_with(
                 "Alembic %s timed out after 60 seconds", "upgrade"
             )
 
@@ -80,6 +80,6 @@ class TestDatabaseInitCoverage:
 
             assert result is False
             # Should log general error (line 105)
-            args, _ = mock_logger.error.call_args
+            args, _ = mock_logger.exception.call_args
             assert "Failed to run alembic" in args[0]
             assert "upgrade" in args[1]

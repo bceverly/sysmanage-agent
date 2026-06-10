@@ -88,7 +88,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                         self.available_updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect pkg updates: %s"), str(error))
+            logger.exception(_("Failed to detect pkg updates: %s"), str(error))
 
     def _collect_pkgin_update_command(self):
         """Determine the correct pkgin update command based on privilege level.
@@ -194,7 +194,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
             logger.debug("=== PKGIN DETECTION END ===")
         except Exception as error:
-            logger.error(_("Failed to detect pkgin updates: %s"), str(error))
+            logger.exception(_("Failed to detect pkgin updates: %s"), str(error))
 
     # Helper methods
 
@@ -232,7 +232,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply pkg updates: %s"), str(error))
+            logger.exception(_("Failed to apply pkg updates: %s"), str(error))
             for package in packages:
                 results["failed_packages"].append(
                     {
@@ -485,7 +485,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
         except FileNotFoundError:
             logger.debug("syspatch not available on this system")
         except Exception as error:
-            logger.error(_("Failed to detect OpenBSD system updates: %s"), str(error))
+            logger.exception(
+                _("Failed to detect OpenBSD system updates: %s"), str(error)
+            )
 
     def _detect_openbsd_version_upgrades(self):
         """Detect OpenBSD version upgrades by checking openbsd.org."""
@@ -559,7 +561,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 )
 
         except Exception as error:
-            logger.error(_("Failed to detect OpenBSD version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect OpenBSD version upgrades: %s"), str(error)
+            )
 
         logger.info("=== Finished OpenBSD version upgrade detection ===")
 
@@ -608,7 +612,9 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 )
 
         except Exception as error:
-            logger.error(_("Failed to detect FreeBSD version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect FreeBSD version upgrades: %s"), str(error)
+            )
 
     def detect_updates(self):
         """Detect all updates from BSD sources."""
@@ -748,7 +754,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     )
 
         except subprocess.TimeoutExpired:
-            logger.error(_("syspatch command timed out"))
+            logger.exception(_("syspatch command timed out"))
             for package in packages:
                 results["failed_packages"].append(
                     {
@@ -758,7 +764,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
                     }
                 )
         except Exception as error:
-            logger.error(_("Failed to apply syspatch updates: %s"), str(error))
+            logger.exception(_("Failed to apply syspatch updates: %s"), str(error))
             for package in packages:
                 results["failed_packages"].append(
                     {
@@ -955,7 +961,7 @@ class BSDUpdateDetector(UpdateDetectorBase):
             return results
 
         except Exception as error:
-            logger.error(_("Failed to apply updates: %s"), str(error))
+            logger.exception(_("Failed to apply updates: %s"), str(error))
             results["failed_packages"].append(
                 {
                     "package_name": "all",

@@ -175,10 +175,10 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         return False
 
     except subprocess.TimeoutExpired:
-        logger.error(_("Alembic %s timed out after 60 seconds"), operation)
+        logger.exception(_("Alembic %s timed out after 60 seconds"), operation)
         return False
     except Exception as error:
-        logger.error(_("Failed to run alembic %s: %s"), operation, error)
+        logger.exception(_("Failed to run alembic %s: %s"), operation, error)
         return False
 
 
@@ -225,5 +225,5 @@ def initialize_database(config_manager) -> bool:
         return True
 
     except Exception as error:
-        logger.error(_("Failed to initialize database: %s"), error)
+        logger.exception(_("Failed to initialize database: %s"), error)
         return False

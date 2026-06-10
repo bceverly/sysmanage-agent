@@ -175,7 +175,7 @@ class WindowsUpdateApplierMixin:
                     )
 
             except Exception as error:
-                logger.error(
+                logger.exception(
                     _("Exception updating package '%s': %s"),
                     package["package_name"],
                     str(error),
@@ -240,7 +240,7 @@ class WindowsUpdateApplierMixin:
                     )
 
             except Exception as error:
-                logger.error(
+                logger.exception(
                     _("Exception updating package '%s': %s"),
                     package["package_name"],
                     str(error),
@@ -421,7 +421,7 @@ class WindowsUpdateApplierMixin:
                 )
 
             except subprocess.TimeoutExpired:
-                logger.error(
+                logger.exception(
                     _("Windows Update '%s' timed out after 30 minutes"), package_name
                 )
                 results["failed_packages"].append(
@@ -432,7 +432,7 @@ class WindowsUpdateApplierMixin:
                     }
                 )
             except Exception as error:
-                logger.error(
+                logger.exception(
                     _("Exception installing Windows Update '%s': %s"),
                     package_name,
                     str(error),
@@ -704,7 +704,7 @@ class WindowsUpdateApplierMixin:
             return results
 
         except Exception as error:
-            logger.error(_("Failed to apply updates: %s"), str(error))
+            logger.exception(_("Failed to apply updates: %s"), str(error))
             results["failed_packages"].append(
                 {
                     "package_name": "all",

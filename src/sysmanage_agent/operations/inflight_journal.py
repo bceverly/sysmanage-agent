@@ -386,7 +386,7 @@ def scan_inflight_on_startup(
             try:
                 enqueue_command_result(_build_synthetic_command_result(payload))
             except Exception as error:  # pylint: disable=broad-exception-caught
-                LOGGER.error(
+                LOGGER.exception(
                     "Failed to enqueue synthetic command_result for %s: %s",
                     message_id,
                     error,

@@ -131,7 +131,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect apt packages: %s"), str(error))
+            logger.exception(_("Failed to collect apt packages: %s"), str(error))
 
     def _parse_snap_package_line(self, parts):
         """Parse a single snap list output line into a package dict.
@@ -183,7 +183,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                         self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect snap packages: %s"), str(error))
+            logger.exception(_("Failed to collect snap packages: %s"), str(error))
 
     def _parse_flatpak_package_line(self, parts):
         """Parse a single flatpak list output line into a package dict.
@@ -245,7 +245,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                         self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect flatpak packages: %s"), str(error))
+            logger.exception(_("Failed to collect flatpak packages: %s"), str(error))
 
     def _collect_yum_packages(self):
         """Collect packages from YUM (Red Hat/CentOS)."""
@@ -307,7 +307,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect DNF packages: %s"), str(error))
+            logger.exception(_("Failed to collect DNF packages: %s"), str(error))
 
     def _parse_pacman_package_line(self, parts):
         """Parse a single pacman -Q output line into a package dict.
@@ -352,7 +352,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect Pacman packages: %s"), str(error))
+            logger.exception(_("Failed to collect Pacman packages: %s"), str(error))
 
     def _parse_zypper_package_line(self, parts):
         """Parse a single rpm query output line into a package dict for Zypper.
@@ -425,7 +425,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             logger.debug("Successfully collected %d Zypper packages", zypper_count)
 
         except Exception as error:
-            logger.error(_("Failed to collect Zypper packages: %s"), str(error))
+            logger.exception(_("Failed to collect Zypper packages: %s"), str(error))
 
     def _collect_portage_packages(self):
         """Collect packages from Portage (Gentoo)."""
@@ -503,7 +503,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             logger.debug("Successfully collected %d APK packages", apk_count)
 
         except Exception as error:
-            logger.error(_("Failed to collect APK packages: %s"), str(error))
+            logger.exception(_("Failed to collect APK packages: %s"), str(error))
 
     def _is_system_package_linux(self, package_name: str) -> bool:
         """Determine if a Linux package is a system package."""

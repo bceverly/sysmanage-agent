@@ -123,7 +123,7 @@ Download packages from [GitHub Releases](https://github.com/bceverly/sysmanage-a
 
 ## Prerequisites
 
-- **Python**: 3.9, 3.11, or 3.12 (Python 3.13 not yet supported)
+- **Python**: 3.9–3.14 (tested across the full range in CI; 3.9 retained for macOS system Python)
 - **Network**: Outbound HTTPS access to SysManage Server
 - **Privileges**: Administrative rights for system management tasks (optional)
 

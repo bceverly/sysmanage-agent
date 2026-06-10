@@ -257,7 +257,7 @@ class WindowsPackageDetectorMixin:
                     logger.debug("Failed to parse winget line '%s': %s", line, error)
 
         except Exception as error:
-            logger.error(_("Failed to detect winget updates: %s"), str(error))
+            logger.exception(_("Failed to detect winget updates: %s"), str(error))
 
     def _detect_microsoft_store_updates(self):
         """Detect Microsoft Store updates."""
@@ -292,7 +292,7 @@ class WindowsPackageDetectorMixin:
                         self.available_updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Chocolatey updates: %s"), str(error))
+            logger.exception(_("Failed to detect Chocolatey updates: %s"), str(error))
 
     def _detect_scoop_updates(self):
         """Detect updates from Scoop."""
@@ -322,4 +322,4 @@ class WindowsPackageDetectorMixin:
                             self.available_updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Scoop updates: %s"), str(error))
+            logger.exception(_("Failed to detect Scoop updates: %s"), str(error))

@@ -32,7 +32,9 @@ class BSDPackageCollector(BasePackageCollector):
                     total_collected += count
                     logger.info("Collected %d packages from pkg_info", count)
                 except Exception as error:
-                    logger.error(_("Failed to collect pkg_info packages: %s"), error)
+                    logger.exception(
+                        _("Failed to collect pkg_info packages: %s"), error
+                    )
         elif system == "freebsd":
             # FreeBSD uses pkg command
             if self._is_package_manager_available("pkg"):
@@ -41,7 +43,7 @@ class BSDPackageCollector(BasePackageCollector):
                     total_collected += count
                     logger.info("Collected %d packages from pkg", count)
                 except Exception as error:
-                    logger.error(_("Failed to collect pkg packages: %s"), error)
+                    logger.exception(_("Failed to collect pkg packages: %s"), error)
 
         # Try pkgin (NetBSD)
         if self._is_package_manager_available("pkgin"):
@@ -50,7 +52,7 @@ class BSDPackageCollector(BasePackageCollector):
                 total_collected += count
                 logger.info("Collected %d packages from pkgin", count)
             except Exception as error:
-                logger.error(_("Failed to collect pkgin packages: %s"), error)
+                logger.exception(_("Failed to collect pkgin packages: %s"), error)
 
         return total_collected
 
@@ -94,7 +96,7 @@ class BSDPackageCollector(BasePackageCollector):
             return self._store_packages("pkg", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting pkg packages: %s"), error)
+            logger.exception(_("Error collecting pkg packages: %s"), error)
             return 0
 
     def _collect_pkgin_packages(self) -> int:
@@ -117,7 +119,7 @@ class BSDPackageCollector(BasePackageCollector):
             return self._store_packages("pkgin", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting pkgin packages: %s"), error)
+            logger.exception(_("Error collecting pkgin packages: %s"), error)
             return 0
 
     def _parse_pkg_output(self, output: str) -> List[Dict[str, str]]:

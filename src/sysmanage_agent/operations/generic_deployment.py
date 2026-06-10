@@ -31,7 +31,7 @@ def _argv_is_wsl_exe(argv: Optional[List[str]]) -> bool:
     """Return True if argv[0] basename is ``wsl.exe`` or ``wsl``."""
     if not argv:
         return False
-    head = argv[0] if argv else ""
+    head = argv[0]
     if not isinstance(head, str):
         return False
     base = head.rsplit("\\", 1)[-1].rsplit("/", 1)[-1].lower()

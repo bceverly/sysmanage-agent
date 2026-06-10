@@ -92,6 +92,17 @@ class FlexibleLogger:
         if self._should_log(logging.ERROR):
             self.logger.error(msg, *args, **kwargs)
 
+    def exception(self, msg: str, *args, **kwargs):
+        """Log an error message with exception traceback if verbosity allows.
+
+        Mirrors ``logging.Logger.exception``: emitted at ERROR level with the
+        active traceback attached.  Provided so call sites can use
+        ``logger.exception(...)`` uniformly whether the underlying logger is a
+        stdlib ``Logger`` or this wrapper.
+        """
+        if self._should_log(logging.ERROR):
+            self.logger.exception(msg, *args, **kwargs)
+
     def critical(self, msg: str, *args, **kwargs):
         """Log critical message if verbosity allows."""
         if self._should_log(logging.CRITICAL):

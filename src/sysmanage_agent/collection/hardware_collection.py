@@ -113,7 +113,9 @@ class HardwareCollector:
             return hardware_data
 
         except Exception as error:
-            logger.error(_("Failed to collect hardware information: %s"), str(error))
+            logger.exception(
+                _("Failed to collect hardware information: %s"), str(error)
+            )
             return {
                 "hardware_details": json.dumps({"error": str(error)}),
                 "storage_details": json.dumps([]),

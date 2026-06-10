@@ -55,7 +55,7 @@ class LinuxUpdateDetector:
                 updates = self._parse_apt_upgradable_output(result.stdout)
 
         except Exception as error:
-            logger.error(_("Failed to detect APT updates: %s"), str(error))
+            logger.exception(_("Failed to detect APT updates: %s"), str(error))
 
         return updates
 
@@ -116,7 +116,7 @@ class LinuxUpdateDetector:
                         updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Snap updates: %s"), str(error))
+            logger.exception(_("Failed to detect Snap updates: %s"), str(error))
 
         return updates
 
@@ -157,7 +157,7 @@ class LinuxUpdateDetector:
                         updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Flatpak updates: %s"), str(error))
+            logger.exception(_("Failed to detect Flatpak updates: %s"), str(error))
 
         return updates
 
@@ -197,7 +197,7 @@ class LinuxUpdateDetector:
                         updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect DNF updates: %s"), str(error))
+            logger.exception(_("Failed to detect DNF updates: %s"), str(error))
 
         return updates
 
@@ -219,7 +219,7 @@ class LinuxUpdateDetector:
                 updates = self._parse_zypper_output(result.stdout)
 
         except Exception as error:
-            logger.error(_("Failed to detect Zypper updates: %s"), str(error))
+            logger.exception(_("Failed to detect Zypper updates: %s"), str(error))
 
         return updates
 
@@ -289,7 +289,7 @@ class LinuxUpdateDetector:
                         updates.append(update)
 
         except Exception as error:
-            logger.error(_("Failed to detect Pacman updates: %s"), str(error))
+            logger.exception(_("Failed to detect Pacman updates: %s"), str(error))
 
         return updates
 
@@ -338,7 +338,7 @@ class LinuxUpdateDetector:
                 logger.debug("fwupd get-updates failed: %s", result.stderr.strip())
 
         except Exception as error:
-            logger.error(_("Failed to detect fwupd updates: %s"), str(error))
+            logger.exception(_("Failed to detect fwupd updates: %s"), str(error))
 
         return updates
 
@@ -372,9 +372,9 @@ class LinuxUpdateDetector:
                 updates.extend(device_updates)
 
         except json.JSONDecodeError as error:
-            logger.error(_("Failed to parse fwupd JSON output: %s"), str(error))
+            logger.exception(_("Failed to parse fwupd JSON output: %s"), str(error))
         except Exception as error:
-            logger.error(_("Error processing fwupd updates: %s"), str(error))
+            logger.exception(_("Error processing fwupd updates: %s"), str(error))
 
         return updates
 

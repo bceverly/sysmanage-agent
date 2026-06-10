@@ -145,7 +145,7 @@ def check_wsl_support() -> Dict[str, Any]:
             result["enabled"] = False
             result["needs_enable"] = True
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        _logger.error("Error checking WSL support: %s", exc)
+        _logger.exception("Error checking WSL support: %s", exc)
     return result
 
 

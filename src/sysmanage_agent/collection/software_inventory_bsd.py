@@ -80,7 +80,9 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 logger.debug("FreeBSD pkg tool not available or no packages found")
 
         except Exception as error:
-            logger.error(_("Failed to collect FreeBSD pkg packages: %s"), str(error))
+            logger.exception(
+                _("Failed to collect FreeBSD pkg packages: %s"), str(error)
+            )
 
     def _detect_bsd_platform_source(self):
         """Detect the BSD platform and return the appropriate source name.
@@ -126,7 +128,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     logger.warning(_("pkg_info stderr: %s"), result.stderr)
 
         except Exception as error:
-            logger.error(_("Failed to collect pkg_info packages: %s"), str(error))
+            logger.exception(_("Failed to collect pkg_info packages: %s"), str(error))
 
     def _parse_pkg_output(self, output: str, source_name: str):
         """Parse output from BSD pkg commands (both FreeBSD and OpenBSD)."""

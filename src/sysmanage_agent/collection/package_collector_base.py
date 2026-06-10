@@ -267,7 +267,7 @@ class BasePackageCollector:
                 session.commit()
 
         except Exception as error:
-            logger.error(_("Failed to store packages for %s: %s"), manager, error)
+            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
             return 0
 
         return stored_count
@@ -323,7 +323,7 @@ class BasePackageCollector:
                 session.commit()
 
         except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.error(_("Failed to store packages for %s: %s"), manager, error)
+            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
             return 0
 
         return stored_count
@@ -353,7 +353,7 @@ class BasePackageCollector:
                 ]
 
         except Exception as error:
-            logger.error(_("Failed to get packages for %s: %s"), manager, error)
+            logger.exception(_("Failed to get packages for %s: %s"), manager, error)
             return []
 
     def get_all_packages(self) -> List[AvailablePackage]:
@@ -377,7 +377,7 @@ class BasePackageCollector:
                 ]
 
         except Exception as error:
-            logger.error(_("Failed to get all packages: %s"), error)
+            logger.exception(_("Failed to get all packages: %s"), error)
             return []
 
     def get_package_managers(self) -> List[str]:
@@ -390,7 +390,7 @@ class BasePackageCollector:
                 return [manager[0] for manager in managers]
 
         except Exception as error:
-            logger.error(_("Failed to get package managers: %s"), error)
+            logger.exception(_("Failed to get package managers: %s"), error)
             return []
 
     def get_packages_for_transmission(self) -> Dict[str, any]:
@@ -426,5 +426,5 @@ class BasePackageCollector:
                 }
 
         except Exception as error:
-            logger.error(_("Failed to get packages for transmission: %s"), error)
+            logger.exception(_("Failed to get packages for transmission: %s"), error)
             return {}

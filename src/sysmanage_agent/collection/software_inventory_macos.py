@@ -148,7 +148,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             self._collect_homebrew_list(brew_cmd, "--cask", "homebrew_cask")
 
         except Exception as error:
-            logger.error(_("Failed to collect Homebrew packages: %s"), str(error))
+            logger.exception(_("Failed to collect Homebrew packages: %s"), str(error))
 
     def _parse_plist_field(self, output, field_name):
         """Extract a single field value from plutil -p output.
@@ -246,7 +246,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect macOS applications: %s"), str(error))
+            logger.exception(_("Failed to collect macOS applications: %s"), str(error))
 
     def _process_app_store_entry(self, app):
         """Process a single application entry from system_profiler output.
@@ -332,7 +332,7 @@ class MacOSSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     logger.warning(_("Failed to parse system_profiler JSON output"))
 
         except Exception as error:
-            logger.error(
+            logger.exception(
                 _("Failed to collect Mac App Store applications: %s"), str(error)
             )
 

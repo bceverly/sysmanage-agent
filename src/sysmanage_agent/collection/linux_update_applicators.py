@@ -87,7 +87,7 @@ class LinuxUpdateApplicator:
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply APT updates: %s"), str(error))
+            logger.exception(_("Failed to apply APT updates: %s"), str(error))
             for package in packages:
                 results.setdefault("failed_packages", []).append(
                     {
@@ -213,7 +213,7 @@ class LinuxUpdateApplicator:
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply DNF updates: %s"), str(error))
+            logger.exception(_("Failed to apply DNF updates: %s"), str(error))
             for package in packages:
                 results.setdefault("failed_packages", []).append(
                     {
@@ -286,7 +286,7 @@ class LinuxUpdateApplicator:
                     )
 
             except Exception as error:
-                logger.error(
+                logger.exception(
                     _("Exception during firmware update for %s: %s"),
                     package_name,
                     str(error),
@@ -335,7 +335,9 @@ class LinuxUpdateApplicator:
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply Ubuntu release upgrade: %s"), str(error))
+            logger.exception(
+                _("Failed to apply Ubuntu release upgrade: %s"), str(error)
+            )
             results.setdefault("errors", []).append(
                 f"Ubuntu release upgrade error: {str(error)}"
             )
@@ -386,7 +388,9 @@ class LinuxUpdateApplicator:
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply Fedora release upgrade: %s"), str(error))
+            logger.exception(
+                _("Failed to apply Fedora release upgrade: %s"), str(error)
+            )
             results.setdefault("errors", []).append(
                 f"Fedora release upgrade error: {str(error)}"
             )
@@ -422,7 +426,9 @@ class LinuxUpdateApplicator:
                     )
 
         except Exception as error:
-            logger.error(_("Failed to apply openSUSE release upgrade: %s"), str(error))
+            logger.exception(
+                _("Failed to apply openSUSE release upgrade: %s"), str(error)
+            )
             results.setdefault("errors", []).append(
                 f"openSUSE release upgrade error: {str(error)}"
             )

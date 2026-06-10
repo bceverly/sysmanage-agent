@@ -41,7 +41,9 @@ class WindowsSystemDetectorMixin:
         except subprocess.TimeoutExpired:
             logger.warning(_("Windows Update detection timed out"))
         except Exception as error:
-            logger.error(_("Failed to detect Windows system updates: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Windows system updates: %s"), str(error)
+            )
 
     def _run_windows_update_query(self):
         """Run the PowerShell command to query available Windows updates."""
@@ -240,4 +242,6 @@ class WindowsSystemDetectorMixin:
                     logger.debug("Could not parse Windows upgrade JSON output")
 
         except Exception as error:
-            logger.error(_("Failed to detect Windows version upgrades: %s"), str(error))
+            logger.exception(
+                _("Failed to detect Windows version upgrades: %s"), str(error)
+            )

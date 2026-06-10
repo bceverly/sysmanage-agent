@@ -196,7 +196,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         except ImportError:
             logger.debug("winreg module not available (not on Windows)")
         except Exception as error:
-            logger.error(
+            logger.exception(
                 _("Failed to collect Windows Registry programs: %s"), str(error)
             )
 
@@ -273,7 +273,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     )
 
                 except json.JSONDecodeError as error:
-                    logger.error(
+                    logger.exception(
                         _("Failed to parse Microsoft Store apps JSON: %s"), str(error)
                     )
             else:
@@ -284,7 +284,9 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 "PowerShell not found (not on Windows or PowerShell not installed)"
             )
         except Exception as error:
-            logger.error(_("Failed to collect Microsoft Store apps: %s"), str(error))
+            logger.exception(
+                _("Failed to collect Microsoft Store apps: %s"), str(error)
+            )
 
     def _detect_winget_header(self, lines):
         """Detect the winget list header line and data start index.
@@ -380,7 +382,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
         except Exception as error:
-            logger.error(_("Failed to collect winget packages: %s"), str(error))
+            logger.exception(_("Failed to collect winget packages: %s"), str(error))
 
     def _collect_chocolatey_packages(self):
         """Collect packages from Chocolatey."""

@@ -236,6 +236,12 @@ class TestLoggingMethods:
             logger.critical("Critical message")
             mock_critical.assert_called_once_with("Critical message")
 
+    def test_exception_when_enabled(self, logger):
+        """Test exception logging (ERROR level + traceback) when enabled."""
+        with patch.object(logger.logger, "exception") as mock_exception:
+            logger.exception("Boom: %s", "details")
+            mock_exception.assert_called_once_with("Boom: %s", "details")
+
     def test_logging_with_args(self, logger):
         """Test logging with format arguments."""
         with patch.object(logger.logger, "info") as mock_info:

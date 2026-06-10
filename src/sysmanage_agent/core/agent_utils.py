@@ -1116,7 +1116,7 @@ async def reconcile_inflight_journal(agent) -> Dict[str, Any]:
                 message, priority=Priority.HIGH
             )
         except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.error(
+            logger.exception(
                 _("Failed to queue synthetic command_result for in-flight journal: %s"),
                 error,
             )

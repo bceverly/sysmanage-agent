@@ -102,7 +102,7 @@ class LinuxRepositoryOperations:
                 continue
 
             # Skip comments and continuation lines
-            if line.startswith("#") or line.startswith(" ") or line.startswith("\t"):
+            if line.startswith(("#", " ", "\t")):
                 continue
 
             self._parse_deb822_line(line, current_entry)
@@ -175,7 +175,7 @@ class LinuxRepositoryOperations:
             line = line.lstrip("#").strip()
 
         # Must start with deb or deb-src
-        if not (line.startswith("deb ") or line.startswith("deb-src ")):
+        if not line.startswith(("deb ", "deb-src ")):
             return None
 
         # Check if it's a PPA

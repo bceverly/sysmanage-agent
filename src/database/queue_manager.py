@@ -415,7 +415,7 @@ class MessageQueueManager:
         try:
             return json.loads(message.message_data)
         except (json.JSONDecodeError, TypeError) as error:
-            logger.error(
+            logger.exception(
                 _("Failed to deserialize message %s: %s"), message.message_id, error
             )
             return {}

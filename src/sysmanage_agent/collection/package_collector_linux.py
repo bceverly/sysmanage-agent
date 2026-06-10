@@ -54,7 +54,7 @@ class LinuxPackageCollector(BasePackageCollector):
                     total_collected += count
                     logger.info("Collected %d packages from %s", count, manager_name)
                 except Exception as error:
-                    logger.error(
+                    logger.exception(
                         _("Failed to collect packages from %s: %s"), manager_name, error
                     )
 
@@ -97,7 +97,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return count
 
         except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.error(_("Error collecting APT packages: %s"), error)
+            logger.exception(_("Error collecting APT packages: %s"), error)
             return 0
 
     def _collect_yum_packages(self) -> int:
@@ -119,7 +119,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("yum", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting YUM packages: %s"), error)
+            logger.exception(_("Error collecting YUM packages: %s"), error)
             return 0
 
     def _collect_dnf_packages(self) -> int:
@@ -143,7 +143,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("dnf", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting DNF packages: %s"), error)
+            logger.exception(_("Error collecting DNF packages: %s"), error)
             return 0
 
     def _collect_zypper_packages(self) -> int:
@@ -165,7 +165,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("zypper", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting Zypper packages: %s"), error)
+            logger.exception(_("Error collecting Zypper packages: %s"), error)
             return 0
 
     def _collect_pacman_packages(self) -> int:
@@ -187,7 +187,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("pacman", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting Pacman packages: %s"), error)
+            logger.exception(_("Error collecting Pacman packages: %s"), error)
             return 0
 
     def _collect_snap_packages(self) -> int:
@@ -210,7 +210,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("snap", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting Snap packages: %s"), error)
+            logger.exception(_("Error collecting Snap packages: %s"), error)
             return 0
 
     def _collect_flatpak_packages(self) -> int:
@@ -232,7 +232,7 @@ class LinuxPackageCollector(BasePackageCollector):
             return self._store_packages("flatpak", packages)
 
         except Exception as error:
-            logger.error(_("Error collecting Flatpak packages: %s"), error)
+            logger.exception(_("Error collecting Flatpak packages: %s"), error)
             return 0
 
     def _parse_apt_output(self, output: str) -> List[Dict[str, str]]:
