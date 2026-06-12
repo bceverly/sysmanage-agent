@@ -530,6 +530,7 @@ endif
 	@echo "  3. Install scanner locally: make install-sonar-scanner"
 	@echo ""
 	@echo "Development environment setup complete!"
+ifneq ($(OS),Windows_NT)
 	@if [ -f /tmp/.sysmanage-lxd-group-added-*.tmp ]; then \
 		echo ""; \
 		echo "============================================================"; \
@@ -548,6 +549,7 @@ endif
 		echo ""; \
 		rm -f /tmp/.sysmanage-lxd-group-added-*.tmp; \
 	fi
+endif
 
 # Clean trailing whitespace from Python files (silent operation)
 clean-whitespace: setup-venv

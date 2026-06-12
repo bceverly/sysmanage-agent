@@ -10,7 +10,8 @@ Covers:
       command_result for dead PIDs via the message handler
 
 Tests do NOT spawn long-running subprocesses — Popen / create_subprocess_exec
-is either mocked or run with trivial commands (``true``, ``false``).
+is either mocked or run with a trivial, cross-platform ``python -c`` no-op
+(the POSIX ``true``/``false`` binaries are absent on Windows).
 """
 
 # pylint: disable=protected-access,attribute-defined-outside-init
@@ -308,12 +309,13 @@ class TestApplyDeploymentPlanJournalIntegration:
     async def test_journal_cleared_on_clean_plan_exit(self, isolated_journal_dir):
         """A successful plan run leaves no journal file behind."""
         # Use a real trivial subprocess so create_subprocess_exec actually
-        # spawns and exits — but ``true`` returns immediately so the test
-        # doesn't hang.
+        # spawns and exits — a no-op ``python -c ""`` returns immediately and
+        # works on every platform (the POSIX ``true`` binary is absent on
+        # Windows), so the test neither hangs nor depends on a Unix shell.
         result = await self.deployment.apply_deployment_plan(
             {
                 "_message_id": "plan-clean",
-                "commands": [{"argv": ["true"], "timeout": 5}],
+                "commands": [{"argv": [sys.executable, "-c", ""], "timeout": 5}],
             }
         )
         assert result["success"] is True
@@ -326,7 +328,12 @@ class TestApplyDeploymentPlanJournalIntegration:
         result = await self.deployment.apply_deployment_plan(
             {
                 "_message_id": "plan-fail",
-                "commands": [{"argv": ["false"], "timeout": 5}],
+                "commands": [
+                    {
+                        "argv": [sys.executable, "-c", "import sys; sys.exit(1)"],
+                        "timeout": 5,
+                    }
+                ],
             }
         )
         assert result["success"] is False
@@ -375,7 +382,7 @@ class TestApplyDeploymentPlanJournalIntegration:
         """Plans without a _message_id (legacy callers) skip journaling silently."""
         result = await self.deployment.apply_deployment_plan(
             {
-                "commands": [{"argv": ["true"], "timeout": 5}],
+                "commands": [{"argv": [sys.executable, "-c", ""], "timeout": 5}],
             }
         )
         assert result["success"] is True

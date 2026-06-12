@@ -69,9 +69,9 @@ def test_pty_module_imports_on_bsd():
     image change that drops them surfaces here, not via a 10-deep
     ImportError chain.
     """
-    import pty  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import
-    import termios  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import
-    import pwd  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import
+    import pty  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import,import-error
+    import termios  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import,import-error
+    import pwd  # noqa: F401  pylint: disable=import-outside-toplevel,unused-import,import-error
 
 
 @pytest.mark.integration

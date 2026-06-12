@@ -773,16 +773,30 @@ class TestIntegration:
 
     @pytest.mark.asyncio
     async def test_run_command_echo_integration(self):
-        """Integration test: run echo command and capture output."""
-        result = await run_command_async(["echo", "integration test"])
+        """Integration test: run a command and capture its stdout.
+
+        Uses ``python -c`` rather than the POSIX ``echo`` binary so the
+        integration coverage runs on every platform (Windows has no echo.exe).
+        """
+        result = await run_command_async(
+            [sys.executable, "-c", "print('integration test')"]
+        )
 
         assert result.returncode == 0
         assert "integration test" in result.stdout
 
     @pytest.mark.asyncio
     async def test_run_command_with_pipe_input_integration(self):
-        """Integration test: run command with stdin input."""
-        result = await run_command_async(["cat"], input_data="piped input data")
+        """Integration test: run command with stdin input.
+
+        A ``python -c`` stdin->stdout passthrough stands in for the POSIX
+        ``cat`` binary so this runs cross-platform. The payload has no newline,
+        so there is nothing for text-mode stdout to translate on Windows.
+        """
+        result = await run_command_async(
+            [sys.executable, "-c", "import sys; sys.stdout.write(sys.stdin.read())"],
+            input_data="piped input data",
+        )
 
         assert result.returncode == 0
         assert result.stdout == "piped input data"
@@ -821,40 +835,51 @@ class TestIntegration:
 
     @pytest.mark.asyncio
     async def test_run_command_failing_integration(self):
-        """Integration test: command that fails."""
-        result = await run_command_async(["false"])  # 'false' returns exit code 1
+        """Integration test: command that fails (cross-platform 'false')."""
+        result = await run_command_async(
+            [sys.executable, "-c", "import sys; sys.exit(1)"]
+        )
 
         assert result.returncode == 1
 
     @pytest.mark.asyncio
     async def test_run_command_check_failing_integration(self):
-        """Integration test: failing command with check=True."""
+        """Integration test: failing command with check=True (cross-platform)."""
         with pytest.raises(subprocess.CalledProcessError):
-            await run_command_async(["false"], check=True)
+            await run_command_async(
+                [sys.executable, "-c", "import sys; sys.exit(1)"], check=True
+            )
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Uses POSIX shell syntax ($TEST_VAR); cmd.exe expands %TEST_VAR%",
-    )
     @pytest.mark.asyncio
     async def test_run_command_with_env_integration(self):
-        """Integration test: command with custom environment variable."""
+        """Integration test: command with custom environment variable.
+
+        Reads the env var via ``python -c`` instead of POSIX ``echo $VAR``
+        shell syntax, so the env-passing path is exercised on every platform.
+        """
         custom_env = os.environ.copy()
         custom_env["TEST_VAR"] = "test_value_12345"
 
-        result = await run_command_async("echo $TEST_VAR", shell=True, env=custom_env)
+        result = await run_command_async(
+            [sys.executable, "-c", "import os; print(os.environ['TEST_VAR'])"],
+            env=custom_env,
+        )
 
         assert result.returncode == 0
         assert "test_value_12345" in result.stdout
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Uses POSIX paths (/tmp) and the pwd command; no Windows equivalents in this assertion",
-    )
     @pytest.mark.asyncio
     async def test_run_command_cwd_integration(self):
-        """Integration test: command with custom working directory."""
-        result = await run_command_async(["pwd"], cwd="/tmp")
+        """Integration test: command with custom working directory.
+
+        Uses ``python -c os.getcwd()`` against the platform temp dir instead of
+        POSIX ``pwd``/``/tmp``, and compares via realpath so symlinked temp
+        dirs (macOS /tmp, Windows short paths) still match.
+        """
+        workdir = tempfile.gettempdir()
+        result = await run_command_async(
+            [sys.executable, "-c", "import os; print(os.getcwd())"], cwd=workdir
+        )
 
         assert result.returncode == 0
-        assert "/tmp" in result.stdout or "tmp" in result.stdout
+        assert os.path.realpath(result.stdout.strip()) == os.path.realpath(workdir)
