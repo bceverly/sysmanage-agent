@@ -45,7 +45,20 @@ echo "============================================================"
 echo " Pre-push: running 'make lint' in ${REPO_NAME}..."
 echo "============================================================"
 
-if make lint; then
+# Git for Windows runs this hook inside MSYS bash, which puts sh.exe on PATH.
+# GNU make then auto-detects that Unix shell and switches to Unix-shell mode,
+# choking on this project's cmd.exe Windows recipes.  Forcing SHELL=cmd.exe on
+# the make command line overrides that PATH-based detection, so the Windows
+# branch runs exactly as it does from PowerShell.  Other platforms run make
+# directly.
+run_make_lint() {
+    case "$(uname -s 2>/dev/null)" in
+        MINGW*|MSYS*|CYGWIN*) make SHELL=cmd.exe lint ;;
+        *)                    make lint ;;
+    esac
+}
+
+if run_make_lint; then
     echo ""
     echo "============================================================"
     echo " Pre-push: lint clean — pushing."
