@@ -1,0 +1,9 @@
+# Git hooks are shell scripts executed by Git for Windows' bundled bash.
+# They MUST stay LF: a CRLF shebang ("#!/usr/bin/env bash\r") fails on
+# Windows with `env: 'bash\r': No such file or directory`, silently
+# disabling the hook. `eol=lf` overrides core.autocrlf so these files
+# always check out LF, on every platform.
+.githooks/** text eol=lf
+
+# Any standalone shell script has the same requirement.
+*.sh text eol=lf
