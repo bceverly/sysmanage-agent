@@ -62,6 +62,21 @@ class TestConfigManager:  # pylint: disable=too-many-public-methods
         }
 
     @patch("os.path.exists", return_value=True)
+    def test_get_enrollment_token(self, _mock_exists):
+        """Phase 13.1: get_enrollment_token reads security.enrollment_token."""
+        yaml_text = "security:\n  enrollment_token: sme_abc123\n"
+        with patch("builtins.open", mock_open(read_data=yaml_text)):
+            config = ConfigManager("test-config.yaml")
+        assert config.get_enrollment_token() == "sme_abc123"
+
+    @patch("os.path.exists", return_value=True)
+    def test_get_enrollment_token_absent(self, _mock_exists):
+        """No security.enrollment_token configured → None (server-scoped)."""
+        with patch("builtins.open", mock_open(read_data="server:\n  port: 8080\n")):
+            config = ConfigManager("test-config.yaml")
+        assert config.get_enrollment_token() is None
+
+    @patch("os.path.exists", return_value=True)
     def test_determine_config_path_absolute_path(self, mock_exists):
         """Test config path determination with absolute path."""
         with patch("builtins.open", mock_open(read_data="{}")):

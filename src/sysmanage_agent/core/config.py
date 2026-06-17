@@ -295,3 +295,20 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
             The registration-key string if configured, None otherwise.
         """
         return self.get("security.registration_key")
+
+    def get_enrollment_token(self) -> Optional[str]:
+        """
+        Get the tenant enrollment token if configured (Phase 13.1).
+
+        When set, the agent includes this token in its initial /host/register
+        POST.  On a multi-tenant server the token both authorizes the
+        registration and selects which tenant the host enrols into — the
+        server creates the host's record in that tenant's database and binds
+        host->tenant.  Ignored by single-tenant (OSS) servers.
+
+        Read from ``security.enrollment_token`` in the YAML config.
+
+        Returns:
+            The enrollment-token string if configured, None otherwise.
+        """
+        return self.get("security.enrollment_token")

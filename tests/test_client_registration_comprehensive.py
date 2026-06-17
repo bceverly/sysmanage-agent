@@ -122,6 +122,74 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         self.client_reg.network_utils.get_hostname.assert_called_once()
         self.client_reg.network_utils.get_ip_addresses.assert_called_once()
 
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_basic_registration_info_includes_enrollment_token(self, mock_priv):
+        """Phase 13.1: a configured enrollment token is included in the
+        registration payload so a multi-tenant server can select the tenant."""
+        mock_priv.return_value = False
+        self.client_reg.network_utils.get_hostname.return_value = "h"
+        self.client_reg.network_utils.get_ip_addresses.return_value = (
+            "10.0.0.1",
+            "::1",
+        )
+        self.mock_config.get_enrollment_token.return_value = "sme_secret_token"
+
+        result = self.client_reg.get_basic_registration_info()
+
+        assert result["enrollment_token"] == "sme_secret_token"
+
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_basic_registration_info_no_enrollment_token(self, mock_priv):
+        """No enrollment token configured → the field is absent (server-scoped,
+        unchanged single-tenant behaviour)."""
+        mock_priv.return_value = False
+        self.client_reg.network_utils.get_hostname.return_value = "h"
+        self.client_reg.network_utils.get_ip_addresses.return_value = (
+            "10.0.0.1",
+            "::1",
+        )
+        self.mock_config.get_enrollment_token.return_value = None
+
+        result = self.client_reg.get_basic_registration_info()
+
+        assert "enrollment_token" not in result
+
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_system_info_includes_host_id_when_registered(self, mock_priv):
+        """Phase 13.1: once registered, SYSTEM_INFO carries host_id so a
+        multi-tenant server routes the host's inventory to its tenant DB."""
+        mock_priv.return_value = False
+        self.client_reg.network_utils.get_hostname.return_value = "h"
+        self.client_reg.network_utils.get_ip_addresses.return_value = (
+            "10.0.0.1",
+            "::1",
+        )
+        self.client_reg.os_info_collector.get_os_version_info.return_value = {}
+        self.mock_config.get_enrollment_token.return_value = None
+
+        with patch.object(self.client_reg, "get_host_id", return_value="host-123"):
+            result = self.client_reg.get_system_info()
+
+        assert result["host_id"] == "host-123"
+
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_get_system_info_no_host_id_before_registration(self, mock_priv):
+        """Before registration (no stored id), SYSTEM_INFO omits host_id — the
+        first /host/register call is what creates the id server-side."""
+        mock_priv.return_value = False
+        self.client_reg.network_utils.get_hostname.return_value = "h"
+        self.client_reg.network_utils.get_ip_addresses.return_value = (
+            "10.0.0.1",
+            "::1",
+        )
+        self.client_reg.os_info_collector.get_os_version_info.return_value = {}
+        self.mock_config.get_enrollment_token.return_value = None
+
+        with patch.object(self.client_reg, "get_host_id", return_value=None):
+            result = self.client_reg.get_system_info()
+
+        assert "host_id" not in result
+
     def test_get_os_version_info(self):
         """Test getting OS version information."""
         expected_os_info = {"os": "Linux", "version": "5.4.0"}

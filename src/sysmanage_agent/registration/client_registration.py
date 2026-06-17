@@ -65,6 +65,16 @@ class ClientRegistration:
             # than crashing — back-compat with pre-Phase-8.1 deployments.
             return None
 
+    def _get_enrollment_token_from_config(self) -> Optional[str]:
+        """Read the optional Phase 13.1 tenant enrollment token from config.
+        Wraps the config getter so the registration code path doesn't couple
+        directly to the YAML key name, and tolerates older config-manager
+        builds that lack the helper (back-compat)."""
+        try:
+            return self.config.get_enrollment_token()
+        except AttributeError:
+            return None
+
     def _create_basic_registration_dict(
         self, hostname: str, ipv4: str, ipv6: str
     ) -> Dict[str, Any]:
@@ -118,6 +128,16 @@ class ClientRegistration:
             # Log presence only — never the value or its length, both of
             # which leak information about the secret.
             self.logger.info("Including registration_key in registration data")
+
+        # Phase 13.1: tenant enrollment token.  When supplied via config
+        # (security.enrollment_token), a multi-tenant server validates +
+        # consumes it, creates this host's record in the token's tenant
+        # database, and binds host->tenant.  Single-tenant servers ignore it.
+        enrollment_token = self._get_enrollment_token_from_config()
+        if enrollment_token:
+            basic_info["enrollment_token"] = enrollment_token
+            # Log presence only — never the value or its length.
+            self.logger.info("Including enrollment_token in registration data")
 
         # Debug logging
         logger = logging.getLogger(__name__)
@@ -179,6 +199,16 @@ class ClientRegistration:
         auto_approve_token = self.config.get_auto_approve_token()
         if auto_approve_token:
             system_info["auto_approve_token"] = auto_approve_token
+
+        # Phase 13.1: include the stored host_id so a multi-tenant server can
+        # route this host's inventory to its TENANT database (the host record
+        # was created there at registration).  ``get_host_id`` returns None on
+        # the very first registration cycle (no id yet) — that path is the HTTP
+        # /host/register call, which creates the id — so this only attaches once
+        # the host is registered, exactly where tenant routing needs it.
+        host_id = self.get_host_id()
+        if host_id:
+            system_info["host_id"] = host_id
 
         return system_info
 
