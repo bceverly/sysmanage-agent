@@ -263,7 +263,7 @@ class SysManageAgent(
             file_handler = GzipTimedRotatingFileHandler(
                 log_file, when="midnight", backupCount=14
             )
-            file_handler.setLevel(getattr(logging, log_level.upper()))
+            file_handler.setLevel(log_level.upper())
             file_handler.setFormatter(
                 UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
             )
@@ -274,13 +274,13 @@ class SysManageAgent(
                 file=sys.stderr,
             )
             root_logger.addHandler(logging.StreamHandler())
-        root_logger.setLevel(getattr(logging, log_level.upper()))
+        root_logger.setLevel(log_level.upper())
 
         # Also log to console if running as a daemon (for snap logs, systemd journal, etc.)
         # Check if SYSMANAGE_LOG_CONSOLE environment variable is set
         if os.environ.get("SYSMANAGE_LOG_CONSOLE", "").lower() in ("1", "true", "yes"):
             console_handler = logging.StreamHandler()
-            console_handler.setLevel(getattr(logging, log_level.upper()))
+            console_handler.setLevel(log_level.upper())
             console_handler.setFormatter(
                 UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
             )
