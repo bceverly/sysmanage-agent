@@ -5,11 +5,11 @@ SysManage server using WebSockets with concurrent send/receive operations.
 """
 
 import asyncio
-import json
 import logging
 import os
 import secrets
 import ssl
+import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -49,6 +49,7 @@ from src.sysmanage_agent.operations.update_manager import UpdateManager
 from src.sysmanage_agent.registration.discovery import discovery_client
 from src.sysmanage_agent.registration.registration import ClientRegistration
 from src.sysmanage_agent.registration.registration_manager import RegistrationManager
+from src.sysmanage_agent.utils.log_rotation import GzipTimedRotatingFileHandler
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
 
@@ -254,13 +255,25 @@ class SysManageAgent(
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
 
-        # Always set up file logging - write all output to file
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(getattr(logging, log_level.upper()))
-        file_handler.setFormatter(
-            UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
-        )
-        root_logger.addHandler(file_handler)
+        # Set up file logging - write all output to file.  Rotate daily, gzip
+        # the old log, keep 14 days (standard unix-style) so agent.log can't grow
+        # without bound.  Fall back to console-only if the log path isn't
+        # writable (e.g. an earlier run left it root-owned).
+        try:
+            file_handler = GzipTimedRotatingFileHandler(
+                log_file, when="midnight", backupCount=14
+            )
+            file_handler.setLevel(getattr(logging, log_level.upper()))
+            file_handler.setFormatter(
+                UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
+            )
+            root_logger.addHandler(file_handler)
+        except OSError as exc:
+            print(
+                f"WARNING: cannot write to {log_file} ({exc}); logging to console.",
+                file=sys.stderr,
+            )
+            root_logger.addHandler(logging.StreamHandler())
         root_logger.setLevel(getattr(logging, log_level.upper()))
 
         # Also log to console if running as a daemon (for snap logs, systemd journal, etc.)
@@ -526,133 +539,6 @@ class SysManageAgent(
         self.logger.info("Disconnecting to trigger re-registration...")
         self.running = False
 
-    async def _process_received_message(self, data: Dict[str, Any]) -> bool:
-        """Process a single received message. Returns False if receiver should stop."""
-        message_type = data.get("message_type")
-
-        if message_type == "command":
-            await self.handle_command(data)
-        elif message_type == "ping":
-            pong = self.create_message("pong", {"ping_id": data.get("message_id")})
-            await self.send_message(pong)
-        elif message_type == "ack":
-            self._log_ack_message(data)
-        elif message_type == "error":
-            await self._handle_server_error(data)
-            if self.needs_registration:
-                return False
-        elif message_type == "host_approved":
-            await self.handle_host_approval(data)
-        elif message_type == "registration_success":
-            await self.handle_registration_success(data)
-        elif message_type in (
-            "diagnostic_result_ack",
-            "available_packages_batch_queued",
-            "available_packages_batch_start_queued",
-            "available_packages_batch_end_queued",
-        ):
-            status = data.get("status", "unknown")
-            self.logger.debug("Server confirmed %s: %s", message_type, status)
-        else:
-            self.logger.warning("Unknown message type: %s", message_type)
-        return True
-
-    def _log_ack_message(self, data: Dict[str, Any]) -> None:
-        """Log an acknowledgment message from the server."""
-        ack_data = data.get("data", {})
-        queue_id = data.get("queue_id")
-        acked_msg_id = (
-            ack_data.get("acked_message_id")
-            or ack_data.get("message_id")
-            or data.get("message_id", "unknown")
-        )
-        status = data.get("status", "unknown")
-
-        if queue_id:
-            self.logger.debug(
-                "Server acknowledged message queue_id: %s (status: %s)",
-                queue_id,
-                status,
-            )
-        else:
-            self.logger.debug(
-                "Server acknowledged message: %s (status: %s)",
-                acked_msg_id,
-                status,
-            )
-
-    async def message_receiver(self):
-        """Handle incoming messages from server.
-
-        Note: this is currently dead code — ``_run_agent_tasks`` wires
-        ``self.message_handler.message_receiver`` instead.  Keeping it
-        in sync with the real one for hygiene; see the matching docstring
-        in ``message_handler.MessageHandler.message_receiver``.
-        """
-        self.logger.debug("Message receiver started")
-        try:
-            while self.running:
-                # Defensive None-check (see message_handler.message_receiver).
-                ws = self.websocket
-                if ws is None:
-                    self.logger.info("Message receiver: websocket cleared; exiting")
-                    raise websockets.ConnectionClosed(None, None)
-                message = await ws.recv()
-                self.logger.debug("Received: %s", message)
-
-                try:
-                    data = json.loads(message)
-                    if not await self._process_received_message(data):
-                        return
-                except json.JSONDecodeError:
-                    self.logger.error("Invalid JSON received: %s", message)
-                except Exception as error:  # pylint: disable=broad-exception-caught
-                    self.logger.error("Error processing message: %s", error)
-
-        except websockets.ConnectionClosed:
-            self.logger.info(
-                "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
-            )
-            self.connected = False
-            self.websocket = None
-        except Exception as error:
-            self.logger.error(
-                "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", error
-            )
-            self.connected = False
-            self.websocket = None
-            # Re-raise so the outer connection lifecycle reconnects.
-            raise
-
-    async def message_sender(self):
-        """Handle periodic outgoing messages to server."""
-        self.logger.debug("Message sender started")
-
-        # Send initial system info
-        system_info = self.create_system_info_message()
-        await self.send_message(system_info)
-
-        # Send periodic heartbeats
-        ping_interval = self.config.get_ping_interval()
-        while self.running:
-            try:
-                await asyncio.sleep(ping_interval)
-                if self.running and self.connected:
-                    heartbeat = self.create_heartbeat_message()
-                    success = await self.send_message(heartbeat)
-                    if not success:
-                        self.logger.warning("Heartbeat failed, connection may be lost")
-                        # Don't break, let the connection handling in run() deal with it
-                        return
-            except asyncio.CancelledError:
-                # Graceful shutdown - re-raise to propagate cancellation
-                self.logger.debug("Message sender cancelled")
-                raise
-            except Exception as error:
-                self.logger.error("Message sender error: %s", error)
-                # Don't break the loop on non-critical errors, but return to trigger reconnection
-                return
-
     def _create_ssl_context(self):
         """Create SSL context for WebSocket connection."""
         ssl_context = ssl.create_default_context()  # NOSONAR
@@ -681,6 +567,21 @@ class SysManageAgent(
         except Exception as error:
             self.logger.warning("Failed to auto-start child hosts: %s", error)
 
+    async def _queue_cleanup_loop(self):
+        """Periodically purge old completed queue messages so the local agent DB
+        doesn't grow without bound (the queue is otherwise never pruned — this
+        was observed to reach 21 GB).  Runs daily; first pass after a short delay
+        so it doesn't compete with startup."""
+        await asyncio.sleep(300)  # let startup settle
+        while True:
+            try:
+                deleted = await self.message_handler.cleanup_old_messages()
+                if deleted:
+                    self.logger.info("Purged %d old completed queue messages", deleted)
+            except Exception as exc:  # pylint: disable=broad-except
+                self.logger.warning("Queue cleanup failed: %s", exc)
+            await asyncio.sleep(86400)  # daily
+
     async def _run_agent_tasks(self):
         """Run all concurrent agent tasks and handle their lifecycle."""
         sender_task = asyncio.create_task(self.message_handler.message_sender())
@@ -696,6 +597,7 @@ class SysManageAgent(
         data_collector_task = asyncio.create_task(self.data_collector.data_collector())
         package_collector_task = asyncio.create_task(self.package_collector())
         child_host_heartbeat_task = asyncio.create_task(self.child_host_heartbeat())
+        queue_cleanup_task = asyncio.create_task(self._queue_cleanup_loop())
 
         done, pending = await asyncio.wait(
             [sender_task, receiver_task],
@@ -708,6 +610,7 @@ class SysManageAgent(
             data_collector_task,
             package_collector_task,
             child_host_heartbeat_task,
+            queue_cleanup_task,
         ]
         for task in background_tasks:
             task.cancel()

@@ -2,7 +2,6 @@
 Test heartbeat functionality on the agent side.
 """
 
-import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -170,39 +169,6 @@ i18n:
         mock_agent.message_handler.queue_outbound_message.assert_called_once_with(
             test_message
         )
-
-    @pytest.mark.asyncio
-    async def test_message_sender_heartbeat_loop(self, mock_agent):
-        """Test the message sender heartbeat loop."""
-        mock_agent.running = True
-        mock_agent.config.get_ping_interval = Mock(
-            return_value=0.1
-        )  # Very short interval for testing
-
-        # Mock asyncio.sleep to stop the loop after first iteration
-        with patch("asyncio.sleep", side_effect=[None, asyncio.CancelledError()]):
-            with pytest.raises(asyncio.CancelledError):
-                await mock_agent.message_sender()
-
-        # Verify messages were queued (including initial system info)
-        assert mock_agent.message_handler.queue_outbound_message.call_count >= 1
-
-    @pytest.mark.asyncio
-    async def test_message_sender_error_handling(self, mock_agent):
-        """Test message sender error handling."""
-        mock_agent.running = True
-        mock_agent.message_handler.queue_outbound_message.side_effect = Exception(
-            "Queue error"
-        )
-        mock_agent.config.get_ping_interval = Mock(return_value=0.1)
-
-        # Mock sleep to immediately trigger CancelledError on second call
-        with patch("asyncio.sleep", side_effect=asyncio.CancelledError()):
-            with pytest.raises(asyncio.CancelledError):
-                await mock_agent.message_sender()
-
-        # Verify error was logged for the initial send_message call
-        mock_agent.logger.error.assert_called()
 
 
 class TestAgentConfiguration:

@@ -25,8 +25,9 @@ class TestSysManageAgentInitialization:
     @patch("main.initialize_database")
     @patch("main.get_database_manager")
     @patch("main.logging")
+    @patch("main.GzipTimedRotatingFileHandler")
     def test_agent_initialization_success(
-        self, mock_logging, mock_db_manager, mock_init_db
+        self, mock_handler, mock_logging, mock_db_manager, mock_init_db
     ):
         """Test successful agent initialization with valid config."""
         # Create temporary config file
@@ -293,8 +294,9 @@ class TestSysManageAgentLogging:
     @patch("main.initialize_database")
     @patch("main.get_database_manager")
     @patch("main.logging")
+    @patch("main.GzipTimedRotatingFileHandler")
     def test_setup_logging_with_file(
-        self, mock_logging_module, mock_db_manager, mock_init_db
+        self, mock_handler, mock_logging_module, mock_db_manager, mock_init_db
     ):
         """Test logging setup with file configuration."""
         config_data = {
