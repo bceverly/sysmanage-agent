@@ -111,7 +111,11 @@ class TestDatabaseInitAdditional:
         result = initialize_database(mock_config)
 
         assert result is True
-        mock_exists.assert_called_with("/path/to/agent.db")
+        # assert_any_call (not assert_called_with): the @patch("os.path.exists")
+        # is process-global, so a leaked background logging thread from another
+        # test can land the *last* exists() call on its own log file (a 3.9-only
+        # timing flake).  We only care that init checked the db path at all.
+        mock_exists.assert_any_call("/path/to/agent.db")
 
     @patch("src.database.init.run_alembic_migration")
     @patch("src.database.init.should_auto_migrate")

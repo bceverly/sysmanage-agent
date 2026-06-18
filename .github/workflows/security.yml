@@ -20,6 +20,7 @@ jobs:
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -97,6 +98,7 @@ jobs:
   semgrep:
     name: Semgrep PRO Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     container:
       image: semgrep/semgrep
     permissions:
@@ -166,6 +168,7 @@ jobs:
   dependency-check:
     name: Dependency Vulnerability Check
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -202,6 +205,7 @@ jobs:
   bandit-scan:
     name: Bandit Security Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -233,6 +237,7 @@ jobs:
   snyk:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -277,6 +282,7 @@ jobs:
   secrets-scan:
     name: Secrets Detection
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write

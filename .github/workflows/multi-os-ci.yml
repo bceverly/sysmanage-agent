@@ -25,6 +25,7 @@ jobs:
   test-backend:
     name: Backend Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
 
     strategy:
       # Don't bail out of the macOS run because Windows happened to

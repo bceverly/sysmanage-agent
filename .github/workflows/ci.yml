@@ -20,6 +20,7 @@ jobs:
   test-backend:
     name: Backend Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: write  # Allow writing to update README badge
       pull-requests: write  # Allow creating pull requests
@@ -139,6 +140,7 @@ jobs:
   lint-backend:
     name: Backend Linting
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
 
@@ -195,6 +197,7 @@ jobs:
   build:
     name: Build Check
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
     needs: [test-backend, lint-backend]
