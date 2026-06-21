@@ -78,6 +78,7 @@ def _post(url: str, payload: dict, timeout: float = 1800.0) -> dict:
     req = urllib.request.Request(
         url, data=data, headers={"Content-Type": "application/json"}, method="POST"
     )
+    # nosemgrep: dynamic-urllib-use-detected -- service URL is operator config (trusted LAN), not request input
     with urllib.request.urlopen(
         req, timeout=timeout
     ) as resp:  # noqa: S310 (trusted LAN)
@@ -86,6 +87,7 @@ def _post(url: str, payload: dict, timeout: float = 1800.0) -> dict:
 
 def _service_ok(service: str) -> bool:
     try:
+        # nosemgrep: dynamic-urllib-use-detected -- service URL is operator config (trusted LAN), not request input
         with urllib.request.urlopen(  # noqa: S310
             f"{service.rstrip('/')}/health", timeout=10
         ) as resp:

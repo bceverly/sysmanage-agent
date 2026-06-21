@@ -89,6 +89,7 @@ ifeq ($(OS),Windows_NT)
     # Windows-specific paths and commands
     PYTHON = "$(VENV)/Scripts/python.exe"
     PIP = "$(VENV)/Scripts/pip.exe"
+    SEMGREP = semgrep
     RM = rmdir /s /q
     PYTHON_CMD = python
     VENV_ACTIVATE = $(VENV)/Scripts/activate
@@ -100,6 +101,7 @@ else
     # Unix/BSD/Linux defaults (works on FreeBSD)
     PYTHON = $(VENV)/bin/python
     PIP = $(VENV)/bin/pip
+    SEMGREP = $(VENV)/bin/semgrep
     RM = rm -rf
     PYTHON_CMD = python3
     VENV_ACTIVATE = $(VENV)/bin/activate
@@ -794,18 +796,19 @@ ifeq ($(OS),Windows_NT)
 else
 	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607,B608 || true
 	@echo ""
-	@echo "Running Semgrep static analysis..."
-	@echo "Tip: Export SEMGREP_APP_TOKEN for access to Pro rules and supply chain analysis"
+	@echo "Running Semgrep static analysis (local venv)..."
+	@echo "Tip: Export SEMGREP_APP_TOKEN to run the same Pro engine as CI"
+	@$(PYTHON) -c "import semgrep" 2>/dev/null || $(PIP) install --quiet semgrep
 ifeq ($(OS),Windows_NT)
-	@if defined SEMGREP_APP_TOKEN (semgrep ci) else (semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten") || echo "Semgrep scan completed"
+	@if defined SEMGREP_APP_TOKEN ($(SEMGREP) ci) else ($(SEMGREP) scan --metrics=off --config="p/default" --config="p/security-audit" --config="p/trailofbits" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten") || echo "Semgrep scan completed"
 	@echo.
 else
 	@if [ -n "$$SEMGREP_APP_TOKEN" ]; then \
-		echo "Using Semgrep CI with supply chain analysis..."; \
-		semgrep ci || true; \
+		echo "Using Semgrep CI (Pro rules + supply chain)..."; \
+		$(SEMGREP) ci || true; \
 	else \
-		echo "Using basic Semgrep scan (set SEMGREP_APP_TOKEN for supply chain analysis)..."; \
-		semgrep scan --config="p/default" --config="p/security-audit" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true; \
+		echo "Using local registry packs incl. p/trailofbits (set SEMGREP_APP_TOKEN for Pro parity)..."; \
+		$(SEMGREP) scan --metrics=off --config="p/default" --config="p/security-audit" --config="p/trailofbits" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true; \
 	fi
 	@echo ""
 endif
