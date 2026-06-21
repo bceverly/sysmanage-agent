@@ -53,7 +53,7 @@ class MessageHandler:
         self.inbound_queue_processor_running = False
         self.inbound_processing_task = None
 
-        self.logger.info("Message handler initialized")
+        self.logger.info(_("Message handler initialized"))
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
@@ -166,7 +166,7 @@ class MessageHandler:
             )
             return True
         except Exception as error:
-            self.logger.error("Failed to queue message: %s", error)
+            self.logger.error(_("Failed to queue message: %s"), error)
             return False
 
     async def handle_command(self, message: Dict[str, Any]):
@@ -200,11 +200,11 @@ class MessageHandler:
 
             if success:
                 self.logger.info(
-                    "Queued command acknowledgment for message: %s", message_id
+                    _("Queued command acknowledgment for message: %s"), message_id
                 )
             else:
                 self.logger.warning(
-                    "Failed to queue command acknowledgment for message: %s",
+                    _("Failed to queue command acknowledgment for message: %s"),
                     message_id,
                 )
 
@@ -212,7 +212,9 @@ class MessageHandler:
 
         except Exception as error:
             self.logger.error(
-                "Error queueing command acknowledgment for %s: %s", message_id, error
+                _("Error queueing command acknowledgment for %s: %s"),
+                message_id,
+                error,
             )
             return False
 
@@ -259,7 +261,7 @@ class MessageHandler:
         if self._is_stale_error_message(data, error_code):
             return
 
-        self.logger.error("Server error [%s]: %s", error_code, error_message)
+        self.logger.error(_("Server error [%s]: %s"), error_code, error_message)
 
         # Handle specific error codes from server
         await self._dispatch_server_error(error_code, error_message)
@@ -298,7 +300,7 @@ class MessageHandler:
             # If the error message is older than our last registration, ignore it
             if msg_time < self.agent.last_registration_time:
                 self.logger.info(
-                    "Ignoring stale error message [%s] from %s (registration at %s)",
+                    _("Ignoring stale error message [%s] from %s (registration at %s)"),
                     error_code,
                     msg_time,
                     self.agent.last_registration_time,
@@ -312,7 +314,7 @@ class MessageHandler:
             )
         except (ValueError, TypeError) as error:
             self.logger.warning(
-                "Could not parse message timestamp for stale check: %s", error
+                _("Could not parse message timestamp for stale check: %s"), error
             )
 
         return False
@@ -349,27 +351,31 @@ class MessageHandler:
             await self._handle_host_not_registered()
         elif error_code == "host_not_approved":
             self.logger.warning(
-                "Host registration is pending approval. Will continue periodic attempts."
+                _(
+                    "Host registration is pending approval. Will continue periodic attempts."
+                )
             )
         elif error_code == "missing_hostname":
             self.logger.error(
-                "Server reports missing hostname in message. This is a bug."
+                _("Server reports missing hostname in message. This is a bug.")
             )
         elif error_code == "queue_error":
-            self.logger.error("Server failed to queue message: %s", error_message)
+            self.logger.error(_("Server failed to queue message: %s"), error_message)
 
     async def _handle_host_not_registered(self) -> None:
         """Handle host_not_registered error by clearing state and triggering re-registration."""
         self.logger.warning(
-            "Server reports host is not registered. Clearing stored host_id and triggering re-registration..."
+            _(
+                "Server reports host is not registered. Clearing stored host_id and triggering re-registration..."
+            )
         )
 
         # Clear stored host_id from database
         try:
             await self.agent.clear_stored_host_id()
-            self.logger.info("Stored host_id cleared from database")
+            self.logger.info(_("Stored host_id cleared from database"))
         except Exception as error:
-            self.logger.error("Error clearing stored host_id: %s", error)
+            self.logger.error(_("Error clearing stored host_id: %s"), error)
 
         # Clear any existing registration state and force re-registration
         self.agent.registration_status = None
@@ -378,7 +384,7 @@ class MessageHandler:
         # Schedule re-registration on next connection attempt
         self.agent.needs_registration = True
         # Disconnect immediately to trigger reconnection with re-registration
-        self.logger.info("Disconnecting to trigger re-registration...")
+        self.logger.info(_("Disconnecting to trigger re-registration..."))
         self.agent.running = False
 
     async def _handle_broadcast_message(self, data: Dict[str, Any]) -> None:
@@ -404,7 +410,7 @@ class MessageHandler:
         broadcast_id = data.get("broadcast_id", "unknown")
         action = data.get("broadcast_action", "")
         self.logger.info(
-            "Received broadcast %s action=%s issued_by=%s",
+            _("Received broadcast %s action=%s issued_by=%s"),
             broadcast_id,
             action,
             data.get("issued_by", "unknown"),
@@ -414,29 +420,32 @@ class MessageHandler:
             try:
                 await self.agent.data_collector.send_software_inventory_update()
                 self.logger.info(
-                    "Broadcast %s: software inventory refreshed", broadcast_id
+                    _("Broadcast %s: software inventory refreshed"), broadcast_id
                 )
             except AttributeError:
                 # Older agent builds may not expose
                 # ``send_software_inventory_update``.  Best-effort:
                 # fall back to a no-op.
                 self.logger.warning(
-                    "Broadcast %s: inventory refresh requested but "
-                    "data_collector lacks send_software_inventory_update",
+                    _(
+                        "Broadcast %s: inventory refresh requested but "
+                        "data_collector lacks send_software_inventory_update"
+                    ),
                     broadcast_id,
                 )
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 self.logger.error(
-                    "Broadcast %s: inventory refresh failed: %s",
+                    _("Broadcast %s: inventory refresh failed: %s"),
                     broadcast_id,
                     exc,
                 )
         elif action == "banner":
             message = data.get("message") or "(no message)"
+            # Structural diagnostic marker, not user prose — keep untranslated.
             self.logger.info("[BANNER] %s", message)
         else:
             self.logger.warning(
-                "Broadcast %s: unknown action '%s' — ignored",
+                _("Broadcast %s: unknown action '%s' — ignored"),
                 broadcast_id,
                 action,
             )
@@ -475,6 +484,7 @@ class MessageHandler:
         await self.queue_inbound_message(data)
 
         if command_type == "create_child_host":
+            # Structural diagnostic marker (field=value trace), not user prose.
             self.logger.info(
                 ">>> [CREATE_CHILD_HOST_QUEUED] vm_name=%s queue_message_id=%s",
                 params.get("vm_name"),
@@ -517,8 +527,10 @@ class MessageHandler:
                 ws = self.agent.websocket
                 if ws is None:
                     self.logger.info(
-                        "Message receiver: websocket cleared by concurrent "
-                        "disconnect; exiting receive loop to allow reconnect"
+                        _(
+                            "Message receiver: websocket cleared by concurrent "
+                            "disconnect; exiting receive loop to allow reconnect"
+                        )
                     )
                     raise websockets.ConnectionClosed(None, None)
                 message = await ws.recv()
@@ -531,13 +543,13 @@ class MessageHandler:
                         return
 
                 except json.JSONDecodeError:
-                    self.logger.error("Invalid JSON received: %s", message)
+                    self.logger.error(_("Invalid JSON received: %s"), message)
                 except Exception as error:  # pylint: disable=broad-exception-caught
-                    self.logger.error("Error processing message: %s", error)
+                    self.logger.error(_("Error processing message: %s"), error)
 
         except websockets.ConnectionClosed:
             self.logger.info(
-                "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
+                _("WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed")
             )
             self.agent.connected = False
             self.agent.websocket = None
@@ -546,7 +558,7 @@ class MessageHandler:
             # reconnects via _handle_connection_error.
         except Exception as error:
             self.logger.error(
-                "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s", error
+                _("WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"), error
             )
             self.agent.connected = False
             self.agent.websocket = None
@@ -586,7 +598,7 @@ class MessageHandler:
         elif message_type in self._get_status_confirmation_types():
             self._handle_status_confirmation(message_type, data)
         else:
-            self.logger.warning("Unknown message type: %s", message_type)
+            self.logger.warning(_("Unknown message type: %s"), message_type)
 
         return False
 
@@ -648,7 +660,9 @@ class MessageHandler:
                     heartbeat = self.create_heartbeat_message()
                     success = await self.send_message(heartbeat)
                     if not success:
-                        self.logger.warning("Heartbeat failed, connection may be lost")
+                        self.logger.warning(
+                            _("Heartbeat failed, connection may be lost")
+                        )
                         # Don't break, let the connection handling in run() deal with it
                         return
             except asyncio.CancelledError:
@@ -656,7 +670,7 @@ class MessageHandler:
                 self.logger.debug("Message sender cancelled")
                 raise
             except Exception as error:
-                self.logger.error("Message sender error: %s", error)
+                self.logger.error(_("Message sender error: %s"), error)
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
@@ -717,20 +731,22 @@ class MessageHandler:
         )
 
         self.logger.info(
-            "Queued outbound message: %s (ID: %s)", message_type, message_id
+            _("Queued outbound message: %s (ID: %s)"), message_type, message_id
         )
 
         # Trigger queue processing if connected
         if self.agent.connected and not self.queue_processor_running:
             self.logger.info(
-                "Creating queue processing task from queue_outbound_message"
+                _("Creating queue processing task from queue_outbound_message")
             )
             try:
                 task = asyncio.create_task(self.process_outbound_queue())
-                self.logger.info("Task created from queue_outbound_message: %s", task)
+                self.logger.info(
+                    _("Task created from queue_outbound_message: %s"), task
+                )
             except Exception as error:
                 self.logger.error(
-                    "Failed to create task from queue_outbound_message: %s", error
+                    _("Failed to create task from queue_outbound_message: %s"), error
                 )
 
         return message_id
@@ -773,7 +789,7 @@ class MessageHandler:
             return  # Already running
 
         self.inbound_queue_processor_running = True
-        self.logger.info("Starting inbound queue processing")
+        self.logger.info(_("Starting inbound queue processing"))
 
         try:
             while self.agent.running:
@@ -796,7 +812,7 @@ class MessageHandler:
                 await asyncio.sleep(0.1)
 
         except Exception as error:
-            self.logger.error("Error in inbound queue processor: %s", error)
+            self.logger.error(_("Error in inbound queue processor: %s"), error)
         finally:
             self.inbound_queue_processor_running = False
             self.logger.debug("Inbound queue processing stopped")
@@ -806,7 +822,7 @@ class MessageHandler:
         # Mark message as being processed
         if not self.queue_manager.mark_processing(message.message_id):
             self.logger.warning(
-                "Could not mark inbound message %s as processing",
+                _("Could not mark inbound message %s as processing"),
                 message.message_id,
             )
             return  # Already processed or failed to mark
@@ -816,7 +832,7 @@ class MessageHandler:
             message_data = self.queue_manager.deserialize_message_data(message)
 
             self.logger.info(
-                "Processing queued inbound command: %s (queue_id: %s)",
+                _("Processing queued inbound command: %s (queue_id: %s)"),
                 message_data.get("data", {}).get("command_type", "unknown"),
                 message.message_id,
             )
@@ -827,7 +843,7 @@ class MessageHandler:
             # Mark message as completed
             self.queue_manager.mark_completed(message.message_id)
             self.logger.info(
-                "Successfully processed inbound message: %s",
+                _("Successfully processed inbound message: %s"),
                 message.message_id,
             )
 
@@ -836,7 +852,7 @@ class MessageHandler:
             error_msg = f"Exception processing inbound message: {str(error)}"
             self.queue_manager.mark_failed(message.message_id, error_msg, retry=True)
             self.logger.error(
-                "Error processing inbound message %s: %s",
+                _("Error processing inbound message %s: %s"),
                 message.message_id,
                 error,
             )
@@ -872,16 +888,16 @@ class MessageHandler:
         Only processes messages when connected.
         """
         self.logger.info(
-            "Process outbound queue called, current running status: %s",
+            _("Process outbound queue called, current running status: %s"),
             self.queue_processor_running,
         )
         if self.queue_processor_running:
-            self.logger.info("Queue processor already running, exiting")
+            self.logger.info(_("Queue processor already running, exiting"))
             return  # Already running
 
         self.queue_processor_running = True
-        self.logger.info("Starting outbound queue processing")
-        self.logger.info("Agent connected status: %s", self.agent.connected)
+        self.logger.info(_("Starting outbound queue processing"))
+        self.logger.info(_("Agent connected status: %s"), self.agent.connected)
 
         try:
             while self.agent.connected:
@@ -932,7 +948,7 @@ class MessageHandler:
             if success:
                 self.queue_manager.mark_completed(message.message_id)
                 self.logger.info(
-                    "Successfully sent queued message: %s",
+                    _("Successfully sent queued message: %s"),
                     message.message_id,
                 )
                 return False
@@ -964,64 +980,69 @@ class MessageHandler:
 
         Note: async is required because callers await this method.
         """
-        self.logger.info("Connection established, starting queue processing")
+        self.logger.info(_("Connection established, starting queue processing"))
 
         # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
         try:
             recovered = self.queue_manager.recover_stuck_messages(stale_minutes=10)
             if recovered > 0:
                 self.logger.info(
-                    "Recovered %d stuck messages on connection establishment", recovered
+                    _("Recovered %d stuck messages on connection establishment"),
+                    recovered,
                 )
         except Exception as error:
-            self.logger.error("Error recovering stuck messages: %s", error)
+            self.logger.error(_("Error recovering stuck messages: %s"), error)
 
         # Start outbound queue processing task
         if not self.queue_processor_running:
             self.logger.info(
-                "Creating outbound queue processing task from on_connection_established"
+                _(
+                    "Creating outbound queue processing task from on_connection_established"
+                )
             )
             try:
                 self.processing_task = asyncio.create_task(
                     self.process_outbound_queue()
                 )
                 self.logger.info(
-                    "Outbound queue processing task created successfully: %s",
+                    _("Outbound queue processing task created successfully: %s"),
                     self.processing_task,
                 )
             except Exception as error:
                 self.logger.error(
-                    "Failed to create outbound queue processing task: %s",
+                    _("Failed to create outbound queue processing task: %s"),
                     error,
                     exc_info=True,
                 )
         else:
             self.logger.info(
-                "Outbound queue processor already running, not starting another"
+                _("Outbound queue processor already running, not starting another")
             )
 
         # Start inbound queue processing task (to handle any pending commands)
         if not self.inbound_queue_processor_running:
             self.logger.info(
-                "Creating inbound queue processing task from on_connection_established"
+                _(
+                    "Creating inbound queue processing task from on_connection_established"
+                )
             )
             try:
                 self.inbound_processing_task = asyncio.create_task(
                     self.process_inbound_queue()
                 )
                 self.logger.info(
-                    "Inbound queue processing task created successfully: %s",
+                    _("Inbound queue processing task created successfully: %s"),
                     self.inbound_processing_task,
                 )
             except Exception as error:
                 self.logger.error(
-                    "Failed to create inbound queue processing task: %s",
+                    _("Failed to create inbound queue processing task: %s"),
                     error,
                     exc_info=True,
                 )
         else:
             self.logger.info(
-                "Inbound queue processor already running, not starting another"
+                _("Inbound queue processor already running, not starting another")
             )
 
     async def on_connection_lost(self):
@@ -1029,7 +1050,7 @@ class MessageHandler:
         Called when WebSocket connection is lost.
         Stops outbound queue processing (inbound continues to process any pending commands).
         """
-        self.logger.info("Connection lost, stopping outbound queue processing")
+        self.logger.info(_("Connection lost, stopping outbound queue processing"))
 
         # Stop outbound queue processing
         if self.processing_task and not self.processing_task.done():

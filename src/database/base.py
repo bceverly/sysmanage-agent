@@ -11,6 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from src.i18n import _
+
 # Create the base model class
 Base = declarative_base()
 
@@ -55,7 +57,7 @@ class DatabaseManager:
             autocommit=False, autoflush=False, bind=self.engine
         )
 
-        logger.info("Database manager initialized with path: %s", database_path)
+        logger.info(_("Database manager initialized with path: %s"), database_path)
 
     def _get_default_database_path(self) -> str:
         """Get the default database path - defaults to current working directory."""
@@ -69,7 +71,7 @@ class DatabaseManager:
             Path(directory).mkdir(parents=True, exist_ok=True)
         except OSError as error:
             logger.exception(
-                "Failed to create database directory %s: %s", directory, error
+                _("Failed to create database directory %s: %s"), directory, error
             )
             raise
 
@@ -77,9 +79,9 @@ class DatabaseManager:
         """Create all tables defined by models."""
         try:
             Base.metadata.create_all(bind=self.engine)
-            logger.info("Database tables created successfully")
+            logger.info(_("Database tables created successfully"))
         except Exception as error:
-            logger.exception("Failed to create database tables: %s", error)
+            logger.exception(_("Failed to create database tables: %s"), error)
             raise
 
     def get_session(self):
@@ -89,7 +91,7 @@ class DatabaseManager:
     def close(self):
         """Close the database connection."""
         self.engine.dispose()
-        logger.info("Database connection closed")
+        logger.info(_("Database connection closed"))
 
 
 # Global database manager instance (module-level private variable)

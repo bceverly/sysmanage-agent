@@ -155,7 +155,9 @@ class WindowsRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info("Windows repository %s added successfully", repo_name)
+                self.logger.info(
+                    _("Windows repository %s added successfully"), repo_name
+                )
                 return {
                     "success": True,
                     "result": _("Repository added successfully"),
@@ -163,7 +165,7 @@ class WindowsRepositoryOperations:
                 }
 
             self.logger.error(
-                "Failed to add Windows repository %s: %s",
+                _("Failed to add Windows repository %s: %s"),
                 repo_name,
                 result.get("result", {}).get("stderr", ""),
             )

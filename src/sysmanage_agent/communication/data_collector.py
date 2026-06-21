@@ -46,13 +46,13 @@ class DataCollector:
             await self._send_initial_core_data()
             await self._send_initial_update_check()
             await self._send_initial_supplementary_data()
-            self.logger.info("Initial data updates sent successfully")
+            self.logger.info(_("Initial data updates sent successfully"))
         except Exception as error:
             self.logger.error(_("Failed to send initial data updates: %s"), error)
 
     async def _send_initial_core_data(self):
         """Send initial OS version, hardware, user access, and software data."""
-        self.logger.info("Sending initial OS version data...")
+        self.logger.info(_("Sending initial OS version data..."))
 
         # Send OS version data
         os_info = self.agent.registration.get_os_version_info()
@@ -65,7 +65,7 @@ class DataCollector:
         # Allow queue processing tasks to run
         await asyncio.sleep(0)
 
-        self.logger.info("Sending initial hardware data...")
+        self.logger.info(_("Sending initial hardware data..."))
 
         # Send hardware data
         hardware_info = self.agent.registration.get_hardware_info()
@@ -78,7 +78,7 @@ class DataCollector:
         # Allow time for the large hardware message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info("Sending initial user access data...")
+        self.logger.info(_("Sending initial user access data..."))
 
         # Send user access data
         user_access_info = self.agent.registration.get_user_access_info()
@@ -93,7 +93,7 @@ class DataCollector:
         # Allow time for the large user access message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info("Sending initial software inventory data...")
+        self.logger.info(_("Sending initial software inventory data..."))
 
         # Send software inventory data
         software_info = self.agent.registration.get_software_inventory_info()
@@ -107,24 +107,24 @@ class DataCollector:
 
     async def _send_initial_update_check(self):
         """Send initial update check and collect certificates and roles."""
-        self.logger.info("Sending initial update check...")
+        self.logger.info(_("Sending initial update check..."))
 
         try:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
-                    "Found %d available updates during initial check",
+                    _("Found %d available updates during initial check"),
                     update_result["total_updates"],
                 )
             else:
-                self.logger.info("No updates found during initial check")
+                self.logger.info(_("No updates found during initial check"))
         except Exception as error:
-            self.logger.error("Failed to perform initial update check: %s", error)
+            self.logger.error(_("Failed to perform initial update check: %s"), error)
 
         # Allow time for update check to complete before collecting certificates
         await asyncio.sleep(2)
 
-        self.logger.info("Collecting initial certificate data...")
+        self.logger.info(_("Collecting initial certificate data..."))
 
         try:
             certificate_result = await self.collect_certificates()
@@ -132,17 +132,19 @@ class DataCollector:
                 cert_count = certificate_result.get("certificate_count", 0)
                 if cert_count > 0:
                     self.logger.info(
-                        "Found and sent %d certificates during initial collection",
+                        _("Found and sent %d certificates during initial collection"),
                         cert_count,
                     )
                 else:
-                    self.logger.info("No certificates found during initial collection")
+                    self.logger.info(
+                        _("No certificates found during initial collection")
+                    )
             else:
                 error_msg = certificate_result.get("error", _UNKNOWN_ERROR)
-                self.logger.warning("Certificate collection failed: %s", error_msg)
+                self.logger.warning(_("Certificate collection failed: %s"), error_msg)
         except Exception as error:
             self.logger.error(
-                "Failed to perform initial certificate collection: %s", error
+                _("Failed to perform initial certificate collection: %s"), error
             )
 
         try:
@@ -151,44 +153,50 @@ class DataCollector:
                 role_count = role_result.get("role_count", 0)
                 if role_count > 0:
                     self.logger.info(
-                        "Found and sent %d server roles during initial collection",
+                        _("Found and sent %d server roles during initial collection"),
                         role_count,
                     )
                 else:
-                    self.logger.info("No server roles found during initial collection")
+                    self.logger.info(
+                        _("No server roles found during initial collection")
+                    )
             else:
                 error_msg = role_result.get("error", _UNKNOWN_ERROR)
-                self.logger.warning("Role collection failed: %s", error_msg)
+                self.logger.warning(_("Role collection failed: %s"), error_msg)
         except Exception as error:
-            self.logger.error("Failed to perform initial role collection: %s", error)
+            self.logger.error(_("Failed to perform initial role collection: %s"), error)
 
     async def _send_initial_supplementary_data(self):
         """Send initial third-party repos, firewall, Graylog, and child host data."""
         try:
-            self.logger.info("Collecting initial third-party repository data...")
+            self.logger.info(_("Collecting initial third-party repository data..."))
             await self._send_third_party_repository_update()
         except Exception as error:
             self.logger.error(
-                "Failed to send initial third-party repository data: %s", error
+                _("Failed to send initial third-party repository data: %s"), error
             )
 
         try:
-            self.logger.info("Collecting initial firewall status data...")
+            self.logger.info(_("Collecting initial firewall status data..."))
             await self._send_firewall_status_update()
         except Exception as error:
-            self.logger.error("Failed to send initial firewall status data: %s", error)
+            self.logger.error(
+                _("Failed to send initial firewall status data: %s"), error
+            )
 
         try:
-            self.logger.info("Collecting initial Graylog status data...")
+            self.logger.info(_("Collecting initial Graylog status data..."))
             await self._send_graylog_status_update()
         except Exception as error:
-            self.logger.error("Failed to send initial Graylog status data: %s", error)
+            self.logger.error(
+                _("Failed to send initial Graylog status data: %s"), error
+            )
 
         try:
-            self.logger.info("Collecting initial child hosts data...")
+            self.logger.info(_("Collecting initial child hosts data..."))
             await self.child_host_collector.send_child_hosts_update()
         except Exception as error:
-            self.logger.error("Failed to send initial child hosts data: %s", error)
+            self.logger.error(_("Failed to send initial child hosts data: %s"), error)
 
     async def update_os_version(self) -> Dict[str, Any]:
         """Gather and send updated OS version information to the server."""
@@ -207,7 +215,7 @@ class DataCollector:
 
             return {"success": True, "result": "OS version information sent"}
         except Exception as error:
-            self.logger.error("Failed to update OS version: %s", error)
+            self.logger.error(_("Failed to update OS version: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def update_hardware(self) -> Dict[str, Any]:
@@ -229,7 +237,7 @@ class DataCollector:
 
             return {"success": True, "result": "Hardware information sent"}
         except Exception as error:
-            self.logger.error("Failed to update hardware: %s", error)
+            self.logger.error(_("Failed to update hardware: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def update_user_access(self) -> Dict[str, Any]:
@@ -251,7 +259,7 @@ class DataCollector:
 
             return {"success": True, "result": "User access information sent"}
         except Exception as error:
-            self.logger.error("Failed to update user access: %s", error)
+            self.logger.error(_("Failed to update user access: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def _send_software_inventory_update(self):
@@ -280,7 +288,7 @@ class DataCollector:
                 "AGENT_DEBUG: Periodic software inventory sent successfully"
             )
         else:
-            self.logger.warning("Failed to send periodic software inventory data")
+            self.logger.warning(_("Failed to send periodic software inventory data"))
 
     async def _send_user_access_update(self):
         """Send user access update."""
@@ -304,7 +312,7 @@ class DataCollector:
                 "AGENT_DEBUG: Periodic user access data sent successfully"
             )
         else:
-            self.logger.warning("Failed to send periodic user access data")
+            self.logger.warning(_("Failed to send periodic user access data"))
 
     async def _send_hardware_update(self):
         """Send hardware update."""
@@ -328,7 +336,7 @@ class DataCollector:
         if success:
             self.logger.debug("AGENT_DEBUG: Periodic hardware data sent successfully")
         else:
-            self.logger.warning("Failed to send periodic hardware data")
+            self.logger.warning(_("Failed to send periodic hardware data"))
 
     async def _send_certificate_update(self):
         """Send certificate update."""
@@ -347,7 +355,9 @@ class DataCollector:
                 )
         else:
             error_msg = certificate_result.get("error", _UNKNOWN_ERROR)
-            self.logger.warning("Periodic certificate collection failed: %s", error_msg)
+            self.logger.warning(
+                _("Periodic certificate collection failed: %s"), error_msg
+            )
 
     async def _send_role_update(self):
         """Send role update."""
@@ -366,7 +376,7 @@ class DataCollector:
                 )
         else:
             error_msg = role_result.get("error", _UNKNOWN_ERROR)
-            self.logger.warning("Periodic role collection failed: %s", error_msg)
+            self.logger.warning(_("Periodic role collection failed: %s"), error_msg)
 
     async def _send_os_version_update(self):
         """Send OS version update."""
@@ -390,7 +400,7 @@ class DataCollector:
         if success:
             self.logger.debug("AGENT_DEBUG: Periodic OS version data sent successfully")
         else:
-            self.logger.warning("Failed to send periodic OS version data")
+            self.logger.warning(_("Failed to send periodic OS version data"))
 
     async def _send_reboot_status_update(self):
         """Send reboot status update."""
@@ -411,7 +421,7 @@ class DataCollector:
         if not repo_result.get("success", False):
             error_msg = repo_result.get("error", _UNKNOWN_ERROR)
             self.logger.warning(
-                "Failed to collect third-party repositories: %s", error_msg
+                _("Failed to collect third-party repositories: %s"), error_msg
             )
             return
 
@@ -445,7 +455,7 @@ class DataCollector:
                 len(repositories),
             )
         else:
-            self.logger.warning("Failed to send third-party repository data")
+            self.logger.warning(_("Failed to send third-party repository data"))
 
     async def _send_antivirus_status_update(self):
         """Send antivirus status update."""
@@ -477,9 +487,11 @@ class DataCollector:
                     "AGENT_DEBUG: Antivirus status data sent successfully"
                 )
             else:
-                self.logger.warning("Failed to send antivirus status data")
+                self.logger.warning(_("Failed to send antivirus status data"))
         else:
-            self.logger.warning("Cannot send antivirus status data: no host approval")
+            self.logger.warning(
+                _("Cannot send antivirus status data: no host approval")
+            )
 
     async def _send_firewall_status_update(self):
         """Send firewall status update."""
@@ -512,9 +524,9 @@ class DataCollector:
             if success:
                 self.logger.debug("AGENT_DEBUG: Firewall status data sent successfully")
             else:
-                self.logger.warning("Failed to send firewall status data")
+                self.logger.warning(_("Failed to send firewall status data"))
         else:
-            self.logger.warning("Cannot send firewall status data: no host approval")
+            self.logger.warning(_("Cannot send firewall status data: no host approval"))
 
     async def _send_graylog_status_update(self):
         """Send Graylog attachment status update."""
@@ -546,9 +558,9 @@ class DataCollector:
             if success:
                 self.logger.debug("AGENT_DEBUG: Graylog status data sent successfully")
             else:
-                self.logger.warning("Failed to send Graylog status data")
+                self.logger.warning(_("Failed to send Graylog status data"))
         else:
-            self.logger.warning("Cannot send Graylog status data: no host approval")
+            self.logger.warning(_("Cannot send Graylog status data: no host approval"))
 
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
@@ -561,75 +573,77 @@ class DataCollector:
         try:
             await self._send_software_inventory_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending software inventory: %s", error)
+            self.logger.error(
+                _("Error collecting/sending software inventory: %s"), error
+            )
 
         # Send user access update
         try:
             await self._send_user_access_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending user access data: %s", error)
+            self.logger.error(_("Error collecting/sending user access data: %s"), error)
 
         # Send hardware update
         try:
             await self._send_hardware_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending hardware data: %s", error)
+            self.logger.error(_("Error collecting/sending hardware data: %s"), error)
 
         # Send certificate update
         try:
             await self._send_certificate_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending certificate data: %s", error)
+            self.logger.error(_("Error collecting/sending certificate data: %s"), error)
 
         # Send role update
         try:
             await self._send_role_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending role data: %s", error)
+            self.logger.error(_("Error collecting/sending role data: %s"), error)
 
         # Send OS version update
         try:
             await self._send_os_version_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending OS version data: %s", error)
+            self.logger.error(_("Error collecting/sending OS version data: %s"), error)
 
         # Send reboot status update
         try:
             await self._send_reboot_status_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending reboot status: %s", error)
+            self.logger.error(_("Error collecting/sending reboot status: %s"), error)
 
         # Send third-party repository update
         try:
             await self._send_third_party_repository_update()
         except Exception as error:
             self.logger.error(
-                "Error collecting/sending third-party repository data: %s", error
+                _("Error collecting/sending third-party repository data: %s"), error
             )
 
         # Send antivirus status update
         try:
             await self._send_antivirus_status_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending antivirus status: %s", error)
+            self.logger.error(_("Error collecting/sending antivirus status: %s"), error)
 
         # Send firewall status update
         try:
             await self._send_firewall_status_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending firewall status: %s", error)
+            self.logger.error(_("Error collecting/sending firewall status: %s"), error)
 
         # Send Graylog status update
         try:
             await self._send_graylog_status_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending Graylog status: %s", error)
+            self.logger.error(_("Error collecting/sending Graylog status: %s"), error)
 
         # Send child hosts (WSL/VM/container) status update
         try:
             await self.child_host_collector.send_child_hosts_update()
         except Exception as error:
-            self.logger.error("Error collecting/sending child hosts data: %s", error)
+            self.logger.error(_("Error collecting/sending child hosts data: %s"), error)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
@@ -641,7 +655,7 @@ class DataCollector:
         # which is why fresh installs show "OS Updated: never" on the
         # server even hours after the agent connected.  Poll briefly
         # (1s interval, 60s ceiling) and then fire the first collect.
-        for _ in range(60):
+        for _tick in range(60):
             if not self.agent.running:
                 return
             if self.agent.connected:
@@ -650,10 +664,10 @@ class DataCollector:
 
         if self.agent.running and self.agent.connected:
             try:
-                self.logger.info("Initial periodic data collection (post-connect)")
+                self.logger.info(_("Initial periodic data collection (post-connect)"))
                 await self._collect_and_send_periodic_data()
             except Exception as error:  # pylint: disable=broad-exception-caught
-                self.logger.error("Initial data collection error: %s", error)
+                self.logger.error(_("Initial data collection error: %s"), error)
 
         # Send periodic data updates every 5 minutes
         data_collection_interval = 300  # 5 minutes
@@ -668,7 +682,7 @@ class DataCollector:
                 self.logger.debug("Data collector cancelled")
                 raise
             except Exception as error:
-                self.logger.error("Data collector error: %s", error)
+                self.logger.error(_("Data collector error: %s"), error)
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
 
@@ -759,7 +773,7 @@ class DataCollector:
             )
             await self.agent.send_message(batch_start_message)
             self.logger.info(
-                "Started packages batch %s with %d total packages",
+                _("Started packages batch %s with %d total packages"),
                 batch_id,
                 total_packages,
             )
@@ -782,7 +796,9 @@ class DataCollector:
                     )
                     await self.agent.send_message(batch_message)
                     self.logger.info(
-                        "Sent batch with %d packages from %s (batch %s, packages %d-%d)",
+                        _(
+                            "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
+                        ),
                         len(batch_packages),
                         manager_name,
                         batch_id,
@@ -799,13 +815,13 @@ class DataCollector:
                 },
             )
             await self.agent.send_message(batch_end_message)
-            self.logger.info("Completed packages batch %s", batch_id)
+            self.logger.info(_("Completed packages batch %s"), batch_id)
 
             return True
 
         except Exception as error:
             self.logger.error(
-                "Error sending paginated packages for batch %s: %s", batch_id, error
+                _("Error sending paginated packages for batch %s: %s"), batch_id, error
             )
             return False
 
@@ -816,23 +832,25 @@ class DataCollector:
             # Only some certificates in restricted directories may require privileged access
             if not is_running_privileged():
                 self.logger.info(
-                    "Running certificate collection in unprivileged mode - some certificates may not be accessible"
+                    _(
+                        "Running certificate collection in unprivileged mode - some certificates may not be accessible"
+                    )
                 )
 
-            self.logger.info("Collecting SSL certificates from system")
+            self.logger.info(_("Collecting SSL certificates from system"))
 
             # Collect certificate data
             certificates = self.agent.certificate_collector.collect_certificates()
 
             if not certificates:
-                self.logger.info("No certificates found on system")
+                self.logger.info(_("No certificates found on system"))
                 return {
                     "success": True,
                     "result": "No certificates found",
                     "certificate_count": 0,
                 }
 
-            self.logger.info("Found %d certificates", len(certificates))
+            self.logger.info(_("Found %d certificates"), len(certificates))
 
             # Send certificate data to server
             system_info = self.agent.registration.get_system_info()
@@ -860,20 +878,20 @@ class DataCollector:
     async def collect_roles(self) -> Dict[str, Any]:
         """Collect server roles from the system and send to server."""
         try:
-            self.logger.info("Collecting server roles")
+            self.logger.info(_("Collecting server roles"))
 
             # Collect role data
             roles = self.agent.role_detector.detect_roles()
 
             if not roles:
-                self.logger.info("No server roles detected on system")
+                self.logger.info(_("No server roles detected on system"))
                 return {
                     "success": True,
                     "result": "No server roles detected",
                     "role_count": 0,
                 }
 
-            self.logger.info("Found %d server roles", len(roles))
+            self.logger.info(_("Found %d server roles"), len(roles))
 
             # Get hostname for server validation
             system_info = self.agent.registration.get_system_info()

@@ -52,12 +52,12 @@ class UpdateChecker:
         if not (self.agent.running and self.agent.connected):
             return False
 
-        self.logger.info("Performing periodic update check")
+        self.logger.info(_("Performing periodic update check"))
         try:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
-                    "Found %d available updates during periodic check",
+                    _("Found %d available updates during periodic check"),
                     update_result["total_updates"],
                 )
             return True
@@ -116,7 +116,7 @@ class PackageCollectionScheduler:
             self.logger.debug("Package collection is disabled in configuration")
             return False
 
-        self.logger.info("Starting package collection")
+        self.logger.info(_("Starting package collection"))
         try:
             # Run the blocking package collection in a thread pool executor
             # to prevent blocking the async event loop during long HTTP operations
@@ -126,7 +126,7 @@ class PackageCollectionScheduler:
                 self.package_collector.collect_all_available_packages,
             )
             if success:
-                self.logger.info("Package collection completed successfully")
+                self.logger.info(_("Package collection completed successfully"))
             else:
                 self.logger.warning(_("Package collection completed with some issues"))
             return success
@@ -139,12 +139,14 @@ class PackageCollectionScheduler:
         self.logger.debug("Package collection scheduler started")
 
         if not self.agent.config.is_package_collection_enabled():
-            self.logger.info("Package collection is disabled - scheduler will not run")
+            self.logger.info(
+                _("Package collection is disabled - scheduler will not run")
+            )
             return
 
         # Run collection at startup if configured
         if self.agent.config.is_package_collection_at_startup_enabled():
-            self.logger.info("Running initial package collection at startup")
+            self.logger.info(_("Running initial package collection at startup"))
             await self.perform_package_collection()
 
         package_collection_interval = (
@@ -245,7 +247,7 @@ class MessageProcessor:
         parameters = command_data.get("parameters", {})
 
         self.logger.info(
-            "Received command: %s with parameters: %s", command_type, parameters
+            _("Received command: %s with parameters: %s"), command_type, parameters
         )
 
         # Phase 11.6: long-running plans use an in-flight journal keyed by
@@ -481,7 +483,7 @@ class MessageProcessor:
             )
 
             self.logger.info(
-                "Queued script execution result for execution_id: %s", execution_id
+                _("Queued script execution result for execution_id: %s"), execution_id
             )
 
         except Exception as error:
@@ -552,7 +554,7 @@ class MessageProcessor:
                 session.commit()
 
                 self.logger.info(
-                    "Stored execution UUID %s for tracking", execution_uuid
+                    _("Stored execution UUID %s for tracking"), execution_uuid
                 )
             finally:
                 session.close()
@@ -590,7 +592,7 @@ class MessageProcessor:
                 return {"success": False, "error": "No services specified"}
 
             self.logger.info(
-                "Service control requested: %s for services: %s", action, services
+                _("Service control requested: %s for services: %s"), action, services
             )
 
             # Check if running in privileged mode
@@ -647,7 +649,7 @@ class MessageProcessor:
             Dict with success status and message or error.
         """
         try:
-            self.logger.info("Executing %s for service: %s", action, service)
+            self.logger.info(_("Executing %s for service: %s"), action, service)
 
             cmd = self._build_service_control_cmd(action, service)
             if cmd is None:
@@ -658,7 +660,7 @@ class MessageProcessor:
             result = await run_command_async(cmd, timeout=30.0)
 
             if result.returncode == 0:
-                self.logger.info("Successfully %s service: %s", action, service)
+                self.logger.info(_("Successfully %s service: %s"), action, service)
                 return {
                     "success": True,
                     "message": f"Service {action} successful",
@@ -743,7 +745,7 @@ class MessageProcessor:
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""
         try:
-            self.logger.info("Triggering role collection after service control")
+            self.logger.info(_("Triggering role collection after service control"))
             await self.agent.collect_roles()
         except Exception as error:
             self.logger.warning(
@@ -760,7 +762,7 @@ class MessageProcessor:
             if not services:
                 return {"success": False, "error": "No services specified"}
 
-            self.logger.info("Service status check requested for: %s", services)
+            self.logger.info(_("Service status check requested for: %s"), services)
 
             # Check if running in privileged mode
             if not is_running_privileged():
@@ -799,7 +801,7 @@ class MessageProcessor:
             Dict with success, status, and active fields
         """
         try:
-            self.logger.info("Checking status for service: %s", service)
+            self.logger.info(_("Checking status for service: %s"), service)
 
             systemctl_path = shutil.which("systemctl")
             if not systemctl_path:
@@ -819,7 +821,7 @@ class MessageProcessor:
             # - other codes for failed, unknown, etc.
             status = result.stdout.strip()  # active, inactive, failed, unknown, etc.
 
-            self.logger.info("Service %s status: %s", service, status)
+            self.logger.info(_("Service %s status: %s"), service, status)
             return {
                 "success": True,
                 "status": status,
@@ -1123,7 +1125,7 @@ async def reconcile_inflight_journal(agent) -> Dict[str, Any]:
 
     if classified["live"] or classified["dead"]:
         logger.info(
-            "In-flight journal reconciliation: %d live, %d dead",
+            _("In-flight journal reconciliation: %d live, %d dead"),
             len(classified["live"]),
             len(classified["dead"]),
         )

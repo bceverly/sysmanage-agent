@@ -244,7 +244,7 @@ class LinuxUpdateApplicator:
                 continue
 
             try:
-                logger.info("Applying firmware update for device: %s", device_id)
+                logger.info(_("Applying firmware update for device: %s"), device_id)
 
                 result = subprocess.run(  # nosec B603, B607
                     [*_sudo_prefix(), "fwupdmgr", "update", device_id, "--assume-yes"],
@@ -255,7 +255,9 @@ class LinuxUpdateApplicator:
                 )
 
                 if result.returncode == 0:
-                    logger.info("Successfully updated firmware for: %s", package_name)
+                    logger.info(
+                        _("Successfully updated firmware for: %s"), package_name
+                    )
                     results.setdefault("updated_packages", []).append(
                         {
                             "package_name": package_name,
@@ -305,7 +307,7 @@ class LinuxUpdateApplicator:
         try:
             for package in packages:
                 logger.info(
-                    "Applying Ubuntu release upgrade to: %s",
+                    _("Applying Ubuntu release upgrade to: %s"),
                     package.get("available_version"),
                 )
 
@@ -350,7 +352,7 @@ class LinuxUpdateApplicator:
                 target_version = package.get("available_version", "").replace(
                     "Fedora ", ""
                 )
-                logger.info("Applying Fedora release upgrade to: %s", target_version)
+                logger.info(_("Applying Fedora release upgrade to: %s"), target_version)
 
                 result = subprocess.run(  # nosec B603, B607
                     [
@@ -401,7 +403,7 @@ class LinuxUpdateApplicator:
         try:
             for package in packages:
                 logger.info(
-                    "Applying openSUSE release upgrade to: %s",
+                    _("Applying openSUSE release upgrade to: %s"),
                     package.get("available_version"),
                 )
 

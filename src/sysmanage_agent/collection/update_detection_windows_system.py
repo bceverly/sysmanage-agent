@@ -119,7 +119,7 @@ class WindowsSystemDetectorMixin:
             for update in updates_data:
                 update_entry = self._classify_windows_update(update)
                 logger.info(
-                    "Windows Update detected: '%s' with UpdateID='%s'",
+                    _("Windows Update detected: '%s' with UpdateID='%s'"),
                     update_entry["package_name"],
                     update_entry["update_id"],
                 )

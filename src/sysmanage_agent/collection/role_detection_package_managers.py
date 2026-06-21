@@ -9,6 +9,8 @@ import shutil
 import subprocess  # nosec B404 # Required for system package management
 from typing import Dict, Optional
 
+from src.i18n import _
+
 
 def is_valid_unix_username(username: str) -> bool:
     """
@@ -54,7 +56,7 @@ class PackageManagerDetector:
                 packages.update(self._get_windows_packages())
 
         except Exception as error:
-            self.logger.error("Error getting installed packages: %s", error)
+            self.logger.error(_("Error getting installed packages: %s"), error)
 
         return packages
 
@@ -289,7 +291,7 @@ class PackageManagerDetector:
                 pkg_version = pkg_full.split("-")[-1]
                 packages[pkg_name] = pkg_version
         except Exception as error:
-            self.logger.error("Error getting pkgin packages: %s", error)
+            self.logger.error(_("Error getting pkgin packages: %s"), error)
         return packages
 
     def _get_pkg_packages(self) -> Dict[str, str]:
@@ -326,7 +328,7 @@ class PackageManagerDetector:
                 pkg_version = pkg_full.split("-")[-1]
                 packages[pkg_name] = pkg_version
         except Exception as error:
-            self.logger.error("Error getting pkg packages: %s", error)
+            self.logger.error(_("Error getting pkg packages: %s"), error)
         return packages
 
     def _get_windows_packages(self) -> Dict[str, str]:
@@ -370,7 +372,7 @@ class PackageManagerDetector:
                     if os.path.isdir(version_path):
                         packages["postgresql"] = version_dir
                         self.logger.info(
-                            "Found PostgreSQL %s in %s", version_dir, base_path
+                            _("Found PostgreSQL %s in %s"), version_dir, base_path
                         )
                         return  # Take first version found
             except Exception as error:
@@ -391,7 +393,7 @@ class PackageManagerDetector:
                         version = server_dir.replace("MySQL Server ", "")
                         packages["mysql-server"] = version
                         self.logger.info(
-                            "Found MySQL Server %s in %s", version, base_path
+                            _("Found MySQL Server %s in %s"), version, base_path
                         )
                         return  # Take first version found
             except Exception as error:
@@ -418,7 +420,7 @@ class PackageManagerDetector:
             if result.returncode == 0:
                 version = result.stdout.strip()
                 packages["sqlite3"] = version
-                self.logger.info("Found SQLite %s via Python", version)
+                self.logger.info(_("Found SQLite %s via Python"), version)
         except Exception as error:
             self.logger.debug("Error checking Python SQLite: %s", error)
 

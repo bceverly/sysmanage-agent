@@ -46,6 +46,7 @@ import platform
 import subprocess  # nosec B404 # required for hypervisor list shell
 from typing import Any, Dict, List, TYPE_CHECKING
 
+from src.i18n import _
 from src.sysmanage_agent.wsl.keepalive import WslKeepalive, is_windows
 
 if TYPE_CHECKING:
@@ -378,9 +379,9 @@ class ChildHostReporter:
                     len(child_hosts),
                 )
             else:
-                self.logger.warning("Failed to send child hosts data")
+                self.logger.warning(_("Failed to send child hosts data"))
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            self.logger.error("Error collecting/sending child hosts data: %s", exc)
+            self.logger.error(_("Error collecting/sending child hosts data: %s"), exc)
 
     # ------------------------------------------------------------------
     # Periodic loop + Windows-specific keep-alive integration
@@ -393,7 +394,7 @@ class ChildHostReporter:
         if is_windows():
             if self._wsl_keepalive.ensure_wslconfig():
                 self._wsl_keepalive.restart_wsl()
-            self.logger.info("Starting WSL keep-alive processes")
+            self.logger.info(_("Starting WSL keep-alive processes"))
             self._wsl_keepalive.ensure_keepalive_processes()
 
         heartbeat_interval = 60
@@ -409,9 +410,9 @@ class ChildHostReporter:
                     self.logger.debug("Child host heartbeat cancelled")
                     raise
                 except Exception as exc:  # pylint: disable=broad-exception-caught
-                    self.logger.error("Child host heartbeat error: %s", exc)
+                    self.logger.error(_("Child host heartbeat error: %s"), exc)
                     continue
         finally:
             if is_windows():
-                self.logger.info("Stopping WSL keep-alive processes")
+                self.logger.info(_("Stopping WSL keep-alive processes"))
             self._wsl_keepalive.stop_all_keepalive_processes()

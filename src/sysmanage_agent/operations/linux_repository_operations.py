@@ -66,7 +66,7 @@ class LinuxRepositoryOperations:
         if ":" not in line:
             return
 
-        key, _, value = line.partition(":")
+        key, _sep, value = line.partition(":")
         key = key.strip().lower()
         value = value.strip()
 

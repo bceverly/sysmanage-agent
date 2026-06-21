@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import subprocess  # nosec B404 - calls pinned gettext binaries
 import sys
 from pathlib import Path
@@ -227,8 +228,15 @@ def cmd_compile() -> int:
     for lang in list_locales():
         po_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.po"
         mo_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.mo"
-        cmd = ["msgfmt", "-o", str(mo_path), str(po_path)]
-        subprocess.run(cmd, check=True)  # nosec B603
+        try:
+            cmd = ["msgfmt", "-o", str(mo_path), str(po_path)]
+            subprocess.run(cmd, check=True)  # nosec B603
+        except (FileNotFoundError, OSError):
+            # msgfmt (GNU gettext) not installed — fall back to pure-Python polib
+            # so packaging works on platforms without gettext (e.g. Windows MSI).
+            import polib  # noqa: PLC0415
+
+            polib.pofile(str(po_path)).save_as_mofile(str(mo_path))
         print(f"OK: compiled {lang}")
     return 0
 
@@ -270,69 +278,41 @@ def cmd_validate() -> int:
 
 
 def cmd_strip_fuzzy() -> int:
-    """Remove the ``fuzzy`` flag where the msgstr is non-empty and differs
-    from the msgid.  Empty or echo-the-msgid stays fuzzy so it gets seen."""
+    """Turn every fuzzy entry into a clean untranslated gap: drop the ``fuzzy``
+    flag AND empty its msgstr.
+
+    A fuzzy msgstr is msgmerge's GUESS carried over from a different (similar)
+    string — NOT a real translation.  ``msgfmt`` already drops fuzzy entries from
+    the compiled ``.mo`` (so they render English at runtime), but a NON-EMPTY
+    fuzzy msgstr hides the gap from the completeness check, so a wrong/absent
+    translation ships silently.  Emptying makes the gap honest: ``make translate``
+    (or a human) then fills it accurately.  Uses gettext's ``msgattrib`` when
+    present, else a pure-Python ``polib`` fallback (matches ``cmd_compile``)."""
     for lang in list_locales():
         po_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.po"
-        text = po_path.read_text(encoding="utf-8")
-        out: list[str] = []
-        block: list[str] = []
-        for line in text.splitlines():
-            if line.strip():
-                block.append(line)
-                continue
-            out.extend(_strip_fuzzy_block(block))
-            out.append(line)
-            block = []
-        out.extend(_strip_fuzzy_block(block))
-        new_text = "\n".join(out)
-        if not new_text.endswith("\n"):
-            new_text += "\n"
-        if new_text != text:
-            po_path.write_text(new_text, encoding="utf-8")
-            print(f"OK: stripped fuzzy flags in {lang}")
-    return 0
-
-
-_PRINTF_SPEC = re.compile(
-    r"%[#0\-+ ]?\d*\.?\d*[diouxXeEfFgGcrsa%]|%\([^)]+\)[diouxXeEfFgGcrsa]"
-)
-
-
-def _format_specs(s: str) -> tuple:
-    """Return a sorted tuple of printf specs in ``s``, ignoring ``%%``.
-
-    Used to detect bad translations where the msgstr has dropped or
-    changed the format placeholders relative to the msgid.  Such
-    translations break ``logger.info(_(fmt), arg1, arg2)`` at runtime
-    with TypeError.
-    """
-    return tuple(sorted(m for m in _PRINTF_SPEC.findall(s) if m != "%%"))
-
-
-def _strip_fuzzy_block(block: list[str]) -> list[str]:
-    if not block:
-        return block
-    msgid = _extract_quoted(block, "msgid")
-    msgstr = _extract_quoted(block, "msgstr")
-    if not msgid or not msgstr or msgstr == msgid:
-        return block
-    # CRITICAL safety check — if the msgstr's format specifiers don't match
-    # the msgid's, removing the ``fuzzy`` flag would expose a translation
-    # that crashes at runtime when the logger interpolates args.  Keep it
-    # fuzzy so a translator review fills it in (or wipes it).
-    if _format_specs(msgid) != _format_specs(msgstr):
-        return block
-    out: list[str] = []
-    for line in block:
-        if line.startswith("#,") and "fuzzy" in line:
-            new = line.replace("fuzzy", "").replace(", ,", ",").strip()
-            if new in ("#,", "#"):
-                continue
-            out.append(new)
+        if shutil.which("msgattrib"):
+            subprocess.run(  # nosec B603 B607
+                [
+                    "msgattrib",
+                    "--clear-fuzzy",
+                    "--empty",
+                    str(po_path),
+                    "-o",
+                    str(po_path),
+                ],
+                check=True,
+            )
         else:
-            out.append(line)
-    return out
+            import polib  # noqa: PLC0415
+
+            pofile = polib.pofile(str(po_path))
+            for entry in pofile:
+                if "fuzzy" in entry.flags:
+                    entry.flags.remove("fuzzy")
+                    entry.msgstr = ""
+            pofile.save(str(po_path))
+        print(f"OK: cleared fuzzy -> gaps in {lang}")
+    return 0
 
 
 def main() -> int:

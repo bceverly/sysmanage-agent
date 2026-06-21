@@ -30,7 +30,7 @@ class BSDPackageCollector(BasePackageCollector):
                 try:
                     count = self._collect_pkg_packages()
                     total_collected += count
-                    logger.info("Collected %d packages from pkg_info", count)
+                    logger.info(_("Collected %d packages from pkg_info"), count)
                 except Exception as error:
                     logger.exception(
                         _("Failed to collect pkg_info packages: %s"), error
@@ -41,7 +41,7 @@ class BSDPackageCollector(BasePackageCollector):
                 try:
                     count = self._collect_pkg_packages()
                     total_collected += count
-                    logger.info("Collected %d packages from pkg", count)
+                    logger.info(_("Collected %d packages from pkg"), count)
                 except Exception as error:
                     logger.exception(_("Failed to collect pkg packages: %s"), error)
 
@@ -50,7 +50,7 @@ class BSDPackageCollector(BasePackageCollector):
             try:
                 count = self._collect_pkgin_packages()
                 total_collected += count
-                logger.info("Collected %d packages from pkgin", count)
+                logger.info(_("Collected %d packages from pkgin"), count)
             except Exception as error:
                 logger.exception(_("Failed to collect pkgin packages: %s"), error)
 

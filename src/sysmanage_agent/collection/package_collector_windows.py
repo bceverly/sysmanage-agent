@@ -59,7 +59,7 @@ class WindowsPackageCollector(BasePackageCollector):
                 try:
                     count = collector_func()
                     total_collected += count
-                    logger.info("Collected %d packages from %s", count, manager_name)
+                    logger.info(_("Collected %d packages from %s"), count, manager_name)
                 except Exception as error:
                     logger.exception(
                         _("Failed to collect packages from %s: %s"), manager_name, error
@@ -70,14 +70,14 @@ class WindowsPackageCollector(BasePackageCollector):
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget) via REST API."""
         try:
-            logger.info("Fetching winget catalog via REST API")
+            logger.info(_("Fetching winget catalog via REST API"))
 
             api_url = "https://api.winget.run/v2/packages"
             packages = self._collect_winget_pages(api_url)
 
             if packages:
                 logger.info(
-                    "Successfully collected %d packages from winget REST API",
+                    _("Successfully collected %d packages from winget REST API"),
                     len(packages),
                 )
                 return self._store_packages("winget", packages)
@@ -176,14 +176,16 @@ class WindowsPackageCollector(BasePackageCollector):
     def _collect_chocolatey_packages(self) -> int:
         """Collect packages from Chocolatey community repository API."""
         try:
-            logger.info("Fetching Chocolatey catalog via community repository API")
+            logger.info(_("Fetching Chocolatey catalog via community repository API"))
 
             api_url = "https://community.chocolatey.org/api/v2/Packages()"
             packages = self._collect_chocolatey_pages(api_url)
 
             if packages:
                 logger.info(
-                    "Successfully collected %d packages from Chocolatey community repository",
+                    _(
+                        "Successfully collected %d packages from Chocolatey community repository"
+                    ),
                     len(packages),
                 )
                 return self._store_packages("chocolatey", packages)

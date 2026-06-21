@@ -82,7 +82,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             parameters  # API signature requirement - pylint: disable=unused-variable
         )
         try:
-            self.logger.info("Listing third-party repositories")
+            self.logger.info(_("Listing third-party repositories"))
             system = platform.system()
 
             if system == "Linux":
@@ -179,7 +179,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("Repository identifier is required"),
                 }
 
-            self.logger.info("Adding third-party repository: %s", repo_identifier)
+            self.logger.info(_("Adding third-party repository: %s"), repo_identifier)
 
             system = platform.system()
 
@@ -229,7 +229,9 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for deletion"),
                 }
 
-            self.logger.info("Deleting %d third-party repositories", len(repositories))
+            self.logger.info(
+                _("Deleting %d third-party repositories"), len(repositories)
+            )
 
             system = platform.system()
             if system != "Linux":
@@ -291,7 +293,9 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for enabling"),
                 }
 
-            self.logger.info("Enabling %d third-party repositories", len(repositories))
+            self.logger.info(
+                _("Enabling %d third-party repositories"), len(repositories)
+            )
 
             system = platform.system()
             if system != "Linux":
@@ -354,7 +358,9 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for disabling"),
                 }
 
-            self.logger.info("Disabling %d third-party repositories", len(repositories))
+            self.logger.info(
+                _("Disabling %d third-party repositories"), len(repositories)
+            )
 
             system = platform.system()
             if system != "Linux":

@@ -39,6 +39,8 @@ import subprocess  # nosec B404 # required for wsl.exe lifecycle
 from pathlib import Path
 from typing import Dict
 
+from src.i18n import _
+
 
 def _subprocess_creationflags() -> int:
     """Return ``CREATE_NO_WINDOW`` on Windows; 0 elsewhere."""
@@ -89,7 +91,7 @@ class WslKeepalive:
             try:
                 config.read(str(wslconfig_path))
             except configparser.Error as exc:
-                self.logger.warning("Could not parse existing .wslconfig: %s", exc)
+                self.logger.warning(_("Could not parse existing .wslconfig: %s"), exc)
         needs_update = self._configure_wsl2_idle_timeout(config)
         needs_update = self._configure_wsl_autostop(config) or needs_update
         if not needs_update:
@@ -109,7 +111,9 @@ class WslKeepalive:
         current = config.get("wsl2", "vmIdleTimeout", fallback=None)
         if has_lowercase and not has_correct:
             config.remove_option("wsl2", "vmidletimeout")
-            self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
+            self.logger.info(
+                _("Removing lowercase vmidletimeout, will add vmIdleTimeout")
+            )
             needs_update = True
         if current != "-1":
             config.set("wsl2", "vmIdleTimeout", "-1")
@@ -126,7 +130,7 @@ class WslKeepalive:
         current = config.get("wsl", "autoStop", fallback=None)
         if has_lowercase and not has_correct:
             config.remove_option("wsl", "autostop")
-            self.logger.info("Removing lowercase autostop, will add autoStop")
+            self.logger.info(_("Removing lowercase autostop, will add autoStop"))
             needs_update = True
         if current != "false":
             config.set("wsl", "autoStop", "false")
@@ -142,29 +146,30 @@ class WslKeepalive:
         try:
             if creating_new_file:
                 self.logger.info(
-                    ".wslconfig not found, creating to prevent WSL "
-                    "auto-shutdown at %s",
+                    _(
+                        ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
+                    ),
                     wslconfig_path,
                 )
             else:
                 self.logger.info(
-                    "Updating .wslconfig to prevent WSL auto-shutdown at %s",
+                    _("Updating .wslconfig to prevent WSL auto-shutdown at %s"),
                     wslconfig_path,
                 )
             with open(wslconfig_path, "w", encoding="utf-8") as cfg:
                 config.write(cfg)
-            self.logger.info(".wslconfig saved successfully")
+            self.logger.info(_(".wslconfig saved successfully"))
             return True
         except PermissionError:
-            self.logger.error("Permission denied writing to %s", wslconfig_path)
+            self.logger.error(_("Permission denied writing to %s"), wslconfig_path)
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            self.logger.error("Failed to write .wslconfig: %s", exc)
+            self.logger.error(_("Failed to write .wslconfig: %s"), exc)
         return False
 
     def restart_wsl(self) -> None:
         """Run ``wsl --shutdown`` so a freshly-edited ``~/.wslconfig`` takes effect."""
         try:
-            self.logger.info("Shutting down WSL to apply .wslconfig changes...")
+            self.logger.info(_("Shutting down WSL to apply .wslconfig changes..."))
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--shutdown"],
                 capture_output=True,
@@ -174,15 +179,15 @@ class WslKeepalive:
             )
             if result.returncode == 0:
                 self.logger.info(
-                    "WSL shutdown complete, new settings will apply on next start"
+                    _("WSL shutdown complete, new settings will apply on next start")
                 )
             else:
                 stderr = result.stderr.decode("utf-8", errors="ignore")
-                self.logger.warning("WSL shutdown returned non-zero: %s", stderr)
+                self.logger.warning(_("WSL shutdown returned non-zero: %s"), stderr)
         except subprocess.TimeoutExpired:
-            self.logger.warning("WSL shutdown timed out")
+            self.logger.warning(_("WSL shutdown timed out"))
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            self.logger.error("Failed to shutdown WSL: %s", exc)
+            self.logger.error(_("Failed to shutdown WSL: %s"), exc)
 
     # ------------------------------------------------------------------
     # Per-distro sleep-infinity Popen lifecycle
@@ -229,11 +234,13 @@ class WslKeepalive:
                 creationflags=_subprocess_creationflags(),
             )
             self._wsl_keepalive_processes[distro] = process
-            self.logger.info("Started keep-alive process for WSL instance: %s", distro)
+            self.logger.info(
+                _("Started keep-alive process for WSL instance: %s"), distro
+            )
             return True
         except Exception as exc:  # pylint: disable=broad-exception-caught
             self.logger.error(
-                "Failed to start keep-alive for WSL instance %s: %s", distro, exc
+                _("Failed to start keep-alive for WSL instance %s: %s"), distro, exc
             )
             return False
 
@@ -248,7 +255,7 @@ class WslKeepalive:
         except subprocess.TimeoutExpired:
             process.kill()
             self.logger.warning(
-                "Had to kill keep-alive process for WSL instance: %s", distro
+                _("Had to kill keep-alive process for WSL instance: %s"), distro
             )
         except Exception as exc:  # pylint: disable=broad-exception-caught
             self.logger.debug("Error stopping keep-alive for %s: %s", distro, exc)
@@ -267,7 +274,7 @@ class WslKeepalive:
         for distro in tuple(self._wsl_keepalive_processes.keys()):
             if distro not in current:
                 self.logger.info(
-                    "WSL distribution %s no longer exists, stopping keep-alive",
+                    _("WSL distribution %s no longer exists, stopping keep-alive"),
                     distro,
                 )
                 self._stop_keepalive_process(distro)

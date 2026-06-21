@@ -29,6 +29,7 @@ import platform
 import subprocess  # nosec B404 # required for WSL/PowerShell capability checks
 from typing import Any, Dict
 
+from src.i18n import _
 from src.sysmanage_agent.operations.generic_deployment import _decode_command_output
 
 _logger = logging.getLogger(__name__)
@@ -54,12 +55,12 @@ def detect_wsl_blockers(output_lower: str, result: Dict[str, Any]) -> bool:
         result["enabled"] = False
         result["needs_enable"] = False
         result["needs_bios_virtualization"] = True
-        _logger.warning("WSL requires BIOS virtualization to be enabled")
+        _logger.warning(_("WSL requires BIOS virtualization to be enabled"))
         return True
     if "virtual machine platform" in output_lower:
         result["enabled"] = False
         result["needs_enable"] = True
-        _logger.info("WSL requires Virtual Machine Platform to be enabled")
+        _logger.info(_("WSL requires Virtual Machine Platform to be enabled"))
         return True
     return False
 
@@ -131,21 +132,21 @@ def check_wsl_support() -> Dict[str, Any]:
                 result["enabled"] = True
                 parse_wsl_version(output, result)
                 _logger.info(
-                    "WSL is enabled, default version: %s", result["default_version"]
+                    _("WSL is enabled, default version: %s"), result["default_version"]
                 )
             else:
                 result["enabled"] = False
                 result["needs_enable"] = True
-                _logger.info("WSL is available but not fully enabled")
+                _logger.info(_("WSL is available but not fully enabled"))
         except subprocess.TimeoutExpired:
-            _logger.warning("WSL status check timed out")
+            _logger.warning(_("WSL status check timed out"))
             result["enabled"] = False
             result["needs_enable"] = True
         except FileNotFoundError:
             result["enabled"] = False
             result["needs_enable"] = True
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        _logger.exception("Error checking WSL support: %s", exc)
+        _logger.exception(_("Error checking WSL support: %s"), exc)
     return result
 
 

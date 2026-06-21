@@ -11,6 +11,7 @@ from sqlalchemy import Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import TypeDecorator
 
+from src.i18n import _
 from .base import Base
 
 
@@ -50,7 +51,7 @@ class GUID(TypeDecorator):  # pylint: disable=too-many-ancestors
             except (ValueError, AttributeError):
                 # Handle corrupt data gracefully - log and return None
                 logger = logging.getLogger(__name__)
-                logger.warning("Corrupt UUID in database: %s", value)
+                logger.warning(_("Corrupt UUID in database: %s"), value)
                 return None
         return value
 

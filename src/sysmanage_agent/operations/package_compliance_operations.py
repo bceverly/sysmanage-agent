@@ -78,7 +78,7 @@ class PackageComplianceOperations:
         try:
             installed = self._collect_installed_packages()
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            self.logger.error("Failed to collect installed packages: %s", exc)
+            self.logger.error(_("Failed to collect installed packages: %s"), exc)
             return {
                 "success": False,
                 "profile_id": profile_id,
@@ -246,7 +246,7 @@ def _eval_blocked(constraint: Dict[str, Any], matches: List[Dict[str, Any]]):
         )
     offending: List[str] = []
     for pkg in matches:
-        passes, _ = _compare_versions(pkg.get("version", ""), version_op, ver)
+        passes, _reason = _compare_versions(pkg.get("version", ""), version_op, ver)
         if passes:
             offending.append(pkg.get("version", ""))
     if not offending:

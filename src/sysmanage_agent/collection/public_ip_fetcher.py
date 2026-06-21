@@ -45,6 +45,8 @@ from typing import Optional, Tuple
 
 import aiohttp
 
+from src.i18n import _
+
 logger = logging.getLogger(__name__)
 
 # Three echo endpoints with mutual fallback.  Order matters: ipify is
@@ -96,7 +98,7 @@ class PublicIPCache:
             new_ip = await _fetch_from_endpoints()
             if new_ip is not None and new_ip != self._ip:
                 logger.info(
-                    "Public IP refreshed: %s -> %s",
+                    _("Public IP refreshed: %s -> %s"),
                     self._ip or "(unset)",
                     new_ip,
                 )
@@ -175,5 +177,5 @@ async def public_ip_refresh_service(
         try:
             await _cache.refresh()
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning("public_ip_refresh_service iteration failed: %s", exc)
+            logger.warning(_("public_ip_refresh_service iteration failed: %s"), exc)
         await asyncio.sleep(max(1, refresh_interval_seconds))

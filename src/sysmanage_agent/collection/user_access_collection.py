@@ -9,6 +9,8 @@ import platform
 import subprocess  # nosec B404
 from typing import Any, Dict, List
 
+from src.i18n import _
+
 # Unix-only imports - conditionally imported based on platform
 try:
     import grp
@@ -41,7 +43,7 @@ class UserAccessCollector:
             return self._get_bsd_users()
 
         self.logger.warning(
-            "Unsupported platform for user collection: %s", self.system_platform
+            _("Unsupported platform for user collection: %s"), self.system_platform
         )
         return []
 
@@ -57,7 +59,7 @@ class UserAccessCollector:
             return self._get_bsd_groups()
 
         self.logger.warning(
-            "Unsupported platform for group collection: %s", self.system_platform
+            _("Unsupported platform for group collection: %s"), self.system_platform
         )
         return []
 
@@ -87,7 +89,7 @@ class UserAccessCollector:
         """Get Linux user accounts from /etc/passwd."""
         users = []
         if pwd is None:
-            self.logger.warning("pwd module not available on this platform")
+            self.logger.warning(_("pwd module not available on this platform"))
             return users
         try:
             for user in pwd.getpwall():
@@ -103,7 +105,7 @@ class UserAccessCollector:
                     }
                 )
         except Exception as exc:
-            self.logger.error("Failed to collect Linux users: %s", exc)
+            self.logger.error(_("Failed to collect Linux users: %s"), exc)
 
         return users
 
@@ -111,7 +113,7 @@ class UserAccessCollector:
         """Get Linux groups from /etc/group."""
         groups = []
         if grp is None:
-            self.logger.warning("grp module not available on this platform")
+            self.logger.warning(_("grp module not available on this platform"))
             return groups
         try:
             for group in grp.getgrall():
@@ -126,7 +128,7 @@ class UserAccessCollector:
                     }
                 )
         except Exception as error:
-            self.logger.error("Failed to collect Linux groups: %s", error)
+            self.logger.error(_("Failed to collect Linux groups: %s"), error)
 
         return groups
 
@@ -215,7 +217,7 @@ class UserAccessCollector:
                     }
                 )
         except Exception as pwd_error:
-            self.logger.error("Fallback pwd collection also failed: %s", pwd_error)
+            self.logger.error(_("Fallback pwd collection also failed: %s"), pwd_error)
         return users
 
     def _get_macos_users(self) -> List[Dict[str, Any]]:
@@ -237,7 +239,7 @@ class UserAccessCollector:
                     users.append(user_info)
 
         except Exception as error:
-            self.logger.error("Failed to collect macOS users: %s", error)
+            self.logger.error(_("Failed to collect macOS users: %s"), error)
             users = self._collect_macos_users_pwd_fallback()
 
         return users
@@ -281,7 +283,7 @@ class UserAccessCollector:
                     }
                 )
         except Exception as grp_error:
-            self.logger.error("Fallback grp collection also failed: %s", grp_error)
+            self.logger.error(_("Fallback grp collection also failed: %s"), grp_error)
         return groups
 
     def _get_macos_groups(self) -> List[Dict[str, Any]]:
@@ -303,7 +305,7 @@ class UserAccessCollector:
                     groups.append(group_info)
 
         except Exception as error:
-            self.logger.error("Failed to collect macOS groups: %s", error)
+            self.logger.error(_("Failed to collect macOS groups: %s"), error)
             groups = self._collect_macos_groups_grp_fallback()
 
         return groups
@@ -437,7 +439,7 @@ class UserAccessCollector:
                 )
 
         except Exception as error:
-            self.logger.error("Failed to collect Windows users: %s", error)
+            self.logger.error(_("Failed to collect Windows users: %s"), error)
 
         return users
 
@@ -489,7 +491,7 @@ class UserAccessCollector:
                 )
 
         except Exception as error:
-            self.logger.error("Failed to collect Windows groups: %s", error)
+            self.logger.error(_("Failed to collect Windows groups: %s"), error)
 
         return groups
 
@@ -497,7 +499,7 @@ class UserAccessCollector:
         """Get BSD user accounts from /etc/passwd using pwd module."""
         users = []
         if pwd is None:
-            self.logger.warning("pwd module not available on this platform")
+            self.logger.warning(_("pwd module not available on this platform"))
             return users
         try:
             for user in pwd.getpwall():
@@ -515,7 +517,7 @@ class UserAccessCollector:
                     }
                 )
         except Exception as error:
-            self.logger.error("Failed to collect BSD users: %s", error)
+            self.logger.error(_("Failed to collect BSD users: %s"), error)
 
         return users
 
@@ -523,7 +525,7 @@ class UserAccessCollector:
         """Get BSD groups from /etc/group using grp module."""
         groups = []
         if grp is None:
-            self.logger.warning("grp module not available on this platform")
+            self.logger.warning(_("grp module not available on this platform"))
             return groups
         try:
             for group in grp.getgrall():
@@ -540,7 +542,7 @@ class UserAccessCollector:
                 groups.append(group_info)
 
         except Exception as error:
-            self.logger.error("Failed to collect BSD groups: %s", error)
+            self.logger.error(_("Failed to collect BSD groups: %s"), error)
 
         return groups
 
@@ -569,7 +571,7 @@ class UserAccessCollector:
             }
 
         except Exception as error:
-            self.logger.error("Failed to collect access info: %s", error)
+            self.logger.error(_("Failed to collect access info: %s"), error)
             return {
                 "users": [],
                 "groups": [],

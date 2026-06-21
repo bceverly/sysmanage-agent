@@ -58,6 +58,10 @@ cover/
 *.pot
 *.po~
 *~
+# ...but DO track the gettext template (the canonical list of translatable
+# strings).  Negation works because only the *.pot glob ignores it — no parent
+# directory is excluded.
+!src/i18n/locales/messages.pot
 
 # Django stuff:
 *.log

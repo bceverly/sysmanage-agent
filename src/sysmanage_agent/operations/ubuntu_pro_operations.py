@@ -26,7 +26,7 @@ class UbuntuProOperations:
             return {"success": False, "error": _("Ubuntu Pro token is required")}
 
         try:
-            self.logger.info("Attaching Ubuntu Pro subscription...")
+            self.logger.info(_("Attaching Ubuntu Pro subscription..."))
 
             # Run pro attach command with the provided token
             # Use --no-auto-enable to prevent hanging on service enablement
@@ -37,7 +37,7 @@ class UbuntuProOperations:
             )
 
             if result["success"]:
-                self.logger.info("Ubuntu Pro attached successfully")
+                self.logger.info(_("Ubuntu Pro attached successfully"))
 
                 # After successful attach, send updated OS info to server
                 await self._send_os_update_after_pro_change()
@@ -64,7 +64,7 @@ class UbuntuProOperations:
     async def ubuntu_pro_detach(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Detach Ubuntu Pro subscription."""
         try:
-            self.logger.info("Detaching Ubuntu Pro subscription...")
+            self.logger.info(_("Detaching Ubuntu Pro subscription..."))
 
             # Run pro detach command
             command = "sudo pro detach --assume-yes"
@@ -73,7 +73,7 @@ class UbuntuProOperations:
             )
 
             if result["success"]:
-                self.logger.info("Ubuntu Pro detached successfully")
+                self.logger.info(_("Ubuntu Pro detached successfully"))
 
                 # After successful detach, send updated OS info to server
                 await self._send_os_update_after_pro_change()
@@ -107,7 +107,7 @@ class UbuntuProOperations:
             return {"success": False, "error": _("Service name is required")}
 
         try:
-            self.logger.info("Enabling Ubuntu Pro service: %s", service_name)
+            self.logger.info(_("Enabling Ubuntu Pro service: %s"), service_name)
 
             # Run pro enable command
             command = f"sudo pro enable {service_name} --assume-yes"
@@ -117,7 +117,7 @@ class UbuntuProOperations:
 
             if result["success"]:
                 self.logger.info(
-                    "Ubuntu Pro service %s enabled successfully", service_name
+                    _("Ubuntu Pro service %s enabled successfully"), service_name
                 )
 
                 # After successful enable, send updated OS info to server
@@ -157,7 +157,7 @@ class UbuntuProOperations:
             return {"success": False, "error": _("Service name is required")}
 
         try:
-            self.logger.info("Disabling Ubuntu Pro service: %s", service_name)
+            self.logger.info(_("Disabling Ubuntu Pro service: %s"), service_name)
 
             # Run pro disable command
             command = f"sudo pro disable {service_name} --assume-yes"
@@ -167,7 +167,7 @@ class UbuntuProOperations:
 
             if result["success"]:
                 self.logger.info(
-                    "Ubuntu Pro service %s disabled successfully", service_name
+                    _("Ubuntu Pro service %s disabled successfully"), service_name
                 )
 
                 # After successful disable, send updated OS info to server
@@ -217,7 +217,7 @@ class UbuntuProOperations:
             await self.agent_instance.send_message(os_message)
 
             self.logger.info(
-                "Updated OS information sent to server after Ubuntu Pro change"
+                _("Updated OS information sent to server after Ubuntu Pro change")
             )
 
         except Exception as error:

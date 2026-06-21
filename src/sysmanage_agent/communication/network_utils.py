@@ -9,6 +9,8 @@ import socket
 import subprocess  # nosec B404 # Required for hostname detection
 from typing import Optional, Tuple
 
+from src.i18n import _
+
 
 class NetworkUtils:
     """Handles network-related utilities for the agent."""
@@ -151,7 +153,7 @@ class NetworkUtils:
         if not hostname or not hostname.strip():
             hostname = "unknown-host"
             self.logger.warning(
-                "Could not determine hostname, using fallback: %s", hostname
+                _("Could not determine hostname, using fallback: %s"), hostname
             )
         else:
             self.logger.debug("Final hostname determined: %s", hostname)

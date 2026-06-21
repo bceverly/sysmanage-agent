@@ -183,7 +183,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 )
 
             logger.info(
-                "Collected %d programs from Windows Registry",
+                _("Collected %d programs from Windows Registry"),
                 len(
                     [
                         p
@@ -262,7 +262,7 @@ class WindowsSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                             self.collected_packages.append(package)
 
                     logger.info(
-                        "Collected %d apps from Microsoft Store",
+                        _("Collected %d apps from Microsoft Store"),
                         len(
                             [
                                 p

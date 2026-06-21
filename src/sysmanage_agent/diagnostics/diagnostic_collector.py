@@ -36,9 +36,9 @@ class DiagnosticCollector:
             collection_types = parameters.get("collection_types", [])
 
             self.logger.info(
-                "Starting diagnostics collection for ID: %s", collection_id
+                _("Starting diagnostics collection for ID: %s"), collection_id
             )
-            self.logger.info("Collection types requested: %s", collection_types)
+            self.logger.info(_("Collection types requested: %s"), collection_types)
 
             # Dictionary to store collected data
             system_info = self.registration.get_system_info()
@@ -63,7 +63,7 @@ class DiagnosticCollector:
             await self._send_diagnostic_result(diagnostic_data)
 
             self.logger.info(
-                "Diagnostics collection completed for ID: %s", collection_id
+                _("Diagnostics collection completed for ID: %s"), collection_id
             )
 
             return {
@@ -91,32 +91,32 @@ class DiagnosticCollector:
             diagnostic_data: Dictionary to store the collected data
         """
         if collection_type == "system_logs":
-            self.logger.info("Collecting system logs...")
+            self.logger.info(_("Collecting system logs..."))
             diagnostic_data["system_logs"] = await self._collect_system_logs()
         elif collection_type == "configuration_files":
-            self.logger.info("Collecting configuration files...")
+            self.logger.info(_("Collecting configuration files..."))
             diagnostic_data["configuration_files"] = (
                 await self._collect_configuration_files()
             )
         elif collection_type == "network_info":
-            self.logger.info("Collecting network information...")
+            self.logger.info(_("Collecting network information..."))
             diagnostic_data["network_info"] = await self._collect_network_info()
         elif collection_type == "process_info":
-            self.logger.info("Collecting process information...")
+            self.logger.info(_("Collecting process information..."))
             diagnostic_data["process_info"] = await self._collect_process_info()
         elif collection_type == "disk_usage":
-            self.logger.info("Collecting disk usage information...")
+            self.logger.info(_("Collecting disk usage information..."))
             diagnostic_data["disk_usage"] = await self._collect_disk_usage()
         elif collection_type == "environment_variables":
-            self.logger.info("Collecting environment variables...")
+            self.logger.info(_("Collecting environment variables..."))
             diagnostic_data["environment_variables"] = (
                 await self._collect_environment_variables()
             )
         elif collection_type == "agent_logs":
-            self.logger.info("Collecting agent logs...")
+            self.logger.info(_("Collecting agent logs..."))
             diagnostic_data["agent_logs"] = await self._collect_agent_logs()
         elif collection_type == "error_logs":
-            self.logger.info("Collecting error logs...")
+            self.logger.info(_("Collecting error logs..."))
             diagnostic_data["error_logs"] = await self._collect_error_logs()
         else:
             self.logger.warning(_("Unknown collection type: %s"), collection_type)
@@ -133,7 +133,7 @@ class DiagnosticCollector:
         for i, collection_type in enumerate(collection_types, 1):
             try:
                 self.logger.info(
-                    "Starting collection %d/%d: %s",
+                    _("Starting collection %d/%d: %s"),
                     i,
                     len(collection_types),
                     collection_type,
@@ -146,7 +146,7 @@ class DiagnosticCollector:
 
                 elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
                 self.logger.info(
-                    "Completed collection of %s in %.2f seconds",
+                    _("Completed collection of %s in %.2f seconds"),
                     collection_type,
                     elapsed,
                 )
@@ -172,7 +172,7 @@ class DiagnosticCollector:
         Returns:
             Tuple of (collection_size, files_collected)
         """
-        self.logger.info("Calculating collection statistics...")
+        self.logger.info(_("Calculating collection statistics..."))
         collection_size = 0
         files_collected = 0
 
@@ -185,7 +185,7 @@ class DiagnosticCollector:
                     files_collected += len(value)
 
         self.logger.info(
-            "Collection statistics: %d bytes, %d files/entries collected",
+            _("Collection statistics: %d bytes, %d files/entries collected"),
             collection_size,
             files_collected,
         )
@@ -198,7 +198,7 @@ class DiagnosticCollector:
         Args:
             diagnostic_data: Dictionary containing collected diagnostic data
         """
-        self.logger.info("Preparing to send diagnostic data to server...")
+        self.logger.info(_("Preparing to send diagnostic data to server..."))
         send_start_time = datetime.now(timezone.utc)
 
         diagnostic_message = self.agent.create_message(
@@ -206,13 +206,13 @@ class DiagnosticCollector:
         )
 
         self.logger.info(
-            "Sending diagnostic message (ID: %s)...",
+            _("Sending diagnostic message (ID: %s)..."),
             diagnostic_message.get("message_id"),
         )
         await self.agent.send_message(diagnostic_message)
 
         send_elapsed = (datetime.now(timezone.utc) - send_start_time).total_seconds()
-        self.logger.info("Diagnostic message sent in %.2f seconds", send_elapsed)
+        self.logger.info(_("Diagnostic message sent in %.2f seconds"), send_elapsed)
 
     async def _send_diagnostic_error(
         self, collection_id: str, error: Exception
@@ -253,7 +253,7 @@ class DiagnosticCollector:
             Dict with the log_key mapped to the collected log content
         """
         result_data = {}
-        self.logger.info("Collecting Windows %s Event Log...", log_name)
+        self.logger.info(_("Collecting Windows %s Event Log..."), log_name)
         start_time = datetime.now(timezone.utc)
 
         if log_name == "Security":
@@ -276,11 +276,11 @@ class DiagnosticCollector:
         if result.get("success"):
             result_data[log_key] = result.get("result", {}).get("stdout", "")
             self.logger.info(
-                "Windows %s Event Log collected in %.2f seconds", log_name, elapsed
+                _("Windows %s Event Log collected in %.2f seconds"), log_name, elapsed
             )
         else:
             self.logger.warning(
-                "Windows %s Event Log collection failed after %.2f seconds",
+                _("Windows %s Event Log collection failed after %.2f seconds"),
                 log_name,
                 elapsed,
             )
@@ -327,7 +327,9 @@ class DiagnosticCollector:
 
             if current_platform == "Windows":
                 self.logger.info(
-                    "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+                    _(
+                        "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+                    )
                 )
                 system_logs.update(
                     await self._collect_windows_event_log(
@@ -340,7 +342,9 @@ class DiagnosticCollector:
                     )
                 )
                 self.logger.info(
-                    "Collecting Windows Security Event Log (may require admin privileges)..."
+                    _(
+                        "Collecting Windows Security Event Log (may require admin privileges)..."
+                    )
                 )
                 system_logs.update(
                     await self._collect_windows_event_log(
@@ -445,17 +449,17 @@ class DiagnosticCollector:
             Dict with the key mapped to the collected output
         """
         result_data = {}
-        self.logger.info("Collecting %s...", label)
+        self.logger.info(_("Collecting %s..."), label)
         start_time = datetime.now(timezone.utc)
         result = await self.system_ops.execute_shell_command({"command": command})
         elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
 
         if result.get("success"):
             result_data[key] = result.get("result", {}).get("stdout", "")
-            self.logger.info("%s collected in %.2f seconds", label, elapsed)
+            self.logger.info(_("%s collected in %.2f seconds"), label, elapsed)
         else:
             self.logger.warning(
-                "%s collection failed after %.2f seconds", label, elapsed
+                _("%s collection failed after %.2f seconds"), label, elapsed
             )
 
         return result_data
@@ -473,7 +477,7 @@ class DiagnosticCollector:
         )
 
         if "dns_config" not in result_data:
-            self.logger.info("Trying alternative DNS configuration method...")
+            self.logger.info(_("Trying alternative DNS configuration method..."))
             result_data = await self._collect_windows_network_command(
                 'powershell -Command "Get-DnsClientServerAddress | ConvertTo-Json"',
                 "dns_config",
@@ -616,17 +620,17 @@ class DiagnosticCollector:
         ]
 
         for command, key, label in disk_commands:
-            self.logger.info("Collecting %s...", label)
+            self.logger.info(_("Collecting %s..."), label)
             start_time = datetime.now(timezone.utc)
             result = await self.system_ops.execute_shell_command({"command": command})
             elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
 
             if result.get("success"):
                 disk_info[key] = result.get("result", {}).get("stdout", "")
-                self.logger.info("%s collected in %.2f seconds", label, elapsed)
+                self.logger.info(_("%s collected in %.2f seconds"), label, elapsed)
             else:
                 self.logger.warning(
-                    "%s collection failed after %.2f seconds", label, elapsed
+                    _("%s collection failed after %.2f seconds"), label, elapsed
                 )
 
         return disk_info

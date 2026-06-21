@@ -14,6 +14,8 @@ import subprocess  # nosec B404
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from src.i18n import _
+
 if TYPE_CHECKING:
     from main import SysManageAgent
 
@@ -62,7 +64,7 @@ class ChildHostCollector:
                 config.read(str(wslconfig_path))
             except configparser.Error as parse_error:
                 self.logger.warning(
-                    "Could not parse existing .wslconfig: %s", parse_error
+                    _("Could not parse existing .wslconfig: %s"), parse_error
                 )
                 # Continue anyway, we'll add/update the sections
 
@@ -96,7 +98,9 @@ class ChildHostCollector:
 
         if has_lowercase_timeout and not has_correct_timeout:
             config.remove_option("wsl2", "vmidletimeout")
-            self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
+            self.logger.info(
+                _("Removing lowercase vmidletimeout, will add vmIdleTimeout")
+            )
             needs_update = True
 
         if current_timeout != "-1":
@@ -126,7 +130,7 @@ class ChildHostCollector:
 
         if has_lowercase_autostop and not has_correct_autostop:
             config.remove_option("wsl", "autostop")
-            self.logger.info("Removing lowercase autostop, will add autoStop")
+            self.logger.info(_("Removing lowercase autostop, will add autoStop"))
             needs_update = True
 
         if current_autostop != "false":
@@ -149,23 +153,25 @@ class ChildHostCollector:
         try:
             if creating_new_file:
                 self.logger.info(
-                    ".wslconfig not found, creating to prevent WSL auto-shutdown at %s",
+                    _(
+                        ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
+                    ),
                     wslconfig_path,
                 )
             else:
                 self.logger.info(
-                    "Updating .wslconfig to prevent WSL auto-shutdown at %s",
+                    _("Updating .wslconfig to prevent WSL auto-shutdown at %s"),
                     wslconfig_path,
                 )
 
             with open(wslconfig_path, "w", encoding="utf-8") as config_file:
                 config.write(config_file)
-            self.logger.info(".wslconfig saved successfully")
+            self.logger.info(_(".wslconfig saved successfully"))
             return True
         except PermissionError:
-            self.logger.error("Permission denied writing to %s", wslconfig_path)
+            self.logger.error(_("Permission denied writing to %s"), wslconfig_path)
         except Exception as error:  # pylint: disable=broad-except
-            self.logger.error("Failed to write .wslconfig: %s", error)
+            self.logger.error(_("Failed to write .wslconfig: %s"), error)
 
         return False
 
@@ -182,7 +188,7 @@ class ChildHostCollector:
         )
 
         try:
-            self.logger.info("Shutting down WSL to apply .wslconfig changes...")
+            self.logger.info(_("Shutting down WSL to apply .wslconfig changes..."))
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--shutdown"],
                 capture_output=True,
@@ -193,16 +199,16 @@ class ChildHostCollector:
 
             if result.returncode == 0:
                 self.logger.info(
-                    "WSL shutdown complete, new settings will apply on next start"
+                    _("WSL shutdown complete, new settings will apply on next start")
                 )
             else:
                 stderr = result.stderr.decode("utf-8", errors="ignore")
-                self.logger.warning("WSL shutdown returned non-zero: %s", stderr)
+                self.logger.warning(_("WSL shutdown returned non-zero: %s"), stderr)
 
         except subprocess.TimeoutExpired:
-            self.logger.warning("WSL shutdown timed out")
+            self.logger.warning(_("WSL shutdown timed out"))
         except Exception as error:  # pylint: disable=broad-except
-            self.logger.error("Failed to shutdown WSL: %s", error)
+            self.logger.error(_("Failed to shutdown WSL: %s"), error)
 
     async def child_host_heartbeat(self):
         """
@@ -225,7 +231,7 @@ class ChildHostCollector:
                 self._restart_wsl()
 
             # Start persistent keep-alive processes for all WSL instances
-            self.logger.info("Starting WSL keep-alive processes")
+            self.logger.info(_("Starting WSL keep-alive processes"))
             self._ensure_keepalive_processes()
 
         # Send child host status every 60 seconds
@@ -246,13 +252,13 @@ class ChildHostCollector:
                     self.logger.debug("Child host heartbeat cancelled")
                     raise
                 except Exception as error:
-                    self.logger.error("Child host heartbeat error: %s", error)
+                    self.logger.error(_("Child host heartbeat error: %s"), error)
                     # Continue the loop on non-critical errors
                     continue
         finally:
             # Clean up keep-alive processes when heartbeat stops (Windows only)
             if os_type == "windows":
-                self.logger.info("Stopping WSL keep-alive processes")
+                self.logger.info(_("Stopping WSL keep-alive processes"))
             self._stop_all_keepalive_processes()
 
     def _get_wsl_distros(self) -> list:
@@ -328,12 +334,14 @@ class ChildHostCollector:
             )
 
             self._wsl_keepalive_processes[distro] = process
-            self.logger.info("Started keep-alive process for WSL instance: %s", distro)
+            self.logger.info(
+                _("Started keep-alive process for WSL instance: %s"), distro
+            )
             return True
 
         except Exception as error:  # pylint: disable=broad-except
             self.logger.error(
-                "Failed to start keep-alive for WSL instance %s: %s", distro, error
+                _("Failed to start keep-alive for WSL instance %s: %s"), distro, error
             )
             return False
 
@@ -355,7 +363,7 @@ class ChildHostCollector:
             except subprocess.TimeoutExpired:
                 process.kill()
                 self.logger.warning(
-                    "Had to kill keep-alive process for WSL instance: %s", distro
+                    _("Had to kill keep-alive process for WSL instance: %s"), distro
                 )
             except Exception as error:  # pylint: disable=broad-except
                 self.logger.debug("Error stopping keep-alive for %s: %s", distro, error)
@@ -378,7 +386,8 @@ class ChildHostCollector:
         for distro in self._wsl_keepalive_processes.copy():
             if distro not in current_distros:
                 self.logger.info(
-                    "WSL distribution %s no longer exists, stopping keep-alive", distro
+                    _("WSL distribution %s no longer exists, stopping keep-alive"),
+                    distro,
                 )
                 self._stop_keepalive_process(distro)
 
@@ -460,11 +469,11 @@ class ChildHostCollector:
                             len(child_hosts),
                         )
                     else:
-                        self.logger.warning("Failed to send child hosts data")
+                        self.logger.warning(_("Failed to send child hosts data"))
                 else:
                     self.logger.debug(
                         "AGENT_DEBUG: Child hosts collection returned no success: %s",
                         result.get("error", "Unknown error"),
                     )
         except Exception as error:
-            self.logger.error("Error collecting/sending child hosts data: %s", error)
+            self.logger.error(_("Error collecting/sending child hosts data: %s"), error)

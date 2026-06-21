@@ -194,7 +194,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
             storage_devices.extend(self._collect_physical_disk_drives())
         except Exception as error:
             self.logger.error(
-                "Failed to get Windows physical disk info: %s", str(error)
+                _("Failed to get Windows physical disk info: %s"), str(error)
             )
 
         # Then, get logical drives (partitions/volumes)
@@ -282,7 +282,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
             if result.returncode != 0:
                 self.logger.error(
-                    "ipconfig /all failed with return code: %d", result.returncode
+                    _("ipconfig /all failed with return code: %d"), result.returncode
                 )
                 return network_interfaces
 
@@ -310,7 +310,7 @@ class HardwareCollectorWindows(HardwareCollectorBase):
 
         except Exception as error:
             self.logger.error(
-                "Failed to get Windows network info via ipconfig: %s", str(error)
+                _("Failed to get Windows network info via ipconfig: %s"), str(error)
             )
             network_interfaces.append(
                 {

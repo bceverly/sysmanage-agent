@@ -21,6 +21,8 @@ import logging
 import subprocess  # nosec B404
 from typing import Dict, List
 
+from src.i18n import _
+
 
 def _ufw_available() -> bool:
     try:
@@ -74,7 +76,7 @@ def _enable_ip_forwarding(logger: logging.Logger, errors: List[str]) -> None:
         check=False,
     )
     if persist.returncode != 0:
-        logger.warning("Could not persist IP forwarding setting: %s", persist.stderr)
+        logger.warning(_("Could not persist IP forwarding setting: %s"), persist.stderr)
 
 
 def _set_ufw_forward_policy(errors: List[str]) -> None:
@@ -130,7 +132,7 @@ def _add_ufw_bridge_route_rules(logger: logging.Logger, bridge_name: str) -> Non
             and "Skipping" not in result.stdout
             and "already exists" not in result.stderr
         ):
-            logger.warning("UFW rule failed: %s - %s", " ".join(rule), result.stderr)
+            logger.warning(_("UFW rule failed: %s - %s"), " ".join(rule), result.stderr)
 
 
 def _detect_bridge_subnet(bridge_name: str) -> str:
@@ -174,7 +176,7 @@ def _configure_nat_masquerade(
         with open("/etc/ufw/before.rules", "r", encoding="utf-8") as fobj:
             existing = fobj.read()
         if "# LXD NAT rules" in existing:
-            logger.info("NAT rules already configured in before.rules")
+            logger.info(_("NAT rules already configured in before.rules"))
             return
     except OSError as exc:
         errors.append(f"Could not read /etc/ufw/before.rules: {exc}")
@@ -208,13 +210,13 @@ def configure_lxd_firewall(logger: logging.Logger, bridge_name: str = "lxdbr0") 
     via firewalld zones manually — not in scope here).
     """
     if not _ufw_available():
-        logger.info("UFW not installed; skipping LXD bridge firewall config")
+        logger.info(_("UFW not installed; skipping LXD bridge firewall config"))
         return {
             "success": True,
             "message": "UFW not installed; skipping LXD bridge firewall config",
         }
 
-    logger.info("Configuring UFW firewall for LXD bridge: %s", bridge_name)
+    logger.info(_("Configuring UFW firewall for LXD bridge: %s"), bridge_name)
     errors: List[str] = []
 
     _enable_ip_forwarding(logger, errors)

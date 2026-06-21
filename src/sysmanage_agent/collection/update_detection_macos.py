@@ -390,18 +390,19 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                 # Split brew_cmd in case it contains sudo -u
                 cmd = brew_cmd.split() + cmd_args
 
-                logger.info("Running homebrew command: %s", " ".join(cmd))
+                logger.info(_("Running homebrew command: %s"), " ".join(cmd))
                 result = subprocess.run(  # nosec B603, B607
                     cmd, capture_output=True, text=True, timeout=120, check=False
                 )
 
                 logger.info(
-                    "Homebrew command completed. Return code: %d", result.returncode
+                    _("Homebrew command completed. Return code: %d"),
+                    result.returncode,
                 )
                 if result.stdout:
-                    logger.info("Homebrew stdout: %s", result.stdout.strip())
+                    logger.info(_("Homebrew stdout: %s"), result.stdout.strip())
                 if result.stderr:
-                    logger.info("Homebrew stderr: %s", result.stderr.strip())
+                    logger.info(_("Homebrew stderr: %s"), result.stderr.strip())
 
                 if result.returncode == 0:
                     results["updated_packages"].append(
@@ -413,7 +414,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                         }
                     )
                     logger.info(
-                        "Successfully updated package %s", package["package_name"]
+                        _("Successfully updated package %s"), package["package_name"]
                     )
                 else:
                     results["failed_packages"].append(
@@ -443,7 +444,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
         for package in packages:
             package_name = package.get("package_name")
             available_version = package.get("available_version")
-            logger.info("Applying macOS upgrade: %s", available_version)
+            logger.info(_("Applying macOS upgrade: %s"), available_version)
 
             try:
                 # Install the macOS upgrade
@@ -453,7 +454,9 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                     available_version,
                     "--restart",
                 ]
-                logger.info("Running macOS upgrade command: %s", " ".join(upgrade_cmd))
+                logger.info(
+                    _("Running macOS upgrade command: %s"), " ".join(upgrade_cmd)
+                )
 
                 result = subprocess.run(  # nosec B603, B607
                     upgrade_cmd,
@@ -465,7 +468,7 @@ class MacOSUpdateDetector(UpdateDetectorBase):
 
                 if result.returncode == 0:
                     logger.info(
-                        "Successfully applied macOS upgrade: %s", available_version
+                        _("Successfully applied macOS upgrade: %s"), available_version
                     )
                     results["updated_packages"].append(
                         {

@@ -14,6 +14,7 @@ import platform
 import subprocess  # nosec B404
 from typing import Dict, Optional
 
+from src.i18n import _
 from src.sysmanage_agent.operations.firewall_bsd_parsers import BsdFirewallParsers
 from src.sysmanage_agent.operations.firewall_linux_parsers import LinuxFirewallParsers
 from src.sysmanage_agent.operations.firewall_port_helpers import FirewallPortHelpers
@@ -53,11 +54,11 @@ class FirewallCollector:
             if self.system in ["FreeBSD", "OpenBSD", "NetBSD"]:
                 return self._collect_bsd_firewall()
             self.logger.warning(
-                "Unsupported system for firewall detection: %s", self.system
+                _("Unsupported system for firewall detection: %s"), self.system
             )
             return self._empty_status()
         except Exception as exc:
-            self.logger.error("Error collecting firewall status: %s", exc)
+            self.logger.error(_("Error collecting firewall status: %s"), exc)
             return self._empty_status()
 
     def _empty_status(self) -> Dict:

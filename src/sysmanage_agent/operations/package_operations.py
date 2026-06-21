@@ -52,7 +52,7 @@ def _validate_uninstall_packages(
     for package in packages:
         package_name = package.get("package_name")
         if not package_name:
-            logger.warning("Skipping package with no name")
+            logger.warning(_("Skipping package with no name"))
             failed_packages.append({"package": package, "error": _("No package name")})
             continue
         valid_packages.append(package)
@@ -109,7 +109,7 @@ def _process_non_apt_uninstall(
     for package in pkg_list:
         package_name = package.get("package_name")
         uninstall_log.append(f"Uninstalling {package_name}...")
-        logger.info("Uninstalling package: %s", package_name)
+        logger.info(_("Uninstalling package: %s"), package_name)
         # Non-apt managers not implemented yet  # NOSONAR
         failed_packages.append(
             {
@@ -147,7 +147,7 @@ def _update_uninstall_record(
                 tracking_record.success = "true" if overall_success else "false"
                 session.commit()
     except Exception as error:
-        logger.exception("Failed to update uninstall tracking record: %s", error)
+        logger.exception(_("Failed to update uninstall tracking record: %s"), error)
 
 
 class PackageOperations:
@@ -169,7 +169,7 @@ class PackageOperations:
             return {"success": False, "error": _("No package name specified")}
 
         self.logger.info(
-            "Installing package %s (installation_id: %s, requested_by: %s)",
+            _("Installing package %s (installation_id: %s, requested_by: %s)"),
             package_name,
             installation_id,
             requested_by,
@@ -265,7 +265,7 @@ class PackageOperations:
             }
 
         self.logger.info(
-            "Installing %d packages for request %s (requested_by: %s)",
+            _("Installing %d packages for request %s (requested_by: %s)"),
             len(packages),
             request_id,
             requested_by,
@@ -373,7 +373,7 @@ class PackageOperations:
             }
 
         self.logger.info(
-            "Uninstalling %d packages for request %s (requested_by: %s)",
+            _("Uninstalling %d packages for request %s (requested_by: %s)"),
             len(packages),
             request_id,
             requested_by,
@@ -439,8 +439,8 @@ class PackageOperations:
                 failed_packages.extend(apt_failed)
                 uninstall_log.extend(apt_log)
             else:
-                _, non_apt_failed, non_apt_log = _process_non_apt_uninstall(
-                    pkg_list, pkg_manager, self.logger
+                _non_apt_success, non_apt_failed, non_apt_log = (
+                    _process_non_apt_uninstall(pkg_list, pkg_manager, self.logger)
                 )
                 failed_packages.extend(non_apt_failed)
                 uninstall_log.extend(non_apt_log)
@@ -466,7 +466,7 @@ class PackageOperations:
             )
         except Exception as error:
             self.logger.error(
-                "Failed to send uninstall completion to server: %s", error
+                _("Failed to send uninstall completion to server: %s"), error
             )
 
     async def _install_packages_with_apt(
@@ -478,7 +478,7 @@ class PackageOperations:
                 return {"success": False, "error": _("No packages to install")}
 
             self.logger.info(
-                "Installing packages with apt-get: %s", ", ".join(package_names)
+                _("Installing packages with apt-get: %s"), ", ".join(package_names)
             )
 
             # Update package list first
@@ -526,7 +526,7 @@ class PackageOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to install packages with apt-get: %s", error)
+            self.logger.error(_("Failed to install packages with apt-get: %s"), error)
             return {
                 "success": False,
                 "error": _("Exception during apt-get install: %s") % str(error),
@@ -539,7 +539,7 @@ class PackageOperations:
                 return {"success": False, "error": _("No packages to uninstall")}
 
             self.logger.info(
-                "Uninstalling packages with apt-get: %s", ", ".join(package_names)
+                _("Uninstalling packages with apt-get: %s"), ", ".join(package_names)
             )
 
             # Uninstall all packages in a single command (autoremove to clean up dependencies)
@@ -572,7 +572,7 @@ class PackageOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to uninstall packages with apt-get: %s", error)
+            self.logger.error(_("Failed to uninstall packages with apt-get: %s"), error)
             return {
                 "success": False,
                 "error": _("Exception during apt-get remove: %s") % str(error),
@@ -611,7 +611,7 @@ class PackageOperations:
             queued = await self.agent_instance.send_message(completion_message)
             if queued:
                 self.logger.info(
-                    "Queued installation completion for request %s",
+                    _("Queued installation completion for request %s"),
                     request_id,
                 )
             else:
@@ -670,7 +670,7 @@ class PackageOperations:
             await self.agent_instance.send_message(update_message)
 
             self.logger.info(
-                "Sent package installation status update: %s for %s",
+                _("Sent package installation status update: %s for %s"),
                 status,
                 package_name,
             )
@@ -692,7 +692,7 @@ class PackageOperations:
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                version_stdout, _ = await version_process.communicate()
+                version_stdout, _version_stderr = await version_process.communicate()
 
                 if version_process.returncode != 0:
                     versions[package_name] = "unknown"

@@ -76,7 +76,7 @@ class WindowsUpdateApplierMixin:
 
             if time.time() - last_log_time > 30:
                 logger.info(
-                    "Update still running for '%s' (%d seconds elapsed)",
+                    _("Update still running for '%s' (%d seconds elapsed)"),
                     package["package_name"],
                     int(elapsed),
                 )
@@ -105,7 +105,7 @@ class WindowsUpdateApplierMixin:
 
         if returncode == 0:
             logger.info(
-                "Successfully updated package '%s'",
+                _("Successfully updated package '%s'"),
                 package["package_name"],
             )
             results["updated_packages"].append(
@@ -141,7 +141,7 @@ class WindowsUpdateApplierMixin:
             try:
                 package_id = package.get("bundle_id", package["package_name"])
                 logger.info(
-                    "Applying winget update for package '%s' (ID: %s)",
+                    _("Applying winget update for package '%s' (ID: %s)"),
                     package["package_name"],
                     package_id,
                 )
@@ -193,7 +193,9 @@ class WindowsUpdateApplierMixin:
         for package in packages:
             try:
                 package_name = package["package_name"]
-                logger.info("Applying Chocolatey update for package '%s'", package_name)
+                logger.info(
+                    _("Applying Chocolatey update for package '%s'"), package_name
+                )
 
                 result = subprocess.run(  # nosec B603, B607
                     ["choco", "upgrade", package_name, "-y"],
@@ -211,7 +213,7 @@ class WindowsUpdateApplierMixin:
                 )
 
                 if result.returncode == 0:
-                    logger.info("Successfully updated package '%s'", package_name)
+                    logger.info(_("Successfully updated package '%s'"), package_name)
                     results["updated_packages"].append(
                         {
                             "package_name": package_name,
@@ -353,7 +355,7 @@ class WindowsUpdateApplierMixin:
         )
 
         if is_success:
-            logger.info("Successfully installed Windows Update: %s", package_name)
+            logger.info(_("Successfully installed Windows Update: %s"), package_name)
             results["updated_packages"].append(
                 {
                     "package_name": package_name,
@@ -391,7 +393,7 @@ class WindowsUpdateApplierMixin:
                 update_id = package.get("update_id") or package.get("bundle_id")
 
                 logger.info(
-                    "Applying Windows Update: %s (UpdateID: %s)",
+                    _("Applying Windows Update: %s (UpdateID: %s)"),
                     package_name,
                     update_id if update_id else "searching by title",
                 )
@@ -401,7 +403,7 @@ class WindowsUpdateApplierMixin:
                 )
 
                 update_cmd = ["powershell", "-NoProfile", "-Command", powershell_cmd]
-                logger.info("Running Windows Update installation command")
+                logger.info(_("Running Windows Update installation command"))
 
                 result = subprocess.run(  # nosec B603, B607
                     update_cmd,
@@ -450,7 +452,7 @@ class WindowsUpdateApplierMixin:
         for package in packages:
             package_name = package.get("package_name")
             available_version = package.get("available_version")
-            logger.info("Applying Windows upgrade: %s", available_version)
+            logger.info(_("Applying Windows upgrade: %s"), available_version)
 
             try:
                 # PowerShell command to install Windows feature updates
@@ -459,7 +461,7 @@ class WindowsUpdateApplierMixin:
                 """
 
                 upgrade_cmd = ["powershell", "-Command", powershell_cmd]
-                logger.info("Running Windows upgrade command")
+                logger.info(_("Running Windows upgrade command"))
 
                 result = subprocess.run(  # nosec B603, B607
                     upgrade_cmd,
@@ -471,7 +473,7 @@ class WindowsUpdateApplierMixin:
 
                 if result.returncode == 0:
                     logger.info(
-                        "Successfully applied Windows upgrade: %s", available_version
+                        _("Successfully applied Windows upgrade: %s"), available_version
                     )
                     results["updated_packages"].append(
                         {
@@ -531,7 +533,7 @@ class WindowsUpdateApplierMixin:
         """
         if packages:
             logger.info(
-                "Applying updates for %d packages: %s",
+                _("Applying updates for %d packages: %s"),
                 len(packages),
                 ", ".join([pkg.get("name", "unknown") for pkg in packages]),
             )
@@ -539,7 +541,7 @@ class WindowsUpdateApplierMixin:
 
         if package_names:
             logger.info(
-                "Applying updates for %d packages: %s",
+                _("Applying updates for %d packages: %s"),
                 len(package_names),
                 ", ".join(package_names),
             )
@@ -692,11 +694,13 @@ class WindowsUpdateApplierMixin:
             )
 
             for pkg_manager, pkg_list in packages_by_manager.items():
-                logger.info("Applying %d updates using %s", len(pkg_list), pkg_manager)
+                logger.info(
+                    _("Applying %d updates using %s"), len(pkg_list), pkg_manager
+                )
                 self._process_windows_manager_updates(pkg_manager, pkg_list, results)
 
             logger.info(
-                "Update process completed: %d updated, %d failed",
+                _("Update process completed: %d updated, %d failed"),
                 len(results["updated_packages"]),
                 len(results["failed_packages"]),
             )

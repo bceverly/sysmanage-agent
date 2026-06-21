@@ -87,7 +87,7 @@ class UpdateManager:
             requires_reboot: Boolean indicating if reboot is required
         """
         try:
-            self.logger.info("Sending reboot status update: %s", requires_reboot)
+            self.logger.info(_("Sending reboot status update: %s"), requires_reboot)
 
             # Get hostname for server processing
             system_info = self.agent.registration.get_system_info()

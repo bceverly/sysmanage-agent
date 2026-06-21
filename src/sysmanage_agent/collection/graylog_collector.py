@@ -16,6 +16,8 @@ from typing import Dict, Optional
 
 import yaml
 
+from src.i18n import _
+
 RSYSLOG_CONF_DIR = "/etc/rsyslog.d"
 
 
@@ -53,11 +55,11 @@ class GraylogCollector:
                 return self._detect_windows_sidecar()
 
             self.logger.warning(
-                "Graylog detection not supported on platform: %s", self.system
+                _("Graylog detection not supported on platform: %s"), self.system
             )
             return self._no_attachment()
         except Exception as error:
-            self.logger.error("Error collecting Graylog status: %s", error)
+            self.logger.error(_("Error collecting Graylog status: %s"), error)
             return self._no_attachment()
 
     def _no_attachment(self) -> Dict:
@@ -116,7 +118,7 @@ class GraylogCollector:
                 return result
 
         except Exception as error:
-            self.logger.error("Error reading BSD syslog.conf: %s", error)
+            self.logger.error(_("Error reading BSD syslog.conf: %s"), error)
 
         return self._no_attachment()
 
@@ -170,7 +172,7 @@ class GraylogCollector:
             return "RUNNING" in result.stdout
 
         except Exception as error:
-            self.logger.error("Error checking Graylog Sidecar service: %s", error)
+            self.logger.error(_("Error checking Graylog Sidecar service: %s"), error)
             return False
 
     def _parse_windows_sidecar_config(self) -> Dict:
@@ -215,7 +217,7 @@ class GraylogCollector:
                 }
 
         except Exception as error:
-            self.logger.error("Error parsing Graylog Sidecar config: %s", error)
+            self.logger.error(_("Error parsing Graylog Sidecar config: %s"), error)
 
         return None
 
@@ -241,7 +243,7 @@ class GraylogCollector:
 
             except Exception as error:
                 self.logger.error(
-                    "Error reading rsyslog config %s: %s", config_file, error
+                    _("Error reading rsyslog config %s: %s"), config_file, error
                 )
 
         return self._no_attachment()
@@ -351,7 +353,7 @@ class GraylogCollector:
                 }
 
         except Exception as error:
-            self.logger.error("Error reading syslog-ng config: %s", error)
+            self.logger.error(_("Error reading syslog-ng config: %s"), error)
 
         return self._no_attachment()
 

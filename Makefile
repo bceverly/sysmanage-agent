@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local
+.PHONY: test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
 
 # Default target
 help:
@@ -593,16 +593,76 @@ i18n-extract: setup-venv
 i18n-merge: setup-venv
 	@$(PYTHON) scripts/i18n_validate.py --merge
 
+# i18n translation backfill via the GPU translation service (lives in the
+# sysmanage repo at scripts/translation-service/).  Idempotent: only empty
+# msgstr gaps are sent, so re-run any time to fill new strings.  Point at your
+# running service with either:
+#   export TRANSLATION_SERVICE_URL=http://beast:8765
+#   or:  make translate SERVICE=http://beast:8765
+SERVICE ?= $(or $(TRANSLATION_SERVICE_URL),http://localhost:8765)
+
+translate: setup-venv
+	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) scripts/translate_i18n.py --service "$(SERVICE)" --fail-on-gaps
+
+translate-dry: setup-venv
+	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) scripts/translate_i18n.py --dry-run
+
+# Offline completeness GATE — no service, no writes, no network.  Fails loudly
+# (non-zero) if any locale string is still untranslated.  Safe for CI / release.
+translate-check: setup-venv
+	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) scripts/translate_i18n.py --check
+
 i18n-compile: setup-venv
+	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/i18n_validate.py --compile
+
+# Compile .mo from the committed .po BEFORE any package is built — every
+# installer payload bundles src/i18n/locales/, and .mo is gitignored (never
+# committed).  Declared as an EXTRA prerequisite on each installer (Make merges
+# prerequisites across rules; recipes live at their definitions), so one line
+# protects every packaging path.  i18n-compile falls back to polib where msgfmt
+# is absent (e.g. Windows MSI).
+.PHONY: i18n-compile
+installer installer-pkg installer-rpm-suse installer-deb installer-rpm installer-openbsd installer-freebsd installer-alpine installer-netbsd installer-msi-x64 installer-msi-arm64: i18n-compile
 
 i18n-strip-fuzzy: setup-venv
 	@$(PYTHON) scripts/i18n_validate.py --strip-fuzzy
 
 # Format Python code
+# Auto-fix-with-tripwire: black still runs (so ``make lint`` doubles as a
+# fix-it command), but a pre-flight ``--check`` makes ``make lint`` FAIL if
+# black actually reformatted anything — so un-formatted code can't slip through
+# locally and then get rejected by CI's ``black --check``.  Matches sysmanage.
 format-python: setup-venv clean-whitespace
 	@echo "Formatting Python code..."
-	@$(PYTHON) -m black .
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) -m black --check . >nul 2>&1 & if errorlevel 1 ( \
+		$(PYTHON) -m black . & \
+		echo. & \
+		echo [FAIL] black reformatted files in your working tree. & \
+		echo        The fix was applied locally -- commit it before pushing & \
+		echo        ^(CI runs 'black --check' against committed code^). & \
+		echo. & \
+		exit /b 1 \
+	) else ( \
+		$(PYTHON) -m black . \
+	)
+else
+	@$(PYTHON) -m black --check . >/dev/null 2>&1; \
+	black_drift=$$?; \
+	$(PYTHON) -m black .; \
+	if [ "$$black_drift" != "0" ]; then \
+		echo ""; \
+		echo "[FAIL] black reformatted files in your working tree."; \
+		echo "       The fix was applied locally — commit it before pushing"; \
+		echo "       (CI runs 'black --check' against committed code)."; \
+		echo ""; \
+		exit 1; \
+	fi
+endif
 	@echo "[OK] Code formatting completed"
 
 # Python tests

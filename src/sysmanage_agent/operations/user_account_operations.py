@@ -12,7 +12,7 @@ from src.i18n import _
 # Module-level constants for repeated error messages
 _UNSUPPORTED_PLATFORM = _("Unsupported platform: %s")
 _USER_AND_GROUP_DELETED = _("User %s and default group deleted successfully")
-_USER_DELETED_GROUP_FAILED = "User %s deleted but default group deletion failed: %s"
+_USER_DELETED_GROUP_FAILED = _("User %s deleted but default group deletion failed: %s")
 
 
 class UserAccountOperations:
@@ -33,7 +33,7 @@ class UserAccountOperations:
         if not username:
             return {"success": False, "error": _("Username is required")}
 
-        self.logger.info("Creating user account: %s", username)
+        self.logger.info(_("Creating user account: %s"), username)
 
         try:
             # Dispatch to platform-specific handler
@@ -56,14 +56,15 @@ class UserAccountOperations:
             # If user was created successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    "User %s created successfully, sending updated user list", username
+                    _("User %s created successfully, sending updated user list"),
+                    username,
                 )
                 await self.agent.update_user_access()
 
             return result
 
         except Exception as error:
-            self.logger.error("Failed to create user %s: %s", username, error)
+            self.logger.error(_("Failed to create user %s: %s"), username, error)
             return {"success": False, "error": str(error)}
 
     async def create_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,7 +76,7 @@ class UserAccountOperations:
         if not group_name:
             return {"success": False, "error": _("Group name is required")}
 
-        self.logger.info("Creating group: %s", group_name)
+        self.logger.info(_("Creating group: %s"), group_name)
 
         try:
             # Dispatch to platform-specific handler
@@ -98,7 +99,7 @@ class UserAccountOperations:
             # If group was created successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    "Group %s created successfully, sending updated user list",
+                    _("Group %s created successfully, sending updated user list"),
                     group_name,
                 )
                 await self.agent.update_user_access()
@@ -106,7 +107,7 @@ class UserAccountOperations:
             return result
 
         except Exception as error:
-            self.logger.error("Failed to create group %s: %s", group_name, error)
+            self.logger.error(_("Failed to create group %s: %s"), group_name, error)
             return {"success": False, "error": str(error)}
 
     async def delete_host_user(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -118,7 +119,7 @@ class UserAccountOperations:
         if not username:
             return {"success": False, "error": _("Username is required")}
 
-        self.logger.info("Deleting user account: %s", username)
+        self.logger.info(_("Deleting user account: %s"), username)
 
         try:
             # Dispatch to platform-specific handler
@@ -141,14 +142,15 @@ class UserAccountOperations:
             # If user was deleted successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    "User %s deleted successfully, sending updated user list", username
+                    _("User %s deleted successfully, sending updated user list"),
+                    username,
                 )
                 await self.agent.update_user_access()
 
             return result
 
         except Exception as error:
-            self.logger.error("Failed to delete user %s: %s", username, error)
+            self.logger.error(_("Failed to delete user %s: %s"), username, error)
             return {"success": False, "error": str(error)}
 
     async def delete_host_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -160,7 +162,7 @@ class UserAccountOperations:
         if not group_name:
             return {"success": False, "error": _("Group name is required")}
 
-        self.logger.info("Deleting group: %s", group_name)
+        self.logger.info(_("Deleting group: %s"), group_name)
 
         try:
             # Dispatch to platform-specific handler
@@ -183,7 +185,7 @@ class UserAccountOperations:
             # If group was deleted successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    "Group %s deleted successfully, sending updated user list",
+                    _("Group %s deleted successfully, sending updated user list"),
                     group_name,
                 )
                 await self.agent.update_user_access()
@@ -191,7 +193,7 @@ class UserAccountOperations:
             return result
 
         except Exception as error:
-            self.logger.error("Failed to delete group %s: %s", group_name, error)
+            self.logger.error(_("Failed to delete group %s: %s"), group_name, error)
             return {"success": False, "error": str(error)}
 
     # ========== Linux User/Group Creation ==========
@@ -307,7 +309,7 @@ class UserAccountOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to create macOS user %s: %s", username, error)
+            self.logger.error(_("Failed to create macOS user %s: %s"), username, error)
             return {"success": False, "error": str(error)}
 
     async def _create_macos_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -336,7 +338,9 @@ class UserAccountOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to create macOS group %s: %s", group_name, error)
+            self.logger.error(
+                _("Failed to create macOS group %s: %s"), group_name, error
+            )
             return {"success": False, "error": str(error)}
 
     async def _get_next_macos_uid(self) -> int:
@@ -608,7 +612,7 @@ class UserAccountOperations:
                         }
                     # Group deletion failed but user was deleted - still return success
                     self.logger.warning(
-                        "User %s deleted but default group deletion failed: %s",
+                        _USER_DELETED_GROUP_FAILED,
                         username,
                         group_result.get("error"),
                     )
@@ -619,7 +623,7 @@ class UserAccountOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to delete macOS user %s: %s", username, error)
+            self.logger.error(_("Failed to delete macOS user %s: %s"), username, error)
             return {"success": False, "error": str(error)}
 
     async def _delete_macos_group(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
@@ -639,7 +643,9 @@ class UserAccountOperations:
             }
 
         except Exception as error:
-            self.logger.error("Failed to delete macOS group %s: %s", group_name, error)
+            self.logger.error(
+                _("Failed to delete macOS group %s: %s"), group_name, error
+            )
             return {"success": False, "error": str(error)}
 
     # ========== Windows User/Group Deletion ==========
@@ -768,14 +774,14 @@ class UserAccountOperations:
                 }
 
             error_msg = stderr.decode().strip() or stdout.decode().strip()
-            self.logger.error("Command failed (%s): %s", description, error_msg)
+            self.logger.error(_("Command failed (%s): %s"), description, error_msg)
             return {"success": False, "error": error_msg}
 
         except FileNotFoundError as error:
-            self.logger.error("Command not found: %s", cmd[0])
+            self.logger.error(_("Command not found: %s"), cmd[0])
             return {"success": False, "error": str(error)}
         except Exception as error:
-            self.logger.error("Command execution failed: %s", error)
+            self.logger.error(_("Command execution failed: %s"), error)
             return {"success": False, "error": str(error)}
 
     async def _run_command_capture(self, cmd: list) -> Dict[str, Any]:

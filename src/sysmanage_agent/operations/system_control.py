@@ -95,7 +95,7 @@ class SystemControl:
                 await self._send_antivirus_status_update(antivirus_status)
             except Exception as error:
                 self.logger.warning(
-                    "Failed to collect/send antivirus status: %s", str(error)
+                    _("Failed to collect/send antivirus status: %s"), str(error)
                 )
 
             # Collect and send commercial antivirus status
@@ -110,7 +110,8 @@ class SystemControl:
                     )
             except Exception as error:
                 self.logger.warning(
-                    "Failed to collect/send commercial antivirus status: %s", str(error)
+                    _("Failed to collect/send commercial antivirus status: %s"),
+                    str(error),
                 )
 
             # Collect and send Graylog attachment status
@@ -118,7 +119,7 @@ class SystemControl:
                 await self.agent_instance.data_collector._send_graylog_status_update()  # pylint: disable=protected-access
             except Exception as error:
                 self.logger.warning(
-                    "Failed to collect/send Graylog status: %s", str(error)
+                    _("Failed to collect/send Graylog status: %s"), str(error)
                 )
 
             return {"success": True, "result": "System info refresh initiated"}
@@ -322,9 +323,9 @@ class SystemControl:
                 },
             )
             await self.agent_instance.send_message(message)
-            self.logger.info("Sent antivirus status update to server")
+            self.logger.info(_("Sent antivirus status update to server"))
         except Exception as error:
-            self.logger.error("Failed to send antivirus status update: %s", error)
+            self.logger.error(_("Failed to send antivirus status update: %s"), error)
 
     async def _send_commercial_antivirus_status_update(
         self, commercial_antivirus_status: Dict[str, Any]
@@ -372,8 +373,8 @@ class SystemControl:
                 },
             )
             await self.agent_instance.send_message(message)
-            self.logger.info("Sent commercial antivirus status update to server")
+            self.logger.info(_("Sent commercial antivirus status update to server"))
         except Exception as error:
             self.logger.error(
-                "Failed to send commercial antivirus status update: %s", error
+                _("Failed to send commercial antivirus status update: %s"), error
             )

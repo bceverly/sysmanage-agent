@@ -10,6 +10,8 @@ import shutil
 import subprocess  # nosec B404 # Required for service status checking
 from typing import Optional
 
+from src.i18n import _
+
 
 def is_valid_unix_username(username: str) -> bool:
     """
@@ -376,10 +378,10 @@ class ServiceStatusDetector:
     def _extract_service_state(self, state_line: str, service_name: str) -> str:
         """Extract service state from a STATE line."""
         if "RUNNING" in state_line:
-            self.logger.info("Found running Windows service: %s", service_name)
+            self.logger.info(_("Found running Windows service: %s"), service_name)
             return "running"
         if "STOPPED" in state_line:
-            self.logger.info("Found stopped Windows service: %s", service_name)
+            self.logger.info(_("Found stopped Windows service: %s"), service_name)
             return "stopped"
         return "unknown"
 

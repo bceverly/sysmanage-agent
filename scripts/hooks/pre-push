@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# pre-push hook — block pushing a version tag (refs/tags/v*) when this repo's
+# translations are not 100% complete.  OFFLINE: it runs `make translate-check`,
+# which never contacts the translation service, so it works with or without the
+# GPU box up.  This is a local convenience guard only — the authoritative gate
+# is the i18n-gate job in the release workflow (CI), which cannot be bypassed.
+#
+# Install (one-time, per clone):
+#     ln -sf ../../scripts/hooks/pre-push .git/hooks/pre-push
+#   or:
+#     cp scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#
+# Emergency bypass:  git push --no-verify
+#
+set -euo pipefail
+
+gate_ran=0
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+    case "$remote_ref" in
+        refs/tags/v*)
+            if [ "$gate_ran" -eq 0 ]; then
+                echo "pre-push: version tag ${remote_ref#refs/tags/} detected — running offline i18n gate…"
+                if ! make translate-check; then
+                    echo "" >&2
+                    echo "pre-push: BLOCKED — untranslated strings remain (see above)." >&2
+                    echo "          Fill them with 'make translate', or push with --no-verify to override." >&2
+                    exit 1
+                fi
+                gate_ran=1
+            fi
+            ;;
+    esac
+done
+
+exit 0

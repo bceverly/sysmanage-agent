@@ -51,7 +51,7 @@ class CertificateCollector:
                     _("Unsupported platform for certificate collection: %s"), system
                 )
 
-            self.logger.info("Collected %d certificates", len(certificates))
+            self.logger.info(_("Collected %d certificates"), len(certificates))
             return certificates
 
         except Exception as error:
@@ -468,7 +468,7 @@ class CertificateCollector:
                 self._process_windows_certificate_store(store, certificates)
 
             self.logger.info(
-                "Windows certificate collection completed: %d certificates found",
+                _("Windows certificate collection completed: %d certificates found"),
                 len(certificates),
             )
 

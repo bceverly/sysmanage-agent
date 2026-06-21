@@ -56,7 +56,7 @@ class PackageCollector:
         Returns:
             bool: True if collection was successful, False otherwise
         """
-        logger.info("Starting collection of available packages")
+        logger.info(_("Starting collection of available packages"))
 
         if self.collector is None:
             logger.warning(_("Unsupported operating system: %s"), self.system)
@@ -66,7 +66,7 @@ class PackageCollector:
             collected_count = self.collector.collect_packages()
 
             logger.info(
-                "Package collection completed. Collected %d packages",
+                _("Package collection completed. Collected %d packages"),
                 collected_count,
             )
             return True

@@ -245,7 +245,7 @@ class GenericDeployment:
                 "error": f"OS error writing '{path}': {exc}",
             }
 
-        self.logger.info("Deployed file: %s", path)
+        self.logger.info(_("Deployed file: %s"), path)
         return {
             "success": True,
             "path": path,
@@ -464,7 +464,7 @@ class GenericDeployment:
                 cwd=shim_cwd,
                 env=shim_env,
             )
-            _, stderr_bytes = await proc.communicate()
+            _stdout_bytes, stderr_bytes = await proc.communicate()
             if proc.returncode != 0:
                 stderr_text = (stderr_bytes or b"").decode("utf-8", "replace").strip()
                 raise PermissionError(
@@ -528,14 +528,14 @@ class GenericDeployment:
             # 183).  Same fix as the primary _write_atomic path.
             os.replace(backup_path, path)
             self.logger.warning(
-                "Rolled back %s from backup %s after failed deployment",
+                _("Rolled back %s from backup %s after failed deployment"),
                 path,
                 backup_path,
             )
             return f"Restored from backup {backup_path}."
         except OSError as exc:
             self.logger.error(
-                "Rollback failed for %s from %s: %s", path, backup_path, exc
+                _("Rollback failed for %s from %s: %s"), path, backup_path, exc
             )
             return f"Backup at {backup_path} could not be restored ({exc})."
 
@@ -622,7 +622,7 @@ class GenericDeployment:
                     )
                     errors.append(error_msg)
                     self.logger.error(
-                        "Command sequence step %d/%d failed: %s - %s",
+                        _("Command sequence step %d/%d failed: %s - %s"),
                         i + 1,
                         len(steps),
                         description,
@@ -747,7 +747,7 @@ class GenericDeployment:
             message = self.agent.create_message(message_type, data)
             await self.agent.send_message(message)
         except Exception as exc:
-            self.logger.warning("Failed to send progress message: %s", exc)
+            self.logger.warning(_("Failed to send progress message: %s"), exc)
 
     # ================================================================
     # apply_deployment_plan handler

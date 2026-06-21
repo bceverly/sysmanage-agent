@@ -13,6 +13,8 @@ import logging
 import subprocess
 from importlib.metadata import version as pkg_version
 
+from src.i18n import _
+
 logger = logging.getLogger(__name__)
 
 _CACHED_VERSION: dict[str, str] = {}
@@ -86,7 +88,9 @@ def get_agent_version() -> str:
     # 1. importlib.metadata (pip installs)
     try:
         _CACHED_VERSION["value"] = pkg_version("sysmanage-agent")
-        logger.info("Agent version from package metadata: %s", _CACHED_VERSION["value"])
+        logger.info(
+            _("Agent version from package metadata: %s"), _CACHED_VERSION["value"]
+        )
         return _CACHED_VERSION["value"]
     except Exception:  # pylint: disable=broad-except
         pass  # nosec B110 - expected fallthrough
@@ -95,16 +99,16 @@ def get_agent_version() -> str:
     os_pkg_version = _from_os_package_manager()
     if os_pkg_version:
         _CACHED_VERSION["value"] = os_pkg_version
-        logger.info("Agent version from OS package manager: %s", os_pkg_version)
+        logger.info(_("Agent version from OS package manager: %s"), os_pkg_version)
         return os_pkg_version
 
     # 3. git describe (source checkout)
     git_out = _try_run(["git", "describe", "--tags", "--abbrev=0"])
     if git_out:
         _CACHED_VERSION["value"] = git_out + "-dev"
-        logger.info("Agent version from git: %s", _CACHED_VERSION["value"])
+        logger.info(_("Agent version from git: %s"), _CACHED_VERSION["value"])
         return _CACHED_VERSION["value"]
 
     _CACHED_VERSION["value"] = "unknown"
-    logger.warning("Could not determine agent version, using 'unknown'")
+    logger.warning(_("Could not determine agent version, using 'unknown'"))
     return _CACHED_VERSION["value"]

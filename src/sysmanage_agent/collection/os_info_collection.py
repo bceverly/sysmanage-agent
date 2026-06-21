@@ -488,7 +488,7 @@ class OSInfoCollector:
                         line = raw.strip()
                         if not line or line.startswith("#") or "=" not in line:
                             continue
-                        key, _, value = line.partition("=")
+                        key, _sep, value = line.partition("=")
                         value = value.strip()
                         if (
                             len(value) >= 2

@@ -6,6 +6,8 @@ import platform
 from typing import Dict, List, Any
 import logging
 
+from src.i18n import _
+
 from .role_detection_package_managers import PackageManagerDetector
 from .role_detection_service_status import ServiceStatusDetector
 from .role_detection_virtualization_hosts import VirtualizationHostDetector
@@ -152,14 +154,14 @@ class RoleDetector:
             installed_packages = self.package_detector.get_installed_packages()
             if not installed_packages:
                 self.logger.warning(
-                    "No packages detected or unsupported package manager"
+                    _("No packages detected or unsupported package manager")
                 )
                 # Still check special detection roles even without packages
                 self._detect_virtualization_host_roles(roles)
                 return roles
 
             # Check each role category
-            for _, role_info in self.role_mappings.items():
+            for role_info in self.role_mappings.values():
                 role_name = role_info["role"]
 
                 # Handle special detection for virtualization hosts
@@ -175,7 +177,7 @@ class RoleDetector:
             self._detect_virtualization_host_roles(roles)
 
         except Exception as error:
-            self.logger.error("Error detecting roles: %s", error)
+            self.logger.error(_("Error detecting roles: %s"), error)
 
         return roles
 
@@ -195,7 +197,7 @@ class RoleDetector:
                 continue
 
             self.logger.info(
-                "Found %s package: %s v%s",
+                _("Found %s package: %s v%s"),
                 role_name,
                 package_pattern,
                 package_version,
@@ -261,7 +263,9 @@ class RoleDetector:
 
         if existing_role:
             self.logger.info(
-                "Skipping duplicate role: %s with service %s (already have package %s)",
+                _(
+                    "Skipping duplicate role: %s with service %s (already have package %s)"
+                ),
                 role_name,
                 active_service,
                 existing_role["package_name"],
