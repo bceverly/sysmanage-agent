@@ -1874,6 +1874,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      - name: Free up disk space
+        run: |
+          echo "Disk before cleanup:"; df -h /
+          # ubuntu-latest ships ~25GB of preinstalled toolchains this job does
+          # not need (Android SDK, .NET, GHC/ghcup, CodeQL, Swift). Removing them
+          # stops the 18-artifact download + copy into release-files/ from
+          # filling the small runner disk ("No space left on device").
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/share/swift || true
+          sudo docker image prune -af || true
+          echo "Disk after cleanup:"; df -h /
+
       - name: Determine version
         id: version
         run: |
