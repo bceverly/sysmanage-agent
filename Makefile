@@ -570,7 +570,7 @@ lint-version-fix:
 	@$(PYTHON) scripts/check_version_drift.py --fix
 
 # Python linting
-lint: format-python i18n-validate lint-version
+lint: format-python i18n-validate translate-check lint-version
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
@@ -670,10 +670,13 @@ endif
 # Python tests
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
+	@# No PYTHONWARNINGS mask here: warning policy lives in pytest.ini
+	@# (filterwarnings = error + targeted ignores) so warnings fail the build
+	@# instead of being silently swallowed.
 ifeq ($(OS),Windows_NT)
-	@set PYTHONWARNINGS=ignore::RuntimeWarning && $(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
+	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
 else
-	@PYTHONWARNINGS=ignore::RuntimeWarning $(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
+	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
 endif
 	@echo "[OK] Tests completed"
 

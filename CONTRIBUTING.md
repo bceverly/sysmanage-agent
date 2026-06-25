@@ -66,6 +66,12 @@ The Agent supports 14 languages. To contribute:
 - Update translation files for affected languages.
 - Indicate language additions or updates in PR.
 
+`make lint` runs an **offline** i18n completeness gate (`translate-check`,
+no translation service required) alongside `i18n-validate`, so an
+untranslated string fails locally at `pre-push` rather than in CI. Fill
+gaps with your local model rig — `make translate SERVICE=http://<host>:8765`
+— then re-run `make lint`.
+
 ---
 
 ## Project Standards

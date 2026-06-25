@@ -250,9 +250,13 @@ class SysManageAgent(
         if "|" in log_level:
             log_level = log_level.split("|")[0].strip()
 
-        # Clear any existing handlers to prevent double logging
+        # Clear any existing handlers to prevent double logging. Close each one
+        # first — removeHandler only detaches it, so without close() the
+        # underlying log file stays open and leaks (a ResourceWarning every time
+        # setup_logging runs again, e.g. across the test suite).
         root_logger = logging.getLogger()
         for handler in root_logger.handlers[:]:
+            handler.close()
             root_logger.removeHandler(handler)
 
         # Set up file logging - write all output to file.  Rotate daily, gzip
