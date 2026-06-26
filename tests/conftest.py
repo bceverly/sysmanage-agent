@@ -395,35 +395,52 @@ websocket:
             os.unlink(temp_log_path)
 
 
+def _close_orphaned_log_handlers():
+    """Close any still-open ``agent.log`` file handler, wherever it now lives.
+
+    Creating a ``SysManageAgent`` calls ``setup_logging``, which installs a
+    ``GzipTimedRotatingFileHandler`` (a ``logging.FileHandler`` subclass) on the
+    ROOT logger writing to a real ``agent.log``.  pytest's own logging plugin
+    saves and restores ``root.handlers`` around every test phase, so when
+    ``setup_logging`` swaps handlers mid-test, pytest later restores its saved
+    list and ORPHANS the agent's file handler: it is no longer on
+    ``root.handlers`` (so iterating the root logger can't find it) but is still
+    open.  It then leaks as an ``unclosed file`` ResourceWarning when the garbage
+    collector finalizes it — a hard error under the warnings-as-errors policy.
+
+    Find it via logging's global handler registry (``logging._handlerList``)
+    instead, matching by file name so pytest's own ``/dev/null`` capture handler
+    is left untouched.
+    """
+    root = logging.getLogger()
+    # logging's global registry of every live handler (incl. ones detached
+    # from the root logger) — the only place the orphaned handler is reachable.
+    for ref in list(logging._handlerList):  # pylint: disable=protected-access
+        handler = ref() if callable(ref) else ref
+        if not isinstance(handler, logging.FileHandler):
+            continue
+        if not getattr(handler, "baseFilename", "").endswith("agent.log"):
+            continue
+        try:
+            handler.close()
+        finally:
+            root.removeHandler(handler)  # no-op if already detached
+
+
 @pytest.fixture(autouse=True)
 def _close_agent_log_handlers():
-    """Close any file-based log handler the agent's ``setup_logging`` opened.
-
-    Creating a ``SysManageAgent`` adds a ``GzipTimedRotatingFileHandler`` (a
-    ``logging.FileHandler`` subclass) on the ROOT logger, writing to a real
-    ``agent.log``.  ``setup_logging`` only closes it the next time it runs, so
-    between tests the handler can be orphaned with its file still open — which
-    the ``gc.collect()`` in ``pytest_runtest_setup`` surfaces as an
-    ``unclosed file`` ResourceWarning (a hard error under the warnings-as-errors
-    policy).  Closing + detaching file handlers after every test keeps that file
-    descriptor from ever leaking across tests.  StreamHandlers (console / pytest
-    capture) are left untouched.
-    """
+    """Close the agent's ``agent.log`` handler after every test (see helper)."""
     yield
-    root = logging.getLogger()
-    for handler in root.handlers[:]:
-        if isinstance(handler, logging.FileHandler):
-            try:
-                handler.close()
-            finally:
-                root.removeHandler(handler)
+    _close_orphaned_log_handlers()
 
 
 # Pytest hooks for better test isolation
 def pytest_runtest_setup(item):
     """Setup for each test run."""
     _ = item
-    # Ensure no existing database connections interfere
+    # Close any orphaned agent.log handler BEFORE gc surfaces it as an
+    # unclosed-file ResourceWarning, then drop lingering DB connections.
+    _close_orphaned_log_handlers()
     gc.collect()
 
 
@@ -431,5 +448,6 @@ def pytest_runtest_teardown(item, nextitem):
     """Teardown after each test run."""
     _ = item
     _ = nextitem
-    # Clean up any remaining database connections
+    # Same guard on the teardown side (see pytest_runtest_setup).
+    _close_orphaned_log_handlers()
     gc.collect()
