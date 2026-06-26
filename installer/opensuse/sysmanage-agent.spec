@@ -1,5 +1,5 @@
 Name:           sysmanage-agent
-Version:        3.0.0.9
+Version:        3.0.0.10
 Release:        0
 Summary:        System management agent for SysManage
 License:        Dual (Open Source / Commercial)

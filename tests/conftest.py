@@ -6,6 +6,7 @@ Provides isolated test database and mocking infrastructure.
 import asyncio
 import gc
 import glob
+import logging
 import os
 import sys
 import tempfile
@@ -392,6 +393,30 @@ websocket:
             os.unlink(temp_config_path)
         if os.path.exists(temp_log_path):
             os.unlink(temp_log_path)
+
+
+@pytest.fixture(autouse=True)
+def _close_agent_log_handlers():
+    """Close any file-based log handler the agent's ``setup_logging`` opened.
+
+    Creating a ``SysManageAgent`` adds a ``GzipTimedRotatingFileHandler`` (a
+    ``logging.FileHandler`` subclass) on the ROOT logger, writing to a real
+    ``agent.log``.  ``setup_logging`` only closes it the next time it runs, so
+    between tests the handler can be orphaned with its file still open — which
+    the ``gc.collect()`` in ``pytest_runtest_setup`` surfaces as an
+    ``unclosed file`` ResourceWarning (a hard error under the warnings-as-errors
+    policy).  Closing + detaching file handlers after every test keeps that file
+    descriptor from ever leaking across tests.  StreamHandlers (console / pytest
+    capture) are left untouched.
+    """
+    yield
+    root = logging.getLogger()
+    for handler in root.handlers[:]:
+        if isinstance(handler, logging.FileHandler):
+            try:
+                handler.close()
+            finally:
+                root.removeHandler(handler)
 
 
 # Pytest hooks for better test isolation
