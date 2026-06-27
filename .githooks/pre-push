@@ -54,6 +54,7 @@ echo "============================================================"
 run_make_lint() {
     case "$(uname -s 2>/dev/null)" in
         MINGW*|MSYS*|CYGWIN*) make SHELL=cmd.exe lint ;;
+        OpenBSD|FreeBSD|NetBSD) gmake lint ;;
         *)                    make lint ;;
     esac
 }
