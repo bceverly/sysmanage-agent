@@ -37,6 +37,7 @@ SQLAlchemy>=2.0.43
 alembic>=1.16.5
 
 # Development dependencies for linting and testing
+babel>=2.12.0  # pybabel CLI for i18n-validate
 # black is dev-only (``make lint``).  CVE-2026-32274 (arbitrary file writes
 # via crafted ``--python-cell-magics`` cache filename) is fixed in 26.3.1+,
 # which requires Python >=3.10.  Older patched releases for 3.9 don't
