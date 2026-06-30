@@ -318,6 +318,8 @@ class MessageProcessor:
             "collect_available_packages": lambda params: self.agent.collect_available_packages(),
             "collect_certificates": lambda params: self.agent.collect_certificates(),
             "collect_roles": lambda params: self.agent.collect_roles(),
+            "collect_processes": lambda params: self.agent.collect_processes(),
+            "kill_process": self.agent.kill_process,
             "service_control": self._handle_service_control,
             "get_service_status": self._handle_get_service_status,
             "deploy_files": self.agent.deploy_files,

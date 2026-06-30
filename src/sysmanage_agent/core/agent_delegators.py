@@ -248,6 +248,14 @@ class DataCollectorDelegator:
         """Delegate to data_collector."""
         return await self.data_collector.collect_roles()
 
+    async def collect_processes(self) -> Dict[str, Any]:
+        """Delegate to data_collector."""
+        return await self.data_collector.collect_processes()
+
+    async def kill_process(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Delegate to data_collector."""
+        return await self.data_collector.kill_process(parameters)
+
 
 class RegistrationDelegator:
     """Mixin providing registration manager delegators."""

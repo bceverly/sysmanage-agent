@@ -17,6 +17,7 @@ from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
+from src.sysmanage_agent.collection.process_collection import ProcessCollector
 from src.sysmanage_agent.communication.child_host_collector import ChildHostCollector
 
 _UNKNOWN_ERROR = "Unknown error"
@@ -36,6 +37,7 @@ class DataCollector:
         self.logger = logging.getLogger(__name__)
         self.firewall_collector = FirewallCollector(self.logger)
         self.graylog_collector = GraylogCollector(self.logger)
+        self.process_collector = ProcessCollector(self.logger)
         self.child_host_collector = ChildHostCollector(agent_instance)
 
     async def send_initial_data_updates(
@@ -191,6 +193,12 @@ class DataCollector:
             self.logger.error(
                 _("Failed to send initial Graylog status data: %s"), error
             )
+
+        try:
+            self.logger.info(_("Collecting initial process data..."))
+            await self._send_process_update()
+        except Exception as error:
+            self.logger.error(_("Failed to send initial process data: %s"), error)
 
         try:
             self.logger.info(_("Collecting initial child hosts data..."))
@@ -562,6 +570,79 @@ class DataCollector:
         else:
             self.logger.warning(_("Cannot send Graylog status data: no host approval"))
 
+    async def _send_process_update(self):
+        """Collect running processes and send a snapshot to the server."""
+        self.logger.debug("AGENT_DEBUG: Collecting running process data")
+
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            self.logger.warning(_("Cannot send process data: no host approval"))
+            return
+
+        # Collection samples CPU over ~0.5s, so run it off the event loop.
+        processes, truncated = await asyncio.to_thread(
+            self.process_collector.collect_processes
+        )
+
+        process_message = self.agent.create_message(
+            "process_status_update",
+            {
+                "hostname": self.agent.registration.get_system_info()["hostname"],
+                "host_id": str(host_approval.host_id),
+                "processes": processes,
+                "process_count": len(processes),
+                "truncated": truncated,
+                "collected_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        self.logger.debug(
+            "AGENT_DEBUG: Sending process status message: %s",
+            process_message["message_id"],
+        )
+        success = await self.agent.send_message(process_message)
+        if success:
+            self.logger.debug(
+                "AGENT_DEBUG: Process data sent successfully (%d processes)",
+                len(processes),
+            )
+        else:
+            self.logger.warning(_("Failed to send process status data"))
+
+    async def collect_processes(self) -> Dict[str, Any]:
+        """On-demand process collection (server 'refresh' command)."""
+        try:
+            await self._send_process_update()
+            return {"success": True, "result": "Process information sent"}
+        except Exception as error:
+            self.logger.error(_("Error collecting processes: %s"), error)
+            return {"success": False, "error": str(error)}
+
+    async def kill_process(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Terminate a process on this host, then re-send a fresh snapshot."""
+        pid = parameters.get("pid")
+        if pid is None:
+            return {"success": False, "error": _("Missing required parameter: pid")}
+        try:
+            pid = int(pid)
+        except (TypeError, ValueError):
+            return {"success": False, "error": _("Invalid pid: %s") % pid}
+
+        result = await asyncio.to_thread(
+            self.process_collector.kill_process,
+            pid,
+            force=bool(parameters.get("force", False)),
+            expected_name=parameters.get("expected_name"),
+        )
+
+        # Refresh the server's view regardless of outcome so the UI reflects
+        # reality (the process may have died, spawned children, etc.).
+        try:
+            await self._send_process_update()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.warning(_("Failed to refresh processes after kill: %s"), error)
+
+        return result
+
     async def _collect_and_send_periodic_data(self):
         """Collect and send all periodic data updates."""
         if not (self.agent.running and self.agent.connected):
@@ -638,6 +719,12 @@ class DataCollector:
             await self._send_graylog_status_update()
         except Exception as error:
             self.logger.error(_("Error collecting/sending Graylog status: %s"), error)
+
+        # Send running-process snapshot
+        try:
+            await self._send_process_update()
+        except Exception as error:
+            self.logger.error(_("Error collecting/sending process data: %s"), error)
 
         # Send child hosts (WSL/VM/container) status update
         try:
