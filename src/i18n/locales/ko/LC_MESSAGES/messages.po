@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-20 07:32-0400\n"
+"POT-Creation-Date: 2026-06-30 13:58-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -142,7 +142,7 @@ msgid "Collected %d certificates"
 msgstr "%d개의 인증서 수집됨"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:58
-#: src/sysmanage_agent/communication/data_collector.py:877
+#: src/sysmanage_agent/communication/data_collector.py:962
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "파티션 감지 오류: %s"
@@ -481,22 +481,22 @@ msgstr "Ubuntu 릴리스 업그레이드 적용 중: %s"
 msgid "Failed to apply Ubuntu release upgrade: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:356
+#: src/sysmanage_agent/collection/linux_update_applicators.py:355
 #, python-format
 msgid "Applying Fedora release upgrade to: %s"
 msgstr "디바이스용 펌웨어 업데이트 적용 중: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:396
+#: src/sysmanage_agent/collection/linux_update_applicators.py:394
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:408
+#: src/sysmanage_agent/collection/linux_update_applicators.py:406
 #, python-format
 msgid "Applying openSUSE release upgrade to: %s"
 msgstr "openSUSE 릴리스 업그레이드 적용 중: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:434
+#: src/sysmanage_agent/collection/linux_update_applicators.py:432
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
@@ -687,81 +687,79 @@ msgstr "apt 패키지 수집 실패: %s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
-"dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 "
-"dnf 래퍼)"
+msgstr "dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 dnf 래퍼)"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:58
-#: src/sysmanage_agent/collection/package_collector_windows.py:63
+#: src/sysmanage_agent/collection/package_collector_linux.py:57
+#: src/sysmanage_agent/collection/package_collector_windows.py:62
 #, python-format
 msgid "Collected %d packages from %s"
 msgstr "%d개의 패키지 수집됨, 출처: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:62
-#: src/sysmanage_agent/collection/package_collector_windows.py:67
+#: src/sysmanage_agent/collection/package_collector_linux.py:60
+#: src/sysmanage_agent/collection/package_collector_windows.py:65
 #, python-format
 msgid "Failed to collect packages from %s: %s"
 msgstr "%s에서 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:99
+#: src/sysmanage_agent/collection/package_collector_linux.py:97
 msgid "Failed to get APT package information"
 msgstr "APT 패키지 정보 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:104
+#: src/sysmanage_agent/collection/package_collector_linux.py:102
 #, python-format
 msgid "Error collecting APT packages: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:119
+#: src/sysmanage_agent/collection/package_collector_linux.py:117
 msgid "Failed to get YUM package list"
 msgstr "YUM 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:126
+#: src/sysmanage_agent/collection/package_collector_linux.py:124
 #, python-format
 msgid "Error collecting YUM packages: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:141
+#: src/sysmanage_agent/collection/package_collector_linux.py:139
 msgid "Failed to get DNF package list"
 msgstr "DNF 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:150
+#: src/sysmanage_agent/collection/package_collector_linux.py:148
 #, python-format
 msgid "Error collecting DNF packages: %s"
 msgstr "DNF 패키지 수집 오류: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:165
+#: src/sysmanage_agent/collection/package_collector_linux.py:163
 msgid "Failed to get Zypper package list"
 msgstr "Zypper 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:172
+#: src/sysmanage_agent/collection/package_collector_linux.py:170
 #, python-format
 msgid "Error collecting Zypper packages: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:187
+#: src/sysmanage_agent/collection/package_collector_linux.py:185
 msgid "Failed to get Pacman package list"
 msgstr "Pacman 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:194
+#: src/sysmanage_agent/collection/package_collector_linux.py:192
 #, python-format
 msgid "Error collecting Pacman packages: %s"
 msgstr "Pacman 패키지 수집 오류: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:210
+#: src/sysmanage_agent/collection/package_collector_linux.py:208
 msgid "Failed to get Snap package list"
 msgstr "Snap 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:217
+#: src/sysmanage_agent/collection/package_collector_linux.py:215
 #, python-format
 msgid "Error collecting Snap packages: %s"
 msgstr "Snap 패키지 수집 오류: %s"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:232
+#: src/sysmanage_agent/collection/package_collector_linux.py:230
 msgid "Failed to get Flatpak package list"
 msgstr "Flatpak 패키지 목록 가져오기 실패"
 
-#: src/sysmanage_agent/collection/package_collector_linux.py:239
+#: src/sysmanage_agent/collection/package_collector_linux.py:237
 #, python-format
 msgid "Error collecting Flatpak packages: %s"
 msgstr "Flatpak 패키지 수집 오류: %s"
@@ -796,51 +794,81 @@ msgstr "%d개의 Homebrew casks 수집됨"
 msgid "Error collecting Homebrew packages: %s"
 msgstr "Homebrew 패키지 수집 오류: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:75
+#: src/sysmanage_agent/collection/package_collector_windows.py:73
 msgid "Fetching winget catalog via REST API"
 msgstr "REST API를 통해 winget 카탈로그 가져오는 중"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:82
+#: src/sysmanage_agent/collection/package_collector_windows.py:80
 #, python-format
 msgid "Successfully collected %d packages from winget REST API"
 msgstr "winget REST API에서 %d개의 패키지를 성공적으로 수집"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:87
+#: src/sysmanage_agent/collection/package_collector_windows.py:85
 msgid "No packages collected from winget REST API"
 msgstr "winget REST API에서 패키지가 수집되지 않음"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:92
+#: src/sysmanage_agent/collection/package_collector_windows.py:90
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:129
+#: src/sysmanage_agent/collection/package_collector_windows.py:127
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
 msgstr "winget 페이지 %d 가져오기 오류 (현재까지 %d개의 패키지 수집): %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:181
+#: src/sysmanage_agent/collection/package_collector_windows.py:179
 msgid "Fetching Chocolatey catalog via community repository API"
 msgstr "커뮤니티 저장소 API를 통해 Chocolatey 카탈로그 가져오는 중"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:189
+#: src/sysmanage_agent/collection/package_collector_windows.py:187
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
 msgstr "Chocolatey 커뮤니티 저장소에서 %d개의 패키지를 성공적으로 수집"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:196
+#: src/sysmanage_agent/collection/package_collector_windows.py:194
 msgid "No packages collected from Chocolatey community repository"
 msgstr "Chocolatey 커뮤니티 저장소에서 패키지가 수집되지 않음"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:202
+#: src/sysmanage_agent/collection/package_collector_windows.py:200
 #, python-format
 msgid "Error collecting Chocolatey packages via API: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:229
+#: src/sysmanage_agent/collection/package_collector_windows.py:227
 #, python-format
 msgid "Error fetching page at skip %d: %s"
 msgstr "skip %d에서 페이지 가져오기 오류: %s"
+
+#: src/sysmanage_agent/collection/process_collection.py:88
+#, python-format
+msgid "Process snapshot truncated from %d to %d (cap)"
+msgstr "프로세스 스냅샷이 %d에서 %d(으)로 잘렸습니다(상한)"
+
+#: src/sysmanage_agent/collection/process_collection.py:145
+#, python-format
+msgid "No process with PID %d"
+msgstr "PID %d 프로세스가 없습니다"
+
+#: src/sysmanage_agent/collection/process_collection.py:156
+#, python-format
+msgid ""
+"PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
+"recycled); kill refused"
+msgstr ""
+"PID %(pid)d은(는) 이제 '%(expected)s'이(가) 아니라 '%(actual)s'입니다(프로세스가 재사용되었을 수 "
+"있음). 종료가 거부되었습니다"
+
+#: src/sysmanage_agent/collection/process_collection.py:176
+#, python-format
+msgid "Access denied terminating PID %d"
+msgstr "PID %d 종료 중 권한이 거부되었습니다"
+
+#: src/sysmanage_agent/collection/process_collection.py:183
+#, python-format
+msgid "Sent %(sig)s to PID %(pid)d ('%(name)s')"
+msgstr "%(sig)s을(를) PID %(pid)d('%(name)s')(으)로 보냈습니다"
 
 #: src/sysmanage_agent/collection/public_ip_fetcher.py:101
 #, python-format
@@ -1059,9 +1087,7 @@ msgstr "Homebrew 패키지 수집 중"
 msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
-msgstr ""
-"업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로그"
-"램)"
+msgstr "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로그램)"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1207,24 +1233,24 @@ msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:321
+#: src/sysmanage_agent/collection/update_detection_linux.py:320
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:698
 #, python-format
 msgid "Applying %d updates using %s"
 msgstr "%d개의 업데이트 적용 중, 사용: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:327
+#: src/sysmanage_agent/collection/update_detection_linux.py:325
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "%s 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:348
+#: src/sysmanage_agent/collection/update_detection_linux.py:346
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:703
 #, python-format
 msgid "Update process completed: %d updated, %d failed"
 msgstr "업데이트 프로세스 완료: %d개 업데이트됨, %d개 실패"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:371
+#: src/sysmanage_agent/collection/update_detection_linux.py:369
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "지원되지 않는 패키지 관리자: %s"
@@ -1534,28 +1560,26 @@ msgid "Failed to collect access info: %s"
 msgstr "접근 정보 수집에 실패했습니다: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:67
-#: src/sysmanage_agent/wsl/keepalive.py:95
+#: src/sysmanage_agent/wsl/keepalive.py:94
 #, python-format
 msgid "Could not parse existing .wslconfig: %s"
 msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:102
-#: src/sysmanage_agent/wsl/keepalive.py:117
+#: src/sysmanage_agent/wsl/keepalive.py:115
 msgid "Removing lowercase vmidletimeout, will add vmIdleTimeout"
 msgstr "lowercase vmidletimeout 제거할 예정입니다, vmIdleTimeout을 추가합니다"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:133
-#: src/sysmanage_agent/wsl/keepalive.py:135
+#: src/sysmanage_agent/wsl/keepalive.py:133
 msgid "Removing lowercase autostop, will add autoStop"
 msgstr "lowercase autostop 제거함, autoStop 추가 예정"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:157
-#: src/sysmanage_agent/wsl/keepalive.py:151
+#: src/sysmanage_agent/wsl/keepalive.py:150
 #, python-format
 msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-msgstr ""
-".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생성 "
-"중..."
+msgstr ".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생성 중..."
 
 #: src/sysmanage_agent/communication/child_host_collector.py:163
 #: src/sysmanage_agent/wsl/keepalive.py:156
@@ -1652,344 +1676,384 @@ msgstr "WSL 배포판 %s가 더 이상 존재하지 않으므로 keep-alive를 �
 msgid "Failed to send child hosts data"
 msgstr "자식 호스트 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/child_host_collector.py:480
+#: src/sysmanage_agent/communication/child_host_collector.py:479
 #: src/sysmanage_agent/communication/child_host_reporter.py:384
-#: src/sysmanage_agent/communication/data_collector.py:648
+#: src/sysmanage_agent/communication/data_collector.py:733
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:49
+#: src/sysmanage_agent/communication/data_collector.py:51
 msgid "Initial data updates sent successfully"
 msgstr "초기 데이터 업데이트가 성공적으로 전송되었습니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:51
+#: src/sysmanage_agent/communication/data_collector.py:53
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:55
+#: src/sysmanage_agent/communication/data_collector.py:57
 msgid "Sending initial OS version data..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:68
+#: src/sysmanage_agent/communication/data_collector.py:70
 msgid "Sending initial hardware data..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
-#: src/sysmanage_agent/communication/data_collector.py:81
+#: src/sysmanage_agent/communication/data_collector.py:83
 msgid "Sending initial user access data..."
 msgstr "초기 사용자 액세스 데이터 전송 중..."
 
-#: src/sysmanage_agent/communication/data_collector.py:96
+#: src/sysmanage_agent/communication/data_collector.py:98
 msgid "Sending initial software inventory data..."
 msgstr "초기 소프트웨어 인벤토리 데이터 전송 중..."
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:110
+#: src/sysmanage_agent/communication/data_collector.py:112
 msgid "Sending initial update check..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
-#: src/sysmanage_agent/communication/data_collector.py:116
+#: src/sysmanage_agent/communication/data_collector.py:118
 #, python-format
 msgid "Found %d available updates during initial check"
 msgstr "주기적 확인 중 %d개의 사용 가능한 업데이트 발견"
 
-#: src/sysmanage_agent/communication/data_collector.py:120
+#: src/sysmanage_agent/communication/data_collector.py:122
 msgid "No updates found during initial check"
 msgstr "초기 검사 중 업데이트를 찾지 못했습니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:122
+#: src/sysmanage_agent/communication/data_collector.py:124
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:127
+#: src/sysmanage_agent/communication/data_collector.py:129
 msgid "Collecting initial certificate data..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
-#: src/sysmanage_agent/communication/data_collector.py:135
+#: src/sysmanage_agent/communication/data_collector.py:137
 #, python-format
 msgid "Found and sent %d certificates during initial collection"
 msgstr "초기 수집 중 %d개의 인증서를 찾아 전송했습니다."
 
-#: src/sysmanage_agent/communication/data_collector.py:140
+#: src/sysmanage_agent/communication/data_collector.py:142
 msgid "No certificates found during initial collection"
 msgstr "시스템에서 인증서를 찾을 수 없음"
 
-#: src/sysmanage_agent/communication/data_collector.py:144
+#: src/sysmanage_agent/communication/data_collector.py:146
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "패키지 인벤토리 수집 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:147
+#: src/sysmanage_agent/communication/data_collector.py:149
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:156
+#: src/sysmanage_agent/communication/data_collector.py:158
 #, python-format
 msgid "Found and sent %d server roles during initial collection"
 msgstr "초기 수집 중 %d개의 서버 역할을 찾아 전송했습니다."
 
-#: src/sysmanage_agent/communication/data_collector.py:161
+#: src/sysmanage_agent/communication/data_collector.py:163
 msgid "No server roles found during initial collection"
 msgstr "초기 수집 동안 서버 역할을 찾지 못했습니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:165
+#: src/sysmanage_agent/communication/data_collector.py:167
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "패키지 인벤토리 수집 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:167
+#: src/sysmanage_agent/communication/data_collector.py:169
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "libvirt 패키지 설치 실패: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:172
+#: src/sysmanage_agent/communication/data_collector.py:174
 msgid "Collecting initial third-party repository data..."
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:176
+#: src/sysmanage_agent/communication/data_collector.py:178
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "초기 제3자 저장소 데이터 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:180
+#: src/sysmanage_agent/communication/data_collector.py:182
 msgid "Collecting initial firewall status data..."
 msgstr "초기 사용자 액세스 데이터 전송 중..."
 
-#: src/sysmanage_agent/communication/data_collector.py:184
+#: src/sysmanage_agent/communication/data_collector.py:186
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:188
+#: src/sysmanage_agent/communication/data_collector.py:190
 msgid "Collecting initial Graylog status data..."
 msgstr "초기 사용자 액세스 데이터 전송 중..."
 
-#: src/sysmanage_agent/communication/data_collector.py:191
+#: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:194
+#: src/sysmanage_agent/communication/data_collector.py:198
+msgid "Collecting initial process data..."
+msgstr "초기 프로세스 데이터 수집 중..."
+
+#: src/sysmanage_agent/communication/data_collector.py:201
+#, python-format
+msgid "Failed to send initial process data: %s"
+msgstr "초기 프로세스 데이터 전송 실패: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:204
 msgid "Collecting initial child hosts data..."
 msgstr "초기 사용자 액세스 데이터 전송 중..."
 
-#: src/sysmanage_agent/communication/data_collector.py:197
+#: src/sysmanage_agent/communication/data_collector.py:207
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:216
+#: src/sysmanage_agent/communication/data_collector.py:226
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "에이전트 업데이트 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:238
+#: src/sysmanage_agent/communication/data_collector.py:248
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "에이전트 업데이트 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:260
+#: src/sysmanage_agent/communication/data_collector.py:270
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "사용자 접근 업데이트에 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:289
+#: src/sysmanage_agent/communication/data_collector.py:299
 msgid "Failed to send periodic software inventory data"
 msgstr "주기적인 소프트웨어 인벤토리 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:313
+#: src/sysmanage_agent/communication/data_collector.py:323
 msgid "Failed to send periodic user access data"
 msgstr "주기적인 사용자 접근 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:337
+#: src/sysmanage_agent/communication/data_collector.py:347
 msgid "Failed to send periodic hardware data"
 msgstr "주기적인 하드웨어 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:357
+#: src/sysmanage_agent/communication/data_collector.py:367
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:377
+#: src/sysmanage_agent/communication/data_collector.py:387
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "패키지 인벤토리 수집 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:401
+#: src/sysmanage_agent/communication/data_collector.py:411
 msgid "Failed to send periodic OS version data"
 msgstr "주기적인 OS 버전 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:422
+#: src/sysmanage_agent/communication/data_collector.py:432
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "파티션 감지 오류: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:456
+#: src/sysmanage_agent/communication/data_collector.py:466
 msgid "Failed to send third-party repository data"
 msgstr "초기 OS 버전 데이터를 전송하고 있습니다..."
 
-#: src/sysmanage_agent/communication/data_collector.py:488
+#: src/sysmanage_agent/communication/data_collector.py:498
 msgid "Failed to send antivirus status data"
 msgstr "_ANTIVIRUS_ 상태 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:491
+#: src/sysmanage_agent/communication/data_collector.py:501
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:525
+#: src/sysmanage_agent/communication/data_collector.py:535
 msgid "Failed to send firewall status data"
 msgstr "방화벽 상태 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:527
+#: src/sysmanage_agent/communication/data_collector.py:537
 msgid "Cannot send firewall status data: no host approval"
 msgstr "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:559
+#: src/sysmanage_agent/communication/data_collector.py:569
 msgid "Failed to send Graylog status data"
 msgstr "Graylog 상태 데이터 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector.py:561
+#: src/sysmanage_agent/communication/data_collector.py:571
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "가상화 상태 업데이트를 보낼 수 없습니다: 호스트가 승인되지 않았습니다"
 
+#: src/sysmanage_agent/communication/data_collector.py:579
+msgid "Cannot send process data: no host approval"
+msgstr "프로세스 데이터를 보낼 수 없습니다: 호스트 승인이 없습니다"
+
+#: src/sysmanage_agent/communication/data_collector.py:609
+msgid "Failed to send process status data"
+msgstr "프로세스 상태 데이터 전송에 실패했습니다"
+
+#: src/sysmanage_agent/communication/data_collector.py:617
+#, python-format
+msgid "Error collecting processes: %s"
+msgstr "프로세스 수집 중 오류: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:624
+msgid "Missing required parameter: pid"
+msgstr "필수 매개변수 누락: pid"
+
+#: src/sysmanage_agent/communication/data_collector.py:628
+#, python-format
+msgid "Invalid pid: %s"
+msgstr "잘못된 pid: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:642
+#, python-format
+msgid "Failed to refresh processes after kill: %s"
+msgstr "종료 후 프로세스 새로 고침 실패: %s"
+
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:575
+#: src/sysmanage_agent/communication/data_collector.py:658
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "소프트웨어 인벤토리 수집/전송 중 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:583
+#: src/sysmanage_agent/communication/data_collector.py:665
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:590
+#: src/sysmanage_agent/communication/data_collector.py:671
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "환경 변수 수집 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:597
+#: src/sysmanage_agent/communication/data_collector.py:677
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:604
+#: src/sysmanage_agent/communication/data_collector.py:683
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:610
+#: src/sysmanage_agent/communication/data_collector.py:689
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:616
+#: src/sysmanage_agent/communication/data_collector.py:695
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:623
+#: src/sysmanage_agent/communication/data_collector.py:702
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:630
+#: src/sysmanage_agent/communication/data_collector.py:709
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:636
+#: src/sysmanage_agent/communication/data_collector.py:715
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:642
+#: src/sysmanage_agent/communication/data_collector.py:721
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:669
+#: src/sysmanage_agent/communication/data_collector.py:727
+#, python-format
+msgid "Error collecting/sending process data: %s"
+msgstr "프로세스 데이터 수집/전송 중 오류: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:754
 msgid "Initial periodic data collection (post-connect)"
 msgstr "초기 주기적 데이터 수집 (연결 후)"
 
-#: src/sysmanage_agent/communication/data_collector.py:672
+#: src/sysmanage_agent/communication/data_collector.py:757
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "패키지 수집 스케줄러 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:687
+#: src/sysmanage_agent/communication/data_collector.py:772
 #, python-format
 msgid "Data collector error: %s"
 msgstr "패키지 수집 스케줄러 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:750
+#: src/sysmanage_agent/communication/data_collector.py:835
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:778
+#: src/sysmanage_agent/communication/data_collector.py:863
 #, python-format
 msgid "Started packages batch %s with %d total packages"
 msgstr "배치 %s을 시작했습니다. 총 %d개의 패키지가 포함됩니다"
 
-#: src/sysmanage_agent/communication/data_collector.py:802
+#: src/sysmanage_agent/communication/data_collector.py:887
 #, python-format
 msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
 msgstr "자식 만환 창을 %d 카리 서 %s (자식 %s, 카리 %d-%d)"
 
-#: src/sysmanage_agent/communication/data_collector.py:820
+#: src/sysmanage_agent/communication/data_collector.py:905
 #, python-format
 msgid "Completed packages batch %s"
 msgstr "패키지 배치(%s) 완료"
 
-#: src/sysmanage_agent/communication/data_collector.py:826
+#: src/sysmanage_agent/communication/data_collector.py:911
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "배치 %s의 페이지 패키지를 전송하는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:838
+#: src/sysmanage_agent/communication/data_collector.py:923
 msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
-msgstr ""
-"권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있음"
+msgstr "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있음"
 
-#: src/sysmanage_agent/communication/data_collector.py:842
+#: src/sysmanage_agent/communication/data_collector.py:927
 msgid "Collecting SSL certificates from system"
 msgstr "시스템에서 SSL 인증서 수집 중"
 
-#: src/sysmanage_agent/communication/data_collector.py:848
+#: src/sysmanage_agent/communication/data_collector.py:933
 msgid "No certificates found on system"
 msgstr "시스템에서 인증서를 찾을 수 없음"
 
-#: src/sysmanage_agent/communication/data_collector.py:855
+#: src/sysmanage_agent/communication/data_collector.py:940
 #, python-format
 msgid "Found %d certificates"
 msgstr "%d개의 인증서 수집됨"
 
-#: src/sysmanage_agent/communication/data_collector.py:883
+#: src/sysmanage_agent/communication/data_collector.py:968
 msgid "Collecting server roles"
 msgstr "Homebrew 패키지 수집 중"
 
-#: src/sysmanage_agent/communication/data_collector.py:889
+#: src/sysmanage_agent/communication/data_collector.py:974
 msgid "No server roles detected on system"
 msgstr "시스템에서 서버 역할이 감지되지 않음"
 
-#: src/sysmanage_agent/communication/data_collector.py:896
+#: src/sysmanage_agent/communication/data_collector.py:981
 #, python-format
 msgid "Found %d server roles"
 msgstr "%d개의 서버 역할을 찾았습니다."
 
-#: src/sysmanage_agent/communication/data_collector.py:923
+#: src/sysmanage_agent/communication/data_collector.py:1008
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "파티션 감지 오류: %s"
@@ -2034,7 +2098,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:355
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr "호스트 등록이 승인 대기 중입니다. 주기적으로 다시 시도합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:360
@@ -2050,9 +2115,7 @@ msgstr "메시지 직접 전송 실패: %s"
 msgid ""
 "Server reports host is not registered. Clearing stored host_id and "
 "triggering re-registration..."
-msgstr ""
-"서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재등록"
-"을 트리거합니다..."
+msgstr "서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재등록을 트리거합니다..."
 
 #: src/sysmanage_agent/communication/message_handler.py:376
 msgid "Stored host_id cleared from database"
@@ -2084,8 +2147,7 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"%s: 인벤토리 갱신 요청되었으나 data_collector 는 "
-"send_software_inventory_update 를 지원하지 않음"
+"%s: 인벤토리 갱신 요청되었으나 data_collector 는 send_software_inventory_update 를 지원하지 않음"
 
 #: src/sysmanage_agent/communication/message_handler.py:438
 #, python-format
@@ -2101,9 +2163,7 @@ msgstr "%s: 알 수 없는 액션 '%s' — 무시됨"
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
-msgstr ""
-"메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용"
-"하기 위해 수신 루프를 종료합니다"
+msgstr "메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용하기 위해 수신 루프를 종료합니다"
 
 #: src/sysmanage_agent/communication/message_handler.py:546
 #, python-format
@@ -2293,8 +2353,7 @@ msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
 msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시"
-"됨"
+">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시됨"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:44
 #, python-format
@@ -2346,8 +2405,7 @@ msgstr "파티션 감지 오류: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:143
 msgid "Package collection is disabled - scheduler will not run"
-msgstr ""
-"패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
+msgstr "패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
 
 #: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Running initial package collection at startup"
@@ -2368,134 +2426,134 @@ msgstr "상태 %s로 인증 실패: %s"
 msgid "Received command: %s with parameters: %s"
 msgstr "명령 수신: %s, 매개변수: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:382
+#: src/sysmanage_agent/core/agent_utils.py:384
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:419
+#: src/sysmanage_agent/core/agent_utils.py:421
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:431
+#: src/sysmanage_agent/core/agent_utils.py:433
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:486
+#: src/sysmanage_agent/core/agent_utils.py:488
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "execution_id에 대한 스크립트 실행 결과가 큐에 추가됨: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:492
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:509
+#: src/sysmanage_agent/core/agent_utils.py:511
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:523
+#: src/sysmanage_agent/core/agent_utils.py:525
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:538
+#: src/sysmanage_agent/core/agent_utils.py:540
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:557
+#: src/sysmanage_agent/core/agent_utils.py:559
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "추적을 위해 실행 UUID %s 저장됨"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:565
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:595
+#: src/sysmanage_agent/core/agent_utils.py:597
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "서비스 제어 요청됨: %s 대상 서비스: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:628
+#: src/sysmanage_agent/core/agent_utils.py:630
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:652
+#: src/sysmanage_agent/core/agent_utils.py:654
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "서비스 %s 에 대해 %s 실행 중"
 
-#: src/sysmanage_agent/core/agent_utils.py:663
+#: src/sysmanage_agent/core/agent_utils.py:665
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "서비스 %s 의 %s 성공"
 
-#: src/sysmanage_agent/core/agent_utils.py:673
+#: src/sysmanage_agent/core/agent_utils.py:675
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:680
+#: src/sysmanage_agent/core/agent_utils.py:682
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:686
+#: src/sysmanage_agent/core/agent_utils.py:688
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:750
 msgid "Triggering role collection after service control"
 msgstr "서비스 제어 후 역할 수집 트리거됨"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:765
+#: src/sysmanage_agent/core/agent_utils.py:767
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "서비스 상태 확인 요청됨: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:791
+#: src/sysmanage_agent/core/agent_utils.py:793
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:804
+#: src/sysmanage_agent/core/agent_utils.py:806
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "서비스 상태 확인 중: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:824
+#: src/sysmanage_agent/core/agent_utils.py:826
 #, python-format
 msgid "Service %s status: %s"
 msgstr "서비스 %s 상태: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:834
+#: src/sysmanage_agent/core/agent_utils.py:836
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:844
+#: src/sysmanage_agent/core/agent_utils.py:846
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1122
+#: src/sysmanage_agent/core/agent_utils.py:1124
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1128
+#: src/sysmanage_agent/core/agent_utils.py:1130
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "진행 중 저널 조정: 활성 %d개, 종료 %d개"
@@ -2657,7 +2715,8 @@ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 msgstr "Windows 시스템 이벤트 로그 수집 중 (10-30초 소요될 수 있음)..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:346
-msgid "Collecting Windows Security Event Log (may require admin privileges)..."
+msgid ""
+"Collecting Windows Security Event Log (may require admin privileges)..."
 msgstr "Windows 보안 이벤트 로그 수집 중 (관리자 권한이 필요할 수 있음)..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:360
@@ -2951,8 +3010,7 @@ msgstr "apt 패키지 수집 실패: %s"
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr ""
-"호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
+msgstr "호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:272
 #, python-format
@@ -3063,25 +3121,25 @@ msgstr "Error creating bridged network: %s"
 msgid "Error disabling Zypper repository: %s"
 msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 
-#: src/sysmanage_agent/operations/lxd_firewall_helper.py:80
+#: src/sysmanage_agent/operations/lxd_firewall_helper.py:79
 #, python-format
 msgid "Could not persist IP forwarding setting: %s"
 msgstr "네트워크 자동 시작을 설정할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/lxd_firewall_helper.py:138
+#: src/sysmanage_agent/operations/lxd_firewall_helper.py:135
 #, python-format
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW 규칙 실패: %s - %s"
 
-#: src/sysmanage_agent/operations/lxd_firewall_helper.py:183
+#: src/sysmanage_agent/operations/lxd_firewall_helper.py:179
 msgid "NAT rules already configured in before.rules"
 msgstr "NAT 규칙이 이미 before.rules에 구성됨"
 
-#: src/sysmanage_agent/operations/lxd_firewall_helper.py:217
+#: src/sysmanage_agent/operations/lxd_firewall_helper.py:213
 msgid "UFW not installed; skipping LXD bridge firewall config"
 msgstr "UFW가 설치되어 있지 않음; LXD 브리지 방화벽 설정을 건너뜁니다"
 
-#: src/sysmanage_agent/operations/lxd_firewall_helper.py:223
+#: src/sysmanage_agent/operations/lxd_firewall_helper.py:219
 #, python-format
 msgid "Configuring UFW firewall for LXD bridge: %s"
 msgstr "LXD 브리지(%s)를 위한 UFW 방화벽 구성 중..."
@@ -3197,13 +3255,12 @@ msgstr "KVM이 이미 초기화되었습니다"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -3305,72 +3362,72 @@ msgstr "패키지 설치 중: %s"
 msgid "apt-get install failed: %s"
 msgstr "자동 설치 디렉토리 생성됨: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:530
+#: src/sysmanage_agent/operations/package_operations.py:529
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "apt-get을 사용한 패키지 설치에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:534
+#: src/sysmanage_agent/operations/package_operations.py:532
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install 중 예외: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:541
+#: src/sysmanage_agent/operations/package_operations.py:539
 msgid "No packages to uninstall"
 msgstr "libvirt 패키지 설치됨"
 
-#: src/sysmanage_agent/operations/package_operations.py:544
+#: src/sysmanage_agent/operations/package_operations.py:542
 #, python-format
 msgid "Uninstalling packages with apt-get: %s"
 msgstr "패키지 설치 중: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:572
+#: src/sysmanage_agent/operations/package_operations.py:570
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "fwupd get-updates가 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:578
+#: src/sysmanage_agent/operations/package_operations.py:575
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "apt-get을 사용한 패키지 제거에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:582
+#: src/sysmanage_agent/operations/package_operations.py:578
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove 중 예외: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:618
+#: src/sysmanage_agent/operations/package_operations.py:614
 #, python-format
 msgid "Queued installation completion for request %s"
 msgstr "요청 %s에 대한 설치 완료가 큐에 추가됨"
 
-#: src/sysmanage_agent/operations/package_operations.py:623
+#: src/sysmanage_agent/operations/package_operations.py:619
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "install.conf 삽입 실패: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:628
+#: src/sysmanage_agent/operations/package_operations.py:624
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:677
+#: src/sysmanage_agent/operations/package_operations.py:673
 #, python-format
 msgid "Sent package installation status update: %s for %s"
 msgstr "패키지 설치 상태 업데이트 전송됨: %s (%s)"
 
-#: src/sysmanage_agent/operations/package_operations.py:684
+#: src/sysmanage_agent/operations/package_operations.py:680
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:757
+#: src/sysmanage_agent/operations/package_operations.py:753
 #: src/sysmanage_agent/operations/repository_operations.py:424
 #, python-format
 msgid "Error running package update: %s"
 msgstr "fwupd 업데이트 처리 중 오류 발생: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:766
+#: src/sysmanage_agent/operations/package_operations.py:762
 #: src/sysmanage_agent/operations/repository_operations.py:432
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3776,41 +3833,41 @@ msgstr "업데이트 결과 전송을 위한 재연결 대기 중 (시도 %d/%d)
 msgid "Failed to send update results after %d attempts"
 msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
-#: src/sysmanage_agent/operations/update_operations.py:213
+#: src/sysmanage_agent/operations/update_operations.py:212
 msgid "Rescanning for available updates after batch completion"
 msgstr "배치 완료 후 사용 가능한 업데이트 재스캔 중"
 
-#: src/sysmanage_agent/operations/update_operations.py:224
+#: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Post-update scan completed: %d updates remaining"
 msgstr "업데이트 후 스캔 완료: %d개의 업데이트 남음"
 
-#: src/sysmanage_agent/operations/update_operations.py:234
+#: src/sysmanage_agent/operations/update_operations.py:232
 msgid "Successfully sent fresh update list to server"
 msgstr "업데이트 결과를 서버에 성공적으로 전송했습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:236
+#: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
 msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:243
+#: src/sysmanage_agent/operations/update_operations.py:241
 msgid "Starting background update process"
 msgstr "백그라운드 업데이트 프로세스 완료"
 
-#: src/sysmanage_agent/operations/update_operations.py:259
+#: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:272
+#: src/sysmanage_agent/operations/update_operations.py:270
 msgid "Background update process completed"
 msgstr "백그라운드 업데이트 프로세스 완료"
 
-#: src/sysmanage_agent/operations/update_operations.py:284
+#: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:288
+#: src/sysmanage_agent/operations/update_operations.py:286
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "fwupd get-updates가 실패했습니다: %s"
@@ -3820,142 +3877,142 @@ msgstr "fwupd get-updates가 실패했습니다: %s"
 msgid "User %s and default group deleted successfully"
 msgstr "사용자 %s 및 기본 그룹 성공적으로 삭제됨"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:16
+#: src/sysmanage_agent/operations/user_account_operations.py:15
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
 msgstr "사용자 %s가 삭제되었지만 기본 그룹 삭제에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:36
-#: src/sysmanage_agent/operations/user_account_operations.py:122
+#: src/sysmanage_agent/operations/user_account_operations.py:34
+#: src/sysmanage_agent/operations/user_account_operations.py:120
 msgid "Username is required"
 msgstr "사용자 이름은 필수입니다"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:38
+#: src/sysmanage_agent/operations/user_account_operations.py:36
 #, python-format
 msgid "Creating user account: %s"
 msgstr "사용자 계정 생성: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:61
+#: src/sysmanage_agent/operations/user_account_operations.py:59
 #, python-format
 msgid "User %s created successfully, sending updated user list"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:69
+#: src/sysmanage_agent/operations/user_account_operations.py:67
 #, python-format
 msgid "Failed to create user %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:79
-#: src/sysmanage_agent/operations/user_account_operations.py:165
+#: src/sysmanage_agent/operations/user_account_operations.py:77
+#: src/sysmanage_agent/operations/user_account_operations.py:163
 msgid "Group name is required"
 msgstr "VM 이름이 필요합니다"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:81
+#: src/sysmanage_agent/operations/user_account_operations.py:79
 #, python-format
 msgid "Creating group: %s"
 msgstr "그룹 생성 중: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:104
+#: src/sysmanage_agent/operations/user_account_operations.py:102
 #, python-format
 msgid "Group %s created successfully, sending updated user list"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:112
+#: src/sysmanage_agent/operations/user_account_operations.py:110
 #, python-format
 msgid "Failed to create group %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:124
+#: src/sysmanage_agent/operations/user_account_operations.py:122
 #, python-format
 msgid "Deleting user account: %s"
 msgstr "사용자 계정 삭제: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:147
+#: src/sysmanage_agent/operations/user_account_operations.py:145
 #, python-format
 msgid "User %s deleted successfully, sending updated user list"
 msgstr "사용자 %s 성공적으로 삭제됨"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:155
+#: src/sysmanage_agent/operations/user_account_operations.py:153
 #, python-format
 msgid "Failed to delete user %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:167
+#: src/sysmanage_agent/operations/user_account_operations.py:165
 #, python-format
 msgid "Deleting group: %s"
 msgstr "그룹 삭제: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:190
+#: src/sysmanage_agent/operations/user_account_operations.py:188
 #, python-format
 msgid "Group %s deleted successfully, sending updated user list"
 msgstr "그룹 %s 성공적으로 삭제됨"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:198
+#: src/sysmanage_agent/operations/user_account_operations.py:196
 #, python-format
 msgid "Failed to delete group %s: %s"
 msgstr "그룹 %s 삭제에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:310
-#: src/sysmanage_agent/operations/user_account_operations.py:448
+#: src/sysmanage_agent/operations/user_account_operations.py:308
+#: src/sysmanage_agent/operations/user_account_operations.py:446
 #, python-format
 msgid "User %s created successfully"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:314
+#: src/sysmanage_agent/operations/user_account_operations.py:312
 #, python-format
 msgid "Failed to create macOS user %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:339
+#: src/sysmanage_agent/operations/user_account_operations.py:337
 #, python-format
 msgid "Group %s created successfully"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:344
+#: src/sysmanage_agent/operations/user_account_operations.py:342
 #, python-format
 msgid "Failed to create macOS group %s: %s"
 msgstr "macOS 그룹 %s 생성에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:404
+#: src/sysmanage_agent/operations/user_account_operations.py:402
 msgid "Password is required for Windows user creation"
 msgstr "Windows 사용자 생성에 비밀번호가 필요함"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:624
+#: src/sysmanage_agent/operations/user_account_operations.py:622
 #, python-format
 msgid "User %s deleted successfully"
 msgstr "사용자 %s 성공적으로 삭제됨"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:628
+#: src/sysmanage_agent/operations/user_account_operations.py:626
 #, python-format
 msgid "Failed to delete macOS user %s: %s"
 msgstr "macOS 사용자 %s 삭제에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:644
+#: src/sysmanage_agent/operations/user_account_operations.py:642
 #, python-format
 msgid "Group %s deleted successfully"
 msgstr "그룹 %s 성공적으로 삭제됨"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:649
+#: src/sysmanage_agent/operations/user_account_operations.py:647
 #, python-format
 msgid "Failed to delete macOS group %s: %s"
 msgstr "macOS 그룹 %s 삭제에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:775
+#: src/sysmanage_agent/operations/user_account_operations.py:773
 #, python-format
 msgid "Successfully executed: %s"
 msgstr "성공적으로 실행됨: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:779
+#: src/sysmanage_agent/operations/user_account_operations.py:777
 #, python-format
 msgid "Command failed (%s): %s"
 msgstr "Failed to write %s: %s"
 
-#: src/sysmanage_agent/operations/user_account_operations.py:783
+#: src/sysmanage_agent/operations/user_account_operations.py:781
 #, python-format
 msgid "Command not found: %s"
 msgstr "%s 명령을 찾을 수 없습니다."
 
-#: src/sysmanage_agent/operations/user_account_operations.py:786
+#: src/sysmanage_agent/operations/user_account_operations.py:784
 #, python-format
 msgid "Command execution failed: %s"
 msgstr "프로세서 감지 폴백 실패: %s"
@@ -4142,21 +4199,21 @@ msgstr "알 수 없는 출처에서 유효하지 않은 JSON 응답"
 msgid "Error during broadcast discovery: %s"
 msgstr "브로드캐스트 검색 중 오류: %s"
 
-#: src/sysmanage_agent/registration/discovery.py:206
+#: src/sysmanage_agent/registration/discovery.py:205
 #, python-format
 msgid "Server announcement received from %s"
 msgstr "%s에서 서버 공지 수신"
 
-#: src/sysmanage_agent/registration/discovery.py:212
+#: src/sysmanage_agent/registration/discovery.py:210
 msgid "Invalid JSON announcement from unknown source"
 msgstr "알 수 없는 출처에서 유효하지 않은 JSON 공지"
 
-#: src/sysmanage_agent/registration/discovery.py:220
+#: src/sysmanage_agent/registration/discovery.py:218
 #, python-format
 msgid "Error listening for announcements: %s"
 msgstr "공지 수신 중 오류: %s"
 
-#: src/sysmanage_agent/registration/discovery.py:270
+#: src/sysmanage_agent/registration/discovery.py:268
 #, python-format
 msgid "Selected server at %s (score: %s)"
 msgstr "%s에서 서버 선택됨 (점수: %s)"
@@ -4225,9 +4282,7 @@ msgstr "등록은 완료되었지만 승인이 대기 중입니다"
 #: src/sysmanage_agent/registration/registration_manager.py:203
 msgid ""
 "Registration success but no host_id provided - approval may come separately"
-msgstr ""
-"등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 있"
-"습니다"
+msgstr "등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 있습니다"
 
 #: src/sysmanage_agent/registration/registration_manager.py:209
 #, python-format
@@ -4305,8 +4360,7 @@ msgstr "정리 오류에도 불구하고 계속 진행..."
 #: src/sysmanage_agent/registration/registration_manager.py:524
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
-msgstr ""
-"%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
+msgstr "%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
 
 #: src/sysmanage_agent/registration/registration_manager.py:534
 msgid "Corrupt database entries cleaned up"
@@ -4455,11 +4509,10 @@ msgstr "파티션 감지 오류: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이"
-#~ "선스: %s)"
+#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이선스: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4482,8 +4535,7 @@ msgstr "파티션 감지 오류: %s"
 #~ msgstr "소프트웨어 인벤토리 수집 완료: %d개 패키지 발견"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-#~ msgstr ""
-#~ "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
+#~ msgstr "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4582,9 +4634,7 @@ msgstr "파티션 감지 오류: %s"
 #~ msgid ""
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
-#~ msgstr ""
-#~ "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니"
-#~ "다."
+#~ msgstr "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니다."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4731,9 +4781,7 @@ msgstr "파티션 감지 오류: %s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정"
-#~ "도 소요될 수 있습니다."
+#~ msgstr "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정도 소요될 수 있습니다."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "자동 설치 HTTP 요청: %s에서 %s"
@@ -4860,8 +4908,7 @@ msgstr "파티션 감지 오류: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU "
-#~ "가상화가 활성화되어 있는지 확인하세요."
+#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU 가상화가 활성화되어 있는지 확인하세요."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM이 이미 초기화되어 사용할 준비가 되었습니다"
@@ -4962,8 +5009,7 @@ msgstr "파티션 감지 오류: %s"
 #~ msgstr "중첩 가상화가 활성화된 상태로 KVM 커널 모듈이 로드되었습니다"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
-#~ msgstr ""
-#~ " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
+#~ msgstr " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5014,12 +5060,10 @@ msgstr "파티션 감지 오류: %s"
 
 # libguestfs-tools (guestmount) support
 #~ msgid "guestmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "guestunmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "Found FreeBSD root: %s"
 #~ msgstr "FreeBSD 루트 발견: %s"
