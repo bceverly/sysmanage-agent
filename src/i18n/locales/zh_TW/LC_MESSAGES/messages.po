@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -564,17 +564,31 @@ msgstr "Ubuntu Pro 狀態檢查逾時"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "解析fwupd JSON輸出失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "附加 Ubuntu Pro 時發生錯誤：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "Livepatch 狀態檢查逾時"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "取得 Livepatch 狀態失敗：%s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "解析 Livepatch JSON 失敗：%s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "收集軟體清單失敗：%s"
@@ -4466,10 +4480,6 @@ msgstr "偵測分割區時發生錯誤: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "更新%s韌體失敗：%s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "解析fwupd JSON輸出失敗：%s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"

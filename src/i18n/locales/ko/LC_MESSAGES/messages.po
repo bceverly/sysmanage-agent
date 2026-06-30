@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -564,17 +564,31 @@ msgstr "Ubuntu Pro 상태 확인 시간 초과"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Ubuntu Pro 분리 실패: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "fwupd JSON 출력 파싱에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Ubuntu Pro 연결 오류: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "Livepatch 상태 확인 시간이 초과되었습니다"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "Livepatch 상태를 가져오지 못했습니다: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "Livepatch JSON 구문 분석에 실패했습니다: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "소프트웨어 인벤토리 수집 실패: %s"
@@ -4476,10 +4490,6 @@ msgstr "파티션 감지 오류: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "%s의 펌웨어 업데이트에 실패했습니다: %s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "fwupd JSON 출력 파싱에 실패했습니다: %s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"

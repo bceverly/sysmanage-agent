@@ -139,6 +139,17 @@ class OSInfoCollector:
             service_list = self._parse_ubuntu_pro_services(pro_data.get("services", []))
             ubuntu_pro_info["services"] = service_list
 
+            # When the livepatch service is enabled, gather livepatch-specific
+            # detail (patched kernel, patch state, applied CVE fixes, ...) which
+            # the generic ``pro status`` service record doesn't expose.
+            if any(
+                s.get("name") == "livepatch" and s.get("status") == "enabled"
+                for s in service_list
+            ):
+                livepatch = self._get_livepatch_info()
+                if livepatch:
+                    ubuntu_pro_info["livepatch"] = livepatch
+
             self.logger.debug(
                 "Ubuntu Pro status collected: attached=%s, services=%d",
                 ubuntu_pro_info["attached"],
@@ -219,6 +230,82 @@ class OSInfoCollector:
             "status": status,
             "entitled": entitled,
             "raw_status": raw_status,  # Keep original for debugging
+        }
+
+    def _get_livepatch_info(self) -> Optional[Dict[str, Any]]:
+        """Collect Canonical Livepatch status, or None if unavailable.
+
+        Only called when the ``livepatch`` Pro service is enabled.  Uses
+        ``canonical-livepatch status --format json`` (the snap-provided client);
+        if the binary is missing or errors, returns None and the caller falls
+        back to the generic Pro service record.
+        """
+        try:
+            result = subprocess.run(
+                [
+                    "canonical-livepatch",
+                    "status",
+                    "--format",
+                    "json",
+                ],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            self.logger.warning(_("Livepatch status check timed out"))
+            return None
+        except FileNotFoundError:
+            self.logger.debug("canonical-livepatch not installed")
+            return None
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.warning(_("Failed to get Livepatch status: %s"), str(error))
+            return None
+
+        if result.returncode != 0 or not result.stdout:
+            return None
+        return self._parse_livepatch_output(result.stdout)
+
+    def _parse_livepatch_output(self, stdout: str) -> Optional[Dict[str, Any]]:
+        """Normalise ``canonical-livepatch status --format json`` output.
+
+        The client's JSON shape varies across versions; pull the fields
+        defensively.  The running kernel's livepatch block is preferred (the
+        first kernel entry is used as a fallback).
+        """
+        try:
+            data = json.loads(stdout)
+        except json.JSONDecodeError as error:
+            self.logger.warning(_("Failed to parse Livepatch JSON: %s"), str(error))
+            return None
+
+        statuses = data.get("Status") or []
+        kernel_entry = next(
+            (k for k in statuses if k.get("Running")), statuses[0] if statuses else {}
+        )
+        lp_block = kernel_entry.get("Livepatch", {}) if kernel_entry else {}
+
+        # ``Fixes`` may be a newline-delimited string or a list; normalise to a
+        # de-duplicated list of non-empty lines.
+        raw_fixes = lp_block.get("Fixes")
+        if isinstance(raw_fixes, str):
+            fixes = [f.strip("* ").strip() for f in raw_fixes.splitlines()]
+        elif isinstance(raw_fixes, list):
+            fixes = [str(f).strip("* ").strip() for f in raw_fixes]
+        else:
+            fixes = []
+        fixes = [f for f in fixes if f]
+
+        return {
+            "enabled": True,
+            "client_version": data.get("Client-Version") or "",
+            "kernel": kernel_entry.get("Kernel") or "",
+            "patch_state": lp_block.get("State") or "",
+            "check_state": lp_block.get("CheckState") or "",
+            "patch_version": str(lp_block.get("Version") or ""),
+            "last_check": data.get("Last-Check"),
+            "fixes": fixes,
         }
 
     def _extract_timezone_from_zoneinfo_path(self, path: str) -> Optional[str]:

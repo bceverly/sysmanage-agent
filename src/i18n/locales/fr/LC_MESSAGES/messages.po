@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -573,17 +573,31 @@ msgstr "Délai dépassé pour la vérification du statut Ubuntu Pro"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Échec du détachement d'Ubuntu Pro : %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Échec de l'analyse de la sortie JSON fwupd : %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Erreur lors de l'attachement d'Ubuntu Pro : %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "Délai d'attente dépassé pour la vérification de l'état de Livepatch"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "Échec de la récupération de l'état de Livepatch : %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "Échec de l'analyse du JSON de Livepatch : %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Échec de la collecte de l'inventaire logiciel : %s"
@@ -4613,10 +4627,6 @@ msgstr "Erreur de détection des partitions: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "Échec de la mise à jour du firmware pour %s : %s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "Échec de l'analyse de la sortie JSON fwupd : %s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"

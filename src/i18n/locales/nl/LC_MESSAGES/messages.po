@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -568,17 +568,31 @@ msgstr "Time-out bij Ubuntu Pro-statuscontrole"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Fout bij ontkoppelen Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Parseren van fwupd JSON output mislukt: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Fout bij het koppelen van Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "Time-out bij controle van Livepatch-status"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "Ophalen van Livepatch-status mislukt: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "Parseren van Livepatch-JSON mislukt: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Fout bij verzamelen software-inventaris: %s"
@@ -4529,10 +4543,6 @@ msgstr "Fout bij detecteren van partities: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "Firmware bijwerken mislukt voor %s: %s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "Parseren van fwupd JSON output mislukt: %s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"

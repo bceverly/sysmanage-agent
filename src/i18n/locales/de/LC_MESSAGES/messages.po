@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -576,17 +576,31 @@ msgstr "Zeitüberschreitung bei Ubuntu Pro-Statusprüfung"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Fehler beim Trennen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Fehler beim Parsen der fwupd JSON-Ausgabe: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Fehler beim Anhängen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "Zeitüberschreitung bei der Livepatch-Statusprüfung"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "Livepatch-Status konnte nicht abgerufen werden: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "Livepatch-JSON konnte nicht geparst werden: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Fehler beim Erfassen des Software-Inventars: %s"
@@ -4558,10 +4572,6 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "Fehler beim Aktualisieren der Firmware für %s: %s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "Fehler beim Parsen der fwupd JSON-Ausgabe: %s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"

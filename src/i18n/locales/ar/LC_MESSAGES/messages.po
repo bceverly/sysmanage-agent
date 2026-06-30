@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 13:58-0400\n"
+"POT-Creation-Date: 2026-06-30 14:35-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -567,17 +567,31 @@ msgstr "انتهت مهلة التحقق من حالة Ubuntu Pro"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:150
+#: src/sysmanage_agent/collection/os_info_collection.py:161
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:153
+#: src/sysmanage_agent/collection/os_info_collection.py:164
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "خطأ في ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:341
+#: src/sysmanage_agent/collection/os_info_collection.py:257
+msgid "Livepatch status check timed out"
+msgstr "انتهت مهلة فحص حالة Livepatch"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:263
+#, python-format
+msgid "Failed to get Livepatch status: %s"
+msgstr "فشل في الحصول على حالة Livepatch: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:280
+#, python-format
+msgid "Failed to parse Livepatch JSON: %s"
+msgstr "فشل في تحليل JSON الخاص بـ Livepatch: %s"
+
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "فشل في جمع جرد البرمجيات: %s"
@@ -4479,10 +4493,6 @@ msgstr "خطأ في اكتشاف الأقسام: %s"
 #, python-format
 #~ msgid "Failed to query certificate store %s: %s"
 #~ msgstr "فشل في تحديث البرامج الثابتة لـ %s: %s"
-
-#, python-format
-#~ msgid "Failed to parse certificate JSON: %s"
-#~ msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
 
 #, python-format
 #~ msgid "Error processing certificate data: %s"
