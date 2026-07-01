@@ -64,7 +64,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 
 ```bash
 # Add the repository
-echo "deb [trusted=yes] https://repo.sysmanage.org/deb stable main" | \
+echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" | \
   sudo tee /etc/apt/sources.list.d/sysmanage.list
 
 # Update and install
@@ -85,7 +85,7 @@ sudo systemctl restart sysmanage-agent
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/rpm/el9/x86_64
+baseurl=https://repo.sysmanage.org/agent/rpm/el9/x86_64
 enabled=1
 gpgcheck=0
 EOF
@@ -101,7 +101,7 @@ sudo dnf module install python311
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/rpm/el8/x86_64
+baseurl=https://repo.sysmanage.org/agent/rpm/el8/x86_64
 enabled=1
 gpgcheck=0
 EOF
@@ -114,7 +114,7 @@ sudo dnf install sysmanage-agent
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/rpm/fedora/39/x86_64
+baseurl=https://repo.sysmanage.org/agent/rpm/fedora/39/x86_64
 enabled=1
 gpgcheck=0
 EOF

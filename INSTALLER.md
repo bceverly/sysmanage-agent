@@ -685,14 +685,14 @@ sudo apt-get install sysmanage-agent
 
 4. **Verify repository is accessible**:
    ```bash
-   curl -I https://bceverly.github.io/sysmanage-docs/apt/dists/stable/Release
+   curl -I https://repo.sysmanage.org/agent/deb/dists/stable/Release
    # Should return 200 OK
    ```
 
 **User Installation**:
 ```bash
 # Add repository (using trusted=yes since we don't sign with GPG yet)
-echo "deb [trusted=yes] https://bceverly.github.io/sysmanage-docs/apt stable main" | \
+echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" | \
   sudo tee /etc/apt/sources.list.d/sysmanage.list
 
 # Update and install
@@ -704,7 +704,7 @@ sudo apt-get install sysmanage-agent
 
 ## APT Repository Management
 
-The APT repository is located in `~/dev/sysmanage-docs/apt/`.
+The APT repository is located in `~/dev/sysmanage-docs/repo/agent/deb/`.
 
 ### Repository Structure
 
@@ -729,7 +729,7 @@ apt/
 #### Using the Helper Script (Recommended)
 
 ```bash
-cd ~/dev/sysmanage-docs/apt
+cd ~/dev/sysmanage-docs/repo/agent/deb
 
 # Add package and update indexes
 ./update-repo.sh ~/dev/sysmanage-agent_1.0.0-1_all.deb
@@ -776,14 +776,14 @@ git push
 # Wait 2-5 minutes for GitHub Pages to update
 
 # Verify
-curl https://bceverly.github.io/sysmanage-docs/apt/dists/stable/main/binary-amd64/Packages
+curl https://repo.sysmanage.org/agent/deb/dists/stable/main/binary-amd64/Packages
 ```
 
 ### Testing the Repository
 
 ```bash
 # On a test system
-echo "deb [trusted=yes] https://bceverly.github.io/sysmanage-docs/apt stable main" | \
+echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" | \
   sudo tee /etc/apt/sources.list.d/sysmanage-test.list
 
 sudo apt-get update
@@ -878,7 +878,7 @@ After GitHub Actions creates the release:
 
 4. **Verify** (after 2-5 minutes):
    ```bash
-   curl https://bceverly.github.io/sysmanage-docs/apt/dists/stable/main/binary-amd64/Packages | grep Version
+   curl https://repo.sysmanage.org/agent/deb/dists/stable/main/binary-amd64/Packages | grep Version
    ```
 
 ---
@@ -1022,13 +1022,13 @@ sudo apt-get install --reinstall sysmanage-agent
 
 #### Repository Not Found (404)
 
-**Error**: `E: Failed to fetch https://bceverly.github.io/sysmanage-docs/apt/...`
+**Error**: `E: Failed to fetch https://repo.sysmanage.org/agent/deb/...`
 
 **Solution**:
 1. Verify GitHub Pages is enabled
 2. Check that `apt/` directory is in `main` branch
 3. Wait 5 minutes after pushing
-4. Verify URL in browser: https://bceverly.github.io/sysmanage-docs/apt/dists/stable/Release
+4. Verify URL in browser: https://repo.sysmanage.org/agent/deb/dists/stable/Release
 
 #### Package Not Found
 
@@ -1037,7 +1037,7 @@ sudo apt-get install --reinstall sysmanage-agent
 **Solution**:
 ```bash
 # 1. Verify Packages file exists
-curl https://bceverly.github.io/sysmanage-docs/apt/dists/stable/main/binary-amd64/Packages
+curl https://repo.sysmanage.org/agent/deb/dists/stable/main/binary-amd64/Packages
 
 # 2. Update package list
 sudo apt-get update
@@ -1052,10 +1052,10 @@ cat /etc/apt/sources.list.d/sysmanage.list
 
 **Solution**: Use `[trusted=yes]` in sources.list:
 ```bash
-deb [trusted=yes] https://bceverly.github.io/sysmanage-docs/apt stable main
+deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main
 ```
 
-For production, set up GPG signing (see `~/dev/sysmanage-docs/apt/README.md`).
+For production, set up GPG signing (see `~/dev/sysmanage-docs/repo/agent/deb/README.md`).
 
 ---
 
@@ -1162,11 +1162,11 @@ For production deployments, GPG-sign packages:
 
 3. **Sign APT repository**:
    ```bash
-   cd ~/dev/sysmanage-docs/apt/dists/stable
+   cd ~/dev/sysmanage-docs/repo/agent/deb/dists/stable
    gpg --default-key YOUR_KEY_ID -abs -o Release.gpg Release
    ```
 
-See `~/dev/sysmanage-docs/apt/README.md` for detailed GPG setup.
+See `~/dev/sysmanage-docs/repo/agent/deb/README.md` for detailed GPG setup.
 
 ### SSL Verification
 
