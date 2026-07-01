@@ -8,14 +8,17 @@ environments).
 
 The normal release process is fully automated via GitHub Actions: pushing a tag
 matching `v*.*.*` (e.g., `v1.2.3`) triggers builds across all platforms, publishes to
-package repositories, and stages artifacts in sysmanage-docs. This manual process
-replicates that pipeline using local machines.
+package repositories, and **publishes artifacts to Cloudflare R2** (served at
+`https://repo.sysmanage.org`). This manual process replicates that pipeline using
+local machines when CI is unavailable.
 
 **Key concept: Multi-machine additive workflow.** Each machine runs `make release-local`,
-which builds packages for its native platform and stages them into a shared
-sysmanage-docs repository. You run this on as many machines as needed to cover all
-target platforms. Each run is additive -- existing packages from other platforms are
-preserved.
+which builds packages for its native platform and stages them into a local
+`~/dev/sysmanage-docs/repo/` tree. You run this on as many machines as needed to cover
+all target platforms. Each run is additive -- existing packages from other platforms
+are preserved. When done, you publish the staged tree to Cloudflare R2 (Step 7).
+Packages are **no longer committed to the sysmanage-docs git repo** — that `repo/`
+tree is gitignored and lives on R2 only.
 
 ## Prerequisites
 
@@ -342,16 +345,19 @@ ls -la repo/agent/alpine/
 ls -la repo/agent/sbom/
 ```
 
-### Step 7: Commit and push sysmanage-docs
+### Step 7: Publish the staged packages to Cloudflare R2
 
-When GitHub access is restored:
+Packages live on Cloudflare R2 (`https://repo.sysmanage.org`), **not** in git —
+`repo/` is gitignored in sysmanage-docs. Push the staged tree up with the same R2
+credentials CI uses (the `R2_*` secrets, or your rclone `r2` remote). The sync is
+additive; run `make prune-repo` separately for version retention.
 
 ```bash
 cd ~/dev/sysmanage-docs
-git add repo/
-git status              # review what will be committed
-git commit -m "Release sysmanage-agent v1.2.3"
-git push
+aws s3 sync repo/ "s3://sysmanage-repo/" \
+  --endpoint-url "https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com" \
+  --region auto --size-only
+# (or, if configured: rclone copy repo/ r2:sysmanage-repo/ --ignore-existing)
 ```
 
 ## Running Individual Targets Without the Pipeline

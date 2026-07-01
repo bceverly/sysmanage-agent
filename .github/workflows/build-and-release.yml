@@ -1921,17 +1921,41 @@ jobs:
           echo "Release files:"
           ls -la release-files/
 
-      - name: Push packages to sysmanage-docs repository
+      - name: Publish packages to Cloudflare R2
+        # Publishes agent packages straight to the R2 bucket (served at
+        # https://repo.sysmanage.org), replacing the old "commit repo/ into
+        # sysmanage-docs git" flow.  Additive (--size-only, no --delete); version
+        # retention is a separate `make prune-repo` in sysmanage-docs.  The
+        # copy / metadata-regen / flatpak-rsync logic below is UNCHANGED — only
+        # the transport (git clone/commit → R2 pull/push) differs.
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         run: |
-          echo "Cloning sysmanage-docs repository..."
-          git clone https://x-access-token:${DOCS_REPO_TOKEN}@github.com/bceverly/sysmanage-docs.git /tmp/sysmanage-docs
+          set -euo pipefail
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          s3() { aws s3 "$@" --endpoint-url "$ENDPOINT" --region auto; }
+          WORK="${{ github.workspace }}/r2-stage"
+          mkdir -p "$WORK"
+          cd "$WORK"
 
-          cd /tmp/sysmanage-docs
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          # Pull the subtrees whose indexes we regenerate (apt pool, the rpm
+          # repos, and the flatpak OSTree store) so dpkg-scanpackages /
+          # createrepo_c --update / the flatpak rsync see every existing version.
+          # Direct-download dirs (mac/win/bsd/alpine) need no pull.  ``|| true``
+          # tolerates an empty subtree on the very first publish.
+          mkdir -p repo/agent/deb repo/agent/rpm repo/flatpak repo/objects repo/refs
+          s3 sync "s3://${R2_BUCKET}/agent/deb/" repo/agent/deb/ --only-show-errors || true
+          s3 sync "s3://${R2_BUCKET}/agent/rpm/" repo/agent/rpm/ --only-show-errors || true
+          s3 sync "s3://${R2_BUCKET}/flatpak/"   repo/flatpak/   --only-show-errors || true
+          s3 sync "s3://${R2_BUCKET}/objects/"   repo/objects/   --only-show-errors || true
+          s3 sync "s3://${R2_BUCKET}/refs/"      repo/refs/      --only-show-errors || true
+          s3 cp   "s3://${R2_BUCKET}/summary"    repo/summary    2>/dev/null || true
 
           # Create version directories for each platform
           mkdir -p "repo/agent/deb/pool/main/$VERSION-1"
@@ -2052,7 +2076,7 @@ jobs:
           sed -i "s/ 0 main\/binary-amd64\/Packages.gz$/ $SIZE_PACKAGES_GZ main\/binary-amd64\/Packages.gz/" Release.tmp
           mv Release.tmp Release
 
-          cd /tmp/sysmanage-docs
+          cd "$WORK"
 
           # Regenerate RPM repository metadata
           echo "Regenerating RPM repository metadata..."
@@ -2075,12 +2099,13 @@ jobs:
             fi
           done
 
-          # Commit and push changes
-          git add .
-          git commit -m "Add all platform packages for v$VERSION" || echo "No changes to commit"
-          # Pull any changes that occurred during the build to avoid push rejection
-          git pull --rebase origin main || true
-          git push origin main
+          # Publish everything staged to R2 (additive — never deletes; retention
+          # is a separate `make prune-repo`).  One sync from the staging root
+          # covers the agent apt/rpm repos, the per-platform package dirs, the
+          # .flatpak bundles, and the flatpak OSTree store (objects/refs/summary).
+          cd "$WORK"
+          s3 sync repo/ "s3://${R2_BUCKET}/" --size-only --only-show-errors
+          echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
 
       - name: Generate consolidated release notes
         id: release_notes
