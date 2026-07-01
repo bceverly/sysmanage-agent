@@ -55,11 +55,16 @@ SysManage Agent is a headless Python application designed to be installed on rem
 
 ### Package Repositories (Recommended)
 
+> Packages and the apt/rpm repositories are hosted on **Cloudflare R2** at
+> `https://repo.sysmanage.org` (Ubuntu/Debian are also on the Launchpad PPA and
+> Fedora/RHEL on COPR). The repo moved off GitHub Pages, which caps published
+> artifacts at 1 GB.
+
 #### Ubuntu/Debian - APT Repository
 
 ```bash
 # Add the repository
-echo "deb [trusted=yes] https://bceverly.github.io/sysmanage-docs/repo/deb stable main" | \
+echo "deb [trusted=yes] https://repo.sysmanage.org/deb stable main" | \
   sudo tee /etc/apt/sources.list.d/sysmanage.list
 
 # Update and install
@@ -80,7 +85,7 @@ sudo systemctl restart sysmanage-agent
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/el9/x86_64
+baseurl=https://repo.sysmanage.org/rpm/el9/x86_64
 enabled=1
 gpgcheck=0
 EOF
@@ -96,7 +101,7 @@ sudo dnf module install python311
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/el8/x86_64
+baseurl=https://repo.sysmanage.org/rpm/el8/x86_64
 enabled=1
 gpgcheck=0
 EOF
@@ -109,7 +114,7 @@ sudo dnf install sysmanage-agent
 sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
 [sysmanage]
 name=SysManage Agent Repository
-baseurl=https://bceverly.github.io/sysmanage-docs/repo/rpm/fedora/39/x86_64
+baseurl=https://repo.sysmanage.org/rpm/fedora/39/x86_64
 enabled=1
 gpgcheck=0
 EOF
