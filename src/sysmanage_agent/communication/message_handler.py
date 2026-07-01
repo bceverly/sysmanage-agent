@@ -595,6 +595,10 @@ class MessageHandler:
             await self.agent.handle_host_approval(data)
         elif message_type == "registration_success":
             await self.agent.handle_registration_success(data)
+        elif message_type == "logging_config_update":
+            # The payload is nested under the envelope's "data" key (same as
+            # command/ack messages), not at the top level.
+            self.agent.apply_logging_config(data.get("data", {}).get("logging") or {})
         elif message_type in self._get_status_confirmation_types():
             self._handle_status_confirmation(message_type, data)
         else:

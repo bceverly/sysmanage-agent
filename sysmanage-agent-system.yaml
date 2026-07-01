@@ -49,6 +49,14 @@ logging:
   # Log format
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
+  # Platform-native logging: also emit to the OS log sink (in addition to the
+  # rotating file log) so the agent shows up in journalctl / syslog / Event Viewer.
+  # native: false                 # set true to enable
+  # native_target: "auto"         # auto | journald | syslog | eventlog | none
+  #                               # auto = journald (Linux) / Event Log (Windows)
+  #                               #        / syslog (macOS, BSD)
+  # native_identifier: "sysmanage-agent"   # tag/identifier for native entries
+
 # WebSocket connection settings (for real-time communication)
 websocket:
   # Auto-reconnect on connection loss

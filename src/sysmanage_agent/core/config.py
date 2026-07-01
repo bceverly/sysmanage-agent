@@ -180,6 +180,18 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         """Get pipe-separated logging levels configuration."""
         return self.get("logging.level", "INFO|WARNING|ERROR|CRITICAL")
 
+    def get_log_native(self) -> bool:
+        """Whether to also log to the OS-native sink (journald/syslog/eventlog)."""
+        return bool(self.get("logging.native", False))
+
+    def get_log_native_target(self) -> str:
+        """Native log target: auto|journald|syslog|eventlog|none."""
+        return self.get("logging.native_target", "auto")
+
+    def get_log_native_identifier(self) -> str:
+        """Identifier/tag used for native log entries."""
+        return self.get("logging.native_identifier", "sysmanage-agent")
+
     def should_auto_reconnect(self) -> bool:
         """Check if WebSocket should auto-reconnect."""
         return self.get("websocket.auto_reconnect", True)

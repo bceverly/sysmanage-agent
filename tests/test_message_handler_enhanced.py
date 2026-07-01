@@ -696,6 +696,46 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
         self.mock_agent.handle_host_approval.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_dispatch_logging_config_update_extracts_nested_payload(self):
+        """logging_config_update payload is nested under the envelope's "data".
+
+        Regression: the dispatcher must read ``data["data"]["logging"]``, not a
+        top-level ``data["logging"]`` (which is always absent → an empty config
+        that silently no-ops the server-pushed logging settings).
+        """
+        self.mock_agent.apply_logging_config = Mock()
+        payload = {
+            "native_enabled": True,
+            "native_target": "auto",
+            "native_identifier": "sysmanage-agent",
+            "log_level": "WARNING",
+            "verbosity": "medium",
+        }
+        envelope = {
+            "message_type": "logging_config_update",
+            "message_id": "msg-1",
+            "data": {"logging": payload},
+            "queue_message_id": "q-1",
+        }
+
+        # Returns False (keep the receiver loop running) and forwards the
+        # correctly-unwrapped payload to the agent.
+        should_exit = await self.handler._dispatch_received_message(envelope)
+
+        assert should_exit is False
+        self.mock_agent.apply_logging_config.assert_called_once_with(payload)
+
+    @pytest.mark.asyncio
+    async def test_dispatch_logging_config_update_missing_payload(self):
+        """A logging_config_update with no nested payload applies an empty dict."""
+        self.mock_agent.apply_logging_config = Mock()
+        envelope = {"message_type": "logging_config_update", "data": {}}
+
+        await self.handler._dispatch_received_message(envelope)
+
+        self.mock_agent.apply_logging_config.assert_called_once_with({})
+
+    @pytest.mark.asyncio
     async def test_message_receiver_registration_success(self):
         """Test message_receiver processing registration_success message."""
         reg_message = json.dumps(

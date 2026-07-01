@@ -51,6 +51,7 @@ from src.sysmanage_agent.registration.registration import ClientRegistration
 from src.sysmanage_agent.registration.registration_manager import RegistrationManager
 from src.sysmanage_agent.utils.log_rotation import GzipTimedRotatingFileHandler
 from src.sysmanage_agent.utils.logging_formatter import UTCTimestampFormatter
+from src.sysmanage_agent.utils.native_logging import build_native_handler
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
 
 
@@ -80,6 +81,10 @@ class SysManageAgent(
 
         # Load configuration (now guaranteed to exist)
         self.config = ConfigManager(self.config_file)
+
+        # Server-pushed logging overrides (from logging_config_update messages);
+        # win over the yaml file when set.  Populated by apply_logging_config.
+        self._logging_overrides = {}
 
         # Set language from configuration
         configured_language = self.config.get_language()
@@ -226,8 +231,15 @@ class SysManageAgent(
             return False
 
     def setup_logging(self):
-        """Setup logging based on configuration with verbosity support."""
-        log_level = self.config.get_log_level()
+        """Setup logging based on configuration with verbosity support.
+
+        Server-pushed overrides (``self._logging_overrides``, set by
+        ``apply_logging_config`` from a ``logging_config_update`` message) win
+        over the yaml file, so a change made in the server UI takes effect here
+        without a restart.  See ``apply_logging_config``.
+        """
+        overrides = getattr(self, "_logging_overrides", None) or {}
+        log_level = overrides.get("log_level") or self.config.get_log_level()
         log_file = self.config.get_log_file()
 
         # Default to /var/log for system service, or local logs/ for development
@@ -289,6 +301,56 @@ class SysManageAgent(
                 UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
             )
             root_logger.addHandler(console_handler)
+
+        # Optionally also emit to the OS-native log sink (journald / syslog /
+        # Windows Event Log) so the agent integrates with the host's logging.
+        # Server overrides (DB) win over the yaml file.
+        if "native_enabled" in overrides:
+            native_enabled = bool(overrides.get("native_enabled"))
+        else:
+            native_enabled = self.config.get_log_native()
+        native_target = (
+            overrides.get("native_target") or self.config.get_log_native_target()
+        )
+        native_identifier = (
+            overrides.get("native_identifier")
+            or self.config.get_log_native_identifier()
+        )
+        if native_enabled:
+            native_handler = build_native_handler(
+                target=native_target,
+                identifier=native_identifier,
+            )
+            if native_handler is not None:
+                native_handler.setLevel(log_level.upper())
+                root_logger.addHandler(native_handler)
+            else:
+                print(
+                    "WARNING: platform-native logging requested but unavailable; "
+                    "continuing with file logging.",
+                    file=sys.stderr,
+                )
+
+    def apply_logging_config(self, logging_cfg: dict):
+        """Apply a server-pushed logging configuration live (no restart).
+
+        Called when a ``logging_config_update`` message arrives.  Stores the
+        config as overrides (which win over the yaml file) and re-runs
+        ``setup_logging`` so the new level / native sink take effect immediately.
+        """
+        if not isinstance(logging_cfg, dict):
+            return
+        self._logging_overrides = logging_cfg
+        try:
+            self.setup_logging()
+            self.logger.info(
+                _("Applied server logging config: level=%s native=%s target=%s"),
+                logging_cfg.get("log_level"),
+                logging_cfg.get("native_enabled"),
+                logging_cfg.get("native_target"),
+            )
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("Failed to apply server logging config: %s"), error)
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None

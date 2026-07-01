@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 14:35-0400\n"
+"POT-Creation-Date: 2026-06-30 16:56-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -701,7 +701,9 @@ msgstr "收集 apt 軟體包失敗：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr "在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝器）"
+msgstr ""
+"在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝"
+"器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:57
 #: src/sysmanage_agent/collection/package_collector_windows.py:62
@@ -837,8 +839,7 @@ msgstr "透過社群儲存庫 API 取得 Chocolatey 目錄"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:187
 #, python-format
-msgid ""
-"Successfully collected %d packages from Chocolatey community repository"
+msgid "Successfully collected %d packages from Chocolatey community repository"
 msgstr "已成功從 Chocolatey 社群儲存庫收集 %d 個套件"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:194
@@ -870,7 +871,9 @@ msgstr "沒有 PID 為 %d 的程序"
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
-msgstr "PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已拒絕終止"
+msgstr ""
+"PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已"
+"拒絕終止"
 
 #: src/sysmanage_agent/collection/process_collection.py:176
 #, python-format
@@ -2104,8 +2107,7 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "無法設定網路自動啟動: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:355
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
 #: src/sysmanage_agent/communication/message_handler.py:360
@@ -2152,7 +2154,9 @@ msgstr "廣播 %s：軟件存貨已刷新"
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
-msgstr "廣播 %s：存貨刷新請求，但 data_collector 欠缺 send_software_inventory_update 功能"
+msgstr ""
+"廣播 %s：存貨刷新請求，但 data_collector 欠缺 send_software_inventory_update "
+"功能"
 
 #: src/sysmanage_agent/communication/message_handler.py:438
 #, python-format
@@ -2189,165 +2193,165 @@ msgstr "WEBSOCKET通讯錯誤：與伺服器的連接已關閉"
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 訊息接收器錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:601
+#: src/sysmanage_agent/communication/message_handler.py:603
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知的步驟類型：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:664
+#: src/sysmanage_agent/communication/message_handler.py:666
 msgid "Heartbeat failed, connection may be lost"
 msgstr "心跳失敗，連接可能已斷開"
 
-#: src/sysmanage_agent/communication/message_handler.py:673
+#: src/sysmanage_agent/communication/message_handler.py:675
 #, python-format
 msgid "Message sender error: %s"
 msgstr "更新檢查器錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:734
+#: src/sysmanage_agent/communication/message_handler.py:736
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "出站消息佇列： %s （ID: %s）"
 
-#: src/sysmanage_agent/communication/message_handler.py:740
+#: src/sysmanage_agent/communication/message_handler.py:742
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "從 queue_outbound_message 創建隊列處理任務"
 
-#: src/sysmanage_agent/communication/message_handler.py:745
+#: src/sysmanage_agent/communication/message_handler.py:747
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "從 queue_outbound_message 創建任務：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:751
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "直接傳送訊息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:792
+#: src/sysmanage_agent/communication/message_handler.py:794
 msgid "Starting inbound queue processing"
 msgstr "連線已建立，開始佇列處理"
 
-#: src/sysmanage_agent/communication/message_handler.py:815
+#: src/sysmanage_agent/communication/message_handler.py:817
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "佇列處理器發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:825
+#: src/sysmanage_agent/communication/message_handler.py:827
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "訊息已標記為處理中：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:835
+#: src/sysmanage_agent/communication/message_handler.py:837
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "正在處理入站命令佇列： %s （queue_id: %s）"
 
-#: src/sysmanage_agent/communication/message_handler.py:846
+#: src/sysmanage_agent/communication/message_handler.py:848
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "成功更新韌體：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:855
+#: src/sysmanage_agent/communication/message_handler.py:857
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:871
+#: src/sysmanage_agent/communication/message_handler.py:873
 msgid "Cannot send message: not connected to server"
 msgstr "無法傳送訊息：未連線至伺服器"
 
-#: src/sysmanage_agent/communication/message_handler.py:879
+#: src/sysmanage_agent/communication/message_handler.py:881
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接傳送訊息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:891
+#: src/sysmanage_agent/communication/message_handler.py:893
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "調用處理出站隊列，當前運行狀態： %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:895
+#: src/sysmanage_agent/communication/message_handler.py:897
 msgid "Queue processor already running, exiting"
 msgstr "隊列處理器已運行，退出"
 
-#: src/sysmanage_agent/communication/message_handler.py:899
+#: src/sysmanage_agent/communication/message_handler.py:901
 msgid "Starting outbound queue processing"
 msgstr "連線已建立，開始佇列處理"
 
-#: src/sysmanage_agent/communication/message_handler.py:900
+#: src/sysmanage_agent/communication/message_handler.py:902
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "收集 apt 軟體包失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:926
+#: src/sysmanage_agent/communication/message_handler.py:928
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "佇列處理器發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:951
+#: src/sysmanage_agent/communication/message_handler.py:953
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "成功執行：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:968
+#: src/sysmanage_agent/communication/message_handler.py:970
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:983
+#: src/sysmanage_agent/communication/message_handler.py:985
 msgid "Connection established, starting queue processing"
 msgstr "連線已建立，開始佇列處理"
 
-#: src/sysmanage_agent/communication/message_handler.py:990
+#: src/sysmanage_agent/communication/message_handler.py:992
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "已恢復 %d 條卡住的訊息"
 
-#: src/sysmanage_agent/communication/message_handler.py:994
+#: src/sysmanage_agent/communication/message_handler.py:996
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢復卡住的消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1000
+#: src/sysmanage_agent/communication/message_handler.py:1002
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr "從 on_connection_established 建立出去消息處理任務"
 
-#: src/sysmanage_agent/communication/message_handler.py:1008
+#: src/sysmanage_agent/communication/message_handler.py:1010
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1013
+#: src/sysmanage_agent/communication/message_handler.py:1015
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1019
+#: src/sysmanage_agent/communication/message_handler.py:1021
 msgid "Outbound queue processor already running, not starting another"
 msgstr "進程中的出站隊列處理器正在運行，不再啟動新的"
 
-#: src/sysmanage_agent/communication/message_handler.py:1026
+#: src/sysmanage_agent/communication/message_handler.py:1028
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr "從 on_connection_established 建立進來消息處理任務"
 
-#: src/sysmanage_agent/communication/message_handler.py:1034
+#: src/sysmanage_agent/communication/message_handler.py:1036
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1039
+#: src/sysmanage_agent/communication/message_handler.py:1041
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1045
+#: src/sysmanage_agent/communication/message_handler.py:1047
 msgid "Inbound queue processor already running, not starting another"
 msgstr "進程中的入站隊列處理器正在運行，不再啟動新的"
 
-#: src/sysmanage_agent/communication/message_handler.py:1053
+#: src/sysmanage_agent/communication/message_handler.py:1055
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "連線已建立，開始佇列處理"
 
-#: src/sysmanage_agent/communication/message_handler.py:1120
+#: src/sysmanage_agent/communication/message_handler.py:1122
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "關閉訊息處理器時發生錯誤：%s"
@@ -2357,7 +2361,8 @@ msgstr "關閉訊息處理器時發生錯誤：%s"
 msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
-msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
+msgstr ""
+">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:44
 #, python-format
@@ -2719,8 +2724,7 @@ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 msgstr "收集 Windows 系統事件日誌（這可能需要 10-30 秒）..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:346
-msgid ""
-"Collecting Windows Security Event Log (may require admin privileges)..."
+msgid "Collecting Windows Security Event Log (may require admin privileges)..."
 msgstr "收集 Windows 安全事件日誌（可能需要管理員權限）..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:360
@@ -3259,9 +3263,9 @@ msgstr "KVM 已初始化"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
 "Homebrew 安裝需要手動介入。請使用以下命令安裝：/bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
@@ -4509,9 +4513,11 @@ msgstr "偵測分割區時發生錯誤: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
-#~ msgstr "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，已授權：%s）"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
+#~ msgstr ""
+#~ "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，"
+#~ "已授權：%s）"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4780,7 +4786,9 @@ msgstr "偵測分割區時發生錯誤: %s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分鐘。"
+#~ msgstr ""
+#~ "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分"
+#~ "鐘。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自動安裝 HTTP 請求: %s 來自 %s"
@@ -4906,7 +4914,8 @@ msgstr "偵測分割區時發生錯誤: %s"
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
+#~ msgstr ""
+#~ "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化並可使用"
