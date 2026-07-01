@@ -240,49 +240,28 @@ class SysManageAgent(
         """
         overrides = getattr(self, "_logging_overrides", None) or {}
         log_level = overrides.get("log_level") or self.config.get_log_level()
-        log_file = self.config.get_log_file()
-
-        # Default to /var/log for system service, or local logs/ for development
-        if not log_file:
-            # Check environment variable first (highest priority)
-            env_log_dir = os.environ.get("SYSMANAGE_LOG_DIR")
-            if env_log_dir:
-                os.makedirs(env_log_dir, exist_ok=True)
-                log_file = os.path.join(env_log_dir, "agent.log")
-            # Try /var/log/sysmanage-agent (system service)
-            elif os.path.exists("/var/log/sysmanage-agent"):
-                log_file = "/var/log/sysmanage-agent/agent.log"
-            # Fallback to local logs/ directory
-            else:
-                logs_dir = os.path.join(os.getcwd(), "logs")
-                os.makedirs(logs_dir, exist_ok=True)
-                log_file = os.path.join(logs_dir, "agent.log")
-
         # Parse log level - handle pipe-separated levels (use first one)
         if "|" in log_level:
             log_level = log_level.split("|")[0].strip()
+        level = log_level.upper()
+        log_file = self.config.get_log_file() or self._default_log_file()
 
-        # Clear any existing handlers to prevent double logging. Close each one
-        # first — removeHandler only detaches it, so without close() the
-        # underlying log file stays open and leaks (a ResourceWarning every time
-        # setup_logging runs again, e.g. across the test suite).
+        # Clear existing handlers first so re-running setup_logging doesn't
+        # double-log or leak the open file handle (a ResourceWarning otherwise).
         root_logger = logging.getLogger()
-        for handler in root_logger.handlers[:]:
-            handler.close()
-            root_logger.removeHandler(handler)
+        self._reset_root_handlers(root_logger)
+        formatter = UTCTimestampFormatter(
+            "[%(asctime)s UTC] %(levelname)s: %(message)s"
+        )
 
-        # Set up file logging - write all output to file.  Rotate daily, gzip
-        # the old log, keep 14 days (standard unix-style) so agent.log can't grow
-        # without bound.  Fall back to console-only if the log path isn't
-        # writable (e.g. an earlier run left it root-owned).
+        # File logging: rotate daily, gzip old logs, keep 14 days.  Fall back to
+        # console-only if the path isn't writable (e.g. left root-owned).
         try:
             file_handler = GzipTimedRotatingFileHandler(
                 log_file, when="midnight", backupCount=14
             )
-            file_handler.setLevel(log_level.upper())
-            file_handler.setFormatter(
-                UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
-            )
+            file_handler.setLevel(level)
+            file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
         except OSError as exc:
             print(
@@ -290,46 +269,65 @@ class SysManageAgent(
                 file=sys.stderr,
             )
             root_logger.addHandler(logging.StreamHandler())
-        root_logger.setLevel(log_level.upper())
+        root_logger.setLevel(level)
 
-        # Also log to console if running as a daemon (for snap logs, systemd journal, etc.)
-        # Check if SYSMANAGE_LOG_CONSOLE environment variable is set
+        # Also log to console when running as a daemon (snap/systemd), if asked.
         if os.environ.get("SYSMANAGE_LOG_CONSOLE", "").lower() in ("1", "true", "yes"):
             console_handler = logging.StreamHandler()
-            console_handler.setLevel(log_level.upper())
-            console_handler.setFormatter(
-                UTCTimestampFormatter("[%(asctime)s UTC] %(levelname)s: %(message)s")
-            )
+            console_handler.setLevel(level)
+            console_handler.setFormatter(formatter)
             root_logger.addHandler(console_handler)
 
-        # Optionally also emit to the OS-native log sink (journald / syslog /
-        # Windows Event Log) so the agent integrates with the host's logging.
-        # Server overrides (DB) win over the yaml file.
+        self._add_native_handler(root_logger, level, overrides)
+
+    @staticmethod
+    def _default_log_file() -> str:
+        """Default log path: ``$SYSMANAGE_LOG_DIR`` (highest priority), the
+        system ``/var/log/sysmanage-agent`` dir, else a local ``logs/`` dir."""
+        env_log_dir = os.environ.get("SYSMANAGE_LOG_DIR")
+        if env_log_dir:
+            os.makedirs(env_log_dir, exist_ok=True)
+            return os.path.join(env_log_dir, "agent.log")
+        if os.path.exists("/var/log/sysmanage-agent"):
+            return "/var/log/sysmanage-agent/agent.log"
+        logs_dir = os.path.join(os.getcwd(), "logs")
+        os.makedirs(logs_dir, exist_ok=True)
+        return os.path.join(logs_dir, "agent.log")
+
+    @staticmethod
+    def _reset_root_handlers(root_logger: logging.Logger) -> None:
+        """Detach and close every existing root handler (close before remove —
+        removeHandler alone leaks the open log file)."""
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+
+    def _add_native_handler(
+        self, root_logger: logging.Logger, level: str, overrides: dict
+    ) -> None:
+        """Attach the OS-native sink (journald / syslog / Windows Event Log)
+        when enabled.  Server overrides (DB) win over the yaml file."""
         if "native_enabled" in overrides:
             native_enabled = bool(overrides.get("native_enabled"))
         else:
             native_enabled = self.config.get_log_native()
-        native_target = (
-            overrides.get("native_target") or self.config.get_log_native_target()
+        if not native_enabled:
+            return
+        native_handler = build_native_handler(
+            target=overrides.get("native_target")
+            or self.config.get_log_native_target(),
+            identifier=overrides.get("native_identifier")
+            or self.config.get_log_native_identifier(),
         )
-        native_identifier = (
-            overrides.get("native_identifier")
-            or self.config.get_log_native_identifier()
-        )
-        if native_enabled:
-            native_handler = build_native_handler(
-                target=native_target,
-                identifier=native_identifier,
+        if native_handler is None:
+            print(
+                "WARNING: platform-native logging requested but unavailable; "
+                "continuing with file logging.",
+                file=sys.stderr,
             )
-            if native_handler is not None:
-                native_handler.setLevel(log_level.upper())
-                root_logger.addHandler(native_handler)
-            else:
-                print(
-                    "WARNING: platform-native logging requested but unavailable; "
-                    "continuing with file logging.",
-                    file=sys.stderr,
-                )
+            return
+        native_handler.setLevel(level)
+        root_logger.addHandler(native_handler)
 
     def apply_logging_config(self, logging_cfg: dict):
         """Apply a server-pushed logging configuration live (no restart).

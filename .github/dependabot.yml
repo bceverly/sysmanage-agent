@@ -7,6 +7,10 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
+    # Wait a few days after a release before opening an update PR, so freshly
+    # published (and potentially compromised/yanked) versions settle first.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     reviewers:
       - "bceverly"
@@ -35,6 +39,8 @@ updates:
       interval: "monthly"
       day: "monday"
       time: "09:00"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     reviewers:
       - "bceverly"
