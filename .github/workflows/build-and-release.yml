@@ -89,10 +89,20 @@ jobs:
 
   # Ubuntu/Debian .deb Package Build
   build-ubuntu:
-    name: Build .deb Package
-    runs-on: ubuntu-22.04
+    name: Build .deb Package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     needs: wait-for-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+            wheelarch: x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            wheelarch: aarch64
 
     steps:
       - name: Checkout code
@@ -169,11 +179,13 @@ jobs:
           echo "Creating vendor directory with pip dependencies for offline installation..."
           mkdir -p vendor
 
-          # Download wheels for Python 3.12 (Ubuntu 24.04 Noble)
+          # Vendor wheels for THIS build's architecture only (the native .deb is
+          # arch-specific — no need to carry the other arch's wheels).  The
+          # Launchpad source path vendors both arches separately.
           pip3 download -r requirements-prod.txt -d vendor \
             --python-version 3.12 \
-            --platform manylinux2014_x86_64 \
-            --platform manylinux_2_17_x86_64 \
+            --platform manylinux2014_${{ matrix.wheelarch }} \
+            --platform manylinux_2_17_${{ matrix.wheelarch }} \
             --only-binary=:all:
 
           # Also download source distributions for pure Python packages
@@ -257,12 +269,15 @@ jobs:
       - name: Upload .deb as artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: sysmanage-agent-deb
+          name: sysmanage-agent-deb-${{ matrix.arch }}
           path: |
             sysmanage-agent_*.deb
             sysmanage-agent_*.deb.sha256
 
       - name: Upload SBOM as artifact
+        # SBOM is architecture-independent; upload it once (amd64 leg) to avoid
+        # a duplicate-artifact-name collision across the matrix.
+        if: matrix.arch == 'amd64'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sysmanage-agent-sbom
@@ -271,10 +286,18 @@ jobs:
 
   # CentOS/RHEL/Fedora .rpm Package Build
   build-centos:
-    name: Build .rpm Package
-    runs-on: ubuntu-latest
+    name: Build .rpm Package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     needs: wait-for-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout code
@@ -405,7 +428,7 @@ jobs:
       - name: Upload .rpm as artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: sysmanage-agent-rpm
+          name: sysmanage-agent-rpm-${{ matrix.arch }}
           path: |
             sysmanage-agent*.rpm
             sysmanage-agent*.rpm.sha256
@@ -1960,6 +1983,7 @@ jobs:
           # Create version directories for each platform
           mkdir -p "repo/agent/deb/pool/main/$VERSION-1"
           mkdir -p "repo/agent/rpm/el9/x86_64"
+          mkdir -p "repo/agent/rpm/el9/aarch64"
           mkdir -p "repo/agent/rpm/opensuse-tumbleweed/x86_64"
           mkdir -p "repo/agent/rpm/opensuse-leap/15/x86_64"
           mkdir -p "repo/agent/rpm/sles/15/x86_64"
@@ -1976,10 +2000,16 @@ jobs:
           cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
 
-          # RPM packages - CentOS/RHEL (from build-centos job)
-          # The artifact is named "sysmanage-agent-rpm" and contains files like sysmanage-agent-VERSION-1.x86_64.rpm
-          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm" -exec cp {} "repo/agent/rpm/el9/x86_64/" \; 2>/dev/null || true
-          find ${{ github.workspace }}/artifacts/sysmanage-agent-rpm -name "sysmanage-agent-*.rpm.sha256" -exec cp {} "repo/agent/rpm/el9/x86_64/" \; 2>/dev/null || true
+          # RPM packages - CentOS/RHEL (from build-centos matrix job).  Artifacts
+          # are sysmanage-agent-rpm-<arch> (x86_64 / aarch64), each holding
+          # sysmanage-agent-VERSION-1.<arch>.rpm — route each to its own repo dir.
+          for RPMARCH in x86_64 aarch64; do
+            SRC="${{ github.workspace }}/artifacts/sysmanage-agent-rpm-$RPMARCH"
+            [ -d "$SRC" ] || continue
+            mkdir -p "repo/agent/rpm/el9/$RPMARCH"
+            find "$SRC" -name "sysmanage-agent-*.rpm" -exec cp {} "repo/agent/rpm/el9/$RPMARCH/" \; 2>/dev/null || true
+            find "$SRC" -name "sysmanage-agent-*.rpm.sha256" -exec cp {} "repo/agent/rpm/el9/$RPMARCH/" \; 2>/dev/null || true
+          done
 
           # RPM packages - OpenSUSE Tumbleweed
           cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
@@ -2041,38 +2071,38 @@ jobs:
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
           sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
 
-          # Regenerate apt repository metadata
+          # Regenerate apt repository metadata (amd64 + arm64)
           echo "Regenerating apt repository metadata..."
           cd repo/agent/deb
 
-          # Generate Packages files
-          dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
-          gzip -9c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
+          # Generate per-arch Packages files from the shared pool.  dpkg-scanpackages
+          # -a <arch> emits only the .debs whose control Architecture matches, so
+          # amd64 and arm64 clients each get their own index.
+          for ARCH in amd64 arm64; do
+            mkdir -p "dists/stable/main/binary-$ARCH"
+            dpkg-scanpackages -a "$ARCH" pool/ /dev/null > "dists/stable/main/binary-$ARCH/Packages"
+            gzip -9c "dists/stable/main/binary-$ARCH/Packages" > "dists/stable/main/binary-$ARCH/Packages.gz"
+          done
 
-          # Generate Release file with checksums
+          # Generate Release file with checksums (sizes inlined) for both arches
           cd dists/stable
+          REL_FILES="main/binary-amd64/Packages main/binary-amd64/Packages.gz main/binary-arm64/Packages main/binary-arm64/Packages.gz"
           {
+            echo "Origin: SysManage"
+            echo "Label: SysManage Agent"
+            echo "Suite: stable"
+            echo "Codename: stable"
+            echo "Components: main"
+            echo "Architectures: amd64 arm64"
             echo "Date: $(date -R -u)"
-            echo "MD5Sum:"
-            md5sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            md5sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            echo "SHA1:"
-            sha1sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            sha1sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            echo "SHA256:"
-            sha256sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            sha256sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            echo "SHA512:"
-            sha512sum main/binary-amd64/Packages | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-            sha512sum main/binary-amd64/Packages.gz | awk '{printf " %s %16d %s\n", $1, 0, $2}'
-          } > Release.tmp
-
-          # Add file sizes to Release file
-          SIZE_PACKAGES=$(stat -c%s main/binary-amd64/Packages)
-          SIZE_PACKAGES_GZ=$(stat -c%s main/binary-amd64/Packages.gz)
-          sed -i "s/ 0 main\/binary-amd64\/Packages$/ $SIZE_PACKAGES main\/binary-amd64\/Packages/" Release.tmp
-          sed -i "s/ 0 main\/binary-amd64\/Packages.gz$/ $SIZE_PACKAGES_GZ main\/binary-amd64\/Packages.gz/" Release.tmp
-          mv Release.tmp Release
+            for algo in "MD5Sum:md5sum" "SHA1:sha1sum" "SHA256:sha256sum" "SHA512:sha512sum"; do
+              echo "${algo%%:*}"
+              CMD="${algo##*:}"
+              for f in $REL_FILES; do
+                "$CMD" "$f" | awk -v s="$(stat -c%s "$f")" '{printf " %s %16d %s\n", $1, s, $2}'
+              done
+            done
+          } > Release
 
           cd "$WORK"
 
@@ -2082,7 +2112,7 @@ jobs:
           echo "Checking for RPM repositories..."
 
           # Regenerate metadata for each RPM repository
-          for rpm_repo in repo/agent/rpm/el9/x86_64 repo/agent/rpm/opensuse-tumbleweed/x86_64 repo/agent/rpm/opensuse-leap/15/x86_64 repo/agent/rpm/sles/15/x86_64; do
+          for rpm_repo in repo/agent/rpm/el9/x86_64 repo/agent/rpm/el9/aarch64 repo/agent/rpm/opensuse-tumbleweed/x86_64 repo/agent/rpm/opensuse-leap/15/x86_64 repo/agent/rpm/sles/15/x86_64; do
             echo "Checking $rpm_repo..."
             if [ -d "$rpm_repo" ]; then
               echo "  Directory exists"
@@ -2579,11 +2609,18 @@ jobs:
 
           echo "Downloading wheels for Python $PYTHON_VERSION (Ubuntu $RELEASE)..."
 
-          # Download wheels for the target Python version
+          # Download wheels for BOTH arches so Launchpad's arm64 builder (control
+          # is Architecture: any) can install the matching wheels from the single
+          # uploaded source — pip --find-links picks the right wheel per builder.
           pip3 download -r requirements-prod.txt -d vendor \
             --python-version $PYTHON_VERSION \
             --platform manylinux2014_x86_64 \
             --platform manylinux_2_17_x86_64 \
+            --only-binary=:all:
+          pip3 download -r requirements-prod.txt -d vendor \
+            --python-version $PYTHON_VERSION \
+            --platform manylinux2014_aarch64 \
+            --platform manylinux_2_17_aarch64 \
             --only-binary=:all:
 
           # Also download source distributions for pure Python packages
