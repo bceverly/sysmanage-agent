@@ -2013,13 +2013,11 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
-          # OpenBSD packages (.tgz) for 7.5, 7.6, 7.7
-          cp ${{ github.workspace }}/release-files/*-openbsd75.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd75.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd76.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd76.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd77.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd77.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          # OpenBSD packages (.tgz) — wildcard so every built release (7.7, 7.8,
+          # and future versions) is picked up.  The old enumerated 7.5/7.6/7.7
+          # list silently dropped 7.8 and kept dead globs for 7.5/7.6.
+          cp ${{ github.workspace }}/release-files/*-openbsd*.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*-openbsd*.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
 
           # Alpine packages (.apk) for 3.19, 3.20, 3.21
           cp ${{ github.workspace }}/release-files/*-alpine319.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
@@ -2106,6 +2104,18 @@ jobs:
           cd "$WORK"
           s3 sync repo/ "s3://${R2_BUCKET}/" --size-only --only-show-errors
           echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
+
+      - name: Trigger R2 retention prune (keep latest 5)
+        env:
+          DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${DOCS_REPO_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/bceverly/sysmanage-docs/dispatches \
+            -d '{"event_type":"prune-r2"}' \
+            && echo "Triggered R2 retention prune in sysmanage-docs" \
+            || echo "::warning::Could not trigger R2 prune (non-fatal)"
 
       - name: Generate consolidated release notes
         id: release_notes
