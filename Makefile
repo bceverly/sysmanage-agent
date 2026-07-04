@@ -87,6 +87,11 @@ VENV = .venv
 # Platform detection and variable setup
 ifeq ($(OS),Windows_NT)
     # Windows-specific paths and commands
+    # Pin cmd.exe so make's Windows shell is deterministic and independent of PATH.
+    # (A stray sh.exe on PATH would otherwise flip make to a POSIX shell and break
+    # the cmd-batch recipes.) The Unix branch keeps the default /bin/sh.
+    SHELL := cmd.exe
+    .SHELLFLAGS := /c
     PYTHON = "$(VENV)/Scripts/python.exe"
     PIP = "$(VENV)/Scripts/pip.exe"
     SEMGREP = semgrep
@@ -604,21 +609,21 @@ i18n-merge: setup-venv
 SERVICE ?= $(or $(TRANSLATION_SERVICE_URL),http://localhost:8765)
 
 translate: setup-venv
-	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/translate_i18n.py --service "$(SERVICE)" --fail-on-gaps
 
 translate-dry: setup-venv
-	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/translate_i18n.py --dry-run
 
 # Offline completeness GATE — no service, no writes, no network.  Fails loudly
 # (non-zero) if any locale string is still untranslated.  Safe for CI / release.
 translate-check: setup-venv
-	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/translate_i18n.py --check
 
 i18n-compile: setup-venv
-	@$(PYTHON) -c "import polib" 2>/dev/null || $(PYTHON) -m pip install --quiet polib
+	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/i18n_validate.py --compile
 
 # Compile .mo from the committed .po BEFORE any package is built — every
@@ -668,11 +673,11 @@ endif
 	@echo "[OK] Code formatting completed"
 
 # Python tests
+# No PYTHONWARNINGS mask here: warning policy lives in pytest.ini
+# (filterwarnings = error + targeted ignores) so warnings fail the build
+# instead of being silently swallowed.
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
-	@# No PYTHONWARNINGS mask here: warning policy lives in pytest.ini
-	@# (filterwarnings = error + targeted ignores) so warnings fail the build
-	@# instead of being silently swallowed.
 ifeq ($(OS),Windows_NT)
 	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
 else

@@ -5,6 +5,7 @@ Tests configuration management with YAML files and security priority.
 
 # pylint: disable=attribute-defined-outside-init,unused-argument
 
+import os
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -79,9 +80,17 @@ class TestConfigManager:  # pylint: disable=too-many-public-methods
     @patch("os.path.exists", return_value=True)
     def test_determine_config_path_absolute_path(self, mock_exists):
         """Test config path determination with absolute path."""
+        # Use a path that is absolute on the host OS. Python 3.13+ no longer treats
+        # a drive-less "/path" as absolute on Windows (ntpath.isabs), so a Unix-style
+        # path would fall through to the platform default there.
+        abs_path = (
+            r"C:\absolute\path\config.yaml"
+            if os.name == "nt"
+            else "/absolute/path/config.yaml"
+        )
         with patch("builtins.open", mock_open(read_data="{}")):
-            config = ConfigManager("/absolute/path/config.yaml")
-            assert config.config_file == "/absolute/path/config.yaml"
+            config = ConfigManager(abs_path)
+            assert config.config_file == abs_path
 
     @patch("os.name", "nt")
     @patch("os.path.exists")
