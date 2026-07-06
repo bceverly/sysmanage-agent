@@ -83,9 +83,14 @@ class TestCollectPackages:
 
     def test_collect_packages_exception(self, collector):
         """Test package collection with exception."""
+        # Restrict availability to "pkg" only: collect_packages() always also probes
+        # pkgin (NetBSD), and on a real NetBSD host an unmocked _collect_pkgin_packages
+        # would return the host's real package count, masking the swallowed exception.
         with patch("platform.system", return_value="FreeBSD"):
             with patch.object(
-                collector, "_is_package_manager_available", return_value=True
+                collector,
+                "_is_package_manager_available",
+                side_effect=lambda manager: manager == "pkg",
             ):
                 with patch.object(
                     collector, "_collect_pkg_packages", side_effect=Exception("test")
