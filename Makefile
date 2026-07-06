@@ -108,7 +108,11 @@ else
     PIP = $(VENV)/bin/pip
     SEMGREP = $(VENV)/bin/semgrep
     RM = rm -rf
-    PYTHON_CMD = python3
+    # Prefer a plain ``python3``; on systems that only ship a versioned binary
+    # (e.g. NetBSD, where the interpreter is ``python3.13`` with no ``python3``
+    # symlink) fall back to the newest versioned one. No-op where ``python3``
+    # exists (Linux/macOS/FreeBSD), so this doesn't change those platforms.
+    PYTHON_CMD = $(shell for p in python3 python3.14 python3.13 python3.12 python3.11; do command -v $$p >/dev/null 2>&1 && { echo $$p; exit 0; }; done; echo python3)
     VENV_ACTIVATE = $(VENV)/bin/activate
     NULL_REDIRECT = 2>/dev/null
     SHELL_TEST = if [ -f
@@ -479,7 +483,18 @@ else
 		fi; \
 		$(PYTHON) scripts/install-dev-deps.py; \
 	elif [ "$$(uname -s)" = "NetBSD" ]; then \
-		echo "[INFO] NetBSD detected - configuring for grpcio build..."; \
+		echo "[INFO] NetBSD detected - configuring for grpcio + cryptography build..."; \
+		if ! command -v cargo >/dev/null 2>&1 && [ ! -x "$$HOME/.cargo/bin/cargo" ]; then \
+			echo "[INFO] Rust not found - installing (needed to build cryptography from source)..."; \
+			SU=$$(command -v sudo 2>/dev/null || command -v doas 2>/dev/null); \
+			$$SU pkgin -y install rust || $$SU pkg_add rust || { \
+				echo "[ERROR] Could not auto-install Rust. Install it manually, then re-run:  doas pkgin install rust"; \
+				exit 1; \
+			}; \
+		fi; \
+		export PATH="$$HOME/.cargo/bin:/usr/pkg/bin:$$PATH"; \
+		if [ -d /usr/pkg/include/openssl ]; then export OPENSSL_DIR=/usr/pkg; \
+		elif [ -d /usr/include/openssl ]; then export OPENSSL_DIR=/usr; fi; \
 		echo "[INFO] Checking for package creation tools..."; \
 		command -v pkg_create >/dev/null 2>&1 || { \
 			echo "[ERROR] pkg_create not found. Please install pkgtools from pkgsrc."; \
@@ -971,7 +986,7 @@ endif
 # Build installer package (auto-detects platform)
 installer:
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 ifeq ($(OS),Windows_NT)
 	@echo "Windows detected - building MSI installer"
 	@$(MAKE) installer-msi
@@ -1020,7 +1035,7 @@ endif
 # Build macOS .pkg installer package
 installer-pkg:
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 	@echo "=== Building macOS .pkg Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1304,7 +1319,7 @@ installer-pkg:
 # Build openSUSE/SLES installer package
 installer-rpm-suse:
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 	@echo "=== Building openSUSE/SLES .rpm Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1449,7 +1464,7 @@ installer-rpm-suse:
 # Build Ubuntu/Debian installer package
 installer-deb:
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 	@echo "=== Building Ubuntu/Debian .deb Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1663,7 +1678,7 @@ install-dev-rpm-suse: setup-venv
 # Build CentOS/RHEL/Fedora installer package
 installer-rpm:
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 	@echo "=== Building CentOS/RHEL/Fedora .rpm Package ==="
 	@echo ""
 	@echo "Checking build dependencies..."
@@ -1834,7 +1849,7 @@ installer-openbsd:
 	echo "✓ Source directory found"; \
 	echo ""; \
 	echo "Generating OpenBSD PLIST..."; \
-	python3 installer/openbsd/generate-plist.py || { \
+	$(PYTHON_CMD) installer/openbsd/generate-plist.py || { \
 		echo "ERROR: Failed to generate PLIST"; \
 		exit 1; \
 	}; \
@@ -2193,7 +2208,7 @@ snap:
 	@echo "✓ Snapcraft available"
 	@echo ""
 	@echo "Generating requirements-prod.txt from requirements.txt..."
-	@python3 scripts/update-requirements-prod.py
+	@$(PYTHON_CMD) scripts/update-requirements-prod.py
 	@echo "✓ requirements-prod.txt generated"
 	@echo ""
 	@echo "Building snap package..."
@@ -2841,9 +2856,9 @@ sbom:
 	@echo ""
 	@echo "Checking for CycloneDX tools..."
 	@set -e; \
-	if ! python3 -c "import cyclonedx_py" 2>/dev/null; then \
+	if ! $(PYTHON_CMD) -c "import cyclonedx_py" 2>/dev/null; then \
 		echo "Installing cyclonedx-bom for Python..."; \
-		python3 -m pip install cyclonedx-bom --quiet; \
+		$(PYTHON_CMD) -m pip install cyclonedx-bom --quiet; \
 		echo "✓ cyclonedx-bom installed"; \
 	else \
 		echo "✓ cyclonedx-bom already installed"; \
@@ -2851,7 +2866,7 @@ sbom:
 	@echo ""
 	@echo "Generating Python SBOM from requirements.txt..."
 	@set -e; \
-	python3 -m cyclonedx_py requirements \
+	$(PYTHON_CMD) -m cyclonedx_py requirements \
 		requirements.txt \
 		--of JSON \
 		-o sbom/sysmanage-agent-sbom.json
@@ -2920,7 +2935,7 @@ deploy-check-deps:
 	echo ""; \
 	\
 	echo "--- SBOM Generation ---"; \
-	if python3 -c "import cyclonedx_py" 2>/dev/null; then \
+	if $(PYTHON_CMD) -c "import cyclonedx_py" 2>/dev/null; then \
 		echo "  [OK] cyclonedx-bom (Python)"; \
 	else \
 		echo "  [MISSING] cyclonedx-bom"; \
@@ -3370,7 +3385,7 @@ deploy-launchpad:
 	echo ""; \
 	\
 	echo "Generating requirements-prod.txt..."; \
-	python3 scripts/update-requirements-prod.py; \
+	$(PYTHON_CMD) scripts/update-requirements-prod.py; \
 	\
 	echo "Generating SBOM..."; \
 	$(MAKE) sbom; \
@@ -3501,7 +3516,7 @@ deploy-obs:
 	echo ""; \
 	\
 	echo "Generating requirements-prod.txt..."; \
-	python3 scripts/update-requirements-prod.py; \
+	$(PYTHON_CMD) scripts/update-requirements-prod.py; \
 	\
 	WORKSPACE="$(CURDIR)"; \
 	\
@@ -3638,7 +3653,7 @@ deploy-copr:
 	echo ""; \
 	\
 	echo "Generating requirements-prod.txt..."; \
-	python3 scripts/update-requirements-prod.py; \
+	$(PYTHON_CMD) scripts/update-requirements-prod.py; \
 	\
 	WORKSPACE="$(CURDIR)"; \
 	\
