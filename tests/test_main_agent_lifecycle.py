@@ -314,7 +314,7 @@ class TestSysManageAgentDiscovery:
         def _fake_run(coro):
             if asyncio.iscoroutine(coro):
                 coro.close()
-            raise Exception("Network error")
+            raise OSError("Network error")
 
         with patch("main.asyncio.run", side_effect=_fake_run):
             result = agent.auto_discover_and_configure()

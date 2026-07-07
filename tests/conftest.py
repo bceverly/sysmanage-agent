@@ -435,7 +435,7 @@ def _close_agent_log_handlers():
     _close_orphaned_log_handlers()
 
 
-def _gc_collect_suppressing_loop_warnings():
+def _gc_collect_quiet():
     """Run ``gc.collect()`` while suppressing event-loop ``ResourceWarning``s.
 
     On FreeBSD (and other BSDs), ``_UnixSelectorEventLoop`` allocates a
