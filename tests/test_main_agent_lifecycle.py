@@ -221,7 +221,17 @@ class TestSysManageAgentDiscovery:
             agent = SysManageAgent.__new__(SysManageAgent)  # Create without __init__
             agent.config_file = temp_config
 
-            with patch("builtins.open", create=True) as mock_open:
+            # Mock asyncio.run to avoid creating a real event loop whose
+            # self-pipe sockets can leak on BSD during GC teardown.
+            def _fake_run(coro):
+                if asyncio.iscoroutine(coro):
+                    coro.close()
+                return discovered_servers
+
+            with (
+                patch("builtins.open", create=True) as mock_open,
+                patch("main.asyncio.run", side_effect=_fake_run),
+            ):
                 mock_file = Mock()
                 mock_open.return_value.__enter__.return_value = mock_file
 
@@ -249,7 +259,15 @@ class TestSysManageAgentDiscovery:
         agent = SysManageAgent.__new__(SysManageAgent)  # Create without __init__
         agent.config_file = "test-config.yaml"
 
-        result = agent.auto_discover_and_configure()
+        # Mock asyncio.run to avoid creating a real event loop whose
+        # self-pipe sockets can leak on BSD during GC teardown.
+        def _fake_run(coro):
+            if asyncio.iscoroutine(coro):
+                coro.close()
+            return []
+
+        with patch("main.asyncio.run", side_effect=_fake_run):
+            result = agent.auto_discover_and_configure()
 
         assert result is False
         mock_discover.assert_called_once()
@@ -268,7 +286,15 @@ class TestSysManageAgentDiscovery:
         agent = SysManageAgent.__new__(SysManageAgent)  # Create without __init__
         agent.config_file = "test-config.yaml"
 
-        result = agent.auto_discover_and_configure()
+        # Mock asyncio.run to avoid creating a real event loop whose
+        # self-pipe sockets can leak on BSD during GC teardown.
+        def _fake_run(coro):
+            if asyncio.iscoroutine(coro):
+                coro.close()
+            return discovered_servers
+
+        with patch("main.asyncio.run", side_effect=_fake_run):
+            result = agent.auto_discover_and_configure()
 
         assert result is False
         mock_discover.assert_called_once()
@@ -283,7 +309,15 @@ class TestSysManageAgentDiscovery:
         agent = SysManageAgent.__new__(SysManageAgent)  # Create without __init__
         agent.config_file = "test-config.yaml"
 
-        result = agent.auto_discover_and_configure()
+        # Mock asyncio.run to avoid creating a real event loop whose
+        # self-pipe sockets can leak on BSD during GC teardown.
+        def _fake_run(coro):
+            if asyncio.iscoroutine(coro):
+                coro.close()
+            raise Exception("Network error")
+
+        with patch("main.asyncio.run", side_effect=_fake_run):
+            result = agent.auto_discover_and_configure()
 
         assert result is False
 

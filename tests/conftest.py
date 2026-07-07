@@ -11,6 +11,7 @@ import os
 import sys
 import tempfile
 import uuid
+import warnings
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -434,6 +435,35 @@ def _close_agent_log_handlers():
     _close_orphaned_log_handlers()
 
 
+def _gc_collect_suppressing_loop_warnings():
+    """Run ``gc.collect()`` while suppressing event-loop ``ResourceWarning``s.
+
+    On FreeBSD (and other BSDs), ``_UnixSelectorEventLoop`` allocates a
+    self-pipe pair of Unix-domain sockets for signal wakeup.  If a test
+    creates a real event loop (e.g. via ``asyncio.run()``) and the loop
+    object becomes unreachable without being closed, ``gc.collect()``
+    triggers ``BaseEventLoop.__del__`` which calls ``warnings.warn``
+    with ``ResourceWarning`` for the unclosed loop *and* its two
+    self-pipe sockets — three warnings that the warnings-as-errors
+    policy turns into hard failures via pytest's unraisable-exception
+    hook.
+
+    We cannot proactively *close* the loop here because that breaks
+    pytest-asyncio's own event-loop lifecycle for async tests.  Instead,
+    suppress the specific ``ResourceWarning`` messages during
+    ``gc.collect()`` so the ``__del__`` warning calls become no-ops
+    (no exception is raised → the unraisable hook is never triggered).
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message=r"unclosed event loop", category=ResourceWarning
+        )
+        warnings.filterwarnings(
+            "ignore", message=r"unclosed.*socket\.socket", category=ResourceWarning
+        )
+        gc.collect()
+
+
 # Pytest hooks for better test isolation
 def pytest_runtest_setup(item):
     """Setup for each test run."""
@@ -441,7 +471,7 @@ def pytest_runtest_setup(item):
     # Close any orphaned agent.log handler BEFORE gc surfaces it as an
     # unclosed-file ResourceWarning, then drop lingering DB connections.
     _close_orphaned_log_handlers()
-    gc.collect()
+    _gc_collect_suppressing_loop_warnings()
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -450,4 +480,4 @@ def pytest_runtest_teardown(item, nextitem):
     _ = nextitem
     # Same guard on the teardown side (see pytest_runtest_setup).
     _close_orphaned_log_handlers()
-    gc.collect()
+    _gc_collect_suppressing_loop_warnings()
