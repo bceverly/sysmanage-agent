@@ -471,7 +471,7 @@ def pytest_runtest_setup(item):
     # Close any orphaned agent.log handler BEFORE gc surfaces it as an
     # unclosed-file ResourceWarning, then drop lingering DB connections.
     _close_orphaned_log_handlers()
-    _gc_collect_suppressing_loop_warnings()
+    _gc_collect_quiet()
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -480,4 +480,4 @@ def pytest_runtest_teardown(item, nextitem):
     _ = nextitem
     # Same guard on the teardown side (see pytest_runtest_setup).
     _close_orphaned_log_handlers()
-    _gc_collect_suppressing_loop_warnings()
+    _gc_collect_quiet()
