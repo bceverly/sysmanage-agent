@@ -447,6 +447,53 @@ class InstallationRequestTracking(Base):
         )
 
 
+class CustomMetric(Base):
+    """
+    Table for persisting the host's enabled custom-metric definitions
+    (Custom Metrics & Graphs Slice 3).
+
+    The server sends the *complete* enabled set with each
+    ``sync_custom_metrics`` command; the agent REPLACES its whole set and
+    persists it here so the metric scheduler survives an agent restart
+    without waiting for the next server sync.
+    """
+
+    __tablename__ = "custom_metrics"
+
+    # Local primary key.
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+
+    # Server-side metric identifier (echoed back on every sample).
+    metric_id = Column(String(36), nullable=False, unique=True, index=True)
+
+    # Human-readable name (for logs/diagnostics only).
+    name = Column(String(255), nullable=False)
+
+    # The script body to run and the interpreter to run it with
+    # (sh | bash | python3).
+    script = Column(Text, nullable=False)
+    interpreter = Column(String(20), nullable=False)
+
+    # How often to run the metric, in seconds (a 60s floor is enforced by
+    # the scheduler regardless of what is stored here).
+    cadence_seconds = Column(Integer, nullable=False, default=60)
+
+    # Timestamps.
+    created_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self):
+        return (
+            f"<CustomMetric(id={self.id}, metric_id='{self.metric_id}', "
+            f"name='{self.name}', interpreter='{self.interpreter}', "
+            f"cadence_seconds={self.cadence_seconds})>"
+        )
+
+
 class VmmBuildCache(Base):
     """
     Table for caching VMM build artifacts (site77.tgz files).

@@ -323,6 +323,9 @@ class MessageProcessor:
             "service_control": self._handle_service_control,
             "get_service_status": self._handle_get_service_status,
             "deploy_files": self.agent.deploy_files,
+            "install_gpg_key": self.agent.install_gpg_key,
+            "remove_gpg_key": self.agent.remove_gpg_key,
+            "sync_custom_metrics": self.agent.sync_custom_metrics,
             "execute_command_sequence": self.agent.execute_command_sequence,
             "apply_deployment_plan": self.agent.apply_deployment_plan,
             # Phase 10.2 step 7 close-out (2026-05-14): the legacy

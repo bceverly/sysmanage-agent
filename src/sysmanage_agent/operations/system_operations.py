@@ -9,6 +9,7 @@ import logging
 from typing import Any, Dict
 
 from src.sysmanage_agent.operations.generic_deployment import GenericDeployment
+from src.sysmanage_agent.operations.gpg_operations import GpgOperations
 from src.sysmanage_agent.operations.hostname_operations import HostnameOperations
 from src.sysmanage_agent.operations.package_operations import PackageOperations
 from src.sysmanage_agent.operations.repository_operations import (
@@ -39,6 +40,7 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.user_account_ops = UserAccountOperations(agent_instance)
         self.hostname_ops = HostnameOperations(agent_instance)
         self.generic_deployment = GenericDeployment(agent_instance)
+        self.gpg_ops = GpgOperations(agent_instance)
 
     # ========== System Control Delegation ==========
 
@@ -259,6 +261,16 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
     ) -> Dict[str, Any]:
         """Execute a command sequence."""
         return await self.generic_deployment.execute_command_sequence(parameters)
+
+    # ========== GPG Key Management Delegation ==========
+
+    async def install_gpg_key(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Import a GPG key into the target user's/host keyring."""
+        return await self.gpg_ops.install_gpg_key(parameters)
+
+    async def remove_gpg_key(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove a GPG key from the target user's/host keyring."""
+        return await self.gpg_ops.remove_gpg_key(parameters)
 
     async def apply_deployment_plan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Apply a complete declarative deployment plan."""

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 16:56-0400\n"
+"POT-Creation-Date: 2026-07-09 12:03-0400\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -94,7 +94,8 @@ msgstr "Ошибка десериализации сообщения %s: %s"
 #: src/database/queue_manager.py:474
 #, python-format
 msgid "Recovered stuck message %s (type: %s), will retry"
-msgstr "Зависшее сообщение %s (тип: %s) восстановлено, будет повторная попытка"
+msgstr ""
+"Зависшее сообщение %s (тип: %s) восстановлено, будет повторная попытка"
 
 #: src/database/queue_manager.py:488
 #, python-format
@@ -843,7 +844,8 @@ msgstr "Получение каталога Chocolatey через API репоз
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:187
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
 msgstr "Успешно собрано %d пакетов из репозитория сообщества Chocolatey"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:194
@@ -986,7 +988,8 @@ msgstr "Обнаружена роль хоста KVM: libvirt v%s, %d вирту
 #: src/sysmanage_agent/collection/virtualization_role_detector.py:352
 #, python-format
 msgid "Detected bhyve Host role: FreeBSD %s, %d VMs, UEFI=%s"
-msgstr "Обнаружена роль хоста bhyve: FreeBSD %s, %d виртуальных машин, UEFI=%s"
+msgstr ""
+"Обнаружена роль хоста bhyve: FreeBSD %s, %d виртуальных машин, UEFI=%s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:84
 #, python-format
@@ -1107,8 +1110,8 @@ msgid ""
 "Update detection completed: %d updates found (%d security, %d system, %d "
 "application)"
 msgstr ""
-"Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, %d "
-"системных, %d приложений)"
+"Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, %d"
+" системных, %d приложений)"
 
 #: src/sysmanage_agent/collection/update_detection.py:133
 #, python-format
@@ -1601,8 +1604,8 @@ msgstr "Удаление lowercase autostop, будет добавлено autoS
 #, python-format
 msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 msgstr ""
-".wslconfig не найден, создание для предотвращения автоматического выключения "
-"WSL в %s"
+".wslconfig не найден, создание для предотвращения автоматического выключения"
+" WSL в %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:163
 #: src/sysmanage_agent/wsl/keepalive.py:156
@@ -1784,7 +1787,8 @@ msgstr "Неподдерживаемая платформа для инвент�
 #: src/sysmanage_agent/communication/data_collector.py:158
 #, python-format
 msgid "Found and sent %d server roles during initial collection"
-msgstr "Найдено и отправлено %d ролей сервера во время первичной сборки данных"
+msgstr ""
+"Найдено и отправлено %d ролей сервера во время первичной сборки данных"
 
 #: src/sysmanage_agent/communication/data_collector.py:163
 msgid "No server roles found during initial collection"
@@ -1905,7 +1909,8 @@ msgstr "Не удалось отправить данные статуса ан�
 
 #: src/sysmanage_agent/communication/data_collector.py:501
 msgid "Cannot send antivirus status data: no host approval"
-msgstr "Не удается отправить обновление статуса виртуализации: хост не одобрен"
+msgstr ""
+"Не удается отправить обновление статуса виртуализации: хост не одобрен"
 
 #: src/sysmanage_agent/communication/data_collector.py:535
 msgid "Failed to send firewall status data"
@@ -1913,7 +1918,8 @@ msgstr "Не удалось отправить данные статуса бр�
 
 #: src/sysmanage_agent/communication/data_collector.py:537
 msgid "Cannot send firewall status data: no host approval"
-msgstr "Не удается отправить обновление статуса виртуализации: хост не одобрен"
+msgstr ""
+"Не удается отправить обновление статуса виртуализации: хост не одобрен"
 
 #: src/sysmanage_agent/communication/data_collector.py:569
 msgid "Failed to send Graylog status data"
@@ -1921,7 +1927,8 @@ msgstr "Не удалось отправить данные статуса Grayl
 
 #: src/sysmanage_agent/communication/data_collector.py:571
 msgid "Cannot send Graylog status data: no host approval"
-msgstr "Не удается отправить обновление статуса виртуализации: хост не одобрен"
+msgstr ""
+"Не удается отправить обновление статуса виртуализации: хост не одобрен"
 
 #: src/sysmanage_agent/communication/data_collector.py:579
 msgid "Cannot send process data: no host approval"
@@ -2056,8 +2063,8 @@ msgid ""
 "Running certificate collection in unprivileged mode - some certificates may "
 "not be accessible"
 msgstr ""
-"Сбор сертификатов в непривилегированном режиме - некоторые сертификаты могут "
-"быть недоступны"
+"Сбор сертификатов в непривилегированном режиме - некоторые сертификаты могут"
+" быть недоступны"
 
 #: src/sysmanage_agent/communication/data_collector.py:927
 msgid "Collecting SSL certificates from system"
@@ -2131,7 +2138,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Не удалось установить автозапуск сети: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:355
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Регистрация узла ожидает одобрения. Будут продолжены периодические попытки."
 
@@ -2222,167 +2230,167 @@ msgstr "ОШИБКА_WEBСOCKET_СОЕДИНЕНИЯ: Соединение с с
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Ошибка приемника сообщений: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:603
+#: src/sysmanage_agent/communication/message_handler.py:605
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Неизвестный тип шага: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:666
+#: src/sysmanage_agent/communication/message_handler.py:668
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Сбой сердцебиения, возможно потеряно соединение"
 
-#: src/sysmanage_agent/communication/message_handler.py:675
+#: src/sysmanage_agent/communication/message_handler.py:677
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Ошибка проверки обновлений: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:738
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "Выходящее сообщение добавлено в очередь: %s (ID: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:742
+#: src/sysmanage_agent/communication/message_handler.py:744
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "Создание задачи обработки очереди из queue_outbound_message"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:749
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "Задача создана из очереди queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:751
+#: src/sysmanage_agent/communication/message_handler.py:753
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Ошибка прямой отправки сообщения: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:794
+#: src/sysmanage_agent/communication/message_handler.py:796
 msgid "Starting inbound queue processing"
 msgstr "Соединение установлено, начинается обработка очереди"
 
-#: src/sysmanage_agent/communication/message_handler.py:817
+#: src/sysmanage_agent/communication/message_handler.py:819
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Ошибка в обработчике очереди: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:827
+#: src/sysmanage_agent/communication/message_handler.py:829
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Сообщение отмечено как обрабатываемое: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:837
+#: src/sysmanage_agent/communication/message_handler.py:839
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "Обработка входящего команды из очереди: %s (queue_id: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:848
+#: src/sysmanage_agent/communication/message_handler.py:850
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "Успешно обновлена прошивка для: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:857
+#: src/sysmanage_agent/communication/message_handler.py:859
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Ошибка обработки сообщения в очереди %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:873
+#: src/sysmanage_agent/communication/message_handler.py:875
 msgid "Cannot send message: not connected to server"
 msgstr "Не удаётся отправить сообщение: нет соединения с сервером"
 
-#: src/sysmanage_agent/communication/message_handler.py:881
+#: src/sysmanage_agent/communication/message_handler.py:883
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Ошибка прямой отправки сообщения: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:893
+#: src/sysmanage_agent/communication/message_handler.py:895
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "Вызов обработки выходящей очереди, текущий статус запущен: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:897
+#: src/sysmanage_agent/communication/message_handler.py:899
 msgid "Queue processor already running, exiting"
 msgstr "Обработчик очереди уже запущен, выход"
 
-#: src/sysmanage_agent/communication/message_handler.py:901
+#: src/sysmanage_agent/communication/message_handler.py:903
 msgid "Starting outbound queue processing"
 msgstr "Соединение установлено, начинается обработка очереди"
 
-#: src/sysmanage_agent/communication/message_handler.py:902
+#: src/sysmanage_agent/communication/message_handler.py:904
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "Не удалось собрать пакеты apt: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:928
+#: src/sysmanage_agent/communication/message_handler.py:930
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Ошибка в обработчике очереди: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:953
+#: src/sysmanage_agent/communication/message_handler.py:955
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "Успешно выполнено: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:970
+#: src/sysmanage_agent/communication/message_handler.py:972
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Ошибка обработки сообщения в очереди %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:985
+#: src/sysmanage_agent/communication/message_handler.py:987
 msgid "Connection established, starting queue processing"
 msgstr "Соединение установлено, начинается обработка очереди"
 
-#: src/sysmanage_agent/communication/message_handler.py:992
+#: src/sysmanage_agent/communication/message_handler.py:994
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "Восстановлено %d зависших сообщений"
 
-#: src/sysmanage_agent/communication/message_handler.py:996
+#: src/sysmanage_agent/communication/message_handler.py:998
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Ошибка восстановления застрявших сообщений: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1002
+#: src/sysmanage_agent/communication/message_handler.py:1004
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr ""
 "Создание задачи обработки исходящей очереди из on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1010
+#: src/sysmanage_agent/communication/message_handler.py:1012
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1015
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Ошибка отключения Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1021
+#: src/sysmanage_agent/communication/message_handler.py:1023
 msgid "Outbound queue processor already running, not starting another"
 msgstr "Выходящий обработчик очереди уже запущен, не начинать новый"
 
-#: src/sysmanage_agent/communication/message_handler.py:1028
+#: src/sysmanage_agent/communication/message_handler.py:1030
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr ""
 "Создание задачи обработки входящей очереди из on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1036
+#: src/sysmanage_agent/communication/message_handler.py:1038
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1041
+#: src/sysmanage_agent/communication/message_handler.py:1043
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Ошибка отключения Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1047
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Inbound queue processor already running, not starting another"
 msgstr "Входящий обработчик очереди уже запущен, не начинать новый"
 
-#: src/sysmanage_agent/communication/message_handler.py:1055
+#: src/sysmanage_agent/communication/message_handler.py:1057
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "Соединение установлено, начинается обработка очереди"
 
-#: src/sysmanage_agent/communication/message_handler.py:1122
+#: src/sysmanage_agent/communication/message_handler.py:1124
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Ошибка закрытия обработчика сообщений: %s"
@@ -2467,136 +2475,136 @@ msgstr "Аутентификация не удалась со статусом %
 msgid "Received command: %s with parameters: %s"
 msgstr "Получена команда: %s с параметрами: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:384
+#: src/sysmanage_agent/core/agent_utils.py:387
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID выполнения скрипта %s уже обработан, дубликат пропущен"
 
-#: src/sysmanage_agent/core/agent_utils.py:421
+#: src/sysmanage_agent/core/agent_utils.py:424
 msgid "Generic command missing nested command_type"
 msgstr "У общей команды отсутствует вложенный command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:433
+#: src/sysmanage_agent/core/agent_utils.py:436
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Неизвестный тип команды: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:491
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:495
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Не удалось собрать пакеты Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:511
+#: src/sysmanage_agent/core/agent_utils.py:514
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Ошибка обнаружения разделов: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:525
+#: src/sysmanage_agent/core/agent_utils.py:528
 msgid "No execution UUID provided, cannot track"
 msgstr "Не указан UUID выполнения, отслеживание невозможно"
 
-#: src/sysmanage_agent/core/agent_utils.py:540
+#: src/sysmanage_agent/core/agent_utils.py:543
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID выполнения %s уже существует в БД"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "UUID выполнения %s сохранён для отслеживания"
 
-#: src/sysmanage_agent/core/agent_utils.py:565
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Ошибка обнаружения разделов: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:597
+#: src/sysmanage_agent/core/agent_utils.py:600
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "Запрошено управление службой: %s для служб: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:630
+#: src/sysmanage_agent/core/agent_utils.py:633
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Ошибка в обработчике управления службами: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:654
+#: src/sysmanage_agent/core/agent_utils.py:657
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "Выполнение %s для службы: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:665
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "Служба %s: %s выполнено успешно"
 
-#: src/sysmanage_agent/core/agent_utils.py:675
+#: src/sysmanage_agent/core/agent_utils.py:678
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Не удалось выполнить %s для службы %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:682
+#: src/sysmanage_agent/core/agent_utils.py:685
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Тайм-аут управления службой для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:688
+#: src/sysmanage_agent/core/agent_utils.py:691
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Ошибка управления службой для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:750
+#: src/sysmanage_agent/core/agent_utils.py:753
 msgid "Triggering role collection after service control"
 msgstr "Запуск сбора ролей после управления службой"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:757
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Не удалось обновить роли после управления службой: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:770
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "Запрошена проверка состояния службы: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:793
+#: src/sysmanage_agent/core/agent_utils.py:796
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Ошибка в обработчике статуса служб: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:806
+#: src/sysmanage_agent/core/agent_utils.py:809
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "Проверка состояния службы: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:826
+#: src/sysmanage_agent/core/agent_utils.py:829
 #, python-format
 msgid "Service %s status: %s"
 msgstr "Служба %s состояние: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:836
+#: src/sysmanage_agent/core/agent_utils.py:839
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Тайм-аут получения состояния службы %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:849
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Ошибка состояния службы для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1124
+#: src/sysmanage_agent/core/agent_utils.py:1127
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Не удалось поставить в очередь синтетический command_result для журнала "
 "выполнения: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1130
+#: src/sysmanage_agent/core/agent_utils.py:1133
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "Сверка журнала выполнения: %d активных, %d завершённых"
@@ -2760,7 +2768,8 @@ msgstr ""
 "секунд)..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:346
-msgid "Collecting Windows Security Event Log (may require admin privileges)..."
+msgid ""
+"Collecting Windows Security Event Log (may require admin privileges)..."
 msgstr ""
 "Сбор данных из журнала безопасности Windows (может потребовать привилегий "
 "администратора)..."
@@ -2939,6 +2948,57 @@ msgstr "Ошибка при добавлении пользователя в г�
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "Управление дочерними хостами требует Pro+ (путь движка)."
 
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#, python-format
+msgid "Synced custom metrics: %d active, %d skipped (invalid)"
+msgstr ""
+"Синхронизированы пользовательские метрики: %d активных, %d пропущено "
+"(недействительные)"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#, python-format
+msgid "Failed to persist custom metrics: %s"
+msgstr "Не удалось сохранить пользовательские метрики: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#, python-format
+msgid "Failed to load persisted custom metrics: %s"
+msgstr "Не удалось загрузить сохраненные пользовательские метрики: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#, python-format
+msgid "Loaded %d persisted custom metric(s) at startup"
+msgstr "Загружено %d сохраненных пользовательских метрик при запуске"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#, python-format
+msgid "interpreter '%s' not available on this host"
+msgstr "интерпретатор '%s' недоступен на этом хосте"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#, python-format
+msgid "failed to run metric: %s"
+msgstr "не удалось запустить метрику: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#, python-format
+msgid "script exited with code %s"
+msgstr "скрипт завершился с кодом выхода %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+msgid "script stdout was not a single numeric value"
+msgstr "stdout скрипта не содержит одиночное числовое значение"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#, python-format
+msgid "Custom-metrics scheduler error: %s"
+msgstr "Ошибка планировщика пользовательских метрик: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#, python-format
+msgid "Failed to send custom metric samples: %s"
+msgstr "Не удалось отправить образцы пользовательских метрик: %s"
+
 #: src/sysmanage_agent/operations/firewall_collector.py:57
 #, python-format
 msgid "Unsupported system for firewall detection: %s"
@@ -2961,7 +3021,8 @@ msgstr "Обнаруженные файловые системы: %s"
 #: src/sysmanage_agent/operations/generic_deployment.py:531
 #, python-format
 msgid "Rolled back %s from backup %s after failed deployment"
-msgstr "Восстановление %s из резервной копии %s после неудачного развертывания"
+msgstr ""
+"Восстановление %s из резервной копии %s после неудачного развертывания"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:538
 #, python-format
@@ -3007,6 +3068,79 @@ msgstr "FileNotFoundError: %s"
 #: src/sysmanage_agent/operations/generic_deployment.py:1204
 msgid "timeout"
 msgstr "тайм-аут"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:116
+#, python-format
+msgid "Could not create GNUPGHOME %s for user %s: %s"
+msgstr "Не удалось создать GNUPGHOME %s для пользователя %s: %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:220
+msgid "Missing required parameter 'armored_key'"
+msgstr "Отсутствует обязательный параметр 'armored_key'"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:228
+#: src/sysmanage_agent/operations/gpg_operations.py:339
+msgid "gpg binary not found on this host"
+msgstr "бинарный файл gpg не найден на этом хосте"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:236
+#, python-format
+msgid "Importing GPG key %s (fingerprint %s) for target=%s"
+msgstr "Импорт GPG-ключа %s (отпечаток %s) для цели=%s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:274
+#, python-format
+msgid "gpg import failed (rc=%s): %s"
+msgstr "Ошибка импорта gpg (код выхода=%s): %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:286
+msgid "Key imported and verified present"
+msgstr "Ключ импортирован и проверен на наличие"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:288
+msgid "gpg import returned success but fingerprint not found"
+msgstr "gpg-импорт вернул успех, но отпечаток ключа не найден"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:294
+#, python-format
+msgid "fingerprint %s not present after import"
+msgstr "отпечаток %s отсутствует после импорта"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:331
+msgid "Missing required parameter 'fingerprint'"
+msgstr "Отсутствует обязательный параметр 'fingerprint'"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:349
+#, python-format
+msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
+msgstr "Удаление GPG-ключа %s (отпечаток %s) для цели=%s, has_private=%s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:383
+msgid "Key removed"
+msgstr "Ключ удален"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:389
+#, python-format
+msgid "gpg delete failed (rc=%s): %s"
+msgstr "Ошибка удаления gpg (код выхода=%s): %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:418
+msgid ""
+"Running gpg as a specific Windows user is not supported by the agent; "
+"imported into the current keyring instead."
+msgstr ""
+"Запуск gpg в качестве конкретного пользователя Windows не поддерживается "
+"агентом; ключ импортирован в текущий набор ключей вместо этого."
+
+#: src/sysmanage_agent/operations/gpg_operations.py:425
+#, python-format
+msgid "target user '%s' does not exist"
+msgstr "целевой пользователь '%s' не существует"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:433
+#, python-format
+msgid "could not prepare GNUPGHOME for user '%s'"
+msgstr "не удалось подготовить GNUPGHOME для пользователя '%s'"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -3302,13 +3436,13 @@ msgstr "KVM уже инициализирован"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Установка Homebrew требует ручного вмешательства. Установите с помощью: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Установка Homebrew требует ручного вмешательства. Установите с помощью: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -3930,7 +4064,8 @@ msgstr "Пользователь %s и группа по умолчанию ус
 #: src/sysmanage_agent/operations/user_account_operations.py:15
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
-msgstr "Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
+msgstr ""
+"Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:120
@@ -4561,11 +4696,11 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: "
-#~ "%s, лицензирован: %s)"
+#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: %s,"
+#~ " лицензирован: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4654,8 +4789,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -4814,8 +4948,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 #~ msgstr "Обнаружение обновлений прошивки fwupd"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
-#~ msgstr ""
-#~ "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
+#~ msgstr "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Обновления прошивки недоступны"
@@ -5000,9 +5133,6 @@ msgstr "Ошибка обнаружения разделов: %s"
 #~ msgid "List networks timed out"
 #~ msgstr "List networks timed out"
 
-#~ msgid "Bridge interface '%s' does not exist"
-#~ msgstr "Bridge interface '%s' does not exist"
-
 #~ msgid "Failed to define network"
 #~ msgstr "Failed to define network"
 
@@ -5072,8 +5202,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 #~ msgstr ""
-#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения "
-#~ "настроек"
+#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения настроек"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5146,8 +5275,7 @@ msgstr "Ошибка обнаружения разделов: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Обновление статуса виртуализации добавлено в очередь для отправки на "
-#~ "сервер"
+#~ "Обновление статуса виртуализации добавлено в очередь для отправки на сервер"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img не найден, попытка установки: %s"

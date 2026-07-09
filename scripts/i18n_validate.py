@@ -212,14 +212,70 @@ def cmd_extract() -> int:
     return 0
 
 
+def _clear_fuzzy(po_path: Path) -> None:
+    """Drop the ``fuzzy`` flag AND empty the msgstr on every fuzzy entry, so a
+    msgmerge GUESS becomes an honest empty gap that ``make translate`` refills
+    accurately (a non-empty fuzzy hides the gap from the completeness check)."""
+    if shutil.which("msgattrib"):
+        subprocess.run(  # nosec B603 B607
+            ["msgattrib", "--clear-fuzzy", "--empty", str(po_path), "-o", str(po_path)],
+            check=True,
+        )
+    else:
+        import polib  # noqa: PLC0415
+
+        pofile = polib.pofile(str(po_path))
+        for entry in pofile:
+            if "fuzzy" in entry.flags:
+                entry.flags.remove("fuzzy")
+                entry.msgstr = ""
+        pofile.save(str(po_path))
+
+
+def _seed_english(po_path: Path) -> None:
+    """English is the SOURCE, never a translation target (``make translate``
+    deliberately skips it), so seed ``msgstr = msgid`` for every empty entry —
+    otherwise the ``en`` locale fails the completeness check on new strings."""
+    if shutil.which("msgen"):
+        subprocess.run(  # nosec B603 B607
+            ["msgen", "--output-file", str(po_path), str(po_path)], check=True
+        )
+    else:
+        import polib  # noqa: PLC0415
+
+        pofile = polib.pofile(str(po_path))
+        changed = False
+        for entry in pofile:
+            if entry.msgid and not entry.obsolete and not entry.msgstr:
+                entry.msgstr = entry.msgid
+                changed = True
+        if changed:
+            pofile.save(str(po_path))
+
+
 def cmd_merge() -> int:
     if not POT_PATH.exists():
         print("FAIL: run --extract first to generate messages.pot", file=sys.stderr)
         return 1
     for lang in list_locales():
         po_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.po"
-        cmd = ["msgmerge", "--update", "--backup=none", str(po_path), str(POT_PATH)]
+        # --no-fuzzy-matching: never let msgmerge GUESS a translation from a
+        # similar string (guesses land `fuzzy`, which `make translate` skips and
+        # validate rejects) — new strings become honest empty gaps instead.
+        cmd = [
+            "msgmerge",
+            "--update",
+            "--backup=none",
+            "--no-fuzzy-matching",
+            str(po_path),
+            str(POT_PATH),
+        ]
         subprocess.run(cmd, check=True)  # nosec B603
+        # Also clear any PRE-EXISTING fuzzy guesses to honest gaps, and seed
+        # English (source == translation) so `en` never fails on new strings.
+        _clear_fuzzy(po_path)
+        if lang == "en":
+            _seed_english(po_path)
         print(f"OK: merged {lang}")
     return 0
 
@@ -269,6 +325,18 @@ def cmd_validate() -> int:
             failures += 1
     if failures:
         print(f"\nFAIL: {failures} issue(s)", file=sys.stderr)
+        print(
+            "\nTo fix, run these in order ('make translate' only fills EMPTY msgstr,\n"
+            "so new strings must first be merged in — i18n-merge also clears fuzzy\n"
+            "guesses and seeds English, which translate does not touch):\n"
+            "  make i18n-extract                              # source -> messages.pot\n"
+            "  make i18n-merge                                # .pot -> locale .po (add msgids, clear fuzzy, seed en)\n"
+            "  make translate SERVICE=http://<host>:8765      # fill foreign-language gaps via the GPU service\n"
+            "  make i18n-compile                              # .po -> .mo\n"
+            "  make i18n-validate                             # re-check (should pass)\n"
+            "(SERVICE also reads $TRANSLATION_SERVICE_URL; defaults to http://localhost:8765.)",
+            file=sys.stderr,
+        )
         return 1
     print(
         "\nOK: every code msgid is translated and fuzzy budget respected",

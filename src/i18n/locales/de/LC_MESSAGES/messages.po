@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-30 16:56-0400\n"
+"POT-Creation-Date: 2026-07-09 12:03-0400\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -237,7 +237,8 @@ msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:329
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr "Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
+msgstr ""
+"Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:334
 #, python-format
@@ -851,7 +852,8 @@ msgstr "Chocolatey-Katalog wird über Community-Repository-API abgerufen"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:187
 #, python-format
-msgid "Successfully collected %d packages from Chocolatey community repository"
+msgid ""
+"Successfully collected %d packages from Chocolatey community repository"
 msgstr "%d Pakete erfolgreich aus Chocolatey-Community-Repository gesammelt"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:194
@@ -2146,7 +2148,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Netzwerk-Autostart konnte nicht gesetzt werden: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:355
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Die Host-Registrierung wartet auf Genehmigung. Periodische Versuche werden "
 "fortgesetzt."
@@ -2241,169 +2244,173 @@ msgstr "WEBSOCKET Kommunikationsfehler: Verbindung zum Server geschlossen"
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNBEKANNTER_FEHLER: Fehler beim Empfang der Nachricht: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:603
+#: src/sysmanage_agent/communication/message_handler.py:605
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Unbekannter Befehlstyp: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:666
+#: src/sysmanage_agent/communication/message_handler.py:668
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Herzfrequenzversagen, Verbindung kann verloren gegangen sein"
 
-#: src/sysmanage_agent/communication/message_handler.py:675
+#: src/sysmanage_agent/communication/message_handler.py:677
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Update-Prüfer-Fehler: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:738
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "Ausgehende Nachricht in die Warteschlange gelegt: %s (ID: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:742
+#: src/sysmanage_agent/communication/message_handler.py:744
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "Aufgabe für die Warteschlange erstellen aus queue_outbound_message"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:749
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "Aufgabe aus der Warteschlange queue_outbound_message erstellt: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:751
+#: src/sysmanage_agent/communication/message_handler.py:753
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Direkte Nachrichtenübertragung fehlgeschlagen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:794
+#: src/sysmanage_agent/communication/message_handler.py:796
 msgid "Starting inbound queue processing"
 msgstr "Verbindung hergestellt, Warteschlangen-Verarbeitung wird gestartet"
 
-#: src/sysmanage_agent/communication/message_handler.py:817
+#: src/sysmanage_agent/communication/message_handler.py:819
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Fehler im Warteschlangen-Prozessor: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:827
+#: src/sysmanage_agent/communication/message_handler.py:829
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Nachricht als verarbeitend markiert: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:837
+#: src/sysmanage_agent/communication/message_handler.py:839
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "Verarbeitung der eingehenden Warteschlangebefehle: %s (queue_id: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:848
+#: src/sysmanage_agent/communication/message_handler.py:850
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "Firmware erfolgreich aktualisiert für: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:857
+#: src/sysmanage_agent/communication/message_handler.py:859
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Fehler bei der Verarbeitung der Warteschlangen-Nachricht %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:873
+#: src/sysmanage_agent/communication/message_handler.py:875
 msgid "Cannot send message: not connected to server"
 msgstr "Nachricht kann nicht gesendet werden: nicht mit Server verbunden"
 
-#: src/sysmanage_agent/communication/message_handler.py:881
+#: src/sysmanage_agent/communication/message_handler.py:883
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Direkte Nachrichtenübertragung fehlgeschlagen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:893
+#: src/sysmanage_agent/communication/message_handler.py:895
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "Aufruf des Ausgehenden Warteschlangenprozessors, aktueller Status: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:897
+#: src/sysmanage_agent/communication/message_handler.py:899
 msgid "Queue processor already running, exiting"
 msgstr "Warteschlangenprozessor ist bereits aktiv, verlasse Programm"
 
-#: src/sysmanage_agent/communication/message_handler.py:901
+#: src/sysmanage_agent/communication/message_handler.py:903
 msgid "Starting outbound queue processing"
 msgstr "Verbindung hergestellt, Warteschlangen-Verarbeitung wird gestartet"
 
-#: src/sysmanage_agent/communication/message_handler.py:902
+#: src/sysmanage_agent/communication/message_handler.py:904
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "Fehler beim Sammeln der apt-Pakete: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:928
+#: src/sysmanage_agent/communication/message_handler.py:930
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Fehler im Warteschlangen-Prozessor: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:953
+#: src/sysmanage_agent/communication/message_handler.py:955
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "Erfolgreich ausgeführt: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:970
+#: src/sysmanage_agent/communication/message_handler.py:972
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Fehler bei der Verarbeitung der Warteschlangen-Nachricht %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:985
+#: src/sysmanage_agent/communication/message_handler.py:987
 msgid "Connection established, starting queue processing"
 msgstr "Verbindung hergestellt, Warteschlangen-Verarbeitung wird gestartet"
 
-#: src/sysmanage_agent/communication/message_handler.py:992
+#: src/sysmanage_agent/communication/message_handler.py:994
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "%d hängende Nachrichten wiederhergestellt"
 
-#: src/sysmanage_agent/communication/message_handler.py:996
+#: src/sysmanage_agent/communication/message_handler.py:998
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Fehler beim Wiederherstellen von verkeilten Nachrichten: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1002
+#: src/sysmanage_agent/communication/message_handler.py:1004
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr ""
-"Aufgabe für die Ausgangswarteschlange erstellen aus on_connection_established"
+"Aufgabe für die Ausgangswarteschlange erstellen aus "
+"on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1010
+#: src/sysmanage_agent/communication/message_handler.py:1012
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1015
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Fehler beim Trennen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1021
+#: src/sysmanage_agent/communication/message_handler.py:1023
 msgid "Outbound queue processor already running, not starting another"
 msgstr ""
-"Ausgehender Warteschlangenprozessor ist bereits aktiv, starte keinen weiteren"
+"Ausgehender Warteschlangenprozessor ist bereits aktiv, starte keinen "
+"weiteren"
 
-#: src/sysmanage_agent/communication/message_handler.py:1028
+#: src/sysmanage_agent/communication/message_handler.py:1030
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr ""
-"Aufgabe für die Eingangswarteschlange erstellen aus on_connection_established"
+"Aufgabe für die Eingangswarteschlange erstellen aus "
+"on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1036
+#: src/sysmanage_agent/communication/message_handler.py:1038
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1041
+#: src/sysmanage_agent/communication/message_handler.py:1043
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Fehler beim Trennen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1047
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Inbound queue processor already running, not starting another"
 msgstr ""
-"Eingehender Warteschlangenprozessor ist bereits aktiv, starte keinen weiteren"
+"Eingehender Warteschlangenprozessor ist bereits aktiv, starte keinen "
+"weiteren"
 
-#: src/sysmanage_agent/communication/message_handler.py:1055
+#: src/sysmanage_agent/communication/message_handler.py:1057
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "Verbindung hergestellt, Warteschlangen-Verarbeitung wird gestartet"
 
-#: src/sysmanage_agent/communication/message_handler.py:1122
+#: src/sysmanage_agent/communication/message_handler.py:1124
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Fehler beim Schließen des Nachrichten-Handlers: %s"
@@ -2488,138 +2495,138 @@ msgstr "Authentifizierung fehlgeschlagen mit Status %s: %s"
 msgid "Received command: %s with parameters: %s"
 msgstr "Befehl empfangen: %s mit Parametern: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:384
+#: src/sysmanage_agent/core/agent_utils.py:387
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "Skriptausführungs-UUID %s bereits verarbeitet, Duplikat wird übersprungen"
 
-#: src/sysmanage_agent/core/agent_utils.py:421
+#: src/sysmanage_agent/core/agent_utils.py:424
 msgid "Generic command missing nested command_type"
 msgstr "Generischer Befehl fehlt verschachtelter command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:433
+#: src/sysmanage_agent/core/agent_utils.py:436
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Unbekannter Befehlstyp: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:491
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr ""
 "Skriptausführungsergebnis für execution_id in Warteschlange eingereiht: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:495
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Fehler beim Sammeln der Homebrew-Pakete: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:511
+#: src/sysmanage_agent/core/agent_utils.py:514
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fehler bei der Partitionserkennung: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:525
+#: src/sysmanage_agent/core/agent_utils.py:528
 msgid "No execution UUID provided, cannot track"
 msgstr "Keine Ausführungs-UUID angegeben, kann nicht verfolgt werden"
 
-#: src/sysmanage_agent/core/agent_utils.py:540
+#: src/sysmanage_agent/core/agent_utils.py:543
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Ausführungs-UUID %s existiert bereits in der Datenbank"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "Ausführungs-UUID %s für Verfolgung gespeichert"
 
-#: src/sysmanage_agent/core/agent_utils.py:565
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fehler bei der Partitionserkennung: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:597
+#: src/sysmanage_agent/core/agent_utils.py:600
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "Dienststeuerung angefordert: %s für Dienste: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:630
+#: src/sysmanage_agent/core/agent_utils.py:633
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fehler im Dienststeuerungs-Handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:654
+#: src/sysmanage_agent/core/agent_utils.py:657
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "%s wird für Dienst ausgeführt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:665
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "Dienst %s erfolgreich %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:675
+#: src/sysmanage_agent/core/agent_utils.py:678
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Fehler beim %s des Dienstes %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:682
+#: src/sysmanage_agent/core/agent_utils.py:685
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Zeitüberschreitung bei Dienststeuerung für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:688
+#: src/sysmanage_agent/core/agent_utils.py:691
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Dienststeuerungsfehler für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:750
+#: src/sysmanage_agent/core/agent_utils.py:753
 msgid "Triggering role collection after service control"
 msgstr "Rollensammlung nach Dienststeuerung wird ausgelöst"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:757
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Fehler beim Aktualisieren der Rollen nach Dienststeuerung: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:770
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "Statusabfrage für Dienst angefordert: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:793
+#: src/sysmanage_agent/core/agent_utils.py:796
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fehler im Dienststatus-Handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:806
+#: src/sysmanage_agent/core/agent_utils.py:809
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "Status für Dienst wird geprüft: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:826
+#: src/sysmanage_agent/core/agent_utils.py:829
 #, python-format
 msgid "Service %s status: %s"
 msgstr "Dienst %s Status: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:836
+#: src/sysmanage_agent/core/agent_utils.py:839
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Zeitüberschreitung bei Dienststatusabfrage für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:849
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Dienststatusfehler für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1124
+#: src/sysmanage_agent/core/agent_utils.py:1127
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Konnte synthetisches command_result für In-Flight-Journal nicht in "
 "Warteschlange stellen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1130
+#: src/sysmanage_agent/core/agent_utils.py:1133
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "In-Flight-Journal-Abgleich: %d aktiv, %d beendet"
@@ -2782,7 +2789,8 @@ msgstr ""
 "Windows-Systemereignisprotokoll (dies kann 10-30 Sekunden dauern) sammeln..."
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:346
-msgid "Collecting Windows Security Event Log (may require admin privileges)..."
+msgid ""
+"Collecting Windows Security Event Log (may require admin privileges)..."
 msgstr ""
 "Windows-Sicherheitsereignisprotokoll (kann Administratorrechte erfordern) "
 "sammeln..."
@@ -2960,6 +2968,57 @@ msgstr "Fehler beim Hinzufügen des Benutzers zu Gruppen: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "Die Verwaltung von Child-Hosts erfordert Pro+ (Engine-Pfad)."
 
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#, python-format
+msgid "Synced custom metrics: %d active, %d skipped (invalid)"
+msgstr ""
+"Synchronisierte benutzerdefinierte Metriken: %d aktiv, %d ignoriert (nicht "
+"gültig)"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#, python-format
+msgid "Failed to persist custom metrics: %s"
+msgstr "Kann die benutzerdefinierten Metriken nicht speichern: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#, python-format
+msgid "Failed to load persisted custom metrics: %s"
+msgstr "Kann die gespeicherten benutzerdefinierten Metriken nicht laden: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#, python-format
+msgid "Loaded %d persisted custom metric(s) at startup"
+msgstr "Lade %d persistierte benutzerdefinierte Metrik(e) beim Starten"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#, python-format
+msgid "interpreter '%s' not available on this host"
+msgstr "Interpreter '%s' nicht auf diesem Host verfügbar"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#, python-format
+msgid "failed to run metric: %s"
+msgstr "Metric-Ausführung fehlgeschlagen: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#, python-format
+msgid "script exited with code %s"
+msgstr "Skript beendet mit Code %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+msgid "script stdout was not a single numeric value"
+msgstr "Ausgabe von Skript war kein einzelnes numerisches Wert"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#, python-format
+msgid "Custom-metrics scheduler error: %s"
+msgstr "Fehler im Custom-Metrics-Scheduler: %s"
+
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#, python-format
+msgid "Failed to send custom metric samples: %s"
+msgstr "Konnte keine benutzerdefinierten Metrik-Proben senden: %s"
+
 #: src/sysmanage_agent/operations/firewall_collector.py:57
 #, python-format
 msgid "Unsupported system for firewall detection: %s"
@@ -3030,6 +3089,82 @@ msgstr "FileNotFoundError: %s"
 #: src/sysmanage_agent/operations/generic_deployment.py:1204
 msgid "timeout"
 msgstr "Zeitüberschreitung"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:116
+#, python-format
+msgid "Could not create GNUPGHOME %s for user %s: %s"
+msgstr "Konnte GNUPGHOME %s für Benutzer %s nicht erstellen: %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:220
+msgid "Missing required parameter 'armored_key'"
+msgstr "Fehlender erforderlicher Parameter 'armored_key'"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:228
+#: src/sysmanage_agent/operations/gpg_operations.py:339
+msgid "gpg binary not found on this host"
+msgstr "gpg-Binärdatei wurde auf diesem Host nicht gefunden"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:236
+#, python-format
+msgid "Importing GPG key %s (fingerprint %s) for target=%s"
+msgstr "Importiere GPG-Schlüssel %s (Fingerabdruck %s) für Ziel=%s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:274
+#, python-format
+msgid "gpg import failed (rc=%s): %s"
+msgstr "gpg-Import-Fehler (rc=%s): %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:286
+msgid "Key imported and verified present"
+msgstr "Schlüssel importiert und erfolgreich verifiziert"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:288
+msgid "gpg import returned success but fingerprint not found"
+msgstr ""
+"gpg-Import war erfolgreich, aber Fingerabdruck konnte nicht gefunden werden"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:294
+#, python-format
+msgid "fingerprint %s not present after import"
+msgstr "Fingerabdruck %s ist nach dem Import nicht vorhanden"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:331
+msgid "Missing required parameter 'fingerprint'"
+msgstr "Fehlender erforderlicher Parameter 'fingerprint'"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:349
+#, python-format
+msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
+msgstr ""
+"Entferne GPG-Schlüssel %s (Fingerabdruck %s) für Ziel=%s, has_private=%s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:383
+msgid "Key removed"
+msgstr "Schlüssel entfernt"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:389
+#, python-format
+msgid "gpg delete failed (rc=%s): %s"
+msgstr "gpg-Delete-Fehler (rc=%s): %s"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:418
+msgid ""
+"Running gpg as a specific Windows user is not supported by the agent; "
+"imported into the current keyring instead."
+msgstr ""
+"Das Ausführen von gpg als spezifischer Windows-Benutzer wird vom Agenten "
+"nicht unterstützt; Schlüssel wurde stattdessen in der aktuellen "
+"Schlüsselsammlung importiert."
+
+#: src/sysmanage_agent/operations/gpg_operations.py:425
+#, python-format
+msgid "target user '%s' does not exist"
+msgstr "Zielbenutzer '%s' existiert nicht"
+
+#: src/sysmanage_agent/operations/gpg_operations.py:433
+#, python-format
+msgid "could not prepare GNUPGHOME for user '%s'"
+msgstr "konnte GNUPGHOME nicht für Benutzer '%s' vorbereiten"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:41
 msgid "No hostname specified"
@@ -3327,13 +3462,13 @@ msgstr "KVM ist bereits initialisiert"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:302
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "Die Homebrew-Installation erfordert manuelle Eingriffe. Bitte installieren "
-"Sie mit: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
-"Homebrew/install/HEAD/install.sh)\""
+"Sie mit: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:314
 msgid "Chocolatey is only supported on Windows systems"
@@ -3956,7 +4091,8 @@ msgstr "Benutzer %s und Standardgruppe erfolgreich gelöscht"
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
 msgstr ""
-"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: %s"
+"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: "
+"%s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:34
 #: src/sysmanage_agent/operations/user_account_operations.py:120
@@ -4362,13 +4498,14 @@ msgstr "Registrierung erhalten, aber Bestätigung noch ausstehend"
 msgid ""
 "Registration success but no host_id provided - approval may come separately"
 msgstr ""
-"Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - Genehmigung "
-"kann separat erfolgen"
+"Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - Genehmigung"
+" kann separat erfolgen"
 
 #: src/sysmanage_agent/registration/registration_manager.py:209
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr "Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
+msgstr ""
+"Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:221
 #, python-format
@@ -4504,8 +4641,7 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
-#~ msgstr ""
-#~ "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
+#~ msgstr "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -4592,11 +4728,11 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, "
-#~ "aktiviert: %s, lizenziert: %s)"
+#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, aktiviert: "
+#~ "%s, lizenziert: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4648,8 +4784,7 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 #, python-format
 #~ msgid "Found %d OpenBSD system patches (combined into single update)"
 #~ msgstr ""
-#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update "
-#~ "zusammengefasst)"
+#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update zusammengefasst)"
 
 #, python-format
 #~ msgid "Current OpenBSD version: %s"
@@ -4725,8 +4860,8 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
 #~ msgstr ""
-#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. "
-#~ "Manuelle Installation erforderlich."
+#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. Manuelle"
+#~ " Installation erforderlich."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4946,8 +5081,8 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
 #~ msgstr ""
-#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert "
-#~ "möglicherweise trotzdem"
+#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert möglicherweise "
+#~ "trotzdem"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "Autoinstall HTTP-Server gestoppt"
@@ -4972,13 +5107,12 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
 #~ msgstr ""
-#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch "
-#~ "Autoinstall"
+#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch Autoinstall"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 #~ msgstr ""
-#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet "
-#~ "(NICHT EMPFOHLEN)"
+#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet (NICHT "
+#~ "EMPFOHLEN)"
 
 #~ msgid "Port already in use"
 #~ msgstr "Port bereits in Verwendung"
@@ -5066,8 +5200,8 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/"
-#~ "kvm existiert und CPU-Virtualisierung im BIOS aktiviert ist."
+#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/kvm"
+#~ " existiert und CPU-Virtualisierung im BIOS aktiviert ist."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM ist bereits initialisiert und einsatzbereit"
@@ -5096,9 +5230,6 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #~ msgid "List networks timed out"
 #~ msgstr "List networks timed out"
-
-#~ msgid "Bridge interface '%s' does not exist"
-#~ msgstr "Bridge interface '%s' does not exist"
 
 #~ msgid "Failed to define network"
 #~ msgstr "Failed to define network"
@@ -5250,8 +5381,8 @@ msgstr "Fehler bei der Partitionserkennung: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Virtualisierungsstatus-Update für den Versand an den Server in "
-#~ "Warteschlange gestellt"
+#~ "Virtualisierungsstatus-Update für den Versand an den Server in Warteschlange"
+#~ " gestellt"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img nicht gefunden, versuche zu installieren: %s"

@@ -78,6 +78,14 @@ class SystemOperationsDelegator:
         """Deploy files to the filesystem."""
         return await self.system_ops.deploy_files(parameters)
 
+    async def install_gpg_key(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Import a GPG key into the target user's/host keyring."""
+        return await self.system_ops.install_gpg_key(parameters)
+
+    async def remove_gpg_key(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove a GPG key from the target user's/host keyring."""
+        return await self.system_ops.remove_gpg_key(parameters)
+
     async def execute_command_sequence(
         self, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -355,6 +363,10 @@ class MiscDelegator:
     async def execute_script(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a script with proper security controls."""
         return await self.script_ops.execute_script(parameters)
+
+    async def sync_custom_metrics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Replace the agent's custom-metric set with the server's set."""
+        return await self.custom_metrics_ops.sync_custom_metrics(parameters)
 
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server."""

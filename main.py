@@ -43,6 +43,9 @@ from src.sysmanage_agent.core.agent_utils import (
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
 from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
+from src.sysmanage_agent.operations.custom_metrics_operations import (
+    CustomMetricsOperations,
+)
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.operations.update_manager import UpdateManager
@@ -154,6 +157,7 @@ class SysManageAgent(
         self.update_manager = UpdateManager(self)
         self.system_ops = SystemOperations(self)
         self.script_ops = ScriptOperations(self)
+        self.custom_metrics_ops = CustomMetricsOperations(self)
         self.child_host_ops = ChildHostOperations(self)
 
         # Initialize diagnostic collector
@@ -662,6 +666,12 @@ class SysManageAgent(
         package_collector_task = asyncio.create_task(self.package_collector())
         child_host_heartbeat_task = asyncio.create_task(self.child_host_heartbeat())
         queue_cleanup_task = asyncio.create_task(self._queue_cleanup_loop())
+        # Custom Metrics & Graphs Slice 3: load the persisted enabled set and
+        # run the per-cadence scheduler as a background task.
+        self.custom_metrics_ops.load_persisted_metrics()
+        custom_metrics_task = asyncio.create_task(
+            self.custom_metrics_ops.run_metrics_loop()
+        )
 
         done, pending = await asyncio.wait(
             [sender_task, receiver_task],
@@ -675,6 +685,7 @@ class SysManageAgent(
             package_collector_task,
             child_host_heartbeat_task,
             queue_cleanup_task,
+            custom_metrics_task,
         ]
         for task in background_tasks:
             task.cancel()
