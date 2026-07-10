@@ -239,33 +239,11 @@ class GpgOperations:
             target_username or "<host>",
         )
 
-        # Write the armored material to a 0600 temp file, import, then always
-        # delete it.  The material never touches a log line or an argv.
-        tmp_path = None
-        try:
-            file_descriptor, tmp_path = tempfile.mkstemp(prefix=".sysmanage_gpg_")
-            os.close(file_descriptor)
-            os.chmod(tmp_path, 0o600)
-            with open(tmp_path, "w", encoding="utf-8") as handle:
-                handle.write(armored_key)
-            # If we run as another user, that user must be able to read the
-            # temp file.  Make it world-readable *content-wise* is risky, so
-            # instead we chown it to the target user when possible.
-            if gnupghome and target_username and platform.system() != "Windows":
-                self._chown_to_user(tmp_path, target_username)
-
-            returncode, _out, err = await self._run_gpg(
-                gpg_path,
-                ["--batch", "--import", tmp_path],
-                target_username=target_username,
-                gnupghome=gnupghome,
-            )
-        finally:
-            if tmp_path and os.path.exists(tmp_path):
-                try:
-                    os.unlink(tmp_path)
-                except OSError:
-                    self.logger.debug("Could not remove gpg temp file %s", tmp_path)
+        # Import the armored material via a transient 0600 temp file (never
+        # logged, never an argv); the helper always cleans it up.
+        returncode, err = await self._import_armored_via_tempfile(
+            gpg_path, armored_key, target_username, gnupghome
+        )
 
         if returncode != 0:
             return {
@@ -295,6 +273,45 @@ class GpgOperations:
                 fingerprint,
             )
         return result
+
+    async def _import_armored_via_tempfile(
+        self,
+        gpg_path: str,
+        armored_key: str,
+        target_username,
+        gnupghome,
+    ):
+        """Import ``armored_key`` via a transient 0600 temp file.
+
+        Writes the material to a mode-0600 temp file (via the mkstemp fd — not
+        the sync builtin open(), which blocks the event loop), chowns it to the
+        target user when importing into another user's keyring, runs
+        ``gpg --batch --import``, and ALWAYS unlinks the temp file.  Returns
+        ``(returncode, stderr)``.  The material never touches a log line or argv.
+        """
+        tmp_path = None
+        try:
+            file_descriptor, tmp_path = tempfile.mkstemp(prefix=".sysmanage_gpg_")
+            try:
+                os.write(file_descriptor, armored_key.encode("utf-8"))
+            finally:
+                os.close(file_descriptor)
+            os.chmod(tmp_path, 0o600)
+            if gnupghome and target_username and platform.system() != "Windows":
+                self._chown_to_user(tmp_path, target_username)
+            returncode, _out, err = await self._run_gpg(
+                gpg_path,
+                ["--batch", "--import", tmp_path],
+                target_username=target_username,
+                gnupghome=gnupghome,
+            )
+            return returncode, err
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    self.logger.debug("Could not remove gpg temp file %s", tmp_path)
 
     # ================================================================
     # remove_gpg_key handler

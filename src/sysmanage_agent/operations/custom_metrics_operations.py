@@ -113,7 +113,7 @@ class CustomMetricsOperations:
             self._metrics = normalized
             # Reset run bookkeeping: brand-new metrics fire on the next tick,
             # dropped metrics stop firing.
-            self._last_run = {mid: None for mid in normalized}
+            self._last_run = dict.fromkeys(normalized)
 
         # Persist the new set so it survives a restart.
         self._persist_metrics(normalized)
@@ -215,7 +215,7 @@ class CustomMetricsOperations:
             return 0
 
         self._metrics = loaded
-        self._last_run = {mid: None for mid in loaded}
+        self._last_run = dict.fromkeys(loaded)
         if loaded:
             self.logger.info(
                 _("Loaded %d persisted custom metric(s) at startup"), len(loaded)
