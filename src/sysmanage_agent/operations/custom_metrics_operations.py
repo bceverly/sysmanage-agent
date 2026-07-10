@@ -79,8 +79,22 @@ class CustomMetricsOperations:
         self._last_run: Dict[str, Optional[float]] = {}
 
         # Guards mutation of the metric set from the sync handler vs the
-        # scheduler loop.
-        self._lock = asyncio.Lock()
+        # scheduler loop.  Created lazily on first use: instantiating
+        # asyncio.Lock() here raises "no current event loop" on Python 3.9
+        # (this class is built during the agent's *sync* __init__); 3.10+
+        # binds the running loop lazily on first await anyway.
+        self._lock: Optional[asyncio.Lock] = None
+
+    def _get_lock(self) -> asyncio.Lock:
+        """Return the mutation lock, creating it on first (async) use.
+
+        Deferred so construction works under Python 3.9, where ``asyncio.Lock()``
+        requires a running event loop at instantiation time.  Safe without extra
+        guarding: asyncio is single-threaded, so the None-check and assignment
+        are atomic (no await between them)."""
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     # ================================================================
     # sync_custom_metrics handler
@@ -109,7 +123,7 @@ class CustomMetricsOperations:
                 continue
             normalized[metric["metric_id"]] = metric
 
-        async with self._lock:
+        async with self._get_lock():
             self._metrics = normalized
             # Reset run bookkeeping: brand-new metrics fire on the next tick,
             # dropped metrics stop firing.
@@ -374,7 +388,7 @@ class CustomMetricsOperations:
         # Snapshot the due metrics under the lock so a concurrent sync can't
         # mutate the dict mid-iteration.
         due: List[Dict[str, Any]] = []
-        async with self._lock:
+        async with self._get_lock():
             for metric_id, metric in self._metrics.items():
                 last = self._last_run.get(metric_id)
                 if last is None or (now - last) >= metric["cadence_seconds"]:

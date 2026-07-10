@@ -159,7 +159,7 @@ class GraylogCollector:
     def _is_windows_sidecar_running(self) -> bool:
         """Check if the Graylog Sidecar Windows service is running."""
         try:
-            result = subprocess.run(  # nosec B603, B607 - safe: hardcoded args, no user input
+            result = subprocess.run(  # nosec B603, B607 # Safe: hardcoded args, no user input
                 ["sc", "query", "graylog-sidecar"],
                 capture_output=True,
                 text=True,
@@ -368,7 +368,7 @@ class GraylogCollector:
             True if service is running, False otherwise
         """
         try:
-            result = subprocess.run(  # nosec B603, B607 - safe: hardcoded args, service_name validated
+            result = subprocess.run(  # nosec B603, B607 # Safe: hardcoded args, service_name validated
                 ["systemctl", "is-active", service_name],
                 capture_output=True,
                 text=True,
