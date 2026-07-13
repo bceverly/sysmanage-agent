@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.7', '7.8']
+        openbsd-version: ['7.7', '7.8', '7.9']
 
     steps:
       - name: Checkout code
