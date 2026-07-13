@@ -11,23 +11,32 @@ import logging
 import logging.handlers
 import os
 import platform
+import socket
 from typing import Optional
 
 # BSD variants whose syslog socket is /dev/log (like Linux).
 _BSD_SYSTEMS = {"FreeBSD", "OpenBSD", "NetBSD", "DragonFly"}
 
 
-def build_native_handler(
+def build_native_handler(  # pylint: disable=too-many-arguments,too-many-return-statements
     target: str = "auto",
     identifier: str = "sysmanage-agent",
     system: Optional[str] = None,
+    *,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    facility: Optional[str] = None,
+    protocol: Optional[str] = None,
 ) -> Optional[logging.Handler]:
     """Build a platform-native log handler.
 
-    ``target``: ``auto`` | ``journald`` | ``syslog`` | ``eventlog`` | ``none``.
-    ``auto`` picks journald on Linux (falling back to syslog), the Windows Event
-    Log on Windows, and syslog on macOS/BSD.  Returns ``None`` if the sink can't
-    be created (e.g. missing ``systemd``/``pywin32``, no syslog socket).
+    ``target``: ``auto`` | ``journald`` | ``syslog`` | ``syslog_remote`` |
+    ``eventlog`` | ``none``.  ``auto`` picks journald on Linux (falling back to
+    syslog), the Windows Event Log on Windows, and syslog on macOS/BSD.
+    ``syslog_remote`` forwards over the network to ``host``:``port`` (Phase 14.5)
+    and uses ``facility`` / ``protocol`` (udp|tcp).  Returns ``None`` if the sink
+    can't be created (missing ``systemd``/``pywin32``, no syslog socket, or —
+    for ``syslog_remote`` — no host).
     """
     system = system or platform.system()
     target = (target or "auto").lower()
@@ -42,9 +51,51 @@ def build_native_handler(
         return _journald_handler(identifier) or _syslog_handler(identifier, system)
     if target == "syslog":
         return _syslog_handler(identifier, system)
+    if target == "syslog_remote":
+        return _syslog_remote_handler(identifier, host, port, facility, protocol)
     if target == "eventlog":
         return _eventlog_handler(identifier, system)
     return None
+
+
+def _syslog_remote_handler(
+    identifier: str,
+    host: Optional[str],
+    port: Optional[int],
+    facility: Optional[str],
+    protocol: Optional[str],
+) -> Optional[logging.Handler]:
+    """SysLogHandler forwarding to a REMOTE host:port over UDP/TCP (Phase 14.5).
+
+    ``None`` when no host is configured or the socket can't be created — the
+    caller keeps file logging, so a bad remote target never stops the agent.
+    """
+    if not host:
+        return None
+    try:
+        port_num = int(port) if port else 514
+    except (TypeError, ValueError):
+        port_num = 514
+    socktype = (
+        socket.SOCK_STREAM
+        if (protocol or "udp").lower() == "tcp"
+        else socket.SOCK_DGRAM
+    )
+    facility_val = logging.handlers.SysLogHandler.LOG_USER
+    if facility:
+        facility_val = logging.handlers.SysLogHandler.facility_names.get(
+            facility.lower(), logging.handlers.SysLogHandler.LOG_USER
+        )
+    try:
+        handler = logging.handlers.SysLogHandler(
+            address=(host, port_num), facility=facility_val, socktype=socktype
+        )
+    except OSError:  # ConnectionError is an OSError subclass (TCP connect fail)
+        return None
+    handler.setFormatter(
+        logging.Formatter(f"{identifier}[%(process)d]: %(levelname)s %(message)s")
+    )
+    return handler
 
 
 def _auto_target(system: str) -> str:

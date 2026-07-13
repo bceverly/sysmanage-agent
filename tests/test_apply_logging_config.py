@@ -23,6 +23,12 @@ def agent(tmp_path):
     cfg.get_log_native.return_value = False
     cfg.get_log_native_target.return_value = "auto"
     cfg.get_log_native_identifier.return_value = "sysmanage-agent"
+    # Remote-syslog getters default to unset (Phase 14.5); a MagicMock default
+    # would be truthy and leak into build_native_handler's kwargs.
+    cfg.get_log_syslog_host.return_value = None
+    cfg.get_log_syslog_port.return_value = None
+    cfg.get_log_syslog_facility.return_value = None
+    cfg.get_log_syslog_protocol.return_value = None
     inst.config = cfg
     return inst
 
@@ -77,7 +83,14 @@ class TestApplyLoggingConfig:
                     "native_identifier": "sm",
                 }
             )
-        build_m.assert_called_once_with(target="syslog", identifier="sm")
+        build_m.assert_called_once_with(
+            target="syslog",
+            identifier="sm",
+            host=None,
+            port=None,
+            facility=None,
+            protocol=None,
+        )
         assert fake in logging.getLogger().handlers
 
     def test_yaml_used_when_no_override(self, agent):
@@ -90,4 +103,39 @@ class TestApplyLoggingConfig:
             agent_main, "build_native_handler", return_value=fake
         ) as build_m:
             agent.setup_logging()
-        build_m.assert_called_once_with(target="journald", identifier="sysmanage-agent")
+        build_m.assert_called_once_with(
+            target="journald",
+            identifier="sysmanage-agent",
+            host=None,
+            port=None,
+            facility=None,
+            protocol=None,
+        )
+
+    def test_remote_syslog_override_passes_remote_params(self, agent):
+        """A syslog_remote push forwards host/port/facility/protocol to the builder."""
+        fake = logging.StreamHandler()
+        with patch.object(
+            agent_main, "build_native_handler", return_value=fake
+        ) as build_m:
+            agent.apply_logging_config(
+                {
+                    "log_level": "INFO",
+                    "native_enabled": True,
+                    "native_target": "syslog_remote",
+                    "native_identifier": "sm",
+                    "syslog_host": "loghost.example",
+                    "syslog_port": 6514,
+                    "syslog_facility": "local0",
+                    "syslog_protocol": "tcp",
+                }
+            )
+        build_m.assert_called_once_with(
+            target="syslog_remote",
+            identifier="sm",
+            host="loghost.example",
+            port=6514,
+            facility="local0",
+            protocol="tcp",
+        )
+        assert fake in logging.getLogger().handlers

@@ -192,6 +192,22 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         """Identifier/tag used for native log entries."""
         return self.get("logging.native_identifier", "sysmanage-agent")
 
+    def get_log_syslog_host(self) -> Optional[str]:
+        """Remote syslog host for native_target=syslog_remote (Phase 14.5)."""
+        return self.get("logging.syslog_host", None)
+
+    def get_log_syslog_port(self) -> Optional[int]:
+        """Remote syslog port (defaults to 514 in the handler when unset)."""
+        return self.get("logging.syslog_port", None)
+
+    def get_log_syslog_facility(self) -> Optional[str]:
+        """Remote syslog facility name (e.g. ``local0``); defaults to ``user``."""
+        return self.get("logging.syslog_facility", None)
+
+    def get_log_syslog_protocol(self) -> Optional[str]:
+        """Remote syslog transport: ``udp`` (default) or ``tcp``."""
+        return self.get("logging.syslog_protocol", None)
+
     def should_auto_reconnect(self) -> bool:
         """Check if WebSocket should auto-reconnect."""
         return self.get("websocket.auto_reconnect", True)

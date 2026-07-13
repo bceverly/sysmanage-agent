@@ -3319,7 +3319,7 @@ release-notes:
 
 # Deploy to Launchpad PPA
 # Usage: LAUNCHPAD_RELEASES="noble jammy" make deploy-launchpad
-# Default releases: resolute questing plucky oracular noble jammy
+# Default releases: resolute noble jammy
 deploy-launchpad:
 	@echo "=================================================="
 	@echo "Deploy to Launchpad PPA"
@@ -3338,7 +3338,7 @@ deploy-launchpad:
 		fi; \
 	fi; \
 	\
-	RELEASES="$${LAUNCHPAD_RELEASES:-resolute questing plucky oracular noble jammy}"; \
+	RELEASES="$${LAUNCHPAD_RELEASES:-resolute noble jammy}"; \
 	echo "Target releases: $$RELEASES"; \
 	echo "Version: $$VERSION"; \
 	echo ""; \
@@ -3402,8 +3402,7 @@ deploy-launchpad:
 		\
 		case "$$RELEASE" in \
 			jammy) PYTHON_VERSION="3.10" ;; \
-			noble|oracular) PYTHON_VERSION="3.12" ;; \
-			plucky|questing) PYTHON_VERSION="3.13" ;; \
+			noble) PYTHON_VERSION="3.12" ;; \
 			resolute) PYTHON_VERSION="3.14" ;; \
 			*) PYTHON_VERSION="3.12" ;; \
 		esac; \

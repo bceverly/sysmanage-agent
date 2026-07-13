@@ -68,6 +68,10 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         """Shutdown the system."""
         return await self.system_control.shutdown_system()
 
+    async def release_upgrade(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform a distro release-upgrade (Phase 14.3)."""
+        return await self.system_control.release_upgrade(parameters)
+
     async def update_agent(self) -> Dict[str, Any]:
         """Update the sysmanage-agent to the latest version."""
         return await self.system_control.update_agent()

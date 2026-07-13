@@ -790,3 +790,73 @@ class TestUpdateAgentFreebsd:
         ):
             result = await system_control._update_agent_freebsd()
         assert result["success"] is False
+
+
+class TestReleaseUpgrade:
+    """Tests for release_upgrade (Phase 14.3 distro release-upgrade)."""
+
+    @pytest.mark.asyncio
+    async def test_ubuntu_do_release_upgrade(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as mock_exec:
+            result = await system_control.release_upgrade(
+                {"method": "do-release-upgrade", "to_version": "24.04", "job_id": "j1"}
+            )
+        assert result["success"] is True
+        cmd = mock_exec.call_args[0][0]["command"]
+        assert "do-release-upgrade" in cmd
+        assert "DistUpgradeViewNonInteractive" in cmd
+
+    @pytest.mark.asyncio
+    async def test_dnf_system_upgrade_uses_releasever(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as mock_exec:
+            await system_control.release_upgrade(
+                {"method": "dnf-system-upgrade", "to_version": "9", "job_id": "j2"}
+            )
+        cmd = mock_exec.call_args[0][0]["command"]
+        assert "system-upgrade download --releasever=9" in cmd
+        assert "system-upgrade reboot" in cmd
+
+    @pytest.mark.asyncio
+    async def test_dnf_requires_version(self, system_control):
+        result = await system_control.release_upgrade(
+            {"method": "dnf-system-upgrade", "to_version": None}
+        )
+        assert result["success"] is False
+
+    @pytest.mark.asyncio
+    async def test_zypper_dup(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as mock_exec:
+            await system_control.release_upgrade({"method": "zypper-dup"})
+        assert "zypper" in mock_exec.call_args[0][0]["command"]
+        assert "dup" in mock_exec.call_args[0][0]["command"]
+
+    @pytest.mark.asyncio
+    async def test_freebsd_update_quotes_version(self, system_control):
+        with patch.object(
+            system_control,
+            "execute_shell_command",
+            new=AsyncMock(return_value={"success": True}),
+        ) as mock_exec:
+            await system_control.release_upgrade(
+                {"method": "freebsd-update", "to_version": "14.1-RELEASE"}
+            )
+        cmd = mock_exec.call_args[0][0]["command"]
+        assert "freebsd-update -r 14.1-RELEASE upgrade" in cmd
+
+    @pytest.mark.asyncio
+    async def test_unknown_method(self, system_control):
+        result = await system_control.release_upgrade({"method": "bogus"})
+        assert result["success"] is False
+        assert "bogus" in result["error"]

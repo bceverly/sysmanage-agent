@@ -6,6 +6,7 @@ Handles system control commands like shell execution, reboot, shutdown, and syst
 import asyncio
 import logging
 import platform
+import shlex
 import socket
 from typing import Any, Dict
 
@@ -204,6 +205,69 @@ class SystemControl:
         except Exception as error:
             self.logger.error(_("Failed to shutdown system: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def release_upgrade(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform a distro release-upgrade (Phase 14.3).
+
+        The server's ``lifecycle_engine`` has already inferred the upgrade
+        method and target version and recorded a ``ReleaseUpgradeJob``; here the
+        agent runs the matching non-interactive upgrade command.  These are
+        long-running and usually reboot the host, so the agent kicks the upgrade
+        off and reports the launch result — job status is finalized on the next
+        check-in.
+        """
+        method = parameters.get("method")
+        to_version = parameters.get("to_version")
+        job_id = parameters.get("job_id")
+
+        # Static (version-independent) upgrade commands.
+        command = {
+            "do-release-upgrade": (
+                "sudo DEBIAN_FRONTEND=noninteractive "
+                "do-release-upgrade -f DistUpgradeViewNonInteractive"
+            ),
+            "zypper-dup": "sudo zypper --non-interactive --gpg-auto-import-keys dup",
+        }.get(method)
+
+        # Version-dependent methods.
+        if command is None and method == "dnf-system-upgrade":
+            if not to_version:
+                return {
+                    "success": False,
+                    "error": _("dnf-system-upgrade requires a target version"),
+                }
+            rel = shlex.quote(str(to_version))
+            command = (
+                "sudo dnf -y install dnf-plugin-system-upgrade && "
+                f"sudo dnf -y system-upgrade download --releasever={rel} "
+                "--allowerasing && "
+                "sudo dnf -y system-upgrade reboot"
+            )
+        elif command is None and method == "freebsd-update":
+            if not to_version:
+                return {
+                    "success": False,
+                    "error": _("freebsd-update requires a target version"),
+                }
+            rel = shlex.quote(str(to_version))
+            command = (
+                f"sudo PAGER=cat freebsd-update -r {rel} upgrade && "
+                "sudo PAGER=cat freebsd-update install"
+            )
+
+        if command is None:
+            return {
+                "success": False,
+                "error": _("Unknown release-upgrade method: %s") % method,
+            }
+
+        self.logger.info(
+            _("Starting release-upgrade (job %s): %s -> %s"),
+            job_id,
+            method,
+            to_version,
+        )
+        return await self.execute_shell_command({"command": command})
 
     async def update_agent(self) -> Dict[str, Any]:
         """Update the sysmanage-agent package to the latest version."""

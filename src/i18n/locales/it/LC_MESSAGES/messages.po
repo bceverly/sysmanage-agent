@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-09 12:03-0400\n"
+"POT-Creation-Date: 2026-07-13 07:54-0400\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -290,7 +290,7 @@ msgstr "Errore nella lettura della configurazione syslog-ng: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
-#: src/sysmanage_agent/operations/system_control.py:228
+#: src/sysmanage_agent/operations/system_control.py:292
 #: src/sysmanage_agent/operations/user_account_operations.py:13
 #, python-format
 msgid "Unsupported platform: %s"
@@ -2487,135 +2487,135 @@ msgstr "Autenticazione fallita con stato %s: %s"
 msgid "Received command: %s with parameters: %s"
 msgstr "Comando ricevuto: %s con parametri: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:387
+#: src/sysmanage_agent/core/agent_utils.py:388
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID di esecuzione script %s già elaborato, duplicato saltato"
 
-#: src/sysmanage_agent/core/agent_utils.py:424
+#: src/sysmanage_agent/core/agent_utils.py:425
 msgid "Generic command missing nested command_type"
 msgstr "Comando generico privo di command_type annidato"
 
-#: src/sysmanage_agent/core/agent_utils.py:436
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo di comando sconosciuto: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:492
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "Risultato esecuzione script in coda per execution_id: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:495
+#: src/sysmanage_agent/core/agent_utils.py:496
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Errore nella raccolta dei pacchetti Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:514
+#: src/sysmanage_agent/core/agent_utils.py:515
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Errore nel rilevamento delle partizioni: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:529
 msgid "No execution UUID provided, cannot track"
 msgstr "Nessun UUID di esecuzione fornito, impossibile tracciare"
 
-#: src/sysmanage_agent/core/agent_utils.py:543
+#: src/sysmanage_agent/core/agent_utils.py:544
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID di esecuzione %s esiste già nel database"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:563
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "UUID di esecuzione %s memorizzato per tracciamento"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:569
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Errore nel rilevamento delle partizioni: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:600
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "Controllo del servizio richiesto: %s per i servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:633
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Errore nel gestore del controllo servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:658
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "Esecuzione di %s per il servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:669
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "Servizio %s: %s con successo"
 
-#: src/sysmanage_agent/core/agent_utils.py:678
+#: src/sysmanage_agent/core/agent_utils.py:679
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Impossibile %s il servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:685
+#: src/sysmanage_agent/core/agent_utils.py:686
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Timeout del controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:691
+#: src/sysmanage_agent/core/agent_utils.py:692
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Errore di controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:753
+#: src/sysmanage_agent/core/agent_utils.py:754
 msgid "Triggering role collection after service control"
 msgstr "Avvio della raccolta dei ruoli dopo il controllo del servizio"
 
-#: src/sysmanage_agent/core/agent_utils.py:757
+#: src/sysmanage_agent/core/agent_utils.py:758
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Impossibile aggiornare i ruoli dopo il controllo del servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:770
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "Verifica dello stato richiesta per il servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:796
+#: src/sysmanage_agent/core/agent_utils.py:797
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Errore nel gestore dello stato dei servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:809
+#: src/sysmanage_agent/core/agent_utils.py:810
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "Controllo dello stato del servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:829
+#: src/sysmanage_agent/core/agent_utils.py:830
 #, python-format
 msgid "Service %s status: %s"
 msgstr "Servizio %s stato: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Timeout dello stato del servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Errore di stato del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1127
+#: src/sysmanage_agent/core/agent_utils.py:1128
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Impossibile accodare command_result sintetico per il diario in volo: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1133
+#: src/sysmanage_agent/core/agent_utils.py:1134
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "Riconciliazione del diario in volo: %d attivi, %d morti"
@@ -2958,52 +2958,52 @@ msgstr "Errore nell'aggiunta utente ai gruppi: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "La gestione dei child host richiede Pro+ (percorso engine)."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:136
 #, python-format
 msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 msgstr ""
 "Sincronizzazione metriche personalizzate: %d attive, %d saltate (non valide)"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:199
 #, python-format
 msgid "Failed to persist custom metrics: %s"
 msgstr "Impossibile persistere le metriche personalizzate: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:228
 #, python-format
 msgid "Failed to load persisted custom metrics: %s"
 msgstr "Impossibile caricare le metriche personalizzate persistite: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:235
 #, python-format
 msgid "Loaded %d persisted custom metric(s) at startup"
 msgstr "Caricate %d metrica\\(e\\) personalizzate persistente\\(i\\) all'avvio"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
 #, python-format
 msgid "interpreter '%s' not available on this host"
 msgstr "l'interprete '%s' non è disponibile su questo host"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:271
 #, python-format
 msgid "failed to run metric: %s"
 msgstr "Impossibile eseguire la metrica: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:275
 #, python-format
 msgid "script exited with code %s"
 msgstr "lo script si è interrotto con il codice %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:283
 msgid "script stdout was not a single numeric value"
 msgstr "stdout dello script non era un singolo valore numerico"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:380
 #, python-format
 msgid "Custom-metrics scheduler error: %s"
 msgstr "Errore del scheduler di metriche personalizzate: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:417
 #, python-format
 msgid "Failed to send custom metric samples: %s"
 msgstr "Impossibile inviare campioni delle metriche personalizzate: %s"
@@ -3088,7 +3088,7 @@ msgid "Missing required parameter 'armored_key'"
 msgstr "Parametro richiesto 'armored_key' mancante"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:228
-#: src/sysmanage_agent/operations/gpg_operations.py:339
+#: src/sysmanage_agent/operations/gpg_operations.py:356
 msgid "gpg binary not found on this host"
 msgstr "binario gpg non trovato su questo host"
 
@@ -3097,46 +3097,46 @@ msgstr "binario gpg non trovato su questo host"
 msgid "Importing GPG key %s (fingerprint %s) for target=%s"
 msgstr "Importazione della chiave GPG %s (impronta digitale %s) per target=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:274
+#: src/sysmanage_agent/operations/gpg_operations.py:252
 #, python-format
 msgid "gpg import failed (rc=%s): %s"
 msgstr "gpg import fallito (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:286
+#: src/sysmanage_agent/operations/gpg_operations.py:264
 msgid "Key imported and verified present"
 msgstr "Chiave importata e verificata come presente"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:288
+#: src/sysmanage_agent/operations/gpg_operations.py:266
 msgid "gpg import returned success but fingerprint not found"
 msgstr ""
 "gpg import ha restituito successo ma l'impronta digitale non è stata trovata"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:294
+#: src/sysmanage_agent/operations/gpg_operations.py:272
 #, python-format
 msgid "fingerprint %s not present after import"
 msgstr "l'impronta digitale %s non è presente dopo l'importazione"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:331
+#: src/sysmanage_agent/operations/gpg_operations.py:348
 msgid "Missing required parameter 'fingerprint'"
 msgstr "Parametro richiesto 'fingerprint' mancante"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:349
+#: src/sysmanage_agent/operations/gpg_operations.py:366
 #, python-format
 msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 msgstr ""
 "Rimozione della chiave GPG %s (impronta digitale %s) per target=%s, "
 "has_private=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:383
+#: src/sysmanage_agent/operations/gpg_operations.py:400
 msgid "Key removed"
 msgstr "Chiave rimossa"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:389
+#: src/sysmanage_agent/operations/gpg_operations.py:406
 #, python-format
 msgid "gpg delete failed (rc=%s): %s"
 msgstr "gpg delete fallito (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:418
+#: src/sysmanage_agent/operations/gpg_operations.py:435
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
@@ -3144,12 +3144,12 @@ msgstr ""
 "Esecuzione di gpg come utente Windows specifico non è supportata "
 "dall'agente; importata nel keyring corrente invece."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:425
+#: src/sysmanage_agent/operations/gpg_operations.py:442
 #, python-format
 msgid "target user '%s' does not exist"
 msgstr "l'utente target '%s' non esiste"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:433
+#: src/sysmanage_agent/operations/gpg_operations.py:450
 #, python-format
 msgid "could not prepare GNUPGHOME for user '%s'"
 msgstr "impossibile preparare GNUPGHOME per l'utente '%s'"
@@ -3738,108 +3738,126 @@ msgstr "L'agent non espone apply_deployment_plan; aggiornamento richiesto"
 msgid "Script delegation failed: %s"
 msgstr "Rilevamento processore alternativo non riuscito: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:35
+#: src/sysmanage_agent/operations/system_control.py:36
 msgid "No command specified"
 msgstr "Nessun comando specificato"
 
-#: src/sysmanage_agent/operations/system_control.py:58
+#: src/sysmanage_agent/operations/system_control.py:59
 #, python-format
 msgid "Command timed out after %d seconds: %s"
 msgstr "Il comando è scaduto dopo %d secondi: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:62
+#: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
 msgid "Command timed out after %d seconds"
 msgstr "Il comando è scaduto dopo %d secondi"
 
-#: src/sysmanage_agent/operations/system_control.py:98
+#: src/sysmanage_agent/operations/system_control.py:99
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
 msgstr "Errore nella raccolta dei pacchetti apt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:113
+#: src/sysmanage_agent/operations/system_control.py:114
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
 msgstr "Errore nel rilevamento delle partizioni: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:122
+#: src/sysmanage_agent/operations/system_control.py:123
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
 msgstr "Errore nella raccolta dei pacchetti apt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:139
+#: src/sysmanage_agent/operations/system_control.py:140
 #, python-format
 msgid "Failed to update system: %s"
 msgstr "Aggiornamento agente non riuscito: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:147
+#: src/sysmanage_agent/operations/system_control.py:148
 msgid "No service name specified"
 msgstr "Nessun nome servizio specificato"
 
-#: src/sysmanage_agent/operations/system_control.py:156
+#: src/sysmanage_agent/operations/system_control.py:157
 #, python-format
 msgid "Failed to restart service %s: %s"
 msgstr "Errore nel riavvio del servizio %s: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:177
+#: src/sysmanage_agent/operations/system_control.py:178
 msgid "System reboot scheduled in 1 minute"
 msgstr "Riavvio del sistema programmato tra 1 minuto"
 
-#: src/sysmanage_agent/operations/system_control.py:181
+#: src/sysmanage_agent/operations/system_control.py:182
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "Errore nel riavvio del sistema: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:201
+#: src/sysmanage_agent/operations/system_control.py:202
 msgid "System shutdown scheduled in 1 minute"
 msgstr "Spegnimento del sistema programmato tra 1 minuto"
 
-#: src/sysmanage_agent/operations/system_control.py:205
+#: src/sysmanage_agent/operations/system_control.py:206
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "Impossibile arrestare il server HTTP: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:219
+#: src/sysmanage_agent/operations/system_control.py:237
+msgid "dnf-system-upgrade requires a target version"
+msgstr "dnf-system-upgrade richiede una versione di destinazione"
+
+#: src/sysmanage_agent/operations/system_control.py:250
+msgid "freebsd-update requires a target version"
+msgstr "freebsd-update richiede una versione di destinazione"
+
+#: src/sysmanage_agent/operations/system_control.py:261
+#, python-format
+msgid "Unknown release-upgrade method: %s"
+msgstr "Metodo di aggiornamento della release sconosciuto: %s"
+
+#: src/sysmanage_agent/operations/system_control.py:265
+#, python-format
+msgid "Starting release-upgrade (job %s): %s -> %s"
+msgstr "Inizio aggiornamento della release (lavoro %s): %s -> %s"
+
+#: src/sysmanage_agent/operations/system_control.py:283
 msgid "Agent update not yet supported on Windows"
 msgstr "Aggiornamento agente non ancora supportato su Windows"
 
-#: src/sysmanage_agent/operations/system_control.py:224
+#: src/sysmanage_agent/operations/system_control.py:288
 msgid "Agent update not yet supported on macOS"
 msgstr "Aggiornamento agente non ancora supportato su macOS"
 
-#: src/sysmanage_agent/operations/system_control.py:231
+#: src/sysmanage_agent/operations/system_control.py:295
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "Aggiornamento agente non riuscito: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:270
+#: src/sysmanage_agent/operations/system_control.py:334
 msgid "Cannot detect Linux distribution"
 msgstr "Impossibile rilevare la distribuzione Linux"
 
-#: src/sysmanage_agent/operations/system_control.py:289
+#: src/sysmanage_agent/operations/system_control.py:353
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "Distribuzione Linux non supportata: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:296
-#: src/sysmanage_agent/operations/system_control.py:307
+#: src/sysmanage_agent/operations/system_control.py:360
+#: src/sysmanage_agent/operations/system_control.py:371
 msgid "Agent updated successfully"
 msgstr "Agente aggiornato con successo"
 
-#: src/sysmanage_agent/operations/system_control.py:326
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Sent antivirus status update to server"
 msgstr "Invio dello stato antivirus aggiornato al server"
 
-#: src/sysmanage_agent/operations/system_control.py:328
+#: src/sysmanage_agent/operations/system_control.py:392
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "Errore nell'invio degli aggiornamenti dati iniziali: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:376
+#: src/sysmanage_agent/operations/system_control.py:440
 msgid "Sent commercial antivirus status update to server"
 msgstr "Invio aggiornamento stato antivirus commerciale al server"
 
-#: src/sysmanage_agent/operations/system_control.py:379
+#: src/sysmanage_agent/operations/system_control.py:443
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "Errore nell'invio degli aggiornamenti dati iniziali: %s"

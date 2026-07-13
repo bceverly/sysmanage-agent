@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-09 12:03-0400\n"
+"POT-Creation-Date: 2026-07-13 07:54-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -286,7 +286,7 @@ msgstr "Fout bij het lezen van syslog-ng configuratie: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
-#: src/sysmanage_agent/operations/system_control.py:228
+#: src/sysmanage_agent/operations/system_control.py:292
 #: src/sysmanage_agent/operations/user_account_operations.py:13
 #, python-format
 msgid "Unsupported platform: %s"
@@ -2473,136 +2473,136 @@ msgstr "Authenticatie mislukt met status %s: %s"
 msgid "Received command: %s with parameters: %s"
 msgstr "Opdracht ontvangen: %s met parameters: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:387
+#: src/sysmanage_agent/core/agent_utils.py:388
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Scriptuitvoerings-UUID %s al verwerkt, duplicaat overgeslagen"
 
-#: src/sysmanage_agent/core/agent_utils.py:424
+#: src/sysmanage_agent/core/agent_utils.py:425
 msgid "Generic command missing nested command_type"
 msgstr "Generieke opdracht mist geneste command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:436
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Onbekend opdrachttype: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:492
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "Scriptuitvoeringsresultaat in wachtrij voor execution_id: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:495
+#: src/sysmanage_agent/core/agent_utils.py:496
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:514
+#: src/sysmanage_agent/core/agent_utils.py:515
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:529
 msgid "No execution UUID provided, cannot track"
 msgstr "Geen uitvoerings-UUID opgegeven, kan niet volgen"
 
-#: src/sysmanage_agent/core/agent_utils.py:543
+#: src/sysmanage_agent/core/agent_utils.py:544
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Uitvoerings-UUID %s bestaat al in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:563
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "Uitvoerings-UUID %s opgeslagen voor tracking"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:569
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:600
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "Servicebeheer gevraagd: %s voor services: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:633
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fout in service-controlafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:658
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "%s uitvoeren voor service: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:669
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "Service %s succesvol %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:678
+#: src/sysmanage_agent/core/agent_utils.py:679
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "%s van service %s mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:685
+#: src/sysmanage_agent/core/agent_utils.py:686
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Time-out bij servicebeheer voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:691
+#: src/sysmanage_agent/core/agent_utils.py:692
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Servicebesturingsfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:753
+#: src/sysmanage_agent/core/agent_utils.py:754
 msgid "Triggering role collection after service control"
 msgstr "Rollenverzameling activeren na servicebeheer"
 
-#: src/sysmanage_agent/core/agent_utils.py:757
+#: src/sysmanage_agent/core/agent_utils.py:758
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:770
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "Statuscontrole gevraagd voor service: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:796
+#: src/sysmanage_agent/core/agent_utils.py:797
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fout in service-statusafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:809
+#: src/sysmanage_agent/core/agent_utils.py:810
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "Status controleren van service: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:829
+#: src/sysmanage_agent/core/agent_utils.py:830
 #, python-format
 msgid "Service %s status: %s"
 msgstr "Service %s status: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Time-out bij servicestatus voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Servicestatusfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1127
+#: src/sysmanage_agent/core/agent_utils.py:1128
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Kon synthetische command_result niet in wachtrij plaatsen voor in-flight "
 "journal: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1133
+#: src/sysmanage_agent/core/agent_utils.py:1134
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "In-flight journal-afstemming: %d actief, %d dood"
@@ -2944,52 +2944,52 @@ msgstr "Fout bij toevoegen gebruiker aan groepen: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "Child-hostbeheer vereist Pro+ (engine-pad)."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:136
 #, python-format
 msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 msgstr ""
 "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen (ongeldig)"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:199
 #, python-format
 msgid "Failed to persist custom metrics: %s"
 msgstr "Kon aangepaste metriek niet opslaan: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:228
 #, python-format
 msgid "Failed to load persisted custom metrics: %s"
 msgstr "Kon aangepaste metriek niet laden uit opslagmedium: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:235
 #, python-format
 msgid "Loaded %d persisted custom metric(s) at startup"
 msgstr "%d opgeslagen aangepaste metriek(s) geladen bij opstarten"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
 #, python-format
 msgid "interpreter '%s' not available on this host"
 msgstr "interpreter '%s' is niet beschikbaar op deze host"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:271
 #, python-format
 msgid "failed to run metric: %s"
 msgstr "mislukt om metriek uit te voeren: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:275
 #, python-format
 msgid "script exited with code %s"
 msgstr "script is afgebroken met code %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:283
 msgid "script stdout was not a single numeric value"
 msgstr "script stdout was geen enkel numeriek waarde"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:380
 #, python-format
 msgid "Custom-metrics scheduler error: %s"
 msgstr "Fout in de scheduler voor aangepaste metriek: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:417
 #, python-format
 msgid "Failed to send custom metric samples: %s"
 msgstr "Kan samples van aangepaste metriek niet verzenden: %s"
@@ -3073,7 +3073,7 @@ msgid "Missing required parameter 'armored_key'"
 msgstr "Verplichte parameter 'armored_key' ontbreekt"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:228
-#: src/sysmanage_agent/operations/gpg_operations.py:339
+#: src/sysmanage_agent/operations/gpg_operations.py:356
 msgid "gpg binary not found on this host"
 msgstr "gpg-binary niet gevonden op deze host"
 
@@ -3082,44 +3082,44 @@ msgstr "gpg-binary niet gevonden op deze host"
 msgid "Importing GPG key %s (fingerprint %s) for target=%s"
 msgstr "GPG-sleutel %s (vingerafdruk %s) importeren voor target=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:274
+#: src/sysmanage_agent/operations/gpg_operations.py:252
 #, python-format
 msgid "gpg import failed (rc=%s): %s"
 msgstr "gpg importeer mislukt (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:286
+#: src/sysmanage_agent/operations/gpg_operations.py:264
 msgid "Key imported and verified present"
 msgstr "Sleutel geïmporteerd en geverifieerd aanwezig"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:288
+#: src/sysmanage_agent/operations/gpg_operations.py:266
 msgid "gpg import returned success but fingerprint not found"
 msgstr "gpg-import retourneerde succes maar vingerafdruk niet gevonden"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:294
+#: src/sysmanage_agent/operations/gpg_operations.py:272
 #, python-format
 msgid "fingerprint %s not present after import"
 msgstr "vingerafdruk %s aanwezig na import niet"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:331
+#: src/sysmanage_agent/operations/gpg_operations.py:348
 msgid "Missing required parameter 'fingerprint'"
 msgstr "Verplichte parameter 'fingerprint' ontbreekt"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:349
+#: src/sysmanage_agent/operations/gpg_operations.py:366
 #, python-format
 msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 msgstr ""
 "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, has_private=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:383
+#: src/sysmanage_agent/operations/gpg_operations.py:400
 msgid "Key removed"
 msgstr "Sleutel verwijderd"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:389
+#: src/sysmanage_agent/operations/gpg_operations.py:406
 #, python-format
 msgid "gpg delete failed (rc=%s): %s"
 msgstr "gpg verwijderen mislukt (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:418
+#: src/sysmanage_agent/operations/gpg_operations.py:435
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
@@ -3127,12 +3127,12 @@ msgstr ""
 "Het uitvoeren van gpg als een specifieke Windows-gebruiker wordt niet "
 "ondersteund door de agent; geïmporteerd in het huidige sleutelslot."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:425
+#: src/sysmanage_agent/operations/gpg_operations.py:442
 #, python-format
 msgid "target user '%s' does not exist"
 msgstr "doelgebruiker '%s' bestaat niet"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:433
+#: src/sysmanage_agent/operations/gpg_operations.py:450
 #, python-format
 msgid "could not prepare GNUPGHOME for user '%s'"
 msgstr "kon GNUPGHOME niet voor gebruiker '%s' voorbereiden"
@@ -3720,108 +3720,126 @@ msgstr "Agent biedt geen apply_deployment_plan; upgrade vereist"
 msgid "Script delegation failed: %s"
 msgstr "Processor detectie-fallback mislukt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:35
+#: src/sysmanage_agent/operations/system_control.py:36
 msgid "No command specified"
 msgstr "Geen opdracht opgegeven"
 
-#: src/sysmanage_agent/operations/system_control.py:58
+#: src/sysmanage_agent/operations/system_control.py:59
 #, python-format
 msgid "Command timed out after %d seconds: %s"
 msgstr "Opdracht verlopen na %d seconden: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:62
+#: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
 msgid "Command timed out after %d seconds"
 msgstr "Opdracht verlopen na %d seconden"
 
-#: src/sysmanage_agent/operations/system_control.py:98
+#: src/sysmanage_agent/operations/system_control.py:99
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:113
+#: src/sysmanage_agent/operations/system_control.py:114
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:122
+#: src/sysmanage_agent/operations/system_control.py:123
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
 msgstr "Fout bij verzamelen apt-pakketten: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:139
+#: src/sysmanage_agent/operations/system_control.py:140
 #, python-format
 msgid "Failed to update system: %s"
 msgstr "Agent bijwerken mislukt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:147
+#: src/sysmanage_agent/operations/system_control.py:148
 msgid "No service name specified"
 msgstr "Geen servicenaam opgegeven"
 
-#: src/sysmanage_agent/operations/system_control.py:156
+#: src/sysmanage_agent/operations/system_control.py:157
 #, python-format
 msgid "Failed to restart service %s: %s"
 msgstr "Kan service %s niet opnieuw starten: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:177
+#: src/sysmanage_agent/operations/system_control.py:178
 msgid "System reboot scheduled in 1 minute"
 msgstr "Systeemherstart over 1 minuut gepland"
 
-#: src/sysmanage_agent/operations/system_control.py:181
+#: src/sysmanage_agent/operations/system_control.py:182
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "Kan systeem niet opnieuw opstarten: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:201
+#: src/sysmanage_agent/operations/system_control.py:202
 msgid "System shutdown scheduled in 1 minute"
 msgstr "Systeemafsluiting over 1 minuut gepland"
 
-#: src/sysmanage_agent/operations/system_control.py:205
+#: src/sysmanage_agent/operations/system_control.py:206
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "Fout bij stoppen HTTP-server: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:219
+#: src/sysmanage_agent/operations/system_control.py:237
+msgid "dnf-system-upgrade requires a target version"
+msgstr "dnf-system-upgrade vereist een doelversie"
+
+#: src/sysmanage_agent/operations/system_control.py:250
+msgid "freebsd-update requires a target version"
+msgstr "freebsd-update vereist een doelversie"
+
+#: src/sysmanage_agent/operations/system_control.py:261
+#, python-format
+msgid "Unknown release-upgrade method: %s"
+msgstr "Onbekende release-upgrade methode: %s"
+
+#: src/sysmanage_agent/operations/system_control.py:265
+#, python-format
+msgid "Starting release-upgrade (job %s): %s -> %s"
+msgstr "Start van release-upgrade (opdracht %s): %s -> %s"
+
+#: src/sysmanage_agent/operations/system_control.py:283
 msgid "Agent update not yet supported on Windows"
 msgstr "Agent-update wordt nog niet ondersteund op Windows"
 
-#: src/sysmanage_agent/operations/system_control.py:224
+#: src/sysmanage_agent/operations/system_control.py:288
 msgid "Agent update not yet supported on macOS"
 msgstr "Agent-update wordt nog niet ondersteund op macOS"
 
-#: src/sysmanage_agent/operations/system_control.py:231
+#: src/sysmanage_agent/operations/system_control.py:295
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "Agent bijwerken mislukt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:270
+#: src/sysmanage_agent/operations/system_control.py:334
 msgid "Cannot detect Linux distribution"
 msgstr "Kan Linux-distributie niet detecteren"
 
-#: src/sysmanage_agent/operations/system_control.py:289
+#: src/sysmanage_agent/operations/system_control.py:353
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "Niet-ondersteunde Linux-distributie: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:296
-#: src/sysmanage_agent/operations/system_control.py:307
+#: src/sysmanage_agent/operations/system_control.py:360
+#: src/sysmanage_agent/operations/system_control.py:371
 msgid "Agent updated successfully"
 msgstr "Agent succesvol bijgewerkt"
 
-#: src/sysmanage_agent/operations/system_control.py:326
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Sent antivirus status update to server"
 msgstr "Antivirusstatusupdate verzonden naar server"
 
-#: src/sysmanage_agent/operations/system_control.py:328
+#: src/sysmanage_agent/operations/system_control.py:392
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:376
+#: src/sysmanage_agent/operations/system_control.py:440
 msgid "Sent commercial antivirus status update to server"
 msgstr "Commerciële antiviruss-statusupdate verzonden naar server"
 
-#: src/sysmanage_agent/operations/system_control.py:379
+#: src/sysmanage_agent/operations/system_control.py:443
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "Verzenden van initiële gegevens mislukt: %s"

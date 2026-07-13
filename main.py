@@ -322,6 +322,14 @@ class SysManageAgent(
             or self.config.get_log_native_target(),
             identifier=overrides.get("native_identifier")
             or self.config.get_log_native_identifier(),
+            # Remote-syslog forwarding (Phase 14.5) — only used when the target
+            # is ``syslog_remote``; ignored by the local sinks.
+            host=overrides.get("syslog_host") or self.config.get_log_syslog_host(),
+            port=overrides.get("syslog_port") or self.config.get_log_syslog_port(),
+            facility=overrides.get("syslog_facility")
+            or self.config.get_log_syslog_facility(),
+            protocol=overrides.get("syslog_protocol")
+            or self.config.get_log_syslog_protocol(),
         )
         if native_handler is None:
             print(

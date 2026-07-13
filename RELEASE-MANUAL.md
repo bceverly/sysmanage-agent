@@ -209,8 +209,8 @@ Regenerates DEB and RPM repository metadata if the tools are available.
 ```bash
 make deploy-launchpad
 ```
-Builds signed source packages for each Ubuntu release (questing, plucky, oracular,
-noble, jammy) and uploads them via `dput` to `ppa:bceverly/sysmanage-agent`.
+Builds signed source packages for each Ubuntu release (resolute, noble, jammy)
+and uploads them via `dput` to `ppa:bceverly/sysmanage-agent`.
 Override target releases: `LAUNCHPAD_RELEASES="noble jammy" make deploy-launchpad`
 Override GPG key: `LAUNCHPAD_GPG_KEY=ABCDEF12 make deploy-launchpad`
 
@@ -438,7 +438,7 @@ VERSION=1.2.3 make release-notes  # Release notes in installer/dist/
 | `VERSION` | Auto-detected from git tag | Override the release version (e.g., `VERSION=1.2.3`) |
 | `DOCS_REPO` | `~/dev/sysmanage-docs` | Path to the sysmanage-docs repository |
 | `ALPINE_VERSIONS` | `3.19 3.20 3.21` | Space-separated Alpine versions to build |
-| `LAUNCHPAD_RELEASES` | `questing plucky oracular noble jammy` | Space-separated Ubuntu releases for PPA |
+| `LAUNCHPAD_RELEASES` | `resolute noble jammy` | Space-separated Ubuntu releases for PPA |
 | `LAUNCHPAD_GPG_KEY` | Auto-detected from keyring | GPG key ID for signing source packages |
 | `LAUNCHPAD_GPG_PASSPHRASE` | (none) | GPG passphrase for non-interactive signing |
 | `OBS_USERNAME` | Read from `~/.config/osc/oscrc` | OBS username |

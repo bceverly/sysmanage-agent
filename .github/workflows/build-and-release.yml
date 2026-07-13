@@ -2406,7 +2406,7 @@ jobs:
 
           ## Supported Platforms
 
-          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble), 24.10 (Oracular), 25.04 (Plucky), 25.10 (Questing)
+          - **Ubuntu**: 22.04 LTS (Jammy), 24.04 LTS (Noble)
           - **Debian**: 11 (Bullseye), 12 (Bookworm), 13 (Trixie)
           - **CentOS/RHEL**: 9.x
           - **OpenSUSE**: Tumbleweed, Leap 15.x
@@ -2495,8 +2495,6 @@ jobs:
         include:
           - release: resolute
             release_name: "26.04 Resolute"
-          - release: questing
-            release_name: "25.10 Questing"
           - release: noble
             release_name: "24.04 Noble"
           - release: jammy
@@ -2519,7 +2517,12 @@ jobs:
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
           sudo apt-get update
-          sudo apt-get install -y devscripts debhelper dh-python python3-all python3-setuptools dput-ng gnupg
+          n=0; ok=0
+          until [ "$n" -ge 3 ]; do
+            if sudo apt-get install -y devscripts debhelper dh-python python3-all python3-setuptools dput-ng gnupg; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::apt-get install attempt $n/3 failed; retrying in $((n*20))s"; sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::apt-get install failed after 3 attempts"; exit 1; }
 
       - name: Import GPG key
         env:
@@ -2595,9 +2598,6 @@ jobs:
               ;;
             noble)
               PYTHON_VERSION="3.12"
-              ;;
-            questing)
-              PYTHON_VERSION="3.13"
               ;;
             resolute)
               PYTHON_VERSION="3.14"
@@ -2783,11 +2783,15 @@ jobs:
           OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
         run: |
           echo "Checking out OBS package home:${OBS_USERNAME}/sysmanage-agent"
-          if ! osc checkout home:${OBS_USERNAME}/sysmanage-agent; then
-            echo "Checkout failed (possible stale cache), retrying with clean directory..."
+          n=0; ok=0
+          until [ "$n" -ge 5 ]; do
+            if osc checkout home:${OBS_USERNAME}/sysmanage-agent; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::osc checkout attempt $n/5 failed; retrying in $((n*20))s"
+            # Clean any stale/partial cache before the next attempt
             rm -rf "home:${OBS_USERNAME}"
-            osc checkout home:${OBS_USERNAME}/sysmanage-agent
-          fi
+            sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::osc checkout failed after 5 attempts"; exit 1; }
           cd home:${OBS_USERNAME}/sysmanage-agent
           # Remove old tarballs so only the new release is uploaded
           rm -f sysmanage-agent-*.tar.gz
@@ -2887,7 +2891,12 @@ jobs:
           cd home:${OBS_USERNAME}/sysmanage-agent
 
           echo "Committing to OBS..."
-          osc commit -m "Release version $VERSION"
+          n=0; ok=0
+          until [ "$n" -ge 5 ]; do
+            if osc commit -m "Release version $VERSION"; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::osc commit attempt $n/5 failed; retrying in $((n*20))s"; sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::osc commit failed after 5 attempts"; exit 1; }
 
           echo "SUCCESS! Uploaded version $VERSION to OBS"
           echo ""
@@ -2932,7 +2941,12 @@ jobs:
           # `rich` is an undeclared runtime dep in copr-cli >= 1.115 — without
           # it, every subcommand crashes with `ModuleNotFoundError: No module
           # named 'rich'` before any HTTP request goes out.
-          pip3 install copr-cli rich
+          n=0; ok=0
+          until [ "$n" -ge 3 ]; do
+            if pip3 install copr-cli rich; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::pip3 install copr-cli rich attempt $n/3 failed; retrying in $((n*20))s"; sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::pip3 install copr-cli rich failed after 3 attempts"; exit 1; }
 
           # Add pip binaries to PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -3174,7 +3188,12 @@ jobs:
           echo "SRPM: $SRPM_PATH"
 
           # Upload and build
-          copr-cli build $COPR_USERNAME/sysmanage-agent $SRPM_PATH
+          n=0; ok=0
+          until [ "$n" -ge 5 ]; do
+            if copr-cli build $COPR_USERNAME/sysmanage-agent $SRPM_PATH; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::copr-cli build attempt $n/5 failed; retrying in $((n*20))s"; sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::copr-cli build failed after 5 attempts"; exit 1; }
 
           echo ""
           echo "SUCCESS! Uploaded version $VERSION to Copr"
@@ -3261,7 +3280,12 @@ jobs:
 
       - name: Install snapcraft
         run: |
-          sudo snap install snapcraft --classic
+          n=0; ok=0
+          until [ "$n" -ge 3 ]; do
+            if sudo snap install snapcraft --classic; then ok=1; break; fi
+            n=$((n+1)); echo "::warning::snap install snapcraft attempt $n/3 failed; retrying in $((n*20))s"; sleep $((n*20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::snap install snapcraft failed after 3 attempts"; exit 1; }
 
       - name: Upload snap to edge channel
         env:

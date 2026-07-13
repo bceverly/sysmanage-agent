@@ -50,6 +50,10 @@ class SystemOperationsDelegator:
         """Shutdown the system."""
         return await self.system_ops.shutdown_system()
 
+    async def release_upgrade(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform a distro release-upgrade (Phase 14.3)."""
+        return await self.system_ops.release_upgrade(parameters)
+
     async def update_agent(self) -> Dict[str, Any]:
         """Update the sysmanage-agent to the latest version."""
         return await self.system_ops.update_agent()

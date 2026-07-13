@@ -88,6 +88,116 @@ class TestBuildNativeHandler:
         """An unrecognised target yields no handler."""
         assert build_native_handler("carrier-pigeon", system="Linux") is None
 
+    def test_syslog_remote_dispatch(self):
+        """syslog_remote routes to _syslog_remote_handler with the remote params."""
+        fake = MagicMock(spec=logging.Handler)
+        with patch.object(
+            native_logging, "_syslog_remote_handler", return_value=fake
+        ) as mock_fn:
+            handler = build_native_handler(
+                "syslog_remote",
+                "ident",
+                system="Linux",
+                host="loghost",
+                port=1514,
+                facility="local0",
+                protocol="tcp",
+            )
+        assert handler is fake
+        mock_fn.assert_called_once_with("ident", "loghost", 1514, "local0", "tcp")
+
+
+def _mock_syslog(return_value=None):
+    """A SysLogHandler stand-in that preserves the real facility constants/dict.
+
+    Patching the whole class with a bare MagicMock would turn ``LOG_USER`` and
+    ``facility_names`` into mocks, so the handler's facility resolution couldn't
+    be asserted.
+    """
+    real = logging.handlers.SysLogHandler
+    mock = MagicMock(return_value=return_value)
+    mock.LOG_USER = real.LOG_USER
+    mock.facility_names = real.facility_names
+    return mock
+
+
+class TestSyslogRemoteHandler:
+    """Tests for _syslog_remote_handler (Phase 14.5 remote forwarding)."""
+
+    def test_no_host_returns_none(self):
+        """Without a host there is nothing to forward to — no handler."""
+        assert (
+            native_logging._syslog_remote_handler("ident", None, 514, None, None)
+            is None
+        )
+        assert (
+            native_logging._syslog_remote_handler("ident", "", 514, None, None) is None
+        )
+
+    def test_udp_default(self):
+        """A host with no protocol/port/facility → UDP, port 514, LOG_USER."""
+        fake = MagicMock(spec=logging.Handler)
+        syslog_cls = _mock_syslog(fake)
+        with patch.object(native_logging.logging.handlers, "SysLogHandler", syslog_cls):
+            handler = native_logging._syslog_remote_handler(
+                "ident", "loghost", None, None, None
+            )
+        assert handler is fake
+        kwargs = syslog_cls.call_args.kwargs
+        assert kwargs["address"] == ("loghost", 514)
+        assert kwargs["socktype"] == native_logging.socket.SOCK_DGRAM
+        assert kwargs["facility"] == logging.handlers.SysLogHandler.LOG_USER
+
+    def test_tcp_and_facility_and_port(self):
+        """protocol=tcp → SOCK_STREAM; a named facility resolves; port honoured."""
+        fake = MagicMock(spec=logging.Handler)
+        syslog_cls = _mock_syslog(fake)
+        with patch.object(native_logging.logging.handlers, "SysLogHandler", syslog_cls):
+            native_logging._syslog_remote_handler(
+                "ident", "loghost", 6514, "local3", "tcp"
+            )
+        kwargs = syslog_cls.call_args.kwargs
+        assert kwargs["address"] == ("loghost", 6514)
+        assert kwargs["socktype"] == native_logging.socket.SOCK_STREAM
+        assert kwargs["facility"] == logging.handlers.SysLogHandler.LOG_LOCAL3
+
+    def test_bad_facility_falls_back_to_user(self):
+        """An unknown facility name falls back to LOG_USER rather than raising."""
+        fake = MagicMock(spec=logging.Handler)
+        syslog_cls = _mock_syslog(fake)
+        with patch.object(native_logging.logging.handlers, "SysLogHandler", syslog_cls):
+            native_logging._syslog_remote_handler(
+                "ident", "loghost", 514, "not-a-facility", "udp"
+            )
+        assert (
+            syslog_cls.call_args.kwargs["facility"]
+            == logging.handlers.SysLogHandler.LOG_USER
+        )
+
+    def test_bad_port_falls_back_to_514(self):
+        """A non-numeric port falls back to 514 instead of exploding."""
+        fake = MagicMock(spec=logging.Handler)
+        syslog_cls = _mock_syslog(fake)
+        with patch.object(native_logging.logging.handlers, "SysLogHandler", syslog_cls):
+            native_logging._syslog_remote_handler(
+                "ident", "loghost", "not-a-number", None, None
+            )
+        assert syslog_cls.call_args.kwargs["address"] == ("loghost", 514)
+
+    def test_socket_error_returns_none(self):
+        """A failed TCP connect (OSError) yields None — file logging survives."""
+        with patch.object(
+            native_logging.logging.handlers,
+            "SysLogHandler",
+            side_effect=OSError("connection refused"),
+        ):
+            assert (
+                native_logging._syslog_remote_handler(
+                    "ident", "loghost", 514, None, "tcp"
+                )
+                is None
+            )
+
 
 class TestEventlogGuard:
     """_eventlog_handler must never return a degraded off-Windows handler."""

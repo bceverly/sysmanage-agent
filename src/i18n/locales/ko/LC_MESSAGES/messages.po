@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-09 12:03-0400\n"
+"POT-Creation-Date: 2026-07-13 07:54-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -282,7 +282,7 @@ msgstr "syslog-ng 구성 파일 읽는 중 오류: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
-#: src/sysmanage_agent/operations/system_control.py:228
+#: src/sysmanage_agent/operations/system_control.py:292
 #: src/sysmanage_agent/operations/user_account_operations.py:13
 #, python-format
 msgid "Unsupported platform: %s"
@@ -2440,134 +2440,134 @@ msgstr "상태 %s로 인증 실패: %s"
 msgid "Received command: %s with parameters: %s"
 msgstr "명령 수신: %s, 매개변수: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:387
+#: src/sysmanage_agent/core/agent_utils.py:388
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:424
+#: src/sysmanage_agent/core/agent_utils.py:425
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:436
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:492
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "execution_id에 대한 스크립트 실행 결과가 큐에 추가됨: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:495
+#: src/sysmanage_agent/core/agent_utils.py:496
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:514
+#: src/sysmanage_agent/core/agent_utils.py:515
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:529
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:543
+#: src/sysmanage_agent/core/agent_utils.py:544
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:563
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "추적을 위해 실행 UUID %s 저장됨"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:569
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:600
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "서비스 제어 요청됨: %s 대상 서비스: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:633
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:658
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "서비스 %s 에 대해 %s 실행 중"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:669
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "서비스 %s 의 %s 성공"
 
-#: src/sysmanage_agent/core/agent_utils.py:678
+#: src/sysmanage_agent/core/agent_utils.py:679
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:685
+#: src/sysmanage_agent/core/agent_utils.py:686
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:691
+#: src/sysmanage_agent/core/agent_utils.py:692
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:753
+#: src/sysmanage_agent/core/agent_utils.py:754
 msgid "Triggering role collection after service control"
 msgstr "서비스 제어 후 역할 수집 트리거됨"
 
-#: src/sysmanage_agent/core/agent_utils.py:757
+#: src/sysmanage_agent/core/agent_utils.py:758
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:770
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "서비스 상태 확인 요청됨: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:796
+#: src/sysmanage_agent/core/agent_utils.py:797
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:809
+#: src/sysmanage_agent/core/agent_utils.py:810
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "서비스 상태 확인 중: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:829
+#: src/sysmanage_agent/core/agent_utils.py:830
 #, python-format
 msgid "Service %s status: %s"
 msgstr "서비스 %s 상태: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1127
+#: src/sysmanage_agent/core/agent_utils.py:1128
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1133
+#: src/sysmanage_agent/core/agent_utils.py:1134
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "진행 중 저널 조정: 활성 %d개, 종료 %d개"
@@ -2907,51 +2907,51 @@ msgstr "사용자를 그룹에 추가하는 중 오류: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:136
 #, python-format
 msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 msgstr "사용자 지정 메트릭 동기화: 활성 %d 개, 스킵 %d 개 (유효하지 않음)"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:199
 #, python-format
 msgid "Failed to persist custom metrics: %s"
 msgstr "사용자 지정 메트릭 저장 실패: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:228
 #, python-format
 msgid "Failed to load persisted custom metrics: %s"
 msgstr "지속된 사용자 지정 메트릭 로드 실패: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:235
 #, python-format
 msgid "Loaded %d persisted custom metric(s) at startup"
 msgstr "%d 개의 저장된 사용자 지정 메트릭을 시작 시 로드했습니다."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
 #, python-format
 msgid "interpreter '%s' not available on this host"
 msgstr "호스트 '%s'에서 사용할 수 없는 인터프리터"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:271
 #, python-format
 msgid "failed to run metric: %s"
 msgstr "메트릭 실행 실패: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:275
 #, python-format
 msgid "script exited with code %s"
 msgstr "스크립트가 코드 %s로 종료되었습니다."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:283
 msgid "script stdout was not a single numeric value"
 msgstr "스크립트 stdout은 단일 숫자 값이 아닙니다."
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:380
 #, python-format
 msgid "Custom-metrics scheduler error: %s"
 msgstr "사용자 지정 메트릭 스케줄러 오류: %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:417
 #, python-format
 msgid "Failed to send custom metric samples: %s"
 msgstr "사용자 지정 메트릭 샘플 전송 실패: %s"
@@ -3035,7 +3035,7 @@ msgid "Missing required parameter 'armored_key'"
 msgstr "필수 매개변수 'armored_key' 누락됨"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:228
-#: src/sysmanage_agent/operations/gpg_operations.py:339
+#: src/sysmanage_agent/operations/gpg_operations.py:356
 msgid "gpg binary not found on this host"
 msgstr "이 호스트에서 gpg 바이너리를 찾을 수 없습니다."
 
@@ -3044,54 +3044,54 @@ msgstr "이 호스트에서 gpg 바이너리를 찾을 수 없습니다."
 msgid "Importing GPG key %s (fingerprint %s) for target=%s"
 msgstr "GPG 키 %s (지문 %s)을 대상=%s로 가져오는 중입니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:274
+#: src/sysmanage_agent/operations/gpg_operations.py:252
 #, python-format
 msgid "gpg import failed (rc=%s): %s"
 msgstr "gpg import 실패 (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:286
+#: src/sysmanage_agent/operations/gpg_operations.py:264
 msgid "Key imported and verified present"
 msgstr "키를 가져와서 검증되었습니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:288
+#: src/sysmanage_agent/operations/gpg_operations.py:266
 msgid "gpg import returned success but fingerprint not found"
 msgstr "gpg 가져오기가 성공했지만 지문을 찾을 수 없습니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:294
+#: src/sysmanage_agent/operations/gpg_operations.py:272
 #, python-format
 msgid "fingerprint %s not present after import"
 msgstr "지문 %s가 가져오기 후 존재하지 않습니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:331
+#: src/sysmanage_agent/operations/gpg_operations.py:348
 msgid "Missing required parameter 'fingerprint'"
 msgstr "필수 매개변수 'fingerprint' 누락됨"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:349
+#: src/sysmanage_agent/operations/gpg_operations.py:366
 #, python-format
 msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 msgstr "GPG 키 %s (지문 %s)을 대상=%s, has_private=%s로 제거하는 중입니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:383
+#: src/sysmanage_agent/operations/gpg_operations.py:400
 msgid "Key removed"
 msgstr "키가 제거되었습니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:389
+#: src/sysmanage_agent/operations/gpg_operations.py:406
 #, python-format
 msgid "gpg delete failed (rc=%s): %s"
 msgstr "gpg 삭제 실패 (rc=%s): %s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:418
+#: src/sysmanage_agent/operations/gpg_operations.py:435
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr "Windows 사용자를 특정하여 gpg를 실행하는 것은 에이전트에서 지원하지 않습니다; 현재 키링에 가져옵니다."
 
-#: src/sysmanage_agent/operations/gpg_operations.py:425
+#: src/sysmanage_agent/operations/gpg_operations.py:442
 #, python-format
 msgid "target user '%s' does not exist"
 msgstr "타겟 사용자 '%s'가 존재하지 않음"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:433
+#: src/sysmanage_agent/operations/gpg_operations.py:450
 #, python-format
 msgid "could not prepare GNUPGHOME for user '%s'"
 msgstr "'%s' 사용자를 위한 GNUPGHOME 준비를 할 수 없습니다."
@@ -3675,108 +3675,126 @@ msgstr "에이전트가 apply_deployment_plan을 노출하지 않음; 업그레�
 msgid "Script delegation failed: %s"
 msgstr "프로세서 감지 폴백 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:35
+#: src/sysmanage_agent/operations/system_control.py:36
 msgid "No command specified"
 msgstr "명령이 지정되지 않음"
 
-#: src/sysmanage_agent/operations/system_control.py:58
+#: src/sysmanage_agent/operations/system_control.py:59
 #, python-format
 msgid "Command timed out after %d seconds: %s"
 msgstr "%d초 후 명령이 시간 초과되었습니다: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:62
+#: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
 msgid "Command timed out after %d seconds"
 msgstr "%d초 후 명령이 시간 초과되었습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:98
+#: src/sysmanage_agent/operations/system_control.py:99
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:113
+#: src/sysmanage_agent/operations/system_control.py:114
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
 msgstr "파티션 감지 오류: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:122
+#: src/sysmanage_agent/operations/system_control.py:123
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
 msgstr "apt 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:139
+#: src/sysmanage_agent/operations/system_control.py:140
 #, python-format
 msgid "Failed to update system: %s"
 msgstr "에이전트 업데이트 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:147
+#: src/sysmanage_agent/operations/system_control.py:148
 msgid "No service name specified"
 msgstr "서비스 이름이 지정되지 않음"
 
-#: src/sysmanage_agent/operations/system_control.py:156
+#: src/sysmanage_agent/operations/system_control.py:157
 #, python-format
 msgid "Failed to restart service %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:177
+#: src/sysmanage_agent/operations/system_control.py:178
 msgid "System reboot scheduled in 1 minute"
 msgstr "1분 후 시스템 재부팅 예정"
 
-#: src/sysmanage_agent/operations/system_control.py:181
+#: src/sysmanage_agent/operations/system_control.py:182
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "시스템 재부팅 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:201
+#: src/sysmanage_agent/operations/system_control.py:202
 msgid "System shutdown scheduled in 1 minute"
 msgstr "1분 후 시스템 종료 예정"
 
-#: src/sysmanage_agent/operations/system_control.py:205
+#: src/sysmanage_agent/operations/system_control.py:206
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "HTTP 서버 중지 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:219
+#: src/sysmanage_agent/operations/system_control.py:237
+msgid "dnf-system-upgrade requires a target version"
+msgstr "dnf-system-upgrade는 대상 버전이 필요합니다"
+
+#: src/sysmanage_agent/operations/system_control.py:250
+msgid "freebsd-update requires a target version"
+msgstr "freebsd-update는 대상 버전이 필요합니다"
+
+#: src/sysmanage_agent/operations/system_control.py:261
+#, python-format
+msgid "Unknown release-upgrade method: %s"
+msgstr "알 수 없는 릴리즈 업그레이드 방법: %s"
+
+#: src/sysmanage_agent/operations/system_control.py:265
+#, python-format
+msgid "Starting release-upgrade (job %s): %s -> %s"
+msgstr "릴리즈 업그레이드 시작 (작업 %s): %s -> %s"
+
+#: src/sysmanage_agent/operations/system_control.py:283
 msgid "Agent update not yet supported on Windows"
 msgstr "Windows에서의 에이전트 업데이트는 아직 지원되지 않습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:224
+#: src/sysmanage_agent/operations/system_control.py:288
 msgid "Agent update not yet supported on macOS"
 msgstr "macOS에서의 에이전트 업데이트는 아직 지원되지 않습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:231
+#: src/sysmanage_agent/operations/system_control.py:295
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "에이전트 업데이트 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:270
+#: src/sysmanage_agent/operations/system_control.py:334
 msgid "Cannot detect Linux distribution"
 msgstr "Linux 배포판을 감지할 수 없습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:289
+#: src/sysmanage_agent/operations/system_control.py:353
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "지원되지 않는 Linux 배포판: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:296
-#: src/sysmanage_agent/operations/system_control.py:307
+#: src/sysmanage_agent/operations/system_control.py:360
+#: src/sysmanage_agent/operations/system_control.py:371
 msgid "Agent updated successfully"
 msgstr "에이전트가 성공적으로 업데이트되었습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:326
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Sent antivirus status update to server"
 msgstr "_ANTIVIRUS 상태 업데이트를 서버에 보냈습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:328
+#: src/sysmanage_agent/operations/system_control.py:392
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:376
+#: src/sysmanage_agent/operations/system_control.py:440
 msgid "Sent commercial antivirus status update to server"
 msgstr "상업용 안티바이러스 상태 업데이트를 서버에 보냈습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:379
+#: src/sysmanage_agent/operations/system_control.py:443
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "초기 데이터 업데이트 전송에 실패했습니다: %s"

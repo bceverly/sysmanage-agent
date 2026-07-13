@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-09 12:03-0400\n"
+"POT-Creation-Date: 2026-07-13 07:54-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -282,7 +282,7 @@ msgstr "读取syslog-ng配置时出错：%s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:44
 #: src/sysmanage_agent/collection/hardware_collection.py:60
-#: src/sysmanage_agent/operations/system_control.py:228
+#: src/sysmanage_agent/operations/system_control.py:292
 #: src/sysmanage_agent/operations/user_account_operations.py:13
 #, python-format
 msgid "Unsupported platform: %s"
@@ -2436,134 +2436,134 @@ msgstr "认证失败，状态 %s：%s"
 msgid "Received command: %s with parameters: %s"
 msgstr "已接收命令：%s，参数：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:387
+#: src/sysmanage_agent/core/agent_utils.py:388
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:424
+#: src/sysmanage_agent/core/agent_utils.py:425
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:436
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:492
 #, python-format
 msgid "Queued script execution result for execution_id: %s"
 msgstr "已为 execution_id 排队脚本执行结果：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:495
+#: src/sysmanage_agent/core/agent_utils.py:496
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 软件包失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:514
+#: src/sysmanage_agent/core/agent_utils.py:515
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:529
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:543
+#: src/sysmanage_agent/core/agent_utils.py:544
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:563
 #, python-format
 msgid "Stored execution UUID %s for tracking"
 msgstr "已为跟踪存储执行 UUID %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:569
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:600
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Service control requested: %s for services: %s"
 msgstr "已请求服务控制：%s，目标服务：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:633
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:658
 #, python-format
 msgid "Executing %s for service: %s"
 msgstr "正在对服务 %s 执行 %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:669
 #, python-format
 msgid "Successfully %s service: %s"
 msgstr "服务 %s 的 %s 成功"
 
-#: src/sysmanage_agent/core/agent_utils.py:678
+#: src/sysmanage_agent/core/agent_utils.py:679
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "对服务 %s 执行 %s 失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:685
+#: src/sysmanage_agent/core/agent_utils.py:686
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:691
+#: src/sysmanage_agent/core/agent_utils.py:692
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:753
+#: src/sysmanage_agent/core/agent_utils.py:754
 msgid "Triggering role collection after service control"
 msgstr "在服务控制后触发角色收集"
 
-#: src/sysmanage_agent/core/agent_utils.py:757
+#: src/sysmanage_agent/core/agent_utils.py:758
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:770
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service status check requested for: %s"
 msgstr "已请求服务状态检查：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:796
+#: src/sysmanage_agent/core/agent_utils.py:797
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:809
+#: src/sysmanage_agent/core/agent_utils.py:810
 #, python-format
 msgid "Checking status for service: %s"
 msgstr "正在检查服务状态：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:829
+#: src/sysmanage_agent/core/agent_utils.py:830
 #, python-format
 msgid "Service %s status: %s"
 msgstr "服务 %s 状态：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1127
+#: src/sysmanage_agent/core/agent_utils.py:1128
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "无法将合成的 command_result 加入正在执行的日志队列：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:1133
+#: src/sysmanage_agent/core/agent_utils.py:1134
 #, python-format
 msgid "In-flight journal reconciliation: %d live, %d dead"
 msgstr "正在执行的日志对账：活动 %d 个，已死 %d 个"
@@ -2903,51 +2903,51 @@ msgstr "将用户添加到组时出错: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "子主机管理需要 Pro+ (引擎路径)。"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:122
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:136
 #, python-format
 msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 msgstr "同步自定义指标：%d 个活动，%d 个跳过（无效）"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:185
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:199
 #, python-format
 msgid "Failed to persist custom metrics: %s"
 msgstr "保存自定义指标失败：%s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:214
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:228
 #, python-format
 msgid "Failed to load persisted custom metrics: %s"
 msgstr "加载持久化自定义指标失败：%s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:221
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:235
 #, python-format
 msgid "Loaded %d persisted custom metric(s) at startup"
 msgstr "启动时加载了%d个持久化的自定义指标"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:247
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
 #, python-format
 msgid "interpreter '%s' not available on this host"
 msgstr "解释器 '%s' 在此主机上不可用"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:257
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:271
 #, python-format
 msgid "failed to run metric: %s"
 msgstr "运行指标 '%s' 失败"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:261
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:275
 #, python-format
 msgid "script exited with code %s"
 msgstr "脚本退出代码为 %s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:269
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:283
 msgid "script stdout was not a single numeric value"
 msgstr "脚本 stdout 不是一个单一的数值"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:366
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:380
 #, python-format
 msgid "Custom-metrics scheduler error: %s"
 msgstr "自定义指标调度器错误：%s"
 
-#: src/sysmanage_agent/operations/custom_metrics_operations.py:403
+#: src/sysmanage_agent/operations/custom_metrics_operations.py:417
 #, python-format
 msgid "Failed to send custom metric samples: %s"
 msgstr "发送自定义指标样本失败：%s"
@@ -3031,7 +3031,7 @@ msgid "Missing required parameter 'armored_key'"
 msgstr "缺少必需参数 'armored_key'"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:228
-#: src/sysmanage_agent/operations/gpg_operations.py:339
+#: src/sysmanage_agent/operations/gpg_operations.py:356
 msgid "gpg binary not found on this host"
 msgstr "此主机上未找到 gpg 可执行文件"
 
@@ -3040,54 +3040,54 @@ msgstr "此主机上未找到 gpg 可执行文件"
 msgid "Importing GPG key %s (fingerprint %s) for target=%s"
 msgstr "导入 GPG 密钥 %s （指纹 %s）用于目标=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:274
+#: src/sysmanage_agent/operations/gpg_operations.py:252
 #, python-format
 msgid "gpg import failed (rc=%s): %s"
 msgstr "gpg 导入失败（rc=%s）：%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:286
+#: src/sysmanage_agent/operations/gpg_operations.py:264
 msgid "Key imported and verified present"
 msgstr "密钥已导入并验证存在"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:288
+#: src/sysmanage_agent/operations/gpg_operations.py:266
 msgid "gpg import returned success but fingerprint not found"
 msgstr "gpg 导入返回成功但未找到指纹"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:294
+#: src/sysmanage_agent/operations/gpg_operations.py:272
 #, python-format
 msgid "fingerprint %s not present after import"
 msgstr "指纹 %s 导入后不存在"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:331
+#: src/sysmanage_agent/operations/gpg_operations.py:348
 msgid "Missing required parameter 'fingerprint'"
 msgstr "缺少必需参数 'fingerprint'"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:349
+#: src/sysmanage_agent/operations/gpg_operations.py:366
 #, python-format
 msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 msgstr "移除 GPG 密钥 %s （指纹 %s）用于目标=%s，has_private=%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:383
+#: src/sysmanage_agent/operations/gpg_operations.py:400
 msgid "Key removed"
 msgstr "密钥已被移除"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:389
+#: src/sysmanage_agent/operations/gpg_operations.py:406
 #, python-format
 msgid "gpg delete failed (rc=%s): %s"
 msgstr "gpg 删除失败（rc=%s）：%s"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:418
+#: src/sysmanage_agent/operations/gpg_operations.py:435
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr "代理不支持以特定 Windows 用户身份运行 gpg；而是导入到当前的密钥环中。"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:425
+#: src/sysmanage_agent/operations/gpg_operations.py:442
 #, python-format
 msgid "target user '%s' does not exist"
 msgstr "目标用户 '%s' 不存在"
 
-#: src/sysmanage_agent/operations/gpg_operations.py:433
+#: src/sysmanage_agent/operations/gpg_operations.py:450
 #, python-format
 msgid "could not prepare GNUPGHOME for user '%s'"
 msgstr "无法为用户 '%s' 准备 GNUPGHOME"
@@ -3671,108 +3671,126 @@ msgstr "代理未公开 apply_deployment_plan；需要升级"
 msgid "Script delegation failed: %s"
 msgstr "处理器检测回退失败: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:35
+#: src/sysmanage_agent/operations/system_control.py:36
 msgid "No command specified"
 msgstr "未指定命令"
 
-#: src/sysmanage_agent/operations/system_control.py:58
+#: src/sysmanage_agent/operations/system_control.py:59
 #, python-format
 msgid "Command timed out after %d seconds: %s"
 msgstr "命令在 %d 秒后超时: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:62
+#: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
 msgid "Command timed out after %d seconds"
 msgstr "命令在 %d 秒后超时"
 
-#: src/sysmanage_agent/operations/system_control.py:98
+#: src/sysmanage_agent/operations/system_control.py:99
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
 msgstr "收集 apt 软件包失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:113
+#: src/sysmanage_agent/operations/system_control.py:114
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:122
+#: src/sysmanage_agent/operations/system_control.py:123
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
 msgstr "收集 apt 软件包失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:139
+#: src/sysmanage_agent/operations/system_control.py:140
 #, python-format
 msgid "Failed to update system: %s"
 msgstr "更新代理失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:147
+#: src/sysmanage_agent/operations/system_control.py:148
 msgid "No service name specified"
 msgstr "未指定服务名称"
 
-#: src/sysmanage_agent/operations/system_control.py:156
+#: src/sysmanage_agent/operations/system_control.py:157
 #, python-format
 msgid "Failed to restart service %s: %s"
 msgstr "重启服务 %s 失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:177
+#: src/sysmanage_agent/operations/system_control.py:178
 msgid "System reboot scheduled in 1 minute"
 msgstr "系统将在 1 分钟后重启"
 
-#: src/sysmanage_agent/operations/system_control.py:181
+#: src/sysmanage_agent/operations/system_control.py:182
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "重启系统失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:201
+#: src/sysmanage_agent/operations/system_control.py:202
 msgid "System shutdown scheduled in 1 minute"
 msgstr "系统将在 1 分钟后关闭"
 
-#: src/sysmanage_agent/operations/system_control.py:205
+#: src/sysmanage_agent/operations/system_control.py:206
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "停止 HTTP 服务器失败: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:219
+#: src/sysmanage_agent/operations/system_control.py:237
+msgid "dnf-system-upgrade requires a target version"
+msgstr "dnf-system-upgrade 需要指定目标版本"
+
+#: src/sysmanage_agent/operations/system_control.py:250
+msgid "freebsd-update requires a target version"
+msgstr "freebsd-update 需要指定目标版本"
+
+#: src/sysmanage_agent/operations/system_control.py:261
+#, python-format
+msgid "Unknown release-upgrade method: %s"
+msgstr "未知的版本升级方法： %s"
+
+#: src/sysmanage_agent/operations/system_control.py:265
+#, python-format
+msgid "Starting release-upgrade (job %s): %s -> %s"
+msgstr "启动版本升级（作业 %s）：%s -> %s"
+
+#: src/sysmanage_agent/operations/system_control.py:283
 msgid "Agent update not yet supported on Windows"
 msgstr "尚不支持在 Windows 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:224
+#: src/sysmanage_agent/operations/system_control.py:288
 msgid "Agent update not yet supported on macOS"
 msgstr "尚不支持在 macOS 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:231
+#: src/sysmanage_agent/operations/system_control.py:295
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "更新代理失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:270
+#: src/sysmanage_agent/operations/system_control.py:334
 msgid "Cannot detect Linux distribution"
 msgstr "无法检测 Linux 发行版"
 
-#: src/sysmanage_agent/operations/system_control.py:289
+#: src/sysmanage_agent/operations/system_control.py:353
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "不支持的 Linux 发行版：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:296
-#: src/sysmanage_agent/operations/system_control.py:307
+#: src/sysmanage_agent/operations/system_control.py:360
+#: src/sysmanage_agent/operations/system_control.py:371
 msgid "Agent updated successfully"
 msgstr "代理更新成功"
 
-#: src/sysmanage_agent/operations/system_control.py:326
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Sent antivirus status update to server"
 msgstr "向服务器发送防病毒状态更新"
 
-#: src/sysmanage_agent/operations/system_control.py:328
+#: src/sysmanage_agent/operations/system_control.py:392
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "发送初始数据更新失败：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:376
+#: src/sysmanage_agent/operations/system_control.py:440
 msgid "Sent commercial antivirus status update to server"
 msgstr "发送商业防病毒状态更新到服务器"
 
-#: src/sysmanage_agent/operations/system_control.py:379
+#: src/sysmanage_agent/operations/system_control.py:443
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "发送初始数据更新失败：%s"

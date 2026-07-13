@@ -303,6 +303,7 @@ class MessageProcessor:
             "restart_service": self.agent.restart_service,
             "reboot_system": lambda params: self.agent.reboot_system(),
             "shutdown_system": lambda params: self.agent.shutdown_system(),
+            "os_release_upgrade": self.agent.release_upgrade,
             "update_os_version": lambda params: self.agent.update_os_version(),
             "update_hardware": lambda params: self.agent.update_hardware(),
             "update_user_access": lambda params: self.agent.update_user_access(),
