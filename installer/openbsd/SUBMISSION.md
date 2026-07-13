@@ -309,7 +309,7 @@ The agent is written in Python 3 and uses only pure-Python dependencies
 available in OpenBSD ports (websockets, yaml, aiohttp, cryptography,
 sqlalchemy, alembic).
 
-The port has been tested on OpenBSD 7.7/amd64 and builds/runs successfully.
+The port has been tested on OpenBSD 7.9/amd64 and builds/runs successfully.
 
 This port requires registration of:
 - User: _sysmanage:827:_sysmanage

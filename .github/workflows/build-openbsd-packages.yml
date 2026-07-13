@@ -20,7 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        openbsd-version: ['7.7', '7.8', '7.9']
+        # OpenBSD supports only the latest two releases; 7.7 is EOL.
+        openbsd-version: ['7.8', '7.9']
 
     steps:
       - name: Checkout code
@@ -33,7 +34,7 @@ jobs:
           # forwarded into the VM via `envs:` below — NEVER interpolated into the
           # run: script (that is a shell-injection sink; semgrep
           # run-shell-injection).  matrix.openbsd-version is a fixed allow-list
-          # value (7.7/7.8/7.9) and is safe to interpolate directly.
+          # value (7.8/7.9) and is safe to interpolate directly.
           RELEASE_VERSION: ${{ github.event.inputs.version }}
         with:
           release: ${{ matrix.openbsd-version }}

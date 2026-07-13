@@ -235,7 +235,7 @@ system monitoring agent for remote management.
 
 [Brief description of the software and why it's useful]
 
-Attached is the port tarball. The port has been tested on OpenBSD 7.7
+Attached is the port tarball. The port has been tested on OpenBSD 7.9
 [or your version] and builds/runs successfully.
 
 Thanks,
@@ -354,5 +354,5 @@ For OpenBSD port issues:
 ---
 
 **Last Updated:** October 16, 2025
-**OpenBSD Version:** 7.7
+**OpenBSD Version:** 7.9
 **Port Version:** 0.9.4
