@@ -1628,7 +1628,7 @@ jobs:
           echo "Building OpenBSD package for version: $VERSION"
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@d7d892b7b9ba97ed2747b0fc201be65037d64c3e # v1.4.0
+        uses: vmactions/openbsd-vm@18edb32f4e48dae5865d7b8b3a9587bc01218a20 # v1.4.4
         env:
           VERSION: ${{ steps.version.outputs.version }}
         with:
