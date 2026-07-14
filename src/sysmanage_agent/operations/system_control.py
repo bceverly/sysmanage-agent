@@ -97,7 +97,7 @@ class SystemControl:
             command = f"sudo pro {action} fips --assume-yes"
         elif method in ("rhel", "rhel-fips", "fips-mode-setup"):
             command = f"sudo fips-mode-setup --{action}"
-        elif method == "windows" or platform.system() == "Windows":
+        elif method == "windows":
             value = "1" if enable else "0"
             command = (
                 r'reg add "HKLM\System\CurrentControlSet\Control\Lsa'
