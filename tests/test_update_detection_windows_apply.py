@@ -12,6 +12,7 @@ This module covers:
 
 # pylint: disable=protected-access,redefined-outer-name
 
+import itertools
 import subprocess
 from unittest.mock import Mock, patch
 
@@ -317,9 +318,13 @@ class TestApplyWingetUpdates:
         mock_process.communicate.return_value = ("Partial", "")
         mock_process.kill = Mock()
 
-        # Need enough time values for the loop
-        time_values = [0, 0]  # start_time, last_log_time
-        time_values.extend([1300] * 10)  # multiple calls for elapsed checks
+        # This patches the shared `time` module's time() globally, so EVERY
+        # time.time() call — including the ones inside logging.makeRecord() when
+        # the code logs — draws from side_effect.  The exact count varies by
+        # Python version (3.12's logging adds a call), so use an inexhaustible
+        # sequence instead of a fixed list: start at 0, then 1300s (> timeout)
+        # forever, which never raises StopIteration.
+        time_values = itertools.chain([0, 0], itertools.repeat(1300))
 
         with patch("subprocess.Popen", return_value=mock_process):
             with patch(
