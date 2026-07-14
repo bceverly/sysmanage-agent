@@ -11,6 +11,8 @@ scanning-settings:
     - "node_modules"
     - "dist"
     - "build"
+    # Packaging staging dir — holds stale copies of requirements.txt.
+    - "build-temp"
     - "__pycache__"
     - ".tox"
     - ".pytest_cache"
@@ -20,8 +22,14 @@ report:
     enabled: true
     auto-ignore-in-report:
       vulnerabilities:
-        # aiohttp 3.13.5 is the latest published patched release.  The
-        # agent uses aiohttp for the WebSocket client connection.
+        # aiohttp: requirements.txt now pins aiohttp>=3.14.1 on Python 3.10+
+        # (carries the PYSEC-2026-2104..2113 fix).  The agent's 3.9 leg
+        # (RHEL9/OL9 cp39) CANNOT install 3.14 (it requires >=3.10) and no
+        # 3.13.x backport of the fix exists, so the 3.9 branch stays on 3.13.x
+        # and this advisory is an accepted, unavoidable cp39-only gap.
+        # NOTE: "66704" is a placeholder — replace with the real advisory id(s)
+        # shown in the safetycli.com web UI, and set the same ignore there (the
+        # cloud policy overrides this local file for authenticated scans).
         "66704":
-          reason: "aiohttp 3.13.5 is the latest patched release; no upstream fix for newer advisory bucket"
+          reason: "3.14 fix requires Python>=3.10; agent 3.9/cp39 leg cannot take it and no 3.13.x backport exists"
           expires: "2026-09-01"

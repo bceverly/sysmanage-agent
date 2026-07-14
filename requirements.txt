@@ -7,8 +7,14 @@
 # bound only when cp39 is dropped from the supported Python matrix.
 websockets>=15.0.1,<16
 PyYAML>=6.0.2
-aiohttp>=3.13.5  # 20 CVEs across 3.12.x; 3.13.5 is latest patched (HTTP request smuggling, header injection)
-cryptography>=48.0.0  # 3 CVEs in 45.0.7-47.x (buffer overflow + DNS name-constraint validation); 48.0.0 fixes them
+# aiohttp 3.14.x (carrying the PYSEC-2026-2104..2113 fix) requires Python >=3.10,
+# so the agent's 3.9 leg (RHEL9/OL9 cp39) can't install it and no 3.13.x backport
+# of the fix exists.  On 3.10+ take the fixed 3.14.1; on 3.9 stay on the newest
+# 3.9-compatible line (3.13.x) — an accepted, unavoidable gap until aiohttp
+# backports or cp39 is dropped from the support matrix.
+aiohttp>=3.14.1; python_version >= '3.10'
+aiohttp>=3.13.5,<3.14; python_version < '3.10'
+cryptography>=48.0.1  # 45.0.7-47.x buffer overflow + DNS name-constraint CVEs; 48.0.1 fixes GHSA-537c-gmf6-5ccf (48.0.0 affected). Supports cp39.
 psutil>=5.9.0
 bcrypt>=4.0.0
 aiofiles>=24.1.0
@@ -35,6 +41,12 @@ defusedxml>=0.7.1
 # Database dependencies
 SQLAlchemy>=2.0.43
 alembic>=1.16.5
+# Transitive but SHIPPED at runtime, so pinned to their patched releases:
+#   Mako  — pulled by alembic (migration templates).  PYSEC-2026-2617 fixed in 1.3.12.
+#   idna  — pulled by aiohttp (via yarl) for hostname handling.  PYSEC-2026-215
+#           fixed in 3.15.
+Mako>=1.3.12
+idna>=3.15
 
 # Development dependencies for linting and testing
 babel>=2.12.0  # pybabel CLI for i18n-validate
@@ -56,11 +68,29 @@ safety>=3.6.1,<4.0.0
 semgrep>=1.162.0; python_version >= '3.10'
 semgrep>=1.95.0,<1.137; python_version < '3.10'
 typer>=0.9.0,<0.24.0
-pytest>=7.0.0
+# pytest 9.x (which carries the PYSEC tmp-dir advisory fix) requires Python
+# >=3.10, so the agent's 3.9 CI leg can't install it.  On 3.10+ we take the
+# fixed 9.0.3+; on 3.9 we stay on the newest 3.9-compatible pytest (8.4.x) and
+# accept that dev-tool-only medium advisory — pytest is never shipped with the
+# agent, and no 3.9-compatible release carries the fix.
+pytest>=9.0.3; python_version >= '3.10'
+pytest>=8.4.2,<9; python_version < '3.10'
 pytest-asyncio>=0.21.0
 pytest-cov>=4.0.0
 pytest-xdist>=3.0.0
 coverage>=7.0.0
+
+# --- Transitive security pins for DEV / CI tooling only (safety, semgrep,
+#     selenium, requests) — NOT shipped with the agent runtime.  Pinned to their
+#     patched releases so the dependency scanners come back clean. ---
+urllib3>=2.7.0  # PYSEC-2026-141/142 (pulled by requests/semgrep/selenium)
+ujson>=5.13.0  # PYSEC-2026-2293/2294 (pulled by semgrep)
+Authlib>=1.7.2  # advisory affecting 1.7.0 (pulled by safety)
+# python_multipart: still intentionally UNPINNED despite PYSEC-2026-3036..3040.
+# It reaches the agent only through dev tooling (no untrusted-form-parser
+# surface at runtime), and pinning 0.0.27+ breaks the Python-3.9 wheel-download
+# pass the RPM builder uses (see the note above the Database section). Revisit
+# if/when cp39 is dropped from the support matrix.
 
 # Note: On OpenBSD 7.7, coverage.py C tracer requires gcc and py3-cffi
 # Install with: doas pkg_add gcc py3-cffi

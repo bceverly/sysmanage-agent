@@ -168,6 +168,10 @@ class ClientRegistration:
         """Get comprehensive OS version information as separate data."""
         return self.os_info_collector.get_os_version_info()
 
+    def get_fips_mode_info(self) -> Dict[str, Any]:
+        """Get the host's FIPS compliance-mode posture (Phase 14.4)."""
+        return self.os_info_collector.get_fips_mode_info()
+
     def get_hardware_info(self) -> Dict[str, Any]:
         """Get comprehensive hardware information formatted for database storage."""
         return self.hardware_collector.get_hardware_info()

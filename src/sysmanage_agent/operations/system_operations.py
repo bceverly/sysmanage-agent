@@ -72,6 +72,14 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         """Perform a distro release-upgrade (Phase 14.3)."""
         return await self.system_control.release_upgrade(parameters)
 
+    async def fips_enable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable FIPS mode on this host (Phase 14.4)."""
+        return await self.system_control.fips_change(parameters, enable=True)
+
+    async def fips_disable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable FIPS mode on this host (Phase 14.4)."""
+        return await self.system_control.fips_change(parameters, enable=False)
+
     async def update_agent(self) -> Dict[str, Any]:
         """Update the sysmanage-agent to the latest version."""
         return await self.system_control.update_agent()

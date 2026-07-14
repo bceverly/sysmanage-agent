@@ -122,6 +122,125 @@ class OSInfoCollector:
 
         return ubuntu_pro_info
 
+    def get_fips_mode_info(self) -> Dict[str, Any]:
+        """Detect the host's FIPS compliance-mode posture (Phase 14.4).
+
+        Returned dict is persisted on the server host record:
+          status: ``enabled`` | ``available`` | ``disabled`` | ``not_applicable``
+          enabled / available / kernel_enforced: bool
+          vendor: ``ubuntu-pro`` | ``rhel`` | ``windows`` | ""
+          package_version: str
+        macOS and the BSDs have no OS-level FIPS mode → ``not_applicable``.
+        """
+        info: Dict[str, Any] = {
+            "status": "not_applicable",
+            "enabled": False,
+            "available": False,
+            "kernel_enforced": False,
+            "vendor": "",
+            "package_version": "",
+        }
+        system = platform.system()
+        if system == "Linux":
+            self._detect_fips_linux(info)
+        elif system == "Windows":
+            self._detect_fips_windows(info)
+        return info
+
+    def _detect_fips_linux(self, info: Dict[str, Any]) -> None:
+        """FIPS detection on Linux (kernel flag + RHEL fips-mode-setup + Ubuntu Pro)."""
+        info["status"] = "disabled"  # Linux is FIPS-capable
+        self._detect_fips_kernel_flag(info)
+        self._detect_fips_rhel(info)
+        self._detect_fips_ubuntu_pro(info)
+        if info["enabled"]:
+            info["status"] = "enabled"
+        elif info["available"]:
+            info["status"] = "available"
+        else:
+            info["status"] = "disabled"
+
+    def _detect_fips_kernel_flag(self, info: Dict[str, Any]) -> None:
+        """Read the authoritative 'is FIPS active in the kernel right now' flag."""
+        try:
+            with open("/proc/sys/crypto/fips_enabled", encoding="utf-8") as handle:
+                if handle.read().strip() == "1":
+                    info["enabled"] = True
+                    info["kernel_enforced"] = True
+        except OSError:
+            pass
+
+    def _detect_fips_rhel(self, info: Dict[str, Any]) -> None:
+        """RHEL family: fips-mode-setup --check."""
+        try:
+            result = subprocess.run(
+                ["fips-mode-setup", "--check"],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            out = (result.stdout or "").lower()
+            if "enabled" in out or "disabled" in out:
+                info["available"] = True
+                info["vendor"] = info["vendor"] or "rhel"
+                if "is enabled" in out:
+                    info["enabled"] = True
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("fips-mode-setup check failed: %s", error)
+
+    def _detect_fips_ubuntu_pro(self, info: Dict[str, Any]) -> None:
+        """Ubuntu Pro FIPS service status."""
+        try:
+            result = subprocess.run(
+                ["pro", "status", "--all", "--format", "json"],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout:
+                for svc in json.loads(result.stdout).get("services", []):
+                    if str(svc.get("name", "")).startswith("fips"):
+                        info["available"] = True
+                        info["vendor"] = "ubuntu-pro"
+                        if svc.get("status") == "enabled":
+                            info["enabled"] = True
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Ubuntu Pro FIPS check failed: %s", error)
+
+    def _detect_fips_windows(self, info: Dict[str, Any]) -> None:
+        """FIPS detection on Windows (FipsAlgorithmPolicy registry value)."""
+        info["status"] = "disabled"
+        info["vendor"] = "windows"
+        info["available"] = True
+        try:
+            result = subprocess.run(
+                [  # nosec B603, B607
+                    "reg",
+                    "query",
+                    r"HKLM\System\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy",
+                    "/v",
+                    "Enabled",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if "0x1" in (result.stdout or ""):
+                info["enabled"] = True
+                info["kernel_enforced"] = True
+                info["status"] = "enabled"
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Windows FIPS registry check failed: %s", error)
+
     def _parse_ubuntu_pro_output(
         self, stdout: str, ubuntu_pro_info: Dict[str, Any]
     ) -> None:

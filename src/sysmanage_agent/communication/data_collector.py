@@ -64,6 +64,12 @@ class DataCollector:
         await self.agent.send_message(os_message)
         self.logger.debug("AGENT_DEBUG: OS version message sent")
 
+        # Send FIPS compliance-mode posture (Phase 14.4)
+        fips_info = self.agent.registration.get_fips_mode_info()
+        fips_message = self.agent.create_message("fips_compliance_update", fips_info)
+        await self.agent.send_message(fips_message)
+        self.logger.debug("AGENT_DEBUG: FIPS compliance message sent")
+
         # Allow queue processing tasks to run
         await asyncio.sleep(0)
 

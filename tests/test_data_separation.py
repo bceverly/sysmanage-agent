@@ -274,6 +274,14 @@ logging:
                 "storage_devices": [],
                 "network_interfaces": [],
             }
+            mock_registration.get_fips_mode_info.return_value = {
+                "status": "disabled",
+                "enabled": False,
+                "available": True,
+                "kernel_enforced": False,
+                "vendor": "rhel",
+                "package_version": "",
+            }
             mock_registration.get_system_info.return_value = {
                 "hostname": "test-host",
                 "fqdn": "test-host.example.com",
@@ -298,8 +306,9 @@ logging:
 
             await agent.send_initial_data_updates()
 
-            # Verify both OS version and hardware messages were sent (2 calls)
-            assert len(sent_messages) == 2
+            # OS version, FIPS posture, and hardware are each sent as their own
+            # message (the chain then aborts on the unmocked user-access call).
+            assert len(sent_messages) == 3
 
             # Check the first call (OS version message)
             os_call_data = sent_messages[0]
@@ -309,8 +318,15 @@ logging:
             assert os_call_data["data"]["machine_architecture"] == "x86_64"
             assert os_call_data["data"]["os_info"]["distribution"] == "Ubuntu"
 
-            # Check the second call (hardware message)
-            hardware_call_data = sent_messages[1]
+            # Check the second call (FIPS compliance message)
+            fips_call_data = sent_messages[1]
+
+            assert fips_call_data["message_type"] == "fips_compliance_update"
+            assert fips_call_data["data"]["status"] == "disabled"
+            assert fips_call_data["data"]["vendor"] == "rhel"
+
+            # Check the third call (hardware message)
+            hardware_call_data = sent_messages[2]
 
             assert hardware_call_data["message_type"] == "hardware_update"
             assert hardware_call_data["data"]["cpu_vendor"] == "Intel"

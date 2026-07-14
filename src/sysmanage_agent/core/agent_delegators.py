@@ -54,6 +54,14 @@ class SystemOperationsDelegator:
         """Perform a distro release-upgrade (Phase 14.3)."""
         return await self.system_ops.release_upgrade(parameters)
 
+    async def fips_enable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Enable FIPS mode on this host (Phase 14.4)."""
+        return await self.system_ops.fips_enable(parameters)
+
+    async def fips_disable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Disable FIPS mode on this host (Phase 14.4)."""
+        return await self.system_ops.fips_disable(parameters)
+
     async def update_agent(self) -> Dict[str, Any]:
         """Update the sysmanage-agent to the latest version."""
         return await self.system_ops.update_agent()

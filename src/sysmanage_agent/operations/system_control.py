@@ -78,6 +78,56 @@ class SystemControl:
         except Exception as error:
             return {"success": False, "error": str(error)}
 
+    async def fips_change(
+        self, parameters: Dict[str, Any], enable: bool
+    ) -> Dict[str, Any]:
+        """Enable or disable FIPS mode on this host (Phase 14.4).
+
+        The server's ``compliance_engine`` inferred the method (``ubuntu-pro`` /
+        ``rhel`` / ``windows``) from the host OS.  FIPS changes require a reboot
+        to fully take effect, so we run the switch command, resend the (current)
+        posture, and flag ``reboot_required``; the post-reboot check-in reports
+        the settled state.
+        """
+        params = parameters or {}
+        method = params.get("method") or params.get("vendor")
+        action = "enable" if enable else "disable"
+
+        if method in ("ubuntu-pro", "ubuntu_pro"):
+            command = f"sudo pro {action} fips --assume-yes"
+        elif method in ("rhel", "rhel-fips", "fips-mode-setup"):
+            command = f"sudo fips-mode-setup --{action}"
+        elif method == "windows" or platform.system() == "Windows":
+            value = "1" if enable else "0"
+            command = (
+                r'reg add "HKLM\System\CurrentControlSet\Control\Lsa'
+                r'\FipsAlgorithmPolicy" /v Enabled /t REG_DWORD /d '
+                f"{value} /f"
+            )
+        else:
+            return {
+                "success": False,
+                "error": _("Unsupported FIPS method: %s") % method,
+            }
+
+        self.logger.info(_("Applying FIPS %s via: %s"), action, command)
+        result = await self.execute_shell_command({"command": command, "timeout": 600})
+        result["fips_action"] = action
+        result["reboot_required"] = bool(result.get("success"))
+
+        # Resend the posture so the server reflects the change promptly (the
+        # settled value lands after the reboot's check-in).
+        try:
+            fips_info = self.agent_instance.registration.get_fips_mode_info()
+            message = self.agent_instance.create_message(
+                "fips_compliance_update", fips_info
+            )
+            await self.agent_instance.send_message(message)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Post-FIPS status resend failed: %s", error)
+
+        return result
+
     async def get_detailed_system_info(self) -> Dict[str, Any]:
         """
         Get detailed system information and send all data to server.
