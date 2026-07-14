@@ -318,19 +318,28 @@ class TestApplyWingetUpdates:
         mock_process.communicate.return_value = ("Partial", "")
         mock_process.kill = Mock()
 
-        # This patches the shared `time` module's time() globally, so EVERY
-        # time.time() call — including the ones inside logging.makeRecord() when
-        # the code logs — draws from side_effect.  The exact count varies by
-        # Python version (3.12's logging adds a call), so use an inexhaustible
-        # sequence instead of a fixed list: start at 0, then 1300s (> timeout)
-        # forever, which never raises StopIteration.
-        time_values = itertools.chain([0, 0], itertools.repeat(1300))
+        # This patches the shared `time` module's time() GLOBALLY, so every
+        # time.time() call draws from side_effect — including the ones inside
+        # logging.makeRecord() when the code logs (line 143, and again in the
+        # timeout branch).  How many such calls precede `start_time` varies by
+        # Python version, so a fixed/repeating VALUE list is unusable: it either
+        # runs dry (StopIteration) or, if `start_time` lands on the "elapsed"
+        # value, makes `elapsed` == 0 forever → the sleep-free poll loop spins
+        # and the runner OOM-kills it (exit 137).
+        #
+        # Use a MONOTONICALLY INCREASING clock instead: consecutive time.time()
+        # calls always differ by a fixed step, so `elapsed = time.time() -
+        # start_time` on the first loop iteration is that step regardless of how
+        # many logging calls came before start_time.  A step far larger than the
+        # 1200s timeout guarantees the loop exits on iteration 1, and the counter
+        # is infinite so it can never raise StopIteration.
+        mock_clock = itertools.count(0, 1_000_000)  # 0, 1e6, 2e6, … (>> 1200s)
 
         with patch("subprocess.Popen", return_value=mock_process):
             with patch(
                 "src.sysmanage_agent.collection.update_detection_windows_apply.time.time"
             ) as mock_time:
-                mock_time.side_effect = time_values
+                mock_time.side_effect = mock_clock
                 with patch(
                     "src.sysmanage_agent.collection.update_detection_windows_apply.time.sleep"
                 ):
