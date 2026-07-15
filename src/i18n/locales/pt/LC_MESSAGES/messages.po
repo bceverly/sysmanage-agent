@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 10:09-0400\n"
+"POT-Creation-Date: 2026-07-15 06:57-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -567,31 +567,31 @@ msgstr "Tempo esgotado na verificação de status do Ubuntu Pro"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Falha ao desanexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:270
+#: src/sysmanage_agent/collection/os_info_collection.py:280
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Falha ao analisar saída JSON do fwupd: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:273
+#: src/sysmanage_agent/collection/os_info_collection.py:283
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Erro ao anexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:366
+#: src/sysmanage_agent/collection/os_info_collection.py:376
 msgid "Livepatch status check timed out"
 msgstr "Tempo limite excedido na verificação do estado do Livepatch"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:372
+#: src/sysmanage_agent/collection/os_info_collection.py:382
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Falha ao obter o estado do Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:389
+#: src/sysmanage_agent/collection/os_info_collection.py:399
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Falha ao analisar o JSON do Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:537
+#: src/sysmanage_agent/collection/os_info_collection.py:547
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Falha ao coletar inventário de software: %s"
@@ -2095,96 +2095,109 @@ msgstr "Encontradas %d funções de servidor"
 msgid "Error collecting roles: %s"
 msgstr "Erro ao detectar partições: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:56
+#: src/sysmanage_agent/communication/message_handler.py:63
 msgid "Message handler initialized"
 msgstr "Gerenciador de fila de mensagens inicializado"
 
-#: src/sysmanage_agent/communication/message_handler.py:169
+#: src/sysmanage_agent/communication/message_handler.py:176
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:203
+#: src/sysmanage_agent/communication/message_handler.py:210
 #, python-format
 msgid "Queued command acknowledgment for message: %s"
 msgstr "Colocando reconhecimento de comando na fila para mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:207
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:215
+#: src/sysmanage_agent/communication/message_handler.py:222
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Erro na fila de comando de reconhecimento para %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:264
+#: src/sysmanage_agent/communication/message_handler.py:271
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Erro de controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:303
+#: src/sysmanage_agent/communication/message_handler.py:310
 #, python-format
 msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 msgstr "Ignorando mensagem de erro vencida [%s] de %s (registro em %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:317
+#: src/sysmanage_agent/communication/message_handler.py:324
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Não foi possível definir início automático da rede: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:355
+#: src/sysmanage_agent/communication/message_handler.py:362
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Registro do host está pendente de aprovação. Continuará tentando "
 "periodicamente."
 
-#: src/sysmanage_agent/communication/message_handler.py:360
+#: src/sysmanage_agent/communication/message_handler.py:367
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "O servidor relata falta de nome do host na mensagem. Isso é um erro."
 
-#: src/sysmanage_agent/communication/message_handler.py:363
+#: src/sysmanage_agent/communication/message_handler.py:370
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
+#: src/sysmanage_agent/communication/message_handler.py:394
+#, python-format
 msgid ""
-"Server reports host is not registered. Clearing stored host_id and "
-"triggering re-registration..."
+"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"tenant index; will re-register only if it persists."
 msgstr ""
-"O servidor relata que o host não está registrado. Limparé o host_id "
-"armazenado e disparar a re-registração..."
+"O servidor relatou host_não_cadastrado (strike %(n)d/%(limit)d) — "
+"reconectando SEM descartar o host_id para que o servidor possa resolver "
+"novamente este host a partir do seu index de locatário; re-cadastraremos "
+"apenas se persistir."
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:407
+#, python-format
+msgid ""
+"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"genuinely gone; clearing stored host_id and re-registering."
+msgstr ""
+"host_não_cadastrado persistiu (%(n)d strikes) — tratando esta máquina como "
+"genuinamente ausente; limpando o host_id armazenado e recadastrando"
+
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Stored host_id cleared from database"
 msgstr ""
 "Registros de aprovação de host e dados relacionados removidos do banco de "
 "dados"
 
-#: src/sysmanage_agent/communication/message_handler.py:378
+#: src/sysmanage_agent/communication/message_handler.py:418
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:387
+#: src/sysmanage_agent/communication/message_handler.py:428
 msgid "Disconnecting to trigger re-registration..."
 msgstr "Desconectando para disparar re-registro..."
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:454
 #, python-format
 msgid "Received broadcast %s action=%s issued_by=%s"
 msgstr "Recebido broadcast %s aáo=%s emitido_por=%s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/message_handler.py:423
+#: src/sysmanage_agent/communication/message_handler.py:464
 #, python-format
 msgid "Broadcast %s: software inventory refreshed"
 msgstr "Transmissão %s: inventário de software atualizado com sucesso"
 
-#: src/sysmanage_agent/communication/message_handler.py:431
+#: src/sysmanage_agent/communication/message_handler.py:472
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
@@ -2193,17 +2206,17 @@ msgstr ""
 "Transmissão %s: solicitação de atualização do inventário, mas data_collector"
 " não possui send_software_inventory_update"
 
-#: src/sysmanage_agent/communication/message_handler.py:438
+#: src/sysmanage_agent/communication/message_handler.py:479
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Transmissão %s: falha na atualização do inventário: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:448
+#: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "Transmissão %s: ação desconhecida '%s' - ignorada"
 
-#: src/sysmanage_agent/communication/message_handler.py:531
+#: src/sysmanage_agent/communication/message_handler.py:572
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -2211,190 +2224,190 @@ msgstr ""
 "Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do"
 " loop de recepção para permitir reconexão"
 
-#: src/sysmanage_agent/communication/message_handler.py:546
+#: src/sysmanage_agent/communication/message_handler.py:587
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON inválido recebido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:589
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Erro ao processar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:552
+#: src/sysmanage_agent/communication/message_handler.py:593
 msgid "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 msgstr "ERRO_DE_COMUNICAÇÃO_WEBSOCKET: Conexão com o servidor fechada"
 
-#: src/sysmanage_agent/communication/message_handler.py:561
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Erro do receptor de mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:605
+#: src/sysmanage_agent/communication/message_handler.py:654
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Tipo de etapa desconhecido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:668
+#: src/sysmanage_agent/communication/message_handler.py:730
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Batida do coração falhou, a conexão pode ter sido perdida"
 
-#: src/sysmanage_agent/communication/message_handler.py:677
+#: src/sysmanage_agent/communication/message_handler.py:739
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Erro do verificador de atualizações: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "Mensagem de saída colocada na fila: %s (ID: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:744
+#: src/sysmanage_agent/communication/message_handler.py:806
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr ""
 "Criando tarefa de processamento da fila a partir de queue_outbound_message"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:811
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "Tarefa criada a partir da fila queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:753
+#: src/sysmanage_agent/communication/message_handler.py:815
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:796
+#: src/sysmanage_agent/communication/message_handler.py:858
 msgid "Starting inbound queue processing"
 msgstr "Conexão estabelecida, iniciando processamento da fila"
 
-#: src/sysmanage_agent/communication/message_handler.py:819
+#: src/sysmanage_agent/communication/message_handler.py:881
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Erro no processador de fila: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:829
+#: src/sysmanage_agent/communication/message_handler.py:891
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Mensagem marcada como processando: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:839
+#: src/sysmanage_agent/communication/message_handler.py:901
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "Processando comando de entrada da fila: %s (queue_id: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:850
+#: src/sysmanage_agent/communication/message_handler.py:912
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "Firmware atualizado com sucesso para: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:859
+#: src/sysmanage_agent/communication/message_handler.py:921
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Erro ao processar mensagem em fila %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:875
+#: src/sysmanage_agent/communication/message_handler.py:937
 msgid "Cannot send message: not connected to server"
 msgstr "Não é possível enviar mensagem: não conectado ao servidor"
 
-#: src/sysmanage_agent/communication/message_handler.py:883
+#: src/sysmanage_agent/communication/message_handler.py:945
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:895
+#: src/sysmanage_agent/communication/message_handler.py:957
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "Processando fila de saída chamada, status em execução atual: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:899
+#: src/sysmanage_agent/communication/message_handler.py:961
 msgid "Queue processor already running, exiting"
 msgstr "Processador de fila já está em execução, saindo"
 
-#: src/sysmanage_agent/communication/message_handler.py:903
+#: src/sysmanage_agent/communication/message_handler.py:965
 msgid "Starting outbound queue processing"
 msgstr "Conexão estabelecida, iniciando processamento da fila"
 
-#: src/sysmanage_agent/communication/message_handler.py:904
+#: src/sysmanage_agent/communication/message_handler.py:966
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "Falha ao coletar pacotes apt: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:930
+#: src/sysmanage_agent/communication/message_handler.py:992
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Erro no processador de fila: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:955
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "Executado com sucesso: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:972
+#: src/sysmanage_agent/communication/message_handler.py:1034
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Erro ao processar mensagem em fila %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:987
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Connection established, starting queue processing"
 msgstr "Conexão estabelecida, iniciando processamento da fila"
 
-#: src/sysmanage_agent/communication/message_handler.py:994
+#: src/sysmanage_agent/communication/message_handler.py:1056
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "%d mensagens travadas recuperadas"
 
-#: src/sysmanage_agent/communication/message_handler.py:998
+#: src/sysmanage_agent/communication/message_handler.py:1060
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Erro ao recuperar mensagens travadas: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1004
+#: src/sysmanage_agent/communication/message_handler.py:1066
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr ""
 "Criando tarefa de processamento da fila de saída a partir de "
 "on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1012
+#: src/sysmanage_agent/communication/message_handler.py:1074
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1017
+#: src/sysmanage_agent/communication/message_handler.py:1079
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Falha ao desanexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1023
+#: src/sysmanage_agent/communication/message_handler.py:1085
 msgid "Outbound queue processor already running, not starting another"
 msgstr "Processador de fila de saída já está em execução, não iniciando outro"
 
-#: src/sysmanage_agent/communication/message_handler.py:1030
+#: src/sysmanage_agent/communication/message_handler.py:1092
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr ""
 "Criando tarefa de processamento da fila de entrada a partir de "
 "on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1038
+#: src/sysmanage_agent/communication/message_handler.py:1100
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1043
+#: src/sysmanage_agent/communication/message_handler.py:1105
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Falha ao desanexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1049
+#: src/sysmanage_agent/communication/message_handler.py:1111
 msgid "Inbound queue processor already running, not starting another"
 msgstr ""
 "Processador de fila de entrada já está em execução, não iniciando outro"
 
-#: src/sysmanage_agent/communication/message_handler.py:1057
+#: src/sysmanage_agent/communication/message_handler.py:1119
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "Conexão estabelecida, iniciando processamento da fila"
 
-#: src/sysmanage_agent/communication/message_handler.py:1124
+#: src/sysmanage_agent/communication/message_handler.py:1186
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Erro ao fechar gerenciador de mensagens: %s"
@@ -4629,6 +4642,13 @@ msgstr "Tempo esgotado na verificação de status do Ubuntu Pro"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Erro ao detectar partições: %s"
+
+#~ msgid ""
+#~ "Server reports host is not registered. Clearing stored host_id and "
+#~ "triggering re-registration..."
+#~ msgstr ""
+#~ "O servidor relata que o host não está registrado. Limparé o host_id "
+#~ "armazenado e disparar a re-registração..."
 
 #, python-format
 #~ msgid "[BANNER] %s"

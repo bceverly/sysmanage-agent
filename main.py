@@ -127,6 +127,15 @@ class SysManageAgent(
         self.registration_confirmed = (
             False  # Track if we have received registration_success
         )
+        # host_not_registered resilience: a single such error from the server is
+        # frequently spurious (a transient tenant-routing miss for a host that
+        # genuinely lives in its tenant DB).  We only discard our identity and
+        # re-register after the error PERSISTS across this many strikes; any
+        # message that proves the server recognizes us resets the count.  This
+        # keeps an existing host from re-registering with missing/bad tenant info
+        # (burning enrollment-token uses and, once exhausted, spawning a phantom
+        # server-scoped duplicate).  See message_handler._handle_host_not_registered.
+        self.host_not_registered_strikes = 0
 
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
@@ -568,6 +577,19 @@ class SysManageAgent(
             )
 
         return False
+
+    def bump_host_not_registered_strike(self) -> int:
+        """Increment and return the consecutive host_not_registered strike count.
+
+        Used by the message handler to tolerate transient/spurious not-registered
+        errors before discarding this host's identity (see
+        message_handler._handle_host_not_registered)."""
+        self.host_not_registered_strikes += 1
+        return self.host_not_registered_strikes
+
+    def reset_host_not_registered_strikes(self) -> None:
+        """Clear the strike count — the server has proven it recognizes this host."""
+        self.host_not_registered_strikes = 0
 
     async def _handle_server_error(self, data: Dict[str, Any]) -> None:
         """Handle error messages from server."""

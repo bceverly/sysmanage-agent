@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 10:09-0400\n"
+"POT-Creation-Date: 2026-07-15 06:57-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -564,31 +564,31 @@ msgstr "Ubuntu Pro 状态检查超时"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "分离 Ubuntu Pro 失败：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:270
+#: src/sysmanage_agent/collection/os_info_collection.py:280
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "解析fwupd JSON输出失败：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:273
+#: src/sysmanage_agent/collection/os_info_collection.py:283
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "附加 Ubuntu Pro 时出错：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:366
+#: src/sysmanage_agent/collection/os_info_collection.py:376
 msgid "Livepatch status check timed out"
 msgstr "Livepatch 状态检查超时"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:372
+#: src/sysmanage_agent/collection/os_info_collection.py:382
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "获取 Livepatch 状态失败：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:389
+#: src/sysmanage_agent/collection/os_info_collection.py:399
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "解析 Livepatch JSON 失败：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:537
+#: src/sysmanage_agent/collection/os_info_collection.py:547
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "收集软件清单失败：%s"
@@ -2070,290 +2070,301 @@ msgstr "找到 %d 个服务器角色"
 msgid "Error collecting roles: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:56
+#: src/sysmanage_agent/communication/message_handler.py:63
 msgid "Message handler initialized"
 msgstr "消息队列管理器已初始化"
 
-#: src/sysmanage_agent/communication/message_handler.py:169
+#: src/sysmanage_agent/communication/message_handler.py:176
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:203
+#: src/sysmanage_agent/communication/message_handler.py:210
 #, python-format
 msgid "Queued command acknowledgment for message: %s"
 msgstr "为消息排队确认： %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:207
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:215
+#: src/sysmanage_agent/communication/message_handler.py:222
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "为%s队列命令确认时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:264
+#: src/sysmanage_agent/communication/message_handler.py:271
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:303
+#: src/sysmanage_agent/communication/message_handler.py:310
 #, python-format
 msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 msgstr "忽略来自 %s 的过时错误消息 [%s]（注册于 %s）"
 
-#: src/sysmanage_agent/communication/message_handler.py:317
+#: src/sysmanage_agent/communication/message_handler.py:324
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "无法设置网络自动启动: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:355
+#: src/sysmanage_agent/communication/message_handler.py:362
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主机注册正在等待审批。将定期尝试继续。"
 
-#: src/sysmanage_agent/communication/message_handler.py:360
+#: src/sysmanage_agent/communication/message_handler.py:367
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "服务器报告消息中缺少主机名。这是一个错误。"
 
-#: src/sysmanage_agent/communication/message_handler.py:363
+#: src/sysmanage_agent/communication/message_handler.py:370
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
+#: src/sysmanage_agent/communication/message_handler.py:394
+#, python-format
 msgid ""
-"Server reports host is not registered. Clearing stored host_id and "
-"triggering re-registration..."
-msgstr "服务器报告主机未注册。清除存储的host_id并触发重新注册..."
+"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"tenant index; will re-register only if it persists."
+msgstr ""
+"服务器报告主机未注册 (第 %(n)d/%(limit)d 次警告) — 重新连接时不丢弃 "
+"host_id，以便服务器可以从其租户索引中重新解析此主机；如果问题持续，则将重新注册。"
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:407
+#, python-format
+msgid ""
+"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"genuinely gone; clearing stored host_id and re-registering."
+msgstr "主机未注册状态已持久化 (%(n)d 次警告) — 将该主机视为真正消失；清除存储的 host_id 并重新注册。"
+
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Stored host_id cleared from database"
 msgstr "已从数据库清除主机批准记录和相关数据"
 
-#: src/sysmanage_agent/communication/message_handler.py:378
+#: src/sysmanage_agent/communication/message_handler.py:418
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:387
+#: src/sysmanage_agent/communication/message_handler.py:428
 msgid "Disconnecting to trigger re-registration..."
 msgstr "断开连接以触发重新注册..."
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:454
 #, python-format
 msgid "Received broadcast %s action=%s issued_by=%s"
 msgstr "收到广播 %s 动作=%s 发布者=%s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/message_handler.py:423
+#: src/sysmanage_agent/communication/message_handler.py:464
 #, python-format
 msgid "Broadcast %s: software inventory refreshed"
 msgstr "广播 %s: 软件库存已刷新"
 
-#: src/sysmanage_agent/communication/message_handler.py:431
+#: src/sysmanage_agent/communication/message_handler.py:472
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr "广播 %s: 请求刷新库存，但 data_collector 缺少 send_software_inventory_update 功能"
 
-#: src/sysmanage_agent/communication/message_handler.py:438
+#: src/sysmanage_agent/communication/message_handler.py:479
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "广播 %s: 无法刷新库存: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:448
+#: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "广播 %s: 不支持的操作 '%s' — 忽略"
 
-#: src/sysmanage_agent/communication/message_handler.py:531
+#: src/sysmanage_agent/communication/message_handler.py:572
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr "消息接收器：WebSocket 由于并发断开连接被清除；退出接收循环以允许重新连接"
 
-#: src/sysmanage_agent/communication/message_handler.py:546
+#: src/sysmanage_agent/communication/message_handler.py:587
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "收到无效的 JSON 数据：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:589
 #, python-format
 msgid "Error processing message: %s"
 msgstr "处理消息时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:552
+#: src/sysmanage_agent/communication/message_handler.py:593
 msgid "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 msgstr "WEBSOCKET通讯错误：与服务器的连接已关闭"
 
-#: src/sysmanage_agent/communication/message_handler.py:561
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 消息接收错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:605
+#: src/sysmanage_agent/communication/message_handler.py:654
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知的步骤类型：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:668
+#: src/sysmanage_agent/communication/message_handler.py:730
 msgid "Heartbeat failed, connection may be lost"
 msgstr "心跳失败，连接可能丢失"
 
-#: src/sysmanage_agent/communication/message_handler.py:677
+#: src/sysmanage_agent/communication/message_handler.py:739
 #, python-format
 msgid "Message sender error: %s"
 msgstr "更新检查器错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "已将出站消息排队： %s（ID：%s）"
 
-#: src/sysmanage_agent/communication/message_handler.py:744
+#: src/sysmanage_agent/communication/message_handler.py:806
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "从queue_outbound_message创建队列处理任务"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:811
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "从队列 outbound_message 创建任务：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:753
+#: src/sysmanage_agent/communication/message_handler.py:815
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:796
+#: src/sysmanage_agent/communication/message_handler.py:858
 msgid "Starting inbound queue processing"
 msgstr "连接已建立，开始队列处理"
 
-#: src/sysmanage_agent/communication/message_handler.py:819
+#: src/sysmanage_agent/communication/message_handler.py:881
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "队列处理器出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:829
+#: src/sysmanage_agent/communication/message_handler.py:891
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "消息已标记为处理中：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:839
+#: src/sysmanage_agent/communication/message_handler.py:901
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "正在处理入队命令： %s（队列 ID: %s）"
 
-#: src/sysmanage_agent/communication/message_handler.py:850
+#: src/sysmanage_agent/communication/message_handler.py:912
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "成功更新固件：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:859
+#: src/sysmanage_agent/communication/message_handler.py:921
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "处理队列消息 %s 时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:875
+#: src/sysmanage_agent/communication/message_handler.py:937
 msgid "Cannot send message: not connected to server"
 msgstr "无法发送消息：未连接到服务器"
 
-#: src/sysmanage_agent/communication/message_handler.py:883
+#: src/sysmanage_agent/communication/message_handler.py:945
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:895
+#: src/sysmanage_agent/communication/message_handler.py:957
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "处理出队消息调用，当前运行状态：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:899
+#: src/sysmanage_agent/communication/message_handler.py:961
 msgid "Queue processor already running, exiting"
 msgstr "队列处理器已经在运行，退出"
 
-#: src/sysmanage_agent/communication/message_handler.py:903
+#: src/sysmanage_agent/communication/message_handler.py:965
 msgid "Starting outbound queue processing"
 msgstr "连接已建立，开始队列处理"
 
-#: src/sysmanage_agent/communication/message_handler.py:904
+#: src/sysmanage_agent/communication/message_handler.py:966
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "收集 apt 软件包失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:930
+#: src/sysmanage_agent/communication/message_handler.py:992
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "队列处理器出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:955
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "成功执行：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:972
+#: src/sysmanage_agent/communication/message_handler.py:1034
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "处理队列消息 %s 时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:987
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Connection established, starting queue processing"
 msgstr "连接已建立，开始队列处理"
 
-#: src/sysmanage_agent/communication/message_handler.py:994
+#: src/sysmanage_agent/communication/message_handler.py:1056
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "已恢复 %d 条卡住的消息"
 
-#: src/sysmanage_agent/communication/message_handler.py:998
+#: src/sysmanage_agent/communication/message_handler.py:1060
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢复滞留消息时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1004
+#: src/sysmanage_agent/communication/message_handler.py:1066
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr "从on_connection_established创建出队处理任务"
 
-#: src/sysmanage_agent/communication/message_handler.py:1012
+#: src/sysmanage_agent/communication/message_handler.py:1074
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1017
+#: src/sysmanage_agent/communication/message_handler.py:1079
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "分离 Ubuntu Pro 失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1023
+#: src/sysmanage_agent/communication/message_handler.py:1085
 msgid "Outbound queue processor already running, not starting another"
 msgstr "出队处理器已经在运行，不再启动新的实例"
 
-#: src/sysmanage_agent/communication/message_handler.py:1030
+#: src/sysmanage_agent/communication/message_handler.py:1092
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr "从on_connection_established创建入队处理任务"
 
-#: src/sysmanage_agent/communication/message_handler.py:1038
+#: src/sysmanage_agent/communication/message_handler.py:1100
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1043
+#: src/sysmanage_agent/communication/message_handler.py:1105
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "分离 Ubuntu Pro 失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1049
+#: src/sysmanage_agent/communication/message_handler.py:1111
 msgid "Inbound queue processor already running, not starting another"
 msgstr "入队处理器已经在运行，不再启动新的实例"
 
-#: src/sysmanage_agent/communication/message_handler.py:1057
+#: src/sysmanage_agent/communication/message_handler.py:1119
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "连接已建立，开始队列处理"
 
-#: src/sysmanage_agent/communication/message_handler.py:1124
+#: src/sysmanage_agent/communication/message_handler.py:1186
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "关闭消息处理器时出错：%s"
@@ -4554,6 +4565,11 @@ msgstr "Ubuntu Pro 状态检查超时"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "检测分区时出错: %s"
+
+#~ msgid ""
+#~ "Server reports host is not registered. Clearing stored host_id and "
+#~ "triggering re-registration..."
+#~ msgstr "服务器报告主机未注册。清除存储的host_id并触发重新注册..."
 
 #, python-format
 #~ msgid "[BANNER] %s"

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 10:09-0400\n"
+"POT-Creation-Date: 2026-07-15 06:57-0400\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -565,31 +565,31 @@ msgstr "Ubuntu Pro status check timed out"
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Failed to detach Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:270
+#: src/sysmanage_agent/collection/os_info_collection.py:280
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Failed to parse fwupd JSON output: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:273
+#: src/sysmanage_agent/collection/os_info_collection.py:283
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Error attaching Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:366
+#: src/sysmanage_agent/collection/os_info_collection.py:376
 msgid "Livepatch status check timed out"
 msgstr "Livepatch status check timed out"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:372
+#: src/sysmanage_agent/collection/os_info_collection.py:382
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Failed to get Livepatch status: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:389
+#: src/sysmanage_agent/collection/os_info_collection.py:399
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Failed to parse Livepatch JSON: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:537
+#: src/sysmanage_agent/collection/os_info_collection.py:547
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Failed to mount image: %s"
@@ -2073,92 +2073,104 @@ msgstr "Found %d server roles"
 msgid "Error collecting roles: %s"
 msgstr "Error detecting partitions: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:56
+#: src/sysmanage_agent/communication/message_handler.py:63
 msgid "Message handler initialized"
 msgstr "KVM is already initialized"
 
-#: src/sysmanage_agent/communication/message_handler.py:169
+#: src/sysmanage_agent/communication/message_handler.py:176
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Failed to mount image: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:203
+#: src/sysmanage_agent/communication/message_handler.py:210
 #, python-format
 msgid "Queued command acknowledgment for message: %s"
 msgstr "Queued command acknowledgment for message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:207
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "Failed to mount image: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:215
+#: src/sysmanage_agent/communication/message_handler.py:222
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Error queueing command acknowledgment for %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:264
+#: src/sysmanage_agent/communication/message_handler.py:271
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Service control error for %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:303
+#: src/sysmanage_agent/communication/message_handler.py:310
 #, python-format
 msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 msgstr "Ignoring stale error message [%s] from %s (registration at %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:317
+#: src/sysmanage_agent/communication/message_handler.py:324
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Could not set network autostart: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:355
+#: src/sysmanage_agent/communication/message_handler.py:362
 msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Host registration is pending approval. Will continue periodic attempts."
 
-#: src/sysmanage_agent/communication/message_handler.py:360
+#: src/sysmanage_agent/communication/message_handler.py:367
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "Server reports missing hostname in message. This is a bug."
 
-#: src/sysmanage_agent/communication/message_handler.py:363
+#: src/sysmanage_agent/communication/message_handler.py:370
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Failed to mount image: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
+#: src/sysmanage_agent/communication/message_handler.py:394
+#, python-format
 msgid ""
-"Server reports host is not registered. Clearing stored host_id and "
-"triggering re-registration..."
+"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"tenant index; will re-register only if it persists."
 msgstr ""
-"Server reports host is not registered. Clearing stored host_id and "
-"triggering re-registration..."
+"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"tenant index; will re-register only if it persists."
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:407
+#, python-format
+msgid ""
+"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"genuinely gone; clearing stored host_id and re-registering."
+msgstr ""
+"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"genuinely gone; clearing stored host_id and re-registering."
+
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Stored host_id cleared from database"
 msgstr "Host approval records and related data cleared from database"
 
-#: src/sysmanage_agent/communication/message_handler.py:378
+#: src/sysmanage_agent/communication/message_handler.py:418
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:387
+#: src/sysmanage_agent/communication/message_handler.py:428
 msgid "Disconnecting to trigger re-registration..."
 msgstr "Disconnecting to trigger re-registration..."
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:454
 #, python-format
 msgid "Received broadcast %s action=%s issued_by=%s"
 msgstr "Received broadcast %s action=%s issued_by=%s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/message_handler.py:423
+#: src/sysmanage_agent/communication/message_handler.py:464
 #, python-format
 msgid "Broadcast %s: software inventory refreshed"
 msgstr "Broadcast %s: software inventory refreshed"
 
-#: src/sysmanage_agent/communication/message_handler.py:431
+#: src/sysmanage_agent/communication/message_handler.py:472
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
@@ -2167,17 +2179,17 @@ msgstr ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 
-#: src/sysmanage_agent/communication/message_handler.py:438
+#: src/sysmanage_agent/communication/message_handler.py:479
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Broadcast %s: inventory refresh failed: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:448
+#: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "Broadcast %s: unknown action '%s' — ignored"
 
-#: src/sysmanage_agent/communication/message_handler.py:531
+#: src/sysmanage_agent/communication/message_handler.py:572
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -2185,184 +2197,184 @@ msgstr ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:546
+#: src/sysmanage_agent/communication/message_handler.py:587
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "Invalid JSON received: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:589
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Error processing message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:552
+#: src/sysmanage_agent/communication/message_handler.py:593
 msgid "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 msgstr "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 
-#: src/sysmanage_agent/communication/message_handler.py:561
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:605
+#: src/sysmanage_agent/communication/message_handler.py:654
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Unknown step type: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:668
+#: src/sysmanage_agent/communication/message_handler.py:730
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Heartbeat failed, connection may be lost"
 
-#: src/sysmanage_agent/communication/message_handler.py:677
+#: src/sysmanage_agent/communication/message_handler.py:739
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Update checker error: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "Queued outbound message: %s (ID: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:744
+#: src/sysmanage_agent/communication/message_handler.py:806
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "Creating queue processing task from queue_outbound_message"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:811
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "Task created from queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:753
+#: src/sysmanage_agent/communication/message_handler.py:815
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Failed to mount image: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:796
+#: src/sysmanage_agent/communication/message_handler.py:858
 msgid "Starting inbound queue processing"
 msgstr "Connection lost, stopping outbound queue processing"
 
-#: src/sysmanage_agent/communication/message_handler.py:819
+#: src/sysmanage_agent/communication/message_handler.py:881
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Error adding user to groups: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:829
+#: src/sysmanage_agent/communication/message_handler.py:891
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Could not mark inbound message %s as processing"
 
-#: src/sysmanage_agent/communication/message_handler.py:839
+#: src/sysmanage_agent/communication/message_handler.py:901
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "Processing queued inbound command: %s (queue_id: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:850
+#: src/sysmanage_agent/communication/message_handler.py:912
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "Successfully updated firmware for: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:859
+#: src/sysmanage_agent/communication/message_handler.py:921
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Error processing queued message %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:875
+#: src/sysmanage_agent/communication/message_handler.py:937
 msgid "Cannot send message: not connected to server"
 msgstr "Cannot send message: not connected to server"
 
-#: src/sysmanage_agent/communication/message_handler.py:883
+#: src/sysmanage_agent/communication/message_handler.py:945
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Failed to generate SSH key: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:895
+#: src/sysmanage_agent/communication/message_handler.py:957
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "Process outbound queue called, current running status: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:899
+#: src/sysmanage_agent/communication/message_handler.py:961
 msgid "Queue processor already running, exiting"
 msgstr "Queue processor already running, exiting"
 
-#: src/sysmanage_agent/communication/message_handler.py:903
+#: src/sysmanage_agent/communication/message_handler.py:965
 msgid "Starting outbound queue processing"
 msgstr "Connection lost, stopping outbound queue processing"
 
-#: src/sysmanage_agent/communication/message_handler.py:904
+#: src/sysmanage_agent/communication/message_handler.py:966
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "Failed to collect apt packages: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:930
+#: src/sysmanage_agent/communication/message_handler.py:992
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Error adding user to groups: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:955
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "Successfully executed: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:972
+#: src/sysmanage_agent/communication/message_handler.py:1034
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Error processing queued message %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:987
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Connection established, starting queue processing"
 msgstr "Connection established, starting queue processing"
 
-#: src/sysmanage_agent/communication/message_handler.py:994
+#: src/sysmanage_agent/communication/message_handler.py:1056
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "Recovered %d stuck messages"
 
-#: src/sysmanage_agent/communication/message_handler.py:998
+#: src/sysmanage_agent/communication/message_handler.py:1060
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Error recovering stuck messages: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1004
+#: src/sysmanage_agent/communication/message_handler.py:1066
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr "Creating outbound queue processing task from on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1012
+#: src/sysmanage_agent/communication/message_handler.py:1074
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1017
+#: src/sysmanage_agent/communication/message_handler.py:1079
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Failed to detach Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1023
+#: src/sysmanage_agent/communication/message_handler.py:1085
 msgid "Outbound queue processor already running, not starting another"
 msgstr "Outbound queue processor already running, not starting another"
 
-#: src/sysmanage_agent/communication/message_handler.py:1030
+#: src/sysmanage_agent/communication/message_handler.py:1092
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr "Creating inbound queue processing task from on_connection_established"
 
-#: src/sysmanage_agent/communication/message_handler.py:1038
+#: src/sysmanage_agent/communication/message_handler.py:1100
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1043
+#: src/sysmanage_agent/communication/message_handler.py:1105
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Failed to detach Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1049
+#: src/sysmanage_agent/communication/message_handler.py:1111
 msgid "Inbound queue processor already running, not starting another"
 msgstr "Inbound queue processor already running, not starting another"
 
-#: src/sysmanage_agent/communication/message_handler.py:1057
+#: src/sysmanage_agent/communication/message_handler.py:1119
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "Connection lost, stopping outbound queue processing"
 
-#: src/sysmanage_agent/communication/message_handler.py:1124
+#: src/sysmanage_agent/communication/message_handler.py:1186
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Error in service status handler: %s"
@@ -4568,6 +4580,13 @@ msgstr "Ubuntu Pro status check timed out"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Error detecting partitions: %s"
+
+#~ msgid ""
+#~ "Server reports host is not registered. Clearing stored host_id and "
+#~ "triggering re-registration..."
+#~ msgstr ""
+#~ "Server reports host is not registered. Clearing stored host_id and "
+#~ "triggering re-registration..."
 
 #, python-format
 #~ msgid "[BANNER] %s"

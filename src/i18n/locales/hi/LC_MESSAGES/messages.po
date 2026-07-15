@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 10:09-0400\n"
+"POT-Creation-Date: 2026-07-15 06:57-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -569,31 +569,31 @@ msgstr "Ubuntu Pro स्थिति जाँच का समय समाप
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:270
+#: src/sysmanage_agent/collection/os_info_collection.py:280
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:273
+#: src/sysmanage_agent/collection/os_info_collection.py:283
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Ubuntu Pro अटैच करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:366
+#: src/sysmanage_agent/collection/os_info_collection.py:376
 msgid "Livepatch status check timed out"
 msgstr "लाइवपैच स्थिति जाँच का समय समाप्त हो गया"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:372
+#: src/sysmanage_agent/collection/os_info_collection.py:382
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "लाइवपैच स्थिति प्राप्त करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:389
+#: src/sysmanage_agent/collection/os_info_collection.py:399
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "लाइवपैच JSON पार्स करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:537
+#: src/sysmanage_agent/collection/os_info_collection.py:547
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
@@ -2086,94 +2086,106 @@ msgstr "%d सर्वर रोल즈 पाई गये"
 msgid "Error collecting roles: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:56
+#: src/sysmanage_agent/communication/message_handler.py:63
 msgid "Message handler initialized"
 msgstr "संदेश क्यू प्रबंधक प्रारंभ किया गया"
 
-#: src/sysmanage_agent/communication/message_handler.py:169
+#: src/sysmanage_agent/communication/message_handler.py:176
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:203
+#: src/sysmanage_agent/communication/message_handler.py:210
 #, python-format
 msgid "Queued command acknowledgment for message: %s"
 msgstr "queued command acknowledgment message को संचयित किया: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:207
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:215
+#: src/sysmanage_agent/communication/message_handler.py:222
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s के लिए कमान्ड अक्सरेफीकेशन कोई क्वी संयोजित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:264
+#: src/sysmanage_agent/communication/message_handler.py:271
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:303
+#: src/sysmanage_agent/communication/message_handler.py:310
 #, python-format
 msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 msgstr ""
 "पुराने त्रुटि संदेश [%s] को छोड़ दिया जा रहा है (से %s) (पंजीकरण %s पर)"
 
-#: src/sysmanage_agent/communication/message_handler.py:317
+#: src/sysmanage_agent/communication/message_handler.py:324
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:355
+#: src/sysmanage_agent/communication/message_handler.py:362
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
 
-#: src/sysmanage_agent/communication/message_handler.py:360
+#: src/sysmanage_agent/communication/message_handler.py:367
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "सर्वर के संदेश में नामकरण (hostname) अज्ञात है. यह एक बग है।"
 
-#: src/sysmanage_agent/communication/message_handler.py:363
+#: src/sysmanage_agent/communication/message_handler.py:370
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
+#: src/sysmanage_agent/communication/message_handler.py:394
+#, python-format
 msgid ""
-"Server reports host is not registered. Clearing stored host_id and "
-"triggering re-registration..."
+"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"tenant index; will re-register only if it persists."
 msgstr ""
-"सर्वर निश्चित करता है कि होस्ट पंजीकृत नहीं है। संग्रहित host_id को साफ करें"
-" और पुन: पंजीकरण के लिए घोषणा करें..."
+"सर्वर ने host_not_registered (strike %(n)d/%(limit)d) रिपोर्ट किया — होस्ट "
+"आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
+" है, तब ही पुनः रजिस्टर करेंगे;"
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:407
+#, python-format
+msgid ""
+"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"genuinely gone; clearing stored host_id and re-registering."
+msgstr ""
+"host_not_registered जारी (%(n)d स्ट्राइक) — इस होस्ट को वास्तव में गया समझते"
+" हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
+
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Stored host_id cleared from database"
 msgstr "होस्ट स्वीकृति रिकॉर्ड और संबंधित डेटा डेटाबेस से साफ़ किए गए"
 
-#: src/sysmanage_agent/communication/message_handler.py:378
+#: src/sysmanage_agent/communication/message_handler.py:418
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:387
+#: src/sysmanage_agent/communication/message_handler.py:428
 msgid "Disconnecting to trigger re-registration..."
 msgstr "बाहर निकलने के लिए बंद कर रहा हूँ..."
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:454
 #, python-format
 msgid "Received broadcast %s action=%s issued_by=%s"
 msgstr "broadcast %s action=%s issued_by=%s संकेत प्राप्त किया"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/message_handler.py:423
+#: src/sysmanage_agent/communication/message_handler.py:464
 #, python-format
 msgid "Broadcast %s: software inventory refreshed"
 msgstr "बेµटा %s: द्सेजी होजेन कोम्शी"
 
-#: src/sysmanage_agent/communication/message_handler.py:431
+#: src/sysmanage_agent/communication/message_handler.py:472
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
@@ -2182,17 +2194,17 @@ msgstr ""
 "ब्रॉडकास्ट %s: इन्वेंटरी रिफ्रेश का अनुरोध किया गया लेकिन data_collector में"
 " send_software_inventory_update नहीं है"
 
-#: src/sysmanage_agent/communication/message_handler.py:438
+#: src/sysmanage_agent/communication/message_handler.py:479
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "बेµटा %s: सेजेन चात्शी ॥॰: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:448
+#: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "बेµटा %s: प्साॆ '%s' — दें"
 
-#: src/sysmanage_agent/communication/message_handler.py:531
+#: src/sysmanage_agent/communication/message_handler.py:572
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -2200,185 +2212,185 @@ msgstr ""
 "संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; "
 "receive loop को exit करने के लिए आवश्यकता है reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:546
+#: src/sysmanage_agent/communication/message_handler.py:587
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "अमान्य JSON प्राप्त: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:589
 #, python-format
 msgid "Error processing message: %s"
 msgstr "मैसेज प्रोसेसिंग में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:552
+#: src/sysmanage_agent/communication/message_handler.py:593
 msgid "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 msgstr "WEBSOCKET_COMMUNICATION_ERROR: कनेक्शन सर्वर से बंद हो गई"
 
-#: src/sysmanage_agent/communication/message_handler.py:561
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: संदेश प्रतिवर्धक त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:605
+#: src/sysmanage_agent/communication/message_handler.py:654
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "अज्ञात चरण प्रकार: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:668
+#: src/sysmanage_agent/communication/message_handler.py:730
 msgid "Heartbeat failed, connection may be lost"
 msgstr "हैर्टबीट विफल हो गया, कनेक्शन खो चुका हो सकता है"
 
-#: src/sysmanage_agent/communication/message_handler.py:677
+#: src/sysmanage_agent/communication/message_handler.py:739
 #, python-format
 msgid "Message sender error: %s"
 msgstr "अपडेट चेकर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Queued outbound message: %s (ID: %s)"
 msgstr "आउटबाउंड संदेश कतारबद्ध: %s (ID: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:744
+#: src/sysmanage_agent/communication/message_handler.py:806
 msgid "Creating queue processing task from queue_outbound_message"
 msgstr "queue_outbound_message से आगंतक कोई प्रोसेसिंग टास्क बना रहा है"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:811
 #, python-format
 msgid "Task created from queue_outbound_message: %s"
 msgstr "कार्य किसी प्रक्रिया से बनाया गया: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:753
+#: src/sysmanage_agent/communication/message_handler.py:815
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:796
+#: src/sysmanage_agent/communication/message_handler.py:858
 msgid "Starting inbound queue processing"
 msgstr "कनेक्शन स्थापित हो गया, क्यू प्रोसेसिंग शुरू कर रहे हैं"
 
-#: src/sysmanage_agent/communication/message_handler.py:819
+#: src/sysmanage_agent/communication/message_handler.py:881
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:829
+#: src/sysmanage_agent/communication/message_handler.py:891
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "संदेश को प्रोसेसिंग के रूप में चिह्नित किया गया: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:839
+#: src/sysmanage_agent/communication/message_handler.py:901
 #, python-format
 msgid "Processing queued inbound command: %s (queue_id: %s)"
 msgstr "queued inbound command को प्रसंस्करण कर रहा हूँ: %s (queue_id: %s)"
 
-#: src/sysmanage_agent/communication/message_handler.py:850
+#: src/sysmanage_agent/communication/message_handler.py:912
 #, python-format
 msgid "Successfully processed inbound message: %s"
 msgstr "सफलतापूर्वक फर्मवेयर अपडेट किया गया: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:859
+#: src/sysmanage_agent/communication/message_handler.py:921
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:875
+#: src/sysmanage_agent/communication/message_handler.py:937
 msgid "Cannot send message: not connected to server"
 msgstr "संदेश नहीं भेज सकते: सर्वर से कनेक्ट नहीं"
 
-#: src/sysmanage_agent/communication/message_handler.py:883
+#: src/sysmanage_agent/communication/message_handler.py:945
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:895
+#: src/sysmanage_agent/communication/message_handler.py:957
 #, python-format
 msgid "Process outbound queue called, current running status: %s"
 msgstr "outbound queue processor को call किया, वर्तमान running status: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:899
+#: src/sysmanage_agent/communication/message_handler.py:961
 msgid "Queue processor already running, exiting"
 msgstr "कार्यक्रम परसेप्टर अनूठे चल रहा है, exit कर रहा हूँ"
 
-#: src/sysmanage_agent/communication/message_handler.py:903
+#: src/sysmanage_agent/communication/message_handler.py:965
 msgid "Starting outbound queue processing"
 msgstr "कनेक्शन स्थापित हो गया, क्यू प्रोसेसिंग शुरू कर रहे हैं"
 
-#: src/sysmanage_agent/communication/message_handler.py:904
+#: src/sysmanage_agent/communication/message_handler.py:966
 #, python-format
 msgid "Agent connected status: %s"
 msgstr "apt पैकेज एकत्र करना विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:930
+#: src/sysmanage_agent/communication/message_handler.py:992
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:955
+#: src/sysmanage_agent/communication/message_handler.py:1017
 #, python-format
 msgid "Successfully sent queued message: %s"
 msgstr "सफलतापूर्वक निष्पादित: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:972
+#: src/sysmanage_agent/communication/message_handler.py:1034
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:987
+#: src/sysmanage_agent/communication/message_handler.py:1049
 msgid "Connection established, starting queue processing"
 msgstr "कनेक्शन स्थापित हो गया, क्यू प्रोसेसिंग शुरू कर रहे हैं"
 
-#: src/sysmanage_agent/communication/message_handler.py:994
+#: src/sysmanage_agent/communication/message_handler.py:1056
 #, python-format
 msgid "Recovered %d stuck messages on connection establishment"
 msgstr "%d अटके हुए संदेश पुनर्प्राप्त किए गए"
 
-#: src/sysmanage_agent/communication/message_handler.py:998
+#: src/sysmanage_agent/communication/message_handler.py:1060
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "स्टक कीड़ों को बाहर निकलने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1004
+#: src/sysmanage_agent/communication/message_handler.py:1066
 msgid "Creating outbound queue processing task from on_connection_established"
 msgstr "on_connection_established से बाहरी कोई प्रोसेसिंग टास्क बना रहा है"
 
-#: src/sysmanage_agent/communication/message_handler.py:1012
+#: src/sysmanage_agent/communication/message_handler.py:1074
 #, python-format
 msgid "Outbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1017
+#: src/sysmanage_agent/communication/message_handler.py:1079
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1023
+#: src/sysmanage_agent/communication/message_handler.py:1085
 msgid "Outbound queue processor already running, not starting another"
 msgstr ""
 "आउटबाउंड कार्यक्रम परसेप्टर अनूठे चल रहा है, दूसरा नहीं शुरू किया जाएगा"
 
-#: src/sysmanage_agent/communication/message_handler.py:1030
+#: src/sysmanage_agent/communication/message_handler.py:1092
 msgid "Creating inbound queue processing task from on_connection_established"
 msgstr "on_connection_established से आगंतक कोई प्रोसेसिंग टास्क बना रहा है"
 
-#: src/sysmanage_agent/communication/message_handler.py:1038
+#: src/sysmanage_agent/communication/message_handler.py:1100
 #, python-format
 msgid "Inbound queue processing task created successfully: %s"
 msgstr "Bridged network '%s' created successfully"
 
-#: src/sysmanage_agent/communication/message_handler.py:1043
+#: src/sysmanage_agent/communication/message_handler.py:1105
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:1049
+#: src/sysmanage_agent/communication/message_handler.py:1111
 msgid "Inbound queue processor already running, not starting another"
 msgstr "आगंतुक कार्यक्रम परसेप्टर अनूठे चल रहा है, दूसरा नहीं शुरू किया जाएगा"
 
-#: src/sysmanage_agent/communication/message_handler.py:1057
+#: src/sysmanage_agent/communication/message_handler.py:1119
 msgid "Connection lost, stopping outbound queue processing"
 msgstr "कनेक्शन स्थापित हो गया, क्यू प्रोसेसिंग शुरू कर रहे हैं"
 
-#: src/sysmanage_agent/communication/message_handler.py:1124
+#: src/sysmanage_agent/communication/message_handler.py:1186
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
@@ -4609,6 +4621,13 @@ msgstr "Ubuntu Pro स्थिति जाँच का समय समाप
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+
+#~ msgid ""
+#~ "Server reports host is not registered. Clearing stored host_id and "
+#~ "triggering re-registration..."
+#~ msgstr ""
+#~ "सर्वर निश्चित करता है कि होस्ट पंजीकृत नहीं है। संग्रहित host_id को साफ करें"
+#~ " और पुन: पंजीकरण के लिए घोषणा करें..."
 
 #, python-format
 #~ msgid "[BANNER] %s"

@@ -520,8 +520,25 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
     # Tests for _handle_host_not_registered (lines 274-295)
 
     @pytest.mark.asyncio
+    async def test_handle_host_not_registered_single_strike_preserves_identity(self):
+        """A single (potentially spurious) host_not_registered must NOT wipe the
+        host's identity — it reconnects with host_id intact so the server can
+        re-resolve the tenant."""
+        self.mock_agent.bump_host_not_registered_strike.return_value = 1
+
+        await self.handler._handle_host_not_registered()
+
+        # Identity preserved: no clear, no re-registration scheduled.
+        self.mock_agent.clear_stored_host_id.assert_not_called()
+        assert self.mock_agent.needs_registration is False
+        # Still disconnects to force a fresh connection.
+        assert self.mock_agent.running is False
+
+    @pytest.mark.asyncio
     async def test_handle_host_not_registered(self):
-        """Test _handle_host_not_registered clears state and triggers re-registration."""
+        """When the error PERSISTS to the strike limit, clear state and re-register."""
+        self.mock_agent.bump_host_not_registered_strike.return_value = 3
+
         await self.handler._handle_host_not_registered()
 
         # Verify state was cleared
@@ -534,6 +551,7 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
     @pytest.mark.asyncio
     async def test_handle_host_not_registered_clear_error(self):
         """Test _handle_host_not_registered when clearing host_id fails."""
+        self.mock_agent.bump_host_not_registered_strike.return_value = 3
         self.mock_agent.clear_stored_host_id.side_effect = Exception("Database error")
 
         await self.handler._handle_host_not_registered()

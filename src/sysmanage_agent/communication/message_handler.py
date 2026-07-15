@@ -25,6 +25,13 @@ from src.sysmanage_agent.communication.message_logging_helpers import (
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.core.version import get_agent_version
 
+# How many consecutive host_not_registered errors the agent tolerates (reconnecting
+# with its identity intact so the server can re-resolve it) before concluding the
+# host is genuinely gone and discarding host_id to re-register.  Keeps a spurious /
+# transient server-side tenant-routing miss from wiping a valid host's identity and
+# spawning phantom duplicates.
+HOST_NOT_REGISTERED_STRIKE_LIMIT = 3
+
 
 class MessageHandler:
     """
@@ -363,11 +370,44 @@ class MessageHandler:
             self.logger.error(_("Server failed to queue message: %s"), error_message)
 
     async def _handle_host_not_registered(self) -> None:
-        """Handle host_not_registered error by clearing state and triggering re-registration."""
+        """React to a host_not_registered error from the server.
+
+        A SINGLE such error is frequently spurious: under multi-tenancy the server
+        resolves a host's tenant database from its host_id, and a transient routing
+        miss (or a handler that doesn't consult the tenant index) reports a host
+        that genuinely lives in its tenant DB as "not registered".  Blindly
+        clearing our host_id and re-registering on the first error is the ROOT of
+        the phantom-duplicate churn: it discards the tenant binding, burns an
+        enrollment-token use on every reconnect, and once the token is exhausted a
+        token-less re-registration lands server-scoped (the phantom duplicate).
+
+        So we tolerate a few strikes, reconnecting WITHOUT dropping our identity —
+        which lets the server re-resolve us from the still-present host_id — and
+        only treat the host as genuinely gone (clear + re-register) once the error
+        PERSISTS.  Any inbound message the server only sends to a recognized host
+        resets the strike count (see _dispatch_received_message)."""
+        strikes = self.agent.bump_host_not_registered_strike()
+
+        if strikes < HOST_NOT_REGISTERED_STRIKE_LIMIT:
+            self.logger.warning(
+                _(
+                    "Server reported host_not_registered (strike %(n)d/%(limit)d) — "
+                    "reconnecting WITHOUT discarding host_id so the server can "
+                    "re-resolve this host from its tenant index; will re-register "
+                    "only if it persists."
+                ),
+                {"n": strikes, "limit": HOST_NOT_REGISTERED_STRIKE_LIMIT},
+            )
+            # Disconnect to force a fresh connection; identity is preserved.
+            self.agent.running = False
+            return
+
         self.logger.warning(
             _(
-                "Server reports host is not registered. Clearing stored host_id and triggering re-registration..."
-            )
+                "host_not_registered persisted (%(n)d strikes) — treating this host "
+                "as genuinely gone; clearing stored host_id and re-registering."
+            ),
+            {"n": strikes},
         )
 
         # Clear stored host_id from database
@@ -378,6 +418,7 @@ class MessageHandler:
             self.logger.error(_("Error clearing stored host_id: %s"), error)
 
         # Clear any existing registration state and force re-registration
+        self.agent.reset_host_not_registered_strikes()
         self.agent.registration_status = None
         self.agent.registration_confirmed = False
         self.agent.registration.registered = False
@@ -578,6 +619,14 @@ class MessageHandler:
         """
         message_type = data.get("message_type")
 
+        # Proof-of-life: any message the server only sends to a REGISTERED,
+        # recognized host clears accumulated host_not_registered strikes, so a
+        # transient/spurious not-registered error can't snowball into an identity
+        # wipe.  Excludes ping/broadcast (connection-level, not host-specific) and
+        # error (which may itself be host_not_registered).
+        if message_type in self._host_recognized_message_types():
+            self.agent.reset_host_not_registered_strikes()
+
         if message_type == "command":
             await self._handle_command_message(data)
         elif message_type == "broadcast":
@@ -605,6 +654,19 @@ class MessageHandler:
             self.logger.warning(_("Unknown message type: %s"), message_type)
 
         return False
+
+    def _host_recognized_message_types(self) -> set:
+        """Message types the server only sends to a registered, recognized host.
+
+        Receiving any of these proves the server knows this host, so it resets the
+        host_not_registered strike counter.  Deliberately excludes ping/broadcast
+        (connection-level, not host-specific) and error."""
+        return {
+            "command",
+            "ack",
+            "host_approved",
+            "registration_success",
+        } | set(self._get_status_confirmation_types())
 
     def _get_status_confirmation_types(self) -> dict:
         """Return mapping of status confirmation message types to log descriptions."""
