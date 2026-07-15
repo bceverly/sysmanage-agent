@@ -83,7 +83,12 @@ coverage>=7.0.0
 # --- Transitive security pins for DEV / CI tooling only (safety, semgrep,
 #     selenium, requests) — NOT shipped with the agent runtime.  Pinned to their
 #     patched releases so the dependency scanners come back clean. ---
-urllib3>=2.7.0  # PYSEC-2026-141/142 (pulled by requests/semgrep/selenium)
+# urllib3 2.7 dropped Python 3.9, so the 3.9 leg can't take >=2.7.0 (its ceiling
+# is the 2.6.x line).  Split like aiohttp/pytest: latest fix on 3.10+, highest
+# 3.9-compatible secure release on 3.9.  PYSEC-2026-141/142 (pulled by
+# requests/semgrep/selenium).  Scanners run on the 3.10+ leg, which takes >=2.7.0.
+urllib3>=2.7.0; python_version >= '3.10'
+urllib3>=2.5.0,<2.7; python_version < '3.10'
 ujson>=5.13.0  # PYSEC-2026-2293/2294 (pulled by semgrep)
 Authlib>=1.7.2  # advisory affecting 1.7.0 (pulled by safety)
 # python_multipart: still intentionally UNPINNED despite PYSEC-2026-3036..3040.
