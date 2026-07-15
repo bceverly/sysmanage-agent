@@ -89,8 +89,13 @@ coverage>=7.0.0
 # requests/semgrep/selenium).  Scanners run on the 3.10+ leg, which takes >=2.7.0.
 urllib3>=2.7.0; python_version >= '3.10'
 urllib3>=2.5.0,<2.7; python_version < '3.10'
-ujson>=5.13.0  # PYSEC-2026-2293/2294 (pulled by semgrep)
-Authlib>=1.7.2  # advisory affecting 1.7.0 (pulled by safety)
+# ujson's PYSEC fix (5.13.0) and Authlib's (1.7.2) both require Python >=3.10, so
+# pin them ONLY on the 3.10+ leg — where the dependency scanners actually run.  On
+# 3.9 they resolve transitively via semgrep/safety to their newest 3.9-compatible
+# releases (ujson 5.11.x / Authlib 1.6.x); those aren't scanned there, so the gap
+# is inert.  An explicit 3.9 floor is avoided so it can't fight the tools' own pins.
+ujson>=5.13.0; python_version >= '3.10'  # PYSEC-2026-2293/2294 (pulled by semgrep)
+Authlib>=1.7.2; python_version >= '3.10'  # advisory affecting 1.7.0 (pulled by safety)
 # python_multipart: still intentionally UNPINNED despite PYSEC-2026-3036..3040.
 # It reaches the agent only through dev tooling (no untrusted-form-parser
 # surface at runtime), and pinning 0.0.27+ breaks the Python-3.9 wheel-download
