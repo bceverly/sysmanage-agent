@@ -445,29 +445,29 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 ]
 
                 if patches:
-                    # Combine all patches into a single update since syspatch
-                    # applies all patches at once (cumulative, all-or-nothing)
-                    patch_count = len(patches)
-                    patch_list = ", ".join(patches)
-
-                    self.available_updates.append(
-                        {
-                            "package_name": f"OpenBSD System Patches ({patch_count} patches)",
-                            "current_version": "not installed",
-                            "available_version": patch_list,
-                            "package_manager": "syspatch",
-                            "is_security_update": True,  # All syspatches are security updates
-                            "is_system_update": True,  # All syspatches are also system updates
-                            "requires_reboot": True,  # Most syspatches require reboot
-                            "update_size_bytes": None,  # Size not available from syspatch -c
-                            "source": "OpenBSD base system",
-                            "repository": "syspatch",
-                        }
-                    )
+                    # Report ONE update per erratum, keyed by the syspatch patch id
+                    # (e.g. "001_xmss").  syspatch still applies them all-or-nothing,
+                    # but per-erratum rows let the advisory engine (Phase 14.1a) map
+                    # each pending patch to its OpenBSD errata advisory.
+                    for patch in patches:
+                        self.available_updates.append(
+                            {
+                                "package_name": patch,
+                                "current_version": "not installed",
+                                "available_version": patch,
+                                "package_manager": "syspatch",
+                                "is_security_update": True,  # syspatches are security fixes
+                                "is_system_update": True,  # base-system patches
+                                "requires_reboot": True,  # most syspatches require reboot
+                                "update_size_bytes": None,  # not available from syspatch -c
+                                "source": "OpenBSD base system",
+                                "repository": "syspatch",
+                            }
+                        )
 
                     logger.debug(
-                        "Found %d OpenBSD system patches (combined into single update)",
-                        patch_count,
+                        "Found %d OpenBSD system patches (one update each)",
+                        len(patches),
                     )
 
             elif result.returncode == 1:

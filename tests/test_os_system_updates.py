@@ -249,19 +249,18 @@ No new software available.
 
         self.detector._detect_openbsd_system_updates()
 
-        # syspatch combines all patches into a single update since syspatch
-        # applies all patches at once (cumulative, all-or-nothing)
-        assert len(self.detector.available_updates) == 1
-
-        update = self.detector.available_updates[0]
-        assert update["package_name"] == "OpenBSD System Patches (3 patches)"
-        assert "001_rsa" in update["available_version"]
-        assert "002_ssh" in update["available_version"]
-        assert "003_kernel" in update["available_version"]
-        assert update["package_manager"] == "syspatch"
-        assert update["is_security_update"] is True
-        assert update["is_system_update"] is True
-        assert update["requires_reboot"] is True
+        # One update per erratum, keyed by the syspatch patch id (so the advisory
+        # engine can map each pending patch to its OpenBSD errata advisory).
+        # syspatch still applies them all-or-nothing at remediation time.
+        assert len(self.detector.available_updates) == 3
+        names = {u["package_name"] for u in self.detector.available_updates}
+        assert names == {"001_rsa", "002_ssh", "003_kernel"}
+        for update in self.detector.available_updates:
+            assert update["package_manager"] == "syspatch"
+            assert update["available_version"] == update["package_name"]
+            assert update["is_security_update"] is True
+            assert update["is_system_update"] is True
+            assert update["requires_reboot"] is True
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
     @patch("subprocess.run")

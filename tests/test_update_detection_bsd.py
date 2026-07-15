@@ -365,20 +365,26 @@ class TestDetectOpenbsdSystemUpdates:
     """Tests for _detect_openbsd_system_updates method."""
 
     def test_detect_openbsd_system_updates_available(self, detector):
-        """Test OpenBSD system update detection with patches available."""
+        """Test OpenBSD system update detection with patches available — one
+        update per erratum, keyed by the syspatch patch id."""
         mock_result = Mock()
         mock_result.returncode = 0
-        mock_result.stdout = "syspatch001\nsyspatch002\n"
+        mock_result.stdout = "001_xmss\n002_ssh\n"
 
         with patch("subprocess.run", return_value=mock_result):
             detector._detect_openbsd_system_updates()
 
-        assert len(detector.available_updates) == 1
-        update = detector.available_updates[0]
-        assert "OpenBSD System Patches" in update["package_name"]
-        assert update["package_manager"] == "syspatch"
-        assert update["is_security_update"] is True
-        assert update["is_system_update"] is True
+        # One entry per erratum (not a single combined row).
+        assert len(detector.available_updates) == 2
+        names = {u["package_name"] for u in detector.available_updates}
+        assert names == {"001_xmss", "002_ssh"}
+        for update in detector.available_updates:
+            assert update["package_manager"] == "syspatch"
+            assert update["is_security_update"] is True
+            assert update["is_system_update"] is True
+            assert update["requires_reboot"] is True
+            # package_name == available_version (the syspatch patch id)
+            assert update["available_version"] == update["package_name"]
 
     def test_detect_openbsd_system_updates_none(self, detector):
         """Test OpenBSD system update detection with no patches."""
@@ -421,13 +427,14 @@ class TestOpenBsdSystemUpdates:
         with patch("subprocess.run", return_value=mock_result):
             bsd_detector._detect_openbsd_system_updates()
 
-        assert len(bsd_detector.available_updates) == 1
-        update = bsd_detector.available_updates[0]
-        assert "OpenBSD System Patches" in update["package_name"]
-        assert "(3 patches)" in update["package_name"]
-        assert update["is_security_update"] is True
-        assert update["is_system_update"] is True
-        assert update["package_manager"] == "syspatch"
+        # One update per erratum, keyed by the syspatch patch id.
+        assert len(bsd_detector.available_updates) == 3
+        names = {u["package_name"] for u in bsd_detector.available_updates}
+        assert names == {"001_nsd", "002_smtpd", "003_kernel"}
+        for update in bsd_detector.available_updates:
+            assert update["is_security_update"] is True
+            assert update["is_system_update"] is True
+            assert update["package_manager"] == "syspatch"
 
     def test_detect_openbsd_syspatch_none_available(self, bsd_detector):
         """Test OpenBSD syspatch detection when no patches available."""
