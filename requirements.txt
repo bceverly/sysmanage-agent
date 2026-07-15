@@ -7,13 +7,18 @@
 # bound only when cp39 is dropped from the supported Python matrix.
 websockets>=15.0.1,<16
 PyYAML>=6.0.2
-# aiohttp 3.14.x (carrying the PYSEC-2026-2104..2113 fix) requires Python >=3.10,
-# so the agent's 3.9 leg (RHEL9/OL9 cp39) can't install it and no 3.13.x backport
-# of the fix exists.  On 3.10+ take the fixed 3.14.1; on 3.9 stay on the newest
-# 3.9-compatible line (3.13.x) — an accepted, unavoidable gap until aiohttp
-# backports or cp39 is dropped from the support matrix.
-aiohttp>=3.14.1; python_version >= '3.10'
-aiohttp>=3.13.5,<3.14; python_version < '3.10'
+# aiohttp: the PYSEC-2026-2104..2113 fix is in 3.14.x, which requires Python >=3.10;
+# the agent's 3.9 leg (RHEL9/OL9 cp39) can only reach 3.13.x (no backport of the
+# fix exists — an accepted gap until cp39 is dropped).  Express this as a BARE
+# FLOOR, NOT a ``; python_version`` marker: the COPR/RPM vendor step runs
+# ``pip download --python-version 3.9.21``, and pip evaluates env markers against
+# the BUILD HOST's interpreter (3.12), not the target — so a ``>= '3.10'`` marker
+# is wrongly ACTIVE during the 3.9 wheel pass and pulls 3.14.x (no cp39 wheel) →
+# build fails.  A bare floor instead lets pip's Requires-Python metadata pick the
+# right version per target automatically: verified to resolve to 3.14.1 on the
+# 3.10+ passes (the fix) and 3.13.5 on 3.9.  Same constraint as the
+# python_multipart note below — prod deps must not gate on python_version markers.
+aiohttp>=3.13.5
 cryptography>=48.0.1  # 45.0.7-47.x buffer overflow + DNS name-constraint CVEs; 48.0.1 fixes GHSA-537c-gmf6-5ccf (48.0.0 affected). Supports cp39.
 psutil>=5.9.0
 bcrypt>=4.0.0
