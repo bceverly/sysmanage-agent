@@ -115,7 +115,7 @@ def _journald_handler(identifier: str) -> Optional[logging.Handler]:
     """systemd journal handler, or None if python3-systemd isn't installed."""
     try:
         # pylint: disable=import-outside-toplevel
-        from systemd.journal import JournalHandler  # type: ignore
+        from systemd.journal import JournalHandler  # type: ignore[import-not-found]
     except ImportError:
         return None
     try:

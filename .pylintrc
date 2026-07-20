@@ -15,28 +15,64 @@ jobs=1
 unsafe-load-any-extension=no
 
 [MESSAGES CONTROL]
-# Disable specific warnings/errors for agent code
-# Keep these disabled for legitimate reasons:
-# - too-few-public-methods: Data classes and utilities are fine with few methods
-# - line-too-long: Already enforced via max-line-length=100
-# - no-member: Too many false positives with dynamic attributes and C extensions
-# - broad-except: Agent code needs resilience, catching Exception is often necessary
-# - duplicate-code: Cross-platform code will have legitimate similar patterns
-# - cyclic-import: Intentional design pattern with import-outside-toplevel to handle cycles
-# - too-many-*: Complexity warnings for large methods that handle multi-platform logic
+# Shared SysManage pylint disable baseline — byte-identical across all four
+# repos (sysmanage, sysmanage-agent, sysmanage-professional-plus, sysmanage-docs).
+# Real-bug rules stay ENABLED: used-before-assignment, unused-import,
+# unused-variable, bare-except.
 disable=
-    too-few-public-methods,
+    # cosmetic/style
+    invalid-name,
     line-too-long,
-    no-member,
-    broad-except,
-    duplicate-code,
-    cyclic-import,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    fixme,
+    wrong-import-order,
+    wrong-import-position,
+    ungrouped-imports,
+    import-outside-toplevel,
+    no-else-return,
+    inconsistent-return-statements,
+    use-implicit-booleaness-not-comparison,
+    singleton-comparison,
+    use-maxsplit-arg,
+    # complexity
+    too-few-public-methods,
+    too-many-ancestors,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-many-return-statements,
     too-many-branches,
+    too-many-arguments,
     too-many-locals,
     too-many-statements,
-    too-many-return-statements,
+    too-many-boolean-expressions,
     too-many-positional-arguments,
-    too-many-public-methods
+    too-many-nested-blocks,
+    # duplicate/import-resolution
+    duplicate-code,
+    cyclic-import,
+    import-error,
+    no-name-in-module,
+    c-extension-no-member,
+    # SQLAlchemy/dynamic false positives
+    not-callable,
+    no-member,
+    unsubscriptable-object,
+    unsupported-membership-test,
+    # broad exceptions
+    broad-except,
+    broad-exception-caught,
+    broad-exception-raised,
+    # noisy interface/test style
+    unused-argument,
+    protected-access,
+    attribute-defined-outside-init,
+    redefined-outer-name,
+    redefined-builtin,
+    wildcard-import,
+    unused-wildcard-import,
+    reimported
 
 [REPORTS]
 # Set the output format

@@ -477,6 +477,7 @@ class TestCertificateStoreError:
                 # traverse the test fixture dir.  0o700 satisfies
                 # semgrep's "no widely-permissive chmod" rule while
                 # remaining traversable; 0o644 would block rmtree.
+                # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
                 os.chmod(read_only_dir, 0o700)  # nosec B103
 
         finally:

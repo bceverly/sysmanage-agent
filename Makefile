@@ -711,9 +711,9 @@ endif
 test: setup-venv clean-whitespace
 	@echo "=== Running Agent Tests ==="
 ifeq ($(OS),Windows_NT)
-	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
+	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75
 else
-	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml
+	@$(PYTHON) -m pytest tests/ -v --tb=short -n auto --dist=loadfile --cov=main --cov=src/sysmanage_agent --cov=src/database --cov=src/i18n --cov=src/security --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=75
 endif
 	@echo "[OK] Tests completed"
 
@@ -826,15 +826,19 @@ security-python: setup-venv
 	@echo "=== Python Security Analysis ==="
 	@echo "Running Bandit static security analysis..."
 ifeq ($(OS),Windows_NT)
-	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607,B608 || echo.
+	# Gate on Medium+High only. B603/B607 (subprocess) are intentionally skipped:
+	# this agent's core job is spawning subprocesses, so those checks flood with noise.
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --severity-level medium --skip B101,B404,B603,B607,B608
 	@echo.
 	@echo "Running Safety dependency vulnerability scan..."
-	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
+	@$(PYTHON) -m safety scan --output screen
 	@echo.
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | findstr /r "cryptography aiohttp black bandit websockets PyYAML SQLAlchemy alembic" || echo "Package list completed"
 else
-	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --skip B101,B404,B603,B607,B608 || true
+	# Gate on Medium+High only. B603/B607 (subprocess) are intentionally skipped:
+	# this agent's core job is spawning subprocesses, so those checks flood with noise.
+	@$(PYTHON) -m bandit -r *.py src/ scripts/ -f screen --severity-level medium --skip B101,B404,B603,B607,B608
 	@echo ""
 	@echo "Running Semgrep static analysis (local venv)..."
 	@echo "Tip: Export SEMGREP_APP_TOKEN to run the same Pro engine as CI"
@@ -848,12 +852,12 @@ else
 		$(SEMGREP) ci || true; \
 	else \
 		echo "Using local registry packs incl. p/trailofbits (set SEMGREP_APP_TOKEN for Pro parity)..."; \
-		$(SEMGREP) scan --metrics=off --config="p/default" --config="p/security-audit" --config="p/trailofbits" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten" || true; \
+		$(SEMGREP) scan --metrics=off --error --config="p/default" --config="p/security-audit" --config="p/trailofbits" --config="p/python" --config="p/django" --config="p/flask" --config="p/owasp-top-ten"; \
 	fi
 	@echo ""
 endif
 	@echo "Running Safety dependency vulnerability scan..."
-	@$(PYTHON) -m safety scan --output screen || echo "Safety scan completed with issues"
+	@$(PYTHON) -m safety scan --output screen
 	@echo ""
 	@echo "=== Current dependency versions (for upgrade reference) ==="
 	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"

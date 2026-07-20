@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     # ``# nosec B405`` annotation documents that no actual XML parse
     # ever uses this import — the runtime parser is defusedxml
     # (``DET.fromstring`` above).
-    import xml.etree.ElementTree as ET  # nosec B405  # noqa: N811
+    import xml.etree.ElementTree as ET  # nosec B405  # noqa: N811  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 
 logger = logging.getLogger(__name__)
 

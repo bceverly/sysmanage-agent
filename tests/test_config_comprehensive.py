@@ -316,7 +316,7 @@ class TestConfigManager:  # pylint: disable=too-many-public-methods
             url = config.get_server_url()
             # String split so semgrep's detect-insecure-websocket rule
             # doesn't flag the literal — this assertion exists to LOCK
-            # IN the insecure-mode behavior (use_https: false → ws://).
+            # IN the insecure-mode behavior (use_https: false → ws://).  # nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket  # ws:// value in a test config fixture
             # Production deployments always set use_https: true.
             expected_scheme = "ws" + "://"
             assert url == f"{expected_scheme}test.example.com:9000/api/agent/connect"

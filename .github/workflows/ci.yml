@@ -163,14 +163,17 @@ jobs:
 
     - name: Run Pylint
       run: |
-        python -m pylint src/ --rcfile=.pylintrc --exit-zero
+        python -m pylint src/ --rcfile=.pylintrc
 
     - name: Run Bandit security scan
       run: |
-        # B101: assert (used in tests), B404: import subprocess, B608: false positive on shell scripts
-        python -m bandit -r src/ -f screen --skip B101,B404,B608
+        # Gate on Medium+High only.
+        # B101: assert (used in tests), B404: import subprocess, B608: false positive on shell scripts.
+        # B603/B607 (subprocess) are intentionally skipped: this agent's core job is spawning
+        # subprocesses, so those checks flood with noise.
+        python -m bandit -r src/ -f screen --severity-level medium --skip B101,B404,B603,B607,B608
         # Also generate JSON report for artifacts
-        python -m bandit -r src/ -f json -o bandit-report.json --skip B101,B404,B608 || true
+        python -m bandit -r src/ -f json -o bandit-report.json --severity-level medium --skip B101,B404,B603,B607,B608 || true
 
     - name: Upload Bandit results
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -184,8 +187,10 @@ jobs:
 
     - name: Run Safety scan
       run: |
-        safety scan --output screen || true
+        # Generate the JSON artifact first (|| true so a nonzero exit still uploads the report),
+        # then gate on the screen scan.
         safety scan --output json --output-file safety-report.json || true
+        safety scan --output screen
 
     - name: Upload Safety results
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

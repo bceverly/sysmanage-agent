@@ -30,9 +30,9 @@ try:
     from packaging.specifiers import SpecifierSet
     from packaging.version import InvalidVersion, Version
 except ImportError:  # pragma: no cover
-    Version = None  # type: ignore
-    InvalidVersion = Exception  # type: ignore
-    SpecifierSet = None  # type: ignore
+    Version = None  # type: ignore[assignment,misc]
+    InvalidVersion = Exception  # type: ignore[assignment,misc]
+    SpecifierSet = None  # type: ignore[assignment,misc]
 
 
 CONSTRAINT_REQUIRED = "REQUIRED"

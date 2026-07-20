@@ -23,7 +23,7 @@ import pytest
 from src.sysmanage_agent.operations.gpg_operations import GpgOperations
 
 ARMORED = (
-    "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
+    "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"  # nosemgrep: generic.secrets.security.detected-pgp-private-key-block.detected-pgp-private-key-block  # fake armored key; test asserts it gets redacted
     "SUPERSECRETPRIVATEMATERIALdeadbeef1234567890\n"
     "-----END PGP PRIVATE KEY BLOCK-----\n"
 )
