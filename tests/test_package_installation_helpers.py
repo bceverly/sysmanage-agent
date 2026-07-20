@@ -7,7 +7,7 @@ Unit tests for src.sysmanage_agent.operations.package_installation_helpers modul
 Comprehensive tests for helper functions used in package installation operations.
 """
 
-# pylint: disable=protected-access,attribute-defined-outside-init,too-many-lines
+# pylint: disable=protected-access,attribute-defined-outside-init
 
 import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, patch

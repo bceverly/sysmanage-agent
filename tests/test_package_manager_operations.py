@@ -7,7 +7,7 @@ Unit tests for src.sysmanage_agent.operations.package_manager_operations module.
 Comprehensive tests for enabling package managers (flatpak, snap, homebrew, chocolatey, scoop).
 """
 
-# pylint: disable=protected-access,attribute-defined-outside-init,too-many-lines
+# pylint: disable=protected-access,attribute-defined-outside-init
 
 import asyncio
 from unittest.mock import AsyncMock, Mock, patch

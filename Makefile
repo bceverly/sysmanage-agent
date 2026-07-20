@@ -589,8 +589,25 @@ lint-version:
 lint-version-fix:
 	@$(PYTHON) scripts/check_version_drift.py --fix
 
+# File-length gate: no source file may exceed 1000 lines (scripts/ exempt).
+# Uniform across all SysManage repos; complements pylint max-module-lines.
+lint-file-length:
+	@echo "Checking file lengths (max 1000 lines; scripts/ + generated i18n exempt)..."
+	@bad=$$(git ls-files '*.py' '*.pyx' '*.pxi' '*.ts' '*.tsx' '*.js' '*.jsx' \
+		| grep -vE '(^|/)scripts/|-i18n\.ts$$' \
+		| while read f; do \
+			n=$$(wc -l < "$$f"); \
+			if [ "$$n" -gt 1000 ]; then printf '  %6d  %s\n' "$$n" "$$f"; fi; \
+		done); \
+	if [ -n "$$bad" ]; then \
+		echo "ERROR: source files exceed the 1000-line limit:"; \
+		echo "$$bad"; \
+		exit 1; \
+	fi; \
+	echo "[OK] all source files within 1000 lines"
+
 # Python linting
-lint: format-python i18n-validate translate-check lint-version
+lint: lint-file-length format-python i18n-validate translate-check lint-version
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
