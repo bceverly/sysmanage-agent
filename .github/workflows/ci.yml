@@ -186,6 +186,11 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run Safety scan
+      env:
+        # Authenticates the scan against the Safety Platform (free account key,
+        # stored as a repo secret). Without it `safety scan` falls back to an
+        # interactive login and crashes on EOF in CI.
+        SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
       run: |
         # Generate the JSON artifact first (|| true so a nonzero exit still uploads the report),
         # then gate on the screen scan.
