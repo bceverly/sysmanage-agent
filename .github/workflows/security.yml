@@ -197,10 +197,18 @@ jobs:
         # interactive login and crashes on EOF in CI.
         SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
       run: |
+        # Run safety from a DEDICATED venv. The typer<0.26 pin is the crux:
+        # typer 0.26+ vendors its own `_click`, but safety dispatches its CLI
+        # through the REAL click, so typer's callback wrapper reads a vendored
+        # click context that was never pushed -> "no active click context".
+        # Floating typer resolves 0.27.0 (crashes); typer<0.26 -> 0.25.1 (works).
+        python -m venv /tmp/safety-venv
+        /tmp/safety-venv/bin/pip install --upgrade pip
+        /tmp/safety-venv/bin/pip install 'safety>=3.6.1,<4.0.0' 'safety-schemas' 'typer<0.26'
         # Generate the JSON artifact first (|| true so a nonzero exit still uploads the report),
         # then gate on the screen scan.
-        safety scan --output json --output-file safety-report.json || true
-        safety scan --output screen
+        /tmp/safety-venv/bin/safety scan --output json --output-file safety-report.json || true
+        /tmp/safety-venv/bin/safety scan --output screen
 
     - name: Upload Safety results
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
