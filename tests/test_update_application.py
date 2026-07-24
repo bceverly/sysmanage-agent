@@ -673,6 +673,61 @@ class TestPackageInstallation:
 
         assert result["success"] is False
 
+    def test_install_with_snap_success(self, linux_detector):
+        """Test successful snap package installation."""
+        mock_result = Mock(returncode=0, stdout="hello installed")
+
+        with patch("subprocess.run", return_value=mock_result):
+            result = linux_detector._install_with_snap("hello")
+
+        assert result["success"] is True
+
+    def test_install_with_snap_failure(self, linux_detector):
+        """Test snap installation failure (non-classic error, no retry)."""
+        error = subprocess.CalledProcessError(1, "snap")
+        error.stderr = 'error: snap "nope" not found'
+        error.stdout = ""
+
+        with patch("subprocess.run", side_effect=error) as run:
+            result = linux_detector._install_with_snap("nope")
+
+        assert result["success"] is False
+        assert run.call_count == 1  # no --classic retry for unrelated errors
+
+    def test_install_with_snap_classic_fallback(self, linux_detector):
+        """A classic-confinement snap retries with --classic and succeeds."""
+        error = subprocess.CalledProcessError(1, "snap")
+        error.stderr = (
+            'error: This revision of snap "code" was published using classic '
+            "confinement ... use --classic"
+        )
+        error.stdout = ""
+        ok = Mock(returncode=0, stdout="code installed")
+        calls = []
+
+        def _run(argv, **_kwargs):
+            calls.append(argv)
+            if len(calls) == 1:
+                raise error
+            return ok
+
+        with patch("subprocess.run", side_effect=_run):
+            result = linux_detector._install_with_snap("code")
+
+        assert result["success"] is True
+        assert calls[1] == ["sudo", "snap", "install", "--classic", "code"]
+
+    def test_install_with_snap_classic_fallback_fails(self, linux_detector):
+        """Both attempts fail -> failure surfaced."""
+        error = subprocess.CalledProcessError(1, "snap")
+        error.stderr = "use --classic"
+        error.stdout = ""
+
+        with patch("subprocess.run", side_effect=error):
+            result = linux_detector._install_with_snap("code")
+
+        assert result["success"] is False
+
     def test_install_with_yum_success(self, linux_detector):
         """Test successful YUM package installation."""
         mock_result = Mock(returncode=0, stdout="Package installed")

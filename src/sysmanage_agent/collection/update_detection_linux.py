@@ -535,6 +535,50 @@ class LinuxUpdateDetector(UpdateDetectorBase):
                 "error": f"Failed to install {package_name}: {error.stderr or error.stdout}",
             }
 
+    def _install_with_snap(self, package_name: str) -> Dict[str, Any]:
+        """Install package using the snap package manager (Phase 17.1).
+
+        Snaps that use classic confinement must be installed with ``--classic``;
+        snapd reports that as an install error, so retry once with ``--classic``
+        when the first attempt asks for it.
+        """
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "snap", "install", package_name],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=True,
+            )
+            return {"success": True, "version": "unknown", "output": result.stdout}
+
+        except subprocess.CalledProcessError as error:
+            stderr = error.stderr or ""
+            if "--classic" in stderr or "classic" in stderr.lower():
+                try:
+                    result = subprocess.run(  # nosec B603, B607
+                        ["sudo", "snap", "install", "--classic", package_name],
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
+                        check=True,
+                    )
+                    return {
+                        "success": True,
+                        "version": "unknown",
+                        "output": result.stdout,
+                    }
+                except subprocess.CalledProcessError as retry_error:
+                    return {
+                        "success": False,
+                        "error": f"Failed to install {package_name}: "
+                        f"{retry_error.stderr or retry_error.stdout}",
+                    }
+            return {
+                "success": False,
+                "error": f"Failed to install {package_name}: {error.stderr or error.stdout}",
+            }
+
     # ========== Update Orchestration ==========
 
     def detect_updates(self):
