@@ -424,6 +424,66 @@ class TestParseSnapPackageLine:
         assert result is None
 
 
+class TestCollectOciImages:
+    """Tests for container-image (OCI) detection + collection (Phase 17.2)."""
+
+    def test_detect_oci_available(self, collector):
+        """OCI is detected when a container runtime (podman/docker) is present."""
+        with patch.object(collector, "_command_exists") as mock_exists:
+            mock_exists.side_effect = lambda cmd: cmd == "podman"
+            result = collector.detect_package_managers()
+        assert "oci" in result
+
+    def test_collect_oci_images_success(self, collector):
+        """Images are collected as package_manager='oci' with digest→revision."""
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = (
+            "docker.io/library/nginx\t1.27\tsha256:aaa\tabc123\n"
+            "quay.io/org/app\tv2\t<none>\tdef456\n"
+        )
+        with patch.object(
+            collector, "_command_exists", side_effect=lambda c: c == "podman"
+        ):
+            with patch("subprocess.run", return_value=mock_result):
+                collector._collect_oci_images()
+
+        assert len(collector.collected_packages) == 2
+        nginx = collector.collected_packages[0]
+        assert nginx["package_name"] == "docker.io/library/nginx"
+        assert nginx["version"] == "1.27"
+        assert nginx["package_manager"] == "oci"
+        assert nginx["revision"] == "sha256:aaa"
+        assert nginx["source"] == "podman"
+        app = collector.collected_packages[1]
+        # No registry digest -> fall back to the local image ID.
+        assert app["revision"] == "def456"
+
+    def test_collect_oci_images_no_runtime(self, collector):
+        """No runtime present -> nothing collected, no crash."""
+        with patch.object(collector, "_command_exists", return_value=False):
+            collector._collect_oci_images()
+        assert collector.collected_packages == []
+
+    def test_parse_oci_skips_untagged_noise(self, collector):
+        """<none> repository rows (dangling images) are skipped."""
+        assert (
+            collector._parse_oci_image_line(
+                ["<none>", "<none>", "sha256:x", "id"], "docker"
+            )
+            is None
+        )
+        assert collector._parse_oci_image_line(["only-one-field"], "docker") is None
+
+    def test_parse_oci_defaults_tag(self, collector):
+        """A missing/`<none>` tag defaults to 'latest'."""
+        pkg = collector._parse_oci_image_line(
+            ["nginx", "<none>", "sha256:y", "id"], "docker"
+        )
+        assert pkg["version"] == "latest"
+        assert pkg["revision"] == "sha256:y"
+
+
 class TestCollectFlatpakPackages:
     """Tests for _collect_flatpak_packages method."""
 

@@ -44,6 +44,8 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             "zypper": ["zypper"],
             "portage": ["emerge"],
             "apk": ["apk"],
+            # Phase 17.2: OCI/container images (any of these runtimes present).
+            "oci": ["podman", "docker", "nerdctl"],
         }
 
         for manager, executables in manager_executables.items():
@@ -67,6 +69,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         "zypper": "_collect_zypper_packages",
         "portage": "_collect_portage_packages",
         "apk": "_collect_apk_packages",
+        "oci": "_collect_oci_images",
     }
 
     def collect_packages(self):
@@ -207,6 +210,77 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
         except Exception as error:
             logger.exception(_("Failed to collect snap packages: %s"), str(error))
+
+    def _parse_oci_image_line(self, parts, runtime):
+        """Parse one ``<runtime> images`` row into a package dict.
+
+        Columns (from the ``--digests --format`` template below) are:
+        Repository, Tag, Digest, ID.  Container images are reported through the
+        software-inventory pipeline as ``package_manager="oci"`` — name =
+        repository, version = tag, and the registry manifest **digest** (the
+        immutable pin) reuses the ``revision`` field (Phase 17.2 / 17.1 column).
+
+        Returns a package dict, or None for the dangling/untagged noise rows.
+        """
+        if len(parts) < 2:
+            return None
+        repository = parts[0].strip()
+        if not repository or repository == "<none>":
+            return None
+        tag = parts[1].strip() if len(parts) > 1 else ""
+        digest = parts[2].strip() if len(parts) > 2 else ""
+        image_id = parts[3].strip() if len(parts) > 3 else ""
+
+        package = {
+            "package_name": repository,
+            "version": tag if tag and tag != "<none>" else "latest",
+            "package_manager": "oci",
+            "source": runtime,
+            "is_system_package": False,
+            "is_user_installed": True,
+        }
+        # The registry manifest digest is the reproducible pin; fall back to the
+        # local image ID when the digest is absent (e.g. locally-built images).
+        if digest and digest != "<none>":
+            package["revision"] = digest
+        elif image_id and image_id != "<none>":
+            package["revision"] = image_id
+        return package
+
+    def _collect_oci_images(self):
+        """Collect container images from the local OCI runtime (podman/docker/
+        nerdctl).  All three share the same ``images --digests --format``
+        template."""
+        runtime = None
+        for candidate in ("podman", "docker", "nerdctl"):
+            if self._command_exists(candidate):
+                runtime = candidate
+                break
+        if runtime is None:
+            return
+        try:
+            logger.debug("Collecting %s container images", runtime)
+            result = subprocess.run(
+                [
+                    runtime,
+                    "images",
+                    "--digests",
+                    "--format",
+                    "{{.Repository}}\t{{.Tag}}\t{{.Digest}}\t{{.ID}}",
+                ],  # nosec B603, B607
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().split("\n"):
+                    if line:
+                        package = self._parse_oci_image_line(line.split("\t"), runtime)
+                        if package:
+                            self.collected_packages.append(package)
+        except Exception as error:
+            logger.exception(_("Failed to collect container images: %s"), str(error))
 
     def _parse_flatpak_package_line(self, parts):
         """Parse a single flatpak list output line into a package dict.
