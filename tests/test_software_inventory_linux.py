@@ -325,6 +325,43 @@ class TestCollectSnapPackages:
         assert code["version"] == "1.52.1"
         assert code["package_manager"] == "snap"
         assert "snap_store" in code["source"]
+        # Channel-aware detection (Phase 17.1): structured channel/revision +
+        # best-effort confinement from the Notes column.
+        assert code["revision"] == "54"
+        assert code["channel"] == "latest/stable"
+        assert code["confinement"] == "classic"
+        firefox = collector.collected_packages[1]
+        assert firefox["revision"] == "100"
+        assert firefox["channel"] == "latest/stable"
+        # "-" in Notes is not a confinement flag, so it is left unset.
+        assert "confinement" not in firefox
+
+    def test_collect_snap_packages_devmode_confinement(self, collector):
+        """A devmode note maps to devmode confinement."""
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = (
+            "Name   Version  Rev  Tracking     Publisher  Notes\n"
+            "hello  2.10     42   latest/edge  canonical  devmode\n"
+        )
+        with patch("subprocess.run", return_value=mock_result):
+            collector._collect_snap_packages()
+
+        pkg = collector.collected_packages[0]
+        assert pkg["channel"] == "latest/edge"
+        assert pkg["revision"] == "42"
+        assert pkg["confinement"] == "devmode"
+
+    def test_parse_snap_line_minimal_fields(self, collector):
+        """A 3-field line (no Tracking/Notes) still yields name/version/revision."""
+        pkg = collector._parse_snap_package_line(["hello", "2.10", "42"])
+        assert pkg["package_name"] == "hello"
+        assert pkg["revision"] == "42"
+        assert pkg["source"] == "snap_store"
+        assert "channel" not in pkg
+        assert "confinement" not in pkg
+        # Too few fields -> unparseable.
+        assert collector._parse_snap_package_line(["hello", "2.10"]) is None
 
     def test_collect_snap_packages_empty(self, collector):
         """Test snap package collection with no packages."""

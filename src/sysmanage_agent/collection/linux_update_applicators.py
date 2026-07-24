@@ -106,8 +106,15 @@ class LinuxUpdateApplicator:
         """Apply Snap updates."""
         for package in packages:
             try:
+                # Channel-aware refresh (ROADMAP 17.1): when the server targets a
+                # specific channel, pass it through so `snap refresh` can also
+                # switch tracks; otherwise refresh the currently-tracked channel.
+                argv = [*_sudo_prefix(), "snap", "refresh", package["package_name"]]
+                channel = package.get("channel")
+                if channel:
+                    argv.append(f"--channel={channel}")
                 result = subprocess.run(  # nosec B603, B607
-                    [*_sudo_prefix(), "snap", "refresh", package["package_name"]],
+                    argv,
                     capture_output=True,
                     text=True,
                     timeout=300,

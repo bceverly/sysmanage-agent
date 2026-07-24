@@ -140,9 +140,14 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     def _parse_snap_package_line(self, parts):
         """Parse a single snap list output line into a package dict.
 
+        ``snap list`` columns are: Name Version Rev Tracking Publisher Notes.
+        Channel-aware detection (ROADMAP 17.1) captures the tracking channel and
+        revision as structured fields (not just folded into ``source``), plus a
+        best-effort confinement read from the Notes column.
+
         Args:
             parts: Whitespace-separated fields from snap list output
-                   (name, version, rev, [channel], ...).
+                   (name, version, rev, [tracking], [publisher], [notes]).
 
         Returns:
             A package dict, or None if the line cannot be parsed.
@@ -155,13 +160,27 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             "version": parts[1],
             "package_manager": "snap",
             "source": "snap_store",
+            "revision": parts[2],
             "is_system_package": False,
             "is_user_installed": True,
         }
 
-        # Add channel info if available
+        # The Tracking column IS the snap's channel — keep it structured (and,
+        # for backward compatibility, still reflect it in ``source``).
         if len(parts) >= 4:
+            package["channel"] = parts[3]
             package["source"] = f"snap_store/{parts[3]}"
+
+        # Confinement (best-effort): ``snap list`` does not expose confinement
+        # directly, but the Notes column flags classic/devmode snaps.  Strict
+        # snaps show "-" (no note), which is ambiguous with other notes, so only
+        # classic/devmode are reported with confidence.
+        if len(parts) >= 6:
+            notes = parts[5]
+            if "classic" in notes:
+                package["confinement"] = "classic"
+            elif "devmode" in notes:
+                package["confinement"] = "devmode"
 
         return package
 

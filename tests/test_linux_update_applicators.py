@@ -152,6 +152,31 @@ class TestApplySnapUpdates:
             LinuxUpdateApplicator.apply_snap_updates([_pkg("firefox")], results)
         assert results["failed_packages"][0]["error"] == "snap died"
 
+    def test_channel_aware_refresh_passes_channel(self):
+        """A target channel is threaded through as `--channel=` (ROADMAP 17.1)."""
+        results = {}
+        with patch(
+            "src.sysmanage_agent.collection.linux_update_applicators.subprocess.run",
+            return_value=_completed(0),
+        ) as run:
+            LinuxUpdateApplicator.apply_snap_updates(
+                [_pkg("firefox", channel="latest/beta")], results
+            )
+        argv = run.call_args[0][0]
+        assert "snap" in argv and "refresh" in argv
+        assert "--channel=latest/beta" in argv
+
+    def test_refresh_without_channel_omits_flag(self):
+        """No channel -> plain refresh (current behavior preserved)."""
+        results = {}
+        with patch(
+            "src.sysmanage_agent.collection.linux_update_applicators.subprocess.run",
+            return_value=_completed(0),
+        ) as run:
+            LinuxUpdateApplicator.apply_snap_updates([_pkg("firefox")], results)
+        argv = run.call_args[0][0]
+        assert not any(str(a).startswith("--channel=") for a in argv)
+
 
 # ---------------------------------------------------------------------------
 # apply_flatpak_updates
