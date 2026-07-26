@@ -780,3 +780,66 @@ class TestApplyDeploymentPlan:
             )
         assert result_inline["success"] is True
         assert result_wrapped["success"] is True
+
+
+class TestImageModePlanExecution:
+    """Phase 17.3 — the image_mode_engine's stage/apply/rollback plans are
+    plain ``{commands: [{argv, timeout, ignore_errors, description}]}`` plans,
+    so they execute through the SAME ``apply_deployment_plan`` path the 17.1/
+    17.2 repoint plans use — no bespoke agent handler. These tests pin that the
+    engine's plan shapes run, and that the reboot step's ``ignore_errors`` keeps
+    a dropped connection from failing the action."""
+
+    def setup_method(self):
+        self.mock_agent = Mock()
+        self.mock_agent.send_message = AsyncMock()
+        self.mock_agent.create_message = Mock(return_value={"type": "test"})
+        self.deployment = GenericDeployment(self.mock_agent)
+
+    @pytest.mark.asyncio
+    async def test_bootc_stage_plan_executes(self):
+        """`sudo bootc upgrade` (stage, no reboot) runs and succeeds."""
+        plan = {
+            "commands": [
+                {
+                    "argv": ["sudo", "bootc", "upgrade"],
+                    "timeout": 3600,
+                    "ignore_errors": False,
+                    "description": "stage the newest image (no reboot)",
+                }
+            ]
+        }
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            result = await self.deployment.apply_deployment_plan({"plan": plan})
+        assert result["success"] is True
+        assert len(result["results"]["commands"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_apply_plan_reboot_failure_is_ignored(self):
+        """The reboot step (ignore_errors=True) must not fail the action even
+        when it 'fails' — the connection drops as the host reboots."""
+        plan = {
+            "commands": [
+                {"argv": ["sudo", "rpm-ostree", "upgrade"], "ignore_errors": False},
+                # simulate the reboot dropping the connection (nonzero)
+                {"argv": ["false"], "ignore_errors": True},
+            ]
+        }
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            result = await self.deployment.apply_deployment_plan({"plan": plan})
+        assert result["success"] is True
+        assert len(result["results"]["commands"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_rollback_plan_runs_rollback_then_reboot(self):
+        """Rollback plan attempts both the rollback and the reboot command."""
+        plan = {
+            "commands": [
+                {"argv": ["sudo", "bootc", "rollback"], "ignore_errors": False},
+                {"argv": ["sudo", "systemctl", "reboot"], "ignore_errors": True},
+            ]
+        }
+        with patch("asyncio.create_subprocess_exec", new=_fake_subprocess_exec()):
+            result = await self.deployment.apply_deployment_plan({"plan": plan})
+        assert result["success"] is True
+        assert len(result["results"]["commands"]) == 2

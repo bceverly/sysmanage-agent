@@ -21,6 +21,10 @@ from src.sysmanage_agent.collection.software_inventory_base import (
 
 logger = logging.getLogger(__name__)
 
+# Container runtimes print "<none>" for a dangling/untagged repository, tag,
+# or digest (e.g. `podman images` on a locally-built or pruned image).
+_OCI_NONE = "<none>"
+
 
 class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     """Collects software inventory from Linux package managers."""
@@ -225,7 +229,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         if len(parts) < 2:
             return None
         repository = parts[0].strip()
-        if not repository or repository == "<none>":
+        if not repository or repository == _OCI_NONE:
             return None
         tag = parts[1].strip() if len(parts) > 1 else ""
         digest = parts[2].strip() if len(parts) > 2 else ""
@@ -233,7 +237,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
         package = {
             "package_name": repository,
-            "version": tag if tag and tag != "<none>" else "latest",
+            "version": tag if tag and tag != _OCI_NONE else "latest",
             "package_manager": "oci",
             "source": runtime,
             "is_system_package": False,
@@ -241,9 +245,9 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         }
         # The registry manifest digest is the reproducible pin; fall back to the
         # local image ID when the digest is absent (e.g. locally-built images).
-        if digest and digest != "<none>":
+        if digest and digest != _OCI_NONE:
             package["revision"] = digest
-        elif image_id and image_id != "<none>":
+        elif image_id and image_id != _OCI_NONE:
             package["revision"] = image_id
         return package
 

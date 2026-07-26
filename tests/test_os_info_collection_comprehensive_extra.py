@@ -421,12 +421,17 @@ class TestPlatformInfoCollection:
             assert "ubuntu_pro" not in os_info
 
     def test_collect_linux_os_info_os_error(self):
-        """Test Linux OS info when freedesktop_os_release raises OSError."""
+        """Test Linux OS info when freedesktop_os_release raises OSError.
+
+        Image-mode detection (Phase 17.3) is an independent probe that always
+        runs, so it's stubbed here to keep this focused on the os-release path:
+        an os-release failure must add no distribution fields.
+        """
         with patch(
             "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
             side_effect=OSError("File not found"),
             create=True,
-        ):
+        ), patch.object(self.collector, "_collect_image_mode_info", return_value={}):
             os_info = self.collector._collect_linux_os_info()
             assert not os_info
 

@@ -9,7 +9,9 @@ Handles platform-specific OS version and architecture information gathering.
 
 import json
 import logging
+import os
 import platform
+import shutil
 import subprocess  # nosec B404
 import time
 from typing import Any, Dict, Optional
@@ -678,7 +680,137 @@ class OSInfoCollector:
             if "ubuntu" in distribution.lower():
                 os_info["ubuntu_pro"] = self._get_ubuntu_pro_info()
 
+        # Phase 17.3: image-mode (bootc / rpm-ostree) detection. Rides the same
+        # os_info payload (and thus the os_version_update message) — no separate
+        # collection hook. Always sets is_image_mode so the server can flip the
+        # flag off if a host leaves image mode.
+        os_info.update(self._collect_image_mode_info())
+
         return os_info
+
+    def _detect_image_mode_backend(self) -> Optional[str]:
+        """Return the active image-mode backend for this host, or None.
+
+        Cheap, version-agnostic probes (no 3.10+ APIs): OSTree-booted hosts
+        carry ``/run/ostree-booted``; bootc hosts additionally ship
+        ``/usr/lib/bootc`` and the ``bootc`` binary. bootc is checked first
+        because a bootc host is also OSTree-booted underneath.
+        """
+        try:
+            if os.path.exists("/usr/lib/bootc") and shutil.which("bootc"):
+                return "bootc"
+            if os.path.exists("/run/ostree-booted") and shutil.which("rpm-ostree"):
+                return "rpm-ostree"
+        except OSError:
+            pass
+        return None
+
+    def _collect_image_mode_info(self) -> Dict[str, Any]:
+        """Collect image-mode deployment state (booted/staged/rollback image).
+
+        Returns ``{"is_image_mode": False}`` on a normal package-mode host.
+        On an image-mode host, parses ``bootc status --json`` /
+        ``rpm-ostree status --json`` into the normalized fields the server
+        persists onto the Host row.
+        """
+        backend = self._detect_image_mode_backend()
+        if not backend:
+            return {"is_image_mode": False}
+
+        cmd = (
+            ["bootc", "status", "--json"]
+            if backend == "bootc"
+            else ["rpm-ostree", "status", "--json"]
+        )
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            return {"is_image_mode": True, "image_backend": backend}
+
+        if result.returncode != 0 or not result.stdout.strip():
+            return {"is_image_mode": True, "image_backend": backend}
+
+        try:
+            status = json.loads(result.stdout)
+        except (ValueError, TypeError):
+            return {"is_image_mode": True, "image_backend": backend}
+
+        if backend == "bootc":
+            return self._normalize_bootc_status(status)
+        return self._normalize_rpm_ostree_status(status)
+
+    @staticmethod
+    def _normalize_bootc_status(status: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize ``bootc status --json`` into the common state dict."""
+        st = status.get("status", {}) or {}
+
+        def _img(node):
+            if not node:
+                return (None, None)
+            image = node.get("image", {}) or {}  # the ImageStatus wrapper
+            ref = image.get("image")
+            if isinstance(ref, dict):  # bootc nests image.image.image
+                ref = ref.get("image")
+            return (ref, image.get("imageDigest"))
+
+        booted_ref, booted_digest = _img(st.get("booted"))
+        staged_ref, staged_digest = _img(st.get("staged"))
+        rollback_ref, _rb = _img(st.get("rollback"))
+        return {
+            "is_image_mode": True,
+            "image_backend": "bootc",
+            "booted_image_ref": booted_ref,
+            "booted_image_digest": booted_digest,
+            "staged_image_ref": staged_ref,
+            "staged_image_digest": staged_digest,
+            "rollback_image_ref": rollback_ref,
+            "rollback_available": st.get("rollback") is not None,
+        }
+
+    @staticmethod
+    def _normalize_rpm_ostree_status(status: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize ``rpm-ostree status --json`` into the common state dict.
+
+        Deployment roles: booted (``booted``), staged (``staged``), rollback
+        (the first deployment that is neither booted nor staged).
+        """
+        deployments = status.get("deployments", []) or []
+        booted = next((d for d in deployments if d.get("booted")), None)
+        staged = next((d for d in deployments if d.get("staged")), None)
+        rollback = next(
+            (d for d in deployments if not d.get("booted") and not d.get("staged")),
+            None,
+        )
+
+        def _ref(dep):
+            if not dep:
+                return None
+            ref = dep.get("container-image-reference")
+            # strip the ostree transport prefix (e.g. ostree-unverified-registry:)
+            if ref and ":" in ref and ref.split(":", 1)[0].startswith("ostree"):
+                ref = ref.split(":", 1)[1]
+            return ref
+
+        return {
+            "is_image_mode": True,
+            "image_backend": "rpm-ostree",
+            "booted_image_ref": _ref(booted),
+            "booted_image_digest": (booted or {}).get(
+                "container-image-reference-digest"
+            ),
+            "staged_image_ref": _ref(staged),
+            "staged_image_digest": (staged or {}).get(
+                "container-image-reference-digest"
+            ),
+            "rollback_image_ref": _ref(rollback),
+            "rollback_available": rollback is not None,
+        }
 
     @staticmethod
     def _parse_os_release_file() -> Dict[str, str]:
