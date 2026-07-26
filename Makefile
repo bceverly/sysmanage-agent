@@ -593,6 +593,9 @@ lint-version-fix:
 # Uniform across all SysManage repos; complements pylint max-module-lines.
 lint-file-length:
 	@echo "Checking file lengths (max 1000 lines; scripts/ + generated i18n exempt)..."
+ifeq ($(OS),Windows_NT)
+	@$(PYTHON) scripts/check_file_length.py
+else
 	@bad=$$(git ls-files '*.py' '*.pyx' '*.pxi' '*.ts' '*.tsx' '*.js' '*.jsx' \
 		| grep -vE '(^|/)scripts/|-i18n\.ts$$' \
 		| while read f; do \
@@ -605,6 +608,7 @@ lint-file-length:
 		exit 1; \
 	fi; \
 	echo "[OK] all source files within 1000 lines"
+endif
 
 # Python linting
 lint: lint-file-length format-python i18n-validate translate-check lint-version
