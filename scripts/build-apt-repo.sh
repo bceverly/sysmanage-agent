@@ -48,7 +48,12 @@ for ARCH in $ARCHES; do
     mkdir -p "dists/$SUITE/main/binary-$ARCH"
     dpkg-scanpackages -a "$ARCH" pool/ /dev/null \
         > "dists/$SUITE/main/binary-$ARCH/Packages"
-    gzip -9c "dists/$SUITE/main/binary-$ARCH/Packages" \
+    # -n omits gzip's timestamp+name header.  Without it the .gz is
+    # byte-different on every regeneration even when the content is identical,
+    # while staying the SAME SIZE — which an `aws s3 sync --size-only` then
+    # refuses to upload, leaving R2 serving an old Packages.gz under a Release
+    # that describes the new one ("Hash Sum mismatch", forever).
+    gzip -9nc "dists/$SUITE/main/binary-$ARCH/Packages" \
         > "dists/$SUITE/main/binary-$ARCH/Packages.gz"
     echo "  indexed $ARCH: $(grep -c '^Package:' "dists/$SUITE/main/binary-$ARCH/Packages" || true) package(s)"
 done

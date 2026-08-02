@@ -3750,7 +3750,33 @@ jobs:
           chmod 600 ~/.ssh/config
 
           AUR_DIR=$(mktemp -d /tmp/aur-clone.XXXXXX)
-          git clone ssh://aur@aur.archlinux.org/sysmanage-agent.git "$AUR_DIR"
+          # aur.archlinux.org goes down for maintenance periodically, and an
+          # outage there must not fail the whole release — this job already
+          # soft-fails (exit 0) when its secret is absent, so a third-party
+          # outage should behave the same way.  Retry a few times first in case
+          # it is a blip, then warn and skip.
+          n=0
+          until [ "$n" -ge 3 ]; do
+            if git clone ssh://aur@aur.archlinux.org/sysmanage-agent.git "$AUR_DIR" 2>/tmp/aur-clone.err; then
+              break
+            fi
+            n=$((n+1))
+            echo "AUR clone attempt $n failed; retrying in 30s..."
+            sleep 30
+          done
+          if [ ! -d "$AUR_DIR/.git" ]; then
+            echo "::warning::Could not clone the AUR repo after $n attempts:"
+            sed 's/^/::warning::  /' /tmp/aur-clone.err || true
+            if grep -qi "down due to maintenance\|Could not read from remote repository" /tmp/aur-clone.err; then
+              echo "::warning::aur.archlinux.org appears to be DOWN — skipping the AUR"
+              echo "::warning::publish for v${VERSION}.  Re-run this job once it is back;"
+              echo "::warning::nothing else in the release is affected."
+            else
+              echo "::warning::Check that AUR_SSH_KEY is registered on aur.archlinux.org"
+              echo "::warning::and that the sysmanage-agent repo exists there."
+            fi
+            exit 0
+          fi
 
           cp "$STAGE/PKGBUILD" "$AUR_DIR/PKGBUILD"
           cp "$STAGE/.SRCINFO" "$AUR_DIR/.SRCINFO"
