@@ -2072,38 +2072,12 @@ jobs:
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
           sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
 
-          # Regenerate apt repository metadata (amd64 + arm64)
+          # Regenerate apt repository metadata (amd64 + arm64).
+          # Shared with `make deploy-docs-repo` so the two cannot drift — they
+          # did once, and whichever ran last decided whether apt would accept
+          # the published repo at all.
           echo "Regenerating apt repository metadata..."
-          cd repo/agent/deb
-
-          # Generate per-arch Packages files from the shared pool.  dpkg-scanpackages
-          # -a <arch> emits only the .debs whose control Architecture matches, so
-          # amd64 and arm64 clients each get their own index.
-          for ARCH in amd64 arm64; do
-            mkdir -p "dists/stable/main/binary-$ARCH"
-            dpkg-scanpackages -a "$ARCH" pool/ /dev/null > "dists/stable/main/binary-$ARCH/Packages"
-            gzip -9c "dists/stable/main/binary-$ARCH/Packages" > "dists/stable/main/binary-$ARCH/Packages.gz"
-          done
-
-          # Generate Release file with checksums (sizes inlined) for both arches
-          cd dists/stable
-          REL_FILES="main/binary-amd64/Packages main/binary-amd64/Packages.gz main/binary-arm64/Packages main/binary-arm64/Packages.gz"
-          {
-            echo "Origin: SysManage"
-            echo "Label: SysManage Agent"
-            echo "Suite: stable"
-            echo "Codename: stable"
-            echo "Components: main"
-            echo "Architectures: amd64 arm64"
-            echo "Date: $(date -R -u)"
-            for algo in "MD5Sum:md5sum" "SHA1:sha1sum" "SHA256:sha256sum" "SHA512:sha512sum"; do
-              echo "${algo%%:*}"
-              CMD="${algo##*:}"
-              for f in $REL_FILES; do
-                "$CMD" "$f" | awk -v s="$(stat -c%s "$f")" '{printf " %s %16d %s\n", $1, s, $2}'
-              done
-            done
-          } > Release
+          "$GITHUB_WORKSPACE/scripts/build-apt-repo.sh" repo/agent/deb
 
           cd "$WORK"
 

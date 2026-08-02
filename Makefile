@@ -3946,23 +3946,13 @@ deploy-docs-repo:
 			echo "  Staged: $$(basename $$f) -> $$DEB_DIR/"; \
 		done; \
 		STAGED="$$STAGED deb"; \
-		if [ -x "$$DOCS_REPO/repo/agent/deb/update-repo.sh" ]; then \
-			echo "  Running update-repo.sh..."; \
-			cd "$$DOCS_REPO/repo/agent/deb" && ./update-repo.sh 2>/dev/null || true; \
-			cd "$(CURDIR)"; \
-			echo "  DEB metadata updated"; \
-		elif command -v dpkg-scanpackages >/dev/null 2>&1; then \
-			echo "  Regenerating DEB metadata..."; \
-			cd "$$DOCS_REPO/repo/agent/deb"; \
-			dpkg-scanpackages pool/main /dev/null > dists/stable/main/binary-amd64/Packages 2>/dev/null || true; \
-			gzip -k -f dists/stable/main/binary-amd64/Packages 2>/dev/null || true; \
-			if command -v apt-ftparchive >/dev/null 2>&1; then \
-				cd dists/stable && apt-ftparchive release . > Release 2>/dev/null || true; \
-				cd "$(CURDIR)"; \
-			fi; \
-			cd "$(CURDIR)"; \
-			echo "  DEB metadata updated"; \
-		fi; \
+		echo "  Regenerating DEB metadata..."; \
+		"$(CURDIR)/scripts/build-apt-repo.sh" "$$DOCS_REPO/repo/agent/deb" || { \
+			echo "  [ERROR] apt metadata generation FAILED - not publishing a repo apt would reject"; \
+			exit 1; \
+		}; \
+		cd "$(CURDIR)"; \
+		echo "  DEB metadata updated"; \
 	else \
 		echo "  No .deb packages found in installer/dist/"; \
 		MISSING="$$MISSING deb"; \
