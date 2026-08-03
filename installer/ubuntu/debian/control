@@ -20,7 +20,8 @@ Depends: ${misc:Depends},
  libffi-dev,
  libssl-dev,
  adduser,
- systemd
+ systemd,
+ sudo
 Recommends: genisoimage | mkisofs | xorriso,
  qemu-utils,
  virtinst,
