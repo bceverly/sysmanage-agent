@@ -64,7 +64,7 @@ def detect_wsl_blockers(output_lower: str, result: Dict[str, Any]) -> bool:
     if "virtual machine platform" in output_lower:
         result["enabled"] = False
         result["needs_enable"] = True
-        _logger.info(_("WSL requires Virtual Machine Platform to be enabled"))
+        _logger.info("WSL requires Virtual Machine Platform to be enabled")
         return True
     return False
 
@@ -136,12 +136,12 @@ def check_wsl_support() -> Dict[str, Any]:
                 result["enabled"] = True
                 parse_wsl_version(output, result)
                 _logger.info(
-                    _("WSL is enabled, default version: %s"), result["default_version"]
+                    "WSL is enabled, default version: %s", result["default_version"]
                 )
             else:
                 result["enabled"] = False
                 result["needs_enable"] = True
-                _logger.info(_("WSL is available but not fully enabled"))
+                _logger.info("WSL is available but not fully enabled")
         except subprocess.TimeoutExpired:
             _logger.warning(_("WSL status check timed out"))
             result["enabled"] = False

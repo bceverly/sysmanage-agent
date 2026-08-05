@@ -187,7 +187,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 "error": f"OS error writing '{path}': {exc}",
             }
 
-        self.logger.info(_("Deployed file: %s"), path)
+        self.logger.info("Deployed file: %s", path)
         return {
             "success": True,
             "path": path,

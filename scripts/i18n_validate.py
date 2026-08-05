@@ -174,6 +174,8 @@ def _run_pybabel_extract(out_path: Path) -> None:
         "-k",
         "_",
         "-k",
+        "N_",
+        "-k",
         "gettext",
         "-k",
         "ngettext:1,2",
@@ -201,6 +203,8 @@ def cmd_extract() -> int:
         str(BABEL_CFG),
         "-k",
         "_",
+        "-k",
+        "N_",
         "-k",
         "gettext",
         "-k",
@@ -342,10 +346,11 @@ def cmd_validate() -> int:
             file=sys.stderr,
         )
         return 1
-    print(
-        "\nOK: every code msgid is translated and fuzzy budget respected",
-        file=sys.stderr,
-    )
+    # stdout, deliberately.  Failures go to stderr, but a SUCCESS report on
+    # stderr makes "passing" and "produced no output at all" look identical
+    # — that is how `make i18n-validate` got mistaken for a dead target
+    # (2026-08-05).  Aligned across all four repos.
+    print("\nOK: every code msgid is translated and fuzzy budget respected")
     return 0
 
 

@@ -102,9 +102,7 @@ class ChildHostCollector:
 
         if has_lowercase_timeout and not has_correct_timeout:
             config.remove_option("wsl2", "vmidletimeout")
-            self.logger.info(
-                _("Removing lowercase vmidletimeout, will add vmIdleTimeout")
-            )
+            self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
             needs_update = True
 
         if current_timeout != "-1":
@@ -134,7 +132,7 @@ class ChildHostCollector:
 
         if has_lowercase_autostop and not has_correct_autostop:
             config.remove_option("wsl", "autostop")
-            self.logger.info(_("Removing lowercase autostop, will add autoStop"))
+            self.logger.info("Removing lowercase autostop, will add autoStop")
             needs_update = True
 
         if current_autostop != "false":
@@ -157,20 +155,18 @@ class ChildHostCollector:
         try:
             if creating_new_file:
                 self.logger.info(
-                    _(
-                        ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-                    ),
+                    ".wslconfig not found, creating to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
             else:
                 self.logger.info(
-                    _("Updating .wslconfig to prevent WSL auto-shutdown at %s"),
+                    "Updating .wslconfig to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
 
             with open(wslconfig_path, "w", encoding="utf-8") as config_file:
                 config.write(config_file)
-            self.logger.info(_(".wslconfig saved successfully"))
+            self.logger.info(".wslconfig saved successfully")
             return True
         except PermissionError:
             self.logger.error(_("Permission denied writing to %s"), wslconfig_path)
@@ -192,7 +188,7 @@ class ChildHostCollector:
         )
 
         try:
-            self.logger.info(_("Shutting down WSL to apply .wslconfig changes..."))
+            self.logger.info("Shutting down WSL to apply .wslconfig changes...")
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--shutdown"],
                 capture_output=True,
@@ -203,7 +199,7 @@ class ChildHostCollector:
 
             if result.returncode == 0:
                 self.logger.info(
-                    _("WSL shutdown complete, new settings will apply on next start")
+                    "WSL shutdown complete, new settings will apply on next start"
                 )
             else:
                 stderr = result.stderr.decode("utf-8", errors="ignore")
@@ -235,7 +231,7 @@ class ChildHostCollector:
                 self._restart_wsl()
 
             # Start persistent keep-alive processes for all WSL instances
-            self.logger.info(_("Starting WSL keep-alive processes"))
+            self.logger.info("Starting WSL keep-alive processes")
             self._ensure_keepalive_processes()
 
         # Send child host status every 60 seconds
@@ -262,7 +258,7 @@ class ChildHostCollector:
         finally:
             # Clean up keep-alive processes when heartbeat stops (Windows only)
             if os_type == "windows":
-                self.logger.info(_("Stopping WSL keep-alive processes"))
+                self.logger.info("Stopping WSL keep-alive processes")
             self._stop_all_keepalive_processes()
 
     def _get_wsl_distros(self) -> list:
@@ -338,9 +334,7 @@ class ChildHostCollector:
             )
 
             self._wsl_keepalive_processes[distro] = process
-            self.logger.info(
-                _("Started keep-alive process for WSL instance: %s"), distro
-            )
+            self.logger.info("Started keep-alive process for WSL instance: %s", distro)
             return True
 
         except Exception as error:  # pylint: disable=broad-except
@@ -390,7 +384,7 @@ class ChildHostCollector:
         for distro in self._wsl_keepalive_processes.copy():
             if distro not in current_distros:
                 self.logger.info(
-                    _("WSL distribution %s no longer exists, stopping keep-alive"),
+                    "WSL distribution %s no longer exists, stopping keep-alive",
                     distro,
                 )
                 self._stop_keepalive_process(distro)

@@ -113,7 +113,7 @@ def _process_non_apt_uninstall(
     for package in pkg_list:
         package_name = package.get("package_name")
         uninstall_log.append(f"Uninstalling {package_name}...")
-        logger.info(_("Uninstalling package: %s"), package_name)
+        logger.info("Uninstalling package: %s", package_name)
         # Non-apt managers not implemented yet  # NOSONAR
         failed_packages.append(
             {
@@ -173,7 +173,7 @@ class PackageOperations:
             return {"success": False, "error": _("No package name specified")}
 
         self.logger.info(
-            _("Installing package %s (installation_id: %s, requested_by: %s)"),
+            "Installing package %s (installation_id: %s, requested_by: %s)",
             package_name,
             installation_id,
             requested_by,
@@ -269,7 +269,7 @@ class PackageOperations:
             }
 
         self.logger.info(
-            _("Installing %d packages for request %s (requested_by: %s)"),
+            "Installing %d packages for request %s (requested_by: %s)",
             len(packages),
             request_id,
             requested_by,
@@ -377,7 +377,7 @@ class PackageOperations:
             }
 
         self.logger.info(
-            _("Uninstalling %d packages for request %s (requested_by: %s)"),
+            "Uninstalling %d packages for request %s (requested_by: %s)",
             len(packages),
             request_id,
             requested_by,
@@ -482,7 +482,7 @@ class PackageOperations:
                 return {"success": False, "error": _("No packages to install")}
 
             self.logger.info(
-                _("Installing packages with apt-get: %s"), ", ".join(package_names)
+                "Installing packages with apt-get: %s", ", ".join(package_names)
             )
 
             # Update package list first
@@ -543,7 +543,7 @@ class PackageOperations:
                 return {"success": False, "error": _("No packages to uninstall")}
 
             self.logger.info(
-                _("Uninstalling packages with apt-get: %s"), ", ".join(package_names)
+                "Uninstalling packages with apt-get: %s", ", ".join(package_names)
             )
 
             # Uninstall all packages in a single command (autoremove to clean up dependencies)
@@ -615,7 +615,7 @@ class PackageOperations:
             queued = await self.agent_instance.send_message(completion_message)
             if queued:
                 self.logger.info(
-                    _("Queued installation completion for request %s"),
+                    "Queued installation completion for request %s",
                     request_id,
                 )
             else:
@@ -674,7 +674,7 @@ class PackageOperations:
             await self.agent_instance.send_message(update_message)
 
             self.logger.info(
-                _("Sent package installation status update: %s for %s"),
+                "Sent package installation status update: %s for %s",
                 status,
                 package_name,
             )

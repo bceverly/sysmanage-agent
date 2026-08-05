@@ -54,13 +54,13 @@ class DataCollector(DataCollectorSendersMixin):
             await self._send_initial_core_data()
             await self._send_initial_update_check()
             await self._send_initial_supplementary_data()
-            self.logger.info(_("Initial data updates sent successfully"))
+            self.logger.info("Initial data updates sent successfully")
         except Exception as error:
             self.logger.error(_("Failed to send initial data updates: %s"), error)
 
     async def _send_initial_core_data(self):
         """Send initial OS version, hardware, user access, and software data."""
-        self.logger.info(_("Sending initial OS version data..."))
+        self.logger.info("Sending initial OS version data...")
 
         # Send OS version data
         os_info = self.agent.registration.get_os_version_info()
@@ -79,7 +79,7 @@ class DataCollector(DataCollectorSendersMixin):
         # Allow queue processing tasks to run
         await asyncio.sleep(0)
 
-        self.logger.info(_("Sending initial hardware data..."))
+        self.logger.info("Sending initial hardware data...")
 
         # Send hardware data
         hardware_info = self.agent.registration.get_hardware_info()
@@ -92,7 +92,7 @@ class DataCollector(DataCollectorSendersMixin):
         # Allow time for the large hardware message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info(_("Sending initial user access data..."))
+        self.logger.info("Sending initial user access data...")
 
         # Send user access data
         user_access_info = self.agent.registration.get_user_access_info()
@@ -107,7 +107,7 @@ class DataCollector(DataCollectorSendersMixin):
         # Allow time for the large user access message to be sent before sending more data
         await asyncio.sleep(2)
 
-        self.logger.info(_("Sending initial software inventory data..."))
+        self.logger.info("Sending initial software inventory data...")
 
         # Send software inventory data
         software_info = self.agent.registration.get_software_inventory_info()
@@ -121,24 +121,24 @@ class DataCollector(DataCollectorSendersMixin):
 
     async def _send_initial_update_check(self):
         """Send initial update check and collect certificates and roles."""
-        self.logger.info(_("Sending initial update check..."))
+        self.logger.info("Sending initial update check...")
 
         try:
             update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
-                    _("Found %d available updates during initial check"),
+                    "Found %d available updates during initial check",
                     update_result["total_updates"],
                 )
             else:
-                self.logger.info(_("No updates found during initial check"))
+                self.logger.info("No updates found during initial check")
         except Exception as error:
             self.logger.error(_("Failed to perform initial update check: %s"), error)
 
         # Allow time for update check to complete before collecting certificates
         await asyncio.sleep(2)
 
-        self.logger.info(_("Collecting initial certificate data..."))
+        self.logger.info("Collecting initial certificate data...")
 
         try:
             certificate_result = await self.collect_certificates()
@@ -146,13 +146,11 @@ class DataCollector(DataCollectorSendersMixin):
                 cert_count = certificate_result.get("certificate_count", 0)
                 if cert_count > 0:
                     self.logger.info(
-                        _("Found and sent %d certificates during initial collection"),
+                        "Found and sent %d certificates during initial collection",
                         cert_count,
                     )
                 else:
-                    self.logger.info(
-                        _("No certificates found during initial collection")
-                    )
+                    self.logger.info("No certificates found during initial collection")
             else:
                 error_msg = certificate_result.get("error", _UNKNOWN_ERROR)
                 self.logger.warning(_("Certificate collection failed: %s"), error_msg)
@@ -167,13 +165,11 @@ class DataCollector(DataCollectorSendersMixin):
                 role_count = role_result.get("role_count", 0)
                 if role_count > 0:
                     self.logger.info(
-                        _("Found and sent %d server roles during initial collection"),
+                        "Found and sent %d server roles during initial collection",
                         role_count,
                     )
                 else:
-                    self.logger.info(
-                        _("No server roles found during initial collection")
-                    )
+                    self.logger.info("No server roles found during initial collection")
             else:
                 error_msg = role_result.get("error", _UNKNOWN_ERROR)
                 self.logger.warning(_("Role collection failed: %s"), error_msg)
@@ -183,7 +179,7 @@ class DataCollector(DataCollectorSendersMixin):
     async def _send_initial_supplementary_data(self):
         """Send initial third-party repos, firewall, Graylog, and child host data."""
         try:
-            self.logger.info(_("Collecting initial third-party repository data..."))
+            self.logger.info("Collecting initial third-party repository data...")
             await self._send_third_party_repository_update()
         except Exception as error:
             self.logger.error(
@@ -191,7 +187,7 @@ class DataCollector(DataCollectorSendersMixin):
             )
 
         try:
-            self.logger.info(_("Collecting initial firewall status data..."))
+            self.logger.info("Collecting initial firewall status data...")
             await self._send_firewall_status_update()
         except Exception as error:
             self.logger.error(
@@ -199,7 +195,7 @@ class DataCollector(DataCollectorSendersMixin):
             )
 
         try:
-            self.logger.info(_("Collecting initial Graylog status data..."))
+            self.logger.info("Collecting initial Graylog status data...")
             await self._send_graylog_status_update()
         except Exception as error:
             self.logger.error(
@@ -207,13 +203,13 @@ class DataCollector(DataCollectorSendersMixin):
             )
 
         try:
-            self.logger.info(_("Collecting initial process data..."))
+            self.logger.info("Collecting initial process data...")
             await self._send_process_update()
         except Exception as error:
             self.logger.error(_("Failed to send initial process data: %s"), error)
 
         try:
-            self.logger.info(_("Collecting initial child hosts data..."))
+            self.logger.info("Collecting initial child hosts data...")
             await self.child_host_collector.send_child_hosts_update()
         except Exception as error:
             self.logger.error(_("Failed to send initial child hosts data: %s"), error)
@@ -425,7 +421,7 @@ class DataCollector(DataCollectorSendersMixin):
 
         if self.agent.running and self.agent.connected:
             try:
-                self.logger.info(_("Initial periodic data collection (post-connect)"))
+                self.logger.info("Initial periodic data collection (post-connect)")
                 await self._collect_and_send_periodic_data()
             except Exception as error:  # pylint: disable=broad-exception-caught
                 self.logger.error(_("Initial data collection error: %s"), error)
@@ -534,7 +530,7 @@ class DataCollector(DataCollectorSendersMixin):
             )
             await self.agent.send_message(batch_start_message)
             self.logger.info(
-                _("Started packages batch %s with %d total packages"),
+                "Started packages batch %s with %d total packages",
                 batch_id,
                 total_packages,
             )
@@ -557,9 +553,7 @@ class DataCollector(DataCollectorSendersMixin):
                     )
                     await self.agent.send_message(batch_message)
                     self.logger.info(
-                        _(
-                            "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-                        ),
+                        "Sent batch with %d packages from %s (batch %s, packages %d-%d)",
                         len(batch_packages),
                         manager_name,
                         batch_id,
@@ -576,7 +570,7 @@ class DataCollector(DataCollectorSendersMixin):
                 },
             )
             await self.agent.send_message(batch_end_message)
-            self.logger.info(_("Completed packages batch %s"), batch_id)
+            self.logger.info("Completed packages batch %s", batch_id)
 
             return True
 
@@ -593,25 +587,23 @@ class DataCollector(DataCollectorSendersMixin):
             # Only some certificates in restricted directories may require privileged access
             if not is_running_privileged():
                 self.logger.info(
-                    _(
-                        "Running certificate collection in unprivileged mode - some certificates may not be accessible"
-                    )
+                    "Running certificate collection in unprivileged mode - some certificates may not be accessible"
                 )
 
-            self.logger.info(_("Collecting SSL certificates from system"))
+            self.logger.info("Collecting SSL certificates from system")
 
             # Collect certificate data
             certificates = self.agent.certificate_collector.collect_certificates()
 
             if not certificates:
-                self.logger.info(_("No certificates found on system"))
+                self.logger.info("No certificates found on system")
                 return {
                     "success": True,
                     "result": "No certificates found",
                     "certificate_count": 0,
                 }
 
-            self.logger.info(_("Found %d certificates"), len(certificates))
+            self.logger.info("Found %d certificates", len(certificates))
 
             # Send certificate data to server
             system_info = self.agent.registration.get_system_info()
@@ -639,20 +631,20 @@ class DataCollector(DataCollectorSendersMixin):
     async def collect_roles(self) -> Dict[str, Any]:
         """Collect server roles from the system and send to server."""
         try:
-            self.logger.info(_("Collecting server roles"))
+            self.logger.info("Collecting server roles")
 
             # Collect role data
             roles = self.agent.role_detector.detect_roles()
 
             if not roles:
-                self.logger.info(_("No server roles detected on system"))
+                self.logger.info("No server roles detected on system")
                 return {
                     "success": True,
                     "result": "No server roles detected",
                     "role_count": 0,
                 }
 
-            self.logger.info(_("Found %d server roles"), len(roles))
+            self.logger.info("Found %d server roles", len(roles))
 
             # Get hostname for server validation
             system_info = self.agent.registration.get_system_info()

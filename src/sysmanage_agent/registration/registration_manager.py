@@ -75,7 +75,7 @@ class RegistrationManager:
                         cert_data = await response.json()
                         self.agent.cert_store.store_certificates(cert_data)
                         self.logger.info(
-                            _("Certificates retrieved and stored successfully")
+                            "Certificates retrieved and stored successfully"
                         )
                         return True
                     if response.status == 403:
@@ -101,7 +101,7 @@ class RegistrationManager:
 
         # If no certificates, we need to check if host is approved and fetch them
         self.logger.info(
-            _("No valid certificates found, checking host approval status...")
+            "No valid certificates found, checking host approval status..."
         )
 
         # Get server fingerprint first for security validation
@@ -131,7 +131,7 @@ class RegistrationManager:
                         data = await response.json()
                         server_fingerprint = data.get("fingerprint")
                         self.logger.info(
-                            _("Retrieved server fingerprint for validation: %s"),
+                            "Retrieved server fingerprint for validation: %s",
                             "***REDACTED***" if server_fingerprint else "None",
                         )
                         # We'll store it when we get the full cert data
@@ -161,9 +161,7 @@ class RegistrationManager:
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
         try:
-            self.logger.info(
-                _("Received registration success notification from server")
-            )
+            self.logger.info("Received registration success notification from server")
 
             # Record the registration timestamp
             self.agent.last_registration_time = datetime.now(timezone.utc)
@@ -175,7 +173,7 @@ class RegistrationManager:
 
             if (host_id or host_token) and approved:
                 self.logger.info(
-                    _("Registration approved"),
+                    "Registration approved",
                 )
 
                 # Clear any existing host approval and store the new one
@@ -183,18 +181,18 @@ class RegistrationManager:
                 await self.store_host_approval(
                     host_id, "approved", host_token=host_token
                 )
-                self.logger.info(_("Host approval stored for host_id: %s"), host_id)
+                self.logger.info("Host approval stored for host_id: %s", host_id)
 
                 # Mark registration as confirmed and send initial data
                 self.agent.registration_confirmed = True
                 self.logger.info(
-                    _("Registration confirmed, sending initial inventory data...")
+                    "Registration confirmed, sending initial inventory data..."
                 )
                 await self.agent.send_initial_data_updates()
 
             elif host_id or host_token:
                 self.logger.info(
-                    _("Registration received but approval pending"),
+                    "Registration received but approval pending",
                 )
                 await self.clear_stored_host_id()
                 await self.store_host_approval(
@@ -203,9 +201,7 @@ class RegistrationManager:
                 self.agent.registration_confirmed = True
             else:
                 self.logger.info(
-                    _(
-                        "Registration success but no host_id provided - approval may come separately"
-                    )
+                    "Registration success but no host_id provided - approval may come separately"
                 )
 
         except Exception as error:
@@ -222,7 +218,7 @@ class RegistrationManager:
             certificate = data.get("certificate")
 
             self.logger.info(
-                _("Received host approval notification: host_id=%s, status=%s"),
+                "Received host approval notification: host_id=%s, status=%s",
                 host_id,
                 approval_status,
             )
@@ -231,14 +227,14 @@ class RegistrationManager:
             await self.store_host_approval(host_id, approval_status, certificate)
 
             self.logger.info(
-                _("Host approval information stored successfully. Host ID: %s"), host_id
+                "Host approval information stored successfully. Host ID: %s", host_id
             )
 
             # Re-send system_info so backend sets connection.host_id
             message = self.agent.create_system_info_message()
             await self.agent.message_handler.queue_outbound_message(message)
             self.logger.info(
-                _("Queued system_info after approval to update backend connection")
+                "Queued system_info after approval to update backend connection"
             )
 
         except Exception as error:
@@ -287,9 +283,7 @@ class RegistrationManager:
                 deleted_count = session.query(HostApproval).delete()
                 if deleted_count > 0:
                     self.logger.info(
-                        _(
-                            "Deleted %d old host approval record(s) before storing new approval"
-                        ),
+                        "Deleted %d old host approval record(s) before storing new approval",
                         deleted_count,
                     )
 
@@ -311,7 +305,7 @@ class RegistrationManager:
 
                 session.commit()
                 self.logger.info(
-                    _("Host approval record stored in database: host_id=%s, status=%s"),
+                    "Host approval record stored in database: host_id=%s, status=%s",
                     host_id,
                     approval_status,
                 )
@@ -496,7 +490,7 @@ class RegistrationManager:
 
                 session.commit()
                 self.logger.info(
-                    _("Host approval records and related data cleared from database")
+                    "Host approval records and related data cleared from database"
                 )
 
             finally:
@@ -535,7 +529,7 @@ class RegistrationManager:
                         "host_id NOT LIKE '%-%-%-%-%'"
                     )
                     session.commit()
-                    self.logger.info(_("Corrupt database entries cleaned up"))
+                    self.logger.info("Corrupt database entries cleaned up")
 
             finally:
                 session.close()

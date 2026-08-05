@@ -14,11 +14,11 @@ import socket
 from typing import Any, Dict
 
 from src.sysmanage_agent.core.async_utils import run_command_async
-from src.i18n import _
+from src.i18n import N_, _
 
 # Message constants
-_MSG_HOSTNAME_CHANGED = "Hostname changed to %s"
-_MSG_FAILED_SET_RUNTIME_HOSTNAME = "Failed to set runtime hostname: %s"
+_MSG_HOSTNAME_CHANGED = N_("Hostname changed to %s")
+_MSG_FAILED_SET_RUNTIME_HOSTNAME = N_("Failed to set runtime hostname: %s")
 
 
 class HostnameOperations:

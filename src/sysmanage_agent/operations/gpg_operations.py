@@ -237,7 +237,7 @@ class GpgOperations:
             return {**base_result, "success": False, "error": resolve_err}
 
         self.logger.info(
-            _("Importing GPG key %s (fingerprint %s) for target=%s"),
+            "Importing GPG key %s (fingerprint %s) for target=%s",
             key_id,
             fingerprint,
             target_username or "<host>",
@@ -367,7 +367,7 @@ class GpgOperations:
             return {**base_result, "success": False, "error": resolve_err}
 
         self.logger.info(
-            _("Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"),
+            "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s",
             key_id,
             fingerprint,
             target_username or "<host>",

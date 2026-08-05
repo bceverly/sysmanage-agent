@@ -2110,6 +2110,64 @@ jobs:
           s3 sync repo/ "s3://${R2_BUCKET}/" --size-only --only-show-errors
           echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
 
+      - name: Verify the published apt repo with a real apt-get
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # THE guard for the malformed-Release bug.  A broken `Release` (built
+          # by redirecting into the file apt-ftparchive was still walking) made
+          # the documented Debian install fail for EVERY customer, and nothing
+          # caught it — it surfaced only when bare-metal provisioning failed
+          # three layers downstream.  So verify with a real apt on a clean
+          # Debian, running the EXACT line the docs tell users to run; a
+          # hand-rolled equivalent would not have caught it either.
+          docker run --rm -e VERSION debian:stable-slim bash -euxc '
+            apt-get update -qq
+            apt-get install -y -qq ca-certificates >/dev/null
+
+            echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" \
+              > /etc/apt/sources.list.d/sysmanage-agent.list
+
+            # R2 is read-after-write consistent, but retry briefly so a blip
+            # cannot fail a release that is otherwise fine.
+            for attempt in 1 2 3 4 5; do
+              if apt-get update; then break; fi
+              echo "apt-get update failed (attempt $attempt) — retrying"
+              sleep 10
+              [ "$attempt" = 5 ] && exit 1
+            done
+
+            # An index apt accepts but that lists nothing is still broken.
+            apt-cache policy sysmanage-agent
+            apt-cache policy sysmanage-agent | grep -q "$VERSION" || {
+              echo "::error::apt does not offer the just-published $VERSION"
+              exit 1
+            }
+
+            # Resolve the install for real (no download) — catches a Packages
+            # entry whose Filename/checksum does not match the published pool.
+            apt-get install -y --dry-run sysmanage-agent
+          '
+
+      - name: Verify the published rpm repo with a real dnf
+        run: |
+          set -euo pipefail
+          # The documented RPM install goes through COPR, so this repo is the
+          # less-travelled path — but it IS published, and unverified published
+          # metadata is exactly how the apt breakage happened.
+          docker run --rm rockylinux:9 bash -euxc '
+            cat > /etc/yum.repos.d/sysmanage-agent.repo <<REPO
+          [sysmanage-agent]
+          name=SysManage Agent
+          baseurl=https://repo.sysmanage.org/agent/rpm/el9/\$basearch
+          enabled=1
+          gpgcheck=0
+          REPO
+            dnf -q --disablerepo="*" --enablerepo=sysmanage-agent makecache
+            dnf -q --disablerepo="*" --enablerepo=sysmanage-agent info sysmanage-agent
+          '
+
       - name: Trigger R2 retention prune (keep latest 5)
         env:
           DOCS_REPO_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
@@ -3512,12 +3570,38 @@ jobs:
               echo "::warning::auto-update via komac update in this workflow."
               exit 0
             else
-              echo "::error::komac update failed for non-first-submission reason"
+              # Name the cause instead of dumping an exit code.  v3.5.0.1 failed
+              # here and left NO PR on microsoft/winget-pkgs, and working out why
+              # afterwards meant ruling out the MSIs, the komac download and the
+              # manifest render one at a time — all of which were fine.
+              echo "::error::komac update failed for a non-first-submission reason"
+              if grep -qiE "401|403|bad credentials|unauthorized|token" /tmp/komac.out; then
+                echo "::error::Looks like AUTH — WINGET_PKGS_TOKEN is likely expired or"
+                echo "::error::lacks 'public_repo' scope on a fork of microsoft/winget-pkgs."
+              elif grep -qiE "validation|manifest|schema|installer" /tmp/komac.out; then
+                echo "::error::Looks like MANIFEST VALIDATION — check the installer URLs"
+                echo "::error::resolve and that BOTH x64 and arm64 MSIs exist for this tag."
+              elif grep -qiE "rate limit|timed out|connection|network" /tmp/komac.out; then
+                echo "::error::Looks TRANSIENT (rate limit / network) — re-running may fix it."
+              fi
               exit "$update_rc"
             fi
           fi
 
-          echo "winget submission complete; check the PR on microsoft/winget-pkgs."
+          # komac exiting 0 is not proof it submitted anything.  Confirm a PR
+          # actually exists for this version, so a silent no-op cannot look like
+          # a success — that is exactly how v3.5.0.1 slipped through unnoticed.
+          sleep 15
+          found=$(curl -fsSL --max-time 30 \
+            "https://api.github.com/search/issues?q=repo:microsoft/winget-pkgs+is:pr+sysmanage-agent+${VERSION}" \
+            2>/dev/null | grep -oE '"total_count": *[0-9]+' | head -1 \
+            | grep -oE '[0-9]+$' || echo 0)
+          if [ "${found:-0}" -eq 0 ]; then
+            echo "::error::komac reported success but no winget-pkgs PR exists for ${VERSION}."
+            echo "::error::Treating that as a failure — a missing bump is invisible otherwise."
+            exit 1
+          fi
+          echo "winget submission complete — ${found} PR(s) found for ${VERSION} on microsoft/winget-pkgs."
 
   homebrew-tap:
     name: Homebrew tap formula (Phase 11.8)

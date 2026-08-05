@@ -13,11 +13,11 @@ import platform
 from typing import Any, Dict, Optional
 
 import aiofiles
-from src.i18n import _
+from src.i18n import N_, _
 
 # Constants for error messages used in multiple places
-_UNSUPPORTED_DISTRO = "Unsupported distribution: %s"
-_UNSUPPORTED_OS = "Unsupported operating system: %s"
+_UNSUPPORTED_DISTRO = N_("Unsupported distribution: %s")
+_UNSUPPORTED_OS = N_("Unsupported operating system: %s")
 
 # Distro family detection patterns
 _DEBIAN_FAMILY = ("ubuntu", "debian")
@@ -86,7 +86,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
             parameters  # API signature requirement - pylint: disable=unused-variable
         )
         try:
-            self.logger.info(_("Listing third-party repositories"))
+            self.logger.info("Listing third-party repositories")
             system = platform.system()
 
             if system == "Linux":
@@ -183,7 +183,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("Repository identifier is required"),
                 }
 
-            self.logger.info(_("Adding third-party repository: %s"), repo_identifier)
+            self.logger.info("Adding third-party repository: %s", repo_identifier)
 
             system = platform.system()
 
@@ -233,9 +233,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for deletion"),
                 }
 
-            self.logger.info(
-                _("Deleting %d third-party repositories"), len(repositories)
-            )
+            self.logger.info("Deleting %d third-party repositories", len(repositories))
 
             system = platform.system()
             if system != "Linux":
@@ -297,9 +295,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for enabling"),
                 }
 
-            self.logger.info(
-                _("Enabling %d third-party repositories"), len(repositories)
-            )
+            self.logger.info("Enabling %d third-party repositories", len(repositories))
 
             system = platform.system()
             if system != "Linux":
@@ -362,9 +358,7 @@ class ThirdPartyRepositoryOperations:  # pylint: disable=too-many-public-methods
                     "error": _("No repositories specified for disabling"),
                 }
 
-            self.logger.info(
-                _("Disabling %d third-party repositories"), len(repositories)
-            )
+            self.logger.info("Disabling %d third-party repositories", len(repositories))
 
             system = platform.system()
             if system != "Linux":

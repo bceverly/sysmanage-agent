@@ -201,7 +201,7 @@ class RoleDetector:
                 continue
 
             self.logger.info(
-                _("Found %s package: %s v%s"),
+                "Found %s package: %s v%s",
                 role_name,
                 package_pattern,
                 package_version,
@@ -267,9 +267,7 @@ class RoleDetector:
 
         if existing_role:
             self.logger.info(
-                _(
-                    "Skipping duplicate role: %s with service %s (already have package %s)"
-                ),
+                "Skipping duplicate role: %s with service %s (already have package %s)",
                 role_name,
                 active_service,
                 existing_role["package_name"],

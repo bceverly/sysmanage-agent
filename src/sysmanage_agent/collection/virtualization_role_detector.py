@@ -32,8 +32,6 @@ import shutil
 import subprocess  # nosec B404 # required for hypervisor capability probes
 from typing import Any, Dict, Optional
 
-from src.i18n import _
-
 DEV_VMM_PATH = "/dev/vmm"
 
 
@@ -103,7 +101,7 @@ class VirtualizationHostDetector:
                 service_status = self.service_status_detector.get_service_status("lxd")
 
             self.logger.info(
-                _("Detected LXD Host role: v%s, status=%s"), version, service_status
+                "Detected LXD Host role: v%s, status=%s", version, service_status
             )
             return {
                 "role": "LXD Host",
@@ -150,7 +148,7 @@ class VirtualizationHostDetector:
                     if not version:
                         version = "2"
 
-            self.logger.info(_("Detected WSL Host role: v%s"), version)
+            self.logger.info("Detected WSL Host role: v%s", version)
             return {
                 "role": "WSL Host",
                 "package_name": "wsl",
@@ -221,7 +219,7 @@ class VirtualizationHostDetector:
                 pass
 
             self.logger.info(
-                _("Detected VMM Host role: OpenBSD %s, %d VMs"), obsd_version, vm_count
+                "Detected VMM Host role: OpenBSD %s, %d VMs", obsd_version, vm_count
             )
             return {
                 "role": "VMM Host",
@@ -292,7 +290,7 @@ class VirtualizationHostDetector:
                 pass
 
             self.logger.info(
-                _("Detected KVM Host role: libvirt v%s, %d VMs"), version, vm_count
+                "Detected KVM Host role: libvirt v%s, %d VMs", version, vm_count
             )
             return {
                 "role": "KVM Host",
@@ -353,7 +351,7 @@ class VirtualizationHostDetector:
                     break
 
             self.logger.info(
-                _("Detected bhyve Host role: FreeBSD %s, %d VMs, UEFI=%s"),
+                "Detected bhyve Host role: FreeBSD %s, %d VMs, UEFI=%s",
                 freebsd_version,
                 vm_count,
                 uefi_available,

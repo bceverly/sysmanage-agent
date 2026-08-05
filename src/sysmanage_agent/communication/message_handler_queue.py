@@ -81,19 +81,17 @@ class MessageHandlerQueueMixin:
         )
 
         self.logger.info(
-            _("Queued outbound message: %s (ID: %s)"), message_type, message_id
+            "Queued outbound message: %s (ID: %s)", message_type, message_id
         )
 
         # Trigger queue processing if connected
         if self.agent.connected and not self.queue_processor_running:
             self.logger.info(
-                _("Creating queue processing task from queue_outbound_message")
+                "Creating queue processing task from queue_outbound_message"
             )
             try:
                 task = asyncio.create_task(self.process_outbound_queue())
-                self.logger.info(
-                    _("Task created from queue_outbound_message: %s"), task
-                )
+                self.logger.info("Task created from queue_outbound_message: %s", task)
             except Exception as error:
                 self.logger.error(
                     _("Failed to create task from queue_outbound_message: %s"), error
@@ -139,7 +137,7 @@ class MessageHandlerQueueMixin:
             return  # Already running
 
         self.inbound_queue_processor_running = True
-        self.logger.info(_("Starting inbound queue processing"))
+        self.logger.info("Starting inbound queue processing")
 
         try:
             while self.agent.running:
@@ -182,7 +180,7 @@ class MessageHandlerQueueMixin:
             message_data = self.queue_manager.deserialize_message_data(message)
 
             self.logger.info(
-                _("Processing queued inbound command: %s (queue_id: %s)"),
+                "Processing queued inbound command: %s (queue_id: %s)",
                 message_data.get("data", {}).get("command_type", "unknown"),
                 message.message_id,
             )
@@ -193,7 +191,7 @@ class MessageHandlerQueueMixin:
             # Mark message as completed
             self.queue_manager.mark_completed(message.message_id)
             self.logger.info(
-                _("Successfully processed inbound message: %s"),
+                "Successfully processed inbound message: %s",
                 message.message_id,
             )
 
@@ -238,16 +236,16 @@ class MessageHandlerQueueMixin:
         Only processes messages when connected.
         """
         self.logger.info(
-            _("Process outbound queue called, current running status: %s"),
+            "Process outbound queue called, current running status: %s",
             self.queue_processor_running,
         )
         if self.queue_processor_running:
-            self.logger.info(_("Queue processor already running, exiting"))
+            self.logger.info("Queue processor already running, exiting")
             return  # Already running
 
         self.queue_processor_running = True
-        self.logger.info(_("Starting outbound queue processing"))
-        self.logger.info(_("Agent connected status: %s"), self.agent.connected)
+        self.logger.info("Starting outbound queue processing")
+        self.logger.info("Agent connected status: %s", self.agent.connected)
 
         try:
             while self.agent.connected:
@@ -298,7 +296,7 @@ class MessageHandlerQueueMixin:
             if success:
                 self.queue_manager.mark_completed(message.message_id)
                 self.logger.info(
-                    _("Successfully sent queued message: %s"),
+                    "Successfully sent queued message: %s",
                     message.message_id,
                 )
                 return False
@@ -330,14 +328,14 @@ class MessageHandlerQueueMixin:
 
         Note: async is required because callers await this method.
         """
-        self.logger.info(_("Connection established, starting queue processing"))
+        self.logger.info("Connection established, starting queue processing")
 
         # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
         try:
             recovered = self.queue_manager.recover_stuck_messages(stale_minutes=10)
             if recovered > 0:
                 self.logger.info(
-                    _("Recovered %d stuck messages on connection establishment"),
+                    "Recovered %d stuck messages on connection establishment",
                     recovered,
                 )
         except Exception as error:
@@ -346,16 +344,14 @@ class MessageHandlerQueueMixin:
         # Start outbound queue processing task
         if not self.queue_processor_running:
             self.logger.info(
-                _(
-                    "Creating outbound queue processing task from on_connection_established"
-                )
+                "Creating outbound queue processing task from on_connection_established"
             )
             try:
                 self.processing_task = asyncio.create_task(
                     self.process_outbound_queue()
                 )
                 self.logger.info(
-                    _("Outbound queue processing task created successfully: %s"),
+                    "Outbound queue processing task created successfully: %s",
                     self.processing_task,
                 )
             except Exception as error:
@@ -366,22 +362,20 @@ class MessageHandlerQueueMixin:
                 )
         else:
             self.logger.info(
-                _("Outbound queue processor already running, not starting another")
+                "Outbound queue processor already running, not starting another"
             )
 
         # Start inbound queue processing task (to handle any pending commands)
         if not self.inbound_queue_processor_running:
             self.logger.info(
-                _(
-                    "Creating inbound queue processing task from on_connection_established"
-                )
+                "Creating inbound queue processing task from on_connection_established"
             )
             try:
                 self.inbound_processing_task = asyncio.create_task(
                     self.process_inbound_queue()
                 )
                 self.logger.info(
-                    _("Inbound queue processing task created successfully: %s"),
+                    "Inbound queue processing task created successfully: %s",
                     self.inbound_processing_task,
                 )
             except Exception as error:
@@ -392,7 +386,7 @@ class MessageHandlerQueueMixin:
                 )
         else:
             self.logger.info(
-                _("Inbound queue processor already running, not starting another")
+                "Inbound queue processor already running, not starting another"
             )
 
     async def on_connection_lost(self):
@@ -400,7 +394,7 @@ class MessageHandlerQueueMixin:
         Called when WebSocket connection is lost.
         Stops outbound queue processing (inbound continues to process any pending commands).
         """
-        self.logger.info(_("Connection lost, stopping outbound queue processing"))
+        self.logger.info("Connection lost, stopping outbound queue processing")
 
         # Stop outbound queue processing
         if self.processing_task and not self.processing_task.done():

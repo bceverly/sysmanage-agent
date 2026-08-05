@@ -37,7 +37,7 @@ class UserAccountOperations:
         if not username:
             return {"success": False, "error": _("Username is required")}
 
-        self.logger.info(_("Creating user account: %s"), username)
+        self.logger.info("Creating user account: %s", username)
 
         try:
             # Dispatch to platform-specific handler
@@ -60,7 +60,7 @@ class UserAccountOperations:
             # If user was created successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    _("User %s created successfully, sending updated user list"),
+                    "User %s created successfully, sending updated user list",
                     username,
                 )
                 await self.agent.update_user_access()
@@ -80,7 +80,7 @@ class UserAccountOperations:
         if not group_name:
             return {"success": False, "error": _("Group name is required")}
 
-        self.logger.info(_("Creating group: %s"), group_name)
+        self.logger.info("Creating group: %s", group_name)
 
         try:
             # Dispatch to platform-specific handler
@@ -103,7 +103,7 @@ class UserAccountOperations:
             # If group was created successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    _("Group %s created successfully, sending updated user list"),
+                    "Group %s created successfully, sending updated user list",
                     group_name,
                 )
                 await self.agent.update_user_access()
@@ -123,7 +123,7 @@ class UserAccountOperations:
         if not username:
             return {"success": False, "error": _("Username is required")}
 
-        self.logger.info(_("Deleting user account: %s"), username)
+        self.logger.info("Deleting user account: %s", username)
 
         try:
             # Dispatch to platform-specific handler
@@ -146,7 +146,7 @@ class UserAccountOperations:
             # If user was deleted successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    _("User %s deleted successfully, sending updated user list"),
+                    "User %s deleted successfully, sending updated user list",
                     username,
                 )
                 await self.agent.update_user_access()
@@ -166,7 +166,7 @@ class UserAccountOperations:
         if not group_name:
             return {"success": False, "error": _("Group name is required")}
 
-        self.logger.info(_("Deleting group: %s"), group_name)
+        self.logger.info("Deleting group: %s", group_name)
 
         try:
             # Dispatch to platform-specific handler
@@ -189,7 +189,7 @@ class UserAccountOperations:
             # If group was deleted successfully, send updated user list to server
             if result.get("success"):
                 self.logger.info(
-                    _("Group %s deleted successfully, sending updated user list"),
+                    "Group %s deleted successfully, sending updated user list",
                     group_name,
                 )
                 await self.agent.update_user_access()

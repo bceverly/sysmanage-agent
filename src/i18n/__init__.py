@@ -51,9 +51,31 @@ def get_translation(language: Optional[str] = None) -> gettext.GNUTranslations:
 
 
 def _(message: str, language: Optional[str] = None) -> str:
-    """Translate a message."""
+    """Translate a message.
+
+    NOTE: ``language`` is the SECOND positional argument — this is NOT the
+    i18next ``t(key, englishDefault)`` signature.  Passing English there asks
+    gettext for a locale by that name, falls back to ``NullTranslations`` and
+    returns the msgid verbatim.  ``make lint`` gates against it
+    (``scripts/i18n_check_msgid_style.py``).
+    """
     translation = get_translation(language)
     return translation.gettext(message)
+
+
+def N_(message: str) -> str:  # pylint: disable=invalid-name
+    """Mark a string for extraction WITHOUT translating it yet.
+
+    The standard gettext idiom for deferred translation.  pybabel/xgettext
+    only ever see string *literals*, so a message held in a module constant
+    (``_MSG_HOSTNAME_CHANGED = "..."`` then ``_(_MSG_HOSTNAME_CHANGED)``) is
+    never extracted, never reaches a catalog, and renders English in all 13
+    locales forever — silently, since no gate can miss a msgid that was never
+    extracted.  Wrapping the DEFINITION in ``N_`` puts the text in the .pot
+    (pybabel is passed ``-k N_``) while leaving the value an ordinary string;
+    the ``_()`` at the call site resolves it against the current locale.
+    """
+    return message
 
 
 def ngettext(

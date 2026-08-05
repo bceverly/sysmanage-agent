@@ -398,7 +398,7 @@ class ChildHostReporter:
         if is_windows():
             if self._wsl_keepalive.ensure_wslconfig():
                 self._wsl_keepalive.restart_wsl()
-            self.logger.info(_("Starting WSL keep-alive processes"))
+            self.logger.info("Starting WSL keep-alive processes")
             self._wsl_keepalive.ensure_keepalive_processes()
 
         heartbeat_interval = 60
@@ -418,5 +418,5 @@ class ChildHostReporter:
                     continue
         finally:
             if is_windows():
-                self.logger.info(_("Stopping WSL keep-alive processes"))
+                self.logger.info("Stopping WSL keep-alive processes")
             self._wsl_keepalive.stop_all_keepalive_processes()

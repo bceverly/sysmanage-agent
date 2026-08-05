@@ -89,7 +89,7 @@ class ProcessCollector:
         truncated = len(processes) > MAX_PROCESSES
         if truncated:
             self.logger.info(
-                _("Process snapshot truncated from %d to %d (cap)"),
+                "Process snapshot truncated from %d to %d (cap)",
                 len(processes),
                 MAX_PROCESSES,
             )
@@ -184,7 +184,7 @@ class ProcessCollector:
             exited = True
 
         self.logger.info(
-            _("Sent %(sig)s to PID %(pid)d ('%(name)s')"),
+            "Sent %(sig)s to PID %(pid)d ('%(name)s')",
             {"sig": "SIGKILL" if force else "SIGTERM", "pid": pid, "name": actual_name},
         )
         return {

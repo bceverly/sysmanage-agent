@@ -66,7 +66,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         self.inbound_queue_processor_running = False
         self.inbound_processing_task = None
 
-        self.logger.info(_("Message handler initialized"))
+        self.logger.info("Message handler initialized")
 
     def create_message(
         self, message_type: str, data: Dict[str, Any] = None
@@ -213,7 +213,7 @@ class MessageHandler(MessageHandlerQueueMixin):
 
             if success:
                 self.logger.info(
-                    _("Queued command acknowledgment for message: %s"), message_id
+                    "Queued command acknowledgment for message: %s", message_id
                 )
             else:
                 self.logger.warning(
@@ -313,7 +313,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             # If the error message is older than our last registration, ignore it
             if msg_time < self.agent.last_registration_time:
                 self.logger.info(
-                    _("Ignoring stale error message [%s] from %s (registration at %s)"),
+                    "Ignoring stale error message [%s] from %s (registration at %s)",
                     error_code,
                     msg_time,
                     self.agent.last_registration_time,
@@ -419,7 +419,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         # Clear stored host_id from database
         try:
             await self.agent.clear_stored_host_id()
-            self.logger.info(_("Stored host_id cleared from database"))
+            self.logger.info("Stored host_id cleared from database")
         except Exception as error:
             self.logger.error(_("Error clearing stored host_id: %s"), error)
 
@@ -431,7 +431,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         # Schedule re-registration on next connection attempt
         self.agent.needs_registration = True
         # Disconnect immediately to trigger reconnection with re-registration
-        self.logger.info(_("Disconnecting to trigger re-registration..."))
+        self.logger.info("Disconnecting to trigger re-registration...")
         self.agent.running = False
 
     async def _handle_broadcast_message(self, data: Dict[str, Any]) -> None:
@@ -457,7 +457,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         broadcast_id = data.get("broadcast_id", "unknown")
         action = data.get("broadcast_action", "")
         self.logger.info(
-            _("Received broadcast %s action=%s issued_by=%s"),
+            "Received broadcast %s action=%s issued_by=%s",
             broadcast_id,
             action,
             data.get("issued_by", "unknown"),
@@ -467,7 +467,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             try:
                 await self.agent.data_collector.send_software_inventory_update()
                 self.logger.info(
-                    _("Broadcast %s: software inventory refreshed"), broadcast_id
+                    "Broadcast %s: software inventory refreshed", broadcast_id
                 )
             except AttributeError:
                 # Older agent builds may not expose
@@ -596,7 +596,7 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         except websockets.ConnectionClosed:
             self.logger.info(
-                _("WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed")
+                "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
             )
             self.agent.connected = False
             self.agent.websocket = None

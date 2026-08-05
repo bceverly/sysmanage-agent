@@ -15,19 +15,19 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import aiofiles
-from src.i18n import _
+from src.i18n import N_, _
 
 # Module-level constants for repeated strings
 _EXT_LIST = ".list"
 _EXT_SOURCES = ".sources"
 _REPO_ADDED_SUCCESS = "Repository %s added successfully"
-_REPO_ADDED_SUCCESS_SIMPLE = "Repository added successfully"
+_REPO_ADDED_SUCCESS_SIMPLE = N_("Repository added successfully")
 _REPO_ADD_FAILED = "Failed to add repository %s: %s"
-_REPO_ADD_FAILED_SIMPLE = "Failed to add repository: %s"
-_REPO_FILE_NOT_FOUND = "Repository file not found"
-_REPO_REMOVED_SUCCESS = "Repository removed successfully"
-_REPO_ENABLED_SUCCESS = "Repository enabled successfully"
-_REPO_DISABLED_SUCCESS = "Repository disabled successfully"
+_REPO_ADD_FAILED_SIMPLE = N_("Failed to add repository: %s")
+_REPO_FILE_NOT_FOUND = N_("Repository file not found")
+_REPO_REMOVED_SUCCESS = N_("Repository removed successfully")
+_REPO_ENABLED_SUCCESS = N_("Repository enabled successfully")
+_REPO_DISABLED_SUCCESS = N_("Repository disabled successfully")
 
 
 class LinuxRepositoryOperations:

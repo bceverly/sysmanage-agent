@@ -45,4 +45,4 @@ def log_duplicate_message(
             params.get("vm_name"),
             queue_message_id,
         )
-    logger.info(_("Skipping duplicate command message: %s"), queue_message_id)
+    logger.info("Skipping duplicate command message: %s", queue_message_id)

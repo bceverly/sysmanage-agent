@@ -137,7 +137,7 @@ class CustomMetricsOperations:
         self._persist_metrics(normalized)
 
         self.logger.info(
-            _("Synced custom metrics: %d active, %d skipped (invalid)"),
+            "Synced custom metrics: %d active, %d skipped (invalid)",
             len(normalized),
             skipped,
         )
@@ -236,7 +236,7 @@ class CustomMetricsOperations:
         self._last_run = dict.fromkeys(loaded)
         if loaded:
             self.logger.info(
-                _("Loaded %d persisted custom metric(s) at startup"), len(loaded)
+                "Loaded %d persisted custom metric(s) at startup", len(loaded)
             )
         return len(loaded)
 

@@ -95,7 +95,7 @@ class BSDMacOSRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info(_("Tap %s added successfully"), tap_name)
+                self.logger.info("Tap %s added successfully", tap_name)
                 return {
                     "success": True,
                     "result": _("Tap added successfully"),
@@ -204,7 +204,7 @@ class BSDMacOSRepositoryOperations:
                 update_result.get("exit_code"),
             )
 
-            self.logger.info(_("Repository %s added successfully"), repo_name)
+            self.logger.info("Repository %s added successfully", repo_name)
             return {
                 "success": True,
                 "result": _("Repository added successfully"),
@@ -296,7 +296,7 @@ class BSDMacOSRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info(_("Repository %s cloned successfully"), repo_name)
+                self.logger.info("Repository %s cloned successfully", repo_name)
                 return {
                     "success": True,
                     "result": _("Repository cloned successfully"),

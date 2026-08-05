@@ -120,7 +120,7 @@ class ClientRegistration:
         auto_approve_token = self.config.get_auto_approve_token()
         if auto_approve_token:
             basic_info["auto_approve_token"] = auto_approve_token
-            self.logger.info(_("Including auto_approve_token in registration data"))
+            self.logger.info("Including auto_approve_token in registration data")
 
         # Phase 8.1: pre-shared registration key.  When supplied via
         # config (security.registration_key), the server validates it
@@ -131,7 +131,7 @@ class ClientRegistration:
             basic_info["registration_key"] = registration_key
             # Log presence only — never the value or its length, both of
             # which leak information about the secret.
-            self.logger.info(_("Including registration_key in registration data"))
+            self.logger.info("Including registration_key in registration data")
 
         # Phase 13.1: tenant enrollment token.  When supplied via config
         # (security.enrollment_token), a multi-tenant server validates +
@@ -141,18 +141,18 @@ class ClientRegistration:
         if enrollment_token:
             basic_info["enrollment_token"] = enrollment_token
             # Log presence only — never the value or its length.
-            self.logger.info(_("Including enrollment_token in registration data"))
+            self.logger.info("Including enrollment_token in registration data")
 
         # Debug logging
         logger = logging.getLogger(__name__)
-        logger.info(_("=== AGENT REGISTRATION DEBUG ==="))
-        logger.info(_("Script execution enabled from config: %s"), script_exec_enabled)
+        logger.info("=== AGENT REGISTRATION DEBUG ===")
+        logger.info("Script execution enabled from config: %s", script_exec_enabled)
         logger.info(
-            _("Basic info script_execution_enabled: %s"),
+            "Basic info script_execution_enabled: %s",
             basic_info["script_execution_enabled"],
         )
-        logger.info(_("Is privileged: %s"), is_privileged)
-        logger.info(_("Enabled shells: %s"), enabled_shells)
+        logger.info("Is privileged: %s", is_privileged)
+        logger.info("Enabled shells: %s", enabled_shells)
         # Safe: the second argument is the boolean ``token is not
         # None``, never the token value itself — only the presence
         # check is logged.  Semgrep's Pro rule pattern-matches on
@@ -161,7 +161,7 @@ class ClientRegistration:
         # so suppress here with the fully-qualified rule id.
         # nosemgrep: python.lang.security.audit.logging.logger-credential-leak.python-logger-credential-disclosure
         logger.info(
-            _("Auto-approve credential supplied: %s"),
+            "Auto-approve credential supplied: %s",
             auto_approve_token is not None,
         )
         logger.info("=================================")
@@ -244,13 +244,11 @@ class ClientRegistration:
         # Use minimal registration data
         basic_info = self.get_basic_registration_info()
 
-        self.logger.info(
-            _("Attempting to register with server at %s"), registration_url
-        )
-        self.logger.info(_("=== Minimal Registration Data Being Sent ==="))
+        self.logger.info("Attempting to register with server at %s", registration_url)
+        self.logger.info("=== Minimal Registration Data Being Sent ===")
         for key, value in basic_info.items():
             self.logger.info("  %s: %s", key, value)
-        self.logger.info(_("=== End Registration Data ==="))
+        self.logger.info("=== End Registration Data ===")
         self.logger.debug("Registration data: %s", basic_info)
 
         try:
@@ -286,13 +284,13 @@ class ClientRegistration:
                             self._store_auth_data(host_id, host_token)
 
                         self.logger.info(
-                            _("Successfully registered with server. Host ID: %s"),
+                            "Successfully registered with server. Host ID: %s",
                             host_id,
                         )
                         return True
                     if response.status == 409:
                         # Host already exists - this is OK
-                        self.logger.info(_("Host already registered with server"))
+                        self.logger.info("Host already registered with server")
                         self.registered = True
                         return True
                     error_text = await response.text()
@@ -324,7 +322,7 @@ class ClientRegistration:
             attempt += 1
 
             self.logger.info(
-                _("Registration attempt %s%s"),
+                "Registration attempt %s%s",
                 attempt,
                 # pylint: disable-next=consider-using-f-string
                 (" of %s" % max_retries if max_retries != -1 else ""),
@@ -390,7 +388,7 @@ class ClientRegistration:
                     }
                     self.registered = True
                     self.logger.info(
-                        _("Loaded stored authentication: Host ID %s"), approval.host_id
+                        "Loaded stored authentication: Host ID %s", approval.host_id
                     )
                 else:
                     self.logger.debug("No stored authentication data found")
@@ -412,9 +410,7 @@ class ClientRegistration:
                 )
                 session.add(approval)
                 session.commit()
-                self.logger.info(
-                    _("Stored authentication data for host_id: %s"), host_id
-                )
+                self.logger.info("Stored authentication data for host_id: %s", host_id)
         except Exception as error:
             self.logger.error(_("Error storing auth data: %s"), error)
 

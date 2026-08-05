@@ -1,0 +1,73 @@
+# i18n "intentionally English" allow-list — the escape hatch for the strict
+# gate in scripts/i18n_strict.py (mirrors sysmanage-docs/assets/locales/
+# no-translate.txt, which predates it).
+#
+# A value listed here may stay byte-identical to English in every locale
+# without failing `make lint`.  Use it for things that genuinely do not
+# translate: product and vendor names, CLI invocations, protocol tokens,
+# file paths, format strings that are pure interpolation.
+#
+# One rule per line:
+#   some.dotted.key        exact dotted key (JSON) or exact msgid (.po)
+#   settings.*.command     fnmatch glob on the key
+#   re:<regex>             regex matched against the ENGLISH value
+# Full-line comments start with '#'.
+#
+# Keep rules TIGHT.  A broad glob silently re-opens the hole this gate exists
+# to close — prefer three exact keys over one wildcard that also swallows the
+# prose next to them.  Anchor value regexes with ^ and $.
+
+# --- shell / package-manager invocations quoted verbatim in the UI ----------
+re:^(sudo )?(apt-get|dnf|yum|zypper|apk|pkg|pkg_add|pkgin|brew|winget|snap)
+re:^systemctl (start|stop|restart|enable|disable|status)
+
+# --- product, vendor and protocol names --------------------------------------
+re:^(SysManage|OpenBAO|Grafana|Graylog|OpenTelemetry|Prometheus)$
+re:^(Ubuntu Pro|Launchpad|COPR|openSUSE Build Service|Homebrew|winget)$
+re:^(bootc|rpm-ostree|osquery|Ansible|Velociraptor|Wazuh)$
+
+# --- identifier lists and unit abbreviations that carry no prose -------------
+# "DNF (Fedora/RHEL/CentOS 8+)" — package manager + distro names, all proper.
+re:^DNF \(Fedora/RHEL/CentOS 8\+\)$
+# "WSL: Ubuntu-24.04, LXD: ubuntu:24.04" — image identifiers, copied verbatim.
+re:^WSL: [\w.\-]+, LXD: [\w.:\-]+$
+# "{{minutes}}m {{seconds}}s" — interpolation plus conventional unit letters.
+re:^\{\{minutes\}\}m \{\{seconds\}\}s$
+# "{{target}} (Professional)" — the parenthetical is a licence tier name.
+re:^\{\{target\}\} \((Community|Professional|Enterprise)\)$
+
+# --- shells, hypervisors, protocols, package managers -----------------------
+# Whole-value matches only (fullmatch).  These are names, not words: no locale
+# renders "Zsh" or "bhyve" differently, and asking the translation service for
+# one just burns a round-trip and comes back identical.
+re:(Ba|K|Z|Tc|C|Fi)sh
+re:(Bourne|Korn|Bourne Again|Friendly Interactive) Shell
+re:(bhyve|KVM|QEMU|KVM/QEMU|LXD|LXC|WSL|VMM|vmd|VMM/vmd|libvirt|Xen|Hyper-V)
+re:(syslog|journald|GELF|GELF TCP|GELF UDP|Syslog TCP|Syslog UDP|rsyslog)
+re:(APT|DNF|YUM|Zypper|Pacman|Snap|Flatpak|Homebrew|Chocolatey|Scoop|winget|pkg|pkgin|pkg_add)
+re:(APT|DNF|YUM|Zypper|Snap|Flatpak) \([A-Za-z0-9/ .+-]+\)
+re:(Ubuntu|Debian|Ubuntu/Debian|Fedora|RHEL|CentOS|Rocky|AlmaLinux|openSUSE|SLES|Alpine|Arch|Gentoo|NixOS)
+re:(FreeBSD|OpenBSD|NetBSD|DragonFly|macOS|Windows|Linux|Unix|BSD)
+re:(PostgreSQL|SQLite|MySQL|MariaDB|Redis|Microsoft SQL Server|Oracle)
+re:N/A
+
+# --- cognates: identical in these locales, must still translate elsewhere ---
+# Scoped deliberately.  "Status" IS the German and Dutch word; Spanish must
+# say "Estado".  An unscoped rule here would bless the English everywhere.
+de,nl: re:Status
+de,nl,fr,it,pt,es: re:Version
+de,nl,fr,it,pt,es,ru: re:URL
+de: re:Name
+nl: re:Naam
+
+# --- technical tokens that are identical in every locale --------------------
+# Tool names and Python exception names plus a %s.  These looped forever in
+# `make translate` for the same reason as the frontend placeholder strings.
+re:(pkg_info|syspatch|pkg|apt-get|dnf|zypper) stderr: %s
+re:[A-Za-z]+Error: %s
+
+# --- loanwords correct in one locale only ------------------------------------
+# Italian uses "timeout" unchanged; the other 12 locales translated it
+# (de "Zeitüberschreitung" etc.), so this is scoped to `it` rather than
+# blessing the English everywhere.
+it: re:timeout

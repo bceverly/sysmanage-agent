@@ -61,7 +61,7 @@ class DatabaseManager:
             autocommit=False, autoflush=False, bind=self.engine
         )
 
-        logger.info(_("Database manager initialized with path: %s"), database_path)
+        logger.info("Database manager initialized with path: %s", database_path)
 
     def _get_default_database_path(self) -> str:
         """Get the default database path - defaults to current working directory."""
@@ -83,7 +83,7 @@ class DatabaseManager:
         """Create all tables defined by models."""
         try:
             Base.metadata.create_all(bind=self.engine)
-            logger.info(_("Database tables created successfully"))
+            logger.info("Database tables created successfully")
         except Exception as error:
             logger.exception(_("Failed to create database tables: %s"), error)
             raise
@@ -95,7 +95,7 @@ class DatabaseManager:
     def close(self):
         """Close the database connection."""
         self.engine.dispose()
-        logger.info(_("Database connection closed"))
+        logger.info("Database connection closed")
 
 
 # Global database manager instance (module-level private variable)

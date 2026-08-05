@@ -115,9 +115,7 @@ class WslKeepalive:
         current = config.get("wsl2", "vmIdleTimeout", fallback=None)
         if has_lowercase and not has_correct:
             config.remove_option("wsl2", "vmidletimeout")
-            self.logger.info(
-                _("Removing lowercase vmidletimeout, will add vmIdleTimeout")
-            )
+            self.logger.info("Removing lowercase vmidletimeout, will add vmIdleTimeout")
             needs_update = True
         if current != "-1":
             config.set("wsl2", "vmIdleTimeout", "-1")
@@ -134,7 +132,7 @@ class WslKeepalive:
         current = config.get("wsl", "autoStop", fallback=None)
         if has_lowercase and not has_correct:
             config.remove_option("wsl", "autostop")
-            self.logger.info(_("Removing lowercase autostop, will add autoStop"))
+            self.logger.info("Removing lowercase autostop, will add autoStop")
             needs_update = True
         if current != "false":
             config.set("wsl", "autoStop", "false")
@@ -150,19 +148,17 @@ class WslKeepalive:
         try:
             if creating_new_file:
                 self.logger.info(
-                    _(
-                        ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-                    ),
+                    ".wslconfig not found, creating to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
             else:
                 self.logger.info(
-                    _("Updating .wslconfig to prevent WSL auto-shutdown at %s"),
+                    "Updating .wslconfig to prevent WSL auto-shutdown at %s",
                     wslconfig_path,
                 )
             with open(wslconfig_path, "w", encoding="utf-8") as cfg:
                 config.write(cfg)
-            self.logger.info(_(".wslconfig saved successfully"))
+            self.logger.info(".wslconfig saved successfully")
             return True
         except PermissionError:
             self.logger.error(_("Permission denied writing to %s"), wslconfig_path)
@@ -173,7 +169,7 @@ class WslKeepalive:
     def restart_wsl(self) -> None:
         """Run ``wsl --shutdown`` so a freshly-edited ``~/.wslconfig`` takes effect."""
         try:
-            self.logger.info(_("Shutting down WSL to apply .wslconfig changes..."))
+            self.logger.info("Shutting down WSL to apply .wslconfig changes...")
             result = subprocess.run(  # nosec B603 B607
                 ["wsl", "--shutdown"],
                 capture_output=True,
@@ -183,7 +179,7 @@ class WslKeepalive:
             )
             if result.returncode == 0:
                 self.logger.info(
-                    _("WSL shutdown complete, new settings will apply on next start")
+                    "WSL shutdown complete, new settings will apply on next start"
                 )
             else:
                 stderr = result.stderr.decode("utf-8", errors="ignore")
@@ -238,9 +234,7 @@ class WslKeepalive:
                 creationflags=_subprocess_creationflags(),
             )
             self._wsl_keepalive_processes[distro] = process
-            self.logger.info(
-                _("Started keep-alive process for WSL instance: %s"), distro
-            )
+            self.logger.info("Started keep-alive process for WSL instance: %s", distro)
             return True
         except Exception as exc:  # pylint: disable=broad-exception-caught
             self.logger.error(
@@ -278,7 +272,7 @@ class WslKeepalive:
         for distro in tuple(self._wsl_keepalive_processes.keys()):
             if distro not in current:
                 self.logger.info(
-                    _("WSL distribution %s no longer exists, stopping keep-alive"),
+                    "WSL distribution %s no longer exists, stopping keep-alive",
                     distro,
                 )
                 self._stop_keepalive_process(distro)

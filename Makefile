@@ -611,7 +611,7 @@ else
 endif
 
 # Python linting
-lint: lint-file-length format-python i18n-validate translate-check lint-version
+lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-strict translate-check lint-version
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
@@ -625,6 +625,23 @@ endif
 # every locale .po within budget, fail otherwise.  Run ``make i18n-extract``
 # then ``make i18n-merge`` to refresh the .pot template and merge new
 # msgids into all locales; ``make i18n-compile`` rebuilds .mo files.
+# Strict gate: a translation byte-identical to its English msgid.  Invisible to
+# i18n-validate (the entry exists) and translate-check (it is not [TODO]), so
+# it renders English forever with every gate green.  Escape hatch:
+# i18n-allow.txt.  Mirrors the same target in the other three repos.
+# Gate the SHAPE of gettext msgids.  pybabel only extracts string LITERALS, so
+# a msgid held in a module constant (or a lookup key used as the msgid) never
+# reaches a catalog and renders English — or leaks the raw key — in every
+# locale, with every other i18n gate green.  Mark deferred msgids with N_().
+i18n-check-msgid-style: setup-venv
+	@$(PYTHON) scripts/i18n_check_msgid_style.py \
+		--source-root src --locales src/i18n/locales
+
+i18n-strict: setup-venv
+	@echo "=== i18n strict (English-identical) ==="
+	@$(PYTHON) scripts/i18n_strict.py
+	@echo "[OK] i18n strict gate passed"
+
 i18n-validate: setup-venv
 	@echo "=== i18n validation ==="
 	@$(PYTHON) scripts/i18n_validate.py --validate

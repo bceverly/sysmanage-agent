@@ -159,9 +159,7 @@ class WindowsRepositoryOperations:
             )
 
             if result["success"]:
-                self.logger.info(
-                    _("Windows repository %s added successfully"), repo_name
-                )
+                self.logger.info("Windows repository %s added successfully", repo_name)
                 return {
                     "success": True,
                     "result": _("Repository added successfully"),

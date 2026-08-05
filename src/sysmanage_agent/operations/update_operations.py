@@ -48,7 +48,7 @@ class UpdateOperations:
             update_info["hostname"] = system_info["hostname"]
 
             self.logger.info(
-                _("Update check completed: %d updates found"),
+                "Update check completed: %d updates found",
                 update_info.get("total_updates", 0),
             )
 
@@ -120,9 +120,7 @@ class UpdateOperations:
             bundle_id = pkg.get("bundle_id")
 
             self.logger.info(
-                _(
-                    "Received update request: package='%s', manager='%s', bundle_id='%s'"
-                ),
+                "Received update request: package='%s', manager='%s', bundle_id='%s'",
                 package_name,
                 package_manager,
                 bundle_id if bundle_id else "NULL",
@@ -173,7 +171,7 @@ class UpdateOperations:
                 if available_managers:
                     detected_manager = available_managers[0]
                     self.logger.info(
-                        _("Using detected package manager '%s' for %s"),
+                        "Using detected package manager '%s' for %s",
                         detected_manager,
                         package_name,
                     )
@@ -193,14 +191,12 @@ class UpdateOperations:
             if self.agent.connected and self.agent.websocket:
                 success = await self.agent.send_message(update_message)
                 if success:
-                    self.logger.info(_("Successfully sent update results to server"))
+                    self.logger.info("Successfully sent update results to server")
                     return True
                 self.logger.warning(_("Failed to send update results, will retry..."))
             else:
                 self.logger.info(
-                    _(
-                        "Waiting for reconnection to send update results (attempt %d/%d)"
-                    ),
+                    "Waiting for reconnection to send update results (attempt %d/%d)",
                     retry + 1,
                     max_retries,
                 )
@@ -213,7 +209,7 @@ class UpdateOperations:
 
     async def _rescan_and_send_updates(self, hostname: str) -> None:
         """Rescan for available updates and send to server."""
-        self.logger.info(_("Rescanning for available updates after batch completion"))
+        self.logger.info("Rescanning for available updates after batch completion")
         fresh_update_detector = UpdateDetector()
         loop = asyncio.get_event_loop()
 
@@ -223,7 +219,7 @@ class UpdateOperations:
         fresh_update_info["hostname"] = hostname
 
         self.logger.info(
-            _("Post-update scan completed: %d updates remaining"),
+            "Post-update scan completed: %d updates remaining",
             fresh_update_info.get("total_updates", 0),
         )
 
@@ -233,7 +229,7 @@ class UpdateOperations:
 
         if self.agent.connected and self.agent.websocket:
             await self.agent.send_message(fresh_update_message)
-            self.logger.info(_("Successfully sent fresh update list to server"))
+            self.logger.info("Successfully sent fresh update list to server")
         else:
             self.logger.warning(_("Could not send fresh update list - not connected"))
 
@@ -242,7 +238,7 @@ class UpdateOperations:
     ):
         """Apply updates in background to avoid blocking WebSocket connection."""
         try:
-            self.logger.info(_("Starting background update process"))
+            self.logger.info("Starting background update process")
             update_detector = UpdateDetector()
 
             # Validate packages based on input format
@@ -271,7 +267,7 @@ class UpdateOperations:
 
             system_info = self.agent.registration.get_system_info()
             update_results["hostname"] = system_info["hostname"]
-            self.logger.info(_("Background update process completed"))
+            self.logger.info("Background update process completed")
 
             update_message = self.agent.create_message(
                 "update_apply_result", update_results

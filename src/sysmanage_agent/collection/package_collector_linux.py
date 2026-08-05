@@ -58,7 +58,7 @@ class LinuxPackageCollector(BasePackageCollector):
                 try:
                     count = collector_func()
                     total_collected += count
-                    logger.info(_("Collected %d packages from %s"), count, manager_name)
+                    logger.info("Collected %d packages from %s", count, manager_name)
                 except Exception as error:
                     logger.exception(
                         _("Failed to collect packages from %s: %s"), manager_name, error

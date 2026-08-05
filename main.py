@@ -78,7 +78,7 @@ class SysManageAgent(
 
         self.logger = get_logger(__name__, None)  # Will pass config_manager later
         if not self.try_load_config(config_file):
-            self.logger.info(_("No configuration found, attempting auto-discovery..."))
+            self.logger.info("No configuration found, attempting auto-discovery...")
             if not self.auto_discover_and_configure():
                 raise RuntimeError(
                     _(
@@ -367,7 +367,7 @@ class SysManageAgent(
         try:
             self.setup_logging()
             self.logger.info(
-                _("Applied server logging config: level=%s native=%s target=%s"),
+                "Applied server logging config: level=%s native=%s target=%s",
                 logging_cfg.get("log_level"),
                 logging_cfg.get("native_enabled"),
                 logging_cfg.get("native_target"),
@@ -819,7 +819,7 @@ class SysManageAgent(
             self.connected = True
             self.running = True
             self.connection_failures = 0
-            self.logger.info(_("Connected to server successfully"))
+            self.logger.info("Connected to server successfully")
 
             try:
                 await self.message_handler.on_connection_established()
@@ -833,7 +833,7 @@ class SysManageAgent(
             self._autostart_task = asyncio.create_task(self._autostart_child_hosts())
 
             self.logger.info(
-                _("Connected to server, waiting for registration confirmation...")
+                "Connected to server, waiting for registration confirmation..."
             )
 
             try:
@@ -846,7 +846,7 @@ class SysManageAgent(
         """Main agent execution loop."""
         system_info = self.registration.get_system_info()
 
-        self.logger.info(_("Starting SysManage Agent"))
+        self.logger.info("Starting SysManage Agent")
         self.logger.info("Agent ID: %s", self.agent_id)
         self.logger.info("Hostname: %s", system_info["hostname"])
         self.logger.info("Platform: %s", system_info["platform"])
@@ -874,28 +874,24 @@ class SysManageAgent(
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.logger.warning("Failed to start public-IP refresh service: %s", error)
 
-        self.logger.info(_("Registering with SysManage server..."))
+        self.logger.info("Registering with SysManage server...")
         if not await self.registration.register_with_retry():
             self.logger.error(_("Failed to register with server. Exiting."))
             return
 
-        self.logger.info(_("Registration successful, checking certificates..."))
+        self.logger.info("Registration successful, checking certificates...")
 
         if self.cert_store.has_certificates():
             self.logger.info(
-                _("Valid certificates found - secure authentication available")
+                "Valid certificates found - secure authentication available"
             )
         else:
+            self.logger.info("No certificates found - using token-based authentication")
             self.logger.info(
-                _("No certificates found - using token-based authentication")
-            )
-            self.logger.info(
-                _(
-                    "For enhanced security, approve this host to enable certificate-based auth"
-                )
+                "For enhanced security, approve this host to enable certificate-based auth"
             )
 
-        self.logger.info(_("Starting WebSocket connection..."))
+        self.logger.info("Starting WebSocket connection...")
 
         base_reconnect_interval = self.config.get_reconnect_interval()
 

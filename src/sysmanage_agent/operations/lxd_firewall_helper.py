@@ -180,7 +180,7 @@ def _configure_nat_masquerade(
         with open("/etc/ufw/before.rules", "r", encoding="utf-8") as fobj:
             existing = fobj.read()
         if "# LXD NAT rules" in existing:
-            logger.info(_("NAT rules already configured in before.rules"))
+            logger.info("NAT rules already configured in before.rules")
             return
     except OSError as exc:
         errors.append(f"Could not read /etc/ufw/before.rules: {exc}")
@@ -214,13 +214,13 @@ def configure_lxd_firewall(logger: logging.Logger, bridge_name: str = "lxdbr0") 
     via firewalld zones manually — not in scope here).
     """
     if not _ufw_available():
-        logger.info(_("UFW not installed; skipping LXD bridge firewall config"))
+        logger.info("UFW not installed; skipping LXD bridge firewall config")
         return {
             "success": True,
             "message": "UFW not installed; skipping LXD bridge firewall config",
         }
 
-    logger.info(_("Configuring UFW firewall for LXD bridge: %s"), bridge_name)
+    logger.info("Configuring UFW firewall for LXD bridge: %s", bridge_name)
     errors: List[str] = []
 
     _enable_ip_forwarding(logger, errors)

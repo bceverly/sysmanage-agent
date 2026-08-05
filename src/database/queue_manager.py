@@ -40,7 +40,7 @@ class MessageQueueManager:
             database_path: Optional path to database file
         """
         self.db_manager = get_database_manager(database_path)
-        logger.info(_("Message queue manager initialized"))
+        logger.info("Message queue manager initialized")
 
     @contextmanager
     def get_session(self):
@@ -290,9 +290,7 @@ class MessageQueueManager:
                 message.started_at = None  # Reset processing timestamp
 
                 logger.info(
-                    _(
-                        "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-                    ),
+                    "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds",
                     message_id,
                     message.retry_count,
                     message.max_retries,
@@ -405,7 +403,7 @@ class MessageQueueManager:
             deleted_count = query.count()
             query.delete(synchronize_session=False)
 
-            logger.info(_("Cleaned up %d old messages"), deleted_count)
+            logger.info("Cleaned up %d old messages", deleted_count)
             return deleted_count
 
     def deserialize_message_data(self, message: MessageQueue) -> Dict[str, Any]:
@@ -475,7 +473,7 @@ class MessageQueueManager:
                         f"(attempt {message.retry_count}/{message.max_retries})"
                     )
                     logger.info(
-                        _("Recovered stuck message %s (type: %s), will retry"),
+                        "Recovered stuck message %s (type: %s), will retry",
                         message.message_id,
                         message.message_type,
                     )
@@ -498,7 +496,7 @@ class MessageQueueManager:
                 recovered_count += 1
 
             if recovered_count > 0:
-                logger.info(_("Recovered %d stuck messages"), recovered_count)
+                logger.info("Recovered %d stuck messages", recovered_count)
 
         return recovered_count
 
@@ -535,7 +533,7 @@ class MessageQueueManager:
                     )
                     if stored_msg_id == message_id:
                         logger.info(
-                            _("Duplicate message detected: %s (status: %s)"),
+                            "Duplicate message detected: %s (status: %s)",
                             message_id,
                             message.status,
                         )

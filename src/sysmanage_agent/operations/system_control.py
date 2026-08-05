@@ -114,7 +114,7 @@ class SystemControl:
                 "error": _("Unsupported FIPS method: %s") % method,
             }
 
-        self.logger.info(_("Applying FIPS %s via: %s"), action, command)
+        self.logger.info("Applying FIPS %s via: %s", action, command)
         result = await self.execute_shell_command({"command": command, "timeout": 600})
         result["fips_action"] = action
         result["reboot_required"] = bool(result.get("success"))
@@ -316,7 +316,7 @@ class SystemControl:
             }
 
         self.logger.info(
-            _("Starting release-upgrade (job %s): %s -> %s"),
+            "Starting release-upgrade (job %s): %s -> %s",
             job_id,
             method,
             to_version,
@@ -441,7 +441,7 @@ class SystemControl:
                 },
             )
             await self.agent_instance.send_message(message)
-            self.logger.info(_("Sent antivirus status update to server"))
+            self.logger.info("Sent antivirus status update to server")
         except Exception as error:
             self.logger.error(_("Failed to send antivirus status update: %s"), error)
 
@@ -491,7 +491,7 @@ class SystemControl:
                 },
             )
             await self.agent_instance.send_message(message)
-            self.logger.info(_("Sent commercial antivirus status update to server"))
+            self.logger.info("Sent commercial antivirus status update to server")
         except Exception as error:
             self.logger.error(
                 _("Failed to send commercial antivirus status update: %s"), error

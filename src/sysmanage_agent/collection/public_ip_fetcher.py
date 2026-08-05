@@ -102,7 +102,7 @@ class PublicIPCache:
             new_ip = await _fetch_from_endpoints()
             if new_ip is not None and new_ip != self._ip:
                 logger.info(
-                    _("Public IP refreshed: %s -> %s"),
+                    "Public IP refreshed: %s -> %s",
                     self._ip or "(unset)",
                     new_ip,
                 )

@@ -376,7 +376,7 @@ class PackageManagerDetector:
                     if os.path.isdir(version_path):
                         packages["postgresql"] = version_dir
                         self.logger.info(
-                            _("Found PostgreSQL %s in %s"), version_dir, base_path
+                            "Found PostgreSQL %s in %s", version_dir, base_path
                         )
                         return  # Take first version found
             except Exception as error:
@@ -397,7 +397,7 @@ class PackageManagerDetector:
                         version = server_dir.replace("MySQL Server ", "")
                         packages["mysql-server"] = version
                         self.logger.info(
-                            _("Found MySQL Server %s in %s"), version, base_path
+                            "Found MySQL Server %s in %s", version, base_path
                         )
                         return  # Take first version found
             except Exception as error:
@@ -424,7 +424,7 @@ class PackageManagerDetector:
             if result.returncode == 0:
                 version = result.stdout.strip()
                 packages["sqlite3"] = version
-                self.logger.info(_("Found SQLite %s via Python"), version)
+                self.logger.info("Found SQLite %s via Python", version)
         except Exception as error:
             self.logger.debug("Error checking Python SQLite: %s", error)
 
