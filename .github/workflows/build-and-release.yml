@@ -3575,15 +3575,34 @@ jobs:
               # afterwards meant ruling out the MSIs, the komac download and the
               # manifest render one at a time — all of which were fine.
               echo "::error::komac update failed for a non-first-submission reason"
-              if grep -qiE "401|403|bad credentials|unauthorized|token" /tmp/komac.out; then
-                echo "::error::Looks like AUTH — WINGET_PKGS_TOKEN is likely expired or"
-                echo "::error::lacks 'public_repo' scope on a fork of microsoft/winget-pkgs."
-              elif grep -qiE "validation|manifest|schema|installer" /tmp/komac.out; then
+              # Classify on the ERROR TEXT ONLY.  komac echoes the whole
+              # rendered manifest to stdout on its way to failing, and that
+              # manifest always contains "Installers:", "InstallerUrl" and
+              # "ManifestType" — so grepping the full log for "installer" or
+              # "manifest" matched every single time and reported MANIFEST
+              # VALIDATION for v3.5.1.1, whose actual failure was a permissions
+              # error.  A misleading diagnosis is worse than none: it sent the
+              # investigation at the MSIs, which were fine.
+              sed -n '/^Error:/,$p' /tmp/komac.out > /tmp/komac.err || true
+              [ -s /tmp/komac.err ] || tail -15 /tmp/komac.out > /tmp/komac.err
+              if grep -qiE "401|403|bad credentials|unauthorized|does not have the correct permissions|CreateRef|forbidden|token" /tmp/komac.err; then
+                echo "::error::Looks like AUTH/PERMISSIONS.  komac pushes a branch to YOUR FORK"
+                echo "::error::of microsoft/winget-pkgs, so this fails when either:"
+                echo "::error::  * the fork does not exist — create it once at"
+                echo "::error::    https://github.com/microsoft/winget-pkgs/fork , or"
+                echo "::error::  * WINGET_PKGS_TOKEN cannot write to it.  A classic PAT needs"
+                echo "::error::    'public_repo'; a fine-grained PAT needs Contents: Read+Write"
+                echo "::error::    AND Pull requests: Read+Write scoped to <you>/winget-pkgs."
+                echo "::error::Expired tokens fail the same way."
+              elif grep -qiE "validation|schema|sha256|checksum|404|not found" /tmp/komac.err; then
                 echo "::error::Looks like MANIFEST VALIDATION — check the installer URLs"
                 echo "::error::resolve and that BOTH x64 and arm64 MSIs exist for this tag."
-              elif grep -qiE "rate limit|timed out|connection|network" /tmp/komac.out; then
+              elif grep -qiE "rate limit|timed out|connection|network" /tmp/komac.err; then
                 echo "::error::Looks TRANSIENT (rate limit / network) — re-running may fix it."
               fi
+              echo "::group::komac error output"
+              cat /tmp/komac.err
+              echo "::endgroup::"
               exit "$update_rc"
             fi
           fi

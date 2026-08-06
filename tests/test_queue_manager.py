@@ -15,7 +15,14 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from src.database.base import DatabaseManager
-from src.database.models import MessageQueue, Priority, QueueDirection, QueueStatus
+from src.database.models import (
+    InstallationRequestTracking,
+    MessageQueue,
+    Priority,
+    QueueDirection,
+    QueueStatus,
+    ScriptExecution,
+)
 from src.database.queue_manager import MessageQueueManager
 
 
@@ -140,15 +147,13 @@ class TestMessageQueueManager:
         assert not message.is_completed
         assert message.started_at is not None
 
-        # Mark as completed
+        # Delivered -> the row is REMOVED, not marked.  Nothing in the agent
+        # ever reads a delivered message back, and retaining them grew the
+        # database to 10.75 GB in eight days on a dev host.
         success = queue_manager.mark_completed(message_id)
         assert success
 
-        message = queue_manager.get_message(message_id)
-        assert not message.is_pending
-        assert not message.is_in_progress
-        assert message.is_completed
-        assert message.completed_at is not None
+        assert queue_manager.get_message(message_id) is None
 
     def test_message_retry_logic(self, queue_manager):
         """Test message retry logic with exponential backoff."""
@@ -238,17 +243,18 @@ class TestMessageQueueManager:
         queue_manager.mark_processing(failed_id)
         queue_manager.mark_failed(failed_id, "Test failure", retry=False)
 
-        # Test overall stats
+        # Delivered messages are deleted on acknowledgement, so "completed" is
+        # always 0 and the delivered row is gone from the totals.
         stats = queue_manager.get_queue_stats()
-        assert stats["total"] == 6
+        assert stats["total"] == 5
         assert stats["pending"] == 3  # 2 outbound + 1 inbound
         assert stats["in_progress"] == 1
-        assert stats["completed"] == 1
+        assert stats["completed"] == 0
         assert stats["failed"] == 1
 
         # Test direction-specific stats
         outbound_stats = queue_manager.get_queue_stats(QueueDirection.OUTBOUND)
-        assert outbound_stats["total"] == 5
+        assert outbound_stats["total"] == 4
         assert outbound_stats["pending"] == 2
 
         inbound_stats = queue_manager.get_queue_stats(QueueDirection.INBOUND)
@@ -256,15 +262,19 @@ class TestMessageQueueManager:
         assert inbound_stats["pending"] == 1
 
     def test_message_cleanup(self, queue_manager):
-        """Test old message cleanup functionality."""
-        # Create old completed message
+        """Old FAILED rows are collected; recent ones are kept.
+
+        Delivered messages are removed at acknowledgement, so cleanup is no
+        longer about them — it exists so failures, which ARE retained for
+        diagnosis, do not accumulate for ever.
+        """
         old_msg_id = queue_manager.enqueue_message(
-            "old_message", {}, QueueDirection.OUTBOUND
+            "old_failure", {}, QueueDirection.OUTBOUND, max_retries=0
         )
         queue_manager.mark_processing(old_msg_id)
-        queue_manager.mark_completed(old_msg_id)
+        queue_manager.mark_failed(old_msg_id, "boom", retry=False)
 
-        # Manually set completion date to be old
+        # Age it past the retention window.
         with queue_manager.get_session() as session:
             message = (
                 session.query(MessageQueue).filter_by(message_id=old_msg_id).first()
@@ -272,20 +282,90 @@ class TestMessageQueueManager:
             message.completed_at = datetime.now(timezone.utc) - timedelta(days=10)
             session.commit()
 
-        # Create recent message
         recent_msg_id = queue_manager.enqueue_message(
-            "recent_message", {}, QueueDirection.OUTBOUND
+            "recent_failure", {}, QueueDirection.OUTBOUND, max_retries=0
         )
         queue_manager.mark_processing(recent_msg_id)
-        queue_manager.mark_completed(recent_msg_id)
+        queue_manager.mark_failed(recent_msg_id, "boom", retry=False)
 
-        # Clean up messages older than 7 days
         deleted_count = queue_manager.cleanup_old_messages(older_than_days=7)
         assert deleted_count == 1
 
-        # Verify old message is gone, recent remains
         assert queue_manager.get_message(old_msg_id) is None
         assert queue_manager.get_message(recent_msg_id) is not None
+
+    def test_cleanup_can_preserve_failures(self, queue_manager):
+        """``keep_failed=True`` retains failures regardless of age."""
+        msg_id = queue_manager.enqueue_message(
+            "kept_failure", {}, QueueDirection.OUTBOUND, max_retries=0
+        )
+        queue_manager.mark_processing(msg_id)
+        queue_manager.mark_failed(msg_id, "boom", retry=False)
+        with queue_manager.get_session() as session:
+            message = session.query(MessageQueue).filter_by(message_id=msg_id).first()
+            message.completed_at = datetime.now(timezone.utc) - timedelta(days=99)
+            session.commit()
+
+        assert (
+            queue_manager.cleanup_old_messages(older_than_days=7, keep_failed=True) == 0
+        )
+        assert queue_manager.get_message(msg_id) is not None
+
+    def test_pending_messages_are_never_collected(self, queue_manager):
+        """Undelivered work must survive cleanup — losing it loses the message.
+
+        This is the property the whole queue exists to provide, so it gets an
+        explicit test rather than being implied by the status filter.
+        """
+        pending_id = queue_manager.enqueue_message(
+            "still_waiting", {}, QueueDirection.OUTBOUND
+        )
+        queue_manager.cleanup_old_messages(older_than_days=0)
+        assert queue_manager.get_message(pending_id) is not None
+
+    def test_tracking_records_are_collected_when_finished(self, queue_manager):
+        """Finished ledger rows age out; unfinished ones never do."""
+        now = datetime.now(timezone.utc)
+        with queue_manager.get_session() as session:
+            session.add(
+                ScriptExecution(
+                    execution_id="e-old",
+                    execution_uuid=str(uuid.uuid4()),
+                    completed_at=now - timedelta(days=30),
+                )
+            )
+            session.add(
+                ScriptExecution(
+                    execution_id="e-recent",
+                    execution_uuid=str(uuid.uuid4()),
+                    completed_at=now,
+                )
+            )
+            # Still running: no completed_at.  Collecting this would lose the
+            # dedupe guard for work that has not reported yet.
+            session.add(
+                ScriptExecution(
+                    execution_id="e-running",
+                    execution_uuid=str(uuid.uuid4()),
+                    completed_at=None,
+                )
+            )
+            session.add(
+                InstallationRequestTracking(
+                    request_id="r-old",
+                    requested_by="tester",
+                    packages_json="[]",
+                    completed_at=now - timedelta(days=30),
+                )
+            )
+            session.commit()
+
+        assert queue_manager.cleanup_old_tracking_records(older_than_days=7) == 2
+
+        with queue_manager.get_session() as session:
+            remaining = {r.execution_id for r in session.query(ScriptExecution).all()}
+            assert remaining == {"e-recent", "e-running"}
+            assert session.query(InstallationRequestTracking).count() == 0
 
     def test_correlation_and_reply_to(self, queue_manager):
         """Test message correlation and reply-to functionality."""

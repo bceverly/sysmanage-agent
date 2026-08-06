@@ -230,55 +230,6 @@ class MessageQueue(Base):
         return True
 
 
-class QueueMetrics(Base):
-    """
-    Table for storing queue performance metrics and statistics.
-    """
-
-    __tablename__ = "queue_metrics"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-
-    # Metric identification
-    metric_name = Column(String(50), nullable=False, index=True)
-    direction = Column(String(10), nullable=False, index=True)  # inbound/outbound
-
-    # Metric values
-    count = Column(Integer, nullable=False, default=0)
-    total_time_ms = Column(Integer, nullable=False, default=0)
-    avg_time_ms = Column(Integer, nullable=False, default=0)
-    min_time_ms = Column(Integer, nullable=True)
-    max_time_ms = Column(Integer, nullable=True)
-
-    # Error tracking
-    error_count = Column(Integer, nullable=False, default=0)
-
-    # Timestamps
-    period_start = Column(UTCDateTime, nullable=False)
-    period_end = Column(UTCDateTime, nullable=False)
-    updated_at = Column(
-        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
-
-    # Indexes for efficient querying
-    __table_args__ = (
-        Index(
-            "idx_metrics_period",
-            "metric_name",
-            "direction",
-            "period_start",
-            "period_end",
-        ),
-        Index("idx_metrics_latest", "metric_name", "direction", "updated_at"),
-    )
-
-    def __repr__(self):
-        return (
-            f"<QueueMetrics(id={self.id}, metric='{self.metric_name}', "
-            f"direction='{self.direction}', count={self.count})>"
-        )
-
-
 class HostApproval(Base):
     """
     Table for storing host approval status and assigned host_id from server.
@@ -495,62 +446,4 @@ class CustomMetric(Base):
             f"<CustomMetric(id={self.id}, metric_id='{self.metric_id}', "
             f"name='{self.name}', interpreter='{self.interpreter}', "
             f"cadence_seconds={self.cadence_seconds})>"
-        )
-
-
-class VmmBuildCache(Base):
-    """
-    Table for caching VMM build artifacts (site77.tgz files).
-    Stores version information and file paths to avoid rebuilding unchanged versions.
-    """
-
-    __tablename__ = "vmm_build_cache"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-
-    # OpenBSD version (e.g., "7.7")
-    openbsd_version = Column(String(10), nullable=False, index=True)
-
-    # sysmanage-agent version (e.g., "0.9.9.8")
-    agent_version = Column(String(20), nullable=False, index=True)
-
-    # Path to cached site77.tgz file
-    site_tgz_path = Column(String(512), nullable=False)
-
-    # Path to cached sysmanage-agent package
-    agent_package_path = Column(String(512), nullable=True)
-
-    # SHA256 checksum of the site tarball for integrity verification
-    site_tgz_checksum = Column(String(64), nullable=True)
-
-    # Build metadata
-    built_at = Column(
-        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
-    last_used_at = Column(
-        UTCDateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
-
-    # Success/failure tracking
-    build_status = Column(
-        String(20), nullable=False, default="success"
-    )  # success, failed, building
-    build_log = Column(Text, nullable=True)
-
-    # Index for quick lookups by version combination
-    __table_args__ = (
-        Index(
-            "idx_vmm_cache_version",
-            "openbsd_version",
-            "agent_version",
-            unique=True,
-        ),
-    )
-
-    def __repr__(self):
-        return (
-            f"<VmmBuildCache(id={self.id}, "
-            f"openbsd_version='{self.openbsd_version}', "
-            f"agent_version='{self.agent_version}', "
-            f"status='{self.build_status}')>"
         )

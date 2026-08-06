@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-05 13:41-0400\n"
+"POT-Creation-Date: 2026-08-06 10:10-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1644,59 +1644,64 @@ msgstr "अपडेट चेकर त्रुटि: %s"
 msgid "Error closing message handler: %s"
 msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:97
+#: src/sysmanage_agent/communication/message_handler_queue.py:98
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:163
+#: src/sysmanage_agent/communication/message_handler_queue.py:164
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:173
+#: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "संदेश को प्रोसेसिंग के रूप में चिह्नित किया गया: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:219
+#: src/sysmanage_agent/communication/message_handler_queue.py:220
 msgid "Cannot send message: not connected to server"
 msgstr "संदेश नहीं भेज सकते: सर्वर से कनेक्ट नहीं"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:227
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "संदेश सीधे भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:274
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:316
+#: src/sysmanage_agent/communication/message_handler_queue.py:329
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:342
+#: src/sysmanage_agent/communication/message_handler_queue.py:355
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "स्टक कीड़ों को बाहर निकलने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:359
+#: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#, python-format
+msgid "Error pruning completed queue messages: %s"
+msgstr "त्रुटि: पूर्विकृत कार्यक्रम संرس्तित के डेटा को हटाने में विफल: %s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format

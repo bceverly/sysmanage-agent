@@ -17,6 +17,7 @@ class at runtime.
 
 import asyncio
 import json
+import time
 from typing import Any, Dict
 
 from src.database.models import Priority, QueueDirection
@@ -247,8 +248,20 @@ class MessageHandlerQueueMixin:
         self.logger.info("Starting outbound queue processing")
         self.logger.info("Agent connected status: %s", self.agent.connected)
 
+        # Monotonic, not wall clock: a clock step (NTP correction, suspend/resume)
+        # must not skip a prune for hours or trigger one every pass.
+        next_prune = time.monotonic() + self.QUEUE_PRUNE_INTERVAL_SECONDS
+
         try:
             while self.agent.connected:
+                # An agent that stays connected for weeks never returns to
+                # on_connection_established, so the prune has to recur here or
+                # retention silently stops applying to exactly the long-lived
+                # agents that need it most.
+                if time.monotonic() >= next_prune:
+                    self._prune_completed_messages()
+                    next_prune = time.monotonic() + self.QUEUE_PRUNE_INTERVAL_SECONDS
+
                 # Get pending messages ordered by priority
                 messages = self.queue_manager.dequeue_messages(
                     direction=QueueDirection.OUTBOUND, limit=10, priority_order=True
@@ -341,6 +354,20 @@ class MessageHandlerQueueMixin:
         except Exception as error:
             self.logger.error(_("Error recovering stuck messages: %s"), error)
 
+        # Prune completed history.  ``cleanup_old_messages`` has existed (and been
+        # unit-tested) since the queue landed, but NOTHING in the agent ever
+        # called it — so message_queue grew without bound for the life of the
+        # process.  A dev agent reached 11.3 GB in eight days (112,798 completed
+        # outbound rows, 83% of it available_packages_batch at ~122 KB each),
+        # which is what finally surfaced it: the screenshot VM ran out of disk
+        # copying agent.db in, and the error named the file but not the cause.
+        #
+        # This runs here because it is already the agent's maintenance point
+        # (recover_stuck_messages above) and it is cheap: a single indexed
+        # DELETE.  The periodic re-run lives in the outbound loop, so an agent
+        # that stays connected for weeks still prunes.
+        self._prune_completed_messages()
+
         # Start outbound queue processing task
         if not self.queue_processor_running:
             self.logger.info(
@@ -432,6 +459,46 @@ class MessageHandlerQueueMixin:
                 "failed": outbound_stats["failed"] + inbound_stats["failed"],
             },
         }
+
+    # Delivered messages are now removed at acknowledgement (see
+    # queue_manager.mark_completed), so this window only governs FAILED rows —
+    # kept for diagnosis — and any legacy ``completed`` rows written by an older
+    # agent before that change.
+    QUEUE_RETENTION_DAYS = 7
+
+    # How often the outbound loop re-runs the prune while connected.
+    QUEUE_PRUNE_INTERVAL_SECONDS = 3600
+
+    def _prune_completed_messages(self) -> None:
+        """Delete completed queue history older than the retention window.
+
+        Best-effort: a failure here must never stop message processing, but it
+        IS logged — silent failure is how this went unnoticed in the first
+        place.
+        """
+        try:
+            days = getattr(self, "queue_retention_days", self.QUEUE_RETENTION_DAYS)
+            deleted = self.queue_manager.cleanup_old_messages(older_than_days=days)
+            if deleted:
+                self.logger.info(
+                    "Pruned %d stale queue row(s) older than %d day(s)",
+                    deleted,
+                    days,
+                )
+            # Same maintenance pass collects the two finished-work ledgers, which
+            # otherwise grow by one row per script run / install request for the
+            # life of the agent.
+            tracked = self.queue_manager.cleanup_old_tracking_records(
+                older_than_days=days
+            )
+            if tracked:
+                self.logger.info(
+                    "Pruned %d finished tracking record(s) older than %d day(s)",
+                    tracked,
+                    days,
+                )
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("Error pruning completed queue messages: %s"), error)
 
     async def cleanup_old_messages(  # NOSONAR - async required by caller interface
         self, older_than_days: int = 7

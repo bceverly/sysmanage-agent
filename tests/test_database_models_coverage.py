@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from src.database.models import (
     HostApproval,
     MessageQueue,
-    QueueMetrics,
     ScriptExecution,
     UTCDateTime,
 )
@@ -93,22 +92,6 @@ class TestDatabaseModelsCoverage:
         # This tests the code path even if the condition might not match exactly
         result = message.is_ready_for_processing
         assert isinstance(result, bool)
-
-    def test_queue_metrics_repr(self):
-        """Test QueueMetrics __repr__ method (line 209)."""
-        metrics = QueueMetrics()
-        metrics.id = 456
-        metrics.metric_name = "test_metric"
-        metrics.direction = "outbound"
-        metrics.count = 42
-
-        repr_str = repr(metrics)
-
-        # Should contain key information (line 209)
-        assert "QueueMetrics(id=456" in repr_str
-        assert "metric='test_metric'" in repr_str
-        assert "direction='outbound'" in repr_str
-        assert "count=42" in repr_str
 
     def test_host_approval_repr(self):
         """Test HostApproval __repr__ method (line 245)."""

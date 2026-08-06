@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-05 13:41-0400\n"
+"POT-Creation-Date: 2026-08-06 10:10-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1636,59 +1636,64 @@ msgstr "업데이트 검사기 오류: %s"
 msgid "Error closing message handler: %s"
 msgstr "메시지 핸들러 종료 중 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:97
+#: src/sysmanage_agent/communication/message_handler_queue.py:98
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "메시지 직접 전송 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:163
+#: src/sysmanage_agent/communication/message_handler_queue.py:164
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "큐 프로세서에서 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:173
+#: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "메시지를 처리 중으로 표시: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "큐 메시지 %s 처리 중 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:219
+#: src/sysmanage_agent/communication/message_handler_queue.py:220
 msgid "Cannot send message: not connected to server"
 msgstr "메시지를 보낼 수 없음: 서버에 연결되지 않음"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:227
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "메시지 직접 전송 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:274
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "큐 프로세서에서 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:316
+#: src/sysmanage_agent/communication/message_handler_queue.py:329
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "큐 메시지 %s 처리 중 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:342
+#: src/sysmanage_agent/communication/message_handler_queue.py:355
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "걸린 메시지 복구 중 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:359
+#: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Ubuntu Pro 분리 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Ubuntu Pro 분리 실패: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#, python-format
+msgid "Error pruning completed queue messages: %s"
+msgstr "오류로 인해 완료된 대기열 메시지 제거가 실패했습니다: %s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format

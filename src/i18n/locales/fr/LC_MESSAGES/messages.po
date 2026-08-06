@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-05 13:41-0400\n"
+"POT-Creation-Date: 2026-08-06 10:10-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1670,59 +1670,66 @@ msgstr "Erreur du vérificateur de mises à jour : %s"
 msgid "Error closing message handler: %s"
 msgstr "Erreur lors de la fermeture du gestionnaire de messages : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:97
+#: src/sysmanage_agent/communication/message_handler_queue.py:98
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Échec de l'envoi direct du message : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:163
+#: src/sysmanage_agent/communication/message_handler_queue.py:164
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Erreur dans le processeur de file d'attente : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:173
+#: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Message marqué comme en traitement : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Erreur lors du traitement du message en file d'attente %s : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:219
+#: src/sysmanage_agent/communication/message_handler_queue.py:220
 msgid "Cannot send message: not connected to server"
 msgstr "Impossible d'envoyer le message : non connecté au serveur"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:227
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Échec de l'envoi direct du message : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:274
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Erreur dans le processeur de file d'attente : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:316
+#: src/sysmanage_agent/communication/message_handler_queue.py:329
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Erreur lors du traitement du message en file d'attente %s : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:342
+#: src/sysmanage_agent/communication/message_handler_queue.py:355
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Erreur lors du récupération des messages bloqués : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:359
+#: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Échec du détachement d'Ubuntu Pro : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Échec du détachement d'Ubuntu Pro : %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#, python-format
+msgid "Error pruning completed queue messages: %s"
+msgstr ""
+"Erreur lors de la suppression des messages de la file d'attente terminée : "
+"%s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format

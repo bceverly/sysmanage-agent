@@ -13,13 +13,20 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, asc, or_
+from sqlalchemy import and_, asc, func, or_, text
 
 from src.i18n import _
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
 
 from .base import get_database_manager
-from .models import MessageQueue, Priority, QueueDirection, QueueStatus
+from .models import (
+    InstallationRequestTracking,
+    MessageQueue,
+    Priority,
+    QueueDirection,
+    QueueStatus,
+    ScriptExecution,
+)
 
 logger = get_logger(__name__)
 
@@ -242,10 +249,19 @@ class MessageQueueManager:
             if not message:
                 return False
 
-            message.status = QueueStatus.COMPLETED.value
-            message.completed_at = datetime.now(timezone.utc)
+            # DELETE, don't mark.  A delivered message has no reader: the only
+            # references to QueueStatus.COMPLETED anywhere in the agent were
+            # this write, the retention delete, and an is_completed property —
+            # nothing ever loaded one back.  Retaining them cost 10.75 GB in
+            # eight days on a dev host while the entire rest of the database was
+            # under 10 MB, and the queue's whole purpose is to survive a
+            # disconnect, not to be a history of everything ever sent.
+            #
+            # Failures are different and are kept (see mark_failed): those are
+            # the rows with diagnostic value.
+            session.delete(message)
 
-            logger.debug("Marked message as completed: %s", message_id)
+            logger.debug("Delivered and removed message from queue: %s", message_id)
             return True
 
     def mark_failed(
@@ -351,14 +367,22 @@ class MessageQueueManager:
             if direction:
                 query = query.filter(MessageQueue.direction == direction)
 
-            all_messages = query.all()
-
+            # COUNT in SQL.  This used to be ``query.all()`` followed by four
+            # Python passes, which materialises every row INCLUDING its
+            # message_data blob just to produce four integers — ~11 GB of RAM
+            # against the database that prompted this audit.  It survived only
+            # because nothing in the agent currently calls it.
+            by_status = dict(
+                query.with_entities(
+                    MessageQueue.status, func.count(MessageQueue.message_id)
+                ).group_by(MessageQueue.status)
+            )
             stats = {
-                "total": len(all_messages),
-                "pending": sum(1 for m in all_messages if m.is_pending),
-                "in_progress": sum(1 for m in all_messages if m.is_in_progress),
-                "completed": sum(1 for m in all_messages if m.is_completed),
-                "failed": sum(1 for m in all_messages if m.is_failed),
+                "total": sum(by_status.values()),
+                "pending": by_status.get(QueueStatus.PENDING.value, 0),
+                "in_progress": by_status.get(QueueStatus.IN_PROGRESS.value, 0),
+                "completed": by_status.get(QueueStatus.COMPLETED.value, 0),
+                "failed": by_status.get(QueueStatus.FAILED.value, 0),
             }
 
             if direction:
@@ -367,44 +391,113 @@ class MessageQueueManager:
             return stats
 
     def cleanup_old_messages(
-        self, older_than_days: int = 7, keep_failed: bool = True
+        self, older_than_days: int = 7, keep_failed: bool = False
     ) -> int:
         """
-        Clean up old completed messages to prevent database growth.
+        Remove queue rows that are no longer useful, and reclaim the space.
+
+        Delivered messages are deleted the moment the server acknowledges them
+        (see ``mark_completed``), so in normal operation there is nothing here
+        to collect.  This is the backstop for two cases:
+
+          * rows left ``completed`` by an agent that predates that change, and
+          * FAILED rows, which are retained for diagnosis but must not
+            accumulate forever.
 
         Args:
-            older_than_days: Remove messages older than this many days
-            keep_failed: Whether to keep failed messages for debugging
+            older_than_days: Age threshold, measured from ``completed_at``.
+            keep_failed: Retain failed rows regardless of age.  Defaults to
+                False now: failures are worth keeping for a while, not for
+                ever, and "for ever" is what the old default meant given
+                nothing ever called this.
 
         Returns:
-            int: Number of messages deleted
+            int: Number of rows deleted.
         """
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        collectable = [QueueStatus.COMPLETED.value]
+        if not keep_failed:
+            collectable.append(QueueStatus.FAILED.value)
 
         with self.get_session() as session:
-            query = session.query(MessageQueue).filter(
-                and_(
-                    MessageQueue.completed_at < cutoff_date,
-                    MessageQueue.status == QueueStatus.COMPLETED.value,
-                )
-            )
-
-            if not keep_failed:
-                # Also clean up old failed messages
-                query = query.union(
-                    session.query(MessageQueue).filter(
-                        and_(
-                            MessageQueue.completed_at < cutoff_date,
-                            MessageQueue.status == QueueStatus.FAILED.value,
-                        )
+            # A single DELETE with an IN clause.  The previous implementation
+            # built a UNION of two queries and called .delete() on it, which
+            # SQLAlchemy cannot translate into a bulk DELETE.
+            deleted_count = (
+                session.query(MessageQueue)
+                .filter(
+                    and_(
+                        MessageQueue.completed_at < cutoff_date,
+                        MessageQueue.status.in_(collectable),
                     )
                 )
+                .delete(synchronize_session=False)
+            )
 
-            deleted_count = query.count()
-            query.delete(synchronize_session=False)
+        if deleted_count:
+            logger.info("Cleaned up %d old queue message(s)", deleted_count)
+            # SQLite never returns freed pages to the filesystem on its own, so
+            # a large delete leaves the file exactly as big as it was.  Without
+            # this the disk pressure that motivated the delete does not go away.
+            self.vacuum()
+        return deleted_count
 
-            logger.info("Cleaned up %d old messages", deleted_count)
-            return deleted_count
+    def cleanup_old_tracking_records(self, older_than_days: int = 7) -> int:
+        """Collect finished script-execution and install-tracking rows.
+
+        Both tables are ledgers with no reader once the work is finished:
+
+          * ``script_executions`` exists to reject a duplicate result for an
+            execution the agent has already reported.  The server will not
+            re-send a months-old execution, so the ledger only has to cover a
+            recent window — but nothing ever deleted from it, so it grew by one
+            row per script run for the life of the agent.
+          * ``installation_request_tracking`` correlates an install request with
+            its outcome.  Rows are marked completed/failed and keep the full
+            ``result_log``, and were likewise never deleted.
+
+        Both were empty on the host that prompted this audit, which is why they
+        had not caused trouble yet; the queue simply filled the disk first.
+
+        Returns:
+            int: Number of rows deleted across both tables.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        deleted = 0
+        with self.get_session() as session:
+            deleted += (
+                session.query(ScriptExecution)
+                .filter(
+                    ScriptExecution.completed_at.isnot(None),
+                    ScriptExecution.completed_at < cutoff,
+                )
+                .delete(synchronize_session=False)
+            )
+            deleted += (
+                session.query(InstallationRequestTracking)
+                .filter(
+                    InstallationRequestTracking.completed_at.isnot(None),
+                    InstallationRequestTracking.completed_at < cutoff,
+                )
+                .delete(synchronize_session=False)
+            )
+        if deleted:
+            logger.info("Cleaned up %d finished tracking record(s)", deleted)
+        return deleted
+
+    def vacuum(self) -> None:
+        """Return free pages to the filesystem.
+
+        Best-effort: VACUUM needs a write lock and rewrites the whole file, so
+        it can fail on a busy database.  That is not worth failing a
+        maintenance pass over — the next prune will try again.
+        """
+        try:
+            with self.get_session() as session:
+                session.execute(text("VACUUM"))
+            logger.info("Reclaimed free space from the agent database")
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            logger.warning("VACUUM skipped (database busy?): %s", error)
 
     def deserialize_message_data(self, message: MessageQueue) -> Dict[str, Any]:
         """

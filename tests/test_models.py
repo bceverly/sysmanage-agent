@@ -25,12 +25,10 @@ from src.database.models import (
     QueueDirection,
     Priority,
     MessageQueue,
-    QueueMetrics,
     HostApproval,
     ScriptExecution,
     AvailablePackage,
     InstallationRequestTracking,
-    VmmBuildCache,
 )
 
 
@@ -663,79 +661,3 @@ class TestInstallationRequestTrackingModel:
         repr_str = repr(request)
         assert "InstallationRequestTracking" in repr_str
         assert "req-repr" in repr_str
-
-
-class TestVmmBuildCacheModel:
-    """Tests for VmmBuildCache model."""
-
-    def test_vmm_build_cache_creation(self, db_session):
-        """Test creating a VmmBuildCache instance."""
-        cache = VmmBuildCache(
-            openbsd_version="7.7",
-            agent_version="0.9.9.8",
-            site_tgz_path="/var/cache/vmm/site77.tgz",
-        )
-        db_session.add(cache)
-        db_session.commit()
-
-        assert cache.id is not None
-        assert cache.openbsd_version == "7.7"
-        assert cache.agent_version == "0.9.9.8"
-        assert cache.build_status == "success"
-
-    def test_vmm_build_cache_repr(self, db_session):
-        """Test VmmBuildCache __repr__."""
-        cache = VmmBuildCache(
-            openbsd_version="7.6",
-            agent_version="0.9.9.7",
-            site_tgz_path="/var/cache/vmm/site76.tgz",
-        )
-        db_session.add(cache)
-        db_session.commit()
-
-        repr_str = repr(cache)
-        assert "VmmBuildCache" in repr_str
-        assert "7.6" in repr_str
-        assert "0.9.9.7" in repr_str
-
-
-class TestQueueMetricsModel:
-    """Tests for QueueMetrics model."""
-
-    def test_queue_metrics_creation(self, db_session):
-        """Test creating a QueueMetrics instance."""
-        now = datetime.now(timezone.utc)
-        metrics = QueueMetrics(
-            metric_name="message_processing",
-            direction="outbound",
-            count=100,
-            total_time_ms=5000,
-            avg_time_ms=50,
-            period_start=now - timedelta(hours=1),
-            period_end=now,
-        )
-        db_session.add(metrics)
-        db_session.commit()
-
-        assert metrics.id is not None
-        assert metrics.metric_name == "message_processing"
-        assert metrics.count == 100
-
-    def test_queue_metrics_repr(self, db_session):
-        """Test QueueMetrics __repr__."""
-        now = datetime.now(timezone.utc)
-        metrics = QueueMetrics(
-            metric_name="test_metric",
-            direction="inbound",
-            count=50,
-            total_time_ms=1000,
-            avg_time_ms=20,
-            period_start=now - timedelta(hours=1),
-            period_end=now,
-        )
-        db_session.add(metrics)
-        db_session.commit()
-
-        repr_str = repr(metrics)
-        assert "QueueMetrics" in repr_str
-        assert "test_metric" in repr_str
