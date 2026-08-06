@@ -63,8 +63,14 @@ def _(message: str, language: Optional[str] = None) -> str:
     return translation.gettext(message)
 
 
-def N_(message: str) -> str:  # pylint: disable=invalid-name
+def N_(message: str) -> str:  # NOSONAR  # pylint: disable=invalid-name
     """Mark a string for extraction WITHOUT translating it yet.
+
+    (The name is not snake_case on purpose, hence the suppressions above:
+    ``N_`` is the GNU gettext convention for a no-op extraction marker and
+    is recognised by xgettext, pybabel, poedit and every translator tool.
+    Renaming it would also mean changing ``--keyword=N_`` / ``-k N_`` in
+    the extractors, and would make the code less recognisable, not more.)
 
     The standard gettext idiom for deferred translation.  pybabel/xgettext
     only ever see string *literals*, so a message held in a module constant

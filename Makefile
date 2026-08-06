@@ -611,7 +611,7 @@ else
 endif
 
 # Python linting
-lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-strict translate-check lint-version
+lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-strict translate-check lint-version
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
@@ -633,6 +633,10 @@ endif
 # a msgid held in a module constant (or a lookup key used as the msgid) never
 # reaches a catalog and renders English — or leaks the raw key — in every
 # locale, with every other i18n gate green.  Mark deferred msgids with N_().
+# The extractor must SEE every file with translatable text (see the script).
+i18n-check-coverage: setup-venv
+	@$(PYTHON) scripts/i18n_check_coverage.py
+
 i18n-check-msgid-style: setup-venv
 	@$(PYTHON) scripts/i18n_check_msgid_style.py \
 		--source-root src --locales src/i18n/locales
