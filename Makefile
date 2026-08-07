@@ -611,7 +611,17 @@ else
 endif
 
 # Python linting
-lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-strict translate-check lint-version
+# The FreeBSD port skeleton is never built by CI — it is rendered and
+# tarballed — so three defects sat in it unnoticed until a 2026-08-07 review
+# ahead of a possible ports-tree submission: pre-2021 $FreeBSD$/Created-by
+# keywords, USE_PYTHON=autoplist on a NO_BUILD hand-install port, and a
+# 3-line pkg-plist against ~290 staged files.  This catches that class on
+# Linux.  It is NOT a substitute for portlint -AC / poudriere testport on a
+# real FreeBSD host, which remain the bar before submitting upstream.
+lint-freebsd-port:
+	@$(PYTHON) scripts/check_freebsd_port.py
+
+lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-strict translate-check lint-version lint-freebsd-port
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)

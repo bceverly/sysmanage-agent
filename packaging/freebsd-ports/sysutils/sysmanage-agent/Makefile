@@ -1,6 +1,3 @@
-# Created by: Bryan Everly <bryan@theeverlys.com>
-# $FreeBSD$
-#
 # Phase 11.8 stub.  ``DISTVERSION`` is sed-replaced from ``0.0.0`` to the
 # release tag value by the ``freebsd-ports`` job in
 # build-and-release.yml.  Do not hand-edit on release.
@@ -8,9 +5,10 @@
 PORTNAME=	sysmanage-agent
 DISTVERSION=	0.0.0
 CATEGORIES=	sysutils python
-MASTER_SITES=	https://github.com/bceverly/sysmanage-agent/archive/refs/tags/
-DISTFILES=	v${DISTVERSION}${EXTRACT_SUFX}
-DIST_SUBDIR=	sysmanage-agent
+# No MASTER_SITES / DISTFILES / DIST_SUBDIR here on purpose: USE_GITHUB below
+# derives all three from GH_ACCOUNT/GH_PROJECT/GH_TAGNAME.  Setting both is
+# redundant, portlint flags it, and the two can disagree about what is actually
+# fetched.
 
 MAINTAINER=	bryan@theeverlys.com
 COMMENT=	Cross-platform system management agent for SysManage
@@ -30,8 +28,12 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>=15.0.1:www/py-websockets@${PY_FL
 		${PYTHON_PKGNAMEPREFIX}alembic>=1.16.5:databases/py-alembic@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}defusedxml>0:devel/py-defusedxml@${PY_FLAVOR}
 
-USES=		python:3.9+ shebangfix
-USE_PYTHON=	autoplist
+# python:...,run — NO_BUILD means python is only needed at RUN time.
+# Deliberately NO ``USE_PYTHON=autoplist``: autoplist generates the packing
+# list for setuptools-installed modules, and this port has no setup.py at all —
+# it stages a source tree by hand below.  The two mechanisms together produce
+# an empty or wrong plist.
+USES=		python:3.9+,run shebangfix
 USE_GITHUB=	yes
 GH_ACCOUNT=	bceverly
 GH_PROJECT=	sysmanage-agent
@@ -54,5 +56,14 @@ do-install:
 	${MKDIR} ${STAGEDIR}${PREFIX}/etc
 	${INSTALL_DATA} ${WRKSRC}/sysmanage-agent-system.yaml \
 		${STAGEDIR}${PREFIX}/etc/sysmanage-agent.yaml.sample
+
+# ``src`` is ~290 files that change every release, so they cannot be enumerated
+# by hand in pkg-plist — an unlisted staged file fails stage-qa, which is what
+# the hand-written 3-line plist would have done on the first real build.
+# Appending the staged tree to ${TMPPLIST} is the in-tree idiom for a generated
+# file set.  pkg-plist keeps the fixed entries (main.py, alembic.ini, @sample).
+post-install:
+	@${FIND} -s ${STAGEDIR}${PREFIX}/libexec/${PORTNAME}/src -type f \
+		| ${SED} -e 's,^${STAGEDIR}${PREFIX}/,,' >> ${TMPPLIST}
 
 .include <bsd.port.mk>

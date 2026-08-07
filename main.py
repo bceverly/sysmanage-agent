@@ -157,6 +157,14 @@ class SysManageAgent(
         self.auth_helper = AuthenticationHelper(self, self.logger)
         self.message_processor = MessageProcessor(self, self.logger)
 
+        # Phase 19: let registration advertise what this build can route.
+        # Wired here rather than passed to ClientRegistration's constructor
+        # because registration is built earlier (above) — the handler map does
+        # not exist yet at that point.
+        self.registration.capability_provider = (
+            self.message_processor.get_command_handlers
+        )
+
         # Initialize certificate collector
         self.certificate_collector = CertificateCollector()
 

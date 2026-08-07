@@ -305,6 +305,16 @@ class MessageProcessor:
             )
             await self.agent.send_message(response)
 
+    def get_command_handlers(self) -> Dict[str, Any]:
+        """Public view of the command-handler map.
+
+        Exists so capability advertisement can derive what this build can
+        route from the SAME dict ``_dispatch_command`` routes on, without
+        reaching into a private method.  See
+        ``src.sysmanage_agent.core.capabilities``.
+        """
+        return self._get_command_handlers()
+
     def _get_command_handlers(self) -> Dict[str, Any]:
         """Get mapping of command types to their handlers."""
         return {

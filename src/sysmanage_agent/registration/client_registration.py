@@ -21,6 +21,7 @@ from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.core.capabilities import build_capability_report
 from src.sysmanage_agent.core.version import get_agent_version
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
 from src.sysmanage_agent.collection.software_inventory_collection import (
@@ -46,6 +47,13 @@ class ClientRegistration:
         self.logger = logging.getLogger(__name__)
         self.registered = False
         self.registration_data: Optional[Dict[str, Any]] = None
+        # Phase 19 capability advertisement.  A callable returning the live
+        # command-handler map, wired by the agent AFTER MessageProcessor is
+        # constructed (this object is built first, so it cannot be a ctor arg).
+        # Left None in tests and for any caller that has no agent — the field
+        # is then simply omitted rather than guessed at, because advertising a
+        # capability set we cannot verify is worse than advertising none.
+        self.capability_provider = None
 
         # Initialize component modules
         self.hardware_collector = HardwareCollector()
@@ -94,6 +102,28 @@ class ClientRegistration:
             "active": True,  # Mark as active when registering
         }
 
+    def get_capability_report(self) -> Optional[Dict[str, Any]]:
+        """Capability report for this build, or None when it cannot be derived.
+
+        Never fabricates: with no provider wired there is no way to know what
+        this build routes, and an invented set would defeat the point of the
+        feature.  Failure to build one is logged and treated the same way —
+        registration must not fail because capability reporting did.
+        """
+        if self.capability_provider is None:
+            return None
+        try:
+            handlers = self.capability_provider()
+            return build_capability_report(handlers)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.warning(
+                "Could not build the agent capability report; registering "
+                "without it.  The server will treat this host as unknown-"
+                "capability rather than limited.",
+                exc_info=True,
+            )
+            return None
+
     def get_basic_registration_info(self) -> Dict[str, Any]:
         """Get minimal system information for initial registration."""
         hostname = self.network_utils.get_hostname()
@@ -114,6 +144,14 @@ class ClientRegistration:
 
         # Add agent version
         basic_info["agent_version"] = get_agent_version()
+
+        # Phase 19: advertise what this build can actually do, derived from the
+        # live command-handler map so "advertised" and "dispatchable" cannot
+        # drift apart.  The server gates dispatch on it and flags a host whose
+        # set is a strict subset of the baseline as limited.
+        capabilities = self.get_capability_report()
+        if capabilities is not None:
+            basic_info["agent_capabilities"] = capabilities
 
         # Add auto-approve token if configured (used for automatic host approval
         # during child host creation)

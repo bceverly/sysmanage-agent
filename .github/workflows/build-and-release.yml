@@ -3966,14 +3966,37 @@ jobs:
             echo "::warning::Could not clone the AUR repo after $n attempts:"
             sed 's/^/::warning::  /' /tmp/aur-clone.err || true
             if grep -qi "down due to maintenance\|Could not read from remote repository" /tmp/aur-clone.err; then
-              echo "::warning::aur.archlinux.org appears to be DOWN — skipping the AUR"
-              echo "::warning::publish for v${VERSION}.  Re-run this job once it is back;"
-              echo "::warning::nothing else in the release is affected."
-            else
-              echo "::warning::Check that AUR_SSH_KEY is registered on aur.archlinux.org"
-              echo "::warning::and that the sysmanage-agent repo exists there."
+              # Report HOW FAR behind AUR is, on the run summary page, so a
+              # repeated skip cannot quietly let it drift.  aur.archlinux.org
+              # refused git writes for over a week from ~2026-07-30 while its
+              # web/API stayed up, and three releases fell behind unnoticed.
+              # One-liner on purpose: multi-line script here breaks the YAML
+              # block scalar.
+              published=$(curl -sS -g --max-time 20 "https://aur.archlinux.org/rpc/v5/info?arg[]=sysmanage-agent" 2>/dev/null | python3 -c "import json,sys;print(((json.load(sys.stdin).get('results') or [{}])[0]).get('Version','unknown'))" 2>/dev/null || echo unknown)
+              {
+                echo "### ⚠️ AUR publish SKIPPED — upstream maintenance"
+                echo ""
+                echo "| | |"
+                echo "|---|---|"
+                echo "| This release | \`${VERSION}\` |"
+                echo "| Currently on AUR | \`${published}\` |"
+                echo ""
+                echo "Nothing to fix on our side. If these keep diverging over"
+                echo "several releases, the outage is no longer transient."
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "::warning::aur.archlinux.org is DOWN — skipping the AUR publish."
+              echo "::warning::AUR has ${published}; this release is ${VERSION}."
+              exit 0
             fi
-            exit 0
+            # NOT an upstream outage — a bad key, a missing AUR repo, or a
+            # rejected push are ours to fix, and this job no longer carries
+            # continue-on-error, so it must go red rather than warn and pass.
+            # Silently skipping these is precisely the invisibility the
+            # 2026-08-07 winget failure exposed.
+            echo "::error::AUR clone failed and it is NOT an upstream outage."
+            echo "::error::Check that AUR_SSH_KEY is registered on aur.archlinux.org"
+            echo "::error::and that the sysmanage-agent repo exists there."
+            exit 1
           fi
 
           cp "$STAGE/PKGBUILD" "$AUR_DIR/PKGBUILD"
