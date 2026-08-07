@@ -2107,7 +2107,35 @@ jobs:
           # covers the agent apt/rpm repos, the per-platform package dirs, the
           # .flatpak bundles, and the flatpak OSTree store (objects/refs/summary).
           cd "$WORK"
-          s3 sync repo/ "s3://${R2_BUCKET}/" --size-only --only-show-errors
+
+          # NEVER --size-only HERE.  An apt `Release` is a fixed-width document —
+          # same header set, fixed-length hex digests — so a regenerated one is
+          # almost always EXACTLY the same size as the one it replaces (2000
+          # bytes today).  `aws s3 sync --size-only` compares size alone, so it
+          # decides the new Release is unchanged and never uploads it, leaving a
+          # STALE Release describing index files that have since been replaced.
+          #
+          # That is exactly the 2026-08-07 release failure: `Packages.gz` changed
+          # size (701 -> 700) so it uploaded, the regenerated `Release` did not,
+          # and every apt client — including the verification step below and any
+          # customer following the documented install — got
+          #   "File has unexpected size (700 != 701). Mirror sync in progress?"
+          # It was not a mirror blip and it did not clear on retry; the repo
+          # stayed broken until a later release happened to change the Release
+          # file's size.  Default sync compares size AND mtime, which is what we
+          # want: freshly generated indexes are always newer than what is live.
+          #
+          # ORDER MATTERS TOO.  apt fetches `Release` first and then the indexes
+          # it names, so the indexes must already be published when a client
+          # picks up the new Release.  Upload everything except the Release
+          # files, then the Release files last, which shrinks the inconsistent
+          # window to the final small PUT.
+          s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors \
+            --exclude "*/dists/*/Release" \
+            --exclude "*/dists/*/Release.gpg" \
+            --exclude "*/dists/*/InRelease"
+          s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors
+
           echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
 
       - name: Verify the published apt repo with a real apt-get
