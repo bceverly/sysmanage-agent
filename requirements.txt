@@ -1,11 +1,21 @@
-# Capped below 16.0 because websockets 16.x dropped Python 3.9 wheels.
-# OL9 / RHEL 9 / CentOS Stream 9 / Amazon Linux 2023 ship cp39 as the
-# default python3, and the rpm's vendor dir relies on per-Python wheel
-# downloads; a >=15.0.1 unbounded constraint resolved to 16.0, which has
-# no cp39 wheel, leaving cp39 targets without a websockets install and
-# crashing the agent with "No matching distribution". Bump the upper
-# bound only when cp39 is dropped from the supported Python matrix.
-websockets>=15.0.1,<16
+# DEV/TEST constraint — allows websockets 16.x so it can be exercised on a
+# cp310+ box.  requirements-prod.txt stays capped at <16 ON PURPOSE, and the
+# two must not be reconciled by simply copying this line over.
+#
+# The <16 cap is NOT an API-compatibility claim about websockets 16: it exists
+# because websockets 16.x dropped Python 3.9 wheels.  OL9 / RHEL 9 / CentOS
+# Stream 9 / Amazon Linux 2023 ship cp39 as the default python3, and the rpm's
+# vendor dir relies on per-Python wheel downloads; an unbounded constraint
+# resolves to 16.0, which has no cp39 wheel, leaving those targets without a
+# websockets install and crashing the agent with "No matching distribution".
+#
+# So a green test on Linux here says 16.x works on cp310+ — it says nothing
+# about the cp39 packaging path, which is what the cap protects.  Lifting it in
+# requirements-prod.txt requires dropping cp39 from the supported matrix.  A
+# `; python_version` marker is NOT an option: COPR's `pip download
+# --python-version` evaluates markers against the build host, which is the bug
+# that made all agent runtime deps use bare floors in the first place.
+websockets>=15.0.1,<17
 PyYAML>=6.0.2
 # aiohttp: the PYSEC-2026-2104..2113 fix is in 3.14.x, which requires Python >=3.10;
 # the agent's 3.9 leg (RHEL9/OL9 cp39) can only reach 3.13.x (no backport of the

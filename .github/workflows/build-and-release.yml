@@ -3473,13 +3473,20 @@ jobs:
           MSI_URL_ARM64="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-arm64.msi"
 
           # Download the MSI to compute its sha256 — what winget-pkgs requires.
-          curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
-            echo "::warning::Could not download MSI from $MSI_URL — falling back to placeholder sha256"
-            SHA="0000000000000000000000000000000000000000000000000000000000000000"
-          }
-          if [ -f /tmp/sysmanage-agent.msi ]; then
+            # HARD FAIL: a download problem must not produce a rendered
+            # package with a bogus checksum.  This used to warn and substitute
+            # 64 zeros, which ships a manifest that looks complete and then
+            # fails verification on every user's machine.  The `[ -f ]` guard
+            # was worse than it looks: `curl -f -o` still creates the file, so
+            # a failed fetch could leave an EMPTY file and hash THAT — a
+            # plausible checksum that is simply wrong.  Same class as the
+            # FreeBSD distinfo fail-open fixed on 2026-08-08.
+            curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
+              echo "::error::Could not download the MSI from $MSI_URL"
+              exit 1
+            }
+            [ -s /tmp/sysmanage-agent.msi ] || { echo "::error::/tmp/sysmanage-agent.msi is empty — refusing to render a bogus checksum"; exit 1; }
             SHA=$(sha256sum /tmp/sysmanage-agent.msi | awk '{print toupper($1)}')
-          fi
 
           # Render the manifest from the stub.
           mkdir -p /tmp/winget-out
@@ -3746,13 +3753,17 @@ jobs:
 
           # Pull the source tarball to compute sha256 — Homebrew refuses
           # to install a formula whose sha256 doesn't match.
+          # HARD FAIL — see the FreeBSD distinfo fix (2026-08-08).  Warning and
+          # substituting zeros ships a manifest that looks complete and fails
+          # checksum verification for every user.  `curl -f -o` also CREATES the
+          # file on failure, so `[ -f ]` could hash an empty file: a plausible
+          # checksum that is simply wrong.  `[ -s ]` is the honest guard.
           curl -sSfL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
-            echo "::warning::Could not download tarball from $TARBALL_URL"
-            SHA="0000000000000000000000000000000000000000000000000000000000000000"
+            echo "::error::Could not download /tmp/sysmanage-agent.tar.gz from $TARBALL_URL"
+            exit 1
           }
-          if [ -f /tmp/sysmanage-agent.tar.gz ]; then
-            SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
-          fi
+          [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty — refusing to render a bogus checksum"; exit 1; }
+          SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
 
           mkdir -p /tmp/homebrew-out
           sed \
@@ -3860,13 +3871,20 @@ jobs:
           TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
 
           # Compute the upstream tarball sha256 for sha256sums=().
-          curl -fsSL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
-            echo "::warning::Could not download $TARBALL_URL — using placeholder sha256"
-            TARBALL_SHA="0000000000000000000000000000000000000000000000000000000000000000"
-          }
-          if [ -f /tmp/sysmanage-agent.tar.gz ]; then
+            # HARD FAIL: a download problem must not produce a rendered
+            # package with a bogus checksum.  This used to warn and substitute
+            # 64 zeros, which ships a manifest that looks complete and then
+            # fails verification on every user's machine.  The `[ -f ]` guard
+            # was worse than it looks: `curl -f -o` still creates the file, so
+            # a failed fetch could leave an EMPTY file and hash THAT — a
+            # plausible checksum that is simply wrong.  Same class as the
+            # FreeBSD distinfo fail-open fixed on 2026-08-08.
+            curl -fsSL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
+              echo "::error::Could not download the source tarball from $TARBALL_URL"
+              exit 1
+            }
+            [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty — refusing to render a bogus checksum"; exit 1; }
             TARBALL_SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
-          fi
 
           # Render PKGBUILD into a staging dir.
           STAGE=$(mktemp -d /tmp/aur-stage.XXXXXX)
@@ -3972,7 +3990,16 @@ jobs:
               # web/API stayed up, and three releases fell behind unnoticed.
               # One-liner on purpose: multi-line script here breaks the YAML
               # block scalar.
-              published=$(curl -sS -g --max-time 20 "https://aur.archlinux.org/rpc/v5/info?arg[]=sysmanage-agent" 2>/dev/null | python3 -c "import json,sys;print(((json.load(sys.stdin).get('results') or [{}])[0]).get('Version','unknown'))" 2>/dev/null || echo unknown)
+              # Fetch to a FILE, then parse it — do not pipe curl into an
+              # interpreter.  Semgrep flags `curl ... | python3 -c` as the
+              # "curl | bash" install pattern (gha-curl-pipe-shell).  Here the
+              # remote body is data for json.load and is never executed, so the
+              # alert was a false positive in substance — but the rule's advice
+              # (download first, then process) is the better shape regardless,
+              # and it removes a finding from a queue people actually read.
+              curl -sS -g --max-time 20 -o /tmp/aur-info.json \
+                "https://aur.archlinux.org/rpc/v5/info?arg[]=sysmanage-agent" 2>/dev/null || true
+              published=$(python3 -c "import json;print(((json.load(open('/tmp/aur-info.json')).get('results') or [{}])[0]).get('Version','unknown'))" 2>/dev/null || echo unknown)
               {
                 echo "### ⚠️ AUR publish SKIPPED — upstream maintenance"
                 echo ""
