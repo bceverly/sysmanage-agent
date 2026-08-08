@@ -17,15 +17,15 @@ WWW=		https://github.com/bceverly/sysmanage-agent
 LICENSE=	AGPLv3+
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
-RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>=15.0.1:devel/py-websockets@${PY_FLAVOR} \
+RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>0:devel/py-websockets@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pyyaml>0:devel/py-pyyaml@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}aiohttp>=3.13.5:www/py-aiohttp@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}cryptography>=48.0.0:security/py-cryptography@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}aiohttp>0:www/py-aiohttp@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}cryptography>0:security/py-cryptography@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}psutil>0:sysutils/py-psutil@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}bcrypt>=4.0.0:security/py-bcrypt@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}bcrypt>0:security/py-bcrypt@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}aiofiles>0:devel/py-aiofiles@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}sqlalchemy20>=2.0.43:databases/py-sqlalchemy20@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}alembic>=1.16.5:databases/py-alembic@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}sqlalchemy20>0:databases/py-sqlalchemy20@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}alembic>0:databases/py-alembic@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}defusedxml>0:devel/py-defusedxml@${PY_FLAVOR}
 
 # python:...,run — NO_BUILD means python is only needed at RUN time.

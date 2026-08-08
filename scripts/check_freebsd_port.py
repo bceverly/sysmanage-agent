@@ -111,6 +111,26 @@ def _problems(port_dir: Path) -> list[str]:
                     "fetched distfile"
                 )
 
+    # A dependency version FLOOR is a trap in a port.  FreeBSD ships exactly ONE
+    # version of each port, so `py312-alembic>=1.16.5` against a tree carrying
+    # 1.16.2 makes this port permanently unbuildable for everyone: the floor is
+    # unmet, the framework falls back to a source build, and that build still
+    # produces 1.16.2.  Found on a real ports tree on 2026-08-08 — portlint
+    # passes it, because portlint does not resolve versions.  Floors are
+    # meaningful in requirements.txt and meaningless-to-harmful in a port; the
+    # right way to require a newer dependency is to update THAT port in the
+    # tree, not to declare a bound this port cannot satisfy.
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("#") and ">=" in stripped and ":" in stripped:
+            match = re.search(r"(\S+)>=([^:\s]+):(\S+)", stripped)
+            if match:
+                found.append(
+                    f"Makefile: dependency '{match.group(1)}' declares a version "
+                    f"floor (>={match.group(2)}); FreeBSD carries one version per "
+                    "port, so an unmet floor makes the port unbuildable — use >0"
+                )
+
     if plist.is_file():
         entries = [
             line.strip()
