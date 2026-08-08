@@ -4080,14 +4080,22 @@ jobs:
           sed -i "s/^DISTVERSION=.*/DISTVERSION=\t${VERSION}/" \
             "$STAGE/sysmanage-agent/Makefile"
 
-          # Rewrite distinfo with real SHA256 + SIZE.  FreeBSD distinfo
-          # references DISTFILES paths under DIST_SUBDIR, so the filename
-          # in the distinfo lines stays ``sysmanage-agent/v${VERSION}.tar.gz``.
+          # The distinfo KEY must be the filename the ports framework derives,
+          # not the URL we fetched from.  The old comment here claimed the name
+          # was a DIST_SUBDIR path — but this port sets no DIST_SUBDIR (the
+          # static checker forbids it alongside USE_GITHUB), so the framework
+          # derives ${GH_ACCOUNT}-${GH_PROJECT}-${DISTVERSION}-${GH_TAGNAME}_GH0.tar.gz
+          # and looked up a key that was not in the file — every user's fetch
+          # failed checksum verification.  Confirmed against `make makesum` on
+          # a real ports tree, 2026-08-08: SHA and SIZE were always correct,
+          # only the key was wrong, so nothing in CI could have caught it.
           NOW=$(date -u +%s)
           {
             printf 'TIMESTAMP = %s\n' "$NOW"
-            printf 'SHA256 (sysmanage-agent/v%s.tar.gz) = %s\n' "$VERSION" "$SHA"
-            printf 'SIZE (sysmanage-agent/v%s.tar.gz) = %s\n' "$VERSION" "$SIZE"
+            printf 'SHA256 (bceverly-sysmanage-agent-%s-v%s_GH0.tar.gz) = %s\n' \
+              "$VERSION" "$VERSION" "$SHA"
+            printf 'SIZE (bceverly-sysmanage-agent-%s-v%s_GH0.tar.gz) = %s\n' \
+              "$VERSION" "$VERSION" "$SIZE"
           } > "$STAGE/sysmanage-agent/distinfo"
 
           OUT="sysmanage-agent-v${VERSION}-freebsd-port.tar.gz"
