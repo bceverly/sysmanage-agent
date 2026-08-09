@@ -10,7 +10,14 @@
 #
 # sysmanage_agent_enable (bool):       Set to NO by default.
 #               Set it to YES to enable sysmanage-agent.
-# sysmanage_agent_user (str):          Set to "sysmanage" by default.
+# sysmanage_agent_user (str):          Set to "root" by default.  The agent
+#               manages the SYSTEM — installs packages, controls services,
+#               reboots — so it needs privilege.  On Linux it runs as a
+#               dedicated user because that packaging ships a sudoers file
+#               granting exactly those operations; this port ships none, so
+#               an unprivileged agent would connect, report inventory, and
+#               fail every management action.  Lower it here if you have
+#               arranged privilege escalation yourself.
 # sysmanage_agent_config (str):        Set to "%%PREFIX%%/etc/sysmanage-agent.yaml" by default.
 
 . /etc/rc.subr
@@ -21,7 +28,7 @@ rcvar=sysmanage_agent_enable
 load_rc_config $name
 
 : ${sysmanage_agent_enable:="NO"}
-: ${sysmanage_agent_user:="sysmanage"}
+: ${sysmanage_agent_user:="root"}
 : ${sysmanage_agent_config:="%%PREFIX%%/etc/sysmanage-agent.yaml"}
 
 pidfile="/var/run/${name}.pid"
