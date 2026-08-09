@@ -3565,6 +3565,35 @@ jobs:
               *) echo "::error::WINGET_PKGS_TOKEN lacks public_repo (or repo)."; exit 1 ;;
             esac
           fi
+          # WHO is this token, and can it write the fork it needs?
+          #
+          # komac creates its branch on <authenticated user>/winget-pkgs.  A perfectly
+          # valid token belonging to the WRONG account has the right scopes and no fork,
+          # and komac reports that as
+          #     "Ref cannot be created / failed to create branch ..."
+          # which names neither the account nor the repo.  On 2026-08-09 the scope
+          # preflight above passed (repo, workflow) and this still failed, while the same
+          # check by hand from a laptop showed a writable fork — so "which identity is CI
+          # actually using" was the question the log could not answer.  Answer it here,
+          # before komac runs, in one line.
+          login=$(curl -sS -H "Authorization: token $WINGET_PKGS_TOKEN" \
+                    https://api.github.com/user | jq -r '.login // empty')
+          if [ -z "$login" ]; then
+            echo "::error::WINGET_PKGS_TOKEN does not authenticate (GET /user returned no login)."
+            exit 1
+          fi
+          echo "WINGET_PKGS_TOKEN identity: $login"
+          fork_push=$(curl -sS -H "Authorization: token $WINGET_PKGS_TOKEN" \
+                        "https://api.github.com/repos/$login/winget-pkgs" \
+                      | jq -r '.permissions.push // false')
+          echo "fork $login/winget-pkgs writable: $fork_push"
+          if [ "$fork_push" != "true" ]; then
+            echo "::error::$login has no writable fork of microsoft/winget-pkgs."
+            echo "::error::komac pushes its branch THERE, so it fails at CreateRef."
+            echo "::error::Fix: fork microsoft/winget-pkgs as $login, or point"
+            echo "::error::WINGET_PKGS_TOKEN at the account that owns the fork."
+            exit 1
+          fi
 
           # Download prebuilt komac (linux-x64 musl) — building from source
           # via ``cargo install`` takes ~6 min on a GH runner.  Pin to the

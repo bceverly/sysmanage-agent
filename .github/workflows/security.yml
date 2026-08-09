@@ -316,4 +316,12 @@ jobs:
       uses: trufflesecurity/trufflehog@ec1d9a6b4b7ce070eff34bd09e7cbd95ce1e2412 # main-2026-02-22
       with:
         path: ./
-        extra_args: --debug --only-verified
+        # --exclude-detectors=lob: the Lob detector reports hundreds of
+        # VERIFIED hits across full history in both repos (264 here on 1,550
+        # commits, 358 in the agent on 1,135) while neither project has ever
+        # had a Lob account — Lob's API answers positively for keys that are
+        # not real, so "verified" carries no signal for this one detector.
+        # Left in place it fails every scheduled scan, which trains everyone
+        # to ignore a security gate: worse than not running it.  Scoped to
+        # the one detector so every other verified finding still hard-fails.
+        extra_args: --debug --only-verified --exclude-detectors=lob
