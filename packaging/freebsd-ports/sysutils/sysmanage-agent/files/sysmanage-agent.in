@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# $FreeBSD$
 #
 # PROVIDE: sysmanage_agent
 # REQUIRE: NETWORKING SERVERS DAEMON
@@ -27,8 +26,17 @@ load_rc_config $name
 
 pidfile="/var/run/${name}.pid"
 command="/usr/sbin/daemon"
+# The agent takes NO command-line arguments — ``--config`` was silently
+# ignored, so the daemon fell back to its built-in search order
+# (/etc/sysmanage-agent.yaml, then ./sysmanage-agent.yaml) and never looked at
+# %%PREFIX%%/etc, which is where THIS PORT installs the sample.  The package
+# therefore installed cleanly and died on start with "Configuration file not
+# found".  poudriere cannot catch that: it builds and packages, it never runs
+# the service.  ``SYSMANAGE_CONFIG`` is the documented override the agent does
+# honour (main.py), and an absolute path is used verbatim.
+export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
+
 command_args="-c -p ${pidfile} -u ${sysmanage_agent_user} \
-    %%PYTHON_CMD%% %%PREFIX%%/libexec/sysmanage-agent/main.py \
-    --config ${sysmanage_agent_config}"
+    %%PYTHON_CMD%% %%PREFIX%%/libexec/sysmanage-agent/main.py"
 
 run_rc_command "$1"

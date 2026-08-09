@@ -84,15 +84,24 @@ class SysmanageAgent < Formula
     (etc/"sysmanage-agent").mkpath
     (var/"lib/sysmanage-agent").mkpath
     (var/"log/sysmanage-agent").mkpath
-    # Install the example config — users edit + relocate to
-    # /etc/sysmanage-agent.yaml or /usr/local/etc/sysmanage-agent.yaml
-    # depending on platform.  Don't overwrite if present.
+    # Install the example config.  The service block points
+    # SYSMANAGE_CONFIG at this exact path, so it is read where it lands —
+    # no relocation needed.  Don't overwrite if present.
     config_dest = etc/"sysmanage-agent/sysmanage-agent.yaml"
     cp "sysmanage-agent-system.yaml", config_dest unless config_dest.exist?
   end
 
   service do
     run [opt_bin/"sysmanage-agent"]
+    # The agent parses NO command-line arguments and its built-in search order
+    # is /etc/sysmanage-agent.yaml then ./sysmanage-agent.yaml — neither of
+    # which is where this formula installs the config (HOMEBREW_PREFIX/etc).
+    # Without this the service starts and dies with "Configuration file not
+    # found", and the comment above telling users to relocate to
+    # /usr/local/etc was wrong: that path is not searched either.
+    # SYSMANAGE_CONFIG is the override main.py honours; absolute paths are
+    # used verbatim.
+    environment_variables SYSMANAGE_CONFIG: etc/"sysmanage-agent/sysmanage-agent.yaml"
     keep_alive true
     log_path var/"log/sysmanage-agent/agent.log"
     error_log_path var/"log/sysmanage-agent/agent.err.log"

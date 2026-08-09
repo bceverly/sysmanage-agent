@@ -60,6 +60,27 @@ def _problems(port_dir: Path) -> list[str]:
                 "in 2021 — a committer will reject this"
             )
 
+    # files/ TOO, not just the Makefile.  ``$FreeBSD$`` sat in both rc scripts
+    # for months while this checker passed the ports, because it only ever read
+    # Makefile — a gate that inspects one file cannot speak for a directory.
+    # Found 2026-08-09 in a committer's own triage diff, which is the expensive
+    # way to learn it.
+    files_dir = port_dir / "files"
+    if files_dir.is_dir():
+        for extra in sorted(files_dir.iterdir()):
+            if not extra.is_file():
+                continue
+            try:
+                body = extra.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            for dead in DEAD_KEYWORDS:
+                if dead in body:
+                    found.append(
+                        f"files/{extra.name}: contains '{dead}', removed when "
+                        "FreeBSD moved to git in 2021"
+                    )
+
     for var in REQUIRED_VARS:
         if not re.search(rf"^{var}\s*[?+]?=", text, re.M):
             found.append(f"Makefile: no {var}= (required by the ports framework)")
