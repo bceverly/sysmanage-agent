@@ -56,6 +56,30 @@ class SysmanageAgent < Formula
 
   def install
     venv = virtualenv_create(libexec, "python3.12")
+
+    # INTEL MACS: pin cryptography below 49 before anything else resolves it.
+    #
+    # cryptography dropped x86_64 macOS wheels at 49.0.0 — 48.0.1 still ships
+    # ``macosx_10_9_universal2``, 49.0.0 and 50.0.0 are ``macosx_11_0_arm64``
+    # ONLY (verified against PyPI 2026-08-09).  requirements-prod.txt asks for
+    # ``cryptography>=48.0.1`` (that floor is the CVE-fixed line), which on an
+    # Intel Mac resolves to 50.0.0, finds no wheel, and falls back to building
+    # from source — needing a Rust toolchain and OpenSSL headers that a plain
+    # ``brew install`` does not provide.  Apple Silicon is unaffected.
+    #
+    # Fixed HERE rather than in requirements-prod.txt on purpose: agent runtime
+    # deps must use bare floors with no environment markers, because COPR's
+    # ``pip download --python-version`` evaluates markers against the build
+    # host and silently drops or mis-resolves them.  Confining the pin to the
+    # macOS packaging keeps that rule intact.
+    #
+    # 48.x carries the same CVE fixes as the floor, so this is a wheel-
+    # availability pin, not a security regression.  Remove it when cryptography
+    # ships Intel wheels again, or when Intel Macs are dropped.
+    if OS.mac? && Hardware::CPU.intel?
+      venv.pip_install "cryptography>=48.0.1,<49"
+    end
+
     venv.pip_install_and_link buildpath
     (etc/"sysmanage-agent").mkpath
     (var/"lib/sysmanage-agent").mkpath
