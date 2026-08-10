@@ -1,6 +1,12 @@
 libexec/sysmanage-agent/main.py
 libexec/sysmanage-agent/alembic.ini
+@owner root
+@group sysmanage-agent
+@mode 0640
 @sample etc/sysmanage-agent.yaml.sample
+@mode
+@group
+@owner
 @(root,wheel,0440) etc/sudoers.d/sysmanage-agent
 @dir(sysmanage-agent,sysmanage-agent,0750) /var/db/sysmanage-agent
 @dir(sysmanage-agent,sysmanage-agent,0750) /var/log/sysmanage-agent

@@ -57,9 +57,8 @@ GROUPS=		sysmanage-agent
 
 USE_RC_SUBR=	sysmanage-agent
 
-# pkg-message documents the optional unprivileged deployment.  It needs
-# substitution (%%PREFIX%%, %%EXAMPLESDIR%%), which SUB_FILES performs from
-# SUB_LIST; both of those are default SUB_LIST members.
+# pkg-message documents the unprivileged deployment and the sudoers policy.
+# It needs %%PREFIX%% substituted, which SUB_FILES performs from SUB_LIST.
 SUB_FILES=	pkg-message
 
 # PYTHON_CMD is NOT in the default SUB_LIST — USES=python contributes
@@ -87,16 +86,12 @@ do-install:
 	${MKDIR} ${STAGEDIR}${PREFIX}/etc
 	${INSTALL_DATA} ${WRKSRC}/sysmanage-agent-system.yaml \
 		${STAGEDIR}${PREFIX}/etc/sysmanage-agent.yaml.sample
-# The sudoers policy for the OPTIONAL non-root deployment.  Installed to
-# EXAMPLESDIR, deliberately NOT to ${PREFIX}/etc/sudoers.d and deliberately NOT
-# as @sample: pkg materialises @sample files at install time, which would make
-# a plain ``pkg install`` silently grant a service account root-equivalent
-# privileges.  Nothing here takes effect until an admin copies it, which is the
-# only honest default — see pkg-message.
 # The sudoers policy for the unprivileged deployment.  Mode and ownership come
 # from the @(root,wheel,0440) line in pkg-plist: sudo REFUSES to read a policy
 # file writable by anyone but its owner, and a refused file invalidates the
 # whole @includedir, so the agent would lose every grant at once.
+# (Installed live under ${PREFIX}/etc/sudoers.d, not as an inert example: the
+# agent's DEFAULT user is now unprivileged, so it needs the grants to work.)
 #
 # NOTE: pkg-plist has NO comment syntax — every line there is an entry, so this
 # rationale lives here.  Six explanatory lines in pkg-plist were turned into
