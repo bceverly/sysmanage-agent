@@ -1,0 +1,36 @@
+[
+{ type: install
+  message: <<EOM
+The sysmanage agent runs as root by default.
+
+That is deliberate.  The agent installs packages, deploys files, controls
+services and reboots the host, so it needs privilege however it is deployed.
+
+An OPTIONAL unprivileged deployment is supported.  It does not create a
+security boundary -- the accompanying sudoers policy grants sudo(8) access to
+install(1), chmod(1), chown(8), sed(1) and sysrc(8) with unrestricted
+arguments, each of which is by itself equivalent to root.  What it does give
+you is an audit trail: every privileged action is logged by sudo, whereas a
+root agent logs nothing.  Choose it for accountability, not for containment.
+
+To enable it:
+
+  1. pkg install sudo
+  2. pw groupadd sysmanage
+     pw useradd sysmanage -g sysmanage -d /nonexistent -s /usr/sbin/nologin
+  3. install -m 0440 -o root -g wheel \
+       %%EXAMPLESDIR%%/sysmanage-agent.sudoers \
+       %%PREFIX%%/etc/sudoers.d/sysmanage-agent
+  4. visudo -c -f %%PREFIX%%/etc/sudoers.d/sysmanage-agent
+  5. sysrc sysmanage_agent_user="sysmanage"
+  6. service sysmanage-agent restart
+
+Step 4 is not optional.  sudo rejects a file with a single malformed line by
+discarding the WHOLE file, and the agent then loses every grant at once.
+
+Review the policy before installing it.  It is a superset of what any one
+site needs -- the air-gap, repository-mirroring and firewall grants are only
+required if you use those features, and each can be removed.
+EOM
+}
+]

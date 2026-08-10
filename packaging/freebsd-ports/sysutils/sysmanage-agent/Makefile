@@ -43,6 +43,11 @@ GH_TAGNAME=	v${DISTVERSION}
 
 USE_RC_SUBR=	sysmanage-agent
 
+# pkg-message documents the optional unprivileged deployment.  It needs
+# substitution (%%PREFIX%%, %%EXAMPLESDIR%%), which SUB_FILES performs from
+# SUB_LIST; both of those are default SUB_LIST members.
+SUB_FILES=	pkg-message
+
 # PYTHON_CMD is NOT in the default SUB_LIST — USES=python contributes
 # PYTHON_VERSION, PYTHON_VER, PYTHON_SUFFIX and friends, but not the
 # interpreter path.  Without this line USE_RC_SUBR leaves the literal
@@ -68,6 +73,15 @@ do-install:
 	${MKDIR} ${STAGEDIR}${PREFIX}/etc
 	${INSTALL_DATA} ${WRKSRC}/sysmanage-agent-system.yaml \
 		${STAGEDIR}${PREFIX}/etc/sysmanage-agent.yaml.sample
+# The sudoers policy for the OPTIONAL non-root deployment.  Installed to
+# EXAMPLESDIR, deliberately NOT to ${PREFIX}/etc/sudoers.d and deliberately NOT
+# as @sample: pkg materialises @sample files at install time, which would make
+# a plain ``pkg install`` silently grant a service account root-equivalent
+# privileges.  Nothing here takes effect until an admin copies it, which is the
+# only honest default — see pkg-message.
+	${MKDIR} ${STAGEDIR}${EXAMPLESDIR}
+	${INSTALL_DATA} ${WRKSRC}/installer/freebsd/sysmanage-agent.sudoers \
+		${STAGEDIR}${EXAMPLESDIR}/sysmanage-agent.sudoers
 
 # ``src`` is ~290 files that change every release, so they cannot be enumerated
 # by hand in pkg-plist — an unlisted staged file fails stage-qa, which is what

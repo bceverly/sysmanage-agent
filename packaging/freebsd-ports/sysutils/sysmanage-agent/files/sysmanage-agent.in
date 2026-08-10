@@ -12,12 +12,14 @@
 #               Set it to YES to enable sysmanage-agent.
 # sysmanage_agent_user (str):          Set to "root" by default.  The agent
 #               manages the SYSTEM — installs packages, controls services,
-#               reboots — so it needs privilege.  On Linux it runs as a
-#               dedicated user because that packaging ships a sudoers file
-#               granting exactly those operations; this port ships none, so
-#               an unprivileged agent would connect, report inventory, and
-#               fail every management action.  Lower it here if you have
-#               arranged privilege escalation yourself.
+#               reboots — so it needs privilege however it is deployed.
+#               An unprivileged deployment is supported: install the sudoers
+#               policy from ${EXAMPLESDIR} and set this to "sysmanage".  See
+#               the package message for the full procedure.  Note that the
+#               policy is not a security boundary — it grants install(1),
+#               chmod(1), chown(8), sed(1) and sysrc(8) with unrestricted
+#               arguments, each of which is equivalent to root.  It buys an
+#               audit trail through sudo, not containment.
 # sysmanage_agent_config (str):        Set to "%%PREFIX%%/etc/sysmanage-agent.yaml" by default.
 
 . /etc/rc.subr
@@ -51,7 +53,16 @@ procname="%%PYTHON_CMD%%"
 # honour (main.py), and an absolute path is used verbatim.
 export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
 
-command_args="-c -p ${pidfile} -u ${sysmanage_agent_user} \
+# NO ``-u ${sysmanage_agent_user}`` here.  ``sysmanage_agent_user`` is
+# ${name}_user, an rc.subr knob: when set, run_rc_command wraps the command in
+# ``su -m <user> -c ...``, so /usr/sbin/daemon already runs as that user and
+# ``daemon -u`` then fails in initgroups(), which requires root.  At the default
+# of root both drops are no-ops, which is why this never fired here — but an
+# admin who lowered sysmanage_agent_user in rc.conf, exactly as the comment
+# above invites, would have got a service that silently refused to start.  The
+# SERVER port hit this for real on 2026-08-10; fixed in both for the same
+# reason.
+command_args="-c -p ${pidfile} \
     %%PYTHON_CMD%% %%PREFIX%%/libexec/sysmanage-agent/main.py"
 
 run_rc_command "$1"

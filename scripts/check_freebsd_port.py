@@ -20,6 +20,11 @@ caught, and a committer would have bounced on sight:
   together produce a wrong plist.
 * ``pkg-plist`` listed 3 files while ``do-install`` staged ~290 — every
   unlisted staged file fails stage-qa.
+* ``MASTER_SITES``/``DISTFILES``/``DIST_SUBDIR`` declared alongside
+  ``USE_GITHUB=yes``, which derives all three.
+
+Shared with the sysmanage repo, which has the same skeleton and had the same
+defects; keep the two copies in step.
 
 This is NOT a substitute for ``portlint -AC`` and ``poudriere testport``, which
 need an actual FreeBSD host; it catches the classes above cheaply, on Linux, in
@@ -42,6 +47,94 @@ PORT_DIR = Path("packaging/freebsd-ports/sysutils/sysmanage-agent")
 DEAD_KEYWORDS = ("$FreeBSD$", "# Created by:")
 
 REQUIRED_VARS = ("PORTNAME", "CATEGORIES", "MAINTAINER", "COMMENT", "WWW", "LICENSE")
+
+
+# Substitutions bsd.port.mk performs on USE_RC_SUBR scripts without the port
+# asking.  Anything else in %%...%% has to come from SUB_LIST, or it is
+# installed verbatim.
+FRAMEWORK_SUBS = frozenset(
+    {
+        "PREFIX",
+        "LOCALBASE",
+        "PORTNAME",
+        "DATADIR",
+        "DOCSDIR",
+        "ETCDIR",
+        "EXAMPLESDIR",
+        "WWWDIR",
+        "PYTHON_INCLUDEDIR",
+        "PYTHON_LIBDIR",
+        "PYTHON_PLATFORM",
+        "PYTHON_SITELIBDIR",
+        "PYTHON_SUFFIX",
+        "PYTHON_VER",
+        "PYTHON_VERSION",
+    }
+)
+
+
+def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
+    """Defects that only bite when the SERVICE IS STARTED.
+
+    Everything else this checker looks at — and portlint, check-plist,
+    stage-qa and poudriere too — inspects a package at rest.  All of them
+    passed a sysmanage package that could not start.  The two rules here are
+    the two failures that cost the most to find, each reduced to the textual
+    signature that would have caught it.
+    """
+    found: list[str] = []
+    if not path.name.endswith(".in") or ". /etc/rc.subr" not in body:
+        return found
+
+    # Scan the CODE, not the prose.  The comment explaining why -u must not be
+    # there necessarily quotes ``-u ${name}_user``, so matching raw text reports
+    # the fixed script as broken — the mirror image of the ${TMPPLIST} check
+    # below, where a comment made a dead check look alive.  Either way the rule
+    # has to read what the shell reads.
+    code = "\n".join(
+        line for line in body.splitlines() if not line.lstrip().startswith("#")
+    )
+
+    name_match = re.search(r"^name=(\S+)", code, re.M)
+
+    # ``${name}_user`` belongs to rc.subr, not to the port.  Setting it makes
+    # run_rc_command wrap the command in ``su -m <user> -c ...``, so a
+    # ``daemon -u`` further down runs unprivileged and dies in initgroups():
+    #     daemon[85969]: initgroups(sysmanage,253): Operation not permitted
+    # Both drops are no-ops when the user is root, so this hides completely
+    # until someone runs the service as anyone else.  Found 2026-08-10, and
+    # only because daemon(8) logs to syslog by default — ``service onestart``
+    # itself said nothing but "failed to start".
+    if name_match:
+        user_var = f"{name_match.group(1)}_user"
+        declares_user = re.search(rf"^:\s*\$\{{{re.escape(user_var)}:", code, re.M)
+        drops_again = re.search(r"(^|\s)-u\s+\$?\{?\w", code, re.M)
+        if declares_user and drops_again:
+            found.append(
+                f"files/{path.name}: sets ${{{user_var}}} (an rc.subr knob that "
+                "already runs the command under su) AND passes -u to daemon; the "
+                "second drop fails in initgroups() for any non-root user — drop "
+                "the -u"
+            )
+
+    # A %%TOKEN%% with no SUB_LIST entry is installed literally.  The rc script
+    # then execs the string "%%PYTHON_CMD%%", which is not a program, and the
+    # service fails with nothing useful anywhere.  The port builds, packages,
+    # passes check-plist and stage-qa, and installs — found 2026-08-10 only by
+    # running ``sh -x`` on the INSTALLED rc script.
+    declared = set(re.findall(r"SUB_LIST\s*[+?]?=\s*([^\n]*)", makefile))
+    provided = set()
+    for chunk in declared:
+        provided.update(re.findall(r"(\w+)=", chunk))
+    for token in sorted(set(re.findall(r"%%(\w+)%%", code))):
+        if token not in provided and token not in FRAMEWORK_SUBS:
+            found.append(
+                f"files/{path.name}: uses %%{token}%% but the Makefile's SUB_LIST "
+                f"does not define {token}; it installs verbatim and the service "
+                "fails at exec"
+            )
+
+    return found
 
 
 def _problems(port_dir: Path) -> list[str]:
@@ -80,6 +173,7 @@ def _problems(port_dir: Path) -> list[str]:
                         f"files/{extra.name}: contains '{dead}', removed when "
                         "FreeBSD moved to git in 2021"
                     )
+            found.extend(_rc_script_problems(extra, body, text))
 
     for var in REQUIRED_VARS:
         if not re.search(rf"^{var}\s*[?+]?=", text, re.M):
@@ -161,6 +255,11 @@ def _problems(port_dir: Path) -> list[str]:
         if not entries:
             found.append("pkg-plist: empty")
         for entry in entries:
+            # Keyword lines (@dir, @sample, @owner, ...) legitimately carry
+            # absolute paths: /var and /etc are outside ${PREFIX} and cannot be
+            # expressed any other way.  Only plain file entries are relative.
+            if entry.startswith("@"):
+                continue
             if entry.startswith("/"):
                 found.append(
                     f"pkg-plist: '{entry}' is absolute; entries are relative to "
