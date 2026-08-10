@@ -83,8 +83,16 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
     signature that would have caught it.
     """
     found: list[str] = []
-    if not path.name.endswith(".in") or ". /etc/rc.subr" not in body:
+    if not path.name.endswith(".in"):
         return found
+
+    # The %%TOKEN%% rule applies to EVERY substituted file, not just rc
+    # scripts.  It was originally gated on ". /etc/rc.subr", so a
+    # %%PORTVERSION%% in files/pkg-message.in — PORTVERSION is not a default
+    # SUB_LIST member — sailed straight through on 2026-08-10.  An
+    # unsubstituted token in a package message is merely embarrassing; in the
+    # bootstrap wrapper it would be a command that cannot run.
+    is_rc = ". /etc/rc.subr" in body
 
     # Scan the CODE, not the prose.  The comment explaining why -u must not be
     # there necessarily quotes ``-u ${name}_user``, so matching raw text reports
@@ -95,7 +103,7 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
         line for line in body.splitlines() if not line.lstrip().startswith("#")
     )
 
-    name_match = re.search(r"^name=(\S+)", code, re.M)
+    name_match = re.search(r"^name=(\S+)", code, re.M) if is_rc else None
 
     # ``${name}_user`` belongs to rc.subr, not to the port.  Setting it makes
     # run_rc_command wrap the command in ``su -m <user> -c ...``, so a
@@ -134,6 +142,38 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
                 "fails at exec"
             )
 
+    return found
+
+
+def _pkgjsons_drift(port_dir: Path) -> list[str]:
+    """USES=npm builds from the lockfile COPY inside the port skeleton.
+
+    ``PKGJSONSDIR`` (files/packagejsons/) is what the framework runs ``npm ci``
+    against during the fetch phase -- not the repository's own frontend/.  A
+    stale copy therefore builds a DIFFERENT dependency set than the application
+    was developed and tested with, and nothing anywhere reports it: the port
+    builds, packages and installs perfectly, just against last release's
+    dependencies.  Compare byte-for-byte.
+    """
+    found: list[str] = []
+    jsons = port_dir / "files" / "packagejsons"
+    if not jsons.is_dir():
+        return found
+    for copy in sorted(jsons.rglob("*.json")):
+        rel = copy.relative_to(jsons)
+        origin = Path(*rel.parts)
+        if not origin.is_file():
+            found.append(
+                f"files/packagejsons/{rel}: no matching {origin} in the repo — "
+                "PKGJSONSDIR must mirror the real source tree"
+            )
+            continue
+        if copy.read_bytes() != origin.read_bytes():
+            found.append(
+                f"files/packagejsons/{rel} differs from {origin}; USES=npm "
+                "builds from the COPY, so the port would vendor a different "
+                "dependency set than the application uses (re-copy it)"
+            )
     return found
 
 
@@ -219,11 +259,18 @@ def _problems(port_dir: Path) -> list[str]:
     # about what actually gets fetched.
     if re.search(r"^USE_GITHUB\s*=\s*yes", text, re.M):
         for var in ("MASTER_SITES", "DISTFILES", "DIST_SUBDIR"):
-            if re.search(rf"^{var}\s*[?+]?=", text, re.M):
+            # ``+=`` is NOT the hazard.  Appending a second distfile with a
+            # group tag (``DISTFILES+= foo.tar.gz:frontend``) is the standard
+            # way to fetch a pre-built artifact alongside the GitHub source,
+            # and this port needs exactly that for the web UI.  Only a plain
+            # ``=`` or ``?=`` REDEFINES what USE_GITHUB derived, which is the
+            # case where the two can disagree about what is fetched.
+            if re.search(rf"^{var}\s*\??=", text, re.M):
                 found.append(
                     f"Makefile: {var}= is set alongside USE_GITHUB=yes, which "
                     "derives it — remove one or they can disagree about the "
-                    "fetched distfile"
+                    "fetched distfile (use += with a :group tag to ADD a "
+                    "distfile)"
                 )
 
     # A dependency version FLOOR is a trap in a port.  FreeBSD ships exactly ONE
@@ -283,6 +330,7 @@ def _problems(port_dir: Path) -> list[str]:
     else:
         found.append("pkg-plist: missing")
 
+    found.extend(_pkgjsons_drift(port_dir))
     return found
 
 
