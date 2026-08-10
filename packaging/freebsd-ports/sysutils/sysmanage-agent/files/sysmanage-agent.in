@@ -33,6 +33,14 @@ load_rc_config $name
 
 pidfile="/var/run/${name}.pid"
 command="/usr/sbin/daemon"
+# procname MUST be the interpreter, not $command.  rc.subr's check_process
+# matches the pid in $pidfile against a process named $procname, which
+# defaults to $command — here /usr/sbin/daemon.  But ``daemon -p`` writes
+# the pid of the CHILD it supervises (python), so the name never matches
+# and both onestatus and onestop report "not running" while the service is
+# very much running.  Confirmed 2026-08-10: a second onestart answered
+# "daemon: process already running, pid: 75353".
+procname="%%PYTHON_CMD%%"
 # The agent takes NO command-line arguments — ``--config`` was silently
 # ignored, so the daemon fell back to its built-in search order
 # (/etc/sysmanage-agent.yaml, then ./sysmanage-agent.yaml) and never looked at
