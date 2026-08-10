@@ -28,7 +28,8 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>0:devel/py-websockets@${PY_FLAVOR
 		${PYTHON_PKGNAMEPREFIX}alembic>0:databases/py-alembic@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}defusedxml>0:devel/py-defusedxml@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}netifaces>0:net/py-netifaces@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}packaging>0:devel/py-packaging@${PY_FLAVOR}
+		${PYTHON_PKGNAMEPREFIX}packaging>0:devel/py-packaging@${PY_FLAVOR} \
+		sudo:security/sudo
 
 # python:...,run — NO_BUILD means python is only needed at RUN time.
 # Deliberately NO ``USE_PYTHON=autoplist``: autoplist generates the packing
@@ -40,6 +41,19 @@ USE_GITHUB=	yes
 GH_ACCOUNT=	bceverly
 GH_PROJECT=	sysmanage-agent
 GH_TAGNAME=	v${DISTVERSION}
+
+# The agent runs unprivileged and escalates through the sudoers policy
+# installed below.  Its account is DISTINCT from the sysmanage server port's
+# ``sysmanage`` account on purpose: that one runs a network-facing web
+# application, and the policy here is root-equivalent (it grants install(1),
+# chmod(1), chown(8), sed(1) and sysrc(8) with unrestricted arguments).  Giving
+# both services one account would mean a web-application compromise yields
+# root, so the two ports must not share a user.
+#
+# 255 was free in ports/UIDs and ports/GIDs alongside the server's 253 as of
+# 2026-08-10; portmgr may reassign either, which is routine.
+USERS=		sysmanage-agent
+GROUPS=		sysmanage-agent
 
 USE_RC_SUBR=	sysmanage-agent
 
@@ -79,9 +93,28 @@ do-install:
 # a plain ``pkg install`` silently grant a service account root-equivalent
 # privileges.  Nothing here takes effect until an admin copies it, which is the
 # only honest default — see pkg-message.
-	${MKDIR} ${STAGEDIR}${EXAMPLESDIR}
-	${INSTALL_DATA} ${WRKSRC}/installer/freebsd/sysmanage-agent.sudoers \
-		${STAGEDIR}${EXAMPLESDIR}/sysmanage-agent.sudoers
+# The sudoers policy for the unprivileged deployment.  Mode and ownership come
+# from the @() line in pkg-plist; sudo REFUSES to read a policy file that is
+# group- or world-writable, and refusing it invalidates the include, so the
+# agent would lose every grant at once.
+#
+# The ${SED} rewrites the account name for releases up to and including
+# 3.5.1.9, whose shipped policy grants the bare ``sysmanage`` account — the
+# same account the sysmanage SERVER port creates for its web application.  On a
+# host running both ports that would hand a network-facing service
+# root-equivalent sudo, which is the exact outcome this deployment exists to
+# avoid.  The expression anchors on "sysmanage " WITH the trailing space, so it
+# is a no-op against a corrected policy and needs no removal later.
+	${MKDIR} ${STAGEDIR}${PREFIX}/etc/sudoers.d
+	${SED} -e 's|^sysmanage ALL=|sysmanage-agent ALL=|' \
+		${WRKSRC}/installer/freebsd/sysmanage-agent.sudoers \
+		> ${STAGEDIR}${PREFIX}/etc/sudoers.d/sysmanage-agent
+# Writable state.  get_database_path_from_config() falls back to
+# ``os.getcwd()/agent.db`` and daemon(8) -c makes the cwd /, so an unprivileged
+# agent cannot create its SQLite database at all — and a root one silently
+# writes /agent.db.  The rc script points SYSMANAGE_DB_PATH and
+# SYSMANAGE_LOG_DIR at these directories.
+	${MKDIR} ${STAGEDIR}/var/db/${PORTNAME} ${STAGEDIR}/var/log/${PORTNAME}
 
 # ``src`` is ~290 files that change every release, so they cannot be enumerated
 # by hand in pkg-plist — an unlisted staged file fails stage-qa, which is what

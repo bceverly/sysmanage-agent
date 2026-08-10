@@ -1,25 +1,25 @@
 # SysManage Agent Sudoers Configuration for FreeBSD
-# This file grants the sysmanage user necessary privileges for system management
+# This file grants the sysmanage-agent user necessary privileges for system management
 # File location: /usr/local/etc/sudoers.d/sysmanage-agent
 # Permissions: 0440 (enforced by package installer)
 #
-# The agent runs as the ``sysmanage`` user when ``sysmanage_agent_user``
+# The agent runs as the ``sysmanage-agent`` user when ``sysmanage_agent_user``
 # is set in /etc/rc.conf — see installer/freebsd/sysmanage-agent.rc.
 # When the operator runs the agent as root no sudo is needed; this
 # file is only consulted under the non-root deployment.
 
 # Package Management (pkg).
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg update
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg install *
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg delete *
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg upgrade *
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg delete *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
 # rsync is the snapshot + restore workhorse — without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
 
 # Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
 # bundles the staging tree with ``sudo xorriso`` and checksums it with
@@ -27,49 +27,49 @@ sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/rsync
 # BUILDING_ISO with a sudo password prompt.  NOTE: FreeBSD base has no
 # ``sha256sum`` (it ships ``sha256``); a FreeBSD collector needs the
 # ``coreutils`` pkg, which installs /usr/local/bin/sha256sum.
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/xorriso
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/sha256sum
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/xorriso
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/sha256sum
 # Optical-disc burn (build_iso_plan with a burn_device): ``sudo
 # growisofs`` (dvd+rw-tools pkg) writes the ISO, ``sudo eject``
 # (sysutils/eject pkg) ejects it.  CVE/compliance snapshot fetch uses
 # ``sudo curl``.  Repository ingestion loop-mounts media read-only.
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/growisofs
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/eject
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/curl
-sysmanage ALL=(ALL) NOPASSWD: /sbin/mount
-sysmanage ALL=(ALL) NOPASSWD: /sbin/umount
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/createrepo_c
-sysmanage ALL=(ALL) NOPASSWD: /usr/local/bin/trickle
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/growisofs
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/eject
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/curl
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/umount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/createrepo_c
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/trickle
 
 # Helper utilities the mirroring/snapshot/import plans run via sudo.
-sysmanage ALL=(ALL) NOPASSWD: /bin/mkdir
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/find
-sysmanage ALL=(ALL) NOPASSWD: /bin/chmod
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/chown
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/sed
-sysmanage ALL=(ALL) NOPASSWD: /bin/rm
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/mkdir
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/chmod
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/chown
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm
 
 # Generic file deployment via ``sudo install``.
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/install
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Service Management (rc.d / service).
 # Bare-binary grant: ``service <name> start`` places a wildcard in the MIDDLE
 # of the arguments, which sudo 1.9.x rejects -- and a single rejected line
 # invalidates the WHOLE sudoers file (agent then loses every grant).  Grant
 # the bare binary; the agent's own code constrains service + action.
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/service
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/sysrc *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/service
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/sysrc *
 
 # Firewall Management (pf / ipfw).
-sysmanage ALL=(ALL) NOPASSWD: /sbin/pfctl *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/ipfw *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/pfctl *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/ipfw *
 
 # System Power Management.
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -p *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/reboot
-sysmanage ALL=(ALL) NOPASSWD: /sbin/poweroff
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -p *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/reboot
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff
 
 # Certificate Management.
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/certctl rehash
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/certctl rehash

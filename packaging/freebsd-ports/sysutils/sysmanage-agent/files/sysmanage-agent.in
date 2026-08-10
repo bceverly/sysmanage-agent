@@ -10,16 +10,19 @@
 #
 # sysmanage_agent_enable (bool):       Set to NO by default.
 #               Set it to YES to enable sysmanage-agent.
-# sysmanage_agent_user (str):          Set to "root" by default.  The agent
-#               manages the SYSTEM — installs packages, controls services,
-#               reboots — so it needs privilege however it is deployed.
-#               An unprivileged deployment is supported: install the sudoers
-#               policy from ${EXAMPLESDIR} and set this to "sysmanage".  See
-#               the package message for the full procedure.  Note that the
-#               policy is not a security boundary — it grants install(1),
+# sysmanage_agent_user (str):          Set to "sysmanage-agent" by default.
+#               The agent manages the SYSTEM — installs packages, controls
+#               services, reboots — so it escalates through the sudoers policy
+#               this port installs at %%PREFIX%%/etc/sudoers.d/sysmanage-agent.
+#               That policy is NOT a security boundary: it grants install(1),
 #               chmod(1), chown(8), sed(1) and sysrc(8) with unrestricted
-#               arguments, each of which is equivalent to root.  It buys an
-#               audit trail through sudo, not containment.
+#               arguments, each of which is by itself equivalent to root.  What
+#               the unprivileged deployment buys is an audit trail — sudo logs
+#               every privileged action, a root agent logs nothing.  Set this
+#               to "root" to run privileged directly, in which case the policy
+#               is never consulted.
+# sysmanage_agent_dbpath (str):        Set to "/var/db/sysmanage-agent/agent.db".
+# sysmanage_agent_logdir (str):        Set to "/var/log/sysmanage-agent".
 # sysmanage_agent_config (str):        Set to "%%PREFIX%%/etc/sysmanage-agent.yaml" by default.
 
 . /etc/rc.subr
@@ -30,10 +33,25 @@ rcvar=sysmanage_agent_enable
 load_rc_config $name
 
 : ${sysmanage_agent_enable:="NO"}
-: ${sysmanage_agent_user:="root"}
+: ${sysmanage_agent_user:="sysmanage-agent"}
 : ${sysmanage_agent_config:="%%PREFIX%%/etc/sysmanage-agent.yaml"}
+: ${sysmanage_agent_dbpath:="/var/db/sysmanage-agent/agent.db"}
+: ${sysmanage_agent_logdir:="/var/log/sysmanage-agent"}
 
-pidfile="/var/run/${name}.pid"
+# Pidfile in a per-service DIRECTORY, not directly in /var/run.  rc.subr runs
+# the command as ${sysmanage_agent_user}, and /var/run is root-owned 0755, so
+# an unprivileged daemon(8) cannot create a pidfile there:
+#     daemon: pidfile '/var/run/sysmanage_agent.pid': Permission denied
+# This did not arise while the agent ran as root.  /var/run is volatile, so the
+# directory cannot ship in the package and is created at start time below.
+pidfile="/var/run/${name}/${name}.pid"
+start_precmd="sysmanage_agent_precmd"
+
+sysmanage_agent_precmd()
+{
+	/usr/bin/install -d -o "${sysmanage_agent_user}" \
+	    -g "${sysmanage_agent_user}" -m 0755 "/var/run/${name}"
+}
 command="/usr/sbin/daemon"
 # procname MUST be the interpreter, not $command.  rc.subr's check_process
 # matches the pid in $pidfile against a process named $procname, which
@@ -52,6 +70,12 @@ procname="%%PYTHON_CMD%%"
 # the service.  ``SYSMANAGE_CONFIG`` is the documented override the agent does
 # honour (main.py), and an absolute path is used verbatim.
 export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
+# get_database_path_from_config() ends at ``os.getcwd()/agent.db`` when nothing
+# else resolves, and daemon(8) -c sets the cwd to / — so as root the agent
+# silently created /agent.db, and unprivileged it cannot create the database at
+# all.  Both variables are overrides the agent already honours.
+export SYSMANAGE_DB_PATH="${sysmanage_agent_dbpath}"
+export SYSMANAGE_LOG_DIR="${sysmanage_agent_logdir}"
 
 # NO ``-u ${sysmanage_agent_user}`` here.  ``sysmanage_agent_user`` is
 # ${name}_user, an rc.subr knob: when set, run_rc_command wraps the command in
