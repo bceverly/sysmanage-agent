@@ -43,6 +43,16 @@ GH_TAGNAME=	v${DISTVERSION}
 
 USE_RC_SUBR=	sysmanage-agent
 
+# PYTHON_CMD is NOT in the default SUB_LIST — USES=python contributes
+# PYTHON_VERSION, PYTHON_VER, PYTHON_SUFFIX and friends, but not the
+# interpreter path.  Without this line USE_RC_SUBR leaves the literal
+# string %%PYTHON_CMD%% in the installed rc.d script, and the service
+# fails at exec with no useful message.  Nothing catches it: the port
+# builds, packages, passes check-plist and stage-qa, and installs — the
+# placeholder only bites when the service is STARTED.  Found 2026-08-10
+# via `sh -x` on the installed rc script.
+SUB_LIST+=	PYTHON_CMD=${PYTHON_CMD}
+
 NO_ARCH=	yes
 NO_BUILD=	yes
 
