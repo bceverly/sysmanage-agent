@@ -1,12 +1,6 @@
 libexec/sysmanage-agent/main.py
 libexec/sysmanage-agent/alembic.ini
 @sample etc/sysmanage-agent.yaml.sample
-# 0440 root:wheel is not cosmetic — sudo refuses to read a policy file that is
-# writable by anyone but its owner, and a refused file takes the whole
-# @includedir with it, so the agent would lose every grant at once.
 @(root,wheel,0440) etc/sudoers.d/sysmanage-agent
-# Writable state for the unprivileged agent: SQLite database and logs.  Without
-# these the agent has nowhere to create agent.db (its fallback is the process
-# cwd, which daemon(8) -c sets to /).
 @dir(sysmanage-agent,sysmanage-agent,0750) /var/db/sysmanage-agent
 @dir(sysmanage-agent,sysmanage-agent,0750) /var/log/sysmanage-agent

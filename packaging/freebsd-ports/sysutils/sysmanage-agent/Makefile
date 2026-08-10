@@ -94,9 +94,13 @@ do-install:
 # privileges.  Nothing here takes effect until an admin copies it, which is the
 # only honest default — see pkg-message.
 # The sudoers policy for the unprivileged deployment.  Mode and ownership come
-# from the @() line in pkg-plist; sudo REFUSES to read a policy file that is
-# group- or world-writable, and refusing it invalidates the include, so the
-# agent would lose every grant at once.
+# from the @(root,wheel,0440) line in pkg-plist: sudo REFUSES to read a policy
+# file writable by anyone but its owner, and a refused file invalidates the
+# whole @includedir, so the agent would lose every grant at once.
+#
+# NOTE: pkg-plist has NO comment syntax — every line there is an entry, so this
+# rationale lives here.  Six explanatory lines in pkg-plist were turned into
+# six bogus file paths by check-plist and pkg-create on 2026-08-10.
 #
 # The ${SED} rewrites the account name for releases up to and including
 # 3.5.1.9, whose shipped policy grants the bare ``sysmanage`` account — the

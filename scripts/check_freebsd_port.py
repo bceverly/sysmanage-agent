@@ -247,11 +247,26 @@ def _problems(port_dir: Path) -> list[str]:
                 )
 
     if plist.is_file():
-        entries = [
+        raw = [
             line.strip()
             for line in plist.read_text(encoding="utf-8").splitlines()
-            if line.strip() and not line.startswith("#")
+            if line.strip()
         ]
+        # pkg-plist has NO comment syntax.  Every line is an entry, so a '#'
+        # line becomes a file path: check-plist reports "Missing: # ..." and
+        # pkg-create fails with "Unable to access file .../usr/local/# ...".
+        # This checker used to skip '#' lines as comments, which is what let
+        # six of them reach a real build on 2026-08-10 — a gate that shares the
+        # bug it is meant to catch is worse than no gate.  Use @comment if a
+        # note really has to live in the plist.
+        for entry in raw:
+            if entry.startswith("#"):
+                found.append(
+                    f"pkg-plist: '{entry[:50]}' starts with '#', but pkg-plist "
+                    "has no comment syntax — it will be treated as a file path "
+                    "(use @comment, or move the note to the Makefile)"
+                )
+        entries = [e for e in raw if not e.startswith("#")]
         if not entries:
             found.append("pkg-plist: empty")
         for entry in entries:
