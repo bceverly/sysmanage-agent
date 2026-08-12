@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-06 10:10-0400\n"
+"POT-Creation-Date: 2026-08-12 13:48-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "傳送初始資料更新失敗：%s"
 msgid "Corrupt UUID in database: %s"
 msgstr "數據庫中腐爛的 UUID：%s"
 
-#: src/database/queue_manager.py:305
+#: src/database/queue_manager.py:321
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "訊息 %s 在 %d 次嘗試後永久失敗：%s"
 
-#: src/database/queue_manager.py:423
+#: src/database/queue_manager.py:516
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "反序列化訊息 %s 失敗：%s"
 
-#: src/database/queue_manager.py:490
+#: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "訊息 %s (類型: %s) 超過最大重試次數，標記為失敗"
@@ -1683,7 +1683,7 @@ msgstr "分離 Ubuntu Pro 失敗：%s"
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "錯誤修剪已完成的隊列消息：%s"
@@ -1734,85 +1734,90 @@ msgstr "套件收集排程器錯誤：%s"
 msgid "Auth failed with status %s: %s"
 msgstr "驗證失敗，狀態 %s：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:404
+#: src/sysmanage_agent/core/agent_utils.py:342
+#, python-format
+msgid "Failed to build capability report: %s"
+msgstr "建立能力報告失敗：%s"
+
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:453
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:512
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 軟體包失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:531
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:560
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:585
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:695
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:702
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:708
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:774
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:813
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:856
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:866
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:914
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
@@ -3088,50 +3093,50 @@ msgstr "無法添加 Windows 存儲庫 %s： %s"
 msgid "Error adding Windows repository: %s"
 msgstr "將使用者新增至群組時發生錯誤: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:38
+#: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  警告：aiohttp 不可用，將跳過註冊"
 
-#: src/sysmanage_agent/registration/client_registration.py:231
+#: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
 msgstr "⚠️  警告：aiohttp 不可用，將跳過註冊"
 
-#: src/sysmanage_agent/registration/client_registration.py:298
+#: src/sysmanage_agent/registration/client_registration.py:345
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "驗證失敗，狀態 %s：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:354
 #, python-format
 msgid "Error during registration: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:336
+#: src/sysmanage_agent/registration/client_registration.py:383
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "在 %s 次嘗試後註冊失敗"
 
-#: src/sysmanage_agent/registration/client_registration.py:341
+#: src/sysmanage_agent/registration/client_registration.py:388
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "註冊失敗，%s 秒後重試..."
 
-#: src/sysmanage_agent/registration/client_registration.py:396
+#: src/sysmanage_agent/registration/client_registration.py:443
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "將使用者新增至群組時發生錯誤: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:415
+#: src/sysmanage_agent/registration/client_registration.py:462
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:475
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:490
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "分離 Ubuntu Pro 時發生錯誤：%s"

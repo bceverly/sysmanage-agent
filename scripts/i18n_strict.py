@@ -64,6 +64,7 @@ TODO = "[TODO] "
 
 # Surfaces this repo owns.  ``kind`` picks the reader; ``hashes`` is the
 # staleness sidecar and is omitted for .po (see the module docstring).
+# ===== per-repo surfaces: the ONLY part of this file that differs =====
 SURFACES = [
     {
         "name": "agent",
@@ -71,6 +72,7 @@ SURFACES = [
         "root": REPO / "src" / "i18n" / "locales",
     },
 ]
+# ===== end per-repo surfaces ==========================================
 
 EN = "en"
 
@@ -556,7 +558,23 @@ def main() -> int:
             f"{len(wrong)} wrong-language.\n"
             "  Queue them for translation:  python3 scripts/i18n_strict.py --requeue\n"
             "  Then:                        make translate SERVICE=http://<gpu-box>:8765\n"
-            "  Intentionally-English value? Add a tight rule to i18n-allow.txt.",
+            + (
+                # Neither --requeue nor `make translate` touches the hash
+                # sidecar, so a STALE key raised by a deliberate English edit
+                # survives both and reports stale forever.  Omitting this step
+                # from the hint cost a full requeue/translate/still-stale loop
+                # on docs roadmap.edition.community (2026-08-12).  Only shown
+                # when something is actually stale: after an English-identical
+                # or wrong-language failure, baselining is the WRONG move --
+                # it would record the untranslated value as the reference.
+                "  English edit now retranslated?  "
+                "python3 scripts/i18n_strict.py --baseline\n"
+                "      (records today's English as the staleness reference; run it\n"
+                "       ONLY once the translations above are genuinely current)\n"
+                if stale
+                else ""
+            )
+            + "  Intentionally-English value? Add a tight rule to i18n-allow.txt.",
             file=sys.stderr,
         )
         return 1

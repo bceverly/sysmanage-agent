@@ -48,7 +48,7 @@ baseline agent advertises everything it can route, so nothing regresses for
 hosts that already exist.
 """
 
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 # Bump when the SHAPE of the report changes (new top-level keys, changed
 # semantics) — not when a capability is added, which is the normal case and
@@ -99,7 +99,12 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     "processes": ("collect_processes", "kill_process"),
     "scripts": ("execute_script",),
     "shell": ("execute_shell",),
-    "diagnostics": ("collect_diagnostics",),
+    # ``get_capabilities`` answers a live "what can you do?" query over the
+    # existing server-initiated channel.  Grouped under diagnostics because
+    # that is what it is for -- an operator asking why an action is
+    # unavailable -- and because every build that can be asked can answer, so
+    # it never narrows a host's reported set.
+    "diagnostics": ("collect_diagnostics", "get_capabilities"),
     "certificates": ("collect_certificates",),
     "users_groups": (
         "create_host_user",
@@ -167,12 +172,24 @@ def ungrouped_commands(available: Iterable[str]) -> List[str]:
     return sorted(c for c in available if c not in index)
 
 
-def build_capability_report(handlers: Mapping[str, Any]) -> Dict[str, Any]:
+def build_capability_report(
+    handlers: Mapping[str, Any],
+    suppressed: Optional[Mapping[str, str]] = None,
+) -> Dict[str, Any]:
     """Describe what this agent build can actually do.
 
     ``handlers`` is the live command-handler map — pass
-    ``AgentUtils._get_command_handlers()``.  Deriving from it is the whole
-    point: see the module docstring.
+    ``MessageProcessor._get_command_handlers()``.  Deriving from it is the
+    whole point: see the module docstring.
+
+    ``suppressed`` is ``{command: reason_code}`` for commands this build routes
+    but this HOST cannot deliver — see ``capability_probes.detect_suppressed``.
+    Shipping a handler answers "was this code built?"; it does not answer "will
+    it work here".  Every build carries ``initialize_bhyve``, including on
+    Linux.  Suppressed commands are removed from ``commands`` (so the dispatch
+    gate refuses them) and their reason is preferred over the generic
+    "no_handler" when a whole group goes away, so the host-detail screen can
+    say WHY rather than merely that something is missing.
 
     A group counts as supported when AT LEAST ONE of its commands is routable.
     Partial support is reported rather than hidden, because a build missing one
@@ -180,7 +197,12 @@ def build_capability_report(handlers: Mapping[str, Any]) -> Dict[str, Any]:
     otherwise would be as wrong as claiming full support.  Per-command
     precision is preserved in ``commands`` for the dispatch gate.
     """
-    available = {str(name) for name in handlers}
+    suppressed = dict(suppressed or {})
+    routed = {str(name) for name in handlers}
+    # A suppressed command is not routable, so it must leave ``commands`` too:
+    # the gate reads that list, and advertising a command we would refuse is
+    # the runtime failure this feature exists to prevent.
+    available = routed - set(suppressed)
     supported: List[str] = []
     partial: Dict[str, List[str]] = {}
     unavailable: Dict[str, str] = {}
@@ -188,7 +210,12 @@ def build_capability_report(handlers: Mapping[str, Any]) -> Dict[str, Any]:
     for group, commands in CAPABILITY_GROUPS.items():
         present = [c for c in commands if c in available]
         if not present:
-            unavailable[group] = REASON_NO_HANDLER
+            # Prefer a specific reason over the generic one: if every command
+            # in the group was suppressed for the same reason, say that.
+            reasons = {suppressed[c] for c in commands if c in suppressed}
+            unavailable[group] = (
+                reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
+            )
             continue
         supported.append(group)
         missing = [c for c in commands if c not in available]

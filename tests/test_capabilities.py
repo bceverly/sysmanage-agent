@@ -149,9 +149,39 @@ def test_a_broken_provider_does_not_break_registration():
     assert reg.get_capability_report() is None
 
 
-def test_registration_reports_what_the_provider_offers():
+def test_registration_reports_what_the_provider_offers(monkeypatch):
+    """Nothing is dropped or invented between the provider and the report.
+
+    Registration now also applies the runtime probes (see
+    capability_probes.py), which legitimately remove commands this HOST cannot
+    deliver -- initialize_bhyve off FreeBSD, ubuntu_pro_* without the `pro`
+    CLI.  Asserting the raw list would therefore depend on what happens to be
+    installed on the machine running the tests, so the probe is neutralised
+    here and exercised properly in test_capability_probes.py.  What this test
+    still pins is the pass-through: provider in, same set out.
+    """
+    monkeypatch.setattr(
+        "src.sysmanage_agent.registration.client_registration.detect_suppressed",
+        lambda handlers, **kwargs: {},
+    )
     reg = _bare_registration()
     live = _live_command_types()
     reg.capability_provider = lambda: {c: None for c in live}
     report = reg.get_capability_report()
     assert report["commands"] == sorted(live)
+
+
+def test_registration_drops_commands_this_host_cannot_deliver(monkeypatch):
+    """The probe result must actually reach the advertised command list."""
+    monkeypatch.setattr(
+        "src.sysmanage_agent.registration.client_registration.detect_suppressed",
+        lambda handlers, **kwargs: {"initialize_bhyve": "wrong_platform"},
+    )
+    reg = _bare_registration()
+    reg.capability_provider = lambda: {
+        "get_system_info": None,
+        "initialize_bhyve": None,
+    }
+    report = reg.get_capability_report()
+    assert report["commands"] == ["get_system_info"]
+    assert report["unavailable"]["virtualization"] == "wrong_platform"

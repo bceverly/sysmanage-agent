@@ -699,7 +699,7 @@ i18n-compile: setup-venv
 # prerequisites across rules; recipes live at their definitions), so one line
 # protects every packaging path.  i18n-compile falls back to polib where msgfmt
 # is absent (e.g. Windows MSI).
-.PHONY: i18n-compile
+.PHONY: i18n-compile i18n-fix
 installer installer-pkg installer-rpm-suse installer-deb installer-rpm installer-openbsd installer-freebsd installer-alpine installer-netbsd installer-msi-x64 installer-msi-arm64: i18n-compile
 
 i18n-strip-fuzzy: setup-venv
@@ -4358,3 +4358,20 @@ release-local:
 	echo "Next steps:"; \
 	echo "  - Run 'make release-local' on other machines for additional platforms"; \
 	echo "  - When all platforms are done, commit and push sysmanage-docs"
+
+# One command to FIX a failing i18n gate, in the order that actually works.
+# The check side is already composed by `make lint`; this is the other half,
+# and the ordering used to live only in someone's head.  --requeue is the step
+# that was missing from every written instruction: `make translate` only acts
+# on "[TODO] " values, so a STALE or English-identical value has to be re-marked
+# BEFORE translating or the run has nothing to do and the gate stays red.
+# Source hashes are recorded by the translate run itself, so there is no
+# separate baseline step (see scripts/i18n_hashes.py).
+i18n-fix: setup-venv
+	@echo "=== i18n fix: seed -> requeue -> translate -> verify ==="
+	@$(MAKE) --no-print-directory i18n-extract
+	@$(MAKE) --no-print-directory i18n-merge
+	@$(PYTHON) scripts/i18n_strict.py --requeue
+	@$(MAKE) --no-print-directory translate SERVICE=$(SERVICE)
+	@$(MAKE) --no-print-directory i18n-strict
+	@echo "[OK] i18n gate green"

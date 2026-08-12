@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-06 10:10-0400\n"
+"POT-Creation-Date: 2026-08-12 13:48-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -52,17 +52,17 @@ msgstr "Échec de l'envoi des données initiales : %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "UUID corrompu dans la base de données : %s"
 
-#: src/database/queue_manager.py:305
+#: src/database/queue_manager.py:321
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Message %s définitivement échoué après %d tentatives : %s"
 
-#: src/database/queue_manager.py:423
+#: src/database/queue_manager.py:516
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Échec de la désérialisation du message %s : %s"
 
-#: src/database/queue_manager.py:490
+#: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -1724,7 +1724,7 @@ msgstr "Échec du détachement d'Ubuntu Pro : %s"
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Échec du détachement d'Ubuntu Pro : %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr ""
@@ -1779,85 +1779,90 @@ msgstr "Erreur du planificateur de collecte de paquets : %s"
 msgid "Auth failed with status %s: %s"
 msgstr "Échec de l'authentification avec le statut %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:404
+#: src/sysmanage_agent/core/agent_utils.py:342
+#, python-format
+msgid "Failed to build capability report: %s"
+msgstr "Échec de la construction du rapport des capacités : %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID d'exécution de script %s déjà traité, doublon ignoré"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "Commande générique manquant du command_type imbriqué"
 
-#: src/sysmanage_agent/core/agent_utils.py:453
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Type de commande inconnu : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:512
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Échec de la collecte des paquets Homebrew : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:531
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erreur de détection des partitions: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "Aucun UUID d'exécution fourni, impossible de suivre"
 
-#: src/sysmanage_agent/core/agent_utils.py:560
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID d'exécution %s existe déjà dans la base de données"
 
-#: src/sysmanage_agent/core/agent_utils.py:585
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erreur de détection des partitions: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erreur dans le gestionnaire de contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:695
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Échec de %s sur le service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:702
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Délai dépassé pour le contrôle de service de %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:708
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erreur de contrôle de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:774
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Échec de la mise à jour des rôles après le contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:813
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erreur dans le gestionnaire d'état de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:856
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Délai dépassé pour l'état du service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:866
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erreur d'état de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:914
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -3153,52 +3158,52 @@ msgstr "Echec de l'ajout du répertoire Windows %s : %s"
 msgid "Error adding Windows repository: %s"
 msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:38
+#: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
 "⚠️  AVERTISSEMENT : aiohttp non disponible, l'enregistrement sera ignoré"
 
-#: src/sysmanage_agent/registration/client_registration.py:231
+#: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
 msgstr ""
 "⚠️  AVERTISSEMENT : aiohttp non disponible, l'enregistrement sera ignoré"
 
-#: src/sysmanage_agent/registration/client_registration.py:298
+#: src/sysmanage_agent/registration/client_registration.py:345
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "Échec de l'authentification avec le statut %s : %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:354
 #, python-format
 msgid "Error during registration: %s"
 msgstr "Erreur de détection des partitions: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:336
+#: src/sysmanage_agent/registration/client_registration.py:383
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "Echec de l'enregistrement après %s tentatives"
 
-#: src/sysmanage_agent/registration/client_registration.py:341
+#: src/sysmanage_agent/registration/client_registration.py:388
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "Échec de l'enregistrement, réessayage dans %s secondes..."
 
-#: src/sysmanage_agent/registration/client_registration.py:396
+#: src/sysmanage_agent/registration/client_registration.py:443
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "Erreur lors de l'ajout de l'utilisateur aux groupes : %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:415
+#: src/sysmanage_agent/registration/client_registration.py:462
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "Erreur de détection des partitions: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:475
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:490
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Erreur lors du détachement d'Ubuntu Pro : %s"

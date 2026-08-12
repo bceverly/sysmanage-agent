@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-06 10:10-0400\n"
+"POT-Creation-Date: 2026-08-12 13:48-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "发送初始数据更新失败：%s"
 msgid "Corrupt UUID in database: %s"
 msgstr "数据库中存在损坏的 UUID: %s"
 
-#: src/database/queue_manager.py:305
+#: src/database/queue_manager.py:321
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "消息 %s 在 %d 次尝试后永久失败：%s"
 
-#: src/database/queue_manager.py:423
+#: src/database/queue_manager.py:516
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "反序列化消息 %s 失败：%s"
 
-#: src/database/queue_manager.py:490
+#: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
@@ -1685,7 +1685,7 @@ msgstr "分离 Ubuntu Pro 失败：%s"
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "分离 Ubuntu Pro 失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "删除已完成队列消息时出错：%s"
@@ -1736,85 +1736,90 @@ msgstr "软件包收集调度器错误：%s"
 msgid "Auth failed with status %s: %s"
 msgstr "认证失败，状态 %s：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:404
+#: src/sysmanage_agent/core/agent_utils.py:342
+#, python-format
+msgid "Failed to build capability report: %s"
+msgstr "构建能力报告失败：%s"
+
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:453
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:512
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 软件包失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:531
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:560
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:585
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:695
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "对服务 %s 执行 %s 失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:702
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:708
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:774
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:813
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:856
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:866
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:914
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "无法将合成的 command_result 加入正在执行的日志队列：%s"
@@ -3090,50 +3095,50 @@ msgstr "添加Windows存储库 %s失败：%s"
 msgid "Error adding Windows repository: %s"
 msgstr "将用户添加到组时出错: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:38
+#: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  警告：aiohttp 不可用，将跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:231
+#: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
 msgstr "⚠️  警告：aiohttp 不可用，将跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:298
+#: src/sysmanage_agent/registration/client_registration.py:345
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "认证失败，状态 %s：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:354
 #, python-format
 msgid "Error during registration: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:336
+#: src/sysmanage_agent/registration/client_registration.py:383
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "尝试注册后失败：%s次"
 
-#: src/sysmanage_agent/registration/client_registration.py:341
+#: src/sysmanage_agent/registration/client_registration.py:388
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "注册失败，%s 秒后重试..."
 
-#: src/sysmanage_agent/registration/client_registration.py:396
+#: src/sysmanage_agent/registration/client_registration.py:443
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "将用户添加到组时出错: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:415
+#: src/sysmanage_agent/registration/client_registration.py:462
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "检测分区时出错: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:475
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:490
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "分离 Ubuntu Pro 时出错：%s"

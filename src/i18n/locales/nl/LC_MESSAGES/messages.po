@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-06 10:10-0400\n"
+"POT-Creation-Date: 2026-08-12 13:48-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "Verzenden van initiële gegevens mislukt: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "Corrupte UUID in database: %s"
 
-#: src/database/queue_manager.py:305
+#: src/database/queue_manager.py:321
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Bericht %s definitief mislukt na %d pogingen: %s"
 
-#: src/database/queue_manager.py:423
+#: src/database/queue_manager.py:516
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Deserialiseren van bericht %s mislukt: %s"
 
-#: src/database/queue_manager.py:490
+#: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -1705,7 +1705,7 @@ msgstr "Fout bij ontkoppelen Ubuntu Pro: %s"
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Fout bij ontkoppelen Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Fout bij verwijderen van afgehandelde berichten in de wachtrij: %s"
@@ -1758,85 +1758,90 @@ msgstr "Pakketverzamelplanner-fout: %s"
 msgid "Auth failed with status %s: %s"
 msgstr "Authenticatie mislukt met status %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:404
+#: src/sysmanage_agent/core/agent_utils.py:342
+#, python-format
+msgid "Failed to build capability report: %s"
+msgstr "Mislukt om capaciteitsrapportage op te bouwen: %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Scriptuitvoerings-UUID %s al verwerkt, duplicaat overgeslagen"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "Generieke opdracht mist geneste command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:453
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Onbekend opdrachttype: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:512
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:531
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "Geen uitvoerings-UUID opgegeven, kan niet volgen"
 
-#: src/sysmanage_agent/core/agent_utils.py:560
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Uitvoerings-UUID %s bestaat al in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:585
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fout in service-controlafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:695
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "%s van service %s mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:702
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Time-out bij servicebeheer voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:708
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Servicebesturingsfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:774
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:813
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fout in service-statusafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:856
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Time-out bij servicestatus voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:866
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Servicestatusfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:914
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -3120,52 +3125,52 @@ msgstr "Mislukt om Windows-repository %s toe te voegen: %s"
 msgid "Error adding Windows repository: %s"
 msgstr "Fout bij toevoegen gebruiker aan groepen: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:38
+#: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr ""
 "⚠️  WAARSCHUWING: aiohttp niet beschikbaar, registratie wordt overgeslagen"
 
-#: src/sysmanage_agent/registration/client_registration.py:231
+#: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
 msgstr ""
 "⚠️  WAARSCHUWING: aiohttp niet beschikbaar, registratie wordt overgeslagen"
 
-#: src/sysmanage_agent/registration/client_registration.py:298
+#: src/sysmanage_agent/registration/client_registration.py:345
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "Authenticatie mislukt met status %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:354
 #, python-format
 msgid "Error during registration: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:336
+#: src/sysmanage_agent/registration/client_registration.py:383
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "Mislukt om na %s pogingen te registreren"
 
-#: src/sysmanage_agent/registration/client_registration.py:341
+#: src/sysmanage_agent/registration/client_registration.py:388
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "Inschrijving mislukt, opnieuw proberen over %s seconden..."
 
-#: src/sysmanage_agent/registration/client_registration.py:396
+#: src/sysmanage_agent/registration/client_registration.py:443
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "Fout bij toevoegen gebruiker aan groepen: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:415
+#: src/sysmanage_agent/registration/client_registration.py:462
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "Fout bij detecteren van partities: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:475
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:490
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Fout bij het ontkoppelen van Ubuntu Pro: %s"

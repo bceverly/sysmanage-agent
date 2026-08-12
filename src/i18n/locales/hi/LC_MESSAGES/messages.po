@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-06 10:10-0400\n"
+"POT-Creation-Date: 2026-08-12 13:48-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "प्रारंभिक डेटा अपडेट भेजना
 msgid "Corrupt UUID in database: %s"
 msgstr "Database में corrupt UUID: %s"
 
-#: src/database/queue_manager.py:305
+#: src/database/queue_manager.py:321
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "संदेश %s स्थायी रूप से %d प्रयासों के बाद विफल: %s"
 
-#: src/database/queue_manager.py:423
+#: src/database/queue_manager.py:516
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "संदेश %s को डिसीरियलाइज़ करने में विफल: %s"
 
-#: src/database/queue_manager.py:490
+#: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -1698,7 +1698,7 @@ msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:489
+#: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "त्रुटि: पूर्विकृत कार्यक्रम संرس्तित के डेटा को हटाने में विफल: %s"
@@ -1751,86 +1751,91 @@ msgstr "पैकेज संग्रह शेड्यूलर त्रु
 msgid "Auth failed with status %s: %s"
 msgstr "स्थिति %s के साथ प्रमाणीकरण विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:404
+#: src/sysmanage_agent/core/agent_utils.py:342
+#, python-format
+msgid "Failed to build capability report: %s"
+msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:453
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:512
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:531
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:560
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:585
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:695
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:702
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:708
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:774
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:813
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:856
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:866
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:914
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -3116,50 +3121,50 @@ msgstr "Windows रिपोजिटरी %s जोड़ने में व�
 msgid "Error adding Windows repository: %s"
 msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:38
+#: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  चेतावनी: aiohttp उपलब्ध नहीं, पंजीकरण छोड़ा जाएगा"
 
-#: src/sysmanage_agent/registration/client_registration.py:231
+#: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
 msgstr "⚠️  चेतावनी: aiohttp उपलब्ध नहीं, पंजीकरण छोड़ा जाएगा"
 
-#: src/sysmanage_agent/registration/client_registration.py:298
+#: src/sysmanage_agent/registration/client_registration.py:345
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "स्थिति %s के साथ प्रमाणीकरण विफल: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:354
 #, python-format
 msgid "Error during registration: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:336
+#: src/sysmanage_agent/registration/client_registration.py:383
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "%s प्रयासों के बाद रिगिस्टर होना विफल"
 
-#: src/sysmanage_agent/registration/client_registration.py:341
+#: src/sysmanage_agent/registration/client_registration.py:388
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "सेजेन ॥॰, मोंप्रो %s जेन..."
 
-#: src/sysmanage_agent/registration/client_registration.py:396
+#: src/sysmanage_agent/registration/client_registration.py:443
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:415
+#: src/sysmanage_agent/registration/client_registration.py:462
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:475
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error creating bridged network: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:490
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"

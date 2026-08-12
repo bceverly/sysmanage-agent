@@ -22,6 +22,10 @@ from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.core.capabilities import build_capability_report
+from src.sysmanage_agent.core.capability_probes import (
+    build_excluded_from_env,
+    detect_suppressed,
+)
 from src.sysmanage_agent.core.version import get_agent_version
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
 from src.sysmanage_agent.collection.software_inventory_collection import (
@@ -114,7 +118,12 @@ class ClientRegistration:
             return None
         try:
             handlers = self.capability_provider()
-            return build_capability_report(handlers)
+            # Advertise what this HOST can deliver, not merely what was built:
+            # every build ships initialize_bhyve, including on Linux.
+            suppressed = detect_suppressed(
+                handlers, build_excluded=build_excluded_from_env()
+            )
+            return build_capability_report(handlers, suppressed)
         except Exception:  # pylint: disable=broad-except
             self.logger.warning(
                 "Could not build the agent capability report; registering "

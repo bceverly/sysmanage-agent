@@ -315,6 +315,33 @@ class MessageProcessor:
         """
         return self._get_command_handlers()
 
+    async def _handle_get_capabilities(self) -> Dict[str, Any]:
+        """Report what this build can route, derived from the live handler map.
+
+        Uses the same ``build_capability_report`` the registration payload
+        uses, over the same handler table -- so the answer to a live query and
+        the set the server stored at enrollment cannot drift apart.  Anything
+        that fabricated a list here would defeat the purpose of the feature.
+        """
+        from src.sysmanage_agent.core.capabilities import (  # noqa: PLC0415
+            build_capability_report,
+        )
+        from src.sysmanage_agent.core.capability_probes import (  # noqa: PLC0415
+            build_excluded_from_env,
+            detect_suppressed,
+        )
+
+        try:
+            handlers = self._get_command_handlers()
+            suppressed = detect_suppressed(
+                handlers, build_excluded=build_excluded_from_env()
+            )
+            report = build_capability_report(handlers, suppressed)
+            return {"success": True, "result": report}
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.error(_("Failed to build capability report: %s"), error)
+            return {"success": False, "error": str(error)}
+
     def _get_command_handlers(self) -> Dict[str, Any]:
         """Get mapping of command types to their handlers."""
         return {
@@ -341,6 +368,15 @@ class MessageProcessor:
             "ubuntu_pro_disable_service": self.agent.ubuntu_pro_disable_service,
             "execute_script": self._handle_execute_script,
             "check_reboot_status": lambda params: self.agent.check_reboot_status(),
+            # Phase 19: answer "what can you do?" on demand.  The set is
+            # already sent at registration and with SYSTEM_INFO, but those are
+            # snapshots -- an operator debugging "why is this action greyed
+            # out?" needs to ask the RUNNING agent, not read what it said when
+            # it last enrolled.  Deliberately a command over the existing
+            # server-initiated channel rather than a local listener: the agent
+            # opens one outbound WebSocket and accepts no inbound connections,
+            # and adding a socket would change that on every platform.
+            "get_capabilities": lambda params: self._handle_get_capabilities(),
             "collect_diagnostics": self.agent.collect_diagnostics,
             "collect_available_packages": lambda params: self.agent.collect_available_packages(),
             "collect_certificates": lambda params: self.agent.collect_certificates(),
