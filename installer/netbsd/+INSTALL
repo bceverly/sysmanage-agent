@@ -9,12 +9,12 @@ PRE-INSTALL)
 
 POST-INSTALL)
 	# Create sysmanage user and group if they don't exist
-	if ! /usr/sbin/groupinfo sysmanage >/dev/null 2>&1; then
-		/usr/sbin/groupadd -g 9999 sysmanage
+	if ! /usr/sbin/groupinfo sysmanage-agent >/dev/null 2>&1; then
+		/usr/sbin/groupadd -g 9999 sysmanage-agent
 	fi
-	if ! /usr/sbin/userinfo sysmanage >/dev/null 2>&1; then
-		/usr/sbin/useradd -u 9999 -g sysmanage -s /sbin/nologin \
-			-d /usr/pkg/lib/sysmanage-agent -c "SysManage Agent User" sysmanage
+	if ! /usr/sbin/userinfo sysmanage-agent >/dev/null 2>&1; then
+		/usr/sbin/useradd -u 9999 -g sysmanage-agent -s /sbin/nologin \
+			-d /usr/pkg/lib/sysmanage-agent -c "SysManage Agent User" sysmanage-agent
 	fi
 
 	# Create directories
@@ -25,10 +25,10 @@ POST-INSTALL)
 	mkdir -p /etc/sysmanage-agent
 
 	# Set ownership
-	chown -R sysmanage:sysmanage /usr/pkg/lib/sysmanage-agent
-	chown -R sysmanage:sysmanage /var/log/sysmanage-agent
-	chown -R sysmanage:sysmanage /var/run/sysmanage
-	chown -R sysmanage:sysmanage /etc/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /usr/pkg/lib/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /var/log/sysmanage-agent
+	chown -R sysmanage-agent:sysmanage-agent /var/run/sysmanage
+	chown -R sysmanage-agent:sysmanage-agent /etc/sysmanage-agent
 
 	# Use existing config or create from example
 	if [ -f /etc/sysmanage-agent.yaml ]; then

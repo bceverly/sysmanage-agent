@@ -4,7 +4,16 @@
 
 daemon="${TRUEPREFIX}/bin/python3 ${TRUEPREFIX}/libexec/sysmanage-agent/main.py"
 daemon_user="_sysmanage"
-daemon_flags="--config /etc/sysmanage-agent.yaml"
+daemon_flags=""
+
+# The agent parses NO command-line arguments; "--config" was discarded.  It
+# happened to work here only because /etc/sysmanage-agent.yaml is also the
+# built-in default -- an accident, not a design.  These are the variables
+# main.py and src/database/init.py actually read; without SYSMANAGE_DB_PATH the
+# SQLite database resolves to the process working directory.
+export SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml
+export SYSMANAGE_DB_PATH=/var/db/sysmanage-agent/agent.db
+export SYSMANAGE_LOG_DIR=/var/log/sysmanage-agent
 
 . /etc/rc.d/rc.subr
 

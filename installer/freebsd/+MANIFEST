@@ -67,12 +67,15 @@ if [ -n "$MISSING_DEPS" ]; then
     exit 1
 fi
 
-# Create sysmanage user and group if they don't exist
-if ! pw groupshow sysmanage >/dev/null 2>&1; then
-    pw groupadd sysmanage -g 9999
+# Create the agent's OWN account.  It must not be the bare "sysmanage"
+# account a SysManage SERVER install uses for its web application: the
+# sudoers policy shipped alongside is root-equivalent in practice, and
+# sharing one account would let a web compromise inherit those grants.
+if ! pw groupshow sysmanage-agent >/dev/null 2>&1; then
+    pw groupadd sysmanage-agent -g 9999
 fi
-if ! pw usershow sysmanage >/dev/null 2>&1; then
-    pw useradd sysmanage -u 9999 -g sysmanage -h - -s /usr/sbin/nologin \
+if ! pw usershow sysmanage-agent >/dev/null 2>&1; then
+    pw useradd sysmanage-agent -u 9999 -g sysmanage-agent -h - -s /usr/sbin/nologin \
        -d /usr/local/lib/sysmanage-agent -c "SysManage Agent User"
 fi
 
@@ -84,10 +87,10 @@ mkdir -p /var/run/sysmanage
 mkdir -p /etc/sysmanage-agent
 
 # Set ownership
-chown -R sysmanage:sysmanage /usr/local/lib/sysmanage-agent
-chown -R sysmanage:sysmanage /var/log/sysmanage-agent
-chown -R sysmanage:sysmanage /var/run/sysmanage
-chown -R sysmanage:sysmanage /etc/sysmanage-agent
+chown -R sysmanage-agent:sysmanage-agent /usr/local/lib/sysmanage-agent
+chown -R sysmanage-agent:sysmanage-agent /var/log/sysmanage-agent
+chown -R sysmanage-agent:sysmanage-agent /var/run/sysmanage
+chown -R sysmanage-agent:sysmanage-agent /etc/sysmanage-agent
 
 # Use existing config or create symlink to system config
 if [ -f /etc/sysmanage-agent.yaml ]; then

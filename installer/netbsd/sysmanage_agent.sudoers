@@ -1,26 +1,32 @@
 # SysManage Agent Sudoers Configuration for NetBSD
-# This file grants the sysmanage user necessary privileges for system management
+# This file grants the sysmanage-agent user necessary privileges for system management
 # File location: /usr/pkg/etc/sudoers.d/sysmanage-agent
 # Permissions: 0440 (enforced by package installer)
 #
-# The agent runs as the ``sysmanage`` user when ``sysmanage_agent_user``
+# The agent runs as the ``sysmanage-agent`` user when ``sysmanage_agent_user``
 # is set in /etc/rc.conf — see installer/netbsd/sysmanage_agent.rc.
+#
+# That account is deliberately NOT the bare "sysmanage" account: these grants
+# are root-equivalent in practice (install(1), chmod(1), chown(8), sed(1) with
+# unrestricted arguments), and "sysmanage" is what a SysManage SERVER install
+# uses for its network-facing web application.  Sharing one account would let a
+# web compromise inherit every grant below.
 # When the operator runs the agent as root no sudo is needed.
 
 # Package Management (pkgin / pkg_add).
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin update
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin install *
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin remove *
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin upgrade *
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin full-upgrade
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg_add *
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/pkg_delete *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin remove *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin full-upgrade
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_add *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_delete *
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
 # rsync is the snapshot + restore workhorse — without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/rsync
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/rsync
 
 # Air-gap collector ISO build (Pro+ airgap_collector_engine): build_iso_plan
 # bundles the staging tree with ``sudo xorriso`` and checksums it with
@@ -28,44 +34,44 @@ sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/rsync
 # BUILDING_ISO with a sudo password prompt.  NOTE: NetBSD base has no
 # ``sha256sum``; a NetBSD collector needs the pkgsrc ``coreutils`` pkg,
 # which installs /usr/pkg/bin/sha256sum (and xorriso via the xorriso pkg).
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/xorriso
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/sha256sum
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/xorriso
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/sha256sum
 # Optical-disc burn (build_iso_plan with a burn_device): ``sudo
 # growisofs`` writes the ISO, ``sudo eject`` (pkgsrc sysutils/eject)
 # ejects it.  CVE/compliance snapshot fetch uses ``sudo curl``.
 # Repository ingestion loop-mounts media read-only.
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/growisofs
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/eject
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/curl
-sysmanage ALL=(ALL) NOPASSWD: /sbin/mount
-sysmanage ALL=(ALL) NOPASSWD: /sbin/umount
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/createrepo_c
-sysmanage ALL=(ALL) NOPASSWD: /usr/pkg/bin/trickle
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/growisofs
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/eject
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/curl
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/umount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/createrepo_c
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/trickle
 
 # Helper utilities the mirroring/snapshot/import plans run via sudo.
-sysmanage ALL=(ALL) NOPASSWD: /bin/mkdir
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/find
-sysmanage ALL=(ALL) NOPASSWD: /bin/chmod
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/chown
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/sed
-sysmanage ALL=(ALL) NOPASSWD: /bin/rm
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/mkdir
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/find
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/chmod
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/chown
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/sed
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm
 
 # Generic file deployment via ``sudo install``.
-sysmanage ALL=(ALL) NOPASSWD: /usr/bin/install
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Service Management (rc.d).
-sysmanage ALL=(ALL) NOPASSWD: /etc/rc.d/* start
-sysmanage ALL=(ALL) NOPASSWD: /etc/rc.d/* stop
-sysmanage ALL=(ALL) NOPASSWD: /etc/rc.d/* restart
-sysmanage ALL=(ALL) NOPASSWD: /etc/rc.d/* status
+sysmanage-agent ALL=(ALL) NOPASSWD: /etc/rc.d/* start
+sysmanage-agent ALL=(ALL) NOPASSWD: /etc/rc.d/* stop
+sysmanage-agent ALL=(ALL) NOPASSWD: /etc/rc.d/* restart
+sysmanage-agent ALL=(ALL) NOPASSWD: /etc/rc.d/* status
 
 # Firewall Management (npf / pf).
-sysmanage ALL=(ALL) NOPASSWD: /usr/sbin/npfctl *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/pfctl *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/npfctl *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/pfctl *
 
 # System Power Management.
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/shutdown -p *
-sysmanage ALL=(ALL) NOPASSWD: /sbin/reboot
-sysmanage ALL=(ALL) NOPASSWD: /sbin/poweroff
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -h *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -p *
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/reboot
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff

@@ -8,8 +8,8 @@
 # Add the following lines to /etc/rc.conf to enable sysmanage-agent:
 # sysmanage_agent_enable="YES"
 # sysmanage_agent_config="/usr/local/etc/sysmanage-agent/config.yaml"
-# sysmanage_agent_user="sysmanage"
-# sysmanage_agent_group="sysmanage"
+# sysmanage_agent_user="sysmanage-agent"
+# sysmanage_agent_group="sysmanage-agent"
 
 . /etc/rc.subr
 
@@ -21,14 +21,28 @@ load_rc_config ${name}
 
 : ${sysmanage_agent_enable:="NO"}
 : ${sysmanage_agent_config:="/usr/local/etc/sysmanage-agent/config.yaml"}
-: ${sysmanage_agent_user:="sysmanage"}
-: ${sysmanage_agent_group:="sysmanage"}
+: ${sysmanage_agent_dbpath:="/var/db/sysmanage-agent/agent.db"}
+: ${sysmanage_agent_logdir:="/var/log/sysmanage-agent"}
+: ${sysmanage_agent_user:="sysmanage-agent"}
+: ${sysmanage_agent_group:="sysmanage-agent"}
 : ${sysmanage_agent_pidfile:="/var/run/sysmanage/agent.pid"}
 : ${sysmanage_agent_logfile:="/var/log/sysmanage-agent/agent.log"}
 
+# The agent parses NO command-line arguments.  ``--config`` used to be passed
+# here and was silently discarded (the wrapper execs main.py with "$@", and
+# main.py never reads argv), so the agent fell back to its built-in search --
+# SYSMANAGE_CONFIG, then /etc/sysmanage-agent.yaml, then ./sysmanage-agent.yaml
+# -- and never read the path this script verifies exists in its prestart.
+# These are the variables main.py and src/database/init.py actually honour;
+# without SYSMANAGE_DB_PATH the SQLite database resolves to the process
+# working directory.
+export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
+export SYSMANAGE_DB_PATH="${sysmanage_agent_dbpath}"
+export SYSMANAGE_LOG_DIR="${sysmanage_agent_logdir}"
+
 # Use daemon to run in background
 command="/usr/sbin/daemon"
-command_args="-f -p ${sysmanage_agent_pidfile} /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh --config ${sysmanage_agent_config}"
+command_args="-f -p ${sysmanage_agent_pidfile} /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
 pidfile="${sysmanage_agent_pidfile}"
 
 # FreeBSD rc.subr will handle user switching

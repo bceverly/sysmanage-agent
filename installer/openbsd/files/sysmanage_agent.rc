@@ -16,13 +16,15 @@ rc_reload=NO
 
 # Set environment variables
 export SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml
-export SYSMANAGE_DB_DIR=/var/db/sysmanage-agent
+# SYSMANAGE_DB_PATH (a FILE), not SYSMANAGE_DB_DIR -- nothing reads the latter,
+# so the database silently resolved to the process working directory.
+export SYSMANAGE_DB_PATH=/var/db/sysmanage-agent/agent.db
 export SYSMANAGE_LOG_DIR=/var/log/sysmanage-agent
 
 rc_pre() {
 	# Ensure required directories exist with correct permissions
 	# Running as root for testing (user _sysmanage not registered)
-	install -d -m 0750 ${SYSMANAGE_DB_DIR}
+	install -d -m 0750 $(dirname ${SYSMANAGE_DB_PATH})
 	install -d -m 0750 ${SYSMANAGE_LOG_DIR}
 
 	# Copy example config if no config exists
