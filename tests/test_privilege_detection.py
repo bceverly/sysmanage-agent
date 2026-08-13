@@ -23,6 +23,7 @@ Two defects produced exactly that, and both are pinned here.
 """
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from unittest.mock import patch
@@ -109,10 +110,17 @@ def test_systemctl_is_granted_at_its_real_merged_usr_path(path):
 
 @pytest.mark.parametrize("path", MERGED_USR_SUDOERS, ids=lambda p: p.parent.name)
 def test_sudoers_still_parses(path):
-    """A malformed sudoers drop-in locks the agent out of sudo entirely."""
+    """A malformed sudoers drop-in locks the agent out of sudo entirely.
+
+    Skipped where visudo does not exist -- Windows, and any Linux box without
+    sudo installed.  The check MUST come before subprocess.run: a missing
+    binary raises FileNotFoundError rather than returning a "command not
+    found" status, so inspecting stderr afterwards never runs (that is exactly
+    how this failed the Windows CI leg).
+    """
+    if shutil.which("visudo") is None:
+        pytest.skip("visudo not available on this platform")
     result = subprocess.run(
         ["visudo", "-c", "-f", str(path)], capture_output=True, text=True, check=False
     )
-    if result.returncode != 0 and "command not found" in (result.stderr or ""):
-        pytest.skip("visudo unavailable")
     assert result.returncode == 0, result.stdout + result.stderr
