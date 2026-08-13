@@ -337,6 +337,42 @@ class ScriptExecution(Base):
         return self.result_sent_at is not None
 
 
+class SentPackageSnapshot(Base):
+    """The catalog we last successfully DELIVERED to the server.
+
+    ``available_packages`` holds what the latest scan found; it is replaced
+    wholesale every collection, so it cannot answer "what does the server
+    already have?".  This table is that answer, and it is what makes a delta
+    possible: the difference between the current scan and this snapshot is
+    exactly the set of puts and takes the server needs.
+
+    Written ONLY after a transmission the server accepted.  If a send fails the
+    snapshot stays where it was, so the next delta is still computed against
+    what the server genuinely holds rather than against something we hoped it
+    received.
+
+    ``fingerprint`` is the fingerprint of THIS snapshot.  A delta is only safe
+    to send when it matches the fingerprint the server reports holding -- that
+    is the proof both sides agree on the base being diffed against.  When they
+    disagree, the agent sends a full catalog instead of guessing.
+    """
+
+    __tablename__ = "sent_package_snapshot"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    package_manager = Column(String(50), nullable=False, index=True)
+    package_name = Column(String(255), nullable=False)
+    package_version = Column(String(100), nullable=False)
+    fingerprint = Column(String(64), nullable=False, index=True)
+    sent_at = Column(UTCDateTime, nullable=False)
+
+    def __repr__(self):
+        return (
+            f"<SentPackageSnapshot(manager='{self.package_manager}', "
+            f"name='{self.package_name}', version='{self.package_version}')>"
+        )
+
+
 class AvailablePackage(Base):
     """Model for storing available packages from different package managers on this agent."""
 

@@ -315,7 +315,9 @@ class MessageProcessor:
         """
         return self._get_command_handlers()
 
-    async def _handle_get_capabilities(self) -> Dict[str, Any]:
+    async def _handle_get_capabilities(  # NOSONAR - async required by caller interface
+        self,
+    ) -> Dict[str, Any]:
         """Report what this build can route, derived from the live handler map.
 
         Uses the same ``build_capability_report`` the registration payload
@@ -378,7 +380,11 @@ class MessageProcessor:
             # and adding a socket would change that on every platform.
             "get_capabilities": lambda params: self._handle_get_capabilities(),
             "collect_diagnostics": self.agent.collect_diagnostics,
-            "collect_available_packages": lambda params: self.agent.collect_available_packages(),
+            # Bare reference (like collect_diagnostics above): the command's
+            # parameters carry `known_fingerprint`, the catalog the server
+            # already holds, so they must reach the handler rather than being
+            # dropped by a `lambda params: ...()` wrapper.
+            "collect_available_packages": self.agent.collect_available_packages,
             "collect_certificates": lambda params: self.agent.collect_certificates(),
             "collect_roles": lambda params: self.agent.collect_roles(),
             "collect_processes": lambda params: self.agent.collect_processes(),

@@ -78,6 +78,14 @@ class TestCollectAvailablePackages:
             return_value=True
         )
         mock_agent.package_collection_scheduler.package_collector = Mock()
+        # The send path consults the delivered snapshot to choose delta vs
+        # full; no snapshot => full send.
+        mock_agent.package_collection_scheduler.package_collector.get_sent_snapshot = (
+            Mock(return_value=({}, None, None))
+        )
+        mock_agent.package_collection_scheduler.package_collector.replace_sent_snapshot = Mock(
+            return_value=True
+        )
         mock_agent.package_collection_scheduler.package_collector.get_packages_for_transmission = Mock(
             return_value={
                 "package_managers": {
@@ -119,6 +127,14 @@ class TestCollectAvailablePackages:
             return_value=True
         )
         mock_agent.package_collection_scheduler.package_collector = Mock()
+        # The send path consults the delivered snapshot to choose delta vs
+        # full; no snapshot => full send.
+        mock_agent.package_collection_scheduler.package_collector.get_sent_snapshot = (
+            Mock(return_value=({}, None, None))
+        )
+        mock_agent.package_collection_scheduler.package_collector.replace_sent_snapshot = Mock(
+            return_value=True
+        )
         mock_agent.package_collection_scheduler.package_collector.get_packages_for_transmission = Mock(
             return_value={"package_managers": {"apt": []}}
         )
@@ -157,6 +173,14 @@ class TestCollectAvailablePackages:
             return_value=True
         )
         mock_agent.package_collection_scheduler.package_collector = Mock()
+        # The send path consults the delivered snapshot to choose delta vs
+        # full; no snapshot => full send.
+        mock_agent.package_collection_scheduler.package_collector.get_sent_snapshot = (
+            Mock(return_value=({}, None, None))
+        )
+        mock_agent.package_collection_scheduler.package_collector.replace_sent_snapshot = Mock(
+            return_value=True
+        )
         mock_agent.package_collection_scheduler.package_collector.get_packages_for_transmission = Mock(
             return_value={"package_managers": {}}
         )

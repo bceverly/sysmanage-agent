@@ -248,9 +248,9 @@ class DataCollectorDelegator:
         """Delegate to data_collector for frequent child host status updates."""
         return await self.data_collector.child_host_heartbeat()
 
-    async def collect_available_packages(self) -> Dict[str, Any]:
+    async def collect_available_packages(self, parameters=None) -> Dict[str, Any]:
         """Delegate to data_collector."""
-        return await self.data_collector.collect_available_packages()
+        return await self.data_collector.collect_available_packages(parameters)
 
     async def _send_available_packages_paginated(
         self,

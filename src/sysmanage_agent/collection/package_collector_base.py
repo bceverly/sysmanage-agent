@@ -23,7 +23,7 @@ except ImportError:
     pwd = None  # Windows
 
 from src.database.base import get_database_manager
-from src.database.models import AvailablePackage
+from src.database.models import AvailablePackage, SentPackageSnapshot
 from src.i18n import _
 
 logger = logging.getLogger(__name__)
@@ -432,3 +432,65 @@ class BasePackageCollector:
         except Exception as error:
             logger.exception(_("Failed to get packages for transmission: %s"), error)
             return {}
+
+    # ------------------------------------------------------------------
+    # Delivered-snapshot bookkeeping (delta support)
+    # ------------------------------------------------------------------
+
+    def get_sent_snapshot(self):
+        """What we last successfully delivered: (index, fingerprint, sent_at).
+
+        ``index`` is ``{(manager, name): version}`` -- the identity the server
+        stores -- which is what a delta is computed against.  Returns
+        ``({}, None, None)`` when nothing has been delivered yet, which callers
+        must treat as "send the full catalog": there is no base to diff from.
+        """
+        try:
+            with self.db_manager.get_session() as session:
+                rows = session.query(SentPackageSnapshot).all()
+                if not rows:
+                    return {}, None, None
+                index = {
+                    (row.package_manager, row.package_name): row.package_version
+                    for row in rows
+                }
+                return index, rows[0].fingerprint, rows[0].sent_at
+        except Exception as error:  # pylint: disable=broad-except
+            # Degrade to "no snapshot", which forces a full send: correct, just
+            # larger.  Raising here would abort a collection cycle over
+            # bookkeeping.
+            logger.exception(_("Failed to read sent package snapshot: %s"), error)
+            return {}, None, None
+
+    def replace_sent_snapshot(self, package_managers, fingerprint) -> bool:
+        """Record a delivery the server ACCEPTED.
+
+        Called only after a successful transmission.  If a send failed, the
+        snapshot must keep describing what the server genuinely holds -- a
+        snapshot updated on a failed send would make the next delta diff
+        against data the server never received, and the two sides would
+        silently disagree from then on.
+        """
+        try:
+            now = datetime.now(timezone.utc)
+            with self.db_manager.get_session() as session:
+                session.query(SentPackageSnapshot).delete()
+                for manager, packages in (package_managers or {}).items():
+                    for pkg in packages or []:
+                        name = (pkg.get("name") or "").strip()
+                        if not name:
+                            continue
+                        session.add(
+                            SentPackageSnapshot(
+                                package_manager=manager,
+                                package_name=name,
+                                package_version=(pkg.get("version") or "").strip(),
+                                fingerprint=fingerprint,
+                                sent_at=now,
+                            )
+                        )
+                session.commit()
+            return True
+        except Exception as error:  # pylint: disable=broad-except
+            logger.exception(_("Failed to store sent package snapshot: %s"), error)
+            return False

@@ -340,14 +340,24 @@ class TestTestSudoAccess:
             result = _test_sudo_access()
             assert result is True
 
-    def test_test_sudo_access_service_inactive(self):
-        """Test sudo access when service is inactive (exit code 3)."""
+    def test_test_sudo_access_nonzero_is_unprivileged(self):
+        """A non-zero exit now means sudo was DENIED, nothing else.
+
+        This test previously asserted the opposite -- that exit 3 meant
+        privileged, because the probe ran ``systemctl is-active`` and 3 is
+        "unit inactive".  That reading is exactly the bug: ``sudo -n`` also
+        exits non-zero when it refuses, so a host without sudo reported itself
+        as privileged and the server dispatched patches and reboots to it.
+
+        The probe now runs ``true``, which cannot fail on its own, so its exit
+        status is a statement about sudo alone.
+        """
         mock_result = Mock()
-        mock_result.returncode = 3  # Service inactive is fine
+        mock_result.returncode = 3
 
         with patch("subprocess.run", return_value=mock_result):
             result = _test_sudo_access()
-            assert result is True
+            assert result is False
 
     def test_test_sudo_access_auth_failed(self):
         """Test sudo access when authentication fails (exit code 255)."""

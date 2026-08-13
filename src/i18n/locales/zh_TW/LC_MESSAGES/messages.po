@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-12 13:48-0400\n"
+"POT-Creation-Date: 2026-08-12 19:40-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -81,7 +81,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "軟體清單不支援的平台：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:628
+#: src/sysmanage_agent/communication/data_collector.py:873
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "偵測分割區時發生錯誤: %s"
@@ -544,6 +544,16 @@ msgstr "檢測到的套件管理器：%s"
 #, python-format
 msgid "Failed to get packages for transmission: %s"
 msgstr "收集 macOS 應用程式失敗：%s"
+
+#: src/sysmanage_agent/collection/package_collector_base.py:462
+#, python-format
+msgid "Failed to read sent package snapshot: %s"
+msgstr "無法讀取已發送的包快照：%s"
+
+#: src/sysmanage_agent/collection/package_collector_base.py:495
+#, python-format
+msgid "Failed to store sent package snapshot: %s"
+msgstr "無法存儲已發送的包快照：%s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:40
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:135
@@ -1264,182 +1274,187 @@ msgstr "發送子主機數據失敗"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:403
+#: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:59
+#: src/sysmanage_agent/communication/data_collector.py:76
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:136
+#: src/sysmanage_agent/communication/data_collector.py:153
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:156
+#: src/sysmanage_agent/communication/data_collector.py:173
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "套件清單收集失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:159
+#: src/sysmanage_agent/communication/data_collector.py:176
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "軟體清單不支援的平台：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:175
+#: src/sysmanage_agent/communication/data_collector.py:192
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "套件清單收集失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:177
+#: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "安裝 libvirt 套件失敗: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:186
+#: src/sysmanage_agent/communication/data_collector.py:203
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "無法發送初始第三方存儲庫數據：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:194
+#: src/sysmanage_agent/communication/data_collector.py:211
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:202
+#: src/sysmanage_agent/communication/data_collector.py:219
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:209
+#: src/sysmanage_agent/communication/data_collector.py:226
 #, python-format
 msgid "Failed to send initial process data: %s"
 msgstr "傳送初始程序資料失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:215
+#: src/sysmanage_agent/communication/data_collector.py:232
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "傳送初始資料更新失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:234
+#: src/sysmanage_agent/communication/data_collector.py:251
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "更新代理失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:256
+#: src/sysmanage_agent/communication/data_collector.py:273
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "更新代理失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:278
+#: src/sysmanage_agent/communication/data_collector.py:295
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "更新用戶訪問失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:287
+#: src/sysmanage_agent/communication/data_collector.py:304
 #, python-format
 msgid "Error collecting processes: %s"
 msgstr "收集程序時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:294
+#: src/sysmanage_agent/communication/data_collector.py:311
 msgid "Missing required parameter: pid"
 msgstr "缺少必要參數：pid"
 
-#: src/sysmanage_agent/communication/data_collector.py:298
+#: src/sysmanage_agent/communication/data_collector.py:315
 #, python-format
 msgid "Invalid pid: %s"
 msgstr "無效的 pid：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:312
+#: src/sysmanage_agent/communication/data_collector.py:329
 #, python-format
 msgid "Failed to refresh processes after kill: %s"
 msgstr "終止後重新整理程序失敗：%s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:328
+#: src/sysmanage_agent/communication/data_collector.py:345
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "收集/發送軟件存貨時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:335
+#: src/sysmanage_agent/communication/data_collector.py:352
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "關閉訊息處理器時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:341
+#: src/sysmanage_agent/communication/data_collector.py:358
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "收集環境變數時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:347
+#: src/sysmanage_agent/communication/data_collector.py:364
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:353
+#: src/sysmanage_agent/communication/data_collector.py:370
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:359
+#: src/sysmanage_agent/communication/data_collector.py:376
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:365
+#: src/sysmanage_agent/communication/data_collector.py:382
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:372
+#: src/sysmanage_agent/communication/data_collector.py:389
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "將使用者新增至群組時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:379
+#: src/sysmanage_agent/communication/data_collector.py:396
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:385
+#: src/sysmanage_agent/communication/data_collector.py:402
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:391
+#: src/sysmanage_agent/communication/data_collector.py:408
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:397
+#: src/sysmanage_agent/communication/data_collector.py:414
 #, python-format
 msgid "Error collecting/sending process data: %s"
 msgstr "收集/傳送程序資料時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:427
+#: src/sysmanage_agent/communication/data_collector.py:444
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "套件收集排程器錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:442
+#: src/sysmanage_agent/communication/data_collector.py:459
 #, python-format
 msgid "Data collector error: %s"
 msgstr "套件收集排程器錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:505
+#: src/sysmanage_agent/communication/data_collector.py:704
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "收集 apt 軟體包失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:579
+#: src/sysmanage_agent/communication/data_collector.py:745
+#, python-format
+msgid "Error sending package delta: %s"
+msgstr "傳送包差分時發生錯誤：%s"
+
+#: src/sysmanage_agent/communication/data_collector.py:824
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "為批次 %s 發送分頁包時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:674
+#: src/sysmanage_agent/communication/data_collector.py:919
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "偵測分割區時發生錯誤: %s"
@@ -1739,85 +1754,85 @@ msgstr "驗證失敗，狀態 %s：%s"
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:454
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:487
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:499
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:558
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 軟體包失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:591
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:631
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "偵測分割區時發生錯誤: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:696
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:745
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:752
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:758
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:820
+#: src/sysmanage_agent/core/agent_utils.py:824
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:863
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:906
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:916
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:964
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"

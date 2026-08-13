@@ -219,28 +219,37 @@ def _parse_sudoers_line(line: str, username: str, required_commands: list) -> se
 
 def _test_sudo_access() -> bool:
     """
-    Test if current user has sudo access by trying a safe command.
+    Test whether this user actually has non-interactive sudo.
 
     Returns:
-        bool: True if user has sudo access, False otherwise
+        bool: True only when sudo demonstrably worked.
+
+    WHY ``true`` AND NOT A REAL COMMAND
+    -----------------------------------
+    This used to run ``sudo -n systemctl is-active sysmanage-agent`` and accept
+    ANY exit code except 255.  That conflates two unrelated outcomes:
+
+      * sudo was DENIED -- ``sudo -n`` exits 1 with "a password is required";
+      * sudo worked and the COMMAND returned non-zero -- ``systemctl is-active``
+        exits 3 for an inactive unit, 4 for an unknown one.
+
+    Both land in "not 255", so a host where sudo is refused reported itself as
+    privileged.  That flag drives whether the server believes a host can patch,
+    restart services or reboot for a re-provision, so a false positive is worse
+    than a false negative: work gets dispatched that cannot possibly succeed.
+
+    ``true`` cannot fail on its own.  Its exit status is therefore purely a
+    statement about sudo, which is the only thing being asked.
     """
     try:
-        # Try running a safe sudo command with -n (non-interactive)
         result = subprocess.run(  # nosec B603 B607
-            ["sudo", "-n", "systemctl", "is-active", "sysmanage-agent"],
+            ["sudo", "-n", "true"],
             capture_output=True,
             text=True,
             timeout=5,
             check=False,
         )
-
-        # If command succeeded (regardless of exit code), we have sudo access
-        # Exit code 1 means we could run sudo, just the service check failed
-        # Exit code 1 or 3 from systemctl is fine, it means sudo worked
-        # Only if sudo itself fails (e.g., password required) we don't have access
-        return result.returncode not in [
-            255
-        ]  # 255 typically means sudo authentication failed
+        return result.returncode == 0
 
     except Exception:
         return False
