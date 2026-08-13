@@ -65,7 +65,19 @@ SURFACES = [
 SKIP_PARTS = ("__pycache__", ".git", "node_modules", ".venv", "build", "dist")
 SKIP_NAME_RE = re.compile(r"^(test_|conftest\.py$)")
 
+# A .po entry may be a single line, or gettext's standard wrapped form for long
+# strings:
+#
+#     msgid ""
+#     "a string too long for one line"
+#
+# Both are valid, and msgmerge/msgfmt/polib all emit the wrapped form above ~78
+# columns.  The old pattern matched only the single-line case, so a legitimately
+# wrapped entry looked ABSENT and this gate reported a string as "never reached a
+# catalog" when it was sitting right there.  That is a false alarm on the one
+# check whose whole job is telling you a string is missing.
 MSGID_RE = re.compile(r'^msgid "(.*)"$', re.M)
+CONTINUATION_RE = re.compile(r'^"(.*)"$')
 
 
 def _source_files(surface) -> list[Path]:
@@ -121,9 +133,31 @@ def _msgids_from(paths: list[Path], keywords: list[str]) -> dict[str, str]:
 
 
 def _catalog_msgids(path: Path) -> set[str]:
+    """Every msgid in a .po/.pot, including gettext's wrapped multi-line form."""
     if not path.exists():
         return set()
-    return {m for m in MSGID_RE.findall(path.read_text(encoding="utf-8")) if m}
+
+    found: set[str] = set()
+    pending: list[str] | None = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("msgid "):
+            match = MSGID_RE.match(line)
+            pending = [match.group(1)] if match else None
+            continue
+        if pending is not None:
+            continuation = CONTINUATION_RE.match(line)
+            if continuation:
+                pending.append(continuation.group(1))
+                continue
+            joined = "".join(pending)
+            if joined:
+                found.add(joined)
+            pending = None
+    if pending:
+        joined = "".join(pending)
+        if joined:
+            found.add(joined)
+    return found
 
 
 def check() -> int:
