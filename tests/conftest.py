@@ -81,7 +81,7 @@ for _mod_name in _firewall_modules_to_patch:
     _patch_i18n_in_module(_mod_name)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def test_db_path():
     """Create a unique test database path for each test."""
     test_db_fd, test_db_file = tempfile.mkstemp(
@@ -99,7 +99,7 @@ def test_db_path():
         pass
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def engine(test_db_path):  # pylint: disable=redefined-outer-name
     """Create test database engine with fresh schema for each test."""
     test_db_url = f"sqlite:///{test_db_path}"
@@ -119,7 +119,7 @@ def engine(test_db_path):  # pylint: disable=redefined-outer-name
     test_engine.dispose()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def session(engine):  # pylint: disable=redefined-outer-name
     """Create a test database session with proper isolation."""
     testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -132,7 +132,7 @@ def session(engine):  # pylint: disable=redefined-outer-name
         session_instance.close()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_db_manager(test_db_path):  # pylint: disable=redefined-outer-name
     """Mock database manager that uses test database."""
     with patch("src.database.base.get_database_manager") as mock_get_db_manager:
@@ -246,7 +246,7 @@ def sample_command_message():
     }
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def event_loop():
     """Create event loop for async tests."""
     loop = asyncio.new_event_loop()
