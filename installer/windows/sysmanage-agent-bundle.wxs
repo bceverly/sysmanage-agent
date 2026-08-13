@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <!--
+    SysManage Agent - WiX Bundle (Burn)
+
+    WHY A BUNDLE EXISTS AT ALL
+    ==========================
+    The agent needs Python 3.9+ and the VC++ 2015-2022 runtime.  Neither can be
+    installed from inside the agent MSI: both are Windows Installer packages,
+    the MSI holds the Windows Installer mutex while its custom actions run, and
+    a nested install is refused with 1618 (ERROR_INSTALL_ALREADY_RUNNING).
+    Chaining prerequisites is exactly what Burn is for - it installs each
+    package in its own transaction, in order, so Python is genuinely present
+    before the agent MSI's custom actions look for it.
+
+    THE MSI STILL HAS TO STAND ALONE
+    ================================
+    This bundle is the better experience, but it is a SEPARATE artifact that
+    someone has to choose to download.  winget installs the MSI, `msiexec /i`
+    installs the MSI, and the Pro+ provisioning path installs the MSI.  So the
+    MSI keeps its own deferred-bootstrap scheduled task (bootstrap-task.ps1)
+    rather than relying on this.  Where both apply, the bundle wins the race:
+    Python is already installed by the time the MSI runs, check-python.ps1's
+    detect-only pass is satisfied, and no task is ever registered.
+
+    PREREQUISITES ARE EMBEDDED, NOT DOWNLOADED
+    ==========================================
+    Deliberate, and it costs ~55 MB.  SysManage supports air-gapped estates as
+    a first-class scenario, and a bundle that reaches out to python.org mid-
+    install is useless in exactly the environments that most need a single
+    self-contained installer.  It also removes the most common cause of the
+    original failure: no route to python.org.  build-bundle.ps1 fetches both
+    payloads at BUILD time and verifies each one's Authenticode signature and
+    signer before packaging; the Python payload can additionally be pinned by
+    SHA-256, but the VC++ one cannot, because its aka.ms URL always serves the
+    current build.
+  -->
+
+  <Bundle Name="SysManage Agent"
+          Manufacturer="SysManage"
+          Version="$(var.VERSION)"
+          UpgradeCode="7F3A9C21-4B6E-4E2A-9D18-6C5A2E7B10D4"
+          IconSourceFile="sysmanage-agent.ico"
+          Compressed="yes">
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+          Theme="hyperlinkLicense"
+          LicenseUrl="https://www.gnu.org/licenses/agpl-3.0.html"
+          SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+
+    <!--
+      Is a usable Python already here?
+
+      The agent's floor is 3.9, not 3.12, so this checks every interpreter we
+      would accept rather than only the one we ship.  Installing a second
+      Python onto a machine that already has a perfectly good 3.11 would be
+      rude, slow, and a support burden when two interpreters disagree about
+      which one owns the PATH.
+
+      Per-machine installs only (HKLM): the agent runs as a SYSTEM service, so
+      a per-user Python in some administrator's profile is not reachable by it
+      and must not count as satisfying the prerequisite.
+    -->
+    <util:RegistrySearch Id="Python39"  Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.9\InstallPath"  Result="exists" Variable="HavePython39" />
+    <util:RegistrySearch Id="Python310" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.10\InstallPath" Result="exists" Variable="HavePython310" />
+    <util:RegistrySearch Id="Python311" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" Result="exists" Variable="HavePython311" />
+    <util:RegistrySearch Id="Python312" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.12\InstallPath" Result="exists" Variable="HavePython312" />
+    <util:RegistrySearch Id="Python313" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.13\InstallPath" Result="exists" Variable="HavePython313" />
+
+    <!-- VC++ 2015-2022 runtime, needed by the cryptography wheel. -->
+    <util:RegistrySearch Id="VcRuntimeInstalled"
+                         Root="HKLM"
+                         Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\$(var.VcArch)"
+                         Value="Installed"
+                         Result="value"
+                         Variable="VcRuntimeInstalled" />
+
+    <Chain>
+      <!--
+        1. Visual C++ runtime.
+
+        3010 is success-with-reboot-pending and must not be treated as failure;
+        the agent does not need the reboot to have happened, and failing here
+        would strand the whole chain over a cosmetic condition.
+      -->
+      <ExePackage Id="VcRedist"
+                  DisplayName="Microsoft Visual C++ 2015-2022 Redistributable"
+                  SourceFile="$(var.VcRedistPath)"
+                  Permanent="yes"
+                  Vital="yes"
+                  Compressed="yes"
+                  InstallArguments="/install /quiet /norestart"
+                  DetectCondition="VcRuntimeInstalled = 1"
+                  InstallCondition="NOT (VcRuntimeInstalled = 1)">
+        <ExitCode Value="3010" Behavior="success" />
+      </ExePackage>
+
+      <!--
+        2. Python.
+
+        InstallAllUsers=1 because the agent runs as a SYSTEM service and a
+        per-user interpreter would be invisible to it.  PrependPath=1 because
+        the agent's own scripts locate the interpreter through PATH.
+
+        Permanent="yes": uninstalling the agent must not remove a Python that
+        other software on the box may since have started depending on.  Leaving
+        an interpreter behind is a much smaller sin than breaking an unrelated
+        application.
+      -->
+      <ExePackage Id="Python"
+                  DisplayName="Python $(var.PythonVersion)"
+                  SourceFile="$(var.PythonPath)"
+                  Permanent="yes"
+                  Vital="yes"
+                  Compressed="yes"
+                  InstallArguments="/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 Include_launcher=1"
+                  DetectCondition="HavePython312"
+                  InstallCondition="NOT (HavePython39 OR HavePython310 OR HavePython311 OR HavePython312 OR HavePython313)">
+        <ExitCode Value="3010" Behavior="success" />
+      </ExePackage>
+
+      <!--
+        3. The agent itself.
+
+        By the time this runs, Burn has committed the packages above in their
+        own transactions, so check-python.ps1's detect-only pass finds Python
+        and the MSI finishes the venv and the service in-transaction - no
+        deferred task, and the service is running when the bundle returns.
+      -->
+      <MsiPackage Id="SysManageAgentMsi"
+                  SourceFile="$(var.MsiPath)"
+                  Vital="yes"
+                  Compressed="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

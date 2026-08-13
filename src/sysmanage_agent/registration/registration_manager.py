@@ -10,16 +10,17 @@ including authentication tokens, host approval status, and certificate handling.
 """
 
 import asyncio
-import ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import aiohttp
+from sqlalchemy import text
 
 from src.database.base import get_database_manager
 from src.database.models import HostApproval
 from src.i18n import _
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 
 class RegistrationManager:
@@ -43,34 +44,19 @@ class RegistrationManager:
     async def fetch_certificates(self, host_id: str) -> bool:
         """Fetch certificates from server after approval."""
         try:
-            server_config = self.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
-
-            # Build certificate URL - authenticated endpoint requires /api prefix
-            protocol = "https" if use_https else "http"
-            cert_url = (
-                f"{protocol}://{hostname}:{port}/api/certificates/client/{host_id}"
-            )
-
-            # Set up SSL context if needed
-            ssl_context = None
-            if use_https:
-                ssl_context = ssl.create_default_context()  # NOSONAR
-                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
-                if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR
-                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
+            # Certificates are an authenticated endpoint, hence the /api prefix.
+            endpoint = ServerEndpoint(self.config)
+            cert_url = endpoint.rest_url(f"/api/certificates/client/{host_id}")
 
             # Get authentication token
             auth_token = await self.get_auth_token()
 
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
-            async with aiohttp.ClientSession(connector=connector) as session:
+            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
                 headers = {"Authorization": f"Bearer {auth_token}"}
 
-                async with session.get(cert_url, headers=headers) as response:
+                async with session.get(
+                    cert_url, headers=headers, proxy=endpoint.proxy()
+                ) as response:
                     if response.status == 200:
                         cert_data = await response.json()
                         self.agent.cert_store.store_certificates(cert_data)
@@ -106,27 +92,13 @@ class RegistrationManager:
 
         # Get server fingerprint first for security validation
         try:
-            server_config = self.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
+            endpoint = ServerEndpoint(self.config)
+            fingerprint_url = endpoint.rest_url("/api/certificates/server-fingerprint")
 
-            protocol = "https" if use_https else "http"
-            fingerprint_url = (
-                f"{protocol}://{hostname}:{port}/api/certificates/server-fingerprint"
-            )
-
-            ssl_context = None
-            if use_https:
-                ssl_context = ssl.create_default_context()  # NOSONAR
-                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
-                if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR
-                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.get(fingerprint_url) as response:
+            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
+                async with session.get(
+                    fingerprint_url, proxy=endpoint.proxy()
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         server_fingerprint = data.get("fingerprint")
@@ -142,12 +114,10 @@ class RegistrationManager:
             )
             return False
 
-        # Check if we can find our host ID from previous registration
-        # This is a simplified approach - in a real implementation you might
-        # store the host ID during registration
-        system_info = self.agent.registration.get_system_info()
-        hostname = system_info["hostname"]
-
+        # Dead code removed: this fetched system_info purely to read a hostname
+        # that was never used.  It was masked until the URL-building duplication
+        # above was folded into ServerEndpoint -- pylint had been seeing the
+        # OTHER `hostname` (the one that built the URL) as the used one.
         # For now, we'll try to fetch with a known host ID or wait for manual approval
         # This would be improved with a more sophisticated approval checking mechanism
         self.logger.warning(
@@ -475,17 +445,25 @@ class RegistrationManager:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
-                # Use raw SQL to delete ALL host approval records to avoid UUID parsing errors
-                # This is necessary because corrupt UUIDs in the database will cause
-                # SQLAlchemy to fail when trying to load them as objects
-                session.execute("DELETE FROM host_approval")
+                # Raw SQL, deliberately: a corrupt UUID in the table makes
+                # SQLAlchemy raise while loading the row as an object, which is
+                # exactly the situation this cleanup exists to recover from.
+                #
+                # text() is not optional. SQLAlchemy 2.x refuses a bare string
+                # with "Textual SQL expression should be explicitly declared as
+                # text(...)", and because the caller swallows the exception,
+                # these three statements silently did nothing for weeks -- the
+                # agent logged a cleanup it had not performed.
+                session.execute(text("DELETE FROM host_approval"))
 
                 # Clear any pending script executions since they're tied to the old host
-                session.execute("DELETE FROM script_execution")
+                session.execute(text("DELETE FROM script_execution"))
 
                 # Clear any queued messages with host_id data
                 session.execute(
-                    "DELETE FROM message_queue WHERE message_data LIKE '%host_id%'"
+                    text(
+                        "DELETE FROM message_queue WHERE message_data LIKE '%host_id%'"
+                    )
                 )
 
                 session.commit()
@@ -507,13 +485,25 @@ class RegistrationManager:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
-                # Delete rows with invalid UUIDs using raw SQL
-                # Check host_approval table for non-UUID values
+                # ONE definition of "corrupt", used by both the count and the
+                # delete. They used to differ: the count also matched
+                # "host_id IS NOT NULL", which is true of every populated row,
+                # so a perfectly healthy table reported "Found N corrupt
+                # entries, cleaning up..." and then deleted nothing -- the
+                # delete's predicate was the correct one. Alarming, and wrong.
+                #
+                # A NULL host_id IS corrupt (the row identifies no host), so it
+                # belongs in the predicate; "IS NOT NULL" was the inversion.
+                corrupt_predicate = (
+                    "LENGTH(host_id) != 36 "
+                    "OR host_id NOT LIKE '%-%-%-%-%' "
+                    "OR host_id IS NULL"
+                )
+
                 result = session.execute(
-                    "SELECT COUNT(*) FROM host_approval WHERE "
-                    "LENGTH(host_id) != 36 OR "
-                    "host_id NOT LIKE '%-%-%-%-%' OR "
-                    "host_id IS NOT NULL"
+                    text(
+                        f"SELECT COUNT(*) FROM host_approval WHERE {corrupt_predicate}"
+                    )
                 ).fetchone()
 
                 if result and result[0] > 0:
@@ -524,9 +514,7 @@ class RegistrationManager:
                         result[0],
                     )
                     session.execute(
-                        "DELETE FROM host_approval WHERE "
-                        "LENGTH(host_id) != 36 OR "
-                        "host_id NOT LIKE '%-%-%-%-%'"
+                        text(f"DELETE FROM host_approval WHERE {corrupt_predicate}")
                     )
                     session.commit()
                     self.logger.info("Corrupt database entries cleaned up")

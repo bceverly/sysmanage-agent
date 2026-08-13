@@ -9,7 +9,6 @@ Handles initial registration and periodic re-registration with the server.
 
 import asyncio
 import logging
-import ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -33,6 +32,7 @@ from src.sysmanage_agent.collection.software_inventory_collection import (
 )
 from src.sysmanage_agent.collection.user_access_collection import UserAccessCollector
 from src.sysmanage_agent.communication.network_utils import NetworkUtils
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 try:
     import aiohttp
@@ -279,14 +279,8 @@ class ClientRegistration:
             self.registered = True  # Pretend we're registered for now
             return True
 
-        # Registration is unauthenticated like login, so use base server URL without /api prefix
-        server_config = self.config.get_server_config()
-        hostname = server_config.get("hostname", "localhost")
-        port = server_config.get("port", 8000)
-        use_https = server_config.get("use_https", False)
-        protocol = "https" if use_https else "http"
-        base_url = f"{protocol}://{hostname}:{port}"
-        registration_url = f"{base_url}/api/host/register"
+        # Registration is unauthenticated, like login.
+        registration_url = ServerEndpoint(self.config).rest_url("/api/host/register")
 
         # Use minimal registration data
         basic_info = self.get_basic_registration_info()
@@ -299,24 +293,24 @@ class ClientRegistration:
         self.logger.debug("Registration data: %s", basic_info)
 
         try:
-            # Create SSL context that doesn't verify certificates (for development)
-            ssl_context = (
-                ssl.create_default_context()
-            )  # NOSONAR - SSL verification is intentionally configurable
-            ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2  # NOSONAR
-            ssl_context.check_hostname = (
-                False  # NOSONAR - SSL verification is intentionally configurable
-            )
-            ssl_context.verify_mode = (
-                ssl.CERT_NONE
-            )  # NOSONAR - SSL verification is intentionally configurable
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
-            async with aiohttp.ClientSession(connector=connector) as session:
+            # SECURITY: this block used to disable certificate verification
+            # UNCONDITIONALLY -- check_hostname=False and verify_mode=CERT_NONE
+            # were set regardless of ``verify_ssl``, with a comment claiming it
+            # was "for development".  Registration is the agent's FIRST contact
+            # with the server and is unauthenticated, so it is the single worst
+            # request to leave unverified: anyone in the path could impersonate
+            # the server and enrol the host into their own fleet.
+            #
+            # It now uses the shared context, which verifies by default, honours
+            # ca_bundle for TLS-inspecting proxies, and only disables
+            # verification when an administrator explicitly asks for it.
+            endpoint = ServerEndpoint(self.config)
+            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
                 async with session.post(
                     registration_url,
                     json=basic_info,
                     headers={"Content-Type": "application/json"},
+                    proxy=endpoint.proxy(),
                 ) as response:
 
                     if response.status in [200, 201]:

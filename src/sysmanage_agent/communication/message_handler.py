@@ -10,7 +10,6 @@ Provides reliable message delivery with queue-based persistence and message proc
 import asyncio
 import json
 import logging
-import ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -29,6 +28,7 @@ from src.sysmanage_agent.communication.message_logging_helpers import (
     log_duplicate_message,
 )
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.version import get_agent_version
 
 # How many consecutive host_not_registered errors the agent tolerates (reconnecting
@@ -236,29 +236,20 @@ class MessageHandler(MessageHandlerQueueMixin):
         try:
             # Build health check URL - use base server URL without /api prefix
             # since health check should be unauthenticated
-            server_config = self.agent.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
-            protocol = "https" if use_https else "http"
-            http_url = f"{protocol}://{hostname}:{port}"
+            endpoint = ServerEndpoint(self.agent.config)
+            http_url = endpoint.base_url()
 
-            # Create SSL context if needed
-            ssl_context = None
-            if http_url.startswith("https://"):
-                ssl_context = ssl.create_default_context()  # NOSONAR
-                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
-                if not self.agent.config.should_verify_ssl():
-                    ssl_context.check_hostname = False  # NOSONAR
-                    ssl_context.verify_mode = ssl.CERT_NONE  # NOSONAR
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            # One SSL context builder for the whole agent -- it is also what
+            # honours ca_bundle, so a corporate TLS-inspecting proxy works here
+            # without anyone having to remember to disable verification.
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
 
             async with aiohttp.ClientSession(
-                connector=connector, timeout=timeout
+                timeout=timeout, **endpoint.session_kwargs()
             ) as session:
-                async with session.get(f"{http_url}/") as response:
+                async with session.get(
+                    f"{http_url}/", proxy=endpoint.proxy()
+                ) as response:
                     return response.status == 200
         except Exception as error:
             self.logger.debug("Server health check failed: %s", error)

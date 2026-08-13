@@ -108,7 +108,9 @@ class TestSysManageAgentInitialization:
             parsed_url = urlparse(server_url)
             # Validate hostname and port separately for security
             assert parsed_url.hostname == "basic-server.com"
-            assert parsed_url.port == 8000
+            # None, not 8000: an unconfigured port now means the scheme's
+            # standard port, which is what needs no firewall change.
+            assert parsed_url.port is None
             assert parsed_url.scheme in ("http", "https")
             assert agent.config.get_log_level() == "INFO"  # Default log level
             assert (

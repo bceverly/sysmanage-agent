@@ -10,7 +10,6 @@ import asyncio
 import logging
 import shutil
 import socket
-import ssl
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -36,6 +35,7 @@ from src.sysmanage_agent.core.async_utils import (  # noqa: F401
 # were moved to ``agent_privileges`` to keep this module small; existing
 # imports and test patch targets (e.g. ``agent_utils.is_running_privileged``)
 # must keep resolving here.
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _check_sudoers_privileges,
     _compute_running_privileged,
@@ -201,41 +201,22 @@ class AuthenticationHelper:
 
     def build_auth_url(self) -> str:
         """Build authentication URL from server config."""
-        server_config = self.agent.config.get_server_config()
-        hostname = server_config.get("hostname", "localhost")
-        port = server_config.get("port", 8000)
-        use_https = server_config.get("use_https", False)
-
-        protocol = "https" if use_https else "http"
-        return f"{protocol}://{hostname}:{port}/api/agent/auth"
+        return ServerEndpoint(self.agent.config).rest_url("/api/agent/auth")
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
-        auth_url = self.build_auth_url()
-        server_config = self.agent.config.get_server_config()
-        use_https = server_config.get("use_https", False)
-
-        # Set up SSL context if needed
-        ssl_context = None
-        if use_https:
-            ssl_context = ssl.create_default_context()  # NOSONAR
-            ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
-            if not self.agent.config.should_verify_ssl():
-                ssl_context.check_hostname = (
-                    False  # NOSONAR - SSL verification is configurable by admin
-                )
-                ssl_context.verify_mode = (
-                    ssl.CERT_NONE
-                )  # NOSONAR - SSL certificate validation intentionally disabled when admin configures verify_ssl=false
+        endpoint = ServerEndpoint(self.agent.config)
+        auth_url = endpoint.rest_url("/api/agent/auth")
 
         # Get hostname to send in header
         system_hostname = socket.gethostname()
 
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
-        async with aiohttp.ClientSession(connector=connector) as session:
+        async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
             headers = {"x-agent-hostname": system_hostname}
 
-            async with session.post(auth_url, headers=headers) as response:
+            async with session.post(
+                auth_url, headers=headers, proxy=endpoint.proxy()
+            ) as response:
                 if response.status == 200:
                     data = await response.json()
                     return data.get("connection_token", "")

@@ -327,7 +327,11 @@ class TestConfigManager:  # pylint: disable=too-many-public-methods
         config.config_data = {}
 
         url = config.get_server_url()
-        assert url == "ws://localhost:8000/api/agent/connect"
+        # No port configured means the scheme's standard port (80/443), not
+        # the old hard-coded 8000 -- a value that matched none of the config
+        # templates the project ships and existed only as a latent bug.
+        # Omitting the port is the single-origin goal: nothing to open but 443.
+        assert url == "ws://localhost/api/agent/connect"
 
     @patch("os.path.exists", return_value=True)
     def test_get_server_rest_url_https(self, mock_exists):
@@ -357,7 +361,11 @@ class TestConfigManager:  # pylint: disable=too-many-public-methods
         config.config_data = {}
 
         url = config.get_server_rest_url()
-        assert url == "http://localhost:8000/api"
+        # No port configured means the scheme's standard port (80/443), not
+        # the old hard-coded 8000 -- a value that matched none of the config
+        # templates the project ships and existed only as a latent bug.
+        # Omitting the port is the single-origin goal: nothing to open but 443.
+        assert url == "http://localhost/api"
 
     @patch("os.path.exists", return_value=True)
     def test_get_hostname_override(self, mock_exists):

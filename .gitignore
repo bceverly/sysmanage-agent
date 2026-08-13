@@ -189,6 +189,9 @@ coverage.json
 # Installer build outputs
 installer/dist/
 installer/windows/src.zip
+# Prerequisite installers the bundle embeds (VC++ redist + Python, ~55 MB).
+# build-bundle.ps1 downloads and signature-verifies them on demand.
+installer/windows/prereq/
 installer/windows/nssm.exe
 *.deb
 *.rpm

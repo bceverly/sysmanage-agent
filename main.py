@@ -45,6 +45,7 @@ from src.sysmanage_agent.core.agent_utils import (
     reconcile_inflight_journal,
 )
 from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
 from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
 from src.sysmanage_agent.operations.custom_metrics_operations import (
@@ -461,31 +462,16 @@ class SysManageAgent(
         try:
             # Build health check URL - use base server URL without /api prefix
             # since health check should be unauthenticated
-            server_config = self.config.get_server_config()
-            hostname = server_config.get("hostname", "localhost")
-            port = server_config.get("port", 8000)
-            use_https = server_config.get("use_https", False)
-            protocol = "https" if use_https else "http"
-            http_url = f"{protocol}://{hostname}:{port}"
+            endpoint = ServerEndpoint(self.config)
+            http_url = endpoint.base_url()
 
-            # Create SSL context if needed
-            ssl_context = None
-            if http_url.startswith("https://"):
-                ssl_context = ssl.create_default_context()  # NOSONAR
-                ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
-                if not self.config.should_verify_ssl():
-                    ssl_context.check_hostname = (
-                        False  # NOSONAR - intentionally configurable
-                    )
-                    ssl_context.verify_mode = (
-                        ssl.CERT_NONE
-                    )  # NOSONAR - intentionally configurable
-
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            # One SSL context builder for the whole agent -- it is also what
+            # honours ca_bundle, so a corporate TLS-inspecting proxy works here
+            # without anyone having to disable verification.
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
 
             async with aiohttp.ClientSession(
-                connector=connector, timeout=timeout
+                timeout=timeout, **endpoint.session_kwargs()
             ) as session:
                 async with session.get(f"{http_url}/") as response:
                     return response.status == 200
@@ -650,9 +636,17 @@ class SysManageAgent(
         self.running = False
 
     def _create_ssl_context(self):
-        """Create SSL context for WebSocket connection."""
-        ssl_context = ssl.create_default_context()  # NOSONAR
-        ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+        """Create SSL context for the WebSocket connection.
+
+        Deliberately NOT folded into ServerEndpoint.ssl_context(): this path can
+        upgrade to mutual TLS with a client certificate, which the plain REST
+        calls never do.  It starts from the shared context so ``ca_bundle`` is
+        honoured here too -- an estate behind a TLS-inspecting proxy needs the
+        WebSocket to trust that CA just as much as the REST calls do.
+        """
+        ssl_context = ServerEndpoint(self.config).ssl_context()
+        if ssl_context is None:  # plain ws://, nothing to configure
+            return None
 
         cert_paths = self.cert_store.load_certificates()
         if cert_paths:
@@ -816,12 +810,29 @@ class SysManageAgent(
         ping_interval = self.config.get_ping_interval()
         ping_timeout = ping_interval / 2
 
+        # Proxy handling: an explicit server.proxy wins; otherwise `websockets`
+        # reads HTTPS_PROXY / NO_PROXY from the environment itself, which is
+        # where a managed desktop already keeps it.  The explicit setting exists
+        # for hosts that have no such environment -- a Windows service does not
+        # inherit a user's shell variables, and those are exactly the machines
+        # that sit behind a mandatory proxy.
+        #
+        # Passing proxy=None would DISABLE the environment lookup, so the
+        # argument is only supplied when there is something to say.
+        connect_kwargs = {
+            "ssl": ssl_context,
+            "ping_interval": ping_interval,
+            "ping_timeout": ping_timeout,
+            "close_timeout": 10,
+        }
+        configured_proxy = ServerEndpoint(self.config).proxy()
+        if configured_proxy:
+            connect_kwargs["proxy"] = configured_proxy
+            self.logger.info("Connecting through configured proxy")
+
         async with websockets.connect(
             websocket_url,
-            ssl=ssl_context,
-            ping_interval=ping_interval,
-            ping_timeout=ping_timeout,
-            close_timeout=10,
+            **connect_kwargs,
         ) as websocket:
             self.websocket = websocket
             self.connected = True

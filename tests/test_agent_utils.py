@@ -188,7 +188,11 @@ class TestAuthenticationHelper:
 
         result = self.auth_helper.build_auth_url()
 
-        assert result == "http://localhost:8000/api/agent/auth"
+        # No port configured means the scheme's standard port (80/443), not
+        # the old hard-coded 8000 -- a value that matched none of the config
+        # templates the project ships and existed only as a latent bug.
+        # Omitting the port is the single-origin goal: nothing to open but 443.
+        assert result == "http://localhost/api/agent/auth"
 
     # Note: Comprehensive aiohttp async context manager mocking is complex.
     # The build_auth_url method provides good coverage of the auth logic.

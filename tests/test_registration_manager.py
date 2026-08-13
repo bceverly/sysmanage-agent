@@ -492,3 +492,123 @@ class TestEdgeCases:
         ):
             # Should not raise exception
             await reg_manager.clear_stored_host_id()
+
+
+class TestDatabaseCleanupActuallyRuns:
+    """The cleanup SQL must EXECUTE, and must agree with itself about "corrupt".
+
+    Both bugs here were invisible because every caller swallows the exception:
+
+    * The statements were bare strings. SQLAlchemy 2.x refuses those
+      ("Textual SQL expression ... should be explicitly declared as text(...)"),
+      so for weeks the agent logged "Host approval records ... cleared from
+      database" having deleted nothing.
+    * The count and the delete used different predicates. The count also
+      matched ``host_id IS NOT NULL`` -- true of every populated row -- so a
+      healthy table reported corruption. Worse, NULL comparisons yield NULL
+      rather than true, so the one genuinely corrupt row (a NULL host_id) was
+      the only one it did NOT match.
+    """
+
+    @pytest.fixture(name="seeded_db")
+    def _seeded_db(self):
+        """An in-memory database shaped like the agent's host_approval table.
+
+        A fixture rather than a helper so teardown is deterministic: leaving the
+        engine to the garbage collector makes pytest raise
+        PytestUnraisableExceptionWarning when SQLite finalizes the connection
+        during an unrelated test's setup.
+        """
+        from sqlalchemy import create_engine, text  # noqa: PLC0415
+        from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
+        engine = create_engine("sqlite://")
+        session = sessionmaker(bind=engine)()
+        session.execute(
+            text("CREATE TABLE host_approval (host_id TEXT, approved INTEGER)")
+        )
+        session.execute(text("CREATE TABLE script_execution (id INTEGER)"))
+        session.execute(text("CREATE TABLE message_queue (message_data TEXT)"))
+        for host_id in (
+            "aabeadb6-8cc4-4449-bb92-4be7b8e42c51",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "not-a-uuid",
+            None,
+        ):
+            session.execute(
+                text("INSERT INTO host_approval VALUES (:h, 1)"), {"h": host_id}
+            )
+        session.execute(text("INSERT INTO script_execution VALUES (1)"))
+        session.execute(text('INSERT INTO message_queue VALUES (\'{"host_id": "x"}\')'))
+        session.commit()
+        try:
+            yield session
+        finally:
+            session.close()
+            engine.dispose()
+
+    @staticmethod
+    def _patched(session):
+        manager = Mock()
+        manager.get_session.return_value = session
+        return patch(
+            "src.sysmanage_agent.registration.registration_manager."
+            "get_database_manager",
+            return_value=manager,
+        )
+
+    @staticmethod
+    def _count(session, table):
+        from sqlalchemy import text  # noqa: PLC0415
+
+        return session.execute(
+            text(f"SELECT COUNT(*) FROM {table}")  # nosec B608 - fixed table names
+        ).fetchone()[0]
+
+    @pytest.mark.asyncio
+    async def test_clear_stored_host_id_really_deletes(self, agent, seeded_db):
+        """It claimed success while deleting nothing."""
+        with self._patched(seeded_db):
+            await RegistrationManager(agent).clear_stored_host_id()
+
+        for table in ("host_approval", "script_execution", "message_queue"):
+            count = self._count(seeded_db, table)
+            assert count == 0, f"{table} still has {count} row(s)"
+
+    def test_corrupt_cleanup_keeps_valid_rows_and_removes_bad_ones(
+        self, agent, seeded_db
+    ):
+        """The predicate must mean what the log message claims it means."""
+        from sqlalchemy import text  # noqa: PLC0415
+
+        with self._patched(seeded_db):
+            RegistrationManager(agent).cleanup_corrupt_database_entries()
+
+        remaining = [
+            row[0]
+            for row in seeded_db.execute(
+                text("SELECT host_id FROM host_approval ORDER BY host_id")
+            ).fetchall()
+        ]
+        assert remaining == [
+            "aabeadb6-8cc4-4449-bb92-4be7b8e42c51",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        ], "valid UUIDs must survive; the malformed one and the NULL must not"
+
+    def test_healthy_table_is_left_completely_alone(self, agent, seeded_db):
+        """Two valid rows plus the corrupt pair; only the corrupt pair goes."""
+        from sqlalchemy import text  # noqa: PLC0415
+
+        seeded_db.execute(text("DELETE FROM host_approval WHERE host_id IS NULL"))
+        seeded_db.execute(
+            text("DELETE FROM host_approval WHERE host_id = 'not-a-uuid'")
+        )
+        seeded_db.commit()
+        assert self._count(seeded_db, "host_approval") == 2
+
+        with self._patched(seeded_db):
+            RegistrationManager(agent).cleanup_corrupt_database_entries()
+
+        assert (
+            self._count(seeded_db, "host_approval") == 2
+        ), "a healthy table must not lose rows"

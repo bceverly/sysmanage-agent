@@ -30,6 +30,18 @@ $LogPath = "C:\ProgramData\SysManage\logs"
 $LogFile = Join-Path $LogPath "install.log"
 $TranscriptFile = Join-Path $LogPath "create-service-transcript.log"
 
+# Shared state vocabulary.  Whether the service exists is THE question an
+# operator has after an install, so this script is the one that gets to say
+# Complete -- and, just as importantly, Failed.
+$StateHelper = Join-Path $InstallDir 'bootstrap-state.ps1'
+if (Test-Path $StateHelper) { . $StateHelper }
+function Set-StateIfAvailable {
+    param([string]$State, [string]$Detail)
+    if (Get-Command Set-SmBootstrapState -ErrorAction SilentlyContinue) {
+        Set-SmBootstrapState -State $State -Detail $Detail
+    }
+}
+
 # Start transcript to capture ALL output
 Start-Transcript -Path $TranscriptFile -Append
 
@@ -79,6 +91,12 @@ try {
         Write-Log "  1. Install Python 3.9+ from https://www.python.org/downloads/"
         Write-Log "  2. Re-run the SysManage Agent MSI installer"
         Write-Log ""
+        # The state that used to be invisible.  Anything reading the registry
+        # key or the event log now learns the agent will never enrol.
+        Set-StateIfAvailable -State 'Pending' -Detail (
+            'No virtual environment, so the service was not registered. ' +
+            'The deferred bootstrap task should finish this; if it does not, ' +
+            'install Python 3.9+ and run: schtasks /run /tn SysManage-Agent-Bootstrap')
         try { Stop-Transcript } catch { Write-Host "Stop-Transcript error swallowed: $_" }
         Write-Host ""
         Write-Host "=====================================" -ForegroundColor Yellow
@@ -261,6 +279,9 @@ try {
 
 if ($ServiceCreated) {
     Write-Log "Windows Service creation complete"
+    $svcNow = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    Set-StateIfAvailable -State 'Complete' -Detail (
+        "Service registered and $(if ($svcNow) { $svcNow.Status } else { 'unknown' }).")
 } else {
     # NEVER exit non-zero from this custom action.  The WiX CustomAction
     # for ``CreateService`` uses ``Return="check"`` (sysmanage-agent.wxs
@@ -276,6 +297,8 @@ if ($ServiceCreated) {
     # should leave the MSI landed and let the operator finish the
     # service-register step manually.  Logged WARNING is the contract
     # so operators see what to do.
+    Set-StateIfAvailable -State 'Failed' -Detail (
+        "create-service.ps1 could not register '$ServiceName'. See $LogFile.")
     Write-Log "WARNING: Windows Service creation FAILED -- MSI install will still complete."
     Write-Log "WARNING: To register the service manually after installing Python 3.9+:"
     Write-Log "WARNING:   1. Re-run the MSI (MajorUpgrade detects the install, re-fires CAs)"

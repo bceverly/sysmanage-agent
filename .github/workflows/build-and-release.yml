@@ -851,6 +851,71 @@ jobs:
           Write-Host "SHA256 checksum generated:"
           Get-Content $checksumFile
 
+      # The bundle chains VC++ -> Python -> the agent MSI, each in its own
+      # Windows Installer transaction.  That is the only way the prerequisites
+      # can be installed at all: from inside the MSI they are refused with 1618
+      # (ERROR_INSTALL_ALREADY_RUNNING), which is why a plain MSI install on a
+      # host without Python used to report success and register no service.
+      #
+      # The MSI is still published alongside it: winget and `msiexec /i` consume
+      # the MSI, and it finishes itself via a deferred scheduled task.
+      - name: Build Windows bundle (chained prerequisites)
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $arch = "${{ matrix.arch }}"
+
+          Write-Host "Building Windows bundle for $arch..."
+
+          $dotnetToolsPath = Join-Path $env:USERPROFILE ".dotnet\tools"
+          $env:PATH = "$dotnetToolsPath;$env:PATH"
+          $env:VERSION = $version
+
+          .\installer\windows\build-bundle.ps1 -Architecture $arch
+
+      - name: Verify bundle
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          $exe = "installer\dist\sysmanage-agent-$env:VERSION-windows-$env:ARCH.exe"
+
+          if (-not (Test-Path $exe)) {
+            Write-Host "ERROR: bundle not found at $exe"
+            Get-ChildItem installer\dist -ErrorAction SilentlyContinue
+            exit 1
+          }
+
+          # A bundle that somehow shipped without its embedded payloads would
+          # still be a valid .exe -- and would fail on exactly the air-gapped
+          # hosts it exists for.  Size is the cheap proxy for "the payloads got
+          # compressed in".
+          #
+          # The floor is 20 MB, not something tighter, because the two
+          # architectures differ a lot: measured 2026-08-13, x64 is 51.9 MB and
+          # arm64 only 37.9 MB.  A 40 MB floor looked reasonable against x64 and
+          # would have failed every arm64 release build.  An empty bundle is
+          # ~2-3 MB (the MSI is 1.25 MB), so 20 MB separates the two cases with
+          # room to spare in both directions.
+          $sizeMb = (Get-Item $exe).Length / 1MB
+          Write-Host ("Bundle: {0} ({1:N2} MB)" -f $exe, $sizeMb)
+          if ($sizeMb -lt 20) {
+            Write-Host "ERROR: bundle is only $([int]$sizeMb) MB; embedded prerequisites appear to be missing"
+            exit 1
+          }
+
+      - name: Generate SHA256 checksum for the bundle
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          $exe = "installer\dist\sysmanage-agent-$env:VERSION-windows-$env:ARCH.exe"
+          $hash = (Get-FileHash -Path $exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  $(Split-Path $exe -Leaf)" | Out-File -FilePath "$exe.sha256" -Encoding ascii
+          Get-Content "$exe.sha256"
+
       - name: Upload MSI as artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
@@ -858,6 +923,14 @@ jobs:
           path: |
             installer/dist/sysmanage-agent-*.msi
             installer/dist/sysmanage-agent-*.msi.sha256
+
+      - name: Upload bundle as artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: sysmanage-agent-windows-${{ matrix.arch }}-bundle
+          path: |
+            installer/dist/sysmanage-agent-*.exe
+            installer/dist/sysmanage-agent-*.exe.sha256
 
   # FreeBSD .pkg Package Build
   build-freebsd:
@@ -1935,6 +2008,10 @@ jobs:
           find artifacts/ -name "*.rpm" -exec cp {} release-files/ \;
           find artifacts/ -name "*.pkg" -exec cp {} release-files/ \;
           find artifacts/ -name "*.msi" -exec cp {} release-files/ \;
+          # The Windows bundle.  Narrowly matched rather than "*.exe" so a
+          # stray executable in some other artifact can never be published as a
+          # release asset.
+          find artifacts/ -name "sysmanage-agent-*-windows-*.exe" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tgz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.tar.gz" -exec cp {} release-files/ \;
           find artifacts/ -name "*.flatpak" -exec cp {} release-files/ \;
@@ -2031,6 +2108,11 @@ jobs:
           # Windows packages
           cp ${{ github.workspace }}/release-files/*windows*.msi "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*windows*.msi.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          # The bundle (chained VC++ + Python + agent).  Published alongside the
+          # MSI rather than instead of it: winget and `msiexec /i` consume the
+          # MSI, while the bundle is what the docs point a human at.
+          cp ${{ github.workspace }}/release-files/*windows*.exe "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/*windows*.exe.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
 
           # FreeBSD packages
           cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
@@ -2316,25 +2398,47 @@ jobs:
           \`\`\`
 
           ### Windows (x64)
+          Recommended: the bundled installer (.exe).  It carries Python and the
+          Visual C++ runtime inside it, so it needs no network and the service is
+          running by the time it returns.
           \`\`\`powershell
           # Download and install (PowerShell as Administrator)
+          Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-x64.exe" -OutFile "sysmanage-agent-${VERSION}-windows-x64.exe"
+          Start-Process ".\\sysmanage-agent-${VERSION}-windows-x64.exe" -ArgumentList "/quiet","/norestart" -Wait -Verb RunAs
+
+          # Configure and restart to apply
+          notepad C:\\ProgramData\\SysManage\\sysmanage-agent.yaml
+          Restart-Service SysManageAgent
+          \`\`\`
+
+          The .msi is also published, for winget and for existing automation.  On a
+          host without Python it finishes in the background shortly after msiexec
+          exits; check \`HKLM:\\SOFTWARE\\SysManage\\Agent\\BootstrapState\`.
+          \`\`\`powershell
           Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-x64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-x64.msi"
           Start-Process msiexec.exe -ArgumentList "/i sysmanage-agent-${VERSION}-windows-x64.msi /qn" -Wait -Verb RunAs
-
-          # Configure and start
-          notepad C:\\ProgramData\\SysManage\\sysmanage-agent.yaml
-          Start-Service SysManageAgent
           \`\`\`
 
           ### Windows (ARM64)
+          Recommended: the bundled installer (.exe).  It carries Python and the
+          Visual C++ runtime inside it, so it needs no network and the service is
+          running by the time it returns.
           \`\`\`powershell
           # Download and install (PowerShell as Administrator)
+          Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-arm64.exe" -OutFile "sysmanage-agent-${VERSION}-windows-arm64.exe"
+          Start-Process ".\\sysmanage-agent-${VERSION}-windows-arm64.exe" -ArgumentList "/quiet","/norestart" -Wait -Verb RunAs
+
+          # Configure and restart to apply
+          notepad C:\\ProgramData\\SysManage\\sysmanage-agent.yaml
+          Restart-Service SysManageAgent
+          \`\`\`
+
+          The .msi is also published, for winget and for existing automation.  On a
+          host without Python it finishes in the background shortly after msiexec
+          exits; check \`HKLM:\\SOFTWARE\\SysManage\\Agent\\BootstrapState\`.
+          \`\`\`powershell
           Invoke-WebRequest -Uri "https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-windows-arm64.msi" -OutFile "sysmanage-agent-${VERSION}-windows-arm64.msi"
           Start-Process msiexec.exe -ArgumentList "/i sysmanage-agent-${VERSION}-windows-arm64.msi /qn" -Wait -Verb RunAs
-
-          # Configure and start
-          notepad C:\\ProgramData\\SysManage\\sysmanage-agent.yaml
-          Start-Service SysManageAgent
           \`\`\`
 
           ### FreeBSD

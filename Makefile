@@ -621,7 +621,7 @@ endif
 lint-freebsd-port:
 	@$(PYTHON) scripts/check_freebsd_port.py
 
-lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-strict translate-check lint-version lint-freebsd-port
+lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict translate-check lint-version lint-freebsd-port
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
@@ -650,6 +650,16 @@ i18n-check-coverage: setup-venv
 i18n-check-msgid-style: setup-venv
 	@$(PYTHON) scripts/i18n_check_msgid_style.py \
 		--source-root src --locales src/i18n/locales
+
+# Guard: the ENGLISH catalogue must translate English to itself.
+# On 2026-08-13, 347 entries in the agent's en.po had msgstrs belonging to other
+# msgids -- "Error detecting antivirus" rendered as "Error detecting partitions"
+# -- and because `make translate` translates the English msgstr, all 13 locales
+# inherited the wrong message. Every existing gate asks "is anything missing?";
+# the file was 100%% complete. Completeness was never the problem.
+i18n-check-english:
+	@echo "=== i18n English identity check ==="
+	@$(PYTHON) scripts/i18n_check_english_identity.py
 
 i18n-strict: setup-venv
 	@echo "=== i18n strict (English-identical) ==="

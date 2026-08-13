@@ -131,28 +131,23 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
 
     def get_server_url(self) -> str:
         """Build the complete server WebSocket URL."""
-        server_config = self.get_server_config()
+        # Delegated so there is exactly one implementation of "where is the
+        # server".  This used to be a fourth hand-rolled copy, complete with its
+        # own 8000 default that matched no shipped config.
+        from src.sysmanage_agent.core.server_endpoint import (  # noqa: PLC0415
+            ServerEndpoint,
+        )
 
-        hostname = server_config.get("hostname", "localhost")
-        port = server_config.get("port", 8000)
-        use_https = server_config.get("use_https", False)
-
-        # Build WebSocket URL - hardcoded to /api/agent/connect
-        protocol = "wss" if use_https else "ws"
-        return f"{protocol}://{hostname}:{port}/api/agent/connect"
+        return ServerEndpoint(self).websocket_url()
 
     def get_server_rest_url(self) -> str:
-        """Build the complete server REST API URL."""
-        server_config = self.get_server_config()
+        """Build the complete server REST API base URL (including /api)."""
+        from src.sysmanage_agent.core.server_endpoint import (  # noqa: PLC0415
+            ServerEndpoint,
+        )
 
-        hostname = server_config.get("hostname", "localhost")
-        port = server_config.get("port", 8000)
-        use_https = server_config.get("use_https", False)
-
-        # Build REST URL - includes /api prefix for API endpoints
-        protocol = "https" if use_https else "http"
-        api_path = server_config.get("api_path", "/api")
-        return f"{protocol}://{hostname}:{port}{api_path}"
+        api_path = self.get_server_config().get("api_path", "/api")
+        return ServerEndpoint(self).rest_url(api_path)
 
     def get_hostname_override(self) -> Optional[str]:
         """Get hostname override if specified."""

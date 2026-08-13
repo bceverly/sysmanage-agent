@@ -2,19 +2,19 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-12 19:40-0400\n"
+"POT-Creation-Date: 2026-08-13 15:53-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 #: src/database/base.py:78
 #, python-format
 msgid "Failed to create database directory %s: %s"
-msgstr "فشل في فحص دليل الشهادات %s: %s"
+msgstr "فشل في إنشاء دليل قاعدة البيانات %s: %s"
 
 #: src/database/base.py:88
 #, python-format
 msgid "Failed to create database tables: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إنشاء جداول قاعدة البيانات: %s"
 
 #: src/database/init.py:83
 #, python-format
@@ -44,7 +44,7 @@ msgstr "فشل في تشغيل ترحيلات قاعدة البيانات"
 #: src/database/init.py:232
 #, python-format
 msgid "Failed to initialize database: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تمهيد قاعدة البيانات: %s"
 
 #: src/database/models.py:58
 #, python-format
@@ -75,23 +75,23 @@ msgstr "⚠️  لا يمكن الوصول إلى {config_dir}، العودة إ
 #: src/sysmanage_agent/collection/antivirus_collection.py:66
 #, python-format
 msgid "Error detecting antivirus: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في اكتشاف برنامج الحماية من الفيروسات: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "منصة غير مدعومة لجمع الشهادات: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:873
+#: src/sysmanage_agent/communication/data_collector.py:921
 #, python-format
 msgid "Error collecting certificates: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع الشهادات: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Timeout extracting certificates from keychain: %s"
-msgstr "انتهت مهلة عمليات ramdisk: %s"
+msgstr "لفشل استخراج الشهادات من خزانة المفاتيح: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:411
 #, python-format
@@ -101,17 +101,17 @@ msgstr "فشل في فحص دليل الشهادات %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:480
 #, python-format
 msgid "Error collecting Windows certificates: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع شهادات Windows: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:520
 #, python-format
 msgid "Timeout querying Windows certificate store: %s"
-msgstr "انتهت مهلة عمليات ramdisk: %s"
+msgstr "لفشل الاستعلام عن متجر الشهادات في Windows: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:524
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr "فشل الاستعلام عن مخزن شهادات Windows %s: %s"
+msgstr "فشل في استعلام مخزن الشهادات Windows %s: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
@@ -126,17 +126,17 @@ msgstr "OpenSSL/LibreSSL غير موجود، يتم تخطي الشهادة: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:52
 #, python-format
 msgid "Error detecting commercial antivirus: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في اكتشاف برامج حماية تجارية: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:103
 #, python-format
 msgid "Failed to get Microsoft Defender status: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في الحصول على حالة Microsoft Defender: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 #, python-format
 msgid "Failed to parse Microsoft Defender status JSON: %s"
-msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
+msgstr "فشل في تحليل JSON حالة Microsoft Defender: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 msgid "Timeout while querying Microsoft Defender status"
@@ -145,12 +145,12 @@ msgstr "انتهت المهلة أثناء الاستعلام عن حالة Micr
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:173
 #, python-format
 msgid "Error detecting Microsoft Defender: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في اكتشاف Microsoft Defender: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:209
 #, python-format
 msgid "Could not parse datetime string: %s"
-msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+msgstr "لا يمكن تحليل سلسلة التاريخ والوقت: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:215
 #, python-format
@@ -160,7 +160,7 @@ msgstr "خطأ في تحليل التاريخ والوقت %s: %s"
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:279
 #, python-format
 msgid "Failed to get Microsoft Defender health status: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في الحصول على حالة الصحة Microsoft Defender: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:333
 msgid "Timeout while querying Microsoft Defender status on macOS"
@@ -169,12 +169,12 @@ msgstr "انتهت المهلة أثناء الاستعلام عن حالة Micr
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:338
 #, python-format
 msgid "Error detecting Microsoft Defender on macOS: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في اكتشاف Microsoft Defender على macOS: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:378
 #, python-format
 msgid "Could not parse macOS datetime string: %s"
-msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+msgstr "لا يمكن تحليل سلسلة التاريخ والوقت في macOS: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:384
 #, python-format
@@ -184,12 +184,12 @@ msgstr "خطأ في تحليل datetime macOS %s: %s"
 #: src/sysmanage_agent/collection/graylog_collector.py:62
 #, python-format
 msgid "Graylog detection not supported on platform: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "التعرف على Graylog غير مدعوم على منصة: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:66
 #, python-format
 msgid "Error collecting Graylog status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع حالة Graylog: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:125
 #, python-format
@@ -199,7 +199,7 @@ msgstr "خطأ قراءة ملف syslog.conf في BSD: %s"
 #: src/sysmanage_agent/collection/graylog_collector.py:179
 #, python-format
 msgid "Error checking Graylog Sidecar service: %s"
-msgstr "جارٍ التحقق من حالة الخدمة: %s"
+msgstr "خطأ في التحقق من خدمة Graylog Sidecar: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:224
 #, python-format
@@ -209,7 +209,7 @@ msgstr "خطأ تحليل ملف Graylog Sidecar config: %s"
 #: src/sysmanage_agent/collection/graylog_collector.py:250
 #, python-format
 msgid "Error reading rsyslog config %s: %s"
-msgstr "خطأ في قراءة %s: %s"
+msgstr "خطأ في قراءة ملف تكوين rsyslog %s: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:360
 #, python-format
@@ -232,17 +232,17 @@ msgstr "فشل في جمع جرد البرمجيات: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:113
 #, python-format
 msgid "Failed to get BSD CPU info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات وحدة المعالجة المركزية BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:136
 #, python-format
 msgid "Failed to get BSD memory info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات ذاكرة الوصول العشوائي BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:231
 #, python-format
 msgid "Failed to get BSD storage info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات التخزين BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
@@ -252,17 +252,17 @@ msgstr "فشل في جمع جرد البرمجيات: %ssysmanage-agent.yaml"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr "فشل في الحصول على معلومات معالج Linux: %s"
+msgstr "فشل في الحصول على معلومات وحدة المعالجة المركزية Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:188
 #, python-format
 msgid "Failed to get Linux memory info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات ذاكرة الوصول العشوائي Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:247
 #, python-format
 msgid "Failed to get Linux storage info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات التخزين Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
@@ -272,47 +272,47 @@ msgstr "فشل في جمع جرد البرمجيات: %s"
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
 msgid "Failed to get macOS CPU info: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في الحصول على معلومات وحدة المعالجة المركزية macOS: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:164
 #, python-format
 msgid "Failed to get macOS memory info: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في الحصول على معلومات ذاكرة الوصول العشوائي macOS: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:341
 #, python-format
 msgid "Failed to get macOS storage info: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في الحصول على معلومات التخزين macOS: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:491
 #, python-format
 msgid "Failed to get APFS container info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات وعاء APFS: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:631
 #, python-format
 msgid "Failed to get macOS network info: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في الحصول على معلومات الشبكة macOS: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:66
 #, python-format
 msgid "Failed to get Windows CPU info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات وحدة المعالجة المركزية Windows: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:100
 #, python-format
 msgid "Failed to get Windows memory info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات ذاكرة الوصول العشوائي Windows: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:201
 #, python-format
 msgid "Failed to get Windows physical disk info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات القرص físico Windows: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:209
 #, python-format
 msgid "Failed to get Windows logical disk info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات القرصlógical Windows: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:289
 #, python-format
@@ -322,57 +322,57 @@ msgstr "فشل الأمر ipconfig /all بالرمز: %d"
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
 msgid "Failed to get Windows network info via ipconfig: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات الشبكة Windows باستخدام ipconfig: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على تكوين الشبكة Windows: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
 #, python-format
 msgid "Failed to detect Debian system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام Debian: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:129
 #, python-format
 msgid "Failed to detect Red Hat system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام Red Hat: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:166
 #, python-format
 msgid "Failed to detect Arch system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام Arch: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:202
 #, python-format
 msgid "Failed to detect SUSE system updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات نظام SUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:259
 #, python-format
 msgid "Failed to detect Ubuntu release upgrades: %s"
-msgstr "فشل في جمع حزم Homebrew: %s"
+msgstr "فشل في اكتشاف ترقية إصدار Ubuntu: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:295
 #, python-format
 msgid "Failed to detect Fedora version upgrades: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف ترقية إصدار Fedora: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:332
 #, python-format
 msgid "Failed to detect openSUSE version upgrades: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف ترقية إصدار openSUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:94
 #, python-format
 msgid "Failed to apply APT updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديثات APT: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:227
 #, python-format
 msgid "Failed to apply DNF updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديثات DNF: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:246
 #, python-format
@@ -395,17 +395,17 @@ msgstr "فشل في تحديث البرامج الثابتة لـ %s: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:301
 #, python-format
 msgid "Exception during firmware update for %s: %s"
-msgstr "استثناء في تطبيق تحديث البرامج الثابتة لـ %s: %s"
+msgstr "استثناء أثناء تحديث البرامج الثابتة لـ %s: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:350
 #, python-format
 msgid "Failed to apply Ubuntu release upgrade: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديث الإصدار Ubuntu: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:403
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديث الإصدار Fedora: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
@@ -415,32 +415,32 @@ msgstr "فشل في إرسال تحديثات البيانات الأولية: %
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
 msgid "Failed to detect APT updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات APT: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:123
 #, python-format
 msgid "Failed to detect Snap updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات Snap: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:164
 #, python-format
 msgid "Failed to detect Flatpak updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات Flatpak: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:204
 #, python-format
 msgid "Failed to detect DNF updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات DNF: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:226
 #, python-format
 msgid "Failed to detect Zypper updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات Zypper: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:296
 #, python-format
 msgid "Failed to detect Pacman updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات Pacman: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:323
 msgid "fwupd daemon not running or no permissions"
@@ -473,17 +473,17 @@ msgstr "انتهت مهلة التحقق من حالة Ubuntu Pro"
 #: src/sysmanage_agent/collection/os_info_collection.py:127
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
-msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
+msgstr "فشل في الحصول على حالة Ubuntu Pro: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:286
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
-msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
+msgstr "فشل في تحليل خرج JSON Ubuntu Pro: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:289
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
-msgstr "خطأ في ربط Ubuntu Pro: %s"
+msgstr "خطأ في معالجة بيانات Ubuntu Pro: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:382
 msgid "Livepatch status check timed out"
@@ -502,7 +502,7 @@ msgstr "فشل في تحليل JSON الخاص بـ Livepatch: %s"
 #: src/sysmanage_agent/collection/os_info_collection.py:553
 #, python-format
 msgid "Failed to get timezone: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على توقيت المنطقة الزمنية: %s"
 
 #: src/sysmanage_agent/collection/package_collection.py:46
 #: src/sysmanage_agent/collection/package_collection.py:66
@@ -510,12 +510,12 @@ msgstr "فشل في جمع جرد البرمجيات: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:20
 #, python-format
 msgid "Unsupported operating system: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "نظام التشغيل غير مدعوم: %s"
 
 #: src/sysmanage_agent/collection/package_collection.py:79
 #, python-format
 msgid "Failed to collect available packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع الحزم المتاحة: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:198
 msgid "winget not found in any common location"
@@ -525,7 +525,7 @@ msgstr "لم يتم العثور على winget في أي موقع شائع"
 #: src/sysmanage_agent/collection/package_collector_base.py:330
 #, python-format
 msgid "Failed to store packages for %s: %s"
-msgstr "فشل في تحديث البرامج الثابتة لـ %s: %s"
+msgstr "فشل في تخزين الحزم لـ %s: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:360
 #, python-format
@@ -535,17 +535,17 @@ msgstr "فشل في الحصول على الحزم لـ %s: %s"
 #: src/sysmanage_agent/collection/package_collector_base.py:384
 #, python-format
 msgid "Failed to get all packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في الحصول على جميع الحزم: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:397
 #, python-format
 msgid "Failed to get package managers: %s"
-msgstr "مديري الحزم المكتشفة: %s"
+msgstr "فشل في الحصول على إدارة الحزم: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:433
 #, python-format
 msgid "Failed to get packages for transmission: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في الحصول على حزم للاستخدام: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:462
 #, python-format
@@ -561,17 +561,17 @@ msgstr "فشل في تخزين نظرة عامة الحزمة المرسلة: %s
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:135
 #, python-format
 msgid "Failed to collect pkg_info packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم pkg_info: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:50
 #, python-format
 msgid "Failed to collect pkg packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم pkg: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:59
 #, python-format
 msgid "Failed to collect pkgin packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم pkgin: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:80
 msgid "Failed to get OpenBSD package list"
@@ -584,7 +584,7 @@ msgstr "فشل في الحصول على قائمة حزم pkg"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:103
 #, python-format
 msgid "Error collecting pkg packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم pkg: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:119
 msgid "Failed to get pkgin package list"
@@ -593,7 +593,7 @@ msgstr "فشل في الحصول على قائمة حزم pkgin"
 #: src/sysmanage_agent/collection/package_collector_bsd.py:126
 #, python-format
 msgid "Error collecting pkgin packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم pkgin: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:51
 msgid ""
@@ -610,12 +610,12 @@ msgstr "فشل جمع الحزم من %s: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:101
 msgid "Failed to get APT package information"
-msgstr "فشل في الحصول على معلومات حزم APT"
+msgstr "فشل في الحصول على معلومات حزمة APT"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:106
 #, python-format
 msgid "Error collecting APT packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم APT: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:121
 msgid "Failed to get YUM package list"
@@ -624,7 +624,7 @@ msgstr "فشل في الحصول على قائمة حزم YUM"
 #: src/sysmanage_agent/collection/package_collector_linux.py:128
 #, python-format
 msgid "Error collecting YUM packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم YUM: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:143
 msgid "Failed to get DNF package list"
@@ -642,7 +642,7 @@ msgstr "فشل في الحصول على قائمة حزم Zypper"
 #: src/sysmanage_agent/collection/package_collector_linux.py:174
 #, python-format
 msgid "Error collecting Zypper packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم Zypper: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:189
 msgid "Failed to get Pacman package list"
@@ -707,7 +707,7 @@ msgstr "لم يتم جمع حزم من مستودع Chocolatey المجتمعي"
 #: src/sysmanage_agent/collection/package_collector_windows.py:202
 #, python-format
 msgid "Error collecting Chocolatey packages via API: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع حزم Chocolatey عبر API: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:229
 #, python-format
@@ -740,32 +740,32 @@ msgstr "فشل دورة الخدمة public_ip_refresh_service: %s"
 
 #: src/sysmanage_agent/collection/role_detection.py:161
 msgid "No packages detected or unsupported package manager"
-msgstr "لم يتم العثور على مدير حزم مدعوم"
+msgstr "لم يتم اكتشاف حزم أو مدير حزم غير مدعوم"
 
 #: src/sysmanage_agent/collection/role_detection.py:184
 #, python-format
 msgid "Error detecting roles: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في اكتشاف الأدوار: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:63
 #, python-format
 msgid "Error getting installed packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ أثناء الحصول على الحزم المثبتة: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:298
 #, python-format
 msgid "Error getting pkgin packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ أثناء الحصول على حزم pkgin: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:335
 #, python-format
 msgid "Error getting pkg packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ أثناء الحصول على حزم pkg: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:88
 #, python-format
 msgid "Failed to collect FreeBSD pkg packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم FreeBSD pkg: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:128
 #, python-format
@@ -810,22 +810,22 @@ msgstr "فشل في جمع حزم flatpak: %s"
 #: src/sysmanage_agent/collection/software_inventory_linux.py:411
 #, python-format
 msgid "Failed to collect DNF packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم DNF: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:456
 #, python-format
 msgid "Failed to collect Pacman packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم Pacman: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:529
 #, python-format
 msgid "Failed to collect Zypper packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم Zypper: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:607
 #, python-format
 msgid "Failed to collect APK packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم APK: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:253
 #, python-format
@@ -839,37 +839,37 @@ msgstr "فشل في تحليل مخرجات JSON لـ system_profiler"
 #: src/sysmanage_agent/collection/software_inventory_macos.py:340
 #, python-format
 msgid "Failed to collect Mac App Store applications: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في جمع تطبيقات Mac App Store: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:204
 #, python-format
 msgid "Failed to collect Windows Registry programs: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع برامج Windows Registry: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:281
 #, python-format
 msgid "Failed to parse Microsoft Store apps JSON: %s"
-msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
+msgstr "فشل في تحليل JSON تطبيقات Microsoft Store: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:292
 #, python-format
 msgid "Failed to collect Microsoft Store apps: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في جمع تطبيقات Microsoft Store: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:389
 #, python-format
 msgid "Failed to collect winget packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع حزم winget: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:66
 #, python-format
 msgid "Unsupported platform for update detection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "منصة غير مدعومة لتقصي التحديثات: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:135
 #, python-format
 msgid "Failed to detect available updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف التحديثات المتاحة: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:182
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
@@ -881,7 +881,7 @@ msgstr "فشل تثبيت الحزمة %s: %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:95
 #, python-format
 msgid "Failed to detect pkg updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات pkg: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:126
 #, python-format
@@ -896,12 +896,12 @@ msgstr "فشل pkgin list -u (الرمز %d): %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:201
 #, python-format
 msgid "Failed to detect pkgin updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات pkgin: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:239
 #, python-format
 msgid "Failed to apply pkg updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديثات الحزم: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:287
 msgid "OpenBSD upgrade failed"
@@ -909,11 +909,11 @@ msgstr "فشلت ترقية OpenBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:302
 msgid "OpenBSD upgrade timed out after 30 minutes"
-msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+msgstr "تعدّدت عملية الترقية في OpenBSD بعد 30 دقيقة"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:401
 msgid "FreeBSD upgrade failed"
-msgstr "فشل تحديث البرامج الثابتة"
+msgstr "فشل تحديث FreeBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:414
 msgid "FreeBSD upgrade install failed"
@@ -921,7 +921,7 @@ msgstr "فشل تثبيت ترقية FreeBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:420
 msgid "FreeBSD upgrade timed out"
-msgstr "انتهت مهلة عملية الحذف"
+msgstr "انتهت صلاحية تحديث FreeBSD"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:482
 #, python-format
@@ -935,12 +935,12 @@ msgstr " syspatch(stderr): %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:488
 msgid "OpenBSD system update detection timed out"
-msgstr "انتهت مهلة عملية إعادة التشغيل"
+msgstr "تعدّدت عملية الكشف عن تحديث النظام OpenBSD بعد 30 دقيقة"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:493
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام OpenBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 msgid "Failed to get current OpenBSD version"
@@ -953,17 +953,17 @@ msgstr "تعذر تحليل إصدار OpenBSD من الموقع"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في فحص موقع OpenBSD للتحديثات: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:569
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف ترقية إصدار OpenBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:620
 #, python-format
 msgid "Failed to detect FreeBSD version upgrades: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف ترقية إصدار FreeBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:748
 msgid "syspatch command failed"
@@ -973,15 +973,15 @@ msgstr "فشل أمر syspatch"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:771
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق تحديثات syspatch: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:761
 msgid "syspatch command timed out"
-msgstr "انتهت مهلة عملية إعادة التشغيل"
+msgstr "تجاوز الأمر syspatch الوقت المحدّد"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
 msgid "syspatch timed out after 10 minutes"
-msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+msgstr "syspatch تجاوز الوقت المحدّد بعد 10 دقائق"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:912
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -993,17 +993,17 @@ msgstr "مدير حزم غير مدعوم: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تطبيق التحديثات: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:236
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام Linux: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:262
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف ترقية إصدار Linux: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:329
 #, python-format
@@ -1013,7 +1013,7 @@ msgstr "فشل تطبيق تحديثات %s: %s"
 #: src/sysmanage_agent/collection/update_detection_linux.py:373
 #, python-format
 msgid "Unsupported package manager for apply: %s"
-msgstr "مدير حزم غير مدعوم: %s"
+msgstr "مدير الحزم غير مدعوم للاستعراض: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:165
 #, python-format
@@ -1027,17 +1027,17 @@ msgstr "فشل في تحليل مخرجات JSON لـ Homebrew"
 #: src/sysmanage_agent/collection/update_detection_macos.py:216
 #, python-format
 msgid "Failed to detect Homebrew updates: %s"
-msgstr "فشل في جمع حزم Homebrew: %s"
+msgstr "فشل في اكتشاف تحديثات Homebrew: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:345
 #, python-format
 msgid "Failed to detect Mac App Store updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات Mac App Store: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:376
 #, python-format
 msgid "Failed to detect MacPorts updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات MacPorts: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:432
 #, python-format
@@ -1046,16 +1046,16 @@ msgstr "فشل تحديث الحزمة %s: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:488
 msgid "macOS upgrade failed"
-msgstr "فشل تحديث البرامج الثابتة"
+msgstr "فشل تحديث macOS"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:503
 msgid "macOS upgrade timed out after 2 hours"
-msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+msgstr "تعدّد macOS تجاوز الوقت المحدد بعد ساعتين"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:603
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف ترقية إصدار macOS: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:66
 #, python-format
@@ -1072,7 +1072,7 @@ msgstr "فشل تحديث الحزمة '%s': %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
 #, python-format
 msgid "Exception updating package '%s': %s"
-msgstr "استثناء في تطبيق تحديث البرامج الثابتة لـ %s: %s"
+msgstr "استثناء أثناء تحديث الحزمة '%s': %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
@@ -1090,69 +1090,69 @@ msgstr "انتهت مهلة Windows Update '%s' بعد 30 دقيقة"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
-msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+msgstr "تعدّدت عملية التثبيت بعد 30 دقيقة"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:440
 #, python-format
 msgid "Exception installing Windows Update '%s': %s"
-msgstr "استثناء في تطبيق تحديث البرامج الثابتة لـ %s: %s"
+msgstr "استثناء أثناء تثبيت تحديث Windows '%s': %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:493
 msgid "Windows upgrade failed"
-msgstr "فشل تحديث البرامج الثابتة"
+msgstr "لفشل تحديث نظام Windows"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:508
 msgid "Windows upgrade timed out after 2 hours"
-msgstr "انتهت مهلة تحديث البرامج الثابتة بعد 10 دقائق"
+msgstr "لفشل تحديث نظام Windows بعد انتهاء الوقت المحدّد لمدة ساعتين"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:264
 #, python-format
 msgid "Failed to detect winget updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات winget: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:299
 #, python-format
 msgid "Failed to detect Chocolatey updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات Chocolatey: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:329
 #, python-format
 msgid "Failed to detect Scoop updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في اكتشاف تحديثات Scoop: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:40
 #, python-format
 msgid "Windows Update detection failed: %s"
-msgstr "فشل الكشف البديل عن المعالج: %s"
+msgstr "لفشل تقصي تحديثات Windows: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:46
 msgid "Windows Update detection timed out"
-msgstr "انتهت مهلة عملية إعادة التشغيل"
+msgstr "لفشل تقصي تحديثات Windows بعد انتهاء الوقت المحدد"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:49
 #, python-format
 msgid "Failed to detect Windows system updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف تحديثات نظام Windows: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:135
 #, python-format
 msgid "Failed to parse Windows Update output: %s"
-msgstr "فشل في تحليل مخرجات fwupd JSON: %s"
+msgstr "فشل في تحليل خروج تحديثات Windows: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:250
 #, python-format
 msgid "Failed to detect Windows version upgrades: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في اكتشاف ترقية إصدار Windows: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:50
 #, python-format
 msgid "Unsupported platform for user collection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "منصة غير مدعومة لجمع المستخدمين: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:66
 #, python-format
 msgid "Unsupported platform for group collection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "منصة غير مدعومة لجمع المجموعات: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:96
 #: src/sysmanage_agent/collection/user_access_collection.py:506
@@ -1162,7 +1162,7 @@ msgstr "لا يتوفر الوحدةpwd على هذه المنصة"
 #: src/sysmanage_agent/collection/user_access_collection.py:112
 #, python-format
 msgid "Failed to collect Linux users: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مستخدمي Linux: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:120
 #: src/sysmanage_agent/collection/user_access_collection.py:532
@@ -1172,47 +1172,47 @@ msgstr "لا يتوفر الوحدةgrp على هذه المنصة"
 #: src/sysmanage_agent/collection/user_access_collection.py:135
 #, python-format
 msgid "Failed to collect Linux groups: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مجموعات Linux: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:224
 #, python-format
 msgid "Fallback pwd collection also failed: %s"
-msgstr "فشل جمع جرد الحزم: %s"
+msgstr "فشلت مجموعة pwd الاحتياطية أيضًا: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:246
 #, python-format
 msgid "Failed to collect macOS users: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في جمع مستخدمي macOS: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:290
 #, python-format
 msgid "Fallback grp collection also failed: %s"
-msgstr "فشل جمع جرد الحزم: %s"
+msgstr "فشلت مجموعة grp الاحتياطية أيضًا: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:312
 #, python-format
 msgid "Failed to collect macOS groups: %s"
-msgstr "فشل في جمع تطبيقات macOS: %s"
+msgstr "فشل في جمع مجموعات macOS: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:446
 #, python-format
 msgid "Failed to collect Windows users: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مستخدمي Windows: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:498
 #, python-format
 msgid "Failed to collect Windows groups: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مجموعات Windows: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:524
 #, python-format
 msgid "Failed to collect BSD users: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مستخدمي BSD: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:549
 #, python-format
 msgid "Failed to collect BSD groups: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع مجموعات BSD: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:578
 #, python-format
@@ -1223,7 +1223,7 @@ msgstr "فشل في جمع معلومات الوصول: %s"
 #: src/sysmanage_agent/wsl/keepalive.py:98
 #, python-format
 msgid "Could not parse existing .wslconfig: %s"
-msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+msgstr "لا يمكن تحليل ملف .wslconfig الموجود: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:172
 #: src/sysmanage_agent/wsl/keepalive.py:164
@@ -1235,7 +1235,7 @@ msgstr "تم رفض الإذن للكتابة إلى %s"
 #: src/sysmanage_agent/wsl/keepalive.py:166
 #, python-format
 msgid "Failed to write .wslconfig: %s"
-msgstr "فشل كتابة إعدادات الافتراضية المتداخلة: %s"
+msgstr "فشل في كتابة .wslconfig: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:206
 #: src/sysmanage_agent/wsl/keepalive.py:186
@@ -1246,25 +1246,25 @@ msgstr "إعادة تشغيل WSL عاد بناءً على قيمة غير صف�
 #: src/sysmanage_agent/communication/child_host_collector.py:209
 #: src/sysmanage_agent/wsl/keepalive.py:188
 msgid "WSL shutdown timed out"
-msgstr "انتهت مهلة عملية الإيقاف"
+msgstr "لفشل إيقاف تشغيل WSL بعد انتهاء الوقت المحدد"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:211
 #: src/sysmanage_agent/wsl/keepalive.py:190
 #, python-format
 msgid "Failed to shutdown WSL: %s"
-msgstr "فشل في إيقاف خادم HTTP: %s"
+msgstr "فشل في إيقاف تشغيل WSL: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:255
 #: src/sysmanage_agent/communication/child_host_reporter.py:417
 #, python-format
 msgid "Child host heartbeat error: %s"
-msgstr "تعذر بدء الشبكة الافتراضية: %s"
+msgstr "خطأ في ضربة القلب للمضيف الفرعي: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:342
 #: src/sysmanage_agent/wsl/keepalive.py:241
 #, python-format
 msgid "Failed to start keep-alive for WSL instance %s: %s"
-msgstr "فشل إعادة تشغيل الخدمة %s: %s"
+msgstr "فشل في بدء تشغيل الحفاظ على الاتصال لحالة WSL %s: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:364
 #: src/sysmanage_agent/wsl/keepalive.py:256
@@ -1282,7 +1282,7 @@ msgstr "فشل في إرسال بيانات المضيفين التابعين"
 #: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال بيانات المضيفين التابعين: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:76
 #, python-format
@@ -1292,27 +1292,27 @@ msgstr "فشل في إرسال تحديثات البيانات الأولية: %
 #: src/sysmanage_agent/communication/data_collector.py:153
 #, python-format
 msgid "Failed to perform initial update check: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تنفيذ فحص التحديث الأولي: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:173
 #, python-format
 msgid "Certificate collection failed: %s"
-msgstr "فشل جمع جرد الحزم: %s"
+msgstr "فشل جمع الشهادات: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:176
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "فشل في تنفيذ جمع الشهادات الأولي: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:192
 #, python-format
 msgid "Role collection failed: %s"
-msgstr "فشل جمع جرد الحزم: %s"
+msgstr "فشل جمع الأدوار: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Failed to perform initial role collection: %s"
-msgstr "فشل تثبيت حزم libvirt: %s"
+msgstr "فشل في تنفيذ جمع الدور الأولي: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:203
 #, python-format
@@ -1322,12 +1322,12 @@ msgstr "فشل في إرسال بيانات المستودع الخارجي ال
 #: src/sysmanage_agent/communication/data_collector.py:211
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال بيانات حالة النظام الناري الأولية: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:219
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال بيانات الحالة الأولية لـ Graylog: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:226
 #, python-format
@@ -1337,17 +1337,17 @@ msgstr "فشل إرسال بيانات العمليات الأولية: %s"
 #: src/sysmanage_agent/communication/data_collector.py:232
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال بيانات المضيفات الفرعية الأولية: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:251
 #, python-format
 msgid "Failed to update OS version: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث إصدار نظام التشغيل: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:273
 #, python-format
 msgid "Failed to update hardware: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث الأجهزة: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:295
 #, python-format
@@ -1382,52 +1382,52 @@ msgstr "خطأ جمع/إرسال مخزون البرمجيات: %s"
 #: src/sysmanage_agent/communication/data_collector.py:352
 #, python-format
 msgid "Error collecting/sending user access data: %s"
-msgstr "خطأ في إغلاق معالج الرسائل: %s"
+msgstr "خطأ في جمع/إرسال بيانات الوصول للمستخدمين: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:358
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
-msgstr "خطأ في الاستماع للإعلانات: %s"
+msgstr "خطأ في جمع/إرسال بيانات الأجهزة: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:364
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال بيانات الشهادات: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:370
 #, python-format
 msgid "Error collecting/sending role data: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال بيانات الأدوار: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:376
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال بيانات نسخة نظام التشغيل: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:382
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال حالة إعادة التشغيل: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:389
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في جمع/إرسال بيانات مستودعات الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:396
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال حالة برنامج الحماية من الفيروسات: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:402
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال حالة حائط الحماية: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:408
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع/إرسال حالة Graylog: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:414
 #, python-format
@@ -1437,32 +1437,32 @@ msgstr "خطأ في جمع/إرسال بيانات العمليات: %s"
 #: src/sysmanage_agent/communication/data_collector.py:444
 #, python-format
 msgid "Initial data collection error: %s"
-msgstr "خطأ في مجدول جمع الحزم: %s"
+msgstr "خطأ في جمع البيانات الأولية: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:459
 #, python-format
 msgid "Data collector error: %s"
-msgstr "خطأ في مجدول جمع الحزم: %s"
+msgstr "خطأ في جمع البيانات: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:704
+#: src/sysmanage_agent/communication/data_collector.py:684
 #, python-format
 msgid "Error collecting available packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "خطأ في جمع الحزم المتاحة: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:745
+#: src/sysmanage_agent/communication/data_collector.py:793
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "خطأ في إرسال حزمة الدلتا: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:824
+#: src/sysmanage_agent/communication/data_collector.py:872
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "خطأ إرسال الحزم المصفحة للحزمة %s: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:919
+#: src/sysmanage_agent/communication/data_collector.py:967
 #, python-format
 msgid "Error collecting roles: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع الأدوار: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:53
 msgid "Failed to send periodic software inventory data"
@@ -1479,12 +1479,12 @@ msgstr "فشل في إرسال بيانات الأجهزة الدورية"
 #: src/sysmanage_agent/communication/data_collector_senders.py:121
 #, python-format
 msgid "Periodic certificate collection failed: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "فشل جمع الشهادات الدورية: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:141
 #, python-format
 msgid "Periodic role collection failed: %s"
-msgstr "فشل جمع جرد الحزم: %s"
+msgstr "فشل جمع الأدوار الدورية: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:165
 msgid "Failed to send periodic OS version data"
@@ -1493,11 +1493,11 @@ msgstr "فشل في إرسال بيانات نسخة نظام التشغيل ا�
 #: src/sysmanage_agent/communication/data_collector_senders.py:186
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "فشل في جمع مصادر خارجية ثالثة: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:220
 msgid "Failed to send third-party repository data"
-msgstr "إرسال بيانات وصول المستخدم الأولية..."
+msgstr "فشل في إرسال بيانات مستودعات الجهات الخارجية: "
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:252
 msgid "Failed to send antivirus status data"
@@ -1505,7 +1505,8 @@ msgstr "فشل في إرسال بيانات حالة برنامج حماية ا�
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:255
 msgid "Cannot send antivirus status data: no host approval"
-msgstr "لا يمكن إرسال تحديث حالة الافتراضية: المضيف غير معتمد"
+msgstr ""
+"لا يمكن إرسال بيانات حالة برنامج مكافحة الفيروسات: لا يوجد موافقة من المضيف"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:289
 msgid "Failed to send firewall status data"
@@ -1513,7 +1514,7 @@ msgstr "فشل في إرسال بيانات حالة جدار الحماية"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Cannot send firewall status data: no host approval"
-msgstr "لا يمكن إرسال تحديث حالة الافتراضية: المضيف غير معتمد"
+msgstr "لا يمكن إرسال بيانات حالة جدار الحماية: لا يوجد موافقة من المضيف"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:323
 msgid "Failed to send Graylog status data"
@@ -1521,7 +1522,7 @@ msgstr "فشل في إرسال بيانات حالة Graylog"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Cannot send Graylog status data: no host approval"
-msgstr "لا يمكن إرسال تحديث حالة الافتراضية: المضيف غير معتمد"
+msgstr "لا يمكن إرسال بيانات حالة Graylog: لا يوجد موافقة من المضيف"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:333
 msgid "Cannot send process data: no host approval"
@@ -1534,43 +1535,43 @@ msgstr "فشل إرسال بيانات حالة العمليات"
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
 msgid "Failed to queue message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في ترتيب الرسالة: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:220
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في ترتيب إقرار الأمر للرسالة: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:228
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "خطأ وضع إقرار الأمر لـ %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:277
+#: src/sysmanage_agent/communication/message_handler.py:268
 #, python-format
 msgid "Server error [%s]: %s"
-msgstr "خطأ التحكم بالخدمة لـ %s: %s"
+msgstr "خطأ في الخادم [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:330
+#: src/sysmanage_agent/communication/message_handler.py:321
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
-msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+msgstr "لا يمكن تحليل توقيع الرسالة لفحص التقادم: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:368
+#: src/sysmanage_agent/communication/message_handler.py:359
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "تسجيل المضيف معلق انتظار الموافقة. سيتم مواصلة المحاولات الدورية."
 
-#: src/sysmanage_agent/communication/message_handler.py:373
+#: src/sysmanage_agent/communication/message_handler.py:364
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "يبلغ الخادم عن نقص اسم المضيف في الرسالة. هذا خطأ."
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:367
 #, python-format
 msgid "Server failed to queue message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "لفشل خادم تحميل الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:400
+#: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
@@ -1581,7 +1582,7 @@ msgstr ""
 "الاتصال WITHOUT إلغاء host_id حتى يتمكن الخادم من إعادة تحديد هذا العميل من "
 "مؤشر المستأجر الخاص به؛ سيتم التسجيل مجدداً فقط إذا استمرت هذه الحالة."
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) — treating this host as "
@@ -1590,12 +1591,12 @@ msgstr ""
 "استمرار حالة host_not_registered (%(n)d ضربات) — التعامل مع هذا العميل على "
 "أنه غير موجود فعلياً؛ إزالة host_id المخزن وإعادة التسجيل."
 
-#: src/sysmanage_agent/communication/message_handler.py:424
+#: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
 msgid "Error clearing stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "خطأ في إزالة المعرف المخزن للمضيف: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:469
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
@@ -1604,17 +1605,17 @@ msgstr ""
 "بث %s: تم طلب تحديث المخزون البرمجي ولكن data_collector لا يحتوي على "
 "send_software_inventory_update"
 
-#: src/sysmanage_agent/communication/message_handler.py:485
+#: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "بث %s: فشل تحديث المخزون البرمجي: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:495
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "بث %s: إجراء غير معروف '%s' — تم تجاهله"
 
-#: src/sysmanage_agent/communication/message_handler.py:578
+#: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1622,36 +1623,36 @@ msgstr ""
 "مستقبل الرسائل: websocket تم إزالتها بواسطة انفصال متوازي؛ الخروج من دورة "
 "الاستقبال لاستئناف الاتصال"
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON غير صالح تم استلامه: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:586
 #, python-format
 msgid "Error processing message: %s"
 msgstr "خطأ معالجة الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:599
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: خطأ مستلم الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:651
 #, python-format
 msgid "Unknown message type: %s"
-msgstr "نوع أمر غير معروف: %s"
+msgstr "نوع الرسالة غير معروف: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:727
 msgid "Heartbeat failed, connection may be lost"
 msgstr "تعذرheartbeat، قد يكون الاتصال ضائعا"
 
-#: src/sysmanage_agent/communication/message_handler.py:745
+#: src/sysmanage_agent/communication/message_handler.py:736
 #, python-format
 msgid "Message sender error: %s"
-msgstr "خطأ في مدقق التحديث: %s"
+msgstr "خطأ مرسل الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:761
+#: src/sysmanage_agent/communication/message_handler.py:752
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "خطأ في إغلاق معالج الرسائل: %s"
@@ -1659,12 +1660,12 @@ msgstr "خطأ في إغلاق معالج الرسائل: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:98
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في إنشاء مهمة من طابور الصادرات queue_outbound_message: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:164
 #, python-format
 msgid "Error in inbound queue processor: %s"
-msgstr "خطأ في معالج الطابور: %s"
+msgstr "خطأ في معالج طابور الواردات: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
@@ -1674,7 +1675,7 @@ msgstr "تم وضع علامة على الرسالة كقيد المعالجة: 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
 msgid "Error processing inbound message %s: %s"
-msgstr "خطأ في معالجة الرسالة المجدولة %s: %s"
+msgstr "خطأ في معالجة الرسالة الواردة %s: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:220
 msgid "Cannot send message: not connected to server"
@@ -1688,7 +1689,7 @@ msgstr "فشل في إرسال الرسالة مباشرة: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Error in queue processor: %s"
-msgstr "خطأ في معالج الطابور: %s"
+msgstr "خطأ في معالج الطوابير: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:329
 #, python-format
@@ -1703,12 +1704,12 @@ msgstr "خطأ استعادة الرسائل العالقة: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
-msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
+msgstr "فشل في إنشاء مهمة معالجة طابور الصادرات: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
+msgstr "فشل في إنشاء مهمة معالجة طابور الواردات: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
@@ -1727,7 +1728,7 @@ msgstr ""
 #: src/sysmanage_agent/communication/network_utils.py:160
 #, python-format
 msgid "Could not determine hostname, using fallback: %s"
-msgstr "تعذر تحديد مدير الحزم لـ %s"
+msgstr "لم يتم تحديد اسم المضيف، سيتم استخدام البدلاء: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:53
 msgid "systemctl not found"
@@ -1750,102 +1751,102 @@ msgstr "اكتمل جمع الحزم مع بعض المشكلات"
 #: src/sysmanage_agent/core/agent_utils.py:150
 #, python-format
 msgid "Error during package collection: %s"
-msgstr "خطأ أثناء فحص التحديث الدوري: %s"
+msgstr "خطأ أثناء جمع الحزم: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:189
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "خطأ في مجدول جمع الحزم: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:244
+#: src/sysmanage_agent/core/agent_utils.py:225
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr "فشلت المصادقة بالحالة %s: %s"
+msgstr "فشل التحقق بالاعتماد على الحالة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:342
+#: src/sysmanage_agent/core/agent_utils.py:325
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "فشل في بناء تقرير القدرة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:454
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "تمت معالجة UUID تنفيذ النص البرمجي %s بالفعل، تخطي التكرار"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:474
 msgid "Generic command missing nested command_type"
 msgstr "الأمر العام مفقود command_type المتداخل"
 
-#: src/sysmanage_agent/core/agent_utils.py:503
+#: src/sysmanage_agent/core/agent_utils.py:486
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "نوع أمر غير معروف: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:545
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "فشل في جمع حزم Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:581
+#: src/sysmanage_agent/core/agent_utils.py:564
 #, python-format
 msgid "Error checking execution UUID: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في التحقق من UUID للتنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:595
+#: src/sysmanage_agent/core/agent_utils.py:578
 msgid "No execution UUID provided, cannot track"
 msgstr "لم يتم توفير UUID للتنفيذ، لا يمكن التتبع"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:593
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID التنفيذ %s موجود بالفعل في قاعدة البيانات"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:618
 #, python-format
 msgid "Error storing execution UUID: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في تخزين UUID التنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:700
+#: src/sysmanage_agent/core/agent_utils.py:683
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "خطأ في معالج التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:745
+#: src/sysmanage_agent/core/agent_utils.py:728
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "تعذّر %s للخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:735
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "انتهت مهلة التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:758
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "خطأ التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:824
+#: src/sysmanage_agent/core/agent_utils.py:807
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "تعذّر تحديث الأدوار بعد التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:863
+#: src/sysmanage_agent/core/agent_utils.py:846
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "خطأ في معالج حالة الخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:906
+#: src/sysmanage_agent/core/agent_utils.py:889
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "انتهت مهلة فحص حالة الخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:916
+#: src/sysmanage_agent/core/agent_utils.py:899
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "خطأ في حالة الخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:964
+#: src/sysmanage_agent/core/agent_utils.py:947
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -1875,7 +1876,7 @@ msgstr "لا يمكن تحديد إصدار الوكيل، سيتم استخدا
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:80
 #, python-format
 msgid "Failed to collect diagnostics: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع التشخيصات: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:126
 #, python-format
@@ -1890,7 +1891,7 @@ msgstr "فشل جمع %s بعد %.2f ثانية: %s"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:244
 #, python-format
 msgid "Failed to send error message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في إرسال رسالة خطأ: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:287
 #, python-format
@@ -1900,12 +1901,12 @@ msgstr "فشل جمع سجل الأحداث Windows %s بعد %.2f ثانية"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:360
 #, python-format
 msgid "Error collecting system logs: %s"
-msgstr "خطأ في إغلاق معالج الرسائل: %s"
+msgstr "خطأ في جمع سجلات النظام: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:435
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr "فشل في تحميل ملف التكوين: %s"
+msgstr "خطأ في جمع ملفات التكوين: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:462
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:633
@@ -1916,32 +1917,32 @@ msgstr "فشل جمع %s بعد %.2f ثانية"
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:555
 #, python-format
 msgid "Error collecting network info: %s"
-msgstr "Error configuring KVM networking: %s"
+msgstr "خطأ في جمع معلومات الشبكة: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:594
 #, python-format
 msgid "Error collecting process info: %s"
-msgstr "خطأ في معالج الطابور: %s"
+msgstr "خطأ في جمع معلومات العملية: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:674
 #, python-format
 msgid "Error collecting disk usage: %s"
-msgstr "خطأ في إغلاق معالج الرسائل: %s"
+msgstr "خطأ في جمع استهلاك القرص: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:729
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr "خطأ في الاستماع للإعلانات: %s"
+msgstr "خطأ في جمع المتغيرات البيئية: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:760
 #, python-format
 msgid "Error collecting agent logs: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع سجلات الوكيل: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:796
 #, python-format
 msgid "Error collecting error logs: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع سجلات الأخطاء: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -1950,7 +1951,7 @@ msgstr "Homebrew غير مثبت"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
 #, python-format
 msgid "Error listing Homebrew taps: %s"
-msgstr "خطأ في الاستماع للإعلانات: %s"
+msgstr "خطأ في قوائم Homebrew taps: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
 msgid "Invalid tap format. Use 'user/repo' format"
@@ -1958,7 +1959,7 @@ msgstr "تنسيق tap غير صالح. استخدم تنسيق 'user/repo'"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
 msgid "Tap added successfully"
-msgstr "تم تحديث الوكيل بنجاح"
+msgstr "تم إضافة التوصية بنجاح"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
 #, python-format
@@ -1968,17 +1969,17 @@ msgstr "فشل في إضافة tap %s: %s"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
 #, python-format
 msgid "Failed to add tap: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في إضافة التاب: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
 #, python-format
 msgid "Error adding Homebrew tap: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة تاب Homebrew: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
-msgstr "خطأ في معالج الطابور: %s"
+msgstr "خطأ أثناء قائمة مستودعات FreeBSD: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
@@ -1995,17 +1996,17 @@ msgstr "عنوان URL للمستودع مطلوب لـ FreeBSD pkg"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
-msgstr "تم تحديث الوكيل بنجاح"
+msgstr "تم إضافة المستودع بنجاح"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع FreeBSD: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
-msgstr "خطأ في إعداد الشبكة الافتراضية: %s"
+msgstr "خطأ في قوائم NetBSD المخازن: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
 msgid "Repository URL is required for NetBSD pkgsrc"
@@ -2014,11 +2015,11 @@ msgstr "عنوان URL للمستودع مطلوب لـ NetBSD pkgsrc"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
 #, python-format
 msgid "Repository directory already exists: %s"
-msgstr "Network '%s' already exists"
+msgstr "exists already: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
 msgid "Repository cloned successfully"
-msgstr "NAT networking configured successfully"
+msgstr "تم نسخ المستودع بنجاح"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 #, python-format
@@ -2028,12 +2029,12 @@ msgstr "فشل في نسخ المستودع %s: %s"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
 #, python-format
 msgid "Failed to clone repository: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في نسخ المخزن: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
 #, python-format
 msgid "Error adding NetBSD repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع NetBSD: %s"
 
 # Pro+ feature gate (post-cutover stub)
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
@@ -2082,12 +2083,12 @@ msgstr "فشل في إرسال عينات المؤشرات الخاصة: %s"
 #: src/sysmanage_agent/operations/firewall_collector.py:61
 #, python-format
 msgid "Unsupported system for firewall detection: %s"
-msgstr "منصة غير مدعومة لجرد البرمجيات: %s"
+msgstr "نظام التشغيل غير مدعوم للتقصي عن حائط الحماية: %s"
 
 #: src/sysmanage_agent/operations/firewall_collector.py:65
 #, python-format
 msgid "Error collecting firewall status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في جمع حالة حائط الحماية: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:80
 msgid "No files provided"
@@ -2101,11 +2102,11 @@ msgstr "الرجوع إلى %s من النسخة الاحتياطية %s بعد 
 #: src/sysmanage_agent/operations/generic_deployment.py:480
 #, python-format
 msgid "Rollback failed for %s from %s: %s"
-msgstr "تعذّر %s للخدمة %s: %s"
+msgstr "لفشل الرول백 لـ %s من %s: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:509
 msgid "No steps provided"
-msgstr "لم يتم العثور على ملفات تعريف المستخدمين"
+msgstr "لم يتم تقديم خطوات"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:546
 #, python-format
@@ -2128,7 +2129,7 @@ msgstr "أمر wait_condition فارغ"
 #: src/sysmanage_agent/operations/generic_deployment.py:692
 #, python-format
 msgid "Failed to send progress message: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في إرسال رسالة التقدم: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:308
 msgid "no argv"
@@ -2218,7 +2219,7 @@ msgstr "فشل في تعيين اسم المضيف التشغيلي: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "No hostname specified"
-msgstr "اسم المضيف مطلوب"
+msgstr "لم يتم تحديد اسم المضيف"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:49
 msgid "Invalid hostname format"
@@ -2227,7 +2228,7 @@ msgstr "تنسيق اسم المضيف غير صالح"
 #: src/sysmanage_agent/operations/hostname_operations.py:77
 #, python-format
 msgid "Failed to change hostname: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تغيير اسم المستضيفة: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:124
 #, python-format
@@ -2238,27 +2239,27 @@ msgstr "فشل hostnamectl، محاولة تغيير اسم المضيف يدو�
 #: src/sysmanage_agent/operations/hostname_operations.py:144
 #, python-format
 msgid "Failed to update /etc/hostname: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث /etc/hostname: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:186
 #, python-format
 msgid "Failed to set ComputerName: %s"
-msgstr "فشل في تركيب ramdisk: %s"
+msgstr "فشل في تعيين اسم الكمبيوتر: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:197
 #, python-format
 msgid "Failed to set LocalHostName: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في تعيين اسم المضيف المحلي: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:208
 #, python-format
 msgid "Failed to set HostName: %s"
-msgstr "فشل في إيقاف خادم HTTP: %s"
+msgstr "فشل في تعيين اسم المضيف: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:235
 #, python-format
 msgid "Failed to rename computer: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في تغيير اسم الكمبيوتر: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:241
 #, python-format
@@ -2274,18 +2275,18 @@ msgstr "فشل sysrc، محاولة sed: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:291
 #, python-format
 msgid "Failed to update /etc/rc.conf: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث /etc/rc.conf: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:330
 #: src/sysmanage_agent/operations/hostname_operations.py:336
 #, python-format
 msgid "Failed to update /etc/myname: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث /etc/myname: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:365
 #, python-format
 msgid "Failed to send hostname change confirmation: %s"
-msgstr "فشل في إرسال الرسالة مباشرة: %s"
+msgstr "فشل في إرسال تأكيد تغيير اسم المضيف: %s"
 
 #: src/sysmanage_agent/operations/inflight_journal.py:327
 #: src/sysmanage_agent/operations/inflight_journal.py:328
@@ -2317,61 +2318,61 @@ msgstr "تم تعطيل المستودع بنجاح"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:252
 #, python-format
 msgid "Error listing APT repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ أثناء قائمة مستودعات APT: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:296
 #, python-format
 msgid "Error adding APT repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع APT: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:329
 #, python-format
 msgid "Error deleting APT repository: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في حذف مستودع APT: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:348
 #, python-format
 msgid "Error enabling APT repository: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "خطأ في تمكين مستودع APT: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:370
 #, python-format
 msgid "Error disabling APT repository: %s"
-msgstr "خطأ أثناء اكتشاف البث: %s"
+msgstr "خطأ في تعطيل مستودع APT: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:444
 #, python-format
 msgid "Error listing YUM repositories: %s"
-msgstr "Error configuring KVM networking: %s"
+msgstr "خطأ في قوائم YUM المخازن: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:457
 msgid "Manual YUM repository addition not yet implemented"
-msgstr "كشف تحديثات YUM غير مطبق بعد"
+msgstr "إضافة مستودع YUM يدويًا لم يتم تنفيذه بعد"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:491
 #, python-format
 msgid "Error adding YUM repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع YUM: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:519
 #, python-format
 msgid "Error deleting YUM repository: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في حذف مستودع YUM: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:535
 #, python-format
 msgid "Error enabling YUM repository: %s"
-msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
+msgstr "خطأ في تمكين مستودع YUM: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:554
 #, python-format
 msgid "Error disabling YUM repository: %s"
-msgstr "خطأ أثناء اكتشاف البث: %s"
+msgstr "خطأ في تعطيل مستودع YUM: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:612
 #, python-format
 msgid "Error listing Zypper repositories: %s"
-msgstr "خطأ في إعداد الشبكة الافتراضية: %s"
+msgstr "خطأ في قوائم Zypper المخازن: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:622
 msgid "Repository URL is required for Zypper"
@@ -2380,27 +2381,27 @@ msgstr "عنوان URL للمستودع مطلوب لـ Zypper"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:657
 #, python-format
 msgid "Error adding Zypper repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع Zypper: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:675
 #, python-format
 msgid "Error deleting Zypper repository: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في حذف مستودع Zypper: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:691
 #, python-format
 msgid "Error enabling Zypper repository: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "خطأ في تمكين مستودع Zypper: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:710
 #, python-format
 msgid "Error disabling Zypper repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في تعطيل مستودع Zypper: %s"
 
 #: src/sysmanage_agent/operations/lxd_firewall_helper.py:83
 #, python-format
 msgid "Could not persist IP forwarding setting: %s"
-msgstr "تعذر تعيين التشغيل التلقائي للشبكة: %s"
+msgstr "لا يمكن الحفاظ على إعداد نقل IP: %s"
 
 #: src/sysmanage_agent/operations/lxd_firewall_helper.py:139
 #, python-format
@@ -2409,16 +2410,16 @@ msgstr "فشل قاعدة UFW: %s - %s"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"
-msgstr "اسم المضيف مطلوب"
+msgstr "profile_id مطلوب"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:80
 msgid "constraints must be a list"
-msgstr "يجب أن تكون وحدات المعالجة المركزية 1 على الأقل"
+msgstr "يجب أن تكون القيود قائمة"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:85
 #, python-format
 msgid "Failed to collect installed packages: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع الحزم المثبتة: %s"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:90
 #, python-format
@@ -2428,12 +2429,12 @@ msgstr "فشل جمع جرد الحزم: %s"
 #: src/sysmanage_agent/operations/package_installation_helpers.py:54
 #, python-format
 msgid "Failed to store installation request: %s"
-msgstr "فشل في كتابة install.conf: %s"
+msgstr "فشل في تخزين طلب التثبيت: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:85
 #, python-format
 msgid "Failed to update installation tracking record: %s"
-msgstr "فشل في تنظيف دليل عمل التثبيت التلقائي: %s"
+msgstr "فشل في تحديث سجل التتبع للتثبيت: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:107
 #: src/sysmanage_agent/operations/package_operations.py:59
@@ -2455,16 +2456,16 @@ msgstr "انتهت مدة التثبيت بعد 5 دقائق"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 msgid "Package manager name is required"
-msgstr "اسم المستخدم مطلوب"
+msgstr "اسم مدير الحزم مطلوب"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:114
 msgid "Enabling package managers requires privileged mode"
-msgstr "Bridge interface name is required for bridged mode"
+msgstr "يتطلب تمكين مديري الحزم وضع المستخدم المخول"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:130
 #, python-format
 msgid "Unknown package manager: %s"
-msgstr "مدير حزم غير مدعوم: %s"
+msgstr "مدير الحزم غير معروف: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:137
 #, python-format
@@ -2473,16 +2474,16 @@ msgstr "خطأ في تفعيل مدير الحزم '%s': %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:149
 msgid "Flatpak is only supported on Linux systems"
-msgstr "KVM مدعوم فقط على أنظمة Linux"
+msgstr "يتم دعم Flatpak فقط على أنظمة Linux"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:159
 msgid "Flatpak is already installed"
-msgstr "تم تهيئة KVM بالفعل"
+msgstr "Flatpak مثبت بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:188
 #, python-format
 msgid "No supported package manager found to install %s"
-msgstr "مدير حزم غير مدعوم: %s"
+msgstr "لم يتم العثور على مدير حزم مدعوم لتثبيت %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:211
 #, python-format
@@ -2492,24 +2493,24 @@ msgstr "تم تثبيت %s بنجاح"
 #: src/sysmanage_agent/operations/package_manager_operations.py:245
 #, python-format
 msgid "Could not add Flathub repository: %s"
-msgstr "Could not start network: %s"
+msgstr "لا يمكن إضافة مستودع Flathub: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:252
 msgid "Snap is only supported on Linux systems"
-msgstr "KVM مدعوم فقط على أنظمة Linux"
+msgstr "Snap مدعوم فقط على أنظمة Linux"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:261
 msgid "Snap is already installed"
-msgstr "تم تهيئة KVM بالفعل"
+msgstr "تم تثبيت Snap بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:287
 #, python-format
 msgid "Could not enable snapd service: %s"
-msgstr "تعذر تمكين libvirtd: %s"
+msgstr "لا يمكن تمكين خدمة snapd: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:297
 msgid "Homebrew is already installed"
-msgstr "تم تهيئة KVM بالفعل"
+msgstr "Homebrew تم تثبيته بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
@@ -2523,27 +2524,27 @@ msgstr ""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
-msgstr "KVM مدعوم فقط على أنظمة Linux"
+msgstr "يقتصر دعم Chocolatey على أنظمة Windows"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:327
 msgid "Chocolatey is already installed"
-msgstr "تم تهيئة KVM بالفعل"
+msgstr "Chocolatey مثبت بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:361
 msgid "Chocolatey installed successfully"
-msgstr "تم تثبيت حزم libvirt بنجاح"
+msgstr "تمت تثبيت Chocolatey بنجاح"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Scoop is only supported on Windows systems"
-msgstr "KVM مدعوم فقط على أنظمة Linux"
+msgstr "Scoop مدعوم فقط على أنظمة Windows"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:389
 msgid "Scoop is already installed"
-msgstr "تم تهيئة KVM بالفعل"
+msgstr "سcoop مثبت بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:420
 msgid "Scoop installed successfully"
-msgstr "تم تثبيت حزم libvirt بنجاح"
+msgstr "تم تثبيت Scoop بنجاح"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/package_operations.py:121
@@ -2554,7 +2555,7 @@ msgstr "إلغاء التثبيت غير مطبّق لمدير الحزم %s"
 #: src/sysmanage_agent/operations/package_operations.py:154
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
-msgstr "فشل في تنظيف دليل عمل التثبيت التلقائي: %s"
+msgstr "فشل في تحديث سجل التتبع للإلغاء: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:173
 msgid "No package name specified"
@@ -2572,7 +2573,7 @@ msgstr "لم يتم تحديد حزم للتثبيت"
 #: src/sysmanage_agent/operations/package_operations.py:347
 #, python-format
 msgid "Failed to send installation completion to server: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال اكتمال التثبيت إلى الخادم: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:376
 msgid "No packages specified for uninstallation"
@@ -2581,16 +2582,16 @@ msgstr "لم يتم تحديد حزم لإلغاء التثبيت"
 #: src/sysmanage_agent/operations/package_operations.py:473
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال اكتمال الإلغاء إلى الخادم: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:482
 msgid "No packages to install"
-msgstr "تم تثبيت حزم libvirt"
+msgstr "لا توجد حزم للتركيب"
 
 #: src/sysmanage_agent/operations/package_operations.py:528
 #, python-format
 msgid "apt-get install failed: %s"
-msgstr "تم إنشاء دليل التثبيت التلقائي: %s"
+msgstr "لفشل الأمر apt-get install: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:533
 #, python-format
@@ -2604,12 +2605,12 @@ msgstr "استثناء أثناء apt-get install: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:543
 msgid "No packages to uninstall"
-msgstr "تم تثبيت حزم libvirt"
+msgstr "لا توجد حزم لإزالتها"
 
 #: src/sysmanage_agent/operations/package_operations.py:574
 #, python-format
 msgid "apt-get remove failed: %s"
-msgstr "فشل fwupd get-updates: %s"
+msgstr "/apt-get remove failed: %s/"
 
 #: src/sysmanage_agent/operations/package_operations.py:579
 #, python-format
@@ -2624,7 +2625,7 @@ msgstr "استثناء أثناء apt-get remove: %s"
 #: src/sysmanage_agent/operations/package_operations.py:623
 #, python-format
 msgid "Failed to queue installation completion for request %s"
-msgstr "فشل في تضمين install.conf: %s"
+msgstr "فشل في ترتيب اكتمال التثبيت لطلب %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
@@ -2634,19 +2635,19 @@ msgstr "خطأ في اكتشاف الأقسام: %s"
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
 msgid "Failed to send package installation status update: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال تحديث حالة تثبيت الحزمة: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:757
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
-msgstr "خطأ في معالجة تحديثات fwupd: %s"
+msgstr "خطأ في تشغيل تحديث الحزم: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:766
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
-msgstr "خطأ أثناء فحص التحديث الدوري: %s"
+msgstr "خطأ في تحفيز اكتشاف التحديثات: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
@@ -2656,7 +2657,7 @@ msgstr "الإصدار غير مدعوم: %s"
 #: src/sysmanage_agent/operations/repository_operations.py:103
 #, python-format
 msgid "Error listing third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في قوائم مخازن الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:121
 #, python-format
@@ -2665,12 +2666,12 @@ msgstr "خطأ في اكتشاف توزيعة Linux: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:183
 msgid "Repository identifier is required"
-msgstr "اسم المضيف مطلوب"
+msgstr "يجب توفير معرف المستودع"
 
 #: src/sysmanage_agent/operations/repository_operations.py:207
 #, python-format
 msgid "Error adding third-party repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع خارجي: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 msgid "No repositories specified for deletion"
@@ -2684,7 +2685,7 @@ msgstr "تم حذف %d من %d مستودع"
 #: src/sysmanage_agent/operations/repository_operations.py:267
 #, python-format
 msgid "Error deleting third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في حذف مستودعات الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:295
 msgid "No repositories specified for enabling"
@@ -2698,7 +2699,7 @@ msgstr "تم تفعيل %d من %d مستودع"
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
 msgid "Error enabling third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في تمكين مستودعات الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
@@ -2712,12 +2713,12 @@ msgstr "تم تعطيل %d من %d مستودع"
 #: src/sysmanage_agent/operations/repository_operations.py:393
 #, python-format
 msgid "Error disabling third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في تعطيل مستودعات الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:440
 #, python-format
 msgid "Error re-scanning third-party repositories: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في إعادة فحص مخازن الجهات الخارجية: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:70
 msgid "Missing required parameter 'script_content'"
@@ -2726,7 +2727,7 @@ msgstr "المعامل المطلوب 'script_content' مفقود"
 #: src/sysmanage_agent/operations/script_operations.py:79
 #, python-format
 msgid "Script timeout capped at %d seconds"
-msgstr "انتهت مهلة الأمر بعد %d ثانية"
+msgstr "مدة الانتظار لتنفيذ السクリプト مقيدة بـ %d ثانية"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
@@ -2735,11 +2736,11 @@ msgstr "العميل لا يكشف apply_deployment_plan؛ يلزم الترقي
 #: src/sysmanage_agent/operations/script_operations.py:98
 #, python-format
 msgid "Script delegation failed: %s"
-msgstr "فشل الكشف البديل عن المعالج: %s"
+msgstr "لفشل التفويض للسクリプト: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"
-msgstr "لم يتم تحديد أمر"
+msgstr "لم يتم تحديد أي أمر"
 
 #: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
@@ -2759,22 +2760,22 @@ msgstr "طريقة FIPS غير مدعومة: %s"
 #: src/sysmanage_agent/operations/system_control.py:153
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع/إرسال حالة برنامج مضاد للفيروسات: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:168
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "فشل في جمع/إرسال حالة برنامج مضاد للفيروسات التجاري: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:177
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في جمع/إرسال حالة Graylog: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:194
 #, python-format
 msgid "Failed to update system: %s"
-msgstr "فشل في تحديث الوكيل: %s"
+msgstr "فشل في تحديث النظام: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:202
 msgid "No service name specified"
@@ -2801,7 +2802,7 @@ msgstr "تم جدولة إيقاف تشغيل النظام بعد دقيقة و�
 #: src/sysmanage_agent/operations/system_control.py:260
 #, python-format
 msgid "Failed to shutdown system: %s"
-msgstr "فشل في إيقاف خادم HTTP: %s"
+msgstr "فشل في إيقاف تشغيل النظام: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:291
 msgid "dnf-system-upgrade requires a target version"
@@ -2846,12 +2847,12 @@ msgstr "تم تحديث الوكيل بنجاح"
 #: src/sysmanage_agent/operations/system_control.py:446
 #, python-format
 msgid "Failed to send antivirus status update: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال تحديث حالة برنامج مكافحة الفيروسات: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:497
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال تحديث حالة برنامج مكافحة الفيروسات التجاري: %s"
 
 # Ubuntu Pro functionality
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:30
@@ -2891,7 +2892,7 @@ msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:161
 msgid "Service name is required"
-msgstr "اسم المستخدم مطلوب"
+msgstr "يجب توفير اسم الخدمة"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:132
 #, python-format
@@ -2933,17 +2934,17 @@ msgstr "فشل في إرسال تحديث نظام التشغيل بعد تغي�
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في فحص حالة إعادة التشغيل: %s"
 
 #: src/sysmanage_agent/operations/update_manager.py:114
 #, python-format
 msgid "Failed to send reboot status update: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في إرسال تحديث حالة إعادة التشغيل: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:69
 #, python-format
 msgid "Failed to check updates: %s"
-msgstr "فشل في جمع حزم apt: %s"
+msgstr "فشل في فحص التحديثات: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:94
 msgid "No packages specified for update"
@@ -2956,12 +2957,12 @@ msgstr "تم بدء التحديثات في الخلفية"
 #: src/sysmanage_agent/operations/update_operations.py:111
 #, python-format
 msgid "Failed to start updates: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل في بدء التحديثات: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:151
 #, python-format
 msgid "No package manager specified for %s"
-msgstr "مديري الحزم المكتشفة: %s"
+msgstr "اسم مدير الحزم مطلوب لـ %s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:183
@@ -2989,12 +2990,12 @@ msgstr "لم يتم العثور على حزم صحيحة للتحديث"
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
-msgstr "فشل في إرسال تحديث نظام التشغيل بعد تغيير Ubuntu Pro: %s"
+msgstr "فشل في إعادة المسح للتحديثات بعد المجموعة: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:286
 #, python-format
 msgid "Background update process failed: %s"
-msgstr "فشل fwupd get-updates: %s"
+msgstr "فشل عملية تحديث الخلفية: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:18
 #, python-format
@@ -3014,22 +3015,22 @@ msgstr "اسم المستخدم مطلوب"
 #: src/sysmanage_agent/operations/user_account_operations.py:71
 #, python-format
 msgid "Failed to create user %s: %s"
-msgstr "فشل إعادة تشغيل الخدمة %s: %s"
+msgstr "فشل في إنشاء المستخدم %s: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:81
 #: src/sysmanage_agent/operations/user_account_operations.py:167
 msgid "Group name is required"
-msgstr "اسم الآلة الافتراضية مطلوب"
+msgstr "اسم المجموعة مطلوب"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:114
 #, python-format
 msgid "Failed to create group %s: %s"
-msgstr "فشل إعادة تشغيل الخدمة %s: %s"
+msgstr "فشل في إنشاء المجموعة %s: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:157
 #, python-format
 msgid "Failed to delete user %s: %s"
-msgstr "فشل إعادة تشغيل الخدمة %s: %s"
+msgstr "فشل في حذف المستخدم %s: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:200
 #, python-format
@@ -3040,17 +3041,17 @@ msgstr "فشل في حذف المجموعة %s: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:450
 #, python-format
 msgid "User %s created successfully"
-msgstr "Bridged network '%s' created successfully"
+msgstr "تم إنشاء المستخدم %s بنجاح"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:316
 #, python-format
 msgid "Failed to create macOS user %s: %s"
-msgstr "فشل إعادة تشغيل الخدمة %s: %s"
+msgstr "فشل في إنشاء مستخدم macOS %s: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:341
 #, python-format
 msgid "Group %s created successfully"
-msgstr "Bridged network '%s' created successfully"
+msgstr "تم إنشاء المجموعة %s بنجاح"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:346
 #, python-format
@@ -3089,7 +3090,7 @@ msgstr "تم التنفيذ بنجاح: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:781
 #, python-format
 msgid "Command failed (%s): %s"
-msgstr "Failed to write %s: %s"
+msgstr "فشل الأمر (%s): %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:785
 #, python-format
@@ -3104,7 +3105,7 @@ msgstr "فشل الكشف البديل عن المعالج: %s"
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
 msgid "Error listing Windows repositories: %s"
-msgstr "خطأ في الاستماع للإعلانات: %s"
+msgstr "خطأ في قوائم Windows المخازن: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:141
 msgid "Repository URL is required for Windows repositories"
@@ -3122,7 +3123,7 @@ msgstr "فشل في إضافة مستودع Windows %s: %s"
 #: src/sysmanage_agent/operations/windows_repository_operations.py:182
 #, python-format
 msgid "Error adding Windows repository: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إضافة مستودع Windows: %s"
 
 #: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
@@ -3130,47 +3131,47 @@ msgstr "⚠️  تحذير: aiohttp غير متاح، سيتم تخطي التس
 
 #: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
-msgstr "⚠️  تحذير: aiohttp غير متاح، سيتم تخطي التسجيل"
+msgstr "غير متاح aiohttp، تم تخطي التسجيل"
 
-#: src/sysmanage_agent/registration/client_registration.py:345
+#: src/sysmanage_agent/registration/client_registration.py:339
 #, python-format
 msgid "Registration failed with status %s: %s"
-msgstr "فشلت المصادقة بالحالة %s: %s"
+msgstr "لفشل التسجيل بناءً على الحالة %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:354
+#: src/sysmanage_agent/registration/client_registration.py:348
 #, python-format
 msgid "Error during registration: %s"
-msgstr "خطأ أثناء فحص التحديث الدوري: %s"
+msgstr "خطأ أثناء التسجيل: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:383
+#: src/sysmanage_agent/registration/client_registration.py:377
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "فشل في التسجيل بعد %s محاولات"
 
-#: src/sysmanage_agent/registration/client_registration.py:388
+#: src/sysmanage_agent/registration/client_registration.py:382
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "فشل التسجيل، إعادة المحاولة في %s ثانية..."
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:437
 #, python-format
 msgid "Error loading stored auth data: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في تحميل بيانات التحقق المخزنة: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:462
+#: src/sysmanage_agent/registration/client_registration.py:456
 #, python-format
 msgid "Error storing auth data: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في تخزين بيانات التحقق: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:475
+#: src/sysmanage_agent/registration/client_registration.py:469
 #, python-format
 msgid "Error getting stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "خطأ أثناء الحصول على مخزن host_id: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:490
+#: src/sysmanage_agent/registration/client_registration.py:484
 #, python-format
 msgid "Error retrieving stored approval data: %s"
-msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
+msgstr "خطأ في استرداد بيانات الموافقة المخزنة: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:76
 msgid "No SysManage servers discovered on the network"
@@ -3183,7 +3184,7 @@ msgstr "استجابة JSON غير صالحة من مصدر غير معروف"
 #: src/sysmanage_agent/registration/discovery.py:160
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr "خطأ أثناء اكتشاف البث: %s"
+msgstr "خطأ أثناء الاكتشاف البثي: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:214
 msgid "Invalid JSON announcement from unknown source"
@@ -3192,89 +3193,89 @@ msgstr "إعلان JSON غير صالح من مصدر غير معروف"
 #: src/sysmanage_agent/registration/discovery.py:222
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr "خطأ في الاستماع للإعلانات: %s"
+msgstr "خطأ أثناء الاستماع للإعلانات: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:83
+#: src/sysmanage_agent/registration/registration_manager.py:69
 msgid "Host not yet approved for certificate retrieval"
 msgstr "الخادم尚未批准获取证书"
 
-#: src/sysmanage_agent/registration/registration_manager.py:87
+#: src/sysmanage_agent/registration/registration_manager.py:73
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "فشل في استرداد الشهادات: HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:92
+#: src/sysmanage_agent/registration/registration_manager.py:78
 #, python-format
 msgid "Error fetching certificates: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ أثناء الحصول على الشهادات: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:141
+#: src/sysmanage_agent/registration/registration_manager.py:113
 #, python-format
 msgid "Failed to get server fingerprint: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على بصمة الخادم: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:154
+#: src/sysmanage_agent/registration/registration_manager.py:124
 msgid "Certificate-based authentication requires manual host approval"
 msgstr "تطلب المصادقة القائمة على الشهادات الموافقة اليدوية للنظام المستضياف"
 
-#: src/sysmanage_agent/registration/registration_manager.py:157
+#: src/sysmanage_agent/registration/registration_manager.py:127
 msgid "Please approve this host in the SysManage web interface"
 msgstr "من فضلك اعتمِ هذا المضيف في واجهة SysManage عبر الإنترنت"
 
-#: src/sysmanage_agent/registration/registration_manager.py:209
+#: src/sysmanage_agent/registration/registration_manager.py:179
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "خطأ في معالجة إشعار نجاح التسجيل: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:242
+#: src/sysmanage_agent/registration/registration_manager.py:212
 #, python-format
 msgid "Error processing host approval notification: %s"
-msgstr "خطأ في معالجة تحديثات fwupd: %s"
+msgstr "خطأ في معالجة إشعار الموافقة على المستضيفة: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:263
-#: src/sysmanage_agent/registration/registration_manager.py:500
+#: src/sysmanage_agent/registration/registration_manager.py:233
+#: src/sysmanage_agent/registration/registration_manager.py:478
 #, python-format
 msgid "Error clearing host approval records: %s"
-msgstr "خطأ في إضافة المستخدم إلى المجموعات: %s"
+msgstr "خطأ في إزالة سجلات الموافقة للمضيف: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:317
+#: src/sysmanage_agent/registration/registration_manager.py:287
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "خطأ في تخزين موافقة المضيف في قاعدة البيانات: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:349
+#: src/sysmanage_agent/registration/registration_manager.py:319
 #, python-format
 msgid "Error retrieving stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "خطأ في استرداد معرف المستضيفة المخزن: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:381
-#: src/sysmanage_agent/registration/registration_manager.py:438
+#: src/sysmanage_agent/registration/registration_manager.py:351
+#: src/sysmanage_agent/registration/registration_manager.py:408
 msgid "Error retrieving stored credentials"
 msgstr "خطأ في استرداد بيانات الاعتماد المخزنة"
 
-#: src/sysmanage_agent/registration/registration_manager.py:410
+#: src/sysmanage_agent/registration/registration_manager.py:380
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "خطأ في استرداد host_id المخزن بشكل متزامن: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:463
+#: src/sysmanage_agent/registration/registration_manager.py:433
 #, python-format
 msgid "Error retrieving host approval: %s"
-msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
+msgstr "خطأ في استرداد موافقة المستضيفة: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:502
+#: src/sysmanage_agent/registration/registration_manager.py:480
 msgid "Continuing despite cleanup error..."
 msgstr "المتابعة على الرغم من خطأ التنظيف..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:522
+#: src/sysmanage_agent/registration/registration_manager.py:512
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "وجدت %d سجلات فاسدة في جدول host_approval ،正在进行清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:538
+#: src/sysmanage_agent/registration/registration_manager.py:526
 #, python-format
 msgid "Error during database cleanup: %s"
-msgstr "خطأ أثناء فحص التحديث الدوري: %s"
+msgstr "خطأ أثناء تنظيف قاعدة البيانات: %s"
 
 #: src/sysmanage_agent/wsl/capability.py:62
 msgid "WSL requires BIOS virtualization to be enabled"
@@ -3282,12 +3283,12 @@ msgstr "يتطلب WSL تمكين تقنية BIOS للเสมركايشن"
 
 #: src/sysmanage_agent/wsl/capability.py:146
 msgid "WSL status check timed out"
-msgstr "انتهت مهلة التحقق من حالة Ubuntu Pro"
+msgstr "لفشل فحص حالة WSL بعد انتهاء الوقت المحدد"
 
 #: src/sysmanage_agent/wsl/capability.py:153
 #, python-format
 msgid "Error checking WSL support: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #, python-format
 #~ msgid "Database manager initialized with path: %s"

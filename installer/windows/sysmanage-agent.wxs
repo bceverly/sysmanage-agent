@@ -41,6 +41,15 @@
     -->
     <Property Id="ARPDISPLAYVERSION" Value="$(var.VERSION)" />
 
+    <!--
+      Add/Remove Programs icon.  Without it Windows shows the generic MSI box,
+      which is also what the bundle would inherit.  The .ico is committed
+      (Windows CI has no SVG rasteriser) and regenerated from its vendored SVG
+      by scripts/build_windows_icon.py.
+    -->
+    <Icon Id="SysManageAgentIcon" SourceFile="sysmanage-agent.ico" />
+    <Property Id="ARPPRODUCTICON" Value="SysManageAgentIcon" />
+
     <!-- Embed CAB file in MSI -->
     <MediaTemplate EmbedCab="yes" />
 
@@ -89,6 +98,16 @@
       <!-- Python check script -->
       <Component Id="PythonCheckScript" Guid="A1A1A1A1-B2B2-4C4C-8D8D-E5E5E5E5E5E5">
         <File Id="CheckPythonPs1" Source="check-python.ps1" />
+      </Component>
+
+      <!-- Deferred-bootstrap task: finishes the install after msiexec exits -->
+      <Component Id="BootstrapTaskScript" Guid="C4C4C4C4-D5D5-4E4E-8F8F-A1A1A1A1A1A1">
+        <File Id="BootstrapTaskPs1" Source="bootstrap-task.ps1" />
+      </Component>
+
+      <!-- Shared state vocabulary + Python discovery, dot-sourced by the rest -->
+      <Component Id="BootstrapStateScript" Guid="E6E6E6E6-F7F7-4A4A-8B8B-C2C2C2C2C2C2">
+        <File Id="BootstrapStatePs1" Source="bootstrap-state.ps1" />
       </Component>
 
       <!-- Service creation script -->
@@ -152,12 +171,27 @@
     </Feature>
 
     <!-- Custom actions -->
-    <!-- Check/Install Python before copying files -->
+    <!--
+      Detect prerequisites; do NOT install them.
+
+      The Python and VC++ redistributable installers are Windows Installer
+      packages, and this custom action runs while the parent MSI still holds
+      the Windows Installer mutex, so a nested install is refused with 1618
+      (ERROR_INSTALL_ALREADY_RUNNING).  That is structural: for as long as this
+      action is alive the mutex is held, so no sequencing or retry inside the
+      transaction can ever succeed.  -DeferToTask makes the script register a
+      scheduled task that does the work once msiexec has exited, and record a
+      queryable state in HKLM:\SOFTWARE\SysManage\Agent meanwhile.
+
+      Before this, a host without Python got: install refused -> no venv ->
+      no service -> MSI still exits 0.  "Installation completed successfully"
+      with nothing that would ever enrol.
+    -->
     <CustomAction Id="CheckPython"
                   Directory="INSTALLFOLDER"
                   Execute="deferred"
                   Impersonate="no"
-                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]check-python.ps1"'
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]check-python.ps1" -DeferToTask'
                   Return="check" />
 
     <!-- Install dependencies after files are copied -->

@@ -4,13 +4,53 @@
 
 # Server connection settings
 server:
-  # WebSocket URL of the SysManage server
-  url: "wss://sysmanage.example.com:8443"
+  # ONE origin, and nothing to open but outbound 443.
+  #
+  # The API and the web UI share this origin: the agent talks to /api on it, so
+  # there is no separate API port, no separate WebSocket port, and no
+  # enrollment port.  A firewall rule of "outbound 443 to your SysManage host"
+  # is the whole requirement.
+  #
+  # Omit the port to mean 443 (or 80 for http).
+  #
+  # DEVELOPMENT: a dev server (dev_mode: true in sysmanage.yaml) has no reverse
+  # proxy and no certificate, so point at the backend directly and turn
+  # verification off -- there is nothing to verify:
+  #
+  #   on the SAME machine as the server:
+  #     url: "http://localhost:8080"
+  #   from another machine on the LAN (dev servers bind every interface, so no
+  #   server-side change is needed -- just use its address):
+  #     url: "http://192.168.1.50:8080"
+  #   and in both cases:
+  #     verify_ssl: false
+  url: "https://sysmanage.example.com"
 
-  # Authentication token (optional - obtain from SysManage server if required)
-  # token: "YOUR_AGENT_TOKEN_HERE"
+  # Verify the server's TLS certificate.  Leave this ON.
+  verify_ssl: true
 
-  # Reconnect settings
+  # If your network terminates and re-signs TLS (a "TLS-inspecting" or
+  # "break-and-inspect" proxy), point this at that proxy's root certificate.
+  # That is the supported way to work in such an estate -- it keeps
+  # verification ON.  Setting verify_ssl: false would also "work" and is the
+  # wrong answer: it accepts ANY certificate, from anyone.
+  # ca_bundle: "/etc/ssl/certs/corporate-root.pem"
+
+  # Outbound HTTP proxy, if you have one.  Normally you do not need this: the
+  # agent already honours HTTPS_PROXY / HTTP_PROXY / NO_PROXY from the
+  # environment.  Set it explicitly for hosts where that environment does not
+  # reach the agent -- a Windows service does not inherit a user's shell
+  # variables, and those are often exactly the machines behind a mandatory
+  # proxy.
+  # proxy: "http://proxy.example.com:3128"
+
+  # LEGACY, still supported so existing agents keep working after an upgrade.
+  # Used only when `url` is absent.  Prefer `url`.
+  # hostname: "sysmanage.example.com"
+  # port: 8080
+  # use_https: true
+
+  # Reconnect behaviour
   reconnect_interval: 30  # seconds
   max_reconnect_attempts: 0  # 0 = unlimited
 

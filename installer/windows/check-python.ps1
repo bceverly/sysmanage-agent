@@ -9,12 +9,40 @@
 # - Visual C++ Redistributable (for cryptography package)
 # - Python 3.9+
 #
+# TWO CALLING CONTEXTS
+# --------------------
+# 1. From the MSI custom action, with -DeferToTask.  Prerequisites may only be
+#    DETECTED here, never installed: the parent MSI holds the Windows Installer
+#    mutex for as long as its custom actions run, and both the VC++
+#    redistributable and the Python installer are themselves Windows Installer
+#    packages, so a nested install is refused with 1618
+#    (ERROR_INSTALL_ALREADY_RUNNING).  That is structural, not a race -- no
+#    amount of sequencing or retrying inside the transaction can win.  When
+#    something is missing this hands the work to a scheduled task that runs
+#    once msiexec has exited.
+#
+# 2. Standalone, with no arguments -- from bootstrap-task.ps1, or from the Pro+
+#    provisioning first-boot script, or by an operator recovering an install.
+#    The MSI transaction is over, so everything installs normally.  This is the
+#    historical behaviour and is deliberately the DEFAULT, so existing callers
+#    (notably virtualization_engine's windows_unattend.pxi, which invokes this
+#    script with no arguments) keep working untouched.
+#
+
+[CmdletBinding()]
+param(
+    # Set by the MSI custom action.  Detect only; delegate any actual install
+    # to the deferred scheduled task.
+    [switch]$DeferToTask
+)
 
 $ErrorActionPreference = "Stop"
 
 # Log file
 $LogPath = "C:\ProgramData\SysManage\logs"
 $LogFile = Join-Path $LogPath "install.log"
+$InstallDir = "C:\Program Files\SysManage Agent"
+$TaskName = "SysManage-Agent-Bootstrap"
 
 # Create log directory if it doesn't exist
 if (-not (Test-Path $LogPath)) {
@@ -29,7 +57,24 @@ function Write-Log {
     Write-Host $Message
 }
 
+# Shared state vocabulary and Python discovery.  Dot-sourced so there is one
+# definition of "is Python present" rather than a copy per script.
+$StateHelper = Join-Path $InstallDir 'bootstrap-state.ps1'
+if (Test-Path $StateHelper) {
+    . $StateHelper
+} else {
+    # Running from a source checkout rather than an install; fall back to the
+    # sibling file so the script is still usable standalone.
+    $sibling = Join-Path $PSScriptRoot 'bootstrap-state.ps1'
+    if (Test-Path $sibling) { . $sibling }
+}
+
 Write-Log "=== Prerequisites Check ==="
+if ($DeferToTask) {
+    Write-Log "Mode: detect-only (running inside the MSI transaction)"
+} else {
+    Write-Log "Mode: install (running outside any MSI transaction)"
+}
 
 # Detect system architecture
 $SystemArch = $env:PROCESSOR_ARCHITECTURE
@@ -92,33 +137,26 @@ try {
     Write-Log "WARNING: Could not detect .NET Framework version, assuming it's present"
 }
 
-# 3. Check for Visual C++ Redistributable
-Write-Log "Checking Visual C++ Redistributable..."
-$vcRedistInstalled = $false
-
-# Check for VC++ 2015-2022 redistributable (needed for cryptography package)
-$vcRedistKeys = @(
-    "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64",
-    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
-)
-
-foreach ($key in $vcRedistKeys) {
-    try {
-        $vcRedist = Get-ItemProperty -Path $key -ErrorAction SilentlyContinue
-        if ($vcRedist -and $vcRedist.Installed -eq 1) {
-            Write-Log "Visual C++ Redistributable found: version $($vcRedist.Version)"
-            $vcRedistInstalled = $true
-            break
+function Test-VcRedist {
+    # VC++ 2015-2022 runtime, needed by the cryptography wheel.
+    foreach ($key in @(
+        "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+    )) {
+        try {
+            $vcRedist = Get-ItemProperty -Path $key -ErrorAction SilentlyContinue
+            if ($vcRedist -and $vcRedist.Installed -eq 1) {
+                Write-Log "Visual C++ Redistributable found: version $($vcRedist.Version)"
+                return $true
+            }
+        } catch {
+            continue
         }
-    } catch {
-        continue
     }
+    return $false
 }
 
-if (-not $vcRedistInstalled) {
-    Write-Log "Visual C++ Redistributable not found - installing..."
-
-    # Download VC++ Redistributable 2015-2022 (architecture-specific)
+function Install-VcRedist {
     if ($Arch -eq "arm64") {
         $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
         $vcRedistInstaller = "$env:TEMP\vc_redist.arm64.exe"
@@ -133,13 +171,18 @@ if (-not $vcRedistInstalled) {
         $webClient.DownloadFile($vcRedistUrl, $vcRedistInstaller)
         Write-Log "Download complete: $vcRedistInstaller"
 
-        # Install silently
         Write-Log "Installing Visual C++ Redistributable ($ArchDisplay)..."
         $process = Start-Process -FilePath $vcRedistInstaller -ArgumentList "/install", "/quiet", "/norestart" -Wait -PassThru -WindowStyle Hidden
 
         if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
             Write-Log "Visual C++ Redistributable installed successfully"
             Remove-Item $vcRedistInstaller -Force -ErrorAction SilentlyContinue
+        } elseif ($process.ExitCode -eq 1618) {
+            # The signature of running inside a live MSI transaction.  Name it
+            # explicitly: this exact code, silently swallowed, is what made the
+            # original failure so hard to attribute.
+            Write-Log "ERROR: Visual C++ Redistributable refused with 1618 (another install is in progress)."
+            Write-Log "ERROR: This means a nested install was attempted; it must be deferred instead."
         } else {
             Write-Log "WARNING: Visual C++ Redistributable installation returned exit code $($process.ExitCode)"
             Write-Log "Installation may still succeed, continuing..."
@@ -147,111 +190,178 @@ if (-not $vcRedistInstalled) {
     } catch {
         Write-Log "WARNING: Failed to install Visual C++ Redistributable: $_"
         Write-Log "The cryptography package may fail to install without it"
-        Write-Log "You can manually install it from: $vcRedistUrl"
     }
+}
+
+function Install-Python {
+    $PythonVersion = "3.12.8"
+
+    if ($Arch -eq "arm64") {
+        $PythonInstaller = "$env:TEMP\python-$PythonVersion-arm64.exe"
+        $PythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-arm64.exe"
+    } else {
+        $PythonInstaller = "$env:TEMP\python-$PythonVersion-amd64.exe"
+        $PythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-amd64.exe"
+    }
+
+    try {
+        Write-Log "Downloading Python $PythonVersion ($ArchDisplay) from $PythonUrl..."
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($PythonUrl, $PythonInstaller)
+        Write-Log "Download complete: $PythonInstaller"
+
+        Write-Log "Installing Python $PythonVersion ($ArchDisplay)..."
+        $installArgs = @(
+            "/quiet"
+            "InstallAllUsers=1"
+            "PrependPath=1"
+            "Include_test=0"
+            "Include_launcher=1"
+        )
+
+        $process = Start-Process -FilePath $PythonInstaller -ArgumentList $installArgs -Wait -PassThru -WindowStyle Hidden
+
+        if ($process.ExitCode -eq 0) {
+            Write-Log "Python $PythonVersion ($ArchDisplay) installed successfully"
+            Remove-Item $PythonInstaller -Force -ErrorAction SilentlyContinue
+            if (Get-Command Update-SmProcessPath -ErrorAction SilentlyContinue) {
+                Update-SmProcessPath
+            }
+            return $true
+        }
+
+        if ($process.ExitCode -eq 1618) {
+            Write-Log "ERROR: Python installer refused with 1618 (another install is in progress)."
+            Write-Log "ERROR: A nested install was attempted; it must be deferred instead."
+        } else {
+            Write-Log "WARNING: Python installer returned exit code $($process.ExitCode)"
+        }
+        Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
+        Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
+        Write-Log "WARNING:   sc.exe start SysManageAgent"
+        return $false
+    } catch {
+        Write-Log "WARNING: Failed to download or install Python: $_"
+        Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
+        Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
+        Write-Log "WARNING:   sc.exe start SysManageAgent"
+        return $false
+    }
+}
+
+function Register-BootstrapTask {
+    <#
+    .SYNOPSIS
+        Hand the remaining prerequisite work to a task that outlives msiexec.
+    .DESCRIPTION
+        Two triggers on purpose:
+          * the immediate Start, so a normal install finishes within a minute
+            of msiexec returning rather than at the next reboot;
+          * AtStartup, so a machine that reboots (or whose Python download
+            failed for want of a network) retries by itself instead of sitting
+            broken until somebody notices.
+        bootstrap-task.ps1 removes the task once it reaches Complete.
+    #>
+    $taskScript = Join-Path $InstallDir 'bootstrap-task.ps1'
+    if (-not (Test-Path $taskScript)) {
+        Write-Log "ERROR: $taskScript is missing; cannot defer the bootstrap."
+        return $false
+    }
+
+    try {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
+            -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$taskScript`""
+        $trigger = New-ScheduledTaskTrigger -AtStartup
+        $settings = New-ScheduledTaskSettingsSet `
+            -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+            -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+
+        Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
+            -Settings $settings -User 'SYSTEM' -RunLevel Highest -Force `
+            -Description 'Finishes the SysManage Agent install (Python, venv, service) after msiexec exits.' | Out-Null
+        Write-Log "Registered scheduled task '$TaskName'."
+
+        # Kick it off now; the task itself waits for msiexec to exit.
+        Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+        Write-Log "Started '$TaskName'; it will wait for msiexec to exit before installing Python."
+        return $true
+    } catch {
+        Write-Log "ERROR: Could not register or start '$TaskName': $_"
+        return $false
+    }
+}
+
+# 3 + 4. Visual C++ Redistributable and Python.
+$vcPresent = Test-VcRedist
+if (-not $vcPresent) { Write-Log "Visual C++ Redistributable: NOT present" }
+
+$pythonPath = if (Get-Command Find-SmPython -ErrorAction SilentlyContinue) {
+    Find-SmPython
+} else {
+    $null
+}
+if ($pythonPath) {
+    Write-Log "Found Python: $pythonPath"
+} else {
+    Write-Log "Python 3.9+: NOT present"
+}
+
+if ($DeferToTask) {
+    # Inside the MSI transaction.  Nothing may be installed here.
+    if ($pythonPath -and $vcPresent) {
+        Write-Log "All prerequisites already present; the MSI can finish the install itself."
+        if (Get-Command Set-SmBootstrapState -ErrorAction SilentlyContinue) {
+            Set-SmBootstrapState -State 'Running' `
+                -Detail 'Prerequisites already present; installing in-transaction.'
+        }
+        exit 0
+    }
+
+    $missing = @()
+    if (-not $pythonPath) { $missing += 'Python 3.9+' }
+    if (-not $vcPresent) { $missing += 'Visual C++ 2015-2022 Redistributable' }
+    $missingText = $missing -join ' and '
+
+    Write-Log "Missing prerequisite(s): $missingText"
+    Write-Log "These CANNOT be installed from inside the MSI (nested installs are refused with 1618)."
+
+    if (Register-BootstrapTask) {
+        if (Get-Command Set-SmBootstrapState -ErrorAction SilentlyContinue) {
+            Set-SmBootstrapState -State 'Pending' `
+                -Detail "Waiting on $missingText. Task '$TaskName' will finish the install once msiexec exits."
+        }
+    } else {
+        if (Get-Command Set-SmBootstrapState -ErrorAction SilentlyContinue) {
+            Set-SmBootstrapState -State 'Failed' `
+                -Detail ("Missing $missingText and the deferred bootstrap task could not be registered. " +
+                         "Install Python 3.9+ then re-run the MSI.")
+        }
+    }
+    # Always 0: the CA is Return="check", and a non-zero here rolls the whole
+    # install back (PR #375773 burn).  The state key carries the bad news.
+    exit 0
+}
+
+# Standalone mode -- the MSI transaction is over, so install for real.
+if (-not $vcPresent) {
+    Write-Log "Visual C++ Redistributable not found - installing..."
+    Install-VcRedist
 } else {
     Write-Log "Visual C++ Redistributable: OK"
 }
 
-# 4. Check for Python 3.9+
-Write-Log "Checking Python..."
-
-# Find Python executable
-$PythonExe = $null
-$PythonCommands = @("python", "python3", "py")
-
-foreach ($cmd in $PythonCommands) {
-    try {
-        $testPath = (Get-Command $cmd -ErrorAction SilentlyContinue).Source
-        if ($testPath) {
-            # Verify it's Python 3.9+
-            $version = & $cmd --version 2>&1
-            if ($version -match "Python 3\.(\d+)") {
-                $minor = [int]$Matches[1]
-                if ($minor -ge 9) {
-                    $PythonExe = $cmd
-                    Write-Log "Found Python: $testPath (version: $version)"
-                    exit 0
-                }
-            }
-        }
-    } catch {
-        continue
-    }
-}
-
-# Python not found - install it
-Write-Log "Python 3.9+ not found - installing Python 3.12..."
-
-# Download Python 3.12 installer (architecture-specific)
-$PythonVersion = "3.12.8"
-
-if ($Arch -eq "arm64") {
-    $PythonInstaller = "$env:TEMP\python-$PythonVersion-arm64.exe"
-    $PythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-arm64.exe"
-} else {
-    $PythonInstaller = "$env:TEMP\python-$PythonVersion-amd64.exe"
-    $PythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-amd64.exe"
-}
-
-try {
-    Write-Log "Downloading Python $PythonVersion ($ArchDisplay) from $PythonUrl..."
-
-    # Use .NET WebClient for compatibility
-    $webClient = New-Object System.Net.WebClient
-    $webClient.DownloadFile($PythonUrl, $PythonInstaller)
-
-    Write-Log "Download complete: $PythonInstaller"
-
-    # Install Python silently
-    Write-Log "Installing Python $PythonVersion ($ArchDisplay)..."
-    $installArgs = @(
-        "/quiet"
-        "InstallAllUsers=1"
-        "PrependPath=1"
-        "Include_test=0"
-        "Include_launcher=1"
-    )
-
-    $process = Start-Process -FilePath $PythonInstaller -ArgumentList $installArgs -Wait -PassThru -WindowStyle Hidden
-
-    if ($process.ExitCode -eq 0) {
-        Write-Log "Python $PythonVersion ($ArchDisplay) installed successfully"
-
-        # Clean up installer
-        Remove-Item $PythonInstaller -Force
-
-        # Refresh PATH
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-        exit 0
-    } else {
-        # Soft-fail: do NOT kill the MSI install just because auto-
-        # installing Python failed.  This commonly happens in:
-        #   * winget's sandboxed validation environment (no internet
-        #     access to python.org from the sandbox)
-        #   * offline / air-gapped install scenarios
-        #   * corporate-proxy environments that block the download
-        # The MSI continues and the agent service is registered.
-        # The service will fail to start until Python 3.9+ is on PATH;
-        # the operator can install Python manually then restart the
-        # service.  Surface a clear message in the install log so the
-        # failure mode is diagnosable.
-        Write-Log "WARNING: Python installer returned exit code $($process.ExitCode)"
-        Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
-        Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
-        Write-Log "WARNING:   sc.exe start SysManageAgent"
-        exit 0
-    }
-
-} catch {
-    # Same soft-fail rationale as above -- the most common cause of
-    # this branch firing is sandboxed/restricted-network environments
-    # where the Python download couldn't complete.  Don't abort the
-    # MSI install; surface the manual-recovery steps in the log.
-    Write-Log "WARNING: Failed to download or install Python: $_"
-    Write-Log "WARNING: SysManage Agent service will not start until Python 3.9+ is installed."
-    Write-Log "WARNING: Install Python from https://www.python.org/downloads/ then restart the service:"
-    Write-Log "WARNING:   sc.exe start SysManageAgent"
+if ($pythonPath) {
+    Write-Log "Python 3.9+ already present: $pythonPath"
     exit 0
 }
+
+Write-Log "Python 3.9+ not found - installing Python 3.12..."
+Install-Python | Out-Null
+
+# Soft-fail by design even when the install did not work: the caller
+# (bootstrap-task.ps1, or the provisioning first-boot script) inspects for
+# Python itself and records the durable state.  Exiting non-zero here would
+# only re-create the rollback problem for the MSI path.
+exit 0

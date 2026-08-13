@@ -110,7 +110,11 @@ class TestAuthenticationHelperEdgeCases:
         self.mock_agent.config.get_server_config.return_value = {}
 
         url = self.auth_helper.build_auth_url()
-        assert url == "http://localhost:8000/api/agent/auth"
+        # No port configured means the scheme's standard port (80/443), not
+        # the old hard-coded 8000 -- a value that matched none of the config
+        # templates the project ships and existed only as a latent bug.
+        # Omitting the port is the single-origin goal: nothing to open but 443.
+        assert url == "http://localhost/api/agent/auth"
 
     def test_build_auth_url_https(self):
         """Test build_auth_url with HTTPS enabled."""
@@ -121,7 +125,9 @@ class TestAuthenticationHelperEdgeCases:
         }
 
         url = self.auth_helper.build_auth_url()
-        assert url == "https://server.example.com:443/api/agent/auth"
+        # 443 is https's default, so it is omitted from the URL: an explicit
+        # :443 is noise in logs and some proxies key on the literal Host.
+        assert url == "https://server.example.com/api/agent/auth"
 
 
 class TestMessageProcessorEdgeCases:

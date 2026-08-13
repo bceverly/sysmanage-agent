@@ -2,19 +2,19 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-12 19:40-0400\n"
+"POT-Creation-Date: 2026-08-13 15:53-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 #: src/database/base.py:78
 #, python-format
 msgid "Failed to create database directory %s: %s"
-msgstr "प्रमाणपत्र निर्देशिका %s स्कैन करने में विफल: %s"
+msgstr "कड़ियाँ डेटाबेस डिरेक्टरी %s निर्माण में विफल: %s"
 
 #: src/database/base.py:88
 #, python-format
 msgid "Failed to create database tables: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "काबल्ट डेटाबेस तालिकाएँ नहीं बना पाई: %s"
 
 #: src/database/init.py:83
 #, python-format
@@ -43,7 +43,7 @@ msgstr "डेटाबेस माइग्रेशन चलाने मे
 #: src/database/init.py:232
 #, python-format
 msgid "Failed to initialize database: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "डेटाबेस का संचालन विफल हो गया: %s"
 
 #: src/database/models.py:58
 #, python-format
@@ -74,23 +74,23 @@ msgstr "⚠️  {config_dir} तक पहुँच नहीं, {fallback_dir}
 #: src/sysmanage_agent/collection/antivirus_collection.py:66
 #, python-format
 msgid "Error detecting antivirus: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "एंटीवायरस का पहचान करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "संग्रह के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:873
+#: src/sysmanage_agent/communication/data_collector.py:921
 #, python-format
 msgid "Error collecting certificates: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "कैर्टिफिकेट एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Timeout extracting certificates from keychain: %s"
-msgstr "ramdisk ऑपरेशन के दौरान टाइमआउट: %s"
+msgstr "समयबाहुल्यता: कीचन में प्रमाणपत्र निकालने में %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:411
 #, python-format
@@ -100,17 +100,17 @@ msgstr "प्रमाणपत्र निर्देशिका %s स्�
 #: src/sysmanage_agent/collection/certificate_collection.py:480
 #, python-format
 msgid "Error collecting Windows certificates: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "विंडोज़ कैर्टिफिकेट एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:520
 #, python-format
 msgid "Timeout querying Windows certificate store: %s"
-msgstr "ramdisk ऑपरेशन के दौरान टाइमआउट: %s"
+msgstr "समयबाहुल्यता: Windows प्रमाणपत्र संग्रह से पूछने में %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:524
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
-msgstr "Windows प्रमाणपत्र स्टोर %s से क्वेरी करने में विफल: %s"
+msgstr "Windows सर्टिफिकेट स्टोर %s को प्रश्न करने में विफलता: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
@@ -125,17 +125,17 @@ msgstr "OpenSSL/LibreSSL नहीं मिला, प्रमाणपत्�
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:52
 #, python-format
 msgid "Error detecting commercial antivirus: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "कॉमर्सियल एंटीवायरस का पहचान करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:103
 #, python-format
 msgid "Failed to get Microsoft Defender status: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Microsoft Defender अवस्था की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:165
 #, python-format
 msgid "Failed to parse Microsoft Defender status JSON: %s"
-msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
+msgstr "Microsoft Defender स्थिति JSON की प्रक्रिया में विफलता: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:169
 msgid "Timeout while querying Microsoft Defender status"
@@ -144,12 +144,12 @@ msgstr "Microsoft Defender स्थिति की क्वेरी के �
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:173
 #, python-format
 msgid "Error detecting Microsoft Defender: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "माइक्रोसॉफ्ट डिफेंडर का पहचान करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:209
 #, python-format
 msgid "Could not parse datetime string: %s"
-msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+msgstr "डेट-टाइम स्ट्रिंग को पढ़ने में विफल: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:215
 #, python-format
@@ -159,7 +159,7 @@ msgstr "datetime %s पार्स करने में त्रुटि: %
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:279
 #, python-format
 msgid "Failed to get Microsoft Defender health status: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Microsoft Defender स्वास्थ्य अवस्था की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:333
 msgid "Timeout while querying Microsoft Defender status on macOS"
@@ -168,12 +168,12 @@ msgstr "macOS पर Microsoft Defender स्थिति की क्वे�
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:338
 #, python-format
 msgid "Error detecting Microsoft Defender on macOS: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "माइक्रोसॉफ्ट डिफेंडर का पहचान करने में त्रुटि (मॅकओएस पर): %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:378
 #, python-format
 msgid "Could not parse macOS datetime string: %s"
-msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+msgstr "macOS डेट-टाइम स्ट्रिंग को पढ़ने में विफल: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:384
 #, python-format
@@ -183,12 +183,12 @@ msgstr "macOS datetime %s पार्स करने में त्रुट
 #: src/sysmanage_agent/collection/graylog_collector.py:62
 #, python-format
 msgid "Graylog detection not supported on platform: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "Graylog की गिरफ्तारी पлатफ़ORM: %s पर समर्थित नहीं है"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:66
 #, python-format
 msgid "Error collecting Graylog status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "Graylog साइट की जाँच में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:125
 #, python-format
@@ -198,7 +198,7 @@ msgstr "BSD syslog.conf पढ़ने में त्रुटि: %s"
 #: src/sysmanage_agent/collection/graylog_collector.py:179
 #, python-format
 msgid "Error checking Graylog Sidecar service: %s"
-msgstr "सेवा की स्थिति की जाँच की जा रही है: %s"
+msgstr "Graylog Sidecar सेवा की जाँच में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:224
 #, python-format
@@ -208,7 +208,7 @@ msgstr "Graylog Sidecar config पढ़ने में त्रुटि: %s"
 #: src/sysmanage_agent/collection/graylog_collector.py:250
 #, python-format
 msgid "Error reading rsyslog config %s: %s"
-msgstr "%s पढ़ने में त्रुटि: %s"
+msgstr "rsyslog संरचना %s पढ़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:360
 #, python-format
@@ -231,17 +231,17 @@ msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्�
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:113
 #, python-format
 msgid "Failed to get BSD CPU info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "BSD CPU जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:136
 #, python-format
 msgid "Failed to get BSD memory info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "BSD मेमरी जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:231
 #, python-format
 msgid "Failed to get BSD storage info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "BSD स्टोरेज जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
@@ -251,17 +251,17 @@ msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्�
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
-msgstr "Linux CPU जानकारी प्राप्त करने में विफल: %s"
+msgstr "Linux CPU जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:188
 #, python-format
 msgid "Failed to get Linux memory info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Linux मेमरी जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:247
 #, python-format
 msgid "Failed to get Linux storage info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Linux स्टोरेज जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
@@ -271,47 +271,47 @@ msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्�
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
 msgid "Failed to get macOS CPU info: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS CPU जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:164
 #, python-format
 msgid "Failed to get macOS memory info: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS मेमरी जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:341
 #, python-format
 msgid "Failed to get macOS storage info: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS स्टोरेज जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:491
 #, python-format
 msgid "Failed to get APFS container info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "APFS कंटेनर जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:631
 #, python-format
 msgid "Failed to get macOS network info: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS नेटवर्क जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:66
 #, python-format
 msgid "Failed to get Windows CPU info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows CPU जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:100
 #, python-format
 msgid "Failed to get Windows memory info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows मेमरी जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:201
 #, python-format
 msgid "Failed to get Windows physical disk info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows भौतिक डिस्क जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:209
 #, python-format
 msgid "Failed to get Windows logical disk info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows लॉजिकल डिस्क जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:289
 #, python-format
@@ -323,57 +323,57 @@ msgstr ""
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
 msgid "Failed to get Windows network info via ipconfig: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows नेटवर्क जानकारी ipconfig के माध्यम से प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "Windows नेटवर्क संरचना की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
 #, python-format
 msgid "Failed to detect Debian system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "डिबियन सिस्टम अपडेट्स की पहचान वापसी नहीं कर सकी: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:129
 #, python-format
 msgid "Failed to detect Red Hat system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Red Hat प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:166
 #, python-format
 msgid "Failed to detect Arch system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Arch सिस्टम अपडेट्स की पहचान वापसी नहीं कर सकी: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:202
 #, python-format
 msgid "Failed to detect SUSE system updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "SUSE प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:259
 #, python-format
 msgid "Failed to detect Ubuntu release upgrades: %s"
-msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
+msgstr "Ubuntu वर्जन अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:295
 #, python-format
 msgid "Failed to detect Fedora version upgrades: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "फेडोरा संस्करण अपग्रेड की पहचान में विफल रहा: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:332
 #, python-format
 msgid "Failed to detect openSUSE version upgrades: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "openSUSE संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:94
 #, python-format
 msgid "Failed to apply APT updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "APT अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:227
 #, python-format
 msgid "Failed to apply DNF updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "DNF अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:246
 #, python-format
@@ -396,17 +396,17 @@ msgstr "%s के लिए फर्मवेयर अपडेट विफ�
 #: src/sysmanage_agent/collection/linux_update_applicators.py:301
 #, python-format
 msgid "Exception during firmware update for %s: %s"
-msgstr "%s के लिए फर्मवेयर अपडेट लागू करने में अपवाद: %s"
+msgstr "फ़रवरी अद्यतन के लिए %s के लिए त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:350
 #, python-format
 msgid "Failed to apply Ubuntu release upgrade: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Ubuntu जारी अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:403
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "फ़ेडोरा जारी अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
@@ -416,32 +416,32 @@ msgstr "प्रारंभिक डेटा अपडेट भेजना
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
 msgid "Failed to detect APT updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "APT की अपडेट्स पता नहीं चल सके: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:123
 #, python-format
 msgid "Failed to detect Snap updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Snap अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:164
 #, python-format
 msgid "Failed to detect Flatpak updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Flatpak की अपडेट्स पता नहीं चल सके: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:204
 #, python-format
 msgid "Failed to detect DNF updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "DNF की अपडेट्स का पता नहीं चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:226
 #, python-format
 msgid "Failed to detect Zypper updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Zypper अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:296
 #, python-format
 msgid "Failed to detect Pacman updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Pacman अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:323
 msgid "fwupd daemon not running or no permissions"
@@ -474,17 +474,17 @@ msgstr "Ubuntu Pro स्थिति जाँच का समय समाप
 #: src/sysmanage_agent/collection/os_info_collection.py:127
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
-msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
+msgstr "Ubuntu Pro अवस्था की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:286
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
-msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
+msgstr "Ubuntu Pro JSON आउटपुट की प्रक्रिया में विफलता: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:289
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
-msgstr "Ubuntu Pro अटैच करने में त्रुटि: %s"
+msgstr "Ubuntu Pro डेटा प्रक्रिया करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:382
 msgid "Livepatch status check timed out"
@@ -503,7 +503,7 @@ msgstr "लाइवपैच JSON पार्स करने में वि
 #: src/sysmanage_agent/collection/os_info_collection.py:553
 #, python-format
 msgid "Failed to get timezone: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "तारीख-काल की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/package_collection.py:46
 #: src/sysmanage_agent/collection/package_collection.py:66
@@ -511,12 +511,12 @@ msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्�
 #: src/sysmanage_agent/operations/repository_operations.py:20
 #, python-format
 msgid "Unsupported operating system: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "समर्थित नहीं है कि प्रणाली: %s"
 
 #: src/sysmanage_agent/collection/package_collection.py:79
 #, python-format
 msgid "Failed to collect available packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "उपलब्ध पैकेज एकत्र करने में विफल हो गए: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:198
 msgid "winget not found in any common location"
@@ -526,7 +526,7 @@ msgstr "winget किसी भी सामान्य स्थान पर 
 #: src/sysmanage_agent/collection/package_collector_base.py:330
 #, python-format
 msgid "Failed to store packages for %s: %s"
-msgstr "%s के लिए फर्मवेयर अपडेट विफल: %s"
+msgstr "पैकेज लिस्ट %s के लिए संग्रहण में विफलता: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:360
 #, python-format
@@ -536,17 +536,17 @@ msgstr "%s के लिए पैकेज प्राप्त करने �
 #: src/sysmanage_agent/collection/package_collector_base.py:384
 #, python-format
 msgid "Failed to get all packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "सभी पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:397
 #, python-format
 msgid "Failed to get package managers: %s"
-msgstr "पहचाने गए पैकेज प्रबंधक: %s"
+msgstr "पैकेज मैनेजरज़ की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:433
 #, python-format
 msgid "Failed to get packages for transmission: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "प्रसारण के लिए पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/package_collector_base.py:462
 #, python-format
@@ -562,17 +562,17 @@ msgstr "भेजे गए पैकेज संपीड़ित छवि �
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:135
 #, python-format
 msgid "Failed to collect pkg_info packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkg_info पैकेज का संग्रह फ़ैल हो गया: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:50
 #, python-format
 msgid "Failed to collect pkg packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkg पैकेज का संग्रह एकत्र करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:59
 #, python-format
 msgid "Failed to collect pkgin packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkgin पैकेज का संग्रह फ़ैल गया: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:80
 msgid "Failed to get OpenBSD package list"
@@ -585,7 +585,7 @@ msgstr "pkg पैकेज सूची प्राप्त करने म�
 #: src/sysmanage_agent/collection/package_collector_bsd.py:103
 #, python-format
 msgid "Error collecting pkg packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "पैकेज पैकेजों का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:119
 msgid "Failed to get pkgin package list"
@@ -594,7 +594,7 @@ msgstr "pkgin पैकेज सूची प्राप्त करने �
 #: src/sysmanage_agent/collection/package_collector_bsd.py:126
 #, python-format
 msgid "Error collecting pkgin packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "पिगिन पैकेजों का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:51
 msgid ""
@@ -612,12 +612,12 @@ msgstr "%s से पैकेज एकत्रित करने में �
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:101
 msgid "Failed to get APT package information"
-msgstr "APT पैकेज जानकारी प्राप्त करने में विफल"
+msgstr "APT पैकेज जानकारी प्राप्त विफल हो गई"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:106
 #, python-format
 msgid "Error collecting APT packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "APT पैकेज का संग्रहण में विफल: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:121
 msgid "Failed to get YUM package list"
@@ -626,7 +626,7 @@ msgstr "YUM पैकेज सूची प्राप्त करने म�
 #: src/sysmanage_agent/collection/package_collector_linux.py:128
 #, python-format
 msgid "Error collecting YUM packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "यम साइप्स पैकेज एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:143
 msgid "Failed to get DNF package list"
@@ -635,7 +635,7 @@ msgstr "DNF पैकेज सूची प्राप्त करने म�
 #: src/sysmanage_agent/collection/package_collector_linux.py:152
 #, python-format
 msgid "Error collecting DNF packages: %s"
-msgstr "DNF पैकेज एकत्रित करने में त्रुटि: %s"
+msgstr "DNF पैकेज का संग्रहण में विफल: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:167
 msgid "Failed to get Zypper package list"
@@ -644,7 +644,7 @@ msgstr "Zypper पैकेज सूची प्राप्त करने �
 #: src/sysmanage_agent/collection/package_collector_linux.py:174
 #, python-format
 msgid "Error collecting Zypper packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "जिप्पर पैकेज एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:189
 msgid "Failed to get Pacman package list"
@@ -653,7 +653,7 @@ msgstr "Pacman पैकेज सूची प्राप्त करने �
 #: src/sysmanage_agent/collection/package_collector_linux.py:196
 #, python-format
 msgid "Error collecting Pacman packages: %s"
-msgstr "Pacman पैकेज एकत्रित करने में त्रुटि: %s"
+msgstr "Pacman पैकेज का संग्रहण में विफल: %s"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:212
 msgid "Failed to get Snap package list"
@@ -709,7 +709,7 @@ msgstr "Chocolatey कम्युनिटी रिपॉजिटरी स�
 #: src/sysmanage_agent/collection/package_collector_windows.py:202
 #, python-format
 msgid "Error collecting Chocolatey packages via API: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Chocolatey पैकेज की API के माध्यम से संग्रहण में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:229
 #, python-format
@@ -742,32 +742,32 @@ msgstr "public_ip_refresh_service इतरेशन की सफलताप�
 
 #: src/sysmanage_agent/collection/role_detection.py:161
 msgid "No packages detected or unsupported package manager"
-msgstr "कोई समर्थित पैकेज मैनेजर नहीं मिला"
+msgstr "कोई पैकेज या समर्थित पैकेज मैनेजर नहीं पता"
 
 #: src/sysmanage_agent/collection/role_detection.py:184
 #, python-format
 msgid "Error detecting roles: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "रॉलों का पहचान करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:63
 #, python-format
 msgid "Error getting installed packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "इनस्टल किए गए पैकेजज़ को प्राप्त करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:298
 #, python-format
 msgid "Error getting pkgin packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkgin पैकेजज़ को प्राप्त करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/role_detection_package_managers.py:335
 #, python-format
 msgid "Error getting pkg packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkg पैकेजज़ को प्राप्त करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:88
 #, python-format
 msgid "Failed to collect FreeBSD pkg packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "FreeBSD pkg पैकेज एकत्र करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:128
 #, python-format
@@ -812,22 +812,22 @@ msgstr "flatpak पैकेज एकत्र करना विफल: %s"
 #: src/sysmanage_agent/collection/software_inventory_linux.py:411
 #, python-format
 msgid "Failed to collect DNF packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "DNF पैकेज एकत्र करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:456
 #, python-format
 msgid "Failed to collect Pacman packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Pacman पैकेज एक्सपोर्ट करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:529
 #, python-format
 msgid "Failed to collect Zypper packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Zypper पैकेज एक्सपोर्ट करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_linux.py:607
 #, python-format
 msgid "Failed to collect APK packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "APK पैकेज एकत्र करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_macos.py:253
 #, python-format
@@ -841,37 +841,37 @@ msgstr "system_profiler JSON आउटपुट पार्स करने म
 #: src/sysmanage_agent/collection/software_inventory_macos.py:340
 #, python-format
 msgid "Failed to collect Mac App Store applications: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "Mac App Store अनुप्रयोगों का संकलन विफल हो गया: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:204
 #, python-format
 msgid "Failed to collect Windows Registry programs: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Windows Registry के प्रोग्राम एकत्र करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:281
 #, python-format
 msgid "Failed to parse Microsoft Store apps JSON: %s"
-msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
+msgstr "Microsoft Store एप्स JSON की प्रक्रिया में विफलता: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:292
 #, python-format
 msgid "Failed to collect Microsoft Store apps: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "Microsoft Store ऐप्स का संकलन फ़ैल गया: %s"
 
 #: src/sysmanage_agent/collection/software_inventory_windows.py:389
 #, python-format
 msgid "Failed to collect winget packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "विंगेट पैकेज एकत्र करने में विफल हो गए: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:66
 #, python-format
 msgid "Unsupported platform for update detection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "परीक्षण के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:135
 #, python-format
 msgid "Failed to detect available updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "उपलब्ध अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:182
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
@@ -883,7 +883,7 @@ msgstr "पैकेज %s इंस्टॉल करने में वि�
 #: src/sysmanage_agent/collection/update_detection_bsd.py:95
 #, python-format
 msgid "Failed to detect pkg updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkg अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:126
 #, python-format
@@ -898,12 +898,12 @@ msgstr "pkgin list -u विफल (कोड %d): %s"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:201
 #, python-format
 msgid "Failed to detect pkgin updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "pkgin अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:239
 #, python-format
 msgid "Failed to apply pkg updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "पैकेज अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:287
 msgid "OpenBSD upgrade failed"
@@ -911,11 +911,11 @@ msgstr "OpenBSD अपग्रेड विफल"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:302
 msgid "OpenBSD upgrade timed out after 30 minutes"
-msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+msgstr "OpenBSD अपग्रेड 30 मिनट के बाद टाइमआउट हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:401
 msgid "FreeBSD upgrade failed"
-msgstr "फर्मवेयर अपडेट विफल"
+msgstr "FreeBSD अपग्रेड विफल हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:414
 msgid "FreeBSD upgrade install failed"
@@ -923,7 +923,7 @@ msgstr "FreeBSD अपग्रेड इंस्टॉल विफल"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:420
 msgid "FreeBSD upgrade timed out"
-msgstr "हटाने का समय समाप्त"
+msgstr "FreeBSD अपग्रेड की समय सीमा समाप्त हो गई"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:482
 #, python-format
@@ -937,12 +937,12 @@ msgstr "syspatch stderr: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:488
 msgid "OpenBSD system update detection timed out"
-msgstr "पुनः शुरू करने का समय समाप्त"
+msgstr "OpenBSD सिस्टम अपडेशन डिटेक्शन 30 मिनट के बाद टाइमआउट हो गई"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:493
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "OpenBSD प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:510
 msgid "Failed to get current OpenBSD version"
@@ -955,17 +955,17 @@ msgstr "वेबसाइट से OpenBSD संस्करण पार्�
 #: src/sysmanage_agent/collection/update_detection_bsd.py:563
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "OpenBSD वेबसाइट से अद्यतन खोजने में विफल: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:569
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "OpenBSD संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:620
 #, python-format
 msgid "Failed to detect FreeBSD version upgrades: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "फ्रीब्सड वर्झन अपग्रेड का पता नहीं चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:748
 msgid "syspatch command failed"
@@ -975,15 +975,20 @@ msgstr "syspatch कमांड विफल"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:771
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "सिसपैच अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:761
 msgid "syspatch command timed out"
-msgstr "पुनः शुरू करने का समय समाप्त"
+msgstr "syspatch कमांड टाईम-आउट हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:767
 msgid "syspatch timed out after 10 minutes"
-msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+msgstr ""
+"syspatch \\u0928\\u093e\\u0930 \\u0924\\u0947 \\u0915\\u094b \\u0926\\u0940 "
+"\\u092a\\u09c1\\u0982\\u0995\\u093e \\u0924\\u0947 "
+"\\u092a\\u09b0\\u09bf\\u09af\\u09cd \\u0926\\u0941\\u0938\\u093e "
+"\\u092c\\u094d\\u0930\\u0947\\u0915\\u094d\\u0930\\u0928 "
+"\\u091a\\u093f\\u0932\\u094b"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:912
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -995,17 +1000,17 @@ msgstr "असमर्थित पैकेज प्रबंधक: %s"
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "अद्यतन लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:236
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Linux प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:262
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Linux संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_linux.py:329
 #, python-format
@@ -1015,7 +1020,7 @@ msgstr "%s अपडेट लागू करने में विफल: %s"
 #: src/sysmanage_agent/collection/update_detection_linux.py:373
 #, python-format
 msgid "Unsupported package manager for apply: %s"
-msgstr "असमर्थित पैकेज प्रबंधक: %s"
+msgstr "प्रयोग के लिए समर्थित नहीं है कि पैकेज मैनेजर: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:165
 #, python-format
@@ -1029,17 +1034,17 @@ msgstr "Homebrew JSON आउटपुट पार्स करने में 
 #: src/sysmanage_agent/collection/update_detection_macos.py:216
 #, python-format
 msgid "Failed to detect Homebrew updates: %s"
-msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
+msgstr "Homebrew की अपडेट्स पता नहीं चल सके: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:345
 #, python-format
 msgid "Failed to detect Mac App Store updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Mac App Store अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:376
 #, python-format
 msgid "Failed to detect MacPorts updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "MacPorts अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:432
 #, python-format
@@ -1048,16 +1053,19 @@ msgstr "पैकेज %s अपडेट करने में विफल: 
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:488
 msgid "macOS upgrade failed"
-msgstr "फर्मवेयर अपडेट विफल"
+msgstr "macOS अपग्रेड विफल हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:503
 msgid "macOS upgrade timed out after 2 hours"
-msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+msgstr ""
+"macOS upgrade \\u0928\\u093e\\u0930 \\u0924\\u0947 \\u0915\\u094b "
+"\\u0926\\u0940 \\u092a\\u09c1\\u0982\\u0995\\u093e \\u0924\\u0947 "
+"\\u092a\\u09b0\\u09bf\\u09af\\u09cd"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:603
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "macOS संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:66
 #, python-format
@@ -1074,7 +1082,7 @@ msgstr "पैकेज '%s' अपडेट करने में विफल
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:248
 #, python-format
 msgid "Exception updating package '%s': %s"
-msgstr "%s के लिए फर्मवेयर अपडेट लागू करने में अपवाद: %s"
+msgstr "पैकेज '%s' को अद्यतित करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:376
 msgid "Windows Update installation failed"
@@ -1092,69 +1100,69 @@ msgstr "Windows Update '%s' 30 मिनट के बाद समय समा
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:435
 msgid "Installation timed out after 30 minutes"
-msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+msgstr "इनस्टॉलेशन 30 मिनट के बाद टाइमआउट हो गई"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:440
 #, python-format
 msgid "Exception installing Windows Update '%s': %s"
-msgstr "%s के लिए फर्मवेयर अपडेट लागू करने में अपवाद: %s"
+msgstr "Windows अद्यतन '%s' इनस्टॉल करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:493
 msgid "Windows upgrade failed"
-msgstr "फर्मवेयर अपडेट विफल"
+msgstr "Windows अपडेट के लिए विफल"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:508
 msgid "Windows upgrade timed out after 2 hours"
-msgstr "फर्मवेयर अपडेट 10 मिनट बाद टाइम आउट"
+msgstr "Windows अपडेट 2 घंटों के बाद समयबाहुल्यता में है"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:264
 #, python-format
 msgid "Failed to detect winget updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "विंगेट अपडेट्स की पहचान विफल हो गई: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:299
 #, python-format
 msgid "Failed to detect Chocolatey updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Chocolatey की अपडेट्स पता नहीं चल सके: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_packages.py:329
 #, python-format
 msgid "Failed to detect Scoop updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Scoop अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:40
 #, python-format
 msgid "Windows Update detection failed: %s"
-msgstr "प्रोसेसर पहचान फ़ॉलबैक विफल: %s"
+msgstr "Windows Update परीक्षण विफल हो गया: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:46
 msgid "Windows Update detection timed out"
-msgstr "पुनः शुरू करने का समय समाप्त"
+msgstr "Windows Update परीक्षण में समयबाहुल्यता हुई"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:49
 #, python-format
 msgid "Failed to detect Windows system updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Windows प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:135
 #, python-format
 msgid "Failed to parse Windows Update output: %s"
-msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
+msgstr "Windows Update आउटपुट की प्रक्रिया में विफलता: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:250
 #, python-format
 msgid "Failed to detect Windows version upgrades: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "Windows संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:50
 #, python-format
 msgid "Unsupported platform for user collection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "सदस्य संग्रह के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:66
 #, python-format
 msgid "Unsupported platform for group collection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "समूह संग्रह के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:96
 #: src/sysmanage_agent/collection/user_access_collection.py:506
@@ -1164,7 +1172,7 @@ msgstr "इस प्लेटफอร्म पर pwd मॉड्यूल �
 #: src/sysmanage_agent/collection/user_access_collection.py:112
 #, python-format
 msgid "Failed to collect Linux users: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Linux का उपयोक्ता संग्रह करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:120
 #: src/sysmanage_agent/collection/user_access_collection.py:532
@@ -1174,47 +1182,47 @@ msgstr "यह प्लेटफอร्म पर grp मॉड्यूल �
 #: src/sysmanage_agent/collection/user_access_collection.py:135
 #, python-format
 msgid "Failed to collect Linux groups: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Linux ग्रुप्स का संग्रह फ़ैल गया: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:224
 #, python-format
 msgid "Fallback pwd collection also failed: %s"
-msgstr "पैकेज इन्वेंटरी संग्रह विफल: %s"
+msgstr "प्रतिस्थापन pwd संकलन भी विफल होगया: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:246
 #, python-format
 msgid "Failed to collect macOS users: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS उपयोक्ताओं का संग्रह विफल हुआ: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:290
 #, python-format
 msgid "Fallback grp collection also failed: %s"
-msgstr "पैकेज इन्वेंटरी संग्रह विफल: %s"
+msgstr "प्रतिस्थापन grp संकलन भी विफल होगया: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:312
 #, python-format
 msgid "Failed to collect macOS groups: %s"
-msgstr "macOS एप्लिकेशन एकत्र करना विफल: %s"
+msgstr "macOS ग्रुप्स का संकलन फ़ैल गया: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:446
 #, python-format
 msgid "Failed to collect Windows users: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Windows का उपयोगकर्ता संग्रह करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:498
 #, python-format
 msgid "Failed to collect Windows groups: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Windows ग्रुप्स का संग्रह फ़ैल हो गया: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:524
 #, python-format
 msgid "Failed to collect BSD users: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "BSD उपयोगकर्ताओं की सूची बनाने में विफल: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:549
 #, python-format
 msgid "Failed to collect BSD groups: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "BSD समूह एकत्र करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/user_access_collection.py:578
 #, python-format
@@ -1225,7 +1233,7 @@ msgstr "access info संकलन में त्रुटि: %s"
 #: src/sysmanage_agent/wsl/keepalive.py:98
 #, python-format
 msgid "Could not parse existing .wslconfig: %s"
-msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+msgstr ".wslconfig को पढ़ने में विफल: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:172
 #: src/sysmanage_agent/wsl/keepalive.py:164
@@ -1237,7 +1245,7 @@ msgstr "%s पर लिखने की अनुमति नहीं है"
 #: src/sysmanage_agent/wsl/keepalive.py:166
 #, python-format
 msgid "Failed to write .wslconfig: %s"
-msgstr "नेस्टेड वर्चुअलाइजेशन कॉन्फ़िग लिखने में विफल: %s"
+msgstr ".wslconfig को लिखने में विफल होगया: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:206
 #: src/sysmanage_agent/wsl/keepalive.py:186
@@ -1248,25 +1256,25 @@ msgstr "WSL की बंद होने की प्रक्रिया न
 #: src/sysmanage_agent/communication/child_host_collector.py:209
 #: src/sysmanage_agent/wsl/keepalive.py:188
 msgid "WSL shutdown timed out"
-msgstr "रोकने का समय समाप्त"
+msgstr "WSL ऑफ़ में समयबाहुल्यता हुई"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:211
 #: src/sysmanage_agent/wsl/keepalive.py:190
 #, python-format
 msgid "Failed to shutdown WSL: %s"
-msgstr "HTTP सर्वर बंद करने में विफल: %s"
+msgstr "WSL को बंद करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:255
 #: src/sysmanage_agent/communication/child_host_reporter.py:417
 #, python-format
 msgid "Child host heartbeat error: %s"
-msgstr "डिफ़ॉल्ट नेटवर्क शुरू नहीं कर सका: %s"
+msgstr "बच्चे होस्ट हृदयपल्स त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:342
 #: src/sysmanage_agent/wsl/keepalive.py:241
 #, python-format
 msgid "Failed to start keep-alive for WSL instance %s: %s"
-msgstr "सेवा %s को पुनः प्रारंभ करने में विफल: %s"
+msgstr "WSL इनस्टैंस %s के लिए प्राक्रान्तिक संपर्क शुरू करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:364
 #: src/sysmanage_agent/wsl/keepalive.py:256
@@ -1284,7 +1292,7 @@ msgstr "बच्चे होस्टज़ डेटा भेजने म�
 #: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "चाइल्ड होस्ट्स डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:76
 #, python-format
@@ -1294,27 +1302,27 @@ msgstr "प्रारंभिक डेटा अपडेट भेजना
 #: src/sysmanage_agent/communication/data_collector.py:153
 #, python-format
 msgid "Failed to perform initial update check: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "पहले से ही अपडेट चेक करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:173
 #, python-format
 msgid "Certificate collection failed: %s"
-msgstr "पैकेज इन्वेंटरी संग्रह विफल: %s"
+msgstr "सर्टिफिकेट संग्रहण विफल हुआ: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:176
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "पहले से ही सर्टिफिकेट कोलेक्शन करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:192
 #, python-format
 msgid "Role collection failed: %s"
-msgstr "पैकेज इन्वेंटरी संग्रह विफल: %s"
+msgstr "भूमिका संग्रह विफल हो गई: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Failed to perform initial role collection: %s"
-msgstr "libvirt पैकेज इंस्टॉल करने में विफल: %s"
+msgstr "पहले से ही रॉल कोलेक्शन करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:203
 #, python-format
@@ -1324,12 +1332,12 @@ msgstr "आरंभिक तृतीय-पक्ष अवस्थान �
 #: src/sysmanage_agent/communication/data_collector.py:211
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "फायरवॉल स्थिति डेटा को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:219
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "आरंभिक Graylog स्थिति डेटा को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:226
 #, python-format
@@ -1339,17 +1347,17 @@ msgstr "प्रारंभिक प्रक्रिया डेटा भ
 #: src/sysmanage_agent/communication/data_collector.py:232
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "पुराने होस्ट्स की आरंभिक डेटा को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:251
 #, python-format
 msgid "Failed to update OS version: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "OS संस्करण को अद्ययन करने में विफल होगया: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:273
 #, python-format
 msgid "Failed to update hardware: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "हार्डवेयर को अद्ययन करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:295
 #, python-format
@@ -1384,52 +1392,52 @@ msgstr "सॉफ्टवेअर इन्वेंट्री संकल�
 #: src/sysmanage_agent/communication/data_collector.py:352
 #, python-format
 msgid "Error collecting/sending user access data: %s"
-msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
+msgstr "यूजर अक्सेस डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:358
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
-msgstr "पर्यावरण चर एकत्रित करने में त्रुटि: %s"
+msgstr "हार्डवेअर डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:364
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "कैर्टिफिकेट डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:370
 #, python-format
 msgid "Error collecting/sending role data: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "रॉलों का डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:376
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "ओएस वर्झन डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:382
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "रिबॉट स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:389
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "थर्ड-पार्टी रिपोज़िटरी डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:396
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "एंटीवायरस स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:402
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "फायरवॉल स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:408
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "ग्रेलॉग स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:414
 #, python-format
@@ -1439,32 +1447,32 @@ msgstr "प्रक्रिया डेटा एकत्र/भेजने
 #: src/sysmanage_agent/communication/data_collector.py:444
 #, python-format
 msgid "Initial data collection error: %s"
-msgstr "पैकेज संग्रह शेड्यूलर त्रुटि: %s"
+msgstr "प्रारंभिक डेटा संग्रह त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:459
 #, python-format
 msgid "Data collector error: %s"
-msgstr "पैकेज संग्रह शेड्यूलर त्रुटि: %s"
+msgstr "डाटा कलेक्टर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:704
+#: src/sysmanage_agent/communication/data_collector.py:684
 #, python-format
 msgid "Error collecting available packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "उपलब्ध पैकेज एकलेक्ट करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:745
+#: src/sysmanage_agent/communication/data_collector.py:793
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "पैकेज डेल्टा भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:824
+#: src/sysmanage_agent/communication/data_collector.py:872
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "%s लैच पैगिनेटेड पैकेजज़ भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:919
+#: src/sysmanage_agent/communication/data_collector.py:967
 #, python-format
 msgid "Error collecting roles: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "रॉलों का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:53
 msgid "Failed to send periodic software inventory data"
@@ -1481,12 +1489,12 @@ msgstr "संतत हार्डवेअर डेटा भेजने �
 #: src/sysmanage_agent/communication/data_collector_senders.py:121
 #, python-format
 msgid "Periodic certificate collection failed: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "आवर्तिक पत्रक संग्रह विफल हो गया: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:141
 #, python-format
 msgid "Periodic role collection failed: %s"
-msgstr "पैकेज इन्वेंटरी संग्रह विफल: %s"
+msgstr "आवर्तिक भूमिका संग्रह विफल हो गई: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:165
 msgid "Failed to send periodic OS version data"
@@ -1495,11 +1503,11 @@ msgstr "संतत ऑपरेशन सिस्टम वर्झन ड�
 #: src/sysmanage_agent/communication/data_collector_senders.py:186
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "तीसरी पक्ष की रिपोज़िट्री संग्रह करने में विफल हुए: %s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:220
 msgid "Failed to send third-party repository data"
-msgstr "प्रारंभिक उपयोगकर्ता पहुंच डेटा भेज रहे हैं..."
+msgstr "थर्ड-पार्टी रिपोज़िट्री डेटा भेजने में विफल होगया"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:252
 msgid "Failed to send antivirus status data"
@@ -1507,7 +1515,7 @@ msgstr "एन्टीवायरस स्थिति डेटा भेज
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:255
 msgid "Cannot send antivirus status data: no host approval"
-msgstr "वर्चुअलाइजेशन स्थिति अपडेट नहीं भेज सकते: होस्ट स्वीकृत नहीं"
+msgstr "एन्टीवायरस साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:289
 msgid "Failed to send firewall status data"
@@ -1515,7 +1523,7 @@ msgstr "फायरवॉल स्थिति डेटा भेजने �
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Cannot send firewall status data: no host approval"
-msgstr "वर्चुअलाइजेशन स्थिति अपडेट नहीं भेज सकते: होस्ट स्वीकृत नहीं"
+msgstr "फायरवॉल साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:323
 msgid "Failed to send Graylog status data"
@@ -1523,7 +1531,7 @@ msgstr "Graylog status data भेजने में विफल"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Cannot send Graylog status data: no host approval"
-msgstr "वर्चुअलाइजेशन स्थिति अपडेट नहीं भेज सकते: होस्ट स्वीकृत नहीं"
+msgstr "Graylog साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:333
 msgid "Cannot send process data: no host approval"
@@ -1536,44 +1544,44 @@ msgstr "प्रक्रिया स्थिति डेटा भेजन
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
 msgid "Failed to queue message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "मासेज को क्यू में रखने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:220
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "मासेज के लिए कमांड अक्सरेडीकेशन को क्यू करने में विफलता: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:228
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s के लिए कमान्ड अक्सरेफीकेशन कोई क्वी संयोजित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:277
+#: src/sysmanage_agent/communication/message_handler.py:268
 #, python-format
 msgid "Server error [%s]: %s"
-msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
+msgstr "सर्वर त्रुटि [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:330
+#: src/sysmanage_agent/communication/message_handler.py:321
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
-msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+msgstr "स्टेल चेक के लिए संदेश टाइमस्टॉप को पढ़ने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:368
+#: src/sysmanage_agent/communication/message_handler.py:359
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
 
-#: src/sysmanage_agent/communication/message_handler.py:373
+#: src/sysmanage_agent/communication/message_handler.py:364
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "सर्वर के संदेश में नामकरण (hostname) अज्ञात है. यह एक बग है।"
 
-#: src/sysmanage_agent/communication/message_handler.py:376
+#: src/sysmanage_agent/communication/message_handler.py:367
 #, python-format
 msgid "Server failed to queue message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "सर्वर ने संदेश को पंजीकरण करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:400
+#: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
@@ -1584,7 +1592,7 @@ msgstr ""
 "आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
 " है, तब ही पुनः रजिस्टर करेंगे;"
 
-#: src/sysmanage_agent/communication/message_handler.py:413
+#: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) — treating this host as "
@@ -1593,12 +1601,12 @@ msgstr ""
 "host_not_registered जारी (%(n)d स्ट्राइक) — इस होस्ट को वास्तव में गया समझते"
 " हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
 
-#: src/sysmanage_agent/communication/message_handler.py:424
+#: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
 msgid "Error clearing stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "संग्रीहित होस्ट ID को स्पष्ट करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:469
 #, python-format
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
@@ -1607,17 +1615,17 @@ msgstr ""
 "ब्रॉडकास्ट %s: इन्वेंटरी रिफ्रेश का अनुरोध किया गया लेकिन data_collector में"
 " send_software_inventory_update नहीं है"
 
-#: src/sysmanage_agent/communication/message_handler.py:485
+#: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "बेµटा %s: सेजेन चात्शी ॥॰: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:495
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: unknown action '%s' — ignored"
 msgstr "बेµटा %s: प्साॆ '%s' — दें"
 
-#: src/sysmanage_agent/communication/message_handler.py:578
+#: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1625,49 +1633,49 @@ msgstr ""
 "संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; "
 "receive loop को exit करने के लिए आवश्यकता है reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "अमान्य JSON प्राप्त: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:586
 #, python-format
 msgid "Error processing message: %s"
 msgstr "मैसेज प्रोसेसिंग में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:599
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: संदेश प्रतिवर्धक त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:651
 #, python-format
 msgid "Unknown message type: %s"
-msgstr "अज्ञात चरण प्रकार: %s"
+msgstr "अज्ञात संदेश प्रकार: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:727
 msgid "Heartbeat failed, connection may be lost"
 msgstr "हैर्टबीट विफल हो गया, कनेक्शन खो चुका हो सकता है"
 
-#: src/sysmanage_agent/communication/message_handler.py:745
+#: src/sysmanage_agent/communication/message_handler.py:736
 #, python-format
 msgid "Message sender error: %s"
-msgstr "अपडेट चेकर त्रुटि: %s"
+msgstr "मेसेज सेंडर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:761
+#: src/sysmanage_agent/communication/message_handler.py:752
 #, python-format
 msgid "Error closing message handler: %s"
-msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
+msgstr "मैसेज हैंडलर को बंद करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:98
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "queue_outbound_message से कार्य निर्माण में विफल हो गया: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:164
 #, python-format
 msgid "Error in inbound queue processor: %s"
-msgstr "क्यू प्रोसेसर में त्रुटि: %s"
+msgstr "इनबॉउंड क्वी स्ट्रोक प्रोसेसर में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
@@ -1677,7 +1685,7 @@ msgstr "संदेश को प्रोसेसिंग के रूप �
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
 msgid "Error processing inbound message %s: %s"
-msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
+msgstr "आयात संदेश %s प्रक्रिया करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:220
 msgid "Cannot send message: not connected to server"
@@ -1686,12 +1694,12 @@ msgstr "संदेश नहीं भेज सकते: सर्वर स
 #: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Failed to send message directly: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "सीधे संदेश को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Error in queue processor: %s"
-msgstr "क्यू प्रोसेसर में त्रुटि: %s"
+msgstr "क्वी स्ट्रोक प्रोसेसर में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:329
 #, python-format
@@ -1706,12 +1714,12 @@ msgstr "स्टक कीड़ों को बाहर निकलने �
 #: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
-msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
+msgstr "[outbound queue processing task को बनाने में विफल: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "Ubuntu Pro डिटैच करने में विफल: %s"
+msgstr "आंतरिक कार्यक्रम प्रोसेसिंग कीue बनाने में विफल हुए: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
@@ -1731,7 +1739,7 @@ msgstr ""
 #: src/sysmanage_agent/communication/network_utils.py:160
 #, python-format
 msgid "Could not determine hostname, using fallback: %s"
-msgstr "%s के लिए पैकेज मैनेजर निर्धारित नहीं किया जा सका"
+msgstr "होस्टनाम का पता नहीं चल सका, डिफ़ॉल्ट इस्तेमाल कर रहे हैं: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:53
 msgid "systemctl not found"
@@ -1740,7 +1748,7 @@ msgstr "systemctl शेट्वो"
 #: src/sysmanage_agent/core/agent_utils.py:81
 #, python-format
 msgid "Error during periodic update check: %s"
-msgstr "आवधिक अपडेट जाँच के दौरान त्रुटि: %s"
+msgstr "संचित अपडेट चेक के दौरान त्रुटि: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:109
 #, python-format
@@ -1754,103 +1762,103 @@ msgstr "पैकेज संग्रह कुछ समस्याओं �
 #: src/sysmanage_agent/core/agent_utils.py:150
 #, python-format
 msgid "Error during package collection: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "पैकेज कलेक्शन के दौरान त्रुटि: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:189
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "पैकेज संग्रह शेड्यूलर त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:244
+#: src/sysmanage_agent/core/agent_utils.py:225
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr "स्थिति %s के साथ प्रमाणीकरण विफल: %s"
+msgstr "प्रवीणता विफल हुई साइटस्टेस्टस: %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:342
+#: src/sysmanage_agent/core/agent_utils.py:325
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:454
+#: src/sysmanage_agent/core/agent_utils.py:437
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:474
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:503
+#: src/sysmanage_agent/core/agent_utils.py:486
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:545
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:581
+#: src/sysmanage_agent/core/agent_utils.py:564
 #, python-format
 msgid "Error checking execution UUID: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "प्रोग्रेशियन UUID की जाँच में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:595
+#: src/sysmanage_agent/core/agent_utils.py:578
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:593
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:618
 #, python-format
 msgid "Error storing execution UUID: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "अद्यतन पहचान UUID संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:700
+#: src/sysmanage_agent/core/agent_utils.py:683
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:745
+#: src/sysmanage_agent/core/agent_utils.py:728
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:735
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:758
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:824
+#: src/sysmanage_agent/core/agent_utils.py:807
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:863
+#: src/sysmanage_agent/core/agent_utils.py:846
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:906
+#: src/sysmanage_agent/core/agent_utils.py:889
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:916
+#: src/sysmanage_agent/core/agent_utils.py:899
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:964
+#: src/sysmanage_agent/core/agent_utils.py:947
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -1871,7 +1879,7 @@ msgstr "कॉन्फ़िगरेशन फ़ाइल में अमा
 #: src/sysmanage_agent/core/config.py:88
 #, python-format
 msgid "Failed to load configuration file: %s"
-msgstr "कॉन्फ़िगरेशन फ़ाइल लोड करने में विफल: %s"
+msgstr "सेटिंग्ज़ फाइल को लोड करने में विफलता: %s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/core/version.py:115
@@ -1881,7 +1889,7 @@ msgstr "Agent version का निर्धारण नहीं कर सक
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:80
 #, python-format
 msgid "Failed to collect diagnostics: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr ".Diagnostics का संग्रह फ़ैल गया: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:126
 #, python-format
@@ -1896,7 +1904,7 @@ msgstr "%s को %.2f सेकंड के बाद एकत्रित �
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:244
 #, python-format
 msgid "Failed to send error message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "श्रेणी संदेश को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:287
 #, python-format
@@ -1906,13 +1914,13 @@ msgstr "Windows %s इवेंट लॉग कलेक्शन %.2f से�
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:360
 #, python-format
 msgid "Error collecting system logs: %s"
-msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
+msgstr "सिस्टम लॉगों का एकलेक्ट करने में त्रुटि: %s"
 
 # Configuration
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:435
 #, python-format
 msgid "Error collecting configuration files: %s"
-msgstr "कॉन्फ़िगरेशन फ़ाइलें एकत्रित करने में त्रुटि: %s"
+msgstr "संfigure फाइलों का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:462
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:633
@@ -1923,32 +1931,32 @@ msgstr "%s का संग्रह %.2f सेकंड्स में वि
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:555
 #, python-format
 msgid "Error collecting network info: %s"
-msgstr "Error configuring KVM networking: %s"
+msgstr "नेटवर्क जानकारी एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:594
 #, python-format
 msgid "Error collecting process info: %s"
-msgstr "क्यू प्रोसेसर में त्रुटि: %s"
+msgstr "प्रोसेस साइनोग्राम एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:674
 #, python-format
 msgid "Error collecting disk usage: %s"
-msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
+msgstr "डिस्क उपयोग एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:729
 #, python-format
 msgid "Error collecting environment variables: %s"
-msgstr "पर्यावरण चर एकत्रित करने में त्रुटि: %s"
+msgstr "इनवाइज़रियल वैरिबल्स का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:760
 #, python-format
 msgid "Error collecting agent logs: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "एजेंट लॉग एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:796
 #, python-format
 msgid "Error collecting error logs: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "शिफ्ट लॉगों का एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -1957,7 +1965,7 @@ msgstr "Homebrew इंस्टॉल नहीं है"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
 #, python-format
 msgid "Error listing Homebrew taps: %s"
-msgstr "संदेश हैंडलर बंद करने में त्रुटि: %s"
+msgstr "HomeAsker taps की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
 msgid "Invalid tap format. Use 'user/repo' format"
@@ -1965,7 +1973,7 @@ msgstr "अमान्य tap प्रारूप। 'user/repo' प्रा
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
 msgid "Tap added successfully"
-msgstr "एजेंट सफलतापूर्वक अपडेट किया गया"
+msgstr "Tap सफलतापूर्वक जोड़ा गया"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
 #, python-format
@@ -1975,17 +1983,17 @@ msgstr "tap %s जोड़ने में विफल: %s"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
 #, python-format
 msgid "Failed to add tap: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "ताप को जोड़ने में विफल: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
 #, python-format
 msgid "Error adding Homebrew tap: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "Homebrew टैप जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
-msgstr "क्यू प्रोसेसर में त्रुटि: %s"
+msgstr "FreeBSD रिपोज़िट्रीज़ को सूचीबद्ध करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
@@ -2002,17 +2010,17 @@ msgstr "FreeBSD pkg के लिए रिपॉजिटरी URL आवश�
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
-msgstr "एजेंट सफलतापूर्वक अपडेट किया गया"
+msgstr "पाठक को सफलतापूर्वक जोड़ा गया"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "FreeBSD अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
-msgstr "डिफ़ॉल्ट नेटवर्क सेट करने में त्रुटि: %s"
+msgstr "NetBSD अवस्थाएँ की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
 msgid "Repository URL is required for NetBSD pkgsrc"
@@ -2021,11 +2029,11 @@ msgstr "NetBSD pkgsrc के लिए रिपॉजिटरी URL आवश
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
 #, python-format
 msgid "Repository directory already exists: %s"
-msgstr "Network '%s' already exists"
+msgstr "पाठक डाइरेक्टरी पहले से ही मौजूद: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
 msgid "Repository cloned successfully"
-msgstr "NAT networking configured successfully"
+msgstr "पाठक को सफलतापूर्वक क्लोन किया गया"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 #, python-format
@@ -2035,12 +2043,12 @@ msgstr "repository %s क्लोन करने में विफल: %s"
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
 #, python-format
 msgid "Failed to clone repository: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "प्रतिष्ठान को क्लोन करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
 #, python-format
 msgid "Error adding NetBSD repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "NetBSD अनुभाग जोड़ने में त्रुटि: %s"
 
 # Pro+ feature gate (post-cutover stub)
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
@@ -2091,12 +2099,12 @@ msgstr "Echec de l'envoi d'exemples de m\\u00e9triques personnalis\\u00e9es: %s"
 #: src/sysmanage_agent/operations/firewall_collector.py:61
 #, python-format
 msgid "Unsupported system for firewall detection: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी के लिए असमर्थित प्लेटफॉर्म: %s"
+msgstr "डिफ़ाउल्ट फाइरवॉल परीक्षण के लिए समर्थित नहीं है कि प्रणाली: %s"
 
 #: src/sysmanage_agent/operations/firewall_collector.py:65
 #, python-format
 msgid "Error collecting firewall status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "फायरवॉल स्थिति एकलेक्ट करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:80
 msgid "No files provided"
@@ -2110,11 +2118,11 @@ msgstr "%s को backup %s से roll back किया गया"
 #: src/sysmanage_agent/operations/generic_deployment.py:480
 #, python-format
 msgid "Rollback failed for %s from %s: %s"
-msgstr "सेवा %s पर %s विफल: %s"
+msgstr "रोलबैक के लिए विफल: %s से %s: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:509
 msgid "No steps provided"
-msgstr "कोई उपयोगकर्ता प्रोफ़ाइल नहीं मिला"
+msgstr "कोई स्टेप प्रदान नहीं किया गया"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:546
 #, python-format
@@ -2137,7 +2145,7 @@ msgstr "खाली wait_condition कमांड"
 #: src/sysmanage_agent/operations/generic_deployment.py:692
 #, python-format
 msgid "Failed to send progress message: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "उग्र प्रगति संदेश को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:308
 msgid "no argv"
@@ -2229,7 +2237,7 @@ msgstr "बे स्को शेटेन है: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "No hostname specified"
-msgstr "होस्टनाम आवश्यक है"
+msgstr "कोई होस्टनेम निर्दिष्ट नहीं किया गया"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:49
 msgid "Invalid hostname format"
@@ -2238,7 +2246,7 @@ msgstr "अमान्य होस्टनाम प्रारूप"
 #: src/sysmanage_agent/operations/hostname_operations.py:77
 #, python-format
 msgid "Failed to change hostname: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "होस्टनेम परिवर्तन करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:124
 #, python-format
@@ -2249,27 +2257,27 @@ msgstr "hostnamectl विफल, मैनुअल होस्टनाम �
 #: src/sysmanage_agent/operations/hostname_operations.py:144
 #, python-format
 msgid "Failed to update /etc/hostname: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "/etc/hostname को अद्ययन करने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:186
 #, python-format
 msgid "Failed to set ComputerName: %s"
-msgstr "ramdisk माउंट करने में विफल: %s"
+msgstr "कंप्यूटर नाम को सेट करने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:197
 #, python-format
 msgid "Failed to set LocalHostName: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "लॉकल होस्टनेम को सेट करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:208
 #, python-format
 msgid "Failed to set HostName: %s"
-msgstr "HTTP सर्वर बंद करने में विफल: %s"
+msgstr "होस्टनेम को सेट करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:235
 #, python-format
 msgid "Failed to rename computer: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "कंप्यूटर का नाम बदलने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:241
 #, python-format
@@ -2286,18 +2294,18 @@ msgstr "sysrc विफल, sed का प्रयास: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:291
 #, python-format
 msgid "Failed to update /etc/rc.conf: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "/etc/rc.conf को अद्ययन करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:330
 #: src/sysmanage_agent/operations/hostname_operations.py:336
 #, python-format
 msgid "Failed to update /etc/myname: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "/etc/myname को अद्ययन करने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:365
 #, python-format
 msgid "Failed to send hostname change confirmation: %s"
-msgstr "संदेश सीधे भेजने में विफल: %s"
+msgstr "होस्टनेम परिवर्तन पुष्टि को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/inflight_journal.py:327
 #: src/sysmanage_agent/operations/inflight_journal.py:328
@@ -2329,61 +2337,61 @@ msgstr "बेट्वो चोमेन शेट्वो"
 #: src/sysmanage_agent/operations/linux_repository_operations.py:252
 #, python-format
 msgid "Error listing APT repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "APT रिपोज़िट्रीज़ को सूचीबद्ध करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:296
 #, python-format
 msgid "Error adding APT repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "APT अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:329
 #, python-format
 msgid "Error deleting APT repository: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "एप्ट रिपोज़िटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:348
 #, python-format
 msgid "Error enabling APT repository: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "APT रिपोज़िट्री वायर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:370
 #, python-format
 msgid "Error disabling APT repository: %s"
-msgstr "क्यू प्रोसेसर में त्रुटि: %s"
+msgstr "एप्ट रिपोज़िटरी को डिसेबल करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:444
 #, python-format
 msgid "Error listing YUM repositories: %s"
-msgstr "Error configuring KVM networking: %s"
+msgstr "YUM अवस्थाएँ की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:457
 msgid "Manual YUM repository addition not yet implemented"
-msgstr "YUM अपडेट जांच अभी तक लागू नहीं की गई"
+msgstr "हस्तकारण YUM रिपोज़िटरी की वृद्धि एनपीई नहीं प्रभावी है"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:491
 #, python-format
 msgid "Error adding YUM repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "YUM अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:519
 #, python-format
 msgid "Error deleting YUM repository: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "यम साइप्स रिपोज़िटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:535
 #, python-format
 msgid "Error enabling YUM repository: %s"
-msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"
+msgstr "YUM रिपोज़िट्री वायर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:554
 #, python-format
 msgid "Error disabling YUM repository: %s"
-msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"
+msgstr "यम साइप्स रिपोज़िटरी को डिसेबल करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:612
 #, python-format
 msgid "Error listing Zypper repositories: %s"
-msgstr "डिफ़ॉल्ट नेटवर्क सेट करने में त्रुटि: %s"
+msgstr "Zypper अवस्थाएँ की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:622
 msgid "Repository URL is required for Zypper"
@@ -2392,27 +2400,27 @@ msgstr "Zypper के लिए रिपॉजिटरी URL आवश्य�
 #: src/sysmanage_agent/operations/linux_repository_operations.py:657
 #, python-format
 msgid "Error adding Zypper repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "Zypper अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:675
 #, python-format
 msgid "Error deleting Zypper repository: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "जिप्पर रिपोज़िटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:691
 #, python-format
 msgid "Error enabling Zypper repository: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "Zypper रिपोज़िट्री वायर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:710
 #, python-format
 msgid "Error disabling Zypper repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "जिप्पर रिपोज़िटरी को डिसेबल करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/lxd_firewall_helper.py:83
 #, python-format
 msgid "Could not persist IP forwarding setting: %s"
-msgstr "नेटवर्क ऑटोस्टार्ट सेट नहीं कर सका: %s"
+msgstr "IP फॉरवर्डिंग सेटिंग को संरक्षित करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/lxd_firewall_helper.py:139
 #, python-format
@@ -2421,16 +2429,16 @@ msgstr "UFW नियम विफल हो गया: %s - %s"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"
-msgstr "होस्टनाम आवश्यक है"
+msgstr "profile_id आवश्यक है"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:80
 msgid "constraints must be a list"
-msgstr "CPU कम से कम 1 होने चाहिए"
+msgstr "सीमाएं एक सूची होनी चाहिए"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:85
 #, python-format
 msgid "Failed to collect installed packages: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "इनस्टalled पैकेजज़ का संग्रह फ़ैल हो गया: %s"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:90
 #, python-format
@@ -2440,12 +2448,12 @@ msgstr "पैकेज इन्वेंटरी संग्रह विफ
 #: src/sysmanage_agent/operations/package_installation_helpers.py:54
 #, python-format
 msgid "Failed to store installation request: %s"
-msgstr "install.conf लिखने में विफल: %s"
+msgstr "इनस्टॉलेशन प्रारूप की संग्रहण में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:85
 #, python-format
 msgid "Failed to update installation tracking record: %s"
-msgstr "ऑटोइंस्टॉल वर्क डायरेक्टरी साफ करने में विफल: %s"
+msgstr "इनस्टॉलेशन प्रक्रिया की निगरानी रिकॉर्ड को अद्ययन करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:107
 #: src/sysmanage_agent/operations/package_operations.py:59
@@ -2467,16 +2475,16 @@ msgstr "सेबीन्शी चोमेन 5 है।"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 msgid "Package manager name is required"
-msgstr "उपयोगकर्ता नाम आवश्यक है"
+msgstr "पैकेज मैनेजर नाम आवश्यक है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:114
 msgid "Enabling package managers requires privileged mode"
-msgstr "Bridge interface name is required for bridged mode"
+msgstr "पैकेज मैनेजर को सक्षम करने के लिए प्रावीण्य मोड़ आवश्यक है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:130
 #, python-format
 msgid "Unknown package manager: %s"
-msgstr "असमर्थित पैकेज प्रबंधक: %s"
+msgstr "अज्ञात पैकेज मैनेजर: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:137
 #, python-format
@@ -2485,16 +2493,16 @@ msgstr "पैकेज मैनेजर '%s' सक्षम करने म
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:149
 msgid "Flatpak is only supported on Linux systems"
-msgstr "KVM केवल Linux सिस्टम पर समर्थित है"
+msgstr "Flatpak केवल Linux प्रणालियों में समर्थित है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:159
 msgid "Flatpak is already installed"
-msgstr "KVM पहले से इनिशियलाइज़ है"
+msgstr "Flatpak पहले से ही इनस्टॉल कर लिया गया है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:188
 #, python-format
 msgid "No supported package manager found to install %s"
-msgstr "असमर्थित पैकेज प्रबंधक: %s"
+msgstr "कोई समर्थित पैकेज मैनेजर %s के लिए इनस्टॉल करने के लिए नहीं पाया गया"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:211
 #, python-format
@@ -2504,24 +2512,24 @@ msgstr "%s सफलतापूर्वक इंस्टॉल किया 
 #: src/sysmanage_agent/operations/package_manager_operations.py:245
 #, python-format
 msgid "Could not add Flathub repository: %s"
-msgstr "Could not start network: %s"
+msgstr "Flathub अनुभाग को जोड़ने में विफल: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:252
 msgid "Snap is only supported on Linux systems"
-msgstr "KVM केवल Linux सिस्टम पर समर्थित है"
+msgstr "Snap केवल Linux प्रणालियों पर समर्थित है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:261
 msgid "Snap is already installed"
-msgstr "KVM पहले से इनिशियलाइज़ है"
+msgstr "Snap पहले से ही इनस्टॉल हो चुका है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:287
 #, python-format
 msgid "Could not enable snapd service: %s"
-msgstr "libvirtd सक्षम नहीं हो सका: %s"
+msgstr "snapd सेवा को अनुमति नहीं दी जा सकी: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:297
 msgid "Homebrew is already installed"
-msgstr "KVM पहले से इनिशियलाइज़ है"
+msgstr "Homebrew पहले से ही इनस्टॉल किया गया है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
@@ -2535,27 +2543,27 @@ msgstr ""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
-msgstr "KVM केवल Linux सिस्टम पर समर्थित है"
+msgstr "Chocolatey Windows प्रणालियों पर ही समर्थित है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:327
 msgid "Chocolatey is already installed"
-msgstr "KVM पहले से इनिशियलाइज़ है"
+msgstr "Chocolatey पहले से ही इनस्टॉल हो चुका है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:361
 msgid "Chocolatey installed successfully"
-msgstr "libvirt पैकेज सफलतापूर्वक इंस्टॉल हुए"
+msgstr "Chocolatey की सफल इनस्टॉलेशन"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Scoop is only supported on Windows systems"
-msgstr "KVM केवल Linux सिस्टम पर समर्थित है"
+msgstr "Scoop केवल Windows प्रणालियों पर समर्थित है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:389
 msgid "Scoop is already installed"
-msgstr "KVM पहले से इनिशियलाइज़ है"
+msgstr "Scoop पहले से ही इनस्टॉल हो चुका है"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:420
 msgid "Scoop installed successfully"
-msgstr "libvirt पैकेज सफलतापूर्वक इंस्टॉल हुए"
+msgstr "Scoop सफलतापूर्वक इनस्टॉल हुआ"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/package_operations.py:121
@@ -2566,7 +2574,7 @@ msgstr "%s पैकेज मैनेजर के लिए अनइंस�
 #: src/sysmanage_agent/operations/package_operations.py:154
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
-msgstr "ऑटोइंस्टॉल वर्क डायरेक्टरी साफ करने में विफल: %s"
+msgstr "इनस्टॉलेशन प्रक्रिया की निगरानी रिकॉर्ड को अद्ययन करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:173
 msgid "No package name specified"
@@ -2584,7 +2592,7 @@ msgstr "इंस्टॉलेशन के लिए कोई पैके�
 #: src/sysmanage_agent/operations/package_operations.py:347
 #, python-format
 msgid "Failed to send installation completion to server: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "इनस्टॉलेशन पूर्णता को सर्वर को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:376
 msgid "No packages specified for uninstallation"
@@ -2593,16 +2601,16 @@ msgstr "अनइंस्टॉलेशन के लिए कोई पै�
 #: src/sysmanage_agent/operations/package_operations.py:473
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "इनस्टॉलेशन पूर्णता को सर्वर को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:482
 msgid "No packages to install"
-msgstr "libvirt पैकेज इंस्टॉल हुए"
+msgstr "इनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
 #: src/sysmanage_agent/operations/package_operations.py:528
 #, python-format
 msgid "apt-get install failed: %s"
-msgstr "ऑटोइंस्टॉल डायरेक्टरी बनाई गई: %s"
+msgstr "apt-get install विफल: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:533
 #, python-format
@@ -2616,12 +2624,12 @@ msgstr "apt-get install के दौरान अपवाद: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:543
 msgid "No packages to uninstall"
-msgstr "libvirt पैकेज इंस्टॉल हुए"
+msgstr "उनइनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
 #: src/sysmanage_agent/operations/package_operations.py:574
 #, python-format
 msgid "apt-get remove failed: %s"
-msgstr "fwupd get-updates विफल: %s"
+msgstr "apt-get remove विफल: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:579
 #, python-format
@@ -2636,7 +2644,7 @@ msgstr "apt-get remove के दौरान अपवाद: %s"
 #: src/sysmanage_agent/operations/package_operations.py:623
 #, python-format
 msgid "Failed to queue installation completion for request %s"
-msgstr "install.conf एम्बेड करने में विफल: %s"
+msgstr "अनुरोध %s के लिए स्थापना पूर्ण होने की संकेतस्थल टीका करने में विफलता"
 
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
@@ -2646,19 +2654,19 @@ msgstr "पार्टीशन का पता लगाने में त�
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
 msgid "Failed to send package installation status update: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "पैकेज इनस्टॉलेशन स्थिति अद्ययन को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:757
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
-msgstr "fwupd अपडेट प्रोसेसिंग में त्रुटि: %s"
+msgstr "पैकेज अद्यतन चलाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:766
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "अद्यतन पहचान ट्रिगर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
@@ -2668,7 +2676,7 @@ msgstr "बेट्वो: %s सेबी चोमेन"
 #: src/sysmanage_agent/operations/repository_operations.py:103
 #, python-format
 msgid "Error listing third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "थर्ड-पार्टी अवस्थाएँ की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:121
 #, python-format
@@ -2677,12 +2685,12 @@ msgstr "Linux वितरण का पता लगाने में त्�
 
 #: src/sysmanage_agent/operations/repository_operations.py:183
 msgid "Repository identifier is required"
-msgstr "होस्टनाम आवश्यक है"
+msgstr "पाठक पहचानकर्ता आवश्यक है"
 
 #: src/sysmanage_agent/operations/repository_operations.py:207
 #, python-format
 msgid "Error adding third-party repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "थर्ड-पार्टी अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:233
 msgid "No repositories specified for deletion"
@@ -2696,7 +2704,7 @@ msgstr "%d / %d रिपॉजिटरी हटाई गईं"
 #: src/sysmanage_agent/operations/repository_operations.py:267
 #, python-format
 msgid "Error deleting third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "थर्ड-पार्टी रिपोज़िटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:295
 msgid "No repositories specified for enabling"
@@ -2710,7 +2718,7 @@ msgstr "%d / %d रिपॉजिटरी सक्षम"
 #: src/sysmanage_agent/operations/repository_operations.py:330
 #, python-format
 msgid "Error enabling third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "तीसरे पक्ष की रिपोज़िट्री वायर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:358
 msgid "No repositories specified for disabling"
@@ -2724,12 +2732,12 @@ msgstr "%d / %d रिपॉजिटरी अक्षम"
 #: src/sysmanage_agent/operations/repository_operations.py:393
 #, python-format
 msgid "Error disabling third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "तीसरे पक्ष की रिपोज़िट्री वायर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:440
 #, python-format
 msgid "Error re-scanning third-party repositories: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "थर्ड-पार्टी अवस्थाएँ की फिर से खोज करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/script_operations.py:70
 msgid "Missing required parameter 'script_content'"
@@ -2738,7 +2746,7 @@ msgstr "आवश्यक पैरामीटर 'script_content' गाय�
 #: src/sysmanage_agent/operations/script_operations.py:79
 #, python-format
 msgid "Script timeout capped at %d seconds"
-msgstr "%d सेकंड के बाद कमांड का समय समाप्त हो गया"
+msgstr "स्क्रिप्ट टाइमआउट %d सेकंड तक सीमित"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
@@ -2747,11 +2755,11 @@ msgstr "एजेंट apply_deployment_plan एक्सपोज़ नही
 #: src/sysmanage_agent/operations/script_operations.py:98
 #, python-format
 msgid "Script delegation failed: %s"
-msgstr "प्रोसेसर पहचान फ़ॉलबैक विफल: %s"
+msgstr "स्क्रिप्ट दान विफल हो गया: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"
-msgstr "कोई कमांड निर्दिष्ट नहीं"
+msgstr "कोई command निर्दिष्ट नहीं किया गया"
 
 #: src/sysmanage_agent/operations/system_control.py:63
 #, python-format
@@ -2771,22 +2779,22 @@ msgstr "असमरthynd支撑点的支持FIPS तकनीक: %s"
 #: src/sysmanage_agent/operations/system_control.py:153
 #, python-format
 msgid "Failed to collect/send antivirus status: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "एन्टीवायरस स्थिति का इकट्ठा/प्रेज़्म करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:168
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "कॉमर्शियल एंटीवायरस स्थिति का संग्रह/प्रेषण फ़ैल गया: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:177
 #, python-format
 msgid "Failed to collect/send Graylog status: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "Graylog स्थिति का इकट्ठा/प्रेषण फ़ैल गया: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:194
 #, python-format
 msgid "Failed to update system: %s"
-msgstr "एजेंट अपडेट विफल: %s"
+msgstr "सिस्टम को अद्ययन करने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:202
 msgid "No service name specified"
@@ -2813,7 +2821,7 @@ msgstr "सिस्टम शटडाउन 1 मिनट में निर
 #: src/sysmanage_agent/operations/system_control.py:260
 #, python-format
 msgid "Failed to shutdown system: %s"
-msgstr "HTTP सर्वर बंद करने में विफल: %s"
+msgstr "सिस्टम को बंद करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:291
 msgid "dnf-system-upgrade requires a target version"
@@ -2858,12 +2866,12 @@ msgstr "एजेंट सफलतापूर्वक अपडेट कि
 #: src/sysmanage_agent/operations/system_control.py:446
 #, python-format
 msgid "Failed to send antivirus status update: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "एंटीवायरस स्थिति अद्ययन को भेजने में विफल होगया: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:497
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "कॉमर्शियल एंटीवायरस स्थिति अद्ययन को भेजने में विफलता: %s"
 
 # Ubuntu Pro functionality
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:30
@@ -2903,7 +2911,7 @@ msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:161
 msgid "Service name is required"
-msgstr "उपयोगकर्ता नाम आवश्यक है"
+msgstr "सेवा का नाम आवश्यक है"
 
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:132
 #, python-format
@@ -2945,17 +2953,17 @@ msgstr "Ubuntu Pro परिवर्तन के बाद OS अपडेट 
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "पुनरारंभ की स्थिति जाँच करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/update_manager.py:114
 #, python-format
 msgid "Failed to send reboot status update: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "रीबॉट स्थिति अद्ययन को भेजने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:69
 #, python-format
 msgid "Failed to check updates: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "अद्यतन खोज करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:94
 msgid "No packages specified for update"
@@ -2968,12 +2976,12 @@ msgstr "अपडेट बैकग्राउंड में शुरू �
 #: src/sysmanage_agent/operations/update_operations.py:111
 #, python-format
 msgid "Failed to start updates: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "अपडेट्स को शुरू करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:151
 #, python-format
 msgid "No package manager specified for %s"
-msgstr "पहचाने गए पैकेज प्रबंधक: %s"
+msgstr "कोई पैकेज मैनेजर %s के लिए निर्दिष्ट नहीं किया गया"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:183
@@ -3001,12 +3009,12 @@ msgstr "अपडेट के लिए कोई वैध पैकेज न
 #: src/sysmanage_agent/operations/update_operations.py:282
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
-msgstr "Ubuntu Pro परिवर्तन के बाद OS अपडेट भेजने में विफल: %s"
+msgstr "बैच के बाद अपडेट्स की पुनर्खोज में विफलता: %s"
 
 #: src/sysmanage_agent/operations/update_operations.py:286
 #, python-format
 msgid "Background update process failed: %s"
-msgstr "fwupd get-updates विफल: %s"
+msgstr "पृष्ठभूमि अपडेट प्रक्रिया विफल हो गई: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:18
 #, python-format
@@ -3026,22 +3034,22 @@ msgstr "उपयोगकर्ता नाम आवश्यक है"
 #: src/sysmanage_agent/operations/user_account_operations.py:71
 #, python-format
 msgid "Failed to create user %s: %s"
-msgstr "सेवा %s को पुनः प्रारंभ करने में विफल: %s"
+msgstr "कार्यकर्ता %s को बनाने में विफल: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:81
 #: src/sysmanage_agent/operations/user_account_operations.py:167
 msgid "Group name is required"
-msgstr "VM नाम आवश्यक है"
+msgstr "ग्रुप नाम आवश्यक है"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:114
 #, python-format
 msgid "Failed to create group %s: %s"
-msgstr "सेवा %s को पुनः प्रारंभ करने में विफल: %s"
+msgstr "グルप %s को बनाने में विफल: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:157
 #, python-format
 msgid "Failed to delete user %s: %s"
-msgstr "सेवा %s को पुनः प्रारंभ करने में विफल: %s"
+msgstr "कार्यकर्ता %s को हटाने में विफल: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:200
 #, python-format
@@ -3052,17 +3060,17 @@ msgstr "group %s हटाने में विफल: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:450
 #, python-format
 msgid "User %s created successfully"
-msgstr "Bridged network '%s' created successfully"
+msgstr "सदस्य %s को सफलतापूर्वक बनाया गया"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:316
 #, python-format
 msgid "Failed to create macOS user %s: %s"
-msgstr "सेवा %s को पुनः प्रारंभ करने में विफल: %s"
+msgstr "macOS उपयोगकर्ता %s की सृजन में विफल हुए: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:341
 #, python-format
 msgid "Group %s created successfully"
-msgstr "Bridged network '%s' created successfully"
+msgstr "ग्रुप %s का निर्माण सफलतापूर्वक हुआ"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:346
 #, python-format
@@ -3101,7 +3109,7 @@ msgstr "सफलतापूर्वक निष्पादित: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:781
 #, python-format
 msgid "Command failed (%s): %s"
-msgstr "Failed to write %s: %s"
+msgstr "कमांड विफल (%s): %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:785
 #, python-format
@@ -3116,7 +3124,7 @@ msgstr "प्रोसेसर पहचान फ़ॉलबैक विफ
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
 msgid "Error listing Windows repositories: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "Windows अवस्थाएँ की सूची बनाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:141
 msgid "Repository URL is required for Windows repositories"
@@ -3134,7 +3142,7 @@ msgstr "Windows रिपोजिटरी %s जोड़ने में व�
 #: src/sysmanage_agent/operations/windows_repository_operations.py:182
 #, python-format
 msgid "Error adding Windows repository: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "Windows अनुभाग जोड़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/registration/client_registration.py:43
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
@@ -3142,47 +3150,47 @@ msgstr "⚠️  चेतावनी: aiohttp उपलब्ध नहीं, 
 
 #: src/sysmanage_agent/registration/client_registration.py:278
 msgid "aiohttp not available, skipping registration"
-msgstr "⚠️  चेतावनी: aiohttp उपलब्ध नहीं, पंजीकरण छोड़ा जाएगा"
+msgstr "aiohttp उपलब्ध नहीं, पंजीकरण को छोड़ दिया गया"
 
-#: src/sysmanage_agent/registration/client_registration.py:345
+#: src/sysmanage_agent/registration/client_registration.py:339
 #, python-format
 msgid "Registration failed with status %s: %s"
-msgstr "स्थिति %s के साथ प्रमाणीकरण विफल: %s"
+msgstr "पंजीकरण विफल हुई: अवस्था %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:354
+#: src/sysmanage_agent/registration/client_registration.py:348
 #, python-format
 msgid "Error during registration: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "रजिस्ट्रेशन के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:383
+#: src/sysmanage_agent/registration/client_registration.py:377
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "%s प्रयासों के बाद रिगिस्टर होना विफल"
 
-#: src/sysmanage_agent/registration/client_registration.py:388
+#: src/sysmanage_agent/registration/client_registration.py:382
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "सेजेन ॥॰, मोंप्रो %s जेन..."
 
-#: src/sysmanage_agent/registration/client_registration.py:443
+#: src/sysmanage_agent/registration/client_registration.py:437
 #, python-format
 msgid "Error loading stored auth data: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "संग्रहित प्रमाण डेटा लोड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:462
+#: src/sysmanage_agent/registration/client_registration.py:456
 #, python-format
 msgid "Error storing auth data: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "प्रमाण डेटा संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:475
+#: src/sysmanage_agent/registration/client_registration.py:469
 #, python-format
 msgid "Error getting stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "संग्रहित host_id को प्राप्त करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:490
+#: src/sysmanage_agent/registration/client_registration.py:484
 #, python-format
 msgid "Error retrieving stored approval data: %s"
-msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"
+msgstr "संग्रहित स्वीकृति डेटा खोज करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:76
 msgid "No SysManage servers discovered on the network"
@@ -3190,12 +3198,12 @@ msgstr "नेटवर्क पर कोई SysManage सर्वर नह�
 
 #: src/sysmanage_agent/registration/discovery.py:125
 msgid "Invalid JSON response from unknown source"
-msgstr "अज्ञात स्रोत से अमान्य JSON प्रतिक्रिया"
+msgstr "अवैध JSON प्रतिक्रिया अज्ञात स्रोत से"
 
 #: src/sysmanage_agent/registration/discovery.py:160
 #, python-format
 msgid "Error during broadcast discovery: %s"
-msgstr "ब्रॉडकास्ट खोज के दौरान त्रुटि: %s"
+msgstr "ब्रॉडकास्ट डिस्कवरी के दौरान त्रुटि: %s"
 
 #: src/sysmanage_agent/registration/discovery.py:214
 msgid "Invalid JSON announcement from unknown source"
@@ -3204,82 +3212,82 @@ msgstr "अज्ञात स्रोत से अमान्य JSON घो
 #: src/sysmanage_agent/registration/discovery.py:222
 #, python-format
 msgid "Error listening for announcements: %s"
-msgstr "घोषणाओं को सुनने में त्रुटि: %s"
+msgstr "अन्नाउंसमेंट के लिए सुनने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:83
+#: src/sysmanage_agent/registration/registration_manager.py:69
 msgid "Host not yet approved for certificate retrieval"
 msgstr "होस्ट की सर्टिफिकेट प्राप्त करने के लिए अभी तक पारदर्शित नहीं है"
 
-#: src/sysmanage_agent/registration/registration_manager.py:87
+#: src/sysmanage_agent/registration/registration_manager.py:73
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "सर्टिफिकेट लोड करने में विफल: HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:92
+#: src/sysmanage_agent/registration/registration_manager.py:78
 #, python-format
 msgid "Error fetching certificates: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "सर्टिफिकेट लॉड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:141
+#: src/sysmanage_agent/registration/registration_manager.py:113
 #, python-format
 msgid "Failed to get server fingerprint: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "सर्वर फिंगरप्रिंट प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:154
+#: src/sysmanage_agent/registration/registration_manager.py:124
 msgid "Certificate-based authentication requires manual host approval"
 msgstr ""
 "Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
 
-#: src/sysmanage_agent/registration/registration_manager.py:157
+#: src/sysmanage_agent/registration/registration_manager.py:127
 msgid "Please approve this host in the SysManage web interface"
 msgstr "कृपया SysManage web interface में इस host को approve करें"
 
-#: src/sysmanage_agent/registration/registration_manager.py:209
+#: src/sysmanage_agent/registration/registration_manager.py:179
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "पंजीकरण सफलता अधिसूचना के प्रसंस्करण में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:242
+#: src/sysmanage_agent/registration/registration_manager.py:212
 #, python-format
 msgid "Error processing host approval notification: %s"
-msgstr "fwupd अपडेट प्रोसेसिंग में त्रुटि: %s"
+msgstr "होस्ट स्वीकृति संदेश प्रक्रिया करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:263
-#: src/sysmanage_agent/registration/registration_manager.py:500
+#: src/sysmanage_agent/registration/registration_manager.py:233
+#: src/sysmanage_agent/registration/registration_manager.py:478
 #, python-format
 msgid "Error clearing host approval records: %s"
-msgstr "उपयोगकर्ता को समूहों में जोड़ने में त्रुटि: %s"
+msgstr "होस्ट पहचान रिकॉर्ड्स को स्पष्ट करने में विफल: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:317
+#: src/sysmanage_agent/registration/registration_manager.py:287
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "डेटाबेस में होस्ट स्वीकृति संग्रहीत करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:349
+#: src/sysmanage_agent/registration/registration_manager.py:319
 #, python-format
 msgid "Error retrieving stored host_id: %s"
-msgstr "Error creating bridged network: %s"
+msgstr "संग्रहित होस्ट ID खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:381
-#: src/sysmanage_agent/registration/registration_manager.py:438
+#: src/sysmanage_agent/registration/registration_manager.py:351
+#: src/sysmanage_agent/registration/registration_manager.py:408
 msgid "Error retrieving stored credentials"
 msgstr "संग्रहीत क्रेडेंशियल पुनर्प्राप्त करने में त्रुटि"
 
-#: src/sysmanage_agent/registration/registration_manager.py:410
+#: src/sysmanage_agent/registration/registration_manager.py:380
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "संग्रहीत host_id को सिंक्रोनस रूप से पुनर्प्राप्त करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:463
+#: src/sysmanage_agent/registration/registration_manager.py:433
 #, python-format
 msgid "Error retrieving host approval: %s"
-msgstr "Ubuntu Pro डिटैच करने में त्रुटि: %s"
+msgstr "होस्ट स्वीकृति खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:502
+#: src/sysmanage_agent/registration/registration_manager.py:480
 msgid "Continuing despite cleanup error..."
 msgstr "क्लीनअप त्रुटि के बावजूद जारी..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:522
+#: src/sysmanage_agent/registration/registration_manager.py:512
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
@@ -3290,10 +3298,10 @@ msgstr ""
 "\\u092a\\u092f\\u0932\\u094b, \\u0915\\u094d\\u0936\\u0948 "
 "\\u0938\\u0947\\u0924\\u094d\\u092f\\u0940..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:538
+#: src/sysmanage_agent/registration/registration_manager.py:526
 #, python-format
 msgid "Error during database cleanup: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "डेटाबेस सफाई के दौरान त्रुटि: %s"
 
 #: src/sysmanage_agent/wsl/capability.py:62
 msgid "WSL requires BIOS virtualization to be enabled"
@@ -3301,12 +3309,12 @@ msgstr "WSL के लिए BIOS वर्चुअलीज़ेंशन क
 
 #: src/sysmanage_agent/wsl/capability.py:146
 msgid "WSL status check timed out"
-msgstr "Ubuntu Pro स्थिति जाँच का समय समाप्त"
+msgstr "WSL स्थिति जाँच में समयबाहुल्यता हुई"
 
 #: src/sysmanage_agent/wsl/capability.py:153
 #, python-format
 msgid "Error checking WSL support: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
 
 #, python-format
 #~ msgid "Database manager initialized with path: %s"
