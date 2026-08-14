@@ -183,7 +183,7 @@ msgstr "macOS datetime %s पार्स करने में त्रुट
 #: src/sysmanage_agent/collection/graylog_collector.py:62
 #, python-format
 msgid "Graylog detection not supported on platform: %s"
-msgstr "Graylog की गिरफ्तारी पлатफ़ORM: %s पर समर्थित नहीं है"
+msgstr "ग्रेलॉग डिटेक्शन समर्थित नहीं है: %s प्लेटफ़ॉर्म पर"
 
 #: src/sysmanage_agent/collection/graylog_collector.py:66
 #, python-format
@@ -1773,7 +1773,7 @@ msgstr "आंतरिक कार्यक्रम प्रोसेसि�
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
-msgstr "त्रुटि: पूर्विकृत कार्यक्रम संرس्तित के डेटा को हटाने में विफल: %s"
+msgstr "क्वेयू संदेशों की कटाई पूर्ण हुई: %s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format
@@ -2683,7 +2683,7 @@ msgstr "apt-get remove विफल: %s"
 #: src/sysmanage_agent/operations/package_operations.py:579
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
-msgstr "apt-get का उपयोग करके पैकेज卸载失败：%s"
+msgstr "apt-get का उपयोग करके पैकेजों को अनइंस्टॉल करने में विफल रहा: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:582
 #, python-format
@@ -2823,7 +2823,7 @@ msgstr "%d सेकंड के बाद कमांड का समय स
 #: src/sysmanage_agent/operations/system_control.py:114
 #, python-format
 msgid "Unsupported FIPS method: %s"
-msgstr "असमरthynd支撑点的支持FIPS तकनीक: %s"
+msgstr "असमर्थित FIPS मेथड: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:153
 #, python-format
@@ -3093,7 +3093,7 @@ msgstr "ग्रुप नाम आवश्यक है"
 #: src/sysmanage_agent/operations/user_account_operations.py:114
 #, python-format
 msgid "Failed to create group %s: %s"
-msgstr "グルप %s को बनाने में विफल: %s"
+msgstr "ग्रुप बनाने में विफल रहा: %s: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:157
 #, python-format

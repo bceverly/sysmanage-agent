@@ -1968,7 +1968,7 @@ msgstr "Не удалось отправить сообщение об ошиб�
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:287
 #, python-format
 msgid "Windows %s Event Log collection failed after %.2f seconds"
-msgstr "Сбор Windows %s Event Log завершился失败后经过了%.2f秒"
+msgstr "Сбор журнала событий Windows %s не удался после %.2f секунд"
 
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:360
 #, python-format

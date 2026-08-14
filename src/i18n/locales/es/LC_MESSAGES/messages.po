@@ -3366,9 +3366,7 @@ msgstr "Error durante la limpieza de la base de datos: %s"
 
 #: src/sysmanage_agent/wsl/capability.py:62
 msgid "WSL requires BIOS virtualization to be enabled"
-msgstr ""
-"WSL requiere que "
-"la虚拟化部分不应该在这里出现，因为原始字符串中没有提供足够的信息来生成一个相关的西班牙语翻译。根据给定的规则和提供的输入，正确的输出应该是："
+msgstr "WSL requiere que la virtualización de BIOS esté habilitada"
 
 #: src/sysmanage_agent/wsl/capability.py:146
 msgid "WSL status check timed out"

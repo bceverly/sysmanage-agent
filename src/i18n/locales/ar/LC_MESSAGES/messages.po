@@ -2148,7 +2148,7 @@ msgstr "الرجوع إلى %s من النسخة الاحتياطية %s بعد 
 #: src/sysmanage_agent/operations/generic_deployment.py:480
 #, python-format
 msgid "Rollback failed for %s from %s: %s"
-msgstr "لفشل الرول백 لـ %s من %s: %s"
+msgstr "فشل التراجع لـ %s من %s: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:509
 msgid "No steps provided"
@@ -2251,7 +2251,7 @@ msgstr "مستخدم الهدف '%s' غير موجود"
 #: src/sysmanage_agent/operations/gpg_operations.py:454
 #, python-format
 msgid "could not prepare GNUPGHOME for user '%s'"
-msgstr "не удалось إعداد GNUPGHOME للمستخدم '%s'"
+msgstr "لا يمكن إعداد GNUPGHOME للمستخدم '%s'"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:20
 #, python-format
@@ -2773,7 +2773,7 @@ msgstr "المعامل المطلوب 'script_content' مفقود"
 #: src/sysmanage_agent/operations/script_operations.py:79
 #, python-format
 msgid "Script timeout capped at %d seconds"
-msgstr "مدة الانتظار لتنفيذ السクリプト مقيدة بـ %d ثانية"
+msgstr "تم تحديد مهلة النص البرمجي عند %d ثانية"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
@@ -2782,7 +2782,7 @@ msgstr "العميل لا يكشف apply_deployment_plan؛ يلزم الترقي
 #: src/sysmanage_agent/operations/script_operations.py:98
 #, python-format
 msgid "Script delegation failed: %s"
-msgstr "لفشل التفويض للسクリプト: %s"
+msgstr "فشلت تفويض النص البرمجي: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"
@@ -3243,7 +3243,7 @@ msgstr "خطأ أثناء الاستماع للإعلانات: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:90
 msgid "Host not yet approved for certificate retrieval"
-msgstr "الخادم尚未批准获取证书"
+msgstr "المضيف لم يتم الموافقة عليه بعد للحصول على الشهادة"
 
 #: src/sysmanage_agent/registration/registration_manager.py:94
 #, python-format
@@ -3316,7 +3316,7 @@ msgstr "المتابعة على الرغم من خطأ التنظيف..."
 #: src/sysmanage_agent/registration/registration_manager.py:522
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
-msgstr "وجدت %d سجلات فاسدة في جدول host_approval ،正在进行清理..."
+msgstr "تم العثور على %d إدخالات تالفة في جدول host_approval، جارٍ التنظيف..."
 
 #: src/sysmanage_agent/registration/registration_manager.py:536
 #, python-format

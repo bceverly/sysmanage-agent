@@ -2700,7 +2700,7 @@ msgstr "Linux 배포판 감지 오류: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:183
 msgid "Repository identifier is required"
-msgstr "리포지토리 식별자が必要です"
+msgstr "리포지토리 식별자가 필요합니다"
 
 #: src/sysmanage_agent/operations/repository_operations.py:207
 #, python-format

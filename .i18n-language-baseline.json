@@ -1,0 +1,4 @@
+{
+  "_comment": "Pre-existing wrong-language values, recorded so the gate fails on NEW ones. A ratchet, not an amnesty: this list may only shrink. See wrong_script() for why re-translating does not clear them.",
+  "known": []
+}
