@@ -592,7 +592,8 @@ def main() -> int:
     fixed_wrong = known_wrong - current_wrong
     if args.prune_language:
         save_lang_baseline(known_wrong - fixed_wrong)
-        print(f"[OK] pruned {len(fixed_wrong)} entrie(s) that are now clean")
+        n = len(fixed_wrong)
+        print(f"[OK] pruned {n} {'entry' if n == 1 else 'entries'} that are now clean")
         return 0
     # --requeue deliberately works on the FULL list, baseline included: an
     # explicit requeue is someone choosing to re-attempt them.
@@ -600,7 +601,8 @@ def main() -> int:
         wrong = [r for r in wrong if _lang_identity(r) not in known_wrong]
         if fixed_wrong and not (english or stale or wrong):
             print(
-                f"\nFAIL: {len(fixed_wrong)} wrong-language baseline entrie(s) are "
+                f"\nFAIL: {len(fixed_wrong)} wrong-language baseline "
+                f"{'entry' if len(fixed_wrong) == 1 else 'entries'} are "
                 "now clean — the ratchet must tighten.\n"
                 "  Drop them:  python3 scripts/i18n_strict.py --prune-language\n",
                 file=sys.stderr,

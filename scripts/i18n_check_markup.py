@@ -228,7 +228,8 @@ def main() -> int:
 
     if args.prune:
         save_baseline(known - fixed)
-        print(f"[OK] pruned {len(fixed)} entrie(s) that are now clean")
+        n = len(fixed)
+        print(f"[OK] pruned {n} {'entry' if n == 1 else 'entries'} that are now clean")
         return 0
 
     new = [v for v in violations if identity(v) not in known]
@@ -255,7 +256,8 @@ def main() -> int:
 
     if fixed:
         print(
-            f"\nFAIL: {len(fixed)} baseline entrie(s) are now clean — "
+            f"\nFAIL: {len(fixed)} baseline "
+            f"{'entry' if len(fixed) == 1 else 'entries'} are now clean — "
             "the ratchet must tighten.\n"
         )
         for surface, lang, key in sorted(fixed)[: args.limit]:
