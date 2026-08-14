@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-13 15:53-0400\n"
+"POT-Creation-Date: 2026-08-14 04:54-0400\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1546,6 +1546,54 @@ msgstr "Невозможно отправить данные о процесса
 #: src/sysmanage_agent/communication/data_collector_senders.py:363
 msgid "Failed to send process status data"
 msgstr "Не удалось отправить данные о состоянии процессов"
+
+#: src/sysmanage_agent/communication/http_polling.py:81
+msgid "Could not read the stored host_id for polling"
+msgstr "Не удалось прочитать сохраненный host_id для опроса"
+
+#: src/sysmanage_agent/communication/http_polling.py:95
+msgid "Could not read the outbound queue for polling"
+msgstr "Не удалось прочитать исходящую очередь для опроса"
+
+#: src/sysmanage_agent/communication/http_polling.py:120
+#, python-format
+msgid "Could not mark polled message %s delivered"
+msgstr "Не удалось пометить сообщение %s как доставленное"
+
+#: src/sysmanage_agent/communication/http_polling.py:160
+#, python-format
+msgid "Error handling polled message %s"
+msgstr "Ошибка при обработке опрошенного сообщения %s"
+
+#: src/sysmanage_agent/communication/http_polling.py:176
+msgid ""
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
+msgstr ""
+"Невозможно использовать HTTP-резервное соединение: у этого агента нет "
+"сохраненного host_id. Регистрация должна быть завершена сначала."
+
+#: src/sysmanage_agent/communication/http_polling.py:186
+#, python-format
+msgid ""
+"Using HTTP polling instead of a WebSocket: this network refused the "
+"WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
+"Allow WebSocket upgrades to %s to restore immediate delivery."
+msgstr ""
+"Используется HTTP-опрос вместо WebSocket: эта сеть отклонила обновление на "
+"WebSocket. Команды будут приходить с задержкой до нескольких секунд. "
+"Разрешите обновления WebSocket для %s, чтобы восстановить немедленную "
+"доставку."
+
+#: src/sysmanage_agent/communication/http_polling.py:201
+#, python-format
+msgid "Poll failed (%s); retrying in %ds"
+msgstr "Опрос не удался (%s); повторная попытка через %d секунд"
+
+#: src/sysmanage_agent/communication/http_polling.py:212
+msgid "Re-testing whether this network now allows WebSocket connections"
+msgstr ""
+"Проверяется, позволяет ли эта сеть в настоящее время WebSocket-соединения"
 
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
@@ -3223,84 +3271,84 @@ msgstr "Недопустимое JSON-объявление из неизвест
 msgid "Error listening for announcements: %s"
 msgstr "Ошибка при прослушивании объявлений: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:69
+#: src/sysmanage_agent/registration/registration_manager.py:90
 msgid "Host not yet approved for certificate retrieval"
 msgstr "Узел еще не одобрен для получения сертификатов"
 
-#: src/sysmanage_agent/registration/registration_manager.py:73
+#: src/sysmanage_agent/registration/registration_manager.py:94
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "Не удалось получить сертификаты: HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:78
+#: src/sysmanage_agent/registration/registration_manager.py:99
 #, python-format
 msgid "Error fetching certificates: %s"
 msgstr "Ошибка при получении сертификатов: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:113
+#: src/sysmanage_agent/registration/registration_manager.py:134
 #, python-format
 msgid "Failed to get server fingerprint: %s"
 msgstr "Не удалось получить отпечаток сервера: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:124
+#: src/sysmanage_agent/registration/registration_manager.py:145
 msgid "Certificate-based authentication requires manual host approval"
 msgstr "Аутентификация на основе сертификата требует ручной проверки хоста"
 
-#: src/sysmanage_agent/registration/registration_manager.py:127
+#: src/sysmanage_agent/registration/registration_manager.py:148
 msgid "Please approve this host in the SysManage web interface"
 msgstr "Пожалуйста, одобрите этот хост в интерфейсе SysManage web"
 
-#: src/sysmanage_agent/registration/registration_manager.py:179
+#: src/sysmanage_agent/registration/registration_manager.py:200
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "Ошибка обработки уведомления об успешной регистрации: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:212
+#: src/sysmanage_agent/registration/registration_manager.py:233
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "Ошибка при обработке уведомления о согласовании хоста: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:233
-#: src/sysmanage_agent/registration/registration_manager.py:478
+#: src/sysmanage_agent/registration/registration_manager.py:254
+#: src/sysmanage_agent/registration/registration_manager.py:499
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "Ошибка очистки записей одобрения хоста: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:287
+#: src/sysmanage_agent/registration/registration_manager.py:308
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "Ошибка сохранения одобрения узла в БД: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:319
+#: src/sysmanage_agent/registration/registration_manager.py:340
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "Ошибка при получении сохраненного host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:351
-#: src/sysmanage_agent/registration/registration_manager.py:408
+#: src/sysmanage_agent/registration/registration_manager.py:372
+#: src/sysmanage_agent/registration/registration_manager.py:429
 msgid "Error retrieving stored credentials"
 msgstr "Ошибка извлечения сохранённых учётных данных"
 
-#: src/sysmanage_agent/registration/registration_manager.py:380
+#: src/sysmanage_agent/registration/registration_manager.py:401
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "Ошибка синхронного извлечения сохранённого host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:433
+#: src/sysmanage_agent/registration/registration_manager.py:454
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "Ошибка при получении согласования хоста: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:480
+#: src/sysmanage_agent/registration/registration_manager.py:501
 msgid "Continuing despite cleanup error..."
 msgstr "Продолжение несмотря на ошибку очистки..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:512
+#: src/sysmanage_agent/registration/registration_manager.py:522
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "Обнаружено %d поврежденных записей в таблице host_approval, удаляю..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:526
+#: src/sysmanage_agent/registration/registration_manager.py:536
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "Ошибка при очистке базы данных: %s"

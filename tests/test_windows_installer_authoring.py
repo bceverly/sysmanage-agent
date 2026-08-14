@@ -16,8 +16,10 @@ actions run, and a nested install is refused with 1618.  That is structural,
 not a race.
 """
 
+import importlib.util
 import re
 import shutil
+import sys
 import subprocess  # nosec B404 - runs local build tooling only
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -203,12 +205,23 @@ def test_icon_is_committed_and_referenced():
 
 
 def test_icon_matches_its_svg_source():
-    """A committed binary that has drifted from its source is a mystery blob."""
+    """A committed binary that has drifted from its source is a mystery blob.
+
+    Needs BOTH an SVG rasteriser and Pillow. The first version checked only for
+    ImageMagick and shelled out to a literal "python3", which on the Windows CI
+    runner resolved to an interpreter without Pillow -- so the job failed with
+    ModuleNotFoundError on a machine that was never going to be able to run this
+    check. sys.executable is the interpreter running the tests, and therefore the
+    one whose environment the suite was installed into.
+    """
     if not shutil.which("magick"):
         pytest.skip("ImageMagick not installed; cannot re-render the icon")
+    if importlib.util.find_spec("PIL") is None:
+        pytest.skip("Pillow not installed; cannot re-render the icon")
+
     script = REPO / "scripts" / "build_windows_icon.py"
     result = subprocess.run(  # nosec B603 - fixed local script, no user input
-        ["python3", str(script), "--check"],
+        [sys.executable, str(script), "--check"],
         capture_output=True,
         text=True,
         check=False,

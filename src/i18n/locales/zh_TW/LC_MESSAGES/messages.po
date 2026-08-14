@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-13 15:53-0400\n"
+"POT-Creation-Date: 2026-08-14 04:54-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1525,6 +1525,49 @@ msgstr "無法傳送程序資料：主機未核准"
 #: src/sysmanage_agent/communication/data_collector_senders.py:363
 msgid "Failed to send process status data"
 msgstr "傳送程序狀態資料失敗"
+
+#: src/sysmanage_agent/communication/http_polling.py:81
+msgid "Could not read the stored host_id for polling"
+msgstr "無法讀取存儲的 host_id 以進行輪詢"
+
+#: src/sysmanage_agent/communication/http_polling.py:95
+msgid "Could not read the outbound queue for polling"
+msgstr "無法讀取外發佇列以進行輪詢"
+
+#: src/sysmanage_agent/communication/http_polling.py:120
+#, python-format
+msgid "Could not mark polled message %s delivered"
+msgstr "無法標記已輪詢的消息 %s 已交付"
+
+#: src/sysmanage_agent/communication/http_polling.py:160
+#, python-format
+msgid "Error handling polled message %s"
+msgstr "處理輪詢消息 %s 時發生錯誤"
+
+#: src/sysmanage_agent/communication/http_polling.py:176
+msgid ""
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
+msgstr "無法使用 HTTP 回退：此代理程式沒有存儲的 host_id。註冊必須先完成。"
+
+#: src/sysmanage_agent/communication/http_polling.py:186
+#, python-format
+msgid ""
+"Using HTTP polling instead of a WebSocket: this network refused the "
+"WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
+"Allow WebSocket upgrades to %s to restore immediate delivery."
+msgstr ""
+"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾秒的延遲到達。允許 WebSocket 升級至 "
+"%s 以恢復即時交付。"
+
+#: src/sysmanage_agent/communication/http_polling.py:201
+#, python-format
+msgid "Poll failed (%s); retrying in %ds"
+msgstr "輪詢失敗（%s）；將在 %d 秒後重試"
+
+#: src/sysmanage_agent/communication/http_polling.py:212
+msgid "Re-testing whether this network now allows WebSocket connections"
+msgstr "重新測試此網路是否現在允許 WebSocket 連接"
 
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
@@ -3178,84 +3221,84 @@ msgstr "來自未知來源的無效 JSON 公告"
 msgid "Error listening for announcements: %s"
 msgstr "監聽公告期間發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:69
+#: src/sysmanage_agent/registration/registration_manager.py:90
 msgid "Host not yet approved for certificate retrieval"
 msgstr "主機尚未批准證書檢索"
 
-#: src/sysmanage_agent/registration/registration_manager.py:73
+#: src/sysmanage_agent/registration/registration_manager.py:94
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "獲取證書時失敗：HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:78
+#: src/sysmanage_agent/registration/registration_manager.py:99
 #, python-format
 msgid "Error fetching certificates: %s"
 msgstr "取得憑證時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:113
+#: src/sysmanage_agent/registration/registration_manager.py:134
 #, python-format
 msgid "Failed to get server fingerprint: %s"
 msgstr "無法取得伺服器指紋：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:124
+#: src/sysmanage_agent/registration/registration_manager.py:145
 msgid "Certificate-based authentication requires manual host approval"
 msgstr "憑證基於的身份驗證需要手動主機批准"
 
-#: src/sysmanage_agent/registration/registration_manager.py:127
+#: src/sysmanage_agent/registration/registration_manager.py:148
 msgid "Please approve this host in the SysManage web interface"
 msgstr "請在 SysManage 網頁介面中批准此主機"
 
-#: src/sysmanage_agent/registration/registration_manager.py:179
+#: src/sysmanage_agent/registration/registration_manager.py:200
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "處理註冊成功通知時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:212
+#: src/sysmanage_agent/registration/registration_manager.py:233
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "處理主機批准通知時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:233
-#: src/sysmanage_agent/registration/registration_manager.py:478
+#: src/sysmanage_agent/registration/registration_manager.py:254
+#: src/sysmanage_agent/registration/registration_manager.py:499
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "清除主機批准記錄時出錯：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:287
+#: src/sysmanage_agent/registration/registration_manager.py:308
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "在資料庫中儲存主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:319
+#: src/sysmanage_agent/registration/registration_manager.py:340
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "獲取已存儲的 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:351
-#: src/sysmanage_agent/registration/registration_manager.py:408
+#: src/sysmanage_agent/registration/registration_manager.py:372
+#: src/sysmanage_agent/registration/registration_manager.py:429
 msgid "Error retrieving stored credentials"
 msgstr "擷取已儲存憑證時發生錯誤"
 
-#: src/sysmanage_agent/registration/registration_manager.py:380
+#: src/sysmanage_agent/registration/registration_manager.py:401
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "同步擷取已儲存 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:433
+#: src/sysmanage_agent/registration/registration_manager.py:454
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "獲取主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:480
+#: src/sysmanage_agent/registration/registration_manager.py:501
 msgid "Continuing despite cleanup error..."
 msgstr "儘管出現清理錯誤，仍繼續進行……"
 
-#: src/sysmanage_agent/registration/registration_manager.py:512
+#: src/sysmanage_agent/registration/registration_manager.py:522
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "在 host_approval 表中找到%d個損壞條目，正在清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:526
+#: src/sysmanage_agent/registration/registration_manager.py:536
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "資料庫清理期間發生錯誤：%s"

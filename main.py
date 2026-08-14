@@ -14,6 +14,7 @@ import os
 import secrets
 import ssl
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -45,6 +46,8 @@ from src.sysmanage_agent.core.agent_utils import (
     reconcile_inflight_journal,
 )
 from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.communication.http_polling import HttpPollingTransport
+from src.sysmanage_agent.communication.transport_fallback import TransportState
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
 from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
@@ -122,6 +125,9 @@ class SysManageAgent(
         self.connected = False
         self.running = False
         self.connection_failures = 0
+        # Which transport this agent is on, and when to re-test the
+        # preferred one. See communication/transport_fallback.py.
+        self._transport_state = TransportState()
         self._autostart_task = None
         self._public_ip_task = None
 
@@ -645,7 +651,7 @@ class SysManageAgent(
         WebSocket to trust that CA just as much as the REST calls do.
         """
         ssl_context = ServerEndpoint(self.config).ssl_context()
-        if ssl_context is None:  # plain ws://, nothing to configure
+        if ssl_context is None:  # plaintext transport, nothing to configure
             return None
 
         cert_paths = self.cert_store.load_certificates()
@@ -915,27 +921,61 @@ class SysManageAgent(
         base_reconnect_interval = self.config.get_reconnect_interval()
 
         while True:
+            # A network that refuses the WebSocket upgrade cannot be fixed by
+            # retrying it -- the same refusal comes back forever. Poll instead,
+            # over the same origin, until it is time to re-test.
+            if self._transport_state.using_http_fallback:
+                await HttpPollingTransport(self).run_until_retest(self._transport_state)
+                continue
+
             try:
                 await self._establish_websocket_connection()
+                self._transport_state.record_websocket_success()
 
-            except websockets.ConnectionClosed:
+            except websockets.ConnectionClosed as error:
                 self.logger.warning(
                     "WEBSOCKET_COMMUNICATION_ERROR: WebSocket connection closed by server"
                 )
+                self._note_websocket_failure(error)
             except websockets.InvalidStatusCode as error:
                 self.logger.error(
                     "WEBSOCKET_PROTOCOL_ERROR: WebSocket connection rejected: %s", error
                 )
+                self._note_websocket_failure(error)
             except Exception as error:
                 self.logger.error(
                     "WEBSOCKET_UNKNOWN_ERROR: Connection error: %s", error
                 )
+                self._note_websocket_failure(error)
+
+            # Already polling? Skip the reconnect back-off: the fallback loop
+            # paces itself, and sleeping here would only delay the first poll.
+            if self._transport_state.using_http_fallback:
+                continue
 
             should_continue = await self._handle_connection_error(
                 base_reconnect_interval
             )
             if not should_continue:
                 break
+
+    def _note_websocket_failure(self, error: BaseException) -> None:
+        """Record a failed attempt, and switch transport if it is structural.
+
+        Structural means a middlebox has decided this protocol does not pass, so
+        retrying is pointless. Transient means try again shortly. The distinction
+        is the whole feature: demoting the fleet to polling every time the server
+        restarts would be worse than the problem it solves.
+        """
+        if self._transport_state.record_websocket_failure(error, time.monotonic()):
+            self.logger.warning(
+                _(
+                    "Switching to HTTP polling: %s repeatedly refused the WebSocket "
+                    "upgrade (%s). This is a network policy, not a server outage."
+                ),
+                ServerEndpoint(self.config).base_url(),
+                type(error).__name__,
+            )
 
 
 if __name__ == "__main__":

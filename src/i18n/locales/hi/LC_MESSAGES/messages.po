@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-13 15:53-0400\n"
+"POT-Creation-Date: 2026-08-14 04:54-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1540,6 +1540,55 @@ msgstr "प्रक्रिया डेटा नहीं भेजा ज�
 #: src/sysmanage_agent/communication/data_collector_senders.py:363
 msgid "Failed to send process status data"
 msgstr "प्रक्रिया स्थिति डेटा भेजने में विफल"
+
+#: src/sysmanage_agent/communication/http_polling.py:81
+msgid "Could not read the stored host_id for polling"
+msgstr "प्रस्तुत पॉलिंग के लिए stored host_id को पढ़ने में विफलता"
+
+#: src/sysmanage_agent/communication/http_polling.py:95
+msgid "Could not read the outbound queue for polling"
+msgstr "प्रस्तुत पॉलिंग के लिए बाहरी क्यू को पढ़ने में विफलता"
+
+#: src/sysmanage_agent/communication/http_polling.py:120
+#, python-format
+msgid "Could not mark polled message %s delivered"
+msgstr "पुलिश्ड मेसेज %s को delivered अंकित करने में विफलता"
+
+#: src/sysmanage_agent/communication/http_polling.py:160
+#, python-format
+msgid "Error handling polled message %s"
+msgstr "पुलिश्ड मेसेज %s के हाथांकन में त्रुटि"
+
+#: src/sysmanage_agent/communication/http_polling.py:176
+msgid ""
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
+msgstr ""
+"HTTP फॉलबैक का इस्तेमाल नहीं किया जा सकता: यह एजेंट में कोई भी stored "
+"host_id नहीं है। पंजीकरण पहले पूरा होना चाहिए."
+
+#: src/sysmanage_agent/communication/http_polling.py:186
+#, python-format
+msgid ""
+"Using HTTP polling instead of a WebSocket: this network refused the "
+"WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
+"Allow WebSocket upgrades to %s to restore immediate delivery."
+msgstr ""
+"HTTP पॉलिंग का इस्तेमाल WebSocket के बजाय किया जा रहा है: यह नेटवर्क "
+"WebSocket अपग्रेड को इजाजत नहीं दे रहा है। कमांड्स कुछ सेकंड की देरी के साथ "
+"पहुंचेंगे। WebSocket अपग्रेड को %s इजाजत देने से तुरंत डिलीवरी को पुन: "
+"स्थापित किया जा सकता है।"
+
+#: src/sysmanage_agent/communication/http_polling.py:201
+#, python-format
+msgid "Poll failed (%s); retrying in %ds"
+msgstr "पॉल विफल (%s); पुन: प्रयास करने का समय %ds"
+
+#: src/sysmanage_agent/communication/http_polling.py:212
+msgid "Re-testing whether this network now allows WebSocket connections"
+msgstr ""
+"इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण "
+"किया जाए"
 
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
@@ -3214,80 +3263,80 @@ msgstr "अज्ञात स्रोत से अमान्य JSON घो
 msgid "Error listening for announcements: %s"
 msgstr "अन्नाउंसमेंट के लिए सुनने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:69
+#: src/sysmanage_agent/registration/registration_manager.py:90
 msgid "Host not yet approved for certificate retrieval"
 msgstr "होस्ट की सर्टिफिकेट प्राप्त करने के लिए अभी तक पारदर्शित नहीं है"
 
-#: src/sysmanage_agent/registration/registration_manager.py:73
+#: src/sysmanage_agent/registration/registration_manager.py:94
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "सर्टिफिकेट लोड करने में विफल: HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:78
+#: src/sysmanage_agent/registration/registration_manager.py:99
 #, python-format
 msgid "Error fetching certificates: %s"
 msgstr "सर्टिफिकेट लॉड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:113
+#: src/sysmanage_agent/registration/registration_manager.py:134
 #, python-format
 msgid "Failed to get server fingerprint: %s"
 msgstr "सर्वर फिंगरप्रिंट प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:124
+#: src/sysmanage_agent/registration/registration_manager.py:145
 msgid "Certificate-based authentication requires manual host approval"
 msgstr ""
 "Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
 
-#: src/sysmanage_agent/registration/registration_manager.py:127
+#: src/sysmanage_agent/registration/registration_manager.py:148
 msgid "Please approve this host in the SysManage web interface"
 msgstr "कृपया SysManage web interface में इस host को approve करें"
 
-#: src/sysmanage_agent/registration/registration_manager.py:179
+#: src/sysmanage_agent/registration/registration_manager.py:200
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "पंजीकरण सफलता अधिसूचना के प्रसंस्करण में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:212
+#: src/sysmanage_agent/registration/registration_manager.py:233
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "होस्ट स्वीकृति संदेश प्रक्रिया करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:233
-#: src/sysmanage_agent/registration/registration_manager.py:478
+#: src/sysmanage_agent/registration/registration_manager.py:254
+#: src/sysmanage_agent/registration/registration_manager.py:499
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "होस्ट पहचान रिकॉर्ड्स को स्पष्ट करने में विफल: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:287
+#: src/sysmanage_agent/registration/registration_manager.py:308
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "डेटाबेस में होस्ट स्वीकृति संग्रहीत करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:319
+#: src/sysmanage_agent/registration/registration_manager.py:340
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "संग्रहित होस्ट ID खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:351
-#: src/sysmanage_agent/registration/registration_manager.py:408
+#: src/sysmanage_agent/registration/registration_manager.py:372
+#: src/sysmanage_agent/registration/registration_manager.py:429
 msgid "Error retrieving stored credentials"
 msgstr "संग्रहीत क्रेडेंशियल पुनर्प्राप्त करने में त्रुटि"
 
-#: src/sysmanage_agent/registration/registration_manager.py:380
+#: src/sysmanage_agent/registration/registration_manager.py:401
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "संग्रहीत host_id को सिंक्रोनस रूप से पुनर्प्राप्त करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:433
+#: src/sysmanage_agent/registration/registration_manager.py:454
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "होस्ट स्वीकृति खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:480
+#: src/sysmanage_agent/registration/registration_manager.py:501
 msgid "Continuing despite cleanup error..."
 msgstr "क्लीनअप त्रुटि के बावजूद जारी..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:512
+#: src/sysmanage_agent/registration/registration_manager.py:522
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
@@ -3298,7 +3347,7 @@ msgstr ""
 "\\u092a\\u092f\\u0932\\u094b, \\u0915\\u094d\\u0936\\u0948 "
 "\\u0938\\u0947\\u0924\\u094d\\u092f\\u0940..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:526
+#: src/sysmanage_agent/registration/registration_manager.py:536
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "डेटाबेस सफाई के दौरान त्रुटि: %s"

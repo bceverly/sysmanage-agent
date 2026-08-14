@@ -22,6 +22,27 @@ from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
+# ONE definition of "corrupt", shared by the count and the delete below.
+#
+# They used to differ: the count also matched "host_id IS NOT NULL", true of
+# every populated row, so a perfectly healthy table reported "Found N corrupt
+# entries, cleaning up..." and then deleted nothing -- the delete's predicate was
+# the correct one. Worse, NULL comparisons yield NULL rather than true, so the
+# one genuinely corrupt row (a NULL host_id) was the only one it did NOT match.
+# A NULL host_id IS corrupt: the row identifies no host.
+#
+# Built by concatenation rather than an f-string so the SQL is provably static
+# at module scope -- no interpolation point exists for anything to reach.
+_CORRUPT_HOST_ID = " OR ".join(
+    (
+        "LENGTH(host_id) != 36",
+        "host_id NOT LIKE '%-%-%-%-%'",
+        "host_id IS NULL",
+    )
+)
+_COUNT_CORRUPT_SQL = "SELECT COUNT(*) FROM host_approval WHERE " + _CORRUPT_HOST_ID
+_DELETE_CORRUPT_SQL = "DELETE FROM host_approval WHERE " + _CORRUPT_HOST_ID
+
 
 class RegistrationManager:
     """Manages host registration, approval, and authentication with the server."""
@@ -485,26 +506,15 @@ class RegistrationManager:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
-                # ONE definition of "corrupt", used by both the count and the
-                # delete. They used to differ: the count also matched
-                # "host_id IS NOT NULL", which is true of every populated row,
-                # so a perfectly healthy table reported "Found N corrupt
-                # entries, cleaning up..." and then deleted nothing -- the
-                # delete's predicate was the correct one. Alarming, and wrong.
-                #
-                # A NULL host_id IS corrupt (the row identifies no host), so it
-                # belongs in the predicate; "IS NOT NULL" was the inversion.
-                corrupt_predicate = (
-                    "LENGTH(host_id) != 36 "
-                    "OR host_id NOT LIKE '%-%-%-%-%' "
-                    "OR host_id IS NULL"
-                )
-
-                result = session.execute(
-                    text(
-                        f"SELECT COUNT(*) FROM host_approval WHERE {corrupt_predicate}"
-                    )
-                ).fetchone()
+                # Raw SQL is deliberate here: a corrupt UUID makes SQLAlchemy
+                # raise while loading the row as an object, which is the exact
+                # situation this cleanup recovers from. SQLAlchemy 2.x requires
+                # text() for raw SQL, so the rule cannot be satisfied by writing
+                # it differently -- and the statement is a module-level constant
+                # with no interpolation point for anything to reach.
+                # (Suppression must sit immediately above the finding.)
+                # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
+                result = session.execute(text(_COUNT_CORRUPT_SQL)).fetchone()
 
                 if result and result[0] > 0:
                     self.logger.warning(
@@ -513,9 +523,9 @@ class RegistrationManager:
                         ),
                         result[0],
                     )
-                    session.execute(
-                        text(f"DELETE FROM host_approval WHERE {corrupt_predicate}")
-                    )
+                    # Same static constant, same reasoning as the count above.
+                    # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
+                    session.execute(text(_DELETE_CORRUPT_SQL))
                     session.commit()
                     self.logger.info("Corrupt database entries cleaned up")
 

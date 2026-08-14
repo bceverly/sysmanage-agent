@@ -99,11 +99,11 @@ class ServerEndpoint:
         if url:
             split = urlsplit(url if "//" in url else f"//{url}")
             scheme = (split.scheme or "").lower()
-            # ws:// and wss:// are accepted and normalised to their HTTP
+            # The websocket schemes are accepted and normalised to their HTTP
             # equivalents.  This is not hypothetical: six of the seven shipped
             # config templates say ``url: "wss://sysmanage.example.com:8443"``.
             # Treating an unrecognised scheme as "fall back to use_https" would
-            # silently downgrade every one of those installs to PLAINTEXT ws://,
+            # silently downgrade every one of those installs to plaintext,
             # which is far worse than failing to parse.
             scheme = {"ws": "http", "wss": "https"}.get(scheme, scheme)
             if scheme not in ("http", "https"):
@@ -164,7 +164,7 @@ class ServerEndpoint:
         return f"{self.base_url()}{path}"
 
     def websocket_url(self, path: str = "/api/agent/connect") -> str:
-        """Absolute ``ws://`` / ``wss://`` URL on the SAME origin as the REST API.
+        """Absolute websocket URL on the SAME origin as the REST API.
 
         Same host, same port, same TLS decision -- deliberately derived rather
         than separately configured, because a WebSocket on a different port is
