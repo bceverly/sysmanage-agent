@@ -129,6 +129,23 @@ EN = "en"
 _NOT_PROSE = re.compile(r"^[\W\d_]*$|^https?://\S*$")
 
 
+# A tooling placeholder that leaked into a locale: "[MISSING:some.key]".  The
+# word inside is NOT anchored -- `make translate` cheerfully TRANSLATES the
+# placeholder, so Hindi carried "[अज्ञात:docs.admin.airgap_workflow...]" and
+# Arabic "[ MISSING:... ]" straight onto a live page.  152 of them across nine
+# locales on 2026-08-15, all invisible to every other check: a placeholder is
+# not [TODO], not English-identical, not wrong-script, and carries no markup.
+# The dotted key is the reliable part, so match on that.
+_PLACEHOLDER_VALUE = re.compile(
+    r"^\s*\[[^\]:]{1,40}:\s*[a-z0-9_]+(?:\.[a-z0-9_-]+)+\s*\]\s*$", re.I
+)
+
+
+def is_placeholder(text: str) -> bool:
+    """True if the value is a leaked tooling placeholder rather than a translation."""
+    return bool(_PLACEHOLDER_VALUE.match(text or ""))
+
+
 def is_prose(text: str) -> bool:
     text = (text or "").strip()
     if not text or _NOT_PROSE.match(text):
@@ -426,6 +443,10 @@ def check_json(surface, allow, hashes):
             # denying the escape hatch.
             # Script check FIRST and source-aware: "may stay English" must not
             # mean "may be in any language at all".
+            if is_placeholder(value) and not is_placeholder(src):
+                # Same remedy as wrong-language: it is not a translation at all.
+                wrong.append((surface["name"], lang, path, key, src))
+                continue
             if wrong_script(lang, value, src):
                 wrong.append((surface["name"], lang, path, key, src))
                 continue
