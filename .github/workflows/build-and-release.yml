@@ -2140,13 +2140,35 @@ jobs:
           cp ${{ github.workspace }}/release-files/*-openbsd*.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd*.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
 
-          # Alpine packages (.apk) for 3.19, 3.20, 3.21
-          cp ${{ github.workspace }}/release-files/*-alpine319.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-alpine319.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-alpine320.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-alpine320.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-alpine321.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-alpine321.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          # Alpine packages (.apk) — glob over whatever the build matrix
+          # produced rather than naming releases here.  The hardcoded list had
+          # drifted from the matrix in BOTH directions: 3.19 had been dropped
+          # from the matrix, so its cp silently copied nothing (`|| true` hides
+          # it), while 3.22 had been added, so its .apk was built and attached
+          # to the GitHub release but never published to R2 at all.  A glob
+          # cannot drift.  Fail loudly if it matches nothing: a silent no-op is
+          # what let 3.22 go unpublished across multiple releases.
+          if ! cp ${{ github.workspace }}/release-files/*-alpine*.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null; then
+            echo "::error::no *-alpine*.apk found in release-files — the Alpine build matrix produced nothing to publish"
+            exit 1
+          fi
+          cp ${{ github.workspace }}/release-files/*-alpine*.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          echo "Alpine packages staged for publication:"
+          ls -1 "repo/agent/alpine/packages/$VERSION/"
+
+          # latest.txt — the version pointer the install docs resolve before
+          # building a download URL:
+          #   VERSION=$(curl -s https://repo.sysmanage.org/agent/mac/latest.txt)
+          # Nothing in ANY repo wrote this file.  It had been placed by hand
+          # once and left at 0.9.6, so every documented macOS install resolved
+          # to a version pruned from the bucket long ago and 404'd -- while
+          # looking like a live, version-aware instruction.  Write it here, on
+          # every release, for each direct-download channel that has one.
+          for channel in mac alpine; do
+            mkdir -p "repo/agent/$channel"
+            printf '%s\n' "$VERSION" > "repo/agent/$channel/latest.txt"
+            echo "  latest.txt: agent/$channel -> $VERSION"
+          done
 
           # Flatpak package and repository
           echo "Copying Flatpak files..."
