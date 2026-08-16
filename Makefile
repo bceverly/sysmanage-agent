@@ -3520,10 +3520,10 @@ deploy-launchpad:
 		if [ -n "$$LAUNCHPAD_GPG_PASSPHRASE" ]; then \
 			echo "$$LAUNCHPAD_GPG_PASSPHRASE" > "/tmp/gpg-passphrase-$$RELEASE"; \
 			debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-$$RELEASE" \
-				-k"$$GPG_KEY_ID" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
+				-k"$$GPG_KEY_ID!" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
 			rm -f "/tmp/gpg-passphrase-$$RELEASE"; \
 		else \
-			debsign --re-sign -k"$$GPG_KEY_ID" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
+			debsign --re-sign -k"$$GPG_KEY_ID!" "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \
 		fi; \
 		\
 		dput launchpad "sysmanage-agent_$${VERSION}+ppa1~$${RELEASE}1_source.changes"; \

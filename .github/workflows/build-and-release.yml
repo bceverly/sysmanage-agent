@@ -2037,6 +2037,14 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          # Archive signing.  APT_SIGNING_KEY is a SIGNING SUBKEY export, not
+          # the primary — see the import step below.  APT_SIGN_REQUIRED makes a
+          # missing key fail the release rather than silently publishing a repo
+          # every consumer then has to install with verification disabled.
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          APT_SIGNING_KEY_ID: ${{ secrets.APT_SIGNING_KEY_ID }}
+          APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+          APT_SIGN_REQUIRED: "1"
         run: |
           set -euo pipefail
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
@@ -2154,12 +2162,44 @@ jobs:
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
           sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
 
+          # Import the archive signing subkey.  Only a SIGNING SUBKEY of the
+          # SysManage Package Signing key lives in CI: the primary (which also
+          # certifies, and authorises Launchpad uploads) stays offline, so a
+          # compromised runner costs one revocable subkey rather than the
+          # published identity.
+          if [ -n "${APT_SIGNING_KEY:-}" ]; then
+            echo "Importing archive signing subkey..."
+            export GNUPGHOME="$(mktemp -d)"
+            chmod 700 "$GNUPGHOME"
+            printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
+            # Non-interactive signing: the agent must take the passphrase from
+            # the loopback pinentry rather than trying to open a terminal.
+            echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
+            gpgconf --kill gpg-agent || true
+            if [ -n "${APT_SIGNING_PASSPHRASE:-}" ]; then
+              export APT_GPG_EXTRA="--pinentry-mode loopback --passphrase-file $GNUPGHOME/pp"
+              printf '%s' "$APT_SIGNING_PASSPHRASE" > "$GNUPGHOME/pp"
+              chmod 600 "$GNUPGHOME/pp"
+            fi
+            gpg --batch --list-secret-keys --with-subkey-fingerprints || true
+          else
+            echo "::warning::APT_SIGNING_KEY is not set - the apt repo will be published UNSIGNED"
+          fi
+
           # Regenerate apt repository metadata (amd64 + arm64).
           # Shared with `make deploy-docs-repo` so the two cannot drift — they
           # did once, and whichever ran last decided whether apt would accept
           # the published repo at all.
           echo "Regenerating apt repository metadata..."
           "$GITHUB_WORKSPACE/scripts/build-apt-repo.sh" repo/agent/deb
+
+          # Publish the public keyring next to the repo so the documented
+          # install line can point at a real file.  Dearmored: apt wants a
+          # binary keyring under /usr/share/keyrings, not ASCII armour.
+          if [ -n "${APT_SIGNING_KEY_ID:-}" ]; then
+            gpg --batch --export "${APT_SIGNING_KEY_ID%!}" > repo/agent/sysmanage-archive-keyring.gpg
+            echo "Published keyring: $(stat -c%s repo/agent/sysmanage-archive-keyring.gpg) bytes"
+          fi
 
           cd "$WORK"
 
@@ -2855,8 +2895,14 @@ jobs:
           echo "${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}" > /tmp/gpg-passphrase-${RELEASE}
 
           # Sign with passphrase from file
+          # Trailing '!' pins the PRIMARY key.  Without it gpg signs with the
+          # newest signing-capable subkey, and the archive-signing subkey added
+          # 2026-08-16 is unknown to Launchpad -- the upload would be rejected
+          # with an error pointing nowhere near the cause.  This currently
+          # "works" only because LAUNCHPAD_GPG_KEY holds a pre-subkey export;
+          # pinning means refreshing that secret can no longer break uploads.
           debsign --re-sign -p"gpg --batch --yes --passphrase-file /tmp/gpg-passphrase-${RELEASE}" \
-            -k"$GPG_KEY_ID" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
+            -k"$GPG_KEY_ID!" sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes
 
           # Clean up passphrase file
           rm -f /tmp/gpg-passphrase-${RELEASE}

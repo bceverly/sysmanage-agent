@@ -234,3 +234,10 @@ sbom/
 
 # Claude Code workspace
 .claude/
+
+# vendor/ - wheels fetched by `pip3 download -r requirements-prod.txt` during
+# deploy-launchpad / the source-package build.  Regenerated every release (the
+# recipe does `rm -rf vendor` first) and tarred into
+# sysmanage-agent-vendor-$VERSION.tar.gz, so nothing is lost by ignoring it.
+# Untracked-but-not-ignored meant a stray build swept 24 wheels into a commit.
+vendor/
