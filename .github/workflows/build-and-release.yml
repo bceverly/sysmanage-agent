@@ -2162,6 +2162,35 @@ jobs:
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
           sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
 
+          # Sign every RPM before the metadata is regenerated.  CI never did
+          # this -- only the local `make` targets ran rpmsign -- so everything
+          # actually published was unsigned, which is why the documented dnf
+          # config still said gpgcheck=0.  Signing here means the published
+          # artefacts carry a signature regardless of who built them.
+          if [ -n "${APT_SIGNING_KEY:-}" ]; then
+            sudo apt-get install -y -qq rpm >/dev/null 2>&1 || true
+            RPMS=$(find repo/agent/rpm -name '*.rpm' 2>/dev/null || true)
+            if [ -n "$RPMS" ]; then
+              export GNUPGHOME_RPM="$(mktemp -d)"; chmod 700 "$GNUPGHOME_RPM"
+              GNUPGHOME="$GNUPGHOME_RPM" gpg --batch --import <<<"$APT_SIGNING_KEY"
+              echo "allow-loopback-pinentry" > "$GNUPGHOME_RPM/gpg-agent.conf"
+              printf '%s' "${APT_SIGNING_PASSPHRASE:-}" > "$GNUPGHOME_RPM/pp"
+              chmod 600 "$GNUPGHOME_RPM/pp"
+              KEY_NOBANG="${APT_SIGNING_KEY_ID%!}"
+              echo "$RPMS" | while IFS= read -r r; do
+                [ -n "$r" ] || continue
+                GNUPGHOME="$GNUPGHOME_RPM" rpmsign --addsign \
+                  --define "_gpg_name $KEY_NOBANG" \
+                  --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --pinentry-mode loopback --passphrase-file $GNUPGHOME_RPM/pp --no-secmem-warning -u $KEY_NOBANG -sbo %{__signature_filename} %{__plaintext_filename}" \
+                  "$r" >/dev/null || { echo "::error::rpmsign failed for $r"; exit 1; }
+              done
+              echo "Signed $(echo "$RPMS" | grep -c . ) RPM(s)"
+              # Publish the armoured key dnf/zypper need for gpgcheck=1.
+              GNUPGHOME="$GNUPGHOME_RPM" gpg --batch --armor --export "$KEY_NOBANG" \
+                > repo/agent/rpm/RPM-GPG-KEY-sysmanage
+            fi
+          fi
+
           # Import the archive signing subkey.  Only a SIGNING SUBKEY of the
           # SysManage Package Signing key lives in CI: the primary (which also
           # certifies, and authorises Launchpad uploads) stays offline, so a
@@ -2274,9 +2303,18 @@ jobs:
           # hand-rolled equivalent would not have caught it either.
           docker run --rm -e VERSION debian:stable-slim bash -euxc '
             apt-get update -qq
-            apt-get install -y -qq ca-certificates >/dev/null
+            apt-get install -y -qq ca-certificates curl gnupg >/dev/null
 
-            echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" \
+            # signed-by, NOT trusted=yes.  This smoke test used to disable
+            # signature verification, so it would have passed even if signing
+            # were completely broken -- the one check meant to prove a fresh
+            # install works was the only path not exercising verification.
+            install -d -m 0755 /usr/share/keyrings
+            curl -fsSL https://repo.sysmanage.org/agent/sysmanage-archive-keyring.gpg \
+              -o /usr/share/keyrings/sysmanage-archive-keyring.gpg
+            chmod 0644 /usr/share/keyrings/sysmanage-archive-keyring.gpg
+            
+            echo "deb [signed-by=/usr/share/keyrings/sysmanage-archive-keyring.gpg] https://repo.sysmanage.org/agent/deb stable main" \
               > /etc/apt/sources.list.d/sysmanage-agent.list
 
             # R2 is read-after-write consistent, but retry briefly so a blip
@@ -2312,7 +2350,8 @@ jobs:
           name=SysManage Agent
           baseurl=https://repo.sysmanage.org/agent/rpm/el9/\$basearch
           enabled=1
-          gpgcheck=0
+          gpgcheck=1
+          gpgkey=https://repo.sysmanage.org/agent/rpm/RPM-GPG-KEY-sysmanage
           REPO
             dnf -q --disablerepo="*" --enablerepo=sysmanage-agent makecache
             dnf -q --disablerepo="*" --enablerepo=sysmanage-agent info sysmanage-agent
