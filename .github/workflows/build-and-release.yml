@@ -2311,6 +2311,78 @@ jobs:
 
           echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
 
+      # Cloudflare fronts the R2 bucket and caches NEGATIVE responses.  A GET
+      # for a path that does not exist yet is answered 404, and that 404 is
+      # cached with the zone's 4-hour edge TTL -- so once anything requests a
+      # URL before its first publish, the edge keeps serving 404 over the real
+      # object for hours, and every later request refreshes it.
+      #
+      # Measured 2026-08-16 on the just-published release:
+      #   agent/sysmanage-archive-keyring.gpg -> HTTP 404, cf-cache-status: HIT,
+      #   age: 23790, while the same URL with a cache-busting query string
+      #   returned the real 2869-byte keyring.
+      #
+      # That failed this workflow's own apt smoke test (curl of the keyring,
+      # exit 22) and, far worse, breaks the DOCUMENTED install for every user
+      # and the agent_install dispatch in provisioning_engine for as long as
+      # the negative entry lives.  R2 is read-after-write consistent, so this
+      # is purely an edge-cache problem: purge the small metadata/pointer files
+      # whose content changes every release.
+      #
+      # Gated on the secret exactly like APT_SIGNING_KEY: without a token this
+      # warns rather than failing the release, but the warning says plainly
+      # that a stale 404 may be served.
+      - name: Purge the CDN cache for republished metadata
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ZONE_ID:-}" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID not set - not purging the CDN. A cached 404 from before first publish will keep being served over the real object (up to the zone edge TTL), breaking the documented install."
+            exit 0
+          fi
+          BASE="https://repo.sysmanage.org"
+          # Everything a client fetches by a STABLE url, i.e. the paths a
+          # request can hit before the object exists.  Versioned artifact URLs
+          # are not listed: their path is new every release, so nothing can
+          # have cached a 404 for them.
+          FILES=$(printf '"%s",' \
+            "$BASE/agent/sysmanage-archive-keyring.gpg" \
+            "$BASE/agent/rpm/RPM-GPG-KEY-sysmanage" \
+            "$BASE/agent/mac/latest.txt" \
+            "$BASE/agent/alpine/latest.txt" \
+            "$BASE/agent/freebsd/latest.txt" \
+            "$BASE/agent/openbsd/latest.txt" \
+            "$BASE/agent/netbsd/latest.txt" \
+            "$BASE/agent/deb/dists/stable/InRelease" \
+            "$BASE/agent/deb/dists/stable/Release" \
+            "$BASE/agent/deb/dists/stable/Release.gpg" \
+            "$BASE/agent/deb/dists/stable/main/binary-amd64/Packages" \
+            "$BASE/agent/deb/dists/stable/main/binary-amd64/Packages.gz" \
+            "$BASE/agent/deb/dists/stable/main/binary-arm64/Packages" \
+            "$BASE/agent/deb/dists/stable/main/binary-arm64/Packages.gz" \
+            "$BASE/agent/rpm/el9/x86_64/repodata/repomd.xml" \
+            "$BASE/agent/rpm/el9/aarch64/repodata/repomd.xml" \
+            "$BASE/agent/rpm/opensuse-tumbleweed/x86_64/repodata/repomd.xml" \
+            "$BASE/agent/rpm/opensuse-leap/15/x86_64/repodata/repomd.xml" \
+            "$BASE/agent/rpm/sles/15/x86_64/repodata/repomd.xml" \
+            | sed 's/,$//')
+          RESP=$(curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"files\":[${FILES}]}")
+          echo "$RESP"
+          # Purging is not best-effort: if it silently failed the smoke test
+          # below would fail anyway, but with a far more confusing symptom.
+          echo "$RESP" | grep -q '"success":true' || {
+            echo "::error::Cloudflare purge failed - the edge may serve a stale 404 over freshly published files"
+            exit 1
+          }
+          echo "Purged $(echo "$FILES" | tr ',' '\n' | grep -c .) URL(s) from the CDN"
+
       - name: Verify the published apt repo with a real apt-get
         env:
           VERSION: ${{ steps.version.outputs.version }}
