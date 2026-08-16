@@ -63,6 +63,19 @@ fi
 ARCHES="${APT_REPO_ARCHES:-amd64 arm64}"
 SUITE="${APT_REPO_SUITE:-stable}"
 
+# The Label is per-repository, and this script builds more than one: the agent
+# repo lives at repo/agent/deb and the server repo at repo/server/deb.  It was
+# hardcoded to "SysManage Agent", so the SERVER repo advertised itself as the
+# agent -- visible to anyone running `apt policy`, and misleading in exactly the
+# place a user checks when working out where a package came from.  Derive it
+# from the directory holding the deb root; APT_REPO_LABEL overrides.
+case "$(basename "$(dirname "$(cd "$DEB_ROOT" && pwd)")")" in
+    agent)  DEFAULT_LABEL="SysManage Agent" ;;
+    server) DEFAULT_LABEL="SysManage Server" ;;
+    *)      DEFAULT_LABEL="SysManage" ;;
+esac
+LABEL="${APT_REPO_LABEL:-$DEFAULT_LABEL}"
+
 command -v dpkg-scanpackages >/dev/null 2>&1 || {
     echo "ERROR: dpkg-scanpackages not found (install dpkg-dev)" >&2
     exit 1
@@ -107,7 +120,7 @@ if command -v apt-ftparchive >/dev/null 2>&1; then
     # The -o options are what supply the headers a bare invocation omits.
     apt-ftparchive \
         -o "APT::FTPArchive::Release::Origin=SysManage" \
-        -o "APT::FTPArchive::Release::Label=SysManage Agent" \
+        -o "APT::FTPArchive::Release::Label=$LABEL" \
         -o "APT::FTPArchive::Release::Suite=$SUITE" \
         -o "APT::FTPArchive::Release::Codename=$SUITE" \
         -o "APT::FTPArchive::Release::Components=main" \
@@ -124,7 +137,7 @@ else
     done
     {
         echo "Origin: SysManage"
-        echo "Label: SysManage Agent"
+        echo "Label: $LABEL"
         echo "Suite: $SUITE"
         echo "Codename: $SUITE"
         echo "Components: main"
