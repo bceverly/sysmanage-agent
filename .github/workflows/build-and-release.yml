@@ -2164,7 +2164,7 @@ jobs:
           # to a version pruned from the bucket long ago and 404'd -- while
           # looking like a live, version-aware instruction.  Write it here, on
           # every release, for each direct-download channel that has one.
-          for channel in mac alpine; do
+          for channel in mac alpine freebsd openbsd netbsd; do
             mkdir -p "repo/agent/$channel"
             printf '%s\n' "$VERSION" > "repo/agent/$channel/latest.txt"
             echo "  latest.txt: agent/$channel -> $VERSION"
