@@ -2369,6 +2369,24 @@ jobs:
             "$BASE/agent/rpm/opensuse-leap/15/x86_64/repodata/repomd.xml" \
             "$BASE/agent/rpm/sles/15/x86_64/repodata/repomd.xml" \
             | sed 's/,$//')
+          # Distinguish "the credential is wrong" from "the purge failed".
+          # Cloudflare answers BOTH with error 10000 "Authentication error",
+          # which is unactionable on its own -- it covers an expired token, a
+          # token lacking Cache Purge, a token scoped to another zone, and the
+          # very common case of pasting a GLOBAL API KEY (which needs
+          # X-Auth-Email + X-Auth-Key, not a Bearer token).  /user/tokens/verify
+          # answers only the credential question, so a failure here names the
+          # problem precisely.
+          VERIFY=$(curl -sS \
+            "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json")
+          if ! echo "$VERIFY" | grep -q '"success":true'; then
+            echo "$VERIFY"
+            echo "::error::CLOUDFLARE_API_TOKEN is not a valid API token. Check, in order: (1) it is an API TOKEN, not a Global API Key - the Global key needs X-Auth-Email/X-Auth-Key headers and will always fail here; (2) it has permission Zone -> Cache Purge -> Purge; (3) its Zone Resources include sysmanage.org; (4) the secret has no stray whitespace or newline."
+            exit 1
+          fi
+
           RESP=$(curl -sS -X POST \
             "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
@@ -2378,7 +2396,7 @@ jobs:
           # Purging is not best-effort: if it silently failed the smoke test
           # below would fail anyway, but with a far more confusing symptom.
           echo "$RESP" | grep -q '"success":true' || {
-            echo "::error::Cloudflare purge failed - the edge may serve a stale 404 over freshly published files"
+            echo "::error::Cloudflare purge failed (the token itself is valid - see the response above). Most likely CLOUDFLARE_ZONE_ID is not the sysmanage.org zone, or the token is not scoped to it. The edge may serve a stale 404 over freshly published files."
             exit 1
           }
           echo "Purged $(echo "$FILES" | tr ',' '\n' | grep -c .) URL(s) from the CDN"
