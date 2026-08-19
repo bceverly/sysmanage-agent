@@ -60,6 +60,7 @@ jobs:
   i18n-gate:
     name: i18n Completeness Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -129,6 +130,11 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Install build dependencies
         run: |
@@ -303,6 +309,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
+
       - name: Install RPM build tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
@@ -449,6 +460,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Install RPM build tools
         run: |
@@ -964,6 +980,11 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Install FreeBSD package build tools
         run: |
@@ -1598,6 +1619,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building Flatpak for version: $VERSION"
 
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
+
       - name: Install Flatpak build dependencies
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
@@ -2021,6 +2047,11 @@ jobs:
 
           echo "Release files:"
           ls -la release-files/
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Publish packages to Cloudflare R2
         # Publishes agent packages straight to the R2 bucket (served at
@@ -2865,6 +2896,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Deploying version $VERSION to Launchpad PPA"
 
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
+
       - name: Install packaging tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
@@ -3106,6 +3142,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Deploying version $VERSION to OBS"
 
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
+
       - name: Install OBS tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
@@ -3288,6 +3329,11 @@ jobs:
           VERSION="${GITHUB_REF#refs/tags/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Deploying version $VERSION to Copr"
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Install Copr CLI and build tools
         run: |
@@ -3894,6 +3940,32 @@ jobs:
             echo "::error::Fix: fork microsoft/winget-pkgs as $login, or point"
             echo "::error::WINGET_PKGS_TOKEN at the account that owns the fork."
             exit 1
+          fi
+
+          # SYNC THE FORK before komac runs -- same fix as the sysmanage repo.
+          #
+          # komac creates its working branch at the SHA of
+          # microsoft/winget-pkgs HEAD, in YOUR fork.  GitHub's CreateRef API
+          # requires that SHA to exist in the target repo, so a fork that has
+          # not been synced since the last submission fails with
+          #     Ref cannot be created.
+          # naming neither the fork nor staleness.  The scope/identity/writable
+          # preflights above all PASS in that state, which is what makes it
+          # confusing.  merge-upstream is the API behind "Sync fork"; it is a
+          # fast-forward and cannot conflict on a fork with no local commits.
+          echo "Syncing $login/winget-pkgs with upstream..."
+          sync_body=$(curl -sS -X POST \
+            -H "Authorization: token $WINGET_PKGS_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$login/winget-pkgs/merge-upstream" \
+            -d '{"branch":"master"}')
+          sync_msg=$(printf '%s' "$sync_body" | jq -r '.message // empty')
+          if printf '%s' "$sync_body" | jq -e '.merge_type' >/dev/null 2>&1; then
+            echo "  fork synced: $(printf '%s' "$sync_body" | jq -r '.merge_type')"
+          else
+            echo "::warning::fork sync did not report a merge (${sync_msg:-no message})."
+            echo "::warning::If komac then fails at CreateRef, sync the fork manually:"
+            echo "::warning::  https://github.com/$login/winget-pkgs -> Sync fork"
           fi
 
           # Download prebuilt komac (linux-x64 musl) — building from source
@@ -4606,6 +4678,11 @@ jobs:
             VERSION="${REF#refs/tags/v}"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Configure apt before anything installs: GitHub's Azure mirror
+      # regularly goes dark and apt then walks every repo through a long
+      # connect timeout before failing over.
+      - uses: ./.github/actions/harden-apt
 
       - name: Install BLAKE2s helper
         run: |

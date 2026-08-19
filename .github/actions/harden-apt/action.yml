@@ -1,0 +1,62 @@
+name: "Harden apt"
+description: >-
+  Make apt fail over fast when GitHub's azure.archive.ubuntu.com mirror is
+  unreachable. No-op on non-Linux runners.
+
+# WHY THIS EXISTS
+#   GitHub's Ubuntu runners list azure.archive.ubuntu.com first in
+#   /etc/apt/apt-mirrors.txt, with archive.ubuntu.com as the fallback.  When the
+#   Azure mirror is down -- which happens regularly -- apt walks EVERY repo and
+#   EVERY package index through it on a long connect timeout before failing
+#   over.  On 2026-08-19 that stalled the migration round-trip job past its
+#   15-minute timeout (reported as a bare "The operation was canceled" that read
+#   like a migration failure), and left the NetBSD, EL9 and Playwright jobs
+#   grinding.
+#
+#   Callers we control can pass `-o Acquire::...` inline.  Callers we DON'T
+#   control cannot: `npx playwright install --with-deps` shells out to apt-get
+#   itself.  Configuring apt on the machine is the only fix that covers those,
+#   which is why this is an action rather than a flag.
+#
+#   Safe to call unconditionally, including on macOS/Windows matrix legs.
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ "${RUNNER_OS:-}" != "Linux" ]; then
+          echo "harden-apt: ${RUNNER_OS:-unknown} runner, nothing to do"
+          exit 0
+        fi
+
+        # 1. Drop the Azure mirror so apt goes straight to archive.ubuntu.com.
+        #    Guard against emptying the file: an empty apt-mirrors.txt leaves
+        #    apt with no sources at all, which would break every install rather
+        #    than merely slow it down.
+        MIRRORS=/etc/apt/apt-mirrors.txt
+        if [ -f "$MIRRORS" ] && grep -q 'azure\.archive\.ubuntu\.com' "$MIRRORS"; then
+          if grep -v 'azure\.archive\.ubuntu\.com' "$MIRRORS" | grep -q '[^[:space:]]'; then
+            sudo sed -i '/azure\.archive\.ubuntu\.com/d' "$MIRRORS"
+            echo "harden-apt: removed the Azure mirror; remaining:"
+            sed 's/^/  /' "$MIRRORS"
+          else
+            echo "harden-apt: Azure is the ONLY mirror listed; leaving it in place"
+            echo "  (removing it would leave apt with no sources)"
+          fi
+        else
+          echo "harden-apt: no Azure mirror entry to remove"
+        fi
+
+        # 2. Cap timeouts/retries for everything else, including apt calls made
+        #    by tools we do not control.  This applies even if step 1 found
+        #    nothing, so a different slow mirror still fails over quickly.
+        sudo tee /etc/apt/apt.conf.d/99-ci-apt-timeouts > /dev/null <<'CONF'
+        Acquire::Retries "3";
+        Acquire::http::Timeout "20";
+        Acquire::https::Timeout "20";
+        Acquire::ftp::Timeout "20";
+        CONF
+        echo "harden-apt: wrote /etc/apt/apt.conf.d/99-ci-apt-timeouts"
