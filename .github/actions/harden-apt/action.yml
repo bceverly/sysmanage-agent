@@ -53,10 +53,23 @@ runs:
         # 2. Cap timeouts/retries for everything else, including apt calls made
         #    by tools we do not control.  This applies even if step 1 found
         #    nothing, so a different slow mirror still fails over quickly.
+        #
+        #    ForceIPv4 matters as much as the timeouts.  The runners publish AAAA
+        #    records for the archives but the IPv6 path is frequently dead, so apt
+        #    connects to the v6 address first and waits out a full TCP timeout per
+        #    host before retrying over v4.  That is invisible in the log -- it just
+        #    looks like a slow mirror -- and it is per-repo, so it multiplies.
+        #
+        #    BOTH http and https must be set.  Setting only http left the archive
+        #    fetches unbounded, because archive.ubuntu.com is served over https:
+        #    apt got past the dead Azure mirror and then stalled for hours on the
+        #    fallback it had just failed over to.
         sudo tee /etc/apt/apt.conf.d/99-ci-apt-timeouts > /dev/null <<'CONF'
+        Acquire::ForceIPv4 "true";
         Acquire::Retries "3";
         Acquire::http::Timeout "20";
         Acquire::https::Timeout "20";
         Acquire::ftp::Timeout "20";
         CONF
         echo "harden-apt: wrote /etc/apt/apt.conf.d/99-ci-apt-timeouts"
+        sed 's/^/  /' /etc/apt/apt.conf.d/99-ci-apt-timeouts

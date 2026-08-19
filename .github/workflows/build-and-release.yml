@@ -50,6 +50,14 @@ on:
           - "yes"
           - "no"
 
+# Serialize, do NOT cancel.  This workflow publishes: killing it mid-flight
+# can leave a half-published release (R2 objects, GitHub assets, PPA/COPR/OBS
+# submissions) to clean up by hand.  Grouping still stops two releases from
+# building at once and starving the runner pool.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: write  # Needed for creating releases and pushing to repos
 
@@ -139,16 +147,24 @@ jobs:
       - name: Install build dependencies
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y \
-            debhelper \
-            dh-python \
-            python3-all \
-            python3-setuptools \
-            python3-pip \
-            build-essential \
-            devscripts \
-            lintian
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in debhelper dh-python python3-all python3-setuptools python3-pip build-essential devscripts lintian; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Install SBOM generation tools
         run: |
@@ -317,8 +333,24 @@ jobs:
       - name: Install RPM build tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y rpm createrepo-c python3-dev python3-pip python3-setuptools systemd
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in rpm createrepo-c python3-dev python3-pip python3-setuptools systemd; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Determine version
         id: version
@@ -469,8 +501,24 @@ jobs:
       - name: Install RPM build tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y rpm createrepo-c python3-dev python3-pip python3-setuptools systemd
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in rpm createrepo-c python3-dev python3-pip python3-setuptools systemd; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Determine version
         id: version
@@ -989,18 +1037,24 @@ jobs:
       - name: Install FreeBSD package build tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y \
-            libarchive-tools \
-            python3-dev \
-            python3-pip \
-            python3-setuptools \
-            build-essential \
-            pkg-config \
-            gzip \
-            tar \
-            xz-utils \
-            zstd
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in libarchive-tools python3-dev python3-pip python3-setuptools build-essential pkg-config gzip tar xz-utils zstd; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Set up FreeBSD package structure
         env:
@@ -1627,8 +1681,24 @@ jobs:
       - name: Install Flatpak build dependencies
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in flatpak flatpak-builder; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --user -y flathub org.freedesktop.Platform//24.08
           flatpak install --user -y flathub org.freedesktop.Sdk//24.08
@@ -3150,8 +3220,24 @@ jobs:
       - name: Install OBS tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y osc
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in osc; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Configure OBS credentials
         env:
@@ -3338,8 +3424,24 @@ jobs:
       - name: Install Copr CLI and build tools
         run: |
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update
-          sudo apt-get install -y python3-pip rpm
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in python3-pip rpm; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
           # Install copr-cli via pip (not available in Ubuntu repos).
           # `rich` is an undeclared runtime dep in copr-cli >= 1.115 — without
@@ -4690,8 +4792,24 @@ jobs:
           # binary from coreutils on Ubuntu 24.04 supports BLAKE2b but
           # *not* BLAKE2s; install ``rhash`` which provides BLAKE2s.
           echo 'Acquire::ForceIPv4 "true"; Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99hardening >/dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends rhash
+          # Skip apt entirely when every package is already present.  apt's
+          # Acquire::*::Timeout is an INACTIVITY timeout, not a total-transfer
+          # budget: a mirror that dribbles bytes slowly never trips it, which is
+          # how this step burned a whole 60-minute job timeout.  The cheapest fix
+          # is not to talk to the archive at all -- most of these ship on the
+          # runner image already.  dpkg-query (not `command -v`) because several
+          # of these packages install no binary of their own.
+          MISSING=""
+          for p in rhash; do
+            dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
+          done
+          if [ -z "$MISSING" ]; then
+            echo "apt: all packages already present, skipping update/install"
+          else
+            echo "apt: installing:$MISSING"
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends $MISSING
+          fi
 
       - name: Render NetBSD pkgsrc tree
         id: render

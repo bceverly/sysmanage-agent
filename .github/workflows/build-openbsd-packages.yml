@@ -8,6 +8,14 @@ on:
         required: true
         default: '0.9.9.8'
 
+# Serialize, do NOT cancel.  This workflow publishes: killing it mid-flight
+# can leave a half-published release (R2 objects, GitHub assets, PPA/COPR/OBS
+# submissions) to clean up by hand.  Grouping still stops two releases from
+# building at once and starving the runner pool.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

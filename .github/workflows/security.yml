@@ -11,6 +11,18 @@ on:
   workflow_dispatch:
     # Allow manual triggering from GitHub Actions UI
 
+# Supersede older runs of this workflow so the newest push/tag is the one
+# holding runners.  (This is hygiene, not the fix for the 2026-08 slow builds
+# -- those were apt stalls hitting each job's own timeout, addressed by the
+# dpkg guards on the apt steps and .github/actions/harden-apt.)
+concurrency:
+  # Tag pushes share one group so a newer release supersedes the older run's
+  # CI; branch pushes stay isolated per-ref.  Keyed on github.ref alone, every
+  # tag would be its own group and back-to-back releases would never supersede
+  # each other.
+  group: ${{ github.workflow }}-${{ startsWith(github.ref, 'refs/tags/') && 'tags' || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   security-events: write
