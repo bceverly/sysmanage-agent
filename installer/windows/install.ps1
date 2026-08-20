@@ -232,9 +232,25 @@ try {
         }
 
         # Use python -m pip for better reliability, redirect ALL output to log
+        #
+        # RETRY: unlike the server MSI (which installs from a bundled offline
+        # wheel set), the agent resolves from PyPI at install time, so this step
+        # depends on the target's network at exactly the moment an operator is
+        # installing.  A single transient DNS/TLS blip should not cost the whole
+        # install.  Three attempts with backoff; pip is idempotent, so a partial
+        # first attempt costs nothing on the retry.
         Write-Log "Running: pip install -r requirements-prod.txt"
         Write-Stage "12" "pip install starting"
-        & $VenvPython -m pip install -r $RequirementsFile --disable-pip-version-check 2>&1 | Tee-Object -FilePath $LogFile -Append
+        $pipAttempts = 3
+        for ($pipTry = 1; $pipTry -le $pipAttempts; $pipTry++) {
+            & $VenvPython -m pip install -r $RequirementsFile --disable-pip-version-check 2>&1 | Tee-Object -FilePath $LogFile -Append
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($pipTry -lt $pipAttempts) {
+                $wait = $pipTry * 10
+                Write-Log "pip install attempt $pipTry/$pipAttempts failed (exit $LASTEXITCODE); retrying in ${wait}s..."
+                Start-Sleep -Seconds $wait
+            }
+        }
         Write-Stage "13" "pip install LASTEXITCODE=$LASTEXITCODE"
 
         if ($LASTEXITCODE -eq 0) {
@@ -370,10 +386,29 @@ try {
 # Python 3.9+ and re-run for MajorUpgrade to re-fire the CAs).
 Write-Stage "22" "post-finally code reached; InstallSuccess=$InstallSuccess"
 if (-not $InstallSuccess) {
+    # The exit code stays 0 (see the block above) -- but a failure must not be
+    # INVISIBLE.  This custom action runs with -WindowStyle Hidden, so nothing
+    # written here reaches a human: the operator sees only Windows reporting a
+    # successful install, and finds out later when the agent never checks in.
+    # The server MSI hit exactly this: a completely broken install reported
+    # success while its service restart-looped.  Record it where it can be found
+    # after the fact.
+    try {
+        if (-not [System.Diagnostics.EventLog]::SourceExists("SysManageAgent")) {
+            [System.Diagnostics.EventLog]::CreateEventSource("SysManageAgent", "Application")
+        }
+        Write-EventLog -LogName Application -Source "SysManageAgent" -EntryType Error -EventId 1000 `
+            -Message ("SysManage Agent installation did not complete successfully. " +
+                      "The MSI was allowed to land so the install can be repaired in place. " +
+                      "See $LogFile for the failure and recovery steps.")
+    } catch { }
+
     Write-Host ""
     Write-Host "=====================================" -ForegroundColor Yellow
     Write-Host "Install step had errors -- MSI install will still complete." -ForegroundColor Yellow
+    Write-Host "The agent will NOT run until this is fixed." -ForegroundColor Yellow
     Write-Host "See $LogFile for the failure and recovery steps." -ForegroundColor Yellow
+    Write-Host "An error has also been written to the Application event log." -ForegroundColor Yellow
     Write-Host "=====================================" -ForegroundColor Yellow
     Write-Host ""
 }

@@ -32,6 +32,27 @@ runs:
           exit 0
         fi
 
+        # Nothing to configure where there is no apt.  Jobs that run inside a
+        # container may be on Alpine, or a slim image with no apt at all.
+        if ! command -v apt-get >/dev/null 2>&1; then
+          echo "harden-apt: no apt-get on this image, nothing to do"
+          exit 0
+        fi
+
+        # Do not assume sudo exists.  Container jobs (e.g. `container:
+        # semgrep/semgrep`) already run as root and ship no sudo, so a bare
+        # `sudo tee` there fails with 127 and kills the job -- which is exactly
+        # what this action was added to prevent.
+        if [ "$(id -u)" -eq 0 ]; then
+          SUDO=""
+        elif command -v sudo >/dev/null 2>&1; then
+          SUDO="sudo"
+        else
+          echo "harden-apt: not root and no sudo available; skipping (nothing this"
+          echo "  action does is worth failing a job over)"
+          exit 0
+        fi
+
         # 1. Drop the Azure mirror so apt goes straight to archive.ubuntu.com.
         #    Guard against emptying the file: an empty apt-mirrors.txt leaves
         #    apt with no sources at all, which would break every install rather
@@ -39,7 +60,7 @@ runs:
         MIRRORS=/etc/apt/apt-mirrors.txt
         if [ -f "$MIRRORS" ] && grep -q 'azure\.archive\.ubuntu\.com' "$MIRRORS"; then
           if grep -v 'azure\.archive\.ubuntu\.com' "$MIRRORS" | grep -q '[^[:space:]]'; then
-            sudo sed -i '/azure\.archive\.ubuntu\.com/d' "$MIRRORS"
+            $SUDO sed -i '/azure\.archive\.ubuntu\.com/d' "$MIRRORS"
             echo "harden-apt: removed the Azure mirror; remaining:"
             sed 's/^/  /' "$MIRRORS"
           else
@@ -64,7 +85,8 @@ runs:
         #    fetches unbounded, because archive.ubuntu.com is served over https:
         #    apt got past the dead Azure mirror and then stalled for hours on the
         #    fallback it had just failed over to.
-        sudo tee /etc/apt/apt.conf.d/99-ci-apt-timeouts > /dev/null <<'CONF'
+        $SUDO mkdir -p /etc/apt/apt.conf.d
+        $SUDO tee /etc/apt/apt.conf.d/99-ci-apt-timeouts > /dev/null <<'CONF'
         Acquire::ForceIPv4 "true";
         Acquire::Retries "3";
         Acquire::http::Timeout "20";

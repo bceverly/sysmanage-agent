@@ -31,7 +31,8 @@ RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			devel/py-aiofiles${MODPY_FLAVOR} \
 			databases/py-sqlalchemy${MODPY_FLAVOR} \
 			databases/py-alembic${MODPY_FLAVOR} \
-			textproc/py-defusedxml${MODPY_FLAVOR}
+			textproc/py-defusedxml${MODPY_FLAVOR} \
+			devel/py-packaging${MODPY_FLAVOR}
 
 NO_BUILD =		Yes
 NO_TEST =		Yes

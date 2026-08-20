@@ -59,6 +59,23 @@ alembic>=1.16.5
 Mako>=1.3.12
 idna>=3.15
 
+# packaging — imported directly by
+# src/sysmanage_agent/operations/package_compliance_operations.py.  It was never
+# declared, so only the FreeBSD port (which lists py-packaging in RUN_DEPENDS)
+# actually got it; every pip-installed platform fell through the module's
+# try/except ImportError to _lex_compare().  That is not a graceful degradation,
+# it is WRONG ANSWERS: lexical comparison sorts "1.10" before "1.9", and every
+# "~=" constraint reports non-compliant with "compatible-release (~=) requires
+# the packaging library".  Pure-Python (py3-none-any), so it installs anywhere.
+#
+# NOT declared here on purpose: netifaces, also imported (guarded) by
+# registration/discovery.py.  netifaces 0.11.0 is from 2021 and publishes NO
+# wheel usable on cp312+, so pinning it would force a source build needing MSVC
+# on Windows and break the install outright.  The FreeBSD port gets it from
+# ports where a maintained build exists; everywhere else the guarded fallback in
+# discovery.py is the intended path.
+packaging>=24.0
+
 # Development dependencies for linting and testing
 babel>=2.12.0  # pybabel CLI for i18n-validate
 # black is dev-only (``make lint``).  CVE-2026-32274 (arbitrary file writes

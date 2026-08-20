@@ -33,6 +33,7 @@ DEPENDS+=	${PYPKGPREFIX}-aiofiles-[0-9]*:../../devel/py-aiofiles
 DEPENDS+=	${PYPKGPREFIX}-sqlalchemy-[0-9]*:../../databases/py-sqlalchemy
 DEPENDS+=	${PYPKGPREFIX}-alembic-[0-9]*:../../databases/py-alembic
 DEPENDS+=	${PYPKGPREFIX}-defusedxml-[0-9]*:../../textproc/py-defusedxml
+DEPENDS+=	${PYPKGPREFIX}-packaging-[0-9]*:../../devel/py-packaging
 
 PYTHON_VERSIONS_INCOMPATIBLE=	27
 

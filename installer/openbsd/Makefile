@@ -23,7 +23,11 @@ RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			www/py-aiohttp${MODPY_FLAVOR} \
 			security/py-cryptography${MODPY_FLAVOR} \
 			databases/py-sqlalchemy${MODPY_FLAVOR} \
-			databases/py-alembic${MODPY_FLAVOR}
+			databases/py-alembic${MODPY_FLAVOR} \
+			sysutils/py-psutil${MODPY_FLAVOR} \
+			textproc/py-defusedxml${MODPY_FLAVOR} \
+			security/py-bcrypt${MODPY_FLAVOR} \
+			devel/py-packaging${MODPY_FLAVOR}
 
 NO_BUILD =		Yes
 NO_TEST =		Yes
