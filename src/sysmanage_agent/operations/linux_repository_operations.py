@@ -14,7 +14,7 @@ import os
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.i18n import N_, _
 
 # Module-level constants for repeated strings

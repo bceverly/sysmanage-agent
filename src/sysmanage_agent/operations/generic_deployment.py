@@ -18,7 +18,7 @@ import shutil
 import tempfile
 from typing import Any, Dict, Optional
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.i18n import _
 
 # ``asyncio`` is imported (used by the command-sequence handlers below) and

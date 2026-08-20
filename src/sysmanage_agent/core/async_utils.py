@@ -15,7 +15,7 @@ import subprocess  # nosec B404 # Required for CalledProcessError
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 
 
 @dataclass

@@ -164,6 +164,43 @@ HANDLERS = {
 }
 
 
+def _parse_version(text: str):
+    """``"v3.5.1.26"`` -> ``(3, 5, 1, 26)``; None when not numeric-dotted."""
+    try:
+        return tuple(int(p) for p in text.lstrip("v").split("."))
+    except ValueError:
+        return None
+
+
+def _assert_newer(candidate: str) -> int:
+    """Exit non-zero unless ``candidate`` beats every tag we know about.
+
+    Releases only ever move forward.  Re-cutting a version -- or typing an
+    older one -- would rewrite the on-disk version markers to a value CI has
+    already built, or will never build.  Soft-skips when no tag is resolvable
+    (offline with a shallow checkout), matching the drift check.
+    """
+    want = _parse_version(candidate)
+    if want is None:
+        print(f"ERROR: {candidate!r} is not a numeric dotted version", file=sys.stderr)
+        return 1
+    highest = fetch_highest_tag()
+    if highest is None:
+        print("WARNING: no tags resolvable; skipping newer-than check", file=sys.stderr)
+        return 0
+    have = _parse_version(highest)
+    if have is not None and want <= have:
+        rel = "the same as" if want == have else "older than"
+        print(
+            f"ERROR: v{candidate.lstrip('v')} is {rel} the highest existing tag "
+            f"v{highest}.  Releases only move forward -- pick a higher version.",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"Version check: v{candidate.lstrip('v')} > highest existing tag v{highest}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Compare on-disk version markers to the highest " "GitHub tag."
@@ -171,14 +208,41 @@ def main() -> int:
     parser.add_argument(
         "--fix", action="store_true", help="Rewrite drifted files in-place."
     )
+    parser.add_argument(
+        "--assert-newer",
+        metavar="X.Y.Z",
+        help=(
+            "Exit non-zero unless X.Y.Z is strictly greater than the highest "
+            "tag known locally or on GitHub.  Guards `make release` against "
+            "re-cutting a released version or going backwards."
+        ),
+    )
+    parser.add_argument(
+        "--version",
+        metavar="X.Y.Z",
+        help=(
+            "Treat this as the release version instead of resolving the "
+            "highest tag.  Without it this script needs the tag to ALREADY "
+            "exist, which forces `git tag` to run before the version-bump "
+            "commit -- and a tag cut before a commit can never contain it. "
+            "Pass --version and the tag can be cut last, on the commit that "
+            "actually carries the bump.  See `make release`."
+        ),
+    )
     args = parser.parse_args()
 
-    expected = fetch_highest_tag()
-    if expected is None:
-        # Soft-skip: offline / rate-limited / repo has no tags yet.
-        return 0
+    if args.assert_newer:
+        return _assert_newer(args.assert_newer)
 
-    print(f"Highest GitHub tag ({GITHUB_REPO}): v{expected}")
+    if args.version:
+        expected = args.version.lstrip("v")
+        print(f"Target version (explicit): v{expected}")
+    else:
+        expected = fetch_highest_tag()
+        if expected is None:
+            # Soft-skip: offline / rate-limited / repo has no tags yet.
+            return 0
+        print(f"Highest GitHub tag ({GITHUB_REPO}): v{expected}")
     drift = []
     for rel, kind in TRACKED_FILES:
         path = REPO_ROOT / rel

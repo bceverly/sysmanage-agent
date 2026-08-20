@@ -27,6 +27,59 @@ fi
 
 cd "${REPO_ROOT}"
 
+# --- Tag safety ---------------------------------------------------------------
+# `git tag` stamps whatever HEAD is at that instant.  Cut the tag BEFORE the
+# commit -- which the old release ritual required, because check_version_drift.py
+# resolved the version from an already-existing tag -- and the tag names the
+# PREVIOUS commit for ever.  CI then checks out the tag and faithfully rebuilds
+# the tree without the work.  That is how v3.5.1.24 shipped with broken OpenBSD
+# and Flatpak jobs whose fixes were already sitting on main, and v3.5.1.25 the
+# same way for the Windows ARM64 MSI.
+#
+# `make release VERSION=x.y.z` cuts the tag last and cannot hit this.  This
+# check is the backstop for tags cut by hand.  It fires ONLY when the tag is a
+# strict ancestor of HEAD, so deliberately tagging an unrelated commit is
+# unaffected.  Override for a deliberate historical tag:
+#     SYSMANAGE_ALLOW_STALE_TAG=1 git push origin <tag>
+stale_tag=""
+if [ -z "${SYSMANAGE_ALLOW_STALE_TAG:-}" ]; then
+while read -r local_ref local_sha _remote_ref _remote_sha; do
+case "${local_ref}" in refs/tags/*) ;; *) continue ;; esac
+case "${local_sha}" in *[!0]*) ;; *) continue ;; esac
+tagged="$(git rev-parse -q --verify "${local_sha}^{commit}" 2>/dev/null || true)"
+[ -n "${tagged}" ] || continue
+head_sha="$(git rev-parse -q --verify HEAD 2>/dev/null || true)"
+[ -n "${head_sha}" ] || continue
+[ "${tagged}" != "${head_sha}" ] || continue
+git merge-base --is-ancestor "${tagged}" "${head_sha}" 2>/dev/null || continue
+behind="$(git rev-list --count "${tagged}..${head_sha}" 2>/dev/null || echo '?')"
+tag_name="${local_ref#refs/tags/}"
+echo ""
+echo "============================================================"
+echo " Pre-push BLOCKED: ${tag_name} is ${behind} commit(s) behind HEAD."
+echo "============================================================"
+echo ""
+echo "   ${tag_name}  ->  $(git log --oneline -1 "${tagged}")"
+echo "   HEAD         ->  $(git log --oneline -1 "${head_sha}")"
+echo ""
+echo " CI checks out the TAG, so it would rebuild the older tree and"
+echo " nothing in the commit(s) above would ship."
+echo ""
+echo " Move the tag onto this commit, then push it:"
+echo ""
+echo "     git tag -f -a ${tag_name} -m '<message>' && git push -f origin ${tag_name}"
+echo ""
+echo " Or cut releases with 'make release VERSION=x.y.z', which tags last."
+echo ""
+echo " Tagging an older commit on purpose?"
+echo "     SYSMANAGE_ALLOW_STALE_TAG=1 git push origin ${tag_name}"
+echo ""
+stale_tag=1
+done
+fi
+[ -z "${stale_tag}" ] || exit 1
+
+
 # Skip the check unless the repo declares a `lint:` target.  Three
 # practical reasons:
 #   1. If someone sets this globally (`git config --global

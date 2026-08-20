@@ -22,17 +22,22 @@ PERMIT_PACKAGE =	Yes
 
 MODULES =		lang/python
 
+# NOTE: py-packaging is in sysutils/ on OpenBSD, not devel/ (devel/ is the
+# FreeBSD path; using it here breaks `make package` on 7.8/7.9).
+# aiofiles is deliberately NOT listed: it has no OpenBSD port in any category
+# as of 7.9, so the agent imports it through
+# src/sysmanage_agent/core/aiofiles_compat.py, which falls back to a
+# thread-backed equivalent when the real library is absent.
 RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			textproc/py-yaml${MODPY_FLAVOR} \
 			www/py-aiohttp${MODPY_FLAVOR} \
 			security/py-cryptography${MODPY_FLAVOR} \
 			security/py-bcrypt${MODPY_FLAVOR} \
 			sysutils/py-psutil${MODPY_FLAVOR} \
-			devel/py-aiofiles${MODPY_FLAVOR} \
 			databases/py-sqlalchemy${MODPY_FLAVOR} \
 			databases/py-alembic${MODPY_FLAVOR} \
 			textproc/py-defusedxml${MODPY_FLAVOR} \
-			devel/py-packaging${MODPY_FLAVOR}
+			sysutils/py-packaging${MODPY_FLAVOR}
 
 NO_BUILD =		Yes
 NO_TEST =		Yes

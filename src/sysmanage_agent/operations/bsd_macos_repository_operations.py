@@ -15,7 +15,7 @@ import os
 import re
 from typing import Any, Dict
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.i18n import _
 
 

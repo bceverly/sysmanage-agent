@@ -14,7 +14,7 @@ import platform
 from datetime import datetime, timezone
 from typing import Dict, Any
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 
 from src.i18n import _
 

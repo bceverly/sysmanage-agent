@@ -18,6 +18,10 @@ PERMIT_PACKAGE =	Yes
 
 MODULES =		lang/python
 
+# NOTE: py-packaging lives in sysutils/ on OpenBSD, NOT devel/ -- devel/ is
+# the FreeBSD path and copying it here made `make package` die with
+# "Broken dependency: devel/py-packaging non existent" on 7.8 and 7.9.
+# Verified against ports/sysutils/py-packaging rev 1.25 (7.8) / 1.26 (7.9).
 RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			textproc/py-yaml${MODPY_FLAVOR} \
 			www/py-aiohttp${MODPY_FLAVOR} \
@@ -26,7 +30,8 @@ RUN_DEPENDS =		net/py-websockets${MODPY_FLAVOR} \
 			databases/py-alembic${MODPY_FLAVOR} \
 			sysutils/py-psutil${MODPY_FLAVOR} \
 			textproc/py-defusedxml${MODPY_FLAVOR} \
-			security/py-bcrypt${MODPY_FLAVOR}
+			security/py-bcrypt${MODPY_FLAVOR} \
+			sysutils/py-packaging${MODPY_FLAVOR}
 
 NO_BUILD =		Yes
 NO_TEST =		Yes

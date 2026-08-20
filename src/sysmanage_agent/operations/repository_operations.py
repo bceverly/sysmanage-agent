@@ -12,7 +12,7 @@ import os
 import platform
 from typing import Any, Dict, Optional
 
-import aiofiles
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.i18n import N_, _
 
 # Constants for error messages used in multiple places
