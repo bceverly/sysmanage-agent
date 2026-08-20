@@ -1689,7 +1689,11 @@ jobs:
           # runner image already.  dpkg-query (not `command -v`) because several
           # of these packages install no binary of their own.
           MISSING=""
-          for p in flatpak flatpak-builder; do
+          # elfutils is REQUIRED, not optional: flatpak-builder shells out to
+          # eu-strip/eu-elfcompress to split debuginfo, and on Ubuntu it pulls
+          # elfutils in only via Recommends -- which --no-install-recommends
+          # suppresses.  Name it explicitly rather than depending on recommends.
+          for p in flatpak flatpak-builder elfutils; do
             dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || MISSING="$MISSING $p"
           done
           if [ -z "$MISSING" ]; then
