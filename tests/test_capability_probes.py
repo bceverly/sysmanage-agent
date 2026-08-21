@@ -80,11 +80,38 @@ def test_platform_gated_commands_survive_on_their_own_platform(command, ok_syste
 
 
 def test_missing_tool_suppresses_ubuntu_pro():
-    """Alpine and the BSDs have no `pro` CLI."""
+    """On Ubuntu the `pro` CLI is a real gap, not an inapplicable capability.
+
+    ``distro_ids`` must be injected: without it the probe reads the REAL
+    /etc/os-release, so this passed on the Linux runners and failed on the
+    macOS and Windows ones -- where there is no os-release, the host is not
+    Ubuntu, and the reason is correctly WRONG_PLATFORM rather than the
+    MISSING_TOOL this test is about.  The assertion was right; the setup was
+    incomplete.
+    """
     result = detect_suppressed(
-        ["ubuntu_pro_attach"], system="Linux", which=NO_TOOLS_PRESENT
+        ["ubuntu_pro_attach"],
+        system="Linux",
+        which=NO_TOOLS_PRESENT,
+        distro_ids={"ubuntu"},
     )
     assert result == {"ubuntu_pro_attach": REASON_MISSING_TOOL}
+
+
+def test_ubuntu_pro_is_wrong_platform_where_there_is_no_os_release():
+    """What the macOS/Windows runners actually exercise.
+
+    A host with no os-release cannot be Ubuntu, so `pro` being absent is not a
+    gap -- pinning it here means the distinction is asserted rather than
+    inferred from whichever OS the suite happens to run on.
+    """
+    result = detect_suppressed(
+        ["ubuntu_pro_attach"],
+        system="Darwin",
+        which=NO_TOOLS_PRESENT,
+        distro_ids=frozenset(),
+    )
+    assert result == {"ubuntu_pro_attach": REASON_WRONG_PLATFORM}
 
 
 def test_any_one_alternative_tool_is_enough():
