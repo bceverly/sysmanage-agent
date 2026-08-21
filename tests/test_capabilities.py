@@ -184,4 +184,9 @@ def test_registration_drops_commands_this_host_cannot_deliver(monkeypatch):
     }
     report = reg.get_capability_report()
     assert report["commands"] == ["get_system_info"]
-    assert report["unavailable"]["virtualization"] == "wrong_platform"
+    # bhyve is INAPPLICABLE on Linux, not missing, so it must not be the
+    # reason the group is unavailable -- this stub agent simply routes no
+    # other virtualization handler.  It must also never appear as "partial",
+    # which is the bug this rule exists to prevent.
+    assert report["unavailable"]["virtualization"] == "no_handler"
+    assert "virtualization" not in report["partial"]

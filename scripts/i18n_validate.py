@@ -334,14 +334,14 @@ def cmd_validate() -> int:
     if failures:
         print(f"\nFAIL: {failures} issue(s)", file=sys.stderr)
         print(
-            "\nTo fix, run these in order ('make translate' only fills EMPTY msgstr,\n"
-            "so new strings must first be merged in — i18n-merge also clears fuzzy\n"
-            "guesses and seeds English, which translate does not touch):\n"
-            "  make i18n-extract                              # source -> messages.pot\n"
-            "  make i18n-merge                                # .pot -> locale .po (add msgids, clear fuzzy, seed en)\n"
-            "  make translate SERVICE=http://<host>:8765      # fill foreign-language gaps via the GPU service\n"
-            "  make i18n-compile                              # .po -> .mo\n"
-            "  make i18n-validate                             # re-check (should pass)\n"
+            "\nTo fix:\n"
+            "  make i18n-fix SERVICE=http://<host>:8765\n"
+            "\nThat runs extract -> merge -> requeue -> translate -> compile ->\n"
+            "validate in the one order that works: `translate` only fills EMPTY\n"
+            "msgstr, so new strings must be merged in FIRST or it silently does\n"
+            "nothing, and .mo must be recompiled AFTER or the runtime keeps\n"
+            "serving the old text.  Run the steps by hand only if you need to\n"
+            "stop between them.\n"
             "(SERVICE also reads $TRANSLATION_SERVICE_URL; defaults to http://localhost:8765.)",
             file=sys.stderr,
         )

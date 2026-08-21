@@ -23,7 +23,10 @@ later needs no new plumbing.
 
 import pytest
 
-from src.sysmanage_agent.core.capabilities import build_capability_report
+from src.sysmanage_agent.core.capabilities import (
+    CAPABILITY_GROUPS,
+    build_capability_report,
+)
 from src.sysmanage_agent.core.capability_probes import (
     REASON_BUILD_EXCLUDED,
     REASON_MISSING_TOOL,
@@ -121,18 +124,41 @@ def test_suppressed_commands_leave_the_gate_list():
 
     assert "initialize_bhyve" not in report["commands"]
     assert "get_system_info" in report["commands"]
-    assert report["unavailable"]["virtualization"] == REASON_WRONG_PLATFORM
+    # Unavailable because this stub routes no other virtualization handler --
+    # NOT because of bhyve, which cannot exist on Linux and is therefore
+    # excluded from the analysis entirely.
+    assert report["unavailable"]["virtualization"] == "no_handler"
+    assert "virtualization" not in report["partial"]
 
 
 def test_group_reason_falls_back_when_causes_differ():
-    """Mixed causes must not claim a single misleading reason."""
+    """Mixed causes must not claim a single misleading reason.
+
+    Both causes here are APPLICABLE ones.  An inapplicable cause is filtered
+    out before this fallback is reached, which the next test pins down.
+    """
+    handlers = {"initialize_lxd": object(), "initialize_kvm": object()}
+    suppressed = {
+        "initialize_lxd": REASON_MISSING_TOOL,
+        "initialize_kvm": REASON_BUILD_EXCLUDED,
+    }
+    report = build_capability_report(handlers, suppressed)
+    assert report["unavailable"]["virtualization"] == "no_handler"
+
+
+def test_inapplicable_cause_is_filtered_before_the_reason_is_chosen():
+    """An OS-inapplicable command must not muddy an otherwise clear reason.
+
+    bhyve on Linux is not a cause of anything; the only real cause here is the
+    missing LXD tool, so that is what an operator should be told.
+    """
     handlers = {"initialize_bhyve": object(), "initialize_lxd": object()}
     suppressed = {
         "initialize_bhyve": REASON_WRONG_PLATFORM,
         "initialize_lxd": REASON_MISSING_TOOL,
     }
     report = build_capability_report(handlers, suppressed)
-    assert report["unavailable"]["virtualization"] == "no_handler"
+    assert report["unavailable"]["virtualization"] == REASON_MISSING_TOOL
 
 
 def test_report_without_suppressions_is_unchanged():
@@ -178,3 +204,90 @@ class TestBuildTimeSeam:
             )
             == {}
         )
+
+
+# ---------------------------------------------------------------------------
+# OS applicability (Phase 19 fix)
+#
+# The reported symptom: a Linux KVM host showed virtualization as PARTIALLY
+# supported because it could not run bhyve, vmm or WSL.  Those are FreeBSD's,
+# OpenBSD's and Windows' hypervisors -- absence is not a limitation, it is the
+# taxonomy not applying.  The same class of error made every non-Ubuntu host
+# "limited" for lacking Ubuntu Pro.
+# ---------------------------------------------------------------------------
+
+_ALL_COMMANDS = sorted({c for g in CAPABILITY_GROUPS.values() for c in g})
+
+
+def _report_for(system, distro_ids, tools):
+    handlers = {c: object() for c in _ALL_COMMANDS}
+    suppressed = detect_suppressed(
+        _ALL_COMMANDS,
+        system=system,
+        distro_ids=distro_ids,
+        which=lambda tool: f"/usr/bin/{tool}" if tool in tools else None,
+    )
+    return build_capability_report(handlers, suppressed)
+
+
+_LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd"}
+
+
+def test_linux_host_is_not_partial_for_lacking_bhyve_vmm_and_wsl():
+    """The exact bug: a fully capable KVM host reported as degraded."""
+    report = _report_for("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"})
+    assert "virtualization" not in report["partial"]
+    assert "virtualization" in report["capabilities"]
+    assert not report["unavailable"] and not report["partial"]
+
+
+def test_bsd_host_is_not_partial_for_lacking_kvm_and_lxd():
+    """The mirror image -- fixing only the reported direction is half a fix."""
+    for system in ("FreeBSD", "OpenBSD"):
+        report = _report_for(system, [], {"bhyve"})
+        assert "virtualization" not in report["partial"], system
+        assert not report["unavailable"], system
+
+
+def test_ubuntu_pro_is_not_applicable_off_ubuntu():
+    """Not a missing tool: the `pro` CLI does not exist outside Ubuntu."""
+    report = _report_for("Linux", ["alpine"], _LINUX_VIRT_TOOLS)
+    assert report["not_applicable"]["ubuntu_pro"] == REASON_WRONG_PLATFORM
+    assert "ubuntu_pro" not in report["unavailable"]
+    assert not report["unavailable"] and not report["partial"]
+
+
+def test_ubuntu_pro_is_still_a_real_gap_on_ubuntu():
+    """Applicability must not become a blanket excuse.
+
+    On Ubuntu the `pro` CLI is installable, so its absence is a genuine gap and
+    the host SHOULD read as limited.
+    """
+    report = _report_for("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS)
+    assert report["unavailable"]["ubuntu_pro"] == REASON_MISSING_TOOL
+    assert "ubuntu_pro" not in report["not_applicable"]
+
+
+def test_ubuntu_derivatives_count_as_ubuntu():
+    """ID_LIKE carries the derivatives; Mint ships `pro` just as Ubuntu does."""
+    report = _report_for("Linux", ["linuxmint", "ubuntu"], _LINUX_VIRT_TOOLS)
+    assert "ubuntu_pro" not in report["not_applicable"]
+
+
+def test_inapplicable_groups_never_make_a_host_limited():
+    """The server's rule is `limited = unavailable or partial`.
+
+    Anything OS-inapplicable must be outside both, on every platform -- that is
+    the entire contract this fix rests on.
+    """
+    for system, distro, tools in (
+        ("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"}),
+        ("Linux", ["alpine"], _LINUX_VIRT_TOOLS),
+        ("FreeBSD", [], {"bhyve"}),
+        ("OpenBSD", [], set()),
+        ("Darwin", [], set()),
+        ("Windows", [], set()),
+    ):
+        report = _report_for(system, distro, tools)
+        limited = bool(report["unavailable"] or report["partial"])
+        assert not limited, f"{system}/{distro} reports limited: {report}"

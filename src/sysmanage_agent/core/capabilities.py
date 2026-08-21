@@ -50,9 +50,19 @@ hosts that already exist.
 
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
-# Bump when the SHAPE of the report changes (new top-level keys, changed
-# semantics) — not when a capability is added, which is the normal case and
-# must not require a server change.
+from src.sysmanage_agent.core.capability_probes import INAPPLICABLE_REASONS
+
+# Bump when an older server would MISREAD the report — changed semantics for an
+# existing key, or a key it must understand to be correct.  Not when a
+# capability is added, which is the normal case.
+#
+# ``not_applicable`` was added WITHOUT a bump, deliberately.  A server that has
+# never heard of it drops the key (normalize_report keeps only known fields)
+# and computes ``limited = unavailable or partial`` exactly as before — and
+# that answer is now CORRECT, because inapplicable groups have already been
+# removed from those two by the time they are sent.  Bumping would have been
+# actively worse: MAX_SUPPORTED_SCHEMA_VERSION rejects a newer report outright,
+# so every host would read as unknown-capability until the server caught up.
 CAPABILITY_SCHEMA_VERSION = 1
 
 # Reason codes for an unavailable group.  Codes, not sentences: the server
@@ -196,6 +206,16 @@ def build_capability_report(
     of eleven virtualization commands still does virtualization, and claiming
     otherwise would be as wrong as claiming full support.  Per-command
     precision is preserved in ``commands`` for the dispatch gate.
+
+    APPLICABILITY comes first, though.  A command suppressed for a reason in
+    ``INAPPLICABLE_REASONS`` is not a gap in this agent, it is not part of the
+    taxonomy on this OS, and it is excluded from the group before any of the
+    above is computed.  Without that, every Linux host reported virtualization
+    as PARTIAL for lacking bhyve, vmm and WSL -- three hypervisors it could
+    never run -- and every non-Ubuntu host was flagged limited for lacking
+    Ubuntu Pro.  A group with nothing applicable left goes to
+    ``not_applicable`` rather than ``unavailable``, so the server's
+    ``limited = unavailable or partial`` rule stops counting it.
     """
     suppressed = dict(suppressed or {})
     routed = {str(name) for name in handlers}
@@ -206,19 +226,35 @@ def build_capability_report(
     supported: List[str] = []
     partial: Dict[str, List[str]] = {}
     unavailable: Dict[str, str] = {}
+    not_applicable: Dict[str, str] = {}
 
     for group, commands in CAPABILITY_GROUPS.items():
-        present = [c for c in commands if c in available]
+        inapplicable = [
+            c for c in commands if suppressed.get(c) in INAPPLICABLE_REASONS
+        ]
+        applicable = [c for c in commands if c not in set(inapplicable)]
+
+        if not applicable:
+            # Nothing in this group can exist on this OS.  Reported so the UI
+            # can say "not applicable" instead of going silent, but kept OUT of
+            # unavailable/partial so it never reads as a limitation.
+            reasons = set(suppressed[c] for c in inapplicable)
+            not_applicable[group] = (
+                reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
+            )
+            continue
+
+        present = [c for c in applicable if c in available]
         if not present:
             # Prefer a specific reason over the generic one: if every command
             # in the group was suppressed for the same reason, say that.
-            reasons = {suppressed[c] for c in commands if c in suppressed}
+            reasons = {suppressed[c] for c in applicable if c in suppressed}
             unavailable[group] = (
                 reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
             )
             continue
         supported.append(group)
-        missing = [c for c in commands if c not in available]
+        missing = [c for c in applicable if c not in available]
         if missing:
             partial[group] = sorted(missing)
 
@@ -228,4 +264,5 @@ def build_capability_report(
         "commands": sorted(available),
         "unavailable": dict(sorted(unavailable.items())),
         "partial": dict(sorted(partial.items())),
+        "not_applicable": dict(sorted(not_applicable.items())),
     }

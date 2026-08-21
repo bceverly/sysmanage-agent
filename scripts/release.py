@@ -187,6 +187,12 @@ def bump_markers(version: str, dry_run: bool) -> int:
     # The child writes straight to the inherited stdout; flush ours first or
     # our buffered prints surface AFTER its output and the log reads backwards.
     sys.stdout.flush()
+    # Semgrep flags this as a subprocess call reachable from the environment,
+    # which is true of the ORIGIN of `version` and not of its VALUE: main()
+    # rebuilds it from parsed integers, so it can only ever be four
+    # dot-separated numbers.  argv is a fixed list and shell=False, so even a
+    # hostile value would be one argv element, never a command.
+    # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
     result = subprocess.run(  # nosec B603 - fixed argv from this repo, no shell
         args, cwd=REPO_ROOT, check=False
     )
@@ -197,26 +203,98 @@ def bump_markers(version: str, dry_run: bool) -> int:
     return result.returncode
 
 
+def run_lint() -> int:
+    """Run the repo's own `make lint` gate, matching the pre-push hook.
+
+    Deliberately BEFORE the commit.  The hook runs this at PUSH time, which in a
+    release is after the commit and tag already exist -- so a `format-python`
+    failure (black had to reformat) would strand a tagged commit that cannot be
+    pushed.  Running it first means reformatted files land IN the release commit,
+    and any other gate failure aborts with nothing committed and nothing tagged.
+
+    Mirrors the hook's shell selection: gmake on the BSDs, and SHELL=cmd.exe on
+    Windows so make does not switch to Unix-shell mode just because MSYS put
+    sh.exe on PATH.
+    """
+    if not (REPO_ROOT / "Makefile").exists():
+        return 0
+    if sys.platform.startswith("win"):
+        cmd = ["make", "SHELL=cmd.exe", "lint"]
+    elif sys.platform.startswith(("freebsd", "openbsd", "netbsd")):
+        cmd = ["gmake", "lint"]
+    else:
+        cmd = ["make", "lint"]
+    print(f"=== running '{' '.join(cmd)}' before committing ===")
+    sys.stdout.flush()
+    try:
+        result = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
+            cmd, cwd=REPO_ROOT, check=False
+        )
+    except FileNotFoundError:
+        print("WARNING: make not found; skipping the lint gate", file=sys.stderr)
+        return 0
+    return result.returncode
+
+
 def main() -> int:
     """Entry point."""
     parser = argparse.ArgumentParser(
         description="Cut a release (bump, commit, tag, push)."
     )
-    parser.add_argument("--version", required=True, metavar="X.Y.Z.W")
+    parser.add_argument(
+        "--version",
+        default=None,
+        metavar="X.Y.Z.W",
+        help=(
+            "Explicit version.  Omit to auto-increment the LAST component of "
+            "the highest existing tag (3.5.1.26 -> 3.5.1.27), which is the "
+            "normal case; pass it to start a new series at a phase boundary."
+        ),
+    )
     parser.add_argument("--message", default=None, help="Commit and tag message.")
     parser.add_argument(
         "--dry-run", action="store_true", help="Run guards, change nothing."
     )
     parser.add_argument("--allow-untracked", action="store_true")
+    parser.add_argument(
+        "--skip-lint", action="store_true", help="Skip the pre-commit `make lint` gate."
+    )
+    parser.add_argument(
+        "--yes", action="store_true", help="Do not confirm an auto-derived version."
+    )
     args = parser.parse_args()
 
-    version = args.version.lstrip("v")
-    want = parse_version(version)
-    if want is None:
-        return fail(
-            f"VERSION must be four numeric parts, e.g. 3.5.1.26 (got: {args.version}).",
-            "Every tag in these repos is four-part; a short version would rewrite",
-            "the .spec/APKBUILD markers to a value CI never builds.",
+    skip_lint = args.skip_lint
+    derived = False
+    if args.version:
+        version = args.version.lstrip("v")
+        want = parse_version(version)
+        if want is None:
+            return fail(
+                f"VERSION must be four numeric parts, e.g. 3.5.1.26 (got: {args.version}).",
+                "Every tag in these repos is four-part; a short version would rewrite",
+                "the .spec/APKBUILD markers to a value CI never builds.",
+            )
+        # Rebuild from the parsed INTEGERS rather than reusing the input
+        # string.  Both are equal here by construction, but only this one is
+        # provably four numeric parts at the point it is handed to a
+        # subprocess and written into a git tag -- "it was validated earlier"
+        # is exactly the reasoning that stops holding after the next edit.
+        version = ".".join(str(part) for part in want)
+    else:
+        tags = known_tags()
+        if not tags:
+            return fail(
+                "no existing version tag to increment from.",
+                "Pass an explicit version: make release VERSION=1.0.0.0",
+            )
+        highest = max(tags)
+        want = highest[:-1] + (highest[-1] + 1,)
+        version = ".".join(str(p) for p in want)
+        derived = True
+        print(
+            f"Auto-increment: v{'.'.join(str(p) for p in highest)} -> v{version}  "
+            f"(pass VERSION=x.y.z.w to start a new series)"
         )
 
     tag = f"v{version}"
@@ -226,6 +304,15 @@ def main() -> int:
     if guard:
         return guard
 
+    # A bare `make release` now publishes.  Confirm the derived number when a
+    # human is watching -- one keystroke, and it makes a mistyped/tab-completed
+    # `make release` recoverable instead of a pushed tag and a full CI run.
+    if derived and not args.dry_run and not args.yes and sys.stdin.isatty():
+        answer = input(f"Release v{version} from this branch? [Y/n] ").strip().lower()
+        if answer and not answer.startswith("y"):
+            print("Aborted; nothing was changed.")
+            return 1
+
     if args.dry_run:
         has_markers = (REPO_ROOT / "scripts" / "check_version_drift.py").exists()
         if has_markers:
@@ -233,16 +320,24 @@ def main() -> int:
                 "--- version markers that WOULD be bumped (drift here is expected) ---"
             )
         bump_markers(version, dry_run=True)
-        bump = "bump the version markers, then " if has_markers else ""
+        bump = "bump the version markers, " if has_markers else ""
+        lint = "" if skip_lint else "run `make lint`, "
         print(
-            f"[dry-run] all guards passed.  A real run would {bump}commit any "
-            f'changes as "{message}", tag {tag} on THAT commit, then push the '
-            f"branch and the tag.  Nothing was changed."
+            f"[dry-run] all guards passed.  A real run would {bump}{lint}commit "
+            f'any changes as "{message}", tag {tag} on THAT commit, then push '
+            f"the branch and the tag.  Nothing was changed."
         )
         return 0
 
     if bump_markers(version, dry_run=False):
         return fail("version-marker bump failed; nothing committed or tagged.")
+
+    if not skip_lint and run_lint():
+        return fail(
+            "`make lint` failed -- NOTHING was committed or tagged.",
+            "If black reformatted files, just re-run: the reformatted files will",
+            "be included in the release commit this time.",
+        )
 
     dirty = git("diff", "--quiet", "HEAD", check=False).returncode != 0
     if dirty:

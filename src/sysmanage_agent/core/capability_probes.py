@@ -49,6 +49,20 @@ REASON_WRONG_PLATFORM = "wrong_platform"
 # Reserved for the build-time mechanism; nothing emits it yet.
 REASON_BUILD_EXCLUDED = "build_excluded"
 
+# Reasons that mean "this OS cannot host this capability AT ALL", as opposed to
+# "this host is missing something it could have".
+#
+# The distinction drives the limited/partial analysis, and getting it wrong is
+# what made every Linux host report virtualization as PARTIALLY supported: the
+# group carries bhyve (FreeBSD), vmm (OpenBSD) and WSL (Windows), so a
+# perfectly capable KVM host looked degraded for lacking three hypervisors it
+# could never run.  An inapplicable command is not a gap in this agent -- it is
+# not part of the taxonomy on this OS -- so it must not count toward "limited".
+#
+# REASON_MISSING_TOOL is deliberately NOT here: a missing `virsh` on Linux is a
+# real gap the operator can close by installing it.
+INAPPLICABLE_REASONS = frozenset({REASON_WRONG_PLATFORM})
+
 
 # command -> ((executable, ...), reason)
 #
@@ -83,7 +97,58 @@ _REQUIRED_PLATFORMS: Dict[str, Tuple[Tuple[str, ...], str]] = {
     "disable_bhyve": (("FreeBSD",), REASON_WRONG_PLATFORM),
     "initialize_vmm": (("OpenBSD",), REASON_WRONG_PLATFORM),
     "enable_wsl": (("Windows",), REASON_WRONG_PLATFORM),
+    # The mirror image of the entries above, and just as necessary.  KVM is a
+    # Linux KERNEL feature and LXD is Linux-only, so a FreeBSD host running
+    # bhyve was reporting virtualization as PARTIAL for lacking six commands it
+    # can never run -- the same bug as Linux-and-bhyve, pointed the other way.
+    # Fixing only the direction that was reported would have left every BSD and
+    # macOS host wrong.
+    "initialize_kvm": (("Linux",), REASON_WRONG_PLATFORM),
+    "enable_kvm_modules": (("Linux",), REASON_WRONG_PLATFORM),
+    "disable_kvm_modules": (("Linux",), REASON_WRONG_PLATFORM),
+    "setup_kvm_networking": (("Linux",), REASON_WRONG_PLATFORM),
+    "list_kvm_networks": (("Linux",), REASON_WRONG_PLATFORM),
+    "initialize_lxd": (("Linux",), REASON_WRONG_PLATFORM),
 }
+
+# command -> (distro IDs where it CAN work, reason)
+#
+# platform.system() is too coarse for capabilities that are a property of the
+# DISTRIBUTION rather than the kernel.  Ubuntu Pro is the example: the `pro`
+# CLI is Ubuntu's, so on Alpine or RHEL it is not "a missing tool the operator
+# should install", it is a facility that does not exist there -- and treating
+# it as a missing tool marked every non-Ubuntu host in the fleet as limited.
+#
+# On Ubuntu itself an absent `pro` binary stays REASON_MISSING_TOOL via
+# _REQUIRED_TOOLS below, because there it genuinely is installable.
+_REQUIRED_DISTROS: Dict[str, Tuple[Tuple[str, ...], str]] = {
+    "ubuntu_pro_attach": (("ubuntu",), REASON_WRONG_PLATFORM),
+    "ubuntu_pro_detach": (("ubuntu",), REASON_WRONG_PLATFORM),
+    "ubuntu_pro_enable_service": (("ubuntu",), REASON_WRONG_PLATFORM),
+    "ubuntu_pro_disable_service": (("ubuntu",), REASON_WRONG_PLATFORM),
+}
+
+
+def _distro_ids(os_release_path: str = "/etc/os-release") -> frozenset:
+    """``{ID}`` plus ``ID_LIKE`` entries from os-release, lowercased.
+
+    A file read, not a subprocess, so it still honours design rule 3.  Empty on
+    any platform without the file (macOS, the BSDs, Windows), which makes every
+    _REQUIRED_DISTROS entry inapplicable there -- correct, since all of them are
+    Linux-distribution facilities.  ID_LIKE is included so Ubuntu derivatives
+    (Mint, Pop!_OS) are not told they cannot run a tool they ship.
+    """
+    ids = set()
+    try:
+        with open(os_release_path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                key, _, value = line.partition("=")
+                if key.strip() not in ("ID", "ID_LIKE"):
+                    continue
+                ids.update(value.strip().strip("\"'").lower().split())
+    except OSError:
+        return frozenset()
+    return frozenset(ids)
 
 
 def _which(name: str) -> Optional[str]:
@@ -102,6 +167,7 @@ def detect_suppressed(
     system: Optional[str] = None,
     which=None,
     build_excluded: Optional[Mapping[str, str]] = None,
+    distro_ids: Optional[Iterable[str]] = None,
 ) -> Dict[str, str]:
     """Map each unusable command to a reason code.
 
@@ -112,6 +178,7 @@ def detect_suppressed(
         build_excluded: commands a future build-time mechanism removed, as
             ``{command: reason}``.  Merged in as-is -- this is the seam that
             keeps build-time trimming from needing any new plumbing.
+        distro_ids: override for os-release ID/ID_LIKE lookup (tests).
 
     Returns:
         ``{command: reason_code}`` for commands that must NOT be advertised.
@@ -119,12 +186,26 @@ def detect_suppressed(
     """
     lookup = which or _which
     this_system = system or platform.system()
+    these_distros = (
+        frozenset(str(d).lower() for d in distro_ids)
+        if distro_ids is not None
+        else _distro_ids()
+    )
     suppressed: Dict[str, str] = {}
 
     for command in available:
         required, reason = _REQUIRED_PLATFORMS.get(command, ((), ""))
         if required and this_system not in required:
             suppressed[command] = reason
+            continue
+
+        # Distro check before the tool check, and that order is the fix: a
+        # missing `pro` on Alpine must read as "not applicable here", not as
+        # "install it".  Reversing these would put every non-Ubuntu host back
+        # in the limited bucket.
+        distros, distro_reason = _REQUIRED_DISTROS.get(command, ((), ""))
+        if distros and not these_distros.intersection(distros):
+            suppressed[command] = distro_reason
             continue
 
         tools, tool_reason = _REQUIRED_TOOLS.get(command, ((), ""))

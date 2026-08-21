@@ -606,7 +606,7 @@ lint-version-fix:
 # The logic lives in scripts/release.py so it behaves identically on Windows,
 # where make drives cmd.exe and test/grep/sed do not exist.
 release:
-	@$(PYTHON) scripts/release.py --version "$(VERSION)" $(if $(MSG),--message "$(MSG)") $(if $(DRY_RUN),--dry-run) $(if $(ALLOW_UNTRACKED),--allow-untracked)
+	@$(PYTHON) scripts/release.py $(if $(VERSION),--version "$(VERSION)") $(if $(MSG),--message "$(MSG)") $(if $(DRY_RUN),--dry-run) $(if $(ALLOW_UNTRACKED),--allow-untracked) $(if $(YES),--yes) $(if $(SKIP_LINT),--skip-lint)
 
 # File-length gate: no source file may exceed 1000 lines (scripts/ exempt).
 # Uniform across all SysManage repos; complements pylint max-module-lines.
@@ -4406,12 +4406,20 @@ release-local:
 # BEFORE translating or the run has nothing to do and the gate stays red.
 # Source hashes are recorded by the translate run itself, so there is no
 # separate baseline step (see scripts/i18n_hashes.py).
+# THE one command to run when any i18n gate fails.  It exists because the
+# underlying steps have a mandatory order that is easy to get wrong: translate
+# only fills EMPTY msgstr, so new strings must be extracted and merged FIRST or
+# it silently does nothing; and .mo must be recompiled AFTER, or the runtime
+# keeps serving the previous translations.  Every failing gate now names this
+# target instead of printing the five steps and trusting you to sequence them.
 i18n-fix: setup-venv
-	@echo "=== i18n fix: seed -> requeue -> translate -> verify ==="
+	@echo "=== i18n fix: extract -> merge -> requeue -> translate -> compile -> verify ==="
 	@$(MAKE) --no-print-directory i18n-extract
 	@$(MAKE) --no-print-directory i18n-merge
 	@$(PYTHON) scripts/i18n_strict.py --requeue
 	@$(MAKE) --no-print-directory translate SERVICE=$(SERVICE)
+	@$(MAKE) --no-print-directory i18n-compile
+	@$(MAKE) --no-print-directory i18n-validate
 	@$(MAKE) --no-print-directory i18n-strict
 	@echo "[OK] i18n gate green"
 

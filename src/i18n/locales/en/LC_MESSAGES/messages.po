@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-14 04:54-0400\n"
+"POT-Creation-Date: 2026-08-21 07:41-0400\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1775,6 +1775,11 @@ msgstr ""
 #, python-format
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "Could not determine hostname, using fallback: %s"
+
+#: src/sysmanage_agent/core/agent_lifecycle.py:54
+#, python-format
+msgid "In-flight journal reconciliation failed: %s"
+msgstr "In-flight journal reconciliation failed: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:53
 msgid "systemctl not found"
