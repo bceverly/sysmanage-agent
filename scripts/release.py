@@ -137,7 +137,15 @@ def untracked_source_files() -> list:
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
-def check_guards(version: str, want, allow_untracked: bool):
+def modified_tracked_files() -> list:
+    """Tracked files with staged or unstaged modifications."""
+    result = git("status", "--porcelain", "--untracked-files=no", check=False)
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
+def check_guards(version: str, want, allow_untracked: bool, allow_dirty: bool):
     """Every refusal happens here, BEFORE anything is modified."""
     tags = known_tags()
     if tags:
@@ -171,6 +179,23 @@ def check_guards(version: str, want, allow_untracked: bool):
                 "from the release while code that imports them ships.",
                 "Run: git add <file>   (or .gitignore them), then re-run.",
                 "Deliberate?  make release ALLOW_UNTRACKED=1 ...",
+            )
+
+    # A release commit should contain the version bump and NOTHING else.
+    # `git commit -a` below stages every modified tracked file, so unrelated
+    # work-in-progress would be swept into "Release vX.Y.Z.W" and the tag would
+    # then name a commit that is not what it claims to be.
+    if not allow_dirty:
+        dirty = modified_tracked_files()
+        if dirty:
+            return fail(
+                "uncommitted change(s) to tracked files:",
+                *[f"  {d}" for d in dirty],
+                "`make release` commits with `git commit -a`, so these would be",
+                'swept into the "Release v..." commit next to the version bump,',
+                "leaving a tag that does not describe what it contains.",
+                "Commit or stash them first, then re-run.",
+                "Deliberate?  make release ALLOW_DIRTY=1 ...",
             )
     return 0
 
@@ -256,6 +281,7 @@ def main() -> int:
         "--dry-run", action="store_true", help="Run guards, change nothing."
     )
     parser.add_argument("--allow-untracked", action="store_true")
+    parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument(
         "--skip-lint", action="store_true", help="Skip the pre-commit `make lint` gate."
     )
@@ -300,7 +326,7 @@ def main() -> int:
     tag = f"v{version}"
     message = args.message or f"Release {tag}"
 
-    guard = check_guards(version, want, args.allow_untracked)
+    guard = check_guards(version, want, args.allow_untracked, args.allow_dirty)
     if guard:
         return guard
 
@@ -324,7 +350,7 @@ def main() -> int:
         lint = "" if skip_lint else "run `make lint`, "
         print(
             f"[dry-run] all guards passed.  A real run would {bump}{lint}commit "
-            f'any changes as "{message}", tag {tag} on THAT commit, then push '
+            f'the version-marker bump as "{message}", tag {tag} on THAT commit, then push '
             f"the branch and the tag.  Nothing was changed."
         )
         return 0
