@@ -633,7 +633,7 @@ clean-whitespace: setup-venv
 # runs soft-skip rather than fail so dev workflow isn't blocked.
 lint-version:
 	@echo "=== Version drift check ==="
-	@$(PYTHON) scripts/check_version_drift.py
+	@$(PYTHON) scripts/check_version_drift.py $(if $(SYSMANAGE_RELEASE_VERSION),--version $(SYSMANAGE_RELEASE_VERSION))
 
 # Surgically update drifted version markers to the current GitHub
 # release tag.  Leaves changes unstaged.

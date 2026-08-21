@@ -29,6 +29,7 @@ so a docs-only repo just gets a tag.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess  # nosec B404 - git plumbing, argument lists only, never shell
 import sys
@@ -137,6 +138,23 @@ def untracked_source_files() -> list:
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
+def dirty_paths() -> set:
+    """Paths of tracked files that currently differ from HEAD."""
+    result = git("status", "--porcelain", "--untracked-files=no", check=False)
+    if result.returncode != 0:
+        return set()
+    return {line[3:].strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+def restore_markers(paths) -> None:
+    """Undo the version bump.  Safe because check_guards already proved the
+    tree was clean, so nothing of yours can be inside these files."""
+    if not paths:
+        return
+    git("checkout", "--", *sorted(paths), check=False)
+    print(f"Restored {len(paths)} version-marker file(s) to their pre-release state.")
+
+
 def modified_tracked_files() -> list:
     """Tracked files with staged or unstaged modifications."""
     result = git("status", "--porcelain", "--untracked-files=no", check=False)
@@ -228,7 +246,7 @@ def bump_markers(version: str, dry_run: bool) -> int:
     return result.returncode
 
 
-def run_lint() -> int:
+def run_lint(version: str) -> int:
     """Run the repo's own `make lint` gate, matching the pre-push hook.
 
     Deliberately BEFORE the commit.  The hook runs this at PUSH time, which in a
@@ -251,9 +269,16 @@ def run_lint() -> int:
         cmd = ["make", "lint"]
     print(f"=== running '{' '.join(cmd)}' before committing ===")
     sys.stdout.flush()
+    # The markers were just bumped to the version we are ABOUT to tag, but
+    # lint-version resolves the expected version from the highest PUBLISHED
+    # tag -- which is still the previous release, because this one is not
+    # pushed yet.  Left alone the two disagree by construction and every
+    # release fails its own lint.  make picks env vars up as variables, and
+    # lint-version forwards this one to check_version_drift.py --version.
+    env = dict(os.environ, SYSMANAGE_RELEASE_VERSION=version)
     try:
         result = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
-            cmd, cwd=REPO_ROOT, check=False
+            cmd, cwd=REPO_ROOT, check=False, env=env
         )
     except FileNotFoundError:
         print("WARNING: make not found; skipping the lint gate", file=sys.stderr)
@@ -355,14 +380,18 @@ def main() -> int:
         )
         return 0
 
+    bumped = dirty_paths()
     if bump_markers(version, dry_run=False):
         return fail("version-marker bump failed; nothing committed or tagged.")
+    bumped = [p for p in dirty_paths() if p not in bumped]
 
-    if not skip_lint and run_lint():
+    if not skip_lint and run_lint(version):
+        restore_markers(bumped)
         return fail(
-            "`make lint` failed -- NOTHING was committed or tagged.",
-            "If black reformatted files, just re-run: the reformatted files will",
-            "be included in the release commit this time.",
+            "`make lint` failed -- NOTHING was committed, tagged or left bumped.",
+            "The version markers were restored, so the tree is as you left it.",
+            "Fix the gate and re-run; if black reformatted files, those changes",
+            "are yours to commit first.",
         )
 
     dirty = git("diff", "--quiet", "HEAD", check=False).returncode != 0
