@@ -2434,6 +2434,28 @@ jobs:
             --exclude "*/dists/*/InRelease"
           s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors
 
+          # PROVE the packages landed.  Symmetric with the server workflow's
+          # guard, and added for the same reason: the `cp` lines into the pool
+          # end in `2>/dev/null || true` and `s3 sync` is silent on success, so
+          # a package that never reaches the bucket still produces a green
+          # release.  The SERVER repo shipped .deb.sha256 with no .deb for five
+          # consecutive versions (3.5.1.16 .. .28) exactly that way, with the
+          # apt index advertising a 404.  The agent repo has the same shape and
+          # therefore the same exposure.
+          MISSING=""
+          for f in "repo/agent/deb/pool/main/$VERSION-1/"*.deb; do
+            [ -e "$f" ] || continue
+            KEY="${f#repo/}"
+            s3 ls "s3://${R2_BUCKET}/$KEY" >/dev/null 2>&1 || MISSING="$MISSING $KEY"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::published .deb(s) missing from R2:$MISSING"
+            echo "Local pool contents:"; ls -la "repo/agent/deb/pool/main/$VERSION-1/" || true
+            echo "Bucket pool contents:"; s3 ls "s3://${R2_BUCKET}/agent/deb/pool/main/$VERSION-1/" || true
+            exit 1
+          fi
+          echo "verified in R2: every .deb for $VERSION"
+
           echo "Published SysManage Agent v$VERSION to https://repo.sysmanage.org/agent/"
 
       # Cloudflare fronts the R2 bucket and caches NEGATIVE responses.  A GET
