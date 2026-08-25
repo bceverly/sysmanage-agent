@@ -66,7 +66,15 @@ jobs:
             PORTS_URL="https://ftp.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/ports.tar.gz"
             echo "Downloading ports from: $PORTS_URL"
 
-            if ! ftp -o /tmp/ports.tar.gz "$PORTS_URL"; then
+            # -4 is LOAD-BEARING.  ftp.openbsd.org publishes both A
+            # (199.185.178.81) and AAAA (2620:3d:c000:178::81).  QEMU's
+            # user-mode network does not route IPv6, so ftp(1) resolving the
+            # AAAA first gets EHOSTUNREACH and prints exactly:
+            #     ftp: connect: No route to host
+            # which reads like the mirror is down rather than like the VM has no
+            # v6 route.  Forcing IPv4 skips the address that can never work.
+            # Broke the 7.8 and 7.9 release jobs on 2026-08-25.
+            if ! ftp -4 -o /tmp/ports.tar.gz "$PORTS_URL"; then
               echo "ERROR: Failed to download ports from $PORTS_URL"
               exit 1
             fi
@@ -109,7 +117,7 @@ jobs:
 
               cd /tmp
               PORTS75_URL="https://ftp.openbsd.org/pub/OpenBSD/7.5/ports.tar.gz"
-              if ftp -o - "$PORTS75_URL" 2>/dev/null | gunzip | tar xf - ports/lang/python/3.11; then
+              if ftp -4 -o - "$PORTS75_URL" 2>/dev/null | gunzip | tar xf - ports/lang/python/3.11; then
                 echo "Successfully extracted Python 3.11 port from 7.5"
                 cp -R /tmp/ports/lang/python/3.11 /usr/ports/lang/python/3
                 echo "Copied to /usr/ports/lang/python/3"
