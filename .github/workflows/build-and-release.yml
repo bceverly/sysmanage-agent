@@ -3748,12 +3748,36 @@ jobs:
           echo "SRPM: $SRPM_PATH"
 
           # Upload and build
+          # --nowait: return as soon as the SRPM is UPLOADED.  Without it
+          # copr-cli WATCHES every chroot to completion (Fedora 41/42 + EPEL
+          # 9/10, each x86_64 and aarch64); the emulated aarch64 builds made
+          # that outlive the job timeout, so GitHub killed the step with
+          # "Error: The operation was canceled" while the Copr build itself was
+          # healthy.  Same fix as the sysmanage repo -- see the comment there.
           n=0; ok=0
           until [ "$n" -ge 5 ]; do
-            if copr-cli build $COPR_USERNAME/sysmanage-agent $SRPM_PATH; then ok=1; break; fi
+            if copr-cli build --nowait $COPR_USERNAME/sysmanage-agent $SRPM_PATH | tee /tmp/copr-build.log; then ok=1; break; fi
             n=$((n+1)); echo "::warning::copr-cli build attempt $n/5 failed; retrying in $((n*20))s"; sleep $((n*20))
           done
           [ "$ok" = 1 ] || { echo "::error::copr-cli build failed after 5 attempts"; exit 1; }
+
+          # Fail fast on a broken spec/SRPM (srpm-build dies within minutes)
+          # without waiting on the slow chroots.  Still running at the end of
+          # the budget is normal and not an error.
+          BUILD_ID=$(grep -oE 'Created builds: [0-9]+' /tmp/copr-build.log | grep -oE '[0-9]+' | head -1)
+          if [ -n "$BUILD_ID" ]; then
+            echo "Watching build $BUILD_ID for early failures (up to 5 minutes)..."
+            n=0
+            while [ "$n" -lt 10 ]; do
+              STATE=$(copr-cli status "$BUILD_ID" 2>/dev/null | tr -d '[:space:]')
+              echo "  build $BUILD_ID: ${STATE:-unknown}"
+              case "$STATE" in
+                failed|cancelled) echo "::error::Copr build $BUILD_ID entered state '$STATE'"; exit 1 ;;
+                succeeded) echo "Copr build $BUILD_ID already succeeded."; break ;;
+              esac
+              n=$((n+1)); sleep 30
+            done
+          fi
 
           echo ""
           echo "SUCCESS! Uploaded version $VERSION to Copr"

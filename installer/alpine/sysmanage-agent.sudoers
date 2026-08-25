@@ -79,3 +79,26 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff
 
 # Certificate Management.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates
+
+# Content Lifecycle Management (Phase 16/19) -- content-view publish, promote
+# and serving.  These three were MISSING, and their absence made the whole
+# feature non-functional on a real agent: every publish/promote/materialize
+# plan opens with ``sudo test -d`` and died on it, so content-view publish had
+# never once succeeded outside a harness that strips sudo.  Found by running
+# the flow end-to-end against a live agent on 2026-08-25.
+#
+#   test  -- existence guard at the head of every plan.  A pure predicate: it
+#            cannot write, execute or modify anything.  ``find`` is already
+#            granted and discloses strictly more.
+#   ln    -- the environment promotion ITSELF (``ln -sfn v<N> <env>``), the
+#            atomic flip that repoints an environment at a version.
+#   nginx -- validating the generated serving config before reload.
+#
+# NOTE there is deliberately NO ``sh`` here.  ``sudo sh -c`` is arbitrary root
+# execution and would defeat the bare-binary policy this file exists to
+# enforce; the apt index generation was rewritten to run unprivileged and be
+# placed with ``install`` instead.
+
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/test, /bin/test
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ln, /bin/ln
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/nginx
