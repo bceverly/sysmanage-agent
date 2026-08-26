@@ -58,7 +58,17 @@
 
     <!-- Directory structure -->
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="SysManage Agent" />
+      <Directory Id="INSTALLFOLDER" Name="SysManage Agent">
+        <!--
+          DSC v3, the Windows config-management executor (Phase 20.1).
+          Staged into installer\windows\dsc by build-msi.ps1, which downloads
+          the build matching -Architecture and hard-fails if it cannot.  The
+          whole extracted tree ships, not just dsc.exe: the engine discovers
+          resources from the manifest files sitting beside it, so a lone binary
+          enumerates nothing.
+        -->
+        <Directory Id="DSCFOLDER" Name="dsc" />
+      </Directory>
     </StandardDirectory>
 
     <StandardDirectory Id="CommonAppDataFolder">
@@ -132,6 +142,15 @@
     </ComponentGroup>
 
     <!-- Source files packaged as ZIP - will be extracted by install.ps1 -->
+    <!--
+      Harvested rather than hand-componentised: the DSC payload is a few dozen
+      files whose names change between upstream releases, and enumerating them
+      by hand would mean a silent partial install every time it is bumped.
+    -->
+    <ComponentGroup Id="DscComponents" Directory="DSCFOLDER">
+      <Files Include="dsc\**" />
+    </ComponentGroup>
+
     <ComponentGroup Id="SourceFilesComponent" Directory="INSTALLFOLDER">
       <Component Id="SourceZip" Guid="A7B8C9D0-E1F2-4A5B-8C9D-0E1F2A3B4C5D">
         <File Id="SrcZipFile" Source="src.zip" KeyPath="yes" />
@@ -165,6 +184,7 @@
     <!-- Feature: Main application -->
     <Feature Id="ProductFeature" Title="SysManage Agent" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="DscComponents" />
       <ComponentGroupRef Id="SourceFilesComponent" />
       <ComponentGroupRef Id="ConfigFiles" />
       <ComponentGroupRef Id="WindowsService" />

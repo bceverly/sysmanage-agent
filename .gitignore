@@ -193,6 +193,8 @@ installer/windows/src.zip
 # build-bundle.ps1 downloads and signature-verifies them on demand.
 installer/windows/prereq/
 installer/windows/nssm.exe
+# DSC v3 payload, fetched per-architecture by build-msi.ps1 (~11 MiB).
+installer/windows/dsc/
 *.deb
 *.rpm
 *.tar.gz

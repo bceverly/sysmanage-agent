@@ -200,6 +200,125 @@ if (-not (Test-Path $NssmExe)) {
 }
 Write-Host ""
 
+# Download DSC v3 (the Windows configuration-management executor)
+#
+# WHY THIS IS VENDORED RATHER THAN INSTALLED ON DEMAND
+# ----------------------------------------------------
+# ansible-core declares "Operating System :: POSIX" and nothing else, so the
+# pull-style config-management path (Phase 20.1) cannot use it on Windows.
+# DSC v3 is a standalone engine: no WinRM listener, no LCM, no inbound port --
+# which matters because the alternative (Invoke-DscResource on PS 5.1) goes
+# through the local WS-Management stack and FAILS on a hardened box where WinRM
+# is Stopped/Disabled.  Confirmed on Windows 11 Pro ARM64, 2026-08-26: with
+# WinRM disabled, Invoke-DscResource could not connect while dsc.exe enumerated
+# 25 resources and completed a full get/set/delete round trip on the same host
+# in the same run.
+#
+# Shipping it in the MSI keeps the agent air-gap clean: a managed host must
+# never need to reach github.com to become manageable.
+Write-Host "Checking for DSC v3 (Windows config-management executor)..." -ForegroundColor Cyan
+$DscVersion = "3.2.3"
+$DscDir = Join-Path $CurrentDir "installer\windows\dsc"
+$DscExe = Join-Path $DscDir "dsc.exe"
+
+if (-not (Test-Path $DscExe)) {
+    Write-Host "Downloading DSC v$DscVersion for bundling with installer..." -ForegroundColor Yellow
+
+    # The release assets are per-TARGET-TRIPLE, so this must follow the MSI
+    # architecture rather than the architecture of the machine doing the build:
+    # the ARM64 MSI is cross-built on an x64 runner, and shipping an x86_64
+    # dsc.exe inside it would run under emulation at best.
+    $dscTarget = if ($Architecture -eq "arm64") { "aarch64-pc-windows-msvc" } else { "x86_64-pc-windows-msvc" }
+    $dscAsset = "DSC-$DscVersion-$dscTarget.zip"
+    $dscUrl = "https://github.com/PowerShell/DSC/releases/download/v$DscVersion/$dscAsset"
+
+    $dscZip = Join-Path $env:TEMP "dsc-download.zip"
+    $dscExtract = Join-Path $env:TEMP "dsc-extract"
+    $dscDownloaded = $false
+
+    $maxRetries = 5
+    $baseDelaySeconds = 5
+
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        Write-Host "  Download attempt $attempt of $maxRetries : $dscUrl" -ForegroundColor Cyan
+        try {
+            if (Test-Path $dscZip) {
+                Remove-Item -Path $dscZip -Force -ErrorAction SilentlyContinue
+            }
+
+            Invoke-WebRequest -Uri $dscUrl -OutFile $dscZip -UseBasicParsing -TimeoutSec 120
+
+            # A GitHub error page is still a 200 with HTML in it; check for the
+            # ZIP magic rather than trusting the status code.
+            $fileBytes = [System.IO.File]::ReadAllBytes($dscZip)
+            if ($fileBytes.Length -lt 4 -or $fileBytes[0] -ne 0x50 -or $fileBytes[1] -ne 0x4B) {
+                Write-Host "    Downloaded file is not a valid ZIP archive" -ForegroundColor Yellow
+                continue
+            }
+
+            if (Test-Path $dscExtract) {
+                Remove-Item -Path $dscExtract -Recurse -Force
+            }
+            $ProgressPreference = 'SilentlyContinue'
+            Expand-Archive -Path $dscZip -DestinationPath $dscExtract -Force
+            $ProgressPreference = 'Continue'
+
+            # dsc.exe needs its sibling resource manifests to enumerate
+            # anything, so the whole extracted tree ships, not just the binary.
+            $dscSource = Get-ChildItem -Path $dscExtract -Filter "dsc.exe" -Recurse -File | Select-Object -First 1
+            if (-not $dscSource) {
+                Write-Host "    ZIP extracted but dsc.exe not found inside" -ForegroundColor Yellow
+                continue
+            }
+
+            $dscDownloaded = $true
+            break
+        } catch {
+            Write-Host "    Failed: $_" -ForegroundColor Yellow
+        }
+
+        if ($attempt -lt $maxRetries) {
+            $delaySeconds = [Math]::Min($baseDelaySeconds * [Math]::Pow(2, $attempt - 1), 120)
+            Write-Host "  Waiting $delaySeconds seconds before retry..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $delaySeconds
+        }
+    }
+
+    if (-not $dscDownloaded) {
+        # Hard-fail rather than building an MSI that silently lacks the
+        # executor.  The server reports Windows hosts as config-management
+        # READY on the strength of this file being present; an installer that
+        # quietly omits it would make that report a lie on every Windows host.
+        Write-Host "ERROR: Failed to download DSC v$DscVersion after $maxRetries attempts" -ForegroundColor Red
+        Write-Host "Expected asset: $dscAsset" -ForegroundColor Red
+        Write-Host "Manually extract it to: $DscDir" -ForegroundColor Red
+        exit 1
+    }
+
+    try {
+        if (Test-Path $DscDir) {
+            Remove-Item -Path $DscDir -Recurse -Force
+        }
+        New-Item -ItemType Directory -Force -Path $DscDir | Out-Null
+        Copy-Item -Path (Join-Path $dscSource.DirectoryName "*") -Destination $DscDir -Recurse -Force
+        Write-Host "[OK] DSC v$DscVersion ($dscTarget) ready for bundling" -ForegroundColor Green
+
+        Remove-Item -Path $dscZip -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path $dscExtract -Recurse -Force -ErrorAction SilentlyContinue
+    } catch {
+        Write-Host "ERROR: Failed to stage DSC: $_" -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host "[OK] DSC already present" -ForegroundColor Green
+}
+
+if (-not (Test-Path $DscExe)) {
+    Write-Host "ERROR: $DscExe is missing after staging" -ForegroundColor Red
+    exit 1
+}
+Write-Host ""
+
 # Create ZIP of src directory for packaging
 Write-Host "Preparing source files for packaging..." -ForegroundColor Cyan
 $SrcDir = Join-Path $CurrentDir "src"
