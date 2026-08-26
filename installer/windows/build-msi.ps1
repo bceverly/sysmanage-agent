@@ -200,6 +200,88 @@ if (-not (Test-Path $NssmExe)) {
 }
 Write-Host ""
 
+# Ensure the SBOM exists
+#
+# WHY THIS LIVES HERE AND NOT ONLY IN CI
+# --------------------------------------
+# sysmanage-agent.wxs ships sbom\sysmanage-agent-sbom.json as a component, so
+# the file is REQUIRED to build.  CI generated it in a separate workflow step
+# and this script assumed the result, which meant `make installer-msi-arm64`
+# on a clean checkout failed with a bare WIX0103 pointing at a path nothing in
+# the local build ever creates.  Generating it here closes the gap for local
+# builds without changing what CI produces (CI's step still runs first, and
+# an existing file is left alone).
+Write-Host "Checking for SBOM..." -ForegroundColor Cyan
+$SbomDir = Join-Path $CurrentDir "sbom"
+$AgentSbom = Join-Path $SbomDir "sysmanage-agent-sbom.json"
+
+if (-not (Test-Path $SbomDir)) {
+    New-Item -ItemType Directory -Path $SbomDir -Force | Out-Null
+}
+
+if (Test-Path $AgentSbom) {
+    Write-Host "[OK] SBOM already present" -ForegroundColor Green
+} else {
+    Write-Host "  Generating SBOM from requirements-prod.txt..." -ForegroundColor Yellow
+    $reqProd = Join-Path $CurrentDir "requirements-prod.txt"
+    $generated = $false
+
+    if (Test-Path $reqProd) {
+        # Install the generator if it is missing, exactly as `make sbom` does.
+        & python -c "import cyclonedx_py" 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  Installing cyclonedx-bom..." -ForegroundColor Yellow
+            & python -m pip install cyclonedx-bom --quiet 2>&1 | Out-Null
+        }
+
+        # Same invocation CI uses -- and note the input is requirements-PROD,
+        # not requirements.txt as `make sbom` uses: the MSI ships production
+        # dependencies only, so listing the dev ones would misdescribe it.
+        & python -m cyclonedx_py requirements $reqProd --of JSON -o $AgentSbom 2>&1 | Out-Null
+        $generated = ($LASTEXITCODE -eq 0) -and (Test-Path $AgentSbom)
+    }
+
+    if (-not $generated) {
+        # A placeholder is an EMPTY dependency inventory. That is tolerable for
+        # a developer's local build and is NOT tolerable in a release artifact,
+        # so refuse to write one in CI -- there, a missing SBOM means the
+        # generation step upstream broke and must be fixed, not papered over.
+        if ($env:CI -or $env:GITHUB_ACTIONS) {
+            Write-Host "ERROR: SBOM missing and could not be generated" -ForegroundColor Red
+            Write-Host "Run: python -m pip install cyclonedx-bom" -ForegroundColor Red
+            Write-Host "Then: python -m cyclonedx_py requirements requirements-prod.txt --of JSON -o sbom/sysmanage-agent-sbom.json" -ForegroundColor Red
+            exit 1
+        }
+
+        Write-Host "  cyclonedx-bom unavailable; writing a PLACEHOLDER SBOM" -ForegroundColor Yellow
+        Write-Host "  This MSI is for local testing only - its SBOM lists no dependencies." -ForegroundColor Yellow
+        Write-Host "  Install it for a real one: python -m pip install cyclonedx-bom" -ForegroundColor Yellow
+        $placeholder = @{
+            bomFormat = "CycloneDX"
+            specVersion = "1.4"
+            version = 1
+            metadata = @{
+                component = @{
+                    type = "application"
+                    name = "sysmanage-agent"
+                    version = $VERSION
+                }
+                properties = @(
+                    @{
+                        name = "sysmanage:sbom-status"
+                        value = "placeholder - generated without cyclonedx-bom; dependency list is NOT populated"
+                    }
+                )
+            }
+            components = @()
+        } | ConvertTo-Json -Depth 10
+        Set-Content -Path $AgentSbom -Value $placeholder
+    } else {
+        Write-Host "[OK] SBOM generated" -ForegroundColor Green
+    }
+}
+Write-Host ""
+
 # Download DSC v3 (the Windows configuration-management executor)
 #
 # WHY THIS IS VENDORED RATHER THAN INSTALLED ON DEMAND
