@@ -378,6 +378,10 @@ class MessageProcessor:
             "sync_custom_metrics": self.agent.sync_custom_metrics,
             "execute_command_sequence": self.agent.execute_command_sequence,
             "apply_deployment_plan": self.agent.apply_deployment_plan,
+            # Phase 20.1: desired-state config profiles.  Bare reference, not
+            # a `lambda params: ...()` wrapper -- the profile itself rides in
+            # the parameters and would be dropped by one.
+            "apply_config_profile": self.agent.apply_config_profile,
             # Phase 10.2 step 7 close-out (2026-05-14): the legacy
             # "deploy_opentelemetry" / "remove_opentelemetry" /
             # "attach_to_graylog" handlers were removed when the

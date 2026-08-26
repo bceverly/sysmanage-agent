@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-21 07:41-0400\n"
+"POT-Creation-Date: 2026-08-26 14:20-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1803,85 +1803,85 @@ msgstr "身份验证失败，状态为%s: %s"
 msgid "Failed to build capability report: %s"
 msgstr "构建能力报告失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:437
+#: src/sysmanage_agent/core/agent_utils.py:441
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:474
+#: src/sysmanage_agent/core/agent_utils.py:478
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:486
+#: src/sysmanage_agent/core/agent_utils.py:490
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 软件包失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:564
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检查执行UUID时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:582
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:593
+#: src/sysmanage_agent/core/agent_utils.py:597
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:618
+#: src/sysmanage_agent/core/agent_utils.py:622
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存储执行 UUID 时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:683
+#: src/sysmanage_agent/core/agent_utils.py:687
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:728
+#: src/sysmanage_agent/core/agent_utils.py:732
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "对服务 %s 执行 %s 失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:735
+#: src/sysmanage_agent/core/agent_utils.py:739
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:745
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:807
+#: src/sysmanage_agent/core/agent_utils.py:811
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:889
+#: src/sysmanage_agent/core/agent_utils.py:893
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:899
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:947
+#: src/sysmanage_agent/core/agent_utils.py:951
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "无法将合成的 command_result 加入正在执行的日志队列：%s"
@@ -2075,6 +2075,10 @@ msgstr "添加NetBSD仓库时出错：%s"
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "子主机管理需要 Pro+ (引擎路径)。"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+msgid "Config profile requested but no executor is installed"
+msgstr "请求配置文件，但没有安装执行器"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format

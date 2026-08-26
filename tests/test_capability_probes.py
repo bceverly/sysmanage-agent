@@ -259,10 +259,19 @@ def _report_for(system, distro_ids, tools):
 
 _LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd"}
 
+# Phase 20.1 made config management a real capability with a real prerequisite,
+# so a host that is meant to read as FULLY equipped has to carry its executor
+# too -- ansible-playbook on POSIX, dsc.exe on Windows.  Without these the
+# "nothing is unavailable" assertions below would fail for an honest reason.
+_POSIX_CFG_TOOLS = {"ansible-playbook"}
+_WINDOWS_CFG_TOOLS = {"dsc.exe"}
+
 
 def test_linux_host_is_not_partial_for_lacking_bhyve_vmm_and_wsl():
     """The exact bug: a fully capable KVM host reported as degraded."""
-    report = _report_for("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"})
+    report = _report_for(
+        "Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"} | _POSIX_CFG_TOOLS
+    )
     assert "virtualization" not in report["partial"]
     assert "virtualization" in report["capabilities"]
     assert not report["unavailable"] and not report["partial"]
@@ -271,14 +280,14 @@ def test_linux_host_is_not_partial_for_lacking_bhyve_vmm_and_wsl():
 def test_bsd_host_is_not_partial_for_lacking_kvm_and_lxd():
     """The mirror image -- fixing only the reported direction is half a fix."""
     for system in ("FreeBSD", "OpenBSD"):
-        report = _report_for(system, [], {"bhyve"})
+        report = _report_for(system, [], {"bhyve"} | _POSIX_CFG_TOOLS)
         assert "virtualization" not in report["partial"], system
         assert not report["unavailable"], system
 
 
 def test_ubuntu_pro_is_not_applicable_off_ubuntu():
     """Not a missing tool: the `pro` CLI does not exist outside Ubuntu."""
-    report = _report_for("Linux", ["alpine"], _LINUX_VIRT_TOOLS)
+    report = _report_for("Linux", ["alpine"], _LINUX_VIRT_TOOLS | _POSIX_CFG_TOOLS)
     assert report["not_applicable"]["ubuntu_pro"] == REASON_WRONG_PLATFORM
     assert "ubuntu_pro" not in report["unavailable"]
     assert not report["unavailable"] and not report["partial"]
@@ -308,12 +317,12 @@ def test_inapplicable_groups_never_make_a_host_limited():
     the entire contract this fix rests on.
     """
     for system, distro, tools in (
-        ("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"}),
-        ("Linux", ["alpine"], _LINUX_VIRT_TOOLS),
-        ("FreeBSD", [], {"bhyve"}),
-        ("OpenBSD", [], set()),
-        ("Darwin", [], set()),
-        ("Windows", [], set()),
+        ("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"} | _POSIX_CFG_TOOLS),
+        ("Linux", ["alpine"], _LINUX_VIRT_TOOLS | _POSIX_CFG_TOOLS),
+        ("FreeBSD", [], {"bhyve"} | _POSIX_CFG_TOOLS),
+        ("OpenBSD", [], _POSIX_CFG_TOOLS),
+        ("Darwin", [], _POSIX_CFG_TOOLS),
+        ("Windows", [], _WINDOWS_CFG_TOOLS),
     ):
         report = _report_for(system, distro, tools)
         limited = bool(report["unavailable"] or report["partial"])

@@ -112,6 +112,10 @@ class SystemOperationsDelegator:
         """Apply a declarative deployment plan (packages+files+commands+services)."""
         return await self.system_ops.apply_deployment_plan(parameters)
 
+    async def apply_config_profile(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply a desired-state configuration profile (Phase 20.1)."""
+        return await self.config_mgmt_ops.apply_config_profile(parameters)
+
     # Phase 10.2 step 7 close-out (2026-05-14): the legacy
     # ``deploy_opentelemetry`` / ``remove_opentelemetry`` /
     # ``attach_to_graylog`` delegators here used to route to

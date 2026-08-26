@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-21 07:41-0400\n"
+"POT-Creation-Date: 2026-08-26 14:20-0400\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1848,85 +1848,85 @@ msgstr "Autenticazione fallita con stato %s: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Impossibile creare il rapporto delle capacità: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:437
+#: src/sysmanage_agent/core/agent_utils.py:441
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID di esecuzione script %s già elaborato, duplicato saltato"
 
-#: src/sysmanage_agent/core/agent_utils.py:474
+#: src/sysmanage_agent/core/agent_utils.py:478
 msgid "Generic command missing nested command_type"
 msgstr "Comando generico privo di command_type annidato"
 
-#: src/sysmanage_agent/core/agent_utils.py:486
+#: src/sysmanage_agent/core/agent_utils.py:490
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo di comando sconosciuto: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Errore nella raccolta dei pacchetti Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:564
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Errore durante il controllo dell'esecuzione UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:582
 msgid "No execution UUID provided, cannot track"
 msgstr "Nessun UUID di esecuzione fornito, impossibile tracciare"
 
-#: src/sysmanage_agent/core/agent_utils.py:593
+#: src/sysmanage_agent/core/agent_utils.py:597
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID di esecuzione %s esiste già nel database"
 
-#: src/sysmanage_agent/core/agent_utils.py:618
+#: src/sysmanage_agent/core/agent_utils.py:622
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Errore nel salvataggio dell'UUID di esecuzione: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:683
+#: src/sysmanage_agent/core/agent_utils.py:687
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Errore nel gestore del controllo servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:728
+#: src/sysmanage_agent/core/agent_utils.py:732
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Impossibile %s il servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:735
+#: src/sysmanage_agent/core/agent_utils.py:739
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Timeout del controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:745
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Errore di controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:807
+#: src/sysmanage_agent/core/agent_utils.py:811
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Impossibile aggiornare i ruoli dopo il controllo del servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Errore nel gestore dello stato dei servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:889
+#: src/sysmanage_agent/core/agent_utils.py:893
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Timeout dello stato del servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:899
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Errore di stato del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:947
+#: src/sysmanage_agent/core/agent_utils.py:951
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2121,6 +2121,10 @@ msgstr "Errore nell'aggiunta del repository NetBSD: %s"
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "La gestione dei child host richiede Pro+ (percorso engine)."
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+msgid "Config profile requested but no executor is installed"
+msgstr "Profilo di configurazione richiesto ma nessun esecutore è installato"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-21 07:41-0400\n"
+"POT-Creation-Date: 2026-08-26 14:20-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1810,85 +1810,85 @@ msgstr "인증 실패 상태 코드: %s: %s"
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:437
+#: src/sysmanage_agent/core/agent_utils.py:441
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:474
+#: src/sysmanage_agent/core/agent_utils.py:478
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:486
+#: src/sysmanage_agent/core/agent_utils.py:490
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:564
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:582
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:593
+#: src/sysmanage_agent/core/agent_utils.py:597
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:618
+#: src/sysmanage_agent/core/agent_utils.py:622
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:683
+#: src/sysmanage_agent/core/agent_utils.py:687
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:728
+#: src/sysmanage_agent/core/agent_utils.py:732
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:735
+#: src/sysmanage_agent/core/agent_utils.py:739
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:745
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:807
+#: src/sysmanage_agent/core/agent_utils.py:811
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:889
+#: src/sysmanage_agent/core/agent_utils.py:893
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:899
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:947
+#: src/sysmanage_agent/core/agent_utils.py:951
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
@@ -2082,6 +2082,10 @@ msgstr "NetBSD 저장소 추가 오류: %s"
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+msgid "Config profile requested but no executor is installed"
+msgstr "요청된 구성 프로필에 대해 실행기가 설치되지 않았습니다"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format

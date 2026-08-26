@@ -48,6 +48,9 @@ from src.sysmanage_agent.communication.transport_fallback import TransportState
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
 from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
+from src.sysmanage_agent.operations.config_mgmt_operations import (
+    ConfigMgmtOperations,
+)
 from src.sysmanage_agent.operations.custom_metrics_operations import (
     CustomMetricsOperations,
 )
@@ -184,6 +187,7 @@ class SysManageAgent(
         self.script_ops = ScriptOperations(self)
         self.custom_metrics_ops = CustomMetricsOperations(self)
         self.child_host_ops = ChildHostOperations(self)
+        self.config_mgmt_ops = ConfigMgmtOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)

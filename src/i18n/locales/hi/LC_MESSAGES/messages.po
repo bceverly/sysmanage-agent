@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-21 07:41-0400\n"
+"POT-Creation-Date: 2026-08-26 14:20-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1833,86 +1833,86 @@ msgstr "प्रवीणता विफल हुई साइटस्टे
 msgid "Failed to build capability report: %s"
 msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:437
+#: src/sysmanage_agent/core/agent_utils.py:441
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:474
+#: src/sysmanage_agent/core/agent_utils.py:478
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:486
+#: src/sysmanage_agent/core/agent_utils.py:490
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:545
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:564
+#: src/sysmanage_agent/core/agent_utils.py:568
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "प्रोग्रेशियन UUID की जाँच में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:582
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:593
+#: src/sysmanage_agent/core/agent_utils.py:597
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:618
+#: src/sysmanage_agent/core/agent_utils.py:622
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "अद्यतन पहचान UUID संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:683
+#: src/sysmanage_agent/core/agent_utils.py:687
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:728
+#: src/sysmanage_agent/core/agent_utils.py:732
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:735
+#: src/sysmanage_agent/core/agent_utils.py:739
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:745
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:807
+#: src/sysmanage_agent/core/agent_utils.py:811
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:846
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:889
+#: src/sysmanage_agent/core/agent_utils.py:893
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:899
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:947
+#: src/sysmanage_agent/core/agent_utils.py:951
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2108,6 +2108,11 @@ msgstr "NetBSD अनुभाग जोड़ने में त्रुट�
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "चाइल्ड होस्ट प्रबंधन के लिए Pro+ (इंजन पथ) आवश्यक है।"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+msgid "Config profile requested but no executor is installed"
+msgstr ""
+"कॉन्फ़िगर प्रोफ़ाइल अनुरोध किया गया लेकिन कोई एक्ज़ीक्यूटर स्थापित नहीं है"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format

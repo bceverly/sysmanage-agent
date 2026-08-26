@@ -40,7 +40,9 @@ DESIGN RULES
 import os
 import platform
 import shutil
-from typing import Dict, Iterable, Mapping, Optional, Tuple
+from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
+
+from src.sysmanage_agent.operations import config_mgmt_locator
 
 # Reason codes.  Codes, not sentences: the SERVER owns the translation, so an
 # operator reads them in their own language (see capabilities.py).
@@ -128,6 +130,28 @@ _REQUIRED_DISTROS: Dict[str, Tuple[Tuple[str, ...], str]] = {
     "ubuntu_pro_disable_service": (("ubuntu",), REASON_WRONG_PLATFORM),
 }
 
+# command -> (predicate, reason)
+#
+# For capabilities whose tool cannot be found with a bare PATH lookup.  There
+# is exactly one today and it is not an edge case: ``dsc.exe`` is VENDORED into
+# the MSI at <INSTALLFOLDER>\dsc and deliberately kept off the system PATH --
+# putting a DSC engine on the PATH of every managed Windows host is a side
+# effect nobody asked for.  A _REQUIRED_TOOLS entry would therefore report
+# every Windows host as missing config management, which is the precise
+# false-negative design rule 2 warns about.
+#
+# The predicate takes the SAME injected lookup AND system the tables use, so a
+# test that says "pretend this is Windows with every tool present" gets one
+# consistent answer instead of one that depends on the machine running it.
+# Honouring `lookup` but not `system` would silently probe the wrong branch.
+#
+# The predicate must obey design rule 3 as strictly as the rest of this module:
+# ``config_mgmt_locator`` is filesystem lookups only, and has its own tests
+# asserting it never imports subprocess.
+_REQUIRED_LOCATORS: Dict[str, Tuple[Callable[..., bool], str]] = {
+    "apply_config_profile": (config_mgmt_locator.is_available, REASON_MISSING_TOOL),
+}
+
 
 def _distro_ids(os_release_path: str = "/etc/os-release") -> frozenset:
     """``{ID}`` plus ``ID_LIKE`` entries from os-release, lowercased.
@@ -183,6 +207,10 @@ def _suppression_reason(command, this_system, these_distros, lookup):
     tools, tool_reason = _REQUIRED_TOOLS.get(command, ((), ""))
     if tools and not any(lookup(tool) for tool in tools):
         return tool_reason
+
+    probe, probe_reason = _REQUIRED_LOCATORS.get(command, (None, ""))
+    if probe is not None and not probe(lookup, this_system):
+        return probe_reason
 
     return None
 

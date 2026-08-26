@@ -108,6 +108,11 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     "power": ("reboot_system", "shutdown_system"),
     "processes": ("collect_processes", "kill_process"),
     "scripts": ("execute_script",),
+    # Phase 20.1.  Its own group rather than folded into "deployment":
+    # a host can be perfectly able to apply a deployment plan while having no
+    # config-management executor at all, and merging them would report the
+    # whole group degraded for the wrong reason.
+    "config_management": ("apply_config_profile",),
     "shell": ("execute_shell",),
     # ``get_capabilities`` answers a live "what can you do?" query over the
     # existing server-initiated channel.  Grouped under diagnostics because
