@@ -227,18 +227,32 @@ if (Test-Path $AgentSbom) {
     $generated = $false
 
     if (Test-Path $reqProd) {
-        # Install the generator if it is missing, exactly as `make sbom` does.
-        & python -c "import cyclonedx_py" 2>&1 | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "  Installing cyclonedx-bom..." -ForegroundColor Yellow
-            & python -m pip install cyclonedx-bom --quiet 2>&1 | Out-Null
-        }
+        # $ErrorActionPreference is "Stop" for this script, and under PowerShell
+        # 5.1 that makes ANY native command writing to stderr a TERMINATING
+        # error -- not just a non-zero exit.  The import probe below is meant to
+        # fail (that is how it detects a missing module), and a failing
+        # `python -c "import ..."` prints a traceback to stderr, so leaving the
+        # preference alone aborts the whole build on the expected path.
+        # Relaxed only around these native calls, restored in `finally`, and
+        # `*> $null` keeps the expected traceback off the console.
+        $prevEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            # Install the generator if it is missing, as `make sbom` does.
+            & python -c "import cyclonedx_py" *> $null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  Installing cyclonedx-bom..." -ForegroundColor Yellow
+                & python -m pip install cyclonedx-bom --quiet *> $null
+            }
 
-        # Same invocation CI uses -- and note the input is requirements-PROD,
-        # not requirements.txt as `make sbom` uses: the MSI ships production
-        # dependencies only, so listing the dev ones would misdescribe it.
-        & python -m cyclonedx_py requirements $reqProd --of JSON -o $AgentSbom 2>&1 | Out-Null
-        $generated = ($LASTEXITCODE -eq 0) -and (Test-Path $AgentSbom)
+            # Same invocation CI uses -- and note the input is requirements-PROD,
+            # not requirements.txt as `make sbom` uses: the MSI ships production
+            # dependencies only, so listing the dev ones would misdescribe it.
+            & python -m cyclonedx_py requirements $reqProd --of JSON -o $AgentSbom *> $null
+            $generated = ($LASTEXITCODE -eq 0) -and (Test-Path $AgentSbom)
+        } finally {
+            $ErrorActionPreference = $prevEap
+        }
     }
 
     if (-not $generated) {
@@ -443,6 +457,50 @@ try {
 
     Write-Host ""
     Write-Host "[OK] Package built successfully!" -ForegroundColor Green
+    Write-Host ""
+
+    # Verify the DSC payload actually landed INSIDE the MSI.
+    #
+    # A WiX <Files Include="dsc\**"> that matches nothing is a silent no-op --
+    # the build succeeds and produces an installer with no executor in it.  The
+    # server reports Windows hosts as config-management READY on the strength
+    # of dsc.exe being installed, so an MSI that quietly omits it turns that
+    # report into a lie on every Windows host.  Staging is already checked
+    # before the build; this checks the other end.
+    #
+    # A failure in the CHECK ITSELF is only a warning: a broken verification
+    # should not block a good build, but a verified-empty payload must.
+    Write-Host "Verifying DSC payload is present in the MSI..." -ForegroundColor Cyan
+    $dscFileCount = $null
+    try {
+        $msi = New-Object -ComObject WindowsInstaller.Installer
+        $db = $msi.GetType().InvokeMember("OpenDatabase", "InvokeMethod", $null, $msi, @($OutputMsi, 0))
+        $view = $db.GetType().InvokeMember("OpenView", "InvokeMethod", $null, $db, @('SELECT `FileName` FROM `File`'))
+        $view.GetType().InvokeMember("Execute", "InvokeMethod", $null, $view, $null) | Out-Null
+
+        $dscFileCount = 0
+        while ($true) {
+            $record = $view.GetType().InvokeMember("Fetch", "InvokeMethod", $null, $view, $null)
+            if ($null -eq $record) { break }
+            $name = $record.GetType().InvokeMember("StringData", "GetProperty", $null, $record, @(1))
+            # MSI FileName is "short|long"; match either half.
+            if ($name -match 'dsc\.exe') { $dscFileCount++ }
+        }
+        $view.GetType().InvokeMember("Close", "InvokeMethod", $null, $view, $null) | Out-Null
+    } catch {
+        Write-Host "[WARNING] Could not inspect the MSI to verify DSC: $_" -ForegroundColor Yellow
+        Write-Host "          Verify by hand with: msiexec /a `"$OutputMsi`" /qn TARGETDIR=C:\temp\msi-check" -ForegroundColor Yellow
+        $dscFileCount = $null
+    }
+
+    if ($null -ne $dscFileCount) {
+        if ($dscFileCount -lt 1) {
+            Write-Host "ERROR: the MSI contains no dsc.exe -- the DSC payload was staged but not packaged." -ForegroundColor Red
+            Write-Host '       Check the <Files Include="dsc\**"> group in sysmanage-agent.wxs.' -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "[OK] dsc.exe is present in the MSI" -ForegroundColor Green
+    }
     Write-Host ""
     Write-Host "Package: $OutputMsi" -ForegroundColor Cyan
     Write-Host ""
