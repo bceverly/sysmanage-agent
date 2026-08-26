@@ -471,30 +471,38 @@ try {
     # A failure in the CHECK ITSELF is only a warning: a broken verification
     # should not block a good build, but a verified-empty payload must.
     Write-Host "Verifying DSC payload is present in the MSI..." -ForegroundColor Cyan
-    $dscFileCount = $null
+    #
+    # This scans the MSI's bytes for the string "dsc.exe" rather than querying
+    # the File table through the WindowsInstaller COM object.  The COM route was
+    # tried first and failed with DISP_E_TYPEMISMATCH on this very box; its
+    # argument marshalling is fiddly and cannot be exercised anywhere but
+    # Windows, so it is the wrong tool for a check whose whole job is to be
+    # dependable.  A byte scan has no such moving parts.
+    #
+    # It is sound because file CONTENTS are compressed into the embedded CAB but
+    # the TABLE data -- including the File table's names -- lives in the MSI's
+    # string pool uncompressed.  And the string cannot arrive by accident: the
+    # .wxs never mentions "dsc.exe" (only Include="dsc\**"), so if the harvest
+    # matched nothing, the name appears nowhere in the package.
+    $dscInMsi = $null
     try {
-        $msi = New-Object -ComObject WindowsInstaller.Installer
-        $db = $msi.GetType().InvokeMember("OpenDatabase", "InvokeMethod", $null, $msi, @($OutputMsi, 0))
-        $view = $db.GetType().InvokeMember("OpenView", "InvokeMethod", $null, $db, @('SELECT `FileName` FROM `File`'))
-        $view.GetType().InvokeMember("Execute", "InvokeMethod", $null, $view, $null) | Out-Null
-
-        $dscFileCount = 0
-        while ($true) {
-            $record = $view.GetType().InvokeMember("Fetch", "InvokeMethod", $null, $view, $null)
-            if ($null -eq $record) { break }
-            $name = $record.GetType().InvokeMember("StringData", "GetProperty", $null, $record, @(1))
-            # MSI FileName is "short|long"; match either half.
-            if ($name -match 'dsc\.exe') { $dscFileCount++ }
+        $msiBytes = [System.IO.File]::ReadAllBytes($OutputMsi)
+        # The pool may be ANSI or UTF-16 depending on the package codepage.
+        $asAnsi = [System.Text.Encoding]::ASCII.GetString($msiBytes)
+        $dscInMsi = $asAnsi -match '(?i)dsc\.exe'
+        if (-not $dscInMsi) {
+            $asUnicode = [System.Text.Encoding]::Unicode.GetString($msiBytes)
+            $dscInMsi = $asUnicode -match '(?i)dsc\.exe'
         }
-        $view.GetType().InvokeMember("Close", "InvokeMethod", $null, $view, $null) | Out-Null
+        $msiBytes = $null
     } catch {
         Write-Host "[WARNING] Could not inspect the MSI to verify DSC: $_" -ForegroundColor Yellow
         Write-Host "          Verify by hand with: msiexec /a `"$OutputMsi`" /qn TARGETDIR=C:\temp\msi-check" -ForegroundColor Yellow
-        $dscFileCount = $null
+        $dscInMsi = $null
     }
 
-    if ($null -ne $dscFileCount) {
-        if ($dscFileCount -lt 1) {
+    if ($null -ne $dscInMsi) {
+        if (-not $dscInMsi) {
             Write-Host "ERROR: the MSI contains no dsc.exe -- the DSC payload was staged but not packaged." -ForegroundColor Red
             Write-Host '       Check the <Files Include="dsc\**"> group in sysmanage-agent.wxs.' -ForegroundColor Red
             exit 1
