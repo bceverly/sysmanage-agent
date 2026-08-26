@@ -161,6 +161,32 @@ def _which(name: str) -> Optional[str]:
     return shutil.which(name)
 
 
+def _suppression_reason(command, this_system, these_distros, lookup):
+    """The reason ``command`` must not be advertised, or None if it is usable.
+
+    Split out of ``detect_suppressed`` so that function stays a flat loop: the
+    three checks below were three guard-and-continue blocks inline, which put
+    its cognitive complexity over the limit for no gain in clarity.
+
+    ORDER MATTERS between the second and third checks.  A missing ``pro`` on
+    Alpine must read as "not applicable here", not as "install it"; reversing
+    them would put every non-Ubuntu host back in the limited bucket.
+    """
+    required, reason = _REQUIRED_PLATFORMS.get(command, ((), ""))
+    if required and this_system not in required:
+        return reason
+
+    distros, distro_reason = _REQUIRED_DISTROS.get(command, ((), ""))
+    if distros and not these_distros.intersection(distros):
+        return distro_reason
+
+    tools, tool_reason = _REQUIRED_TOOLS.get(command, ((), ""))
+    if tools and not any(lookup(tool) for tool in tools):
+        return tool_reason
+
+    return None
+
+
 def detect_suppressed(
     available: Iterable[str],
     *,
@@ -194,29 +220,16 @@ def detect_suppressed(
     suppressed: Dict[str, str] = {}
 
     for command in available:
-        required, reason = _REQUIRED_PLATFORMS.get(command, ((), ""))
-        if required and this_system not in required:
+        reason = _suppression_reason(command, this_system, these_distros, lookup)
+        if reason:
             suppressed[command] = reason
-            continue
-
-        # Distro check before the tool check, and that order is the fix: a
-        # missing `pro` on Alpine must read as "not applicable here", not as
-        # "install it".  Reversing these would put every non-Ubuntu host back
-        # in the limited bucket.
-        distros, distro_reason = _REQUIRED_DISTROS.get(command, ((), ""))
-        if distros and not these_distros.intersection(distros):
-            suppressed[command] = distro_reason
-            continue
-
-        tools, tool_reason = _REQUIRED_TOOLS.get(command, ((), ""))
-        if tools and not any(lookup(tool) for tool in tools):
-            suppressed[command] = tool_reason
 
     if build_excluded:
         # Build-time wins: if an artifact shipped without the code, no runtime
         # probe can make it available again.
+        available_set = set(available)
         for command, reason in build_excluded.items():
-            if command in set(available):
+            if command in available_set:
                 suppressed[command] = reason
 
     return dict(sorted(suppressed.items()))

@@ -232,13 +232,16 @@ def build_capability_report(
         inapplicable = [
             c for c in commands if suppressed.get(c) in INAPPLICABLE_REASONS
         ]
-        applicable = [c for c in commands if c not in set(inapplicable)]
+        # Hoisted out of the comprehension: rebuilding the set on every
+        # iteration made this O(n^2) over the command list for no reason.
+        inapplicable_set = set(inapplicable)
+        applicable = [c for c in commands if c not in inapplicable_set]
 
         if not applicable:
             # Nothing in this group can exist on this OS.  Reported so the UI
             # can say "not applicable" instead of going silent, but kept OUT of
             # unavailable/partial so it never reads as a limitation.
-            reasons = set(suppressed[c] for c in inapplicable)
+            reasons = {suppressed[c] for c in inapplicable}
             not_applicable[group] = (
                 reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
             )
