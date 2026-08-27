@@ -36,7 +36,9 @@ falls back to PATH (which covers developers who installed DSC themselves).
 import os
 import platform
 import shutil
-from typing import List, Optional
+from typing import Dict, List, Optional
+
+from src.sysmanage_agent.operations import config_mgmt_engines as engines
 
 # Matches backend/services/config_mgmt_plan_builder.py.  The two must agree:
 # the server decides what to install, this decides what to run.
@@ -73,6 +75,16 @@ def _agent_install_root() -> Optional[str]:
     return os.path.abspath(os.path.join(here, "..", "..", ".."))
 
 
+def _vendored_candidates(engine) -> List[str]:
+    """Places a VENDORED engine's binary may live, most-authoritative first."""
+    candidates = []
+    root = _agent_install_root()
+    if root:
+        for binary in engine.binaries:
+            candidates.append(os.path.join(root, engine.name, binary))
+    return candidates
+
+
 def _windows_candidates() -> List[str]:
     """Places ``dsc.exe`` may live, most-authoritative first."""
     candidates = []
@@ -84,6 +96,48 @@ def _windows_candidates() -> List[str]:
         # shipped and tested against.
         candidates.append(os.path.join(root, "dsc", WINDOWS_BINARY))
     return candidates
+
+
+def find_engine(name=None, which=None, system=None) -> Optional[str]:
+    """Absolute path to a NAMED engine's binary on this host, or None.
+
+    ``name`` is an engine identity (``"salt"``, ``"chef"`` ...), not a binary.
+    Omitted, it resolves to the platform default -- which is what keeps every
+    existing caller working while profiles gain the ability to choose.
+    """
+    engine = engines.get(name, system)
+    if engine is None:
+        # An unimplemented engine is "not available here", not an error.
+        return None
+
+    lookup = which or shutil.which
+    this_system = system or platform.system()
+
+    if engine.vendored and this_system == "Windows":
+        for candidate in _vendored_candidates(engine):
+            if os.path.isfile(candidate):
+                return candidate
+
+    for binary in engine.binaries:
+        found = lookup(binary)
+        if found:
+            return found
+    return None
+
+
+def available_engines(which=None, system=None) -> Dict[str, str]:
+    """``{engine name: path}`` for every engine this host can actually run.
+
+    The server needs the SET, not one answer: a host with Ansible and Salt can
+    be sent either kind of profile, and reporting a single executor would make
+    one of them look impossible.
+    """
+    found = {}
+    for name in engines.applicable(system):
+        path = find_engine(name, which=which, system=system)
+        if path:
+            found[name] = path
+    return found
 
 
 def find_executor(which=None, system=None) -> Optional[str]:
@@ -112,5 +166,12 @@ def find_executor(which=None, system=None) -> Optional[str]:
 
 
 def is_available(which=None, system=None) -> bool:
-    """Whether this host can run configuration profiles at all."""
-    return find_executor(which, system) is not None
+    """Whether this host can run configuration profiles with ANY engine.
+
+    Deliberately not "does the default engine exist": a host with only Salt
+    installed can absolutely run Salt profiles, and reporting the capability as
+    unavailable because ansible-core happens to be missing would hide a working
+    feature. The capability answers "can this host apply profiles at all"; the
+    SERVER decides whether the specific engine a profile names is present.
+    """
+    return bool(available_engines(which=which, system=system))

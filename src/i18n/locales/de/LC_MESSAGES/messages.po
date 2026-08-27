@@ -168,8 +168,7 @@ msgstr "Fehler beim Abrufen des Microsoft Defender-Gesundheitsstatus: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:333
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr ""
-"Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
+msgstr "Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:338
 #, python-format
@@ -1275,8 +1274,7 @@ msgstr "Fehler bei der Herzenbeatsüberprüfung des Kindhosts: %s"
 #: src/sysmanage_agent/wsl/keepalive.py:241
 #, python-format
 msgid "Failed to start keep-alive for WSL instance %s: %s"
-msgstr ""
-"Fehler beim Starten der Keep-Alive-Funktion für die WSL-Instanz %s: %s"
+msgstr "Fehler beim Starten der Keep-Alive-Funktion für die WSL-Instanz %s: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:364
 #: src/sysmanage_agent/wsl/keepalive.py:256
@@ -1537,8 +1535,7 @@ msgstr "Senden von Graylog-Statusdaten fehlgeschlagen"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Cannot send Graylog status data: no host approval"
-msgstr ""
-"Kann Graylog-Statusdaten nicht senden: keine Hostgenehmigung vorhanden"
+msgstr "Kann Graylog-Statusdaten nicht senden: keine Hostgenehmigung vorhanden"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:333
 msgid "Cannot send process data: no host approval"
@@ -1568,8 +1565,8 @@ msgstr "Fehler beim Verarbeiten der übermittelten Nachricht %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
 "Kann die HTTP-Fallbackfunktion nicht verwenden: Dieser Agent hat keine "
 "gespeicherte host_id. Die Registrierung muss zuerst abgeschlossen werden."
@@ -1583,8 +1580,8 @@ msgid ""
 msgstr ""
 "HTTP-Polling wird anstelle von WebSocket verwendet: Dieses Netzwerk hat die "
 "WebSocket-Aktualisierung abgelehnt. Befehle werden mit bis zu einigen "
-"Sekunden Verzögerung eintreffen. Erlauben Sie WebSocket-Aktualisierungen auf"
-" %s, um den sofortigen Versand wiederherzustellen."
+"Sekunden Verzögerung eintreffen. Erlauben Sie WebSocket-Aktualisierungen auf "
+"%s, um den sofortigen Versand wiederherzustellen."
 
 #: src/sysmanage_agent/communication/http_polling.py:201
 #, python-format
@@ -1624,8 +1621,7 @@ msgstr ""
 "werden: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Die Host-Registrierung wartet auf Genehmigung. Periodische Versuche werden "
 "fortgesetzt."
@@ -1649,8 +1645,8 @@ msgid ""
 "tenant index; will re-register only if it persists."
 msgstr ""
 "Der Server hat host_not_registered gemeldet (Strike %(n)d/%(limit)d) – "
-"Verbindung neu herstellen OHNE Ablaufen des host_id, damit der Server dieses"
-" Host aus seinem Tenant-Index erneut auflösen kann; Registrierung wird nur "
+"Verbindung neu herstellen OHNE Ablaufen des host_id, damit der Server dieses "
+"Host aus seinem Tenant-Index erneut auflösen kann; Registrierung wird nur "
 "erfolgen, wenn es anhält."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
@@ -2612,13 +2608,13 @@ msgstr "Homebrew ist bereits installiert"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
 "Die Homebrew-Installation erfordert manuelle Eingriffe. Bitte installieren "
-"Sie mit: /bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Sie mit: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
+"Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -2671,8 +2667,7 @@ msgstr "Keine Pakete für Installation angegeben"
 #: src/sysmanage_agent/operations/package_operations.py:347
 #, python-format
 msgid "Failed to send installation completion to server: %s"
-msgstr ""
-"Fehler beim Senden der Installationserfolgsnachricht an den Server: %s"
+msgstr "Fehler beim Senden der Installationserfolgsnachricht an den Server: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:376
 msgid "No packages specified for uninstallation"
@@ -3106,8 +3101,7 @@ msgstr "Benutzer %s und Standardgruppe erfolgreich gelöscht"
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
 msgstr ""
-"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: "
-"%s"
+"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:38
 #: src/sysmanage_agent/operations/user_account_operations.py:124
@@ -3328,8 +3322,7 @@ msgstr "Bitte genehmigen Sie diesen Host im SysManage-Webinterface"
 #: src/sysmanage_agent/registration/registration_manager.py:200
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr ""
-"Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
+msgstr "Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:233
 #, python-format
@@ -3538,9 +3531,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Gefundenes Paket: %s v%s von Typ %s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr ""
-#~ "Doppelnachlauf-Rolle überspringen: %s mit Dienst %s (haben bereits Paket %s)"
+#~ "Doppelnachlauf-Rolle überspringen: %s mit Dienst %s (haben bereits Paket "
+#~ "%s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3692,8 +3687,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig nicht gefunden, erstellt um automatisches WSL-Beenden bei %s zu "
-#~ "verhindern"
+#~ ".wslconfig nicht gefunden, erstellt um automatisches WSL-Beenden bei %s "
+#~ "zu verhindern"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3804,11 +3799,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Paketbatch %s abgeschlossen"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "Zertifikatssammlung im nicht privilegierten Modus - einige Zertifikate sind "
-#~ "möglicherweise nicht zugänglich"
+#~ "Zertifikatssammlung im nicht privilegierten Modus - einige Zertifikate "
+#~ "sind möglicherweise nicht zugänglich"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "SSL-Zertifikate vom System sammeln"
@@ -3878,7 +3873,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Processing queued inbound command: %s (queue_id: %s)"
-#~ msgstr "Verarbeitung der eingehenden Warteschlangebefehle: %s (queue_id: %s)"
+#~ msgstr ""
+#~ "Verarbeitung der eingehenden Warteschlangebefehle: %s (queue_id: %s)"
 
 #, python-format
 #~ msgid "Successfully processed inbound message: %s"
@@ -3886,7 +3882,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Process outbound queue called, current running status: %s"
-#~ msgstr "Aufruf des Ausgehenden Warteschlangenprozessors, aktueller Status: %s"
+#~ msgstr ""
+#~ "Aufruf des Ausgehenden Warteschlangenprozessors, aktueller Status: %s"
 
 #~ msgid "Queue processor already running, exiting"
 #~ msgstr "Warteschlangenprozessor ist bereits aktiv, verlasse Programm"
@@ -3909,7 +3906,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d hängende Nachrichten wiederhergestellt"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Aufgabe für die Ausgangswarteschlange erstellen aus "
 #~ "on_connection_established"
@@ -3923,7 +3921,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "Ausgehender Warteschlangenprozessor ist bereits aktiv, starte keinen "
 #~ "weiteren"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Aufgabe für die Eingangswarteschlange erstellen aus "
 #~ "on_connection_established"
@@ -4092,7 +4091,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 #~ msgstr ""
-#~ "Windows-Systemereignisprotokoll (dies kann 10-30 Sekunden dauern) sammeln..."
+#~ "Windows-Systemereignisprotokoll (dies kann 10-30 Sekunden dauern) "
+#~ "sammeln..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4126,8 +4126,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Synchronisierte benutzerdefinierte Metriken: %d aktiv, %d ignoriert (nicht "
-#~ "gültig)"
+#~ "Synchronisierte benutzerdefinierte Metriken: %d aktiv, %d ignoriert "
+#~ "(nicht gültig)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4262,7 +4262,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-#~ msgstr "Update-Anfrage empfangen: package='%s', manager='%s', bundle_id='%s'"
+#~ msgstr ""
+#~ "Update-Anfrage empfangen: package='%s', manager='%s', bundle_id='%s'"
 
 #, python-format
 #~ msgid "Using detected package manager '%s' for %s"
@@ -4274,7 +4275,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Warten auf Wiederverbindung zum Senden der Update-Ergebnisse (Versuch %d/%d)"
+#~ "Warten auf Wiederverbindung zum Senden der Update-Ergebnisse (Versuch %d/"
+#~ "%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Erneutes Scannen nach verfügbaren Updates nach Batch-Abschluss"
@@ -4434,10 +4436,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Registrierung erhalten, aber Bestätigung noch ausstehend"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr ""
-#~ "Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - Genehmigung"
-#~ " kann separat erfolgen"
+#~ "Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - "
+#~ "Genehmigung kann separat erfolgen"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4449,8 +4452,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "System-Info nach Genehmigung zum Aktualisieren des Backendverbindungsstatus "
-#~ "in die Warteschlange gelegt"
+#~ "System-Info nach Genehmigung zum Aktualisieren des "
+#~ "Backendverbindungsstatus in die Warteschlange gelegt"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -4484,8 +4487,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Der Server meldet, dass der Host nicht registriert ist. Speicherter host_id "
-#~ "wird gelöscht und Wiederregistrierung ausgelôst..."
+#~ "Der Server meldet, dass der Host nicht registriert ist. Speicherter "
+#~ "host_id wird gelöscht und Wiederregistrierung ausgelôst..."
 
 #, python-format
 #~ msgid "Using database path from SYSMANAGE_DB_PATH: %s"
@@ -4505,7 +4508,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
-#~ msgstr "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
+#~ msgstr ""
+#~ "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -4592,11 +4596,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, aktiviert: "
-#~ "%s, lizenziert: %s)"
+#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, "
+#~ "aktiviert: %s, lizenziert: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4648,7 +4652,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Found %d OpenBSD system patches (combined into single update)"
 #~ msgstr ""
-#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update zusammengefasst)"
+#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update "
+#~ "zusammengefasst)"
 
 #, python-format
 #~ msgid "Current OpenBSD version: %s"
@@ -4724,8 +4729,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
 #~ msgstr ""
-#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. Manuelle"
-#~ " Installation erforderlich."
+#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. "
+#~ "Manuelle Installation erforderlich."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4945,8 +4950,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
 #~ msgstr ""
-#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert möglicherweise "
-#~ "trotzdem"
+#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert "
+#~ "möglicherweise trotzdem"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "Autoinstall HTTP-Server gestoppt"
@@ -4971,12 +4976,13 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
 #~ msgstr ""
-#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch Autoinstall"
+#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch "
+#~ "Autoinstall"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 #~ msgstr ""
-#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet (NICHT "
-#~ "EMPFOHLEN)"
+#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet "
+#~ "(NICHT EMPFOHLEN)"
 
 #~ msgid "Port already in use"
 #~ msgstr "Port bereits in Verwendung"
@@ -5064,8 +5070,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/kvm"
-#~ " existiert und CPU-Virtualisierung im BIOS aktiviert ist."
+#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/"
+#~ "kvm existiert und CPU-Virtualisierung im BIOS aktiviert ist."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM ist bereits initialisiert und einsatzbereit"
@@ -5245,8 +5251,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Virtualisierungsstatus-Update für den Versand an den Server in Warteschlange"
-#~ " gestellt"
+#~ "Virtualisierungsstatus-Update für den Versand an den Server in "
+#~ "Warteschlange gestellt"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img nicht gefunden, versuche zu installieren: %s"

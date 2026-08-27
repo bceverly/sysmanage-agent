@@ -140,3 +140,70 @@ class TestNoSideEffects:
             source = handle.read()
         assert "import subprocess" not in source
         assert "os.system" not in source
+
+
+class TestPerEngineLookup:
+    """A host may run several engines; the locator answers per engine.
+
+    The old API answered "which executor does this host use?" with one value
+    derived from the platform. That was right while there was one engine per
+    platform and wrong the moment an operator could choose.
+    """
+
+    def test_a_named_engine_is_found_independently_of_the_default(self):
+        with patch(f"{MOD}.platform.system", return_value="Linux"), patch(
+            f"{MOD}.shutil.which",
+            side_effect=lambda n: "/usr/bin/salt-call" if n == "salt-call" else None,
+        ):
+            assert locator.find_engine("salt") == "/usr/bin/salt-call"
+            # ansible is the platform default and is absent; that must not
+            # affect the answer for salt.
+            assert locator.find_engine("ansible-core") is None
+
+    def test_available_engines_reports_the_whole_set(self):
+        present = {"salt-call": "/usr/bin/salt-call", "puppet": "/usr/bin/puppet"}
+        with patch(f"{MOD}.platform.system", return_value="Linux"), patch(
+            f"{MOD}.shutil.which", side_effect=present.get
+        ):
+            assert locator.available_engines() == {
+                "salt": "/usr/bin/salt-call",
+                "puppet": "/usr/bin/puppet",
+            }
+
+    def test_a_salt_only_host_can_still_run_profiles(self):
+        # The regression this refactor exists to prevent: keying availability
+        # off the platform default would report this host as unable to run
+        # config management at all.
+        with patch(f"{MOD}.platform.system", return_value="Linux"), patch(
+            f"{MOD}.shutil.which",
+            side_effect=lambda n: "/usr/bin/salt-call" if n == "salt-call" else None,
+        ):
+            assert locator.is_available() is True
+
+    def test_a_host_with_nothing_installed_is_unavailable(self):
+        with patch(f"{MOD}.platform.system", return_value="Linux"), patch(
+            f"{MOD}.shutil.which", return_value=None
+        ):
+            assert locator.is_available() is False
+            assert locator.available_engines() == {}
+
+    def test_an_unknown_engine_is_none_not_an_exception(self):
+        with patch(f"{MOD}.platform.system", return_value="Linux"):
+            assert locator.find_engine("terraform") is None
+
+    def test_dsc_is_not_looked_for_off_windows(self):
+        # It is the one platform-bound engine; probing for it on Linux would
+        # report an engine that cannot run there.
+        with patch(f"{MOD}.platform.system", return_value="Linux"), patch(
+            f"{MOD}.shutil.which", return_value="/usr/bin/anything"
+        ):
+            assert "dsc" not in locator.available_engines()
+
+    def test_the_vendored_windows_copy_still_wins_over_path(self, tmp_path):
+        vendored = tmp_path / "dsc" / "dsc.exe"
+        vendored.parent.mkdir()
+        vendored.write_text("")
+        with patch(f"{MOD}.platform.system", return_value="Windows"), patch(
+            f"{MOD}._agent_install_root", return_value=str(tmp_path)
+        ), patch(f"{MOD}.shutil.which", return_value="C:\\Other\\dsc.exe"):
+            assert locator.find_engine("dsc") == str(vendored)
