@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -700,7 +700,8 @@ msgstr "Fout bij verzamelen apt-pakketten: %s"
 #, python-format
 msgid "Error fetching winget page %d (collected %d packages so far): %s"
 msgstr ""
-"Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten verzameld): %s"
+"Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten verzameld): "
+"%s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:196
 msgid "No packages collected from Chocolatey community repository"
@@ -1555,8 +1556,8 @@ msgstr "Fout bij verwerken van gepold bericht %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Kan de HTTP fallback niet gebruiken: deze agent heeft geen opgeslagen "
 "host_id. Registratie moet eerst voltooid zijn."
@@ -1569,8 +1570,8 @@ msgid ""
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
 "Gebruik HTTP polling in plaats van een WebSocket: dit netwerk weigert de "
-"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging "
-"arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
+"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging"
+" arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
 "herstellen."
 
 #: src/sysmanage_agent/communication/http_polling.py:201
@@ -1609,10 +1610,11 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Kan tijdstempel van bericht voor verouderde controle niet parsen: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
-"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden "
-"doorgestuurd."
+"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden"
+" doorgestuurd."
 
 #: src/sysmanage_agent/communication/message_handler.py:364
 msgid "Server reports missing hostname in message. This is a bug."
@@ -1657,8 +1659,8 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector mist "
-"send_software_inventory_update"
+"Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector mist"
+" send_software_inventory_update"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1764,7 +1766,8 @@ msgstr "Mislukt om uitgaande-wachtrij-verwerkingsopdracht aan te maken: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
+msgstr ""
+"Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
@@ -2104,11 +2107,17 @@ msgstr "Fout bij het toevoegen van NetBSD-repository: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "Child-hostbeheer vereist Pro+ (engine-pad)."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
 msgstr ""
 "Er werd een configuratieprofiel aangevraagd, maar geen uitvoerder is "
 "geïnstalleerd"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "Een onbruikbare configuratiespecificatie wordt geweigerd: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2302,7 +2311,8 @@ msgstr "Mislukt om hostname aan te passen: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:124
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr "hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
+msgstr ""
+"hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:138
 #: src/sysmanage_agent/operations/hostname_operations.py:144
@@ -2585,13 +2595,13 @@ msgstr "Homebrew is al geœtalleerd"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew-installatie vereist handmatige interventie. Installeer met: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Homebrew-installatie vereist handmatige interventie. Installeer met: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -2837,7 +2847,8 @@ msgstr "Mislukt om antivirus-status op te halen/door te sturen: %s"
 #: src/sysmanage_agent/operations/system_control.py:168
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
-msgstr "Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
+msgstr ""
+"Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:177
 #, python-format
@@ -3382,8 +3393,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 #~ msgstr ""
-#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over "
-#~ "%d seconden"
+#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over %d "
+#~ "seconden"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3392,8 +3403,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 # Message Queue Recovery
 #, python-format
 #~ msgid "Recovered stuck message %s (type: %s), will retry"
-#~ msgstr ""
-#~ "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
+#~ msgstr "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
 
 #, python-format
 #~ msgid "Recovered %d stuck messages"
@@ -3489,8 +3499,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid ""
 #~ "Successfully collected %d packages from Chocolatey community repository"
-#~ msgstr ""
-#~ "%d pakketten succesvol verzameld uit Chocolatey community-repository"
+#~ msgstr "%d pakketten succesvol verzameld uit Chocolatey community-repository"
 
 #, python-format
 #~ msgid "Process snapshot truncated from %d to %d (cap)"
@@ -3509,8 +3518,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Gevonden pakket: %s v%s (%s)"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Dubbele rol overslaan: %s met dienst %s (hebben al pakket %s)"
 
 #, python-format
@@ -3569,8 +3577,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, "
-#~ "%d toepassing)"
+#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, %d"
+#~ " toepassing)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3669,8 +3677,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen "
-#~ "op %s"
+#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen op "
+#~ "%s"
 
 #~ msgid ".wslconfig saved successfully"
 #~ msgstr ".wslconfig succesvol opgeslagen"
@@ -3680,8 +3688,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "WSL shutdown complete, new settings will apply on next start"
 #~ msgstr ""
-#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn "
-#~ "bij de volgende opstart"
+#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn bij "
+#~ "de volgende opstart"
 
 #~ msgid "Starting WSL keep-alive processes"
 #~ msgstr "Start WSL keep-alive processen"
@@ -3731,16 +3739,14 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr ""
-#~ "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
+#~ msgstr "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "Geen certificaten gevonden op het systeem"
 
 #, python-format
 #~ msgid "Found and sent %d server roles during initial collection"
-#~ msgstr ""
-#~ "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
+#~ msgstr "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
 
 #~ msgid "No server roles found during initial collection"
 #~ msgstr "Tijdens initiële verzameling geen serverrollen gevonden"
@@ -3770,19 +3776,18 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-#~ msgstr ""
-#~ "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
+#~ msgstr "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
 
 #, python-format
 #~ msgid "Completed packages batch %s"
 #~ msgstr "Voltooide pakketbatch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - "
-#~ "sommige certificaten zijn mogelijk niet toegankelijk"
+#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - sommige"
+#~ " certificaten zijn mogelijk niet toegankelijk"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Verzamelen van SSL-certificaten uit systeem"
@@ -3816,8 +3821,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Ongeldige foutbericht [%s] genegeerd van %s (registratie om %s)"
 
 #~ msgid "Stored host_id cleared from database"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Disconnecting to trigger re-registration..."
 #~ msgstr "Verbinding verbreken om herregistratie te triggeren..."
@@ -3840,8 +3844,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "Creating queue processing task from queue_outbound_message"
 #~ msgstr ""
-#~ "Taak voor het verwerken van berichten aanmaken vanaf "
-#~ "queue_outbound_message"
+#~ "Taak voor het verwerken van berichten aanmaken vanaf queue_outbound_message"
 
 #, python-format
 #~ msgid "Task created from queue_outbound_message: %s"
@@ -3883,8 +3886,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d vastgelopen berichten hersteld"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van uitgaande berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -3896,8 +3898,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Uitgaande wachtrijverwerker is al actief, start geen nieuwe"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van binnenkomende berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -4094,8 +4095,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen "
-#~ "(ongeldig)"
+#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen (ongeldig)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4112,8 +4112,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, "
-#~ "has_private=%s"
+#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "NAT-regels zijn al geconfigureerd in before.rules"
@@ -4138,18 +4137,15 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-#~ msgstr ""
-#~ "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
+#~ msgstr "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing %d packages for request %s (requested_by: %s)"
-#~ msgstr ""
-#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Uninstalling %d packages for request %s (requested_by: %s)"
-#~ msgstr ""
-#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing packages with apt-get: %s"
@@ -4381,8 +4377,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "libvirt-pakketten succesvol geïnstalleerd"
 
 #~ msgid "No valid certificates found, checking host approval status..."
-#~ msgstr ""
-#~ "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
+#~ msgstr "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
 
 #, python-format
 #~ msgid "Retrieved server fingerprint for validation: %s"
@@ -4405,11 +4400,10 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Inschrijving ontvangen maar goedkeuring nog niet afgerond"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan "
-#~ "apart komen"
+#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan apart "
+#~ "komen"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4426,17 +4420,15 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
 #~ msgstr ""
-#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring "
-#~ "is opgeslagen"
+#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring is "
+#~ "opgeslagen"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
+#~ msgstr "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
 
 #~ msgid "Host approval records and related data cleared from database"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Corrupt database entries cleaned up"
 #~ msgstr "Gestoorde databaseteksten zijn opgeruimd"
@@ -4455,8 +4447,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen "
-#~ "en hernieuwde registratie activeren..."
+#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen en"
+#~ " hernieuwde registratie activeren..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4504,8 +4496,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Automatische migratie is ingeschakeld"
 
 #~ msgid "Auto-migration is disabled, skipping migrations"
-#~ msgstr ""
-#~ "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
+#~ msgstr "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
 
 #, python-format
 #~ msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
@@ -4567,8 +4558,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
 #~ "Microsoft Defender for Endpoint gedetecteerd op macOS (versie: %s, "
 #~ "ingeschakeld: %s, gelicentieerd: %s)"
@@ -4595,8 +4586,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
 #~ msgstr ""
-#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet "
-#~ "geïnstalleerd)"
+#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet geïnstalleerd)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4627,8 +4617,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Huidige OpenBSD-versie: %s"
 
 #~ msgid "Fetching https://www.openbsd.org/ to check for updates"
-#~ msgstr ""
-#~ "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
+#~ msgstr "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
 
 #, python-format
 #~ msgid "OpenBSD upgrade available: %s -> %s"
@@ -4663,8 +4652,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -4847,8 +4835,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en "
-#~ "opnieuw opgestart. Dit kan 10-15 minuten duren."
+#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en opnieuw "
+#~ "opgestart. Dit kan 10-15 minuten duren."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "Autoinstall HTTP-verzoek: %s van %s"

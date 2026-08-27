@@ -39,12 +39,15 @@ import asyncio
 import json
 import os
 import platform
+import shutil
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.i18n import _
 from src.sysmanage_agent.operations import config_mgmt_locator as locator
+from src.sysmanage_agent.operations import config_mgmt_readers as readers
 from src.sysmanage_agent.operations import config_mgmt_results as results
+from src.sysmanage_agent.operations import config_mgmt_spec as spec_mod
 
 # Generous, because a profile may install packages.  The server can override.
 DEFAULT_TIMEOUT_SECONDS = 1800
@@ -52,6 +55,7 @@ DEFAULT_TIMEOUT_SECONDS = 1800
 # Reason codes, not sentences: the SERVER owns translation, matching the
 # convention capability_probes established.
 REASON_NO_EXECUTOR = "executor_missing"
+REASON_BAD_SPEC = "spec_invalid"
 REASON_EMPTY_PROFILE = "profile_empty"
 REASON_TIMEOUT = "timeout"
 
@@ -123,6 +127,16 @@ class ConfigMgmtOperations:
         check_mode = bool(parameters.get("check_mode"))
         timeout = int(parameters.get("timeout") or DEFAULT_TIMEOUT_SECONDS)
 
+        # A server-supplied SPEC takes precedence. It is how any engine beyond
+        # the two the agent knows natively gets driven -- see config_mgmt_spec
+        # for why that indirection exists. ansible-core and DSC keep their
+        # built-in paths: they are the free engines, so their flags living in
+        # this AGPL file costs nothing, and keeping them means an older agent
+        # still works when the server has not started sending specs.
+        spec = parameters.get("spec")
+        if spec:
+            return await self._apply_with_spec(spec, timeout)
+
         executor = locator.find_executor()
         if not executor:
             self.logger.warning(
@@ -181,6 +195,58 @@ class ConfigMgmtOperations:
             (stdout or b"").decode("utf-8", errors="replace"),
             (stderr or b"").decode("utf-8", errors="replace"),
         )
+
+    async def _apply_with_spec(
+        self, spec: Dict[str, Any], timeout: int
+    ) -> Dict[str, Any]:
+        """Run a server-supplied execution spec.
+
+        The agent contributes process handling and file hygiene; every decision
+        about WHAT to run and how to read it comes from the spec.
+        """
+        problem = spec_mod.validate(spec)
+        if problem:
+            self.logger.warning(_("Refusing an unusable config spec: %s"), problem)
+            return self._failure(REASON_BAD_SPEC, detail=problem)
+
+        engine = spec.get("engine")
+        executable = locator.find_engine(engine)
+        if not executable:
+            self.logger.warning(
+                _("Config profile requested but no executor is installed")
+            )
+            return self._failure(REASON_NO_EXECUTOR, executor=engine)
+
+        workdir = spec_mod.make_workdir()
+        try:
+            argv, stdin_bytes = spec_mod.materialise(spec, workdir)
+            # Resolve the engine's own binary to the path we actually found,
+            # so a spec never has to guess where it lives.
+            argv[0] = executable
+
+            env = spec_mod.child_env(spec, os.environ.copy())
+            cwd, env = _safe_cwd_and_env(env)
+            spawned = await self._spawn(
+                argv,
+                stdin_bytes=stdin_bytes,
+                timeout=int(spec.get("timeout") or timeout),
+                env=env,
+                cwd=cwd,
+            )
+            if spawned is None:
+                return self._failure(REASON_TIMEOUT, timeout=timeout, executor=engine)
+
+            code, stdout, stderr = spawned
+            return readers.read(spec, code, stdout, stderr, workdir)
+        finally:
+            self._cleanup_tree(workdir)
+
+    def _cleanup_tree(self, workdir: str) -> None:
+        """Remove a run's whole scratch tree; never mask the real result."""
+        try:
+            shutil.rmtree(workdir, ignore_errors=True)
+        except OSError:
+            self.logger.debug("Could not remove %s", workdir)
 
     async def _apply_with_ansible(
         self, executor: str, profile: Dict[str, Any], check_mode: bool, timeout: int

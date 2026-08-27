@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -597,9 +597,7 @@ msgstr "收集 pkgin 包时出错：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
-"在有 dnf 可用的主机上跳过 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包装"
-"器）"
+msgstr "在有 dnf 可用的主机上跳过 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包装器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
@@ -723,9 +721,7 @@ msgstr "没有 PID 为 %d 的进程"
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
-msgstr ""
-"PID %(pid)d 现在是 '%(actual)s'，而非 '%(expected)s'（进程可能已被重用）；已"
-"拒绝终止"
+msgstr "PID %(pid)d 现在是 '%(actual)s'，而非 '%(expected)s'（进程可能已被重用）；已拒绝终止"
 
 #: src/sysmanage_agent/collection/process_collection.py:180
 #, python-format
@@ -1552,8 +1548,8 @@ msgstr "处理轮询消息%s时出错"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr "无法使用HTTP备用方案：此代理没有存储的host_id。必须先完成注册。"
 
 #: src/sysmanage_agent/communication/http_polling.py:186
@@ -1563,8 +1559,7 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"使用HTTP轮询代替WebSocket：此网络拒绝了WebSocket升级。命令将延迟几秒钟到达。"
-"允许WebSocket升级到%s以恢复即时交付。"
+"使用HTTP轮询代替WebSocket：此网络拒绝了WebSocket升级。命令将延迟几秒钟到达。允许WebSocket升级到%s以恢复即时交付。"
 
 #: src/sysmanage_agent/communication/http_polling.py:201
 #, python-format
@@ -1601,7 +1596,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "无法解析消息时间戳以进行过期检查：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr "主机注册正在等待审批。将定期尝试继续。"
 
 #: src/sysmanage_agent/communication/message_handler.py:364
@@ -1620,17 +1616,15 @@ msgid ""
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"服务器报告主机未注册 (第 %(n)d/%(limit)d 次警告) — 重新连接时不丢弃 host_id，"
-"以便服务器可以从其租户索引中重新解析此主机；如果问题持续，则将重新注册。"
+"服务器报告主机未注册 (第 %(n)d/%(limit)d 次警告) — 重新连接时不丢弃 "
+"host_id，以便服务器可以从其租户索引中重新解析此主机；如果问题持续，则将重新注册。"
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) — treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
-msgstr ""
-"主机未注册状态已持久化 (%(n)d 次警告) — 将该主机视为真正消失；清除存储的 "
-"host_id 并重新注册。"
+msgstr "主机未注册状态已持久化 (%(n)d 次警告) — 将该主机视为真正消失；清除存储的 host_id 并重新注册。"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
@@ -1642,9 +1636,7 @@ msgstr "清除存储的host_id时出错：%s"
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
-msgstr ""
-"广播 %s: 请求刷新库存，但 data_collector 缺少 send_software_inventory_update "
-"功能"
+msgstr "广播 %s: 请求刷新库存，但 data_collector 缺少 send_software_inventory_update 功能"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1660,8 +1652,7 @@ msgstr "广播 %s: 不支持的操作 '%s' — 忽略"
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
-msgstr ""
-"消息接收器：WebSocket 由于并发断开连接被清除；退出接收循环以允许重新连接"
+msgstr "消息接收器：WebSocket 由于并发断开连接被清除；退出接收循环以允许重新连接"
 
 #: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
@@ -1761,8 +1752,7 @@ msgstr "删除已完成队列消息时出错：%s"
 msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
-msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 跳过重复 vm_name=%s queue_message_id=%s"
+msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 跳过重复 vm_name=%s queue_message_id=%s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -2086,9 +2076,15 @@ msgstr "添加NetBSD仓库时出错：%s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "子主机管理需要 Pro+ (引擎路径)。"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
 msgstr "请求配置文件，但没有安装执行器"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "拒绝不可用的配置规范: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2561,9 +2557,9 @@ msgstr "Homebrew 已安装"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "Homebrew 安装需要手动干预。请使用以下命令安装：/bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
@@ -3475,8 +3471,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgstr "找到 %s 包：%s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "跳过重复的角色：%s，服务为%s（已拥有包%s）"
 
 #, python-format
@@ -3741,8 +3736,8 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgstr "完成包批次 %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr "在非特权模式下运行证书收集 - 某些证书可能无法访问"
 
 #~ msgid "Collecting SSL certificates from system"
@@ -3841,8 +3836,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "已恢复 %d 条卡住的消息"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "从on_connection_established创建出队处理任务"
 
 #, python-format
@@ -3852,8 +3846,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "出队处理器已经在运行，不再启动新的实例"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "从on_connection_established创建入队处理任务"
 
 #, python-format
@@ -4350,8 +4343,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgstr "已接收注册请求但等待审批"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr "注册成功但未提供主机 ID - 批准可能单独发送"
 
 #, python-format
@@ -4502,11 +4494,9 @@ msgstr "检查WSL支持时出错：%s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
-#~ msgstr ""
-#~ "在 macOS 上检测到 Microsoft Defender for Endpoint（版本：%s，已启用：%s，"
-#~ "已授权：%s）"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
+#~ msgstr "在 macOS 上检测到 Microsoft Defender for Endpoint（版本：%s，已启用：%s，已授权：%s）"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4775,8 +4765,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 自动安装进行中。虚拟机将自动安装并重启。这可能需要 10-15 分钟。"
+#~ msgstr "OpenBSD 自动安装进行中。虚拟机将自动安装并重启。这可能需要 10-15 分钟。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自动安装 HTTP 请求: %s 来自 %s"
@@ -4902,8 +4891,7 @@ msgstr "检查WSL支持时出错：%s"
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr ""
-#~ "此系统上不可用 KVM。请确保 /dev/kvm 存在且 BIOS 中已启用 CPU 虚拟化。"
+#~ msgstr "此系统上不可用 KVM。请确保 /dev/kvm 存在且 BIOS 中已启用 CPU 虚拟化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化并可以使用"

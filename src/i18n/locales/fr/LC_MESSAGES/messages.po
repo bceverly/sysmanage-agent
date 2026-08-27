@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -111,8 +111,8 @@ msgstr "Erreur de collecte des certificats Windows : %s"
 #, python-format
 msgid "Timeout querying Windows certificate store: %s"
 msgstr ""
-"Temps limite atteint lors de la requête de la base de données de certificats "
-"Windows : %s"
+"Temps limite atteint lors de la requête de la base de données de certificats"
+" Windows : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:524
 #, python-format
@@ -122,7 +122,8 @@ msgstr "Échec de la requête dans le magasin de certificats Windows %s : %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:615
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
-msgstr "Délai dépassé lors de l'extraction des infos de certificat depuis : %s"
+msgstr ""
+"Délai dépassé lors de l'extraction des infos de certificat depuis : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:620
 #, python-format
@@ -329,7 +330,8 @@ msgstr "ipconfig /all a échoué avec le code de retour : %d"
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
 msgid "Failed to get Windows network info via ipconfig: %s"
-msgstr "Échec de l’obtention des informations réseau Windows via ipconfig : %s"
+msgstr ""
+"Échec de l’obtention des informations réseau Windows via ipconfig : %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
@@ -874,7 +876,8 @@ msgstr "Échec de la collecte des paquets winget : %s"
 #: src/sysmanage_agent/collection/update_detection.py:66
 #, python-format
 msgid "Unsupported platform for update detection: %s"
-msgstr "Plateforme non prise en charge pour la détection des mises à jour : %s"
+msgstr ""
+"Plateforme non prise en charge pour la détection des mises à jour : %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:135
 #, python-format
@@ -1072,8 +1075,8 @@ msgstr "Échec de la détection des mises à niveau de version macOS : %s"
 #, python-format
 msgid "Package '%s' update timed out after %d seconds. Partial output: %s"
 msgstr ""
-"La mise à jour du paquet '%s' a expiré après %d secondes. Sortie partielle : "
-"%s"
+"La mise à jour du paquet '%s' a expiré après %d secondes. Sortie partielle :"
+" %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:130
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:234
@@ -1572,8 +1575,8 @@ msgstr "Erreur lors du traitement du message pollé %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Impossible d’utiliser le récours HTTP : cet agent n’a pas d’identifiant "
 "d’hôte stocké. L’inscription doit être complètement effectuée en premier."
@@ -1631,7 +1634,8 @@ msgstr ""
 "périmées : %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "L'enregistrement de l'hôte est en attente d'approbation. Les tentatives "
 "périodiques continueront."
@@ -1680,8 +1684,8 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"Diffusion de %s : demande de mise à jour du catalogue mais data_collector ne "
-"possède pas send_software_inventory_update"
+"Diffusion de %s : demande de mise à jour du catalogue mais data_collector ne"
+" possède pas send_software_inventory_update"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1784,21 +1788,22 @@ msgstr "Erreur lors du récupération des messages bloqués : %s"
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr ""
-"Échec de la création de la tâche de traitement de la file d'attente "
-"sortante : %s"
+"Échec de la création de la tâche de traitement de la file d'attente sortante"
+" : %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:410
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr ""
-"Échec de la création de la tâche de traitement de la file d'attente "
-"entrante : %s"
+"Échec de la création de la tâche de traitement de la file d'attente entrante"
+" : %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr ""
-"Erreur lors de la suppression des messages de la file d'attente terminée : %s"
+"Erreur lors de la suppression des messages de la file d'attente terminée : "
+"%s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format
@@ -1806,8 +1811,8 @@ msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
 msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] Ignorant la vm_name=%s queue_message_id=%s "
-"en double"
+">>> [CREATE_CHILD_HOST_DUPLICATE] Ignorant la vm_name=%s queue_message_id=%s"
+" en double"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -2133,9 +2138,15 @@ msgstr "Erreur lors de l'ajout du dépôt NetBSD : %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "La gestion des hôtes enfants nécessite Pro+ (chemin du moteur)."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
 msgstr "Profil de configuration demandé mais aucun exécuteur n'est installé"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "Refusant une spécification de configuration inutilisable : %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2164,7 +2175,8 @@ msgstr "le script s'est terminé avec le code %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:287
 msgid "script stdout was not a single numeric value"
-msgstr "la sortie stdout du script ne contenait pas une seule valeur numérique"
+msgstr ""
+"la sortie stdout du script ne contenait pas une seule valeur numérique"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:384
 #, python-format
@@ -2293,8 +2305,8 @@ msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr ""
-"L'exécution de gpg en tant qu'utilisateur Windows spécifique n'est pas prise "
-"en charge par l'agent ; importé dans le keyring actuel à la place."
+"L'exécution de gpg en tant qu'utilisateur Windows spécifique n'est pas prise"
+" en charge par l'agent ; importé dans le keyring actuel à la place."
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2563,7 +2575,8 @@ msgstr "Le nom du gestionnaire de paquets est requis"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:114
 msgid "Enabling package managers requires privileged mode"
-msgstr "L'activation des gestionnaires de paquets nécessite le mode privilégié"
+msgstr ""
+"L'activation des gestionnaires de paquets nécessite le mode privilégié"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:130
 #, python-format
@@ -2617,13 +2630,13 @@ msgstr "Homebrew est déjà installé"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "L'installation de Homebrew nécessite une intervention manuelle. Veuillez "
-"installer avec : /bin/bash -c \"$(curl -fsSL https://"
-"raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"installer avec : /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3035,7 +3048,8 @@ msgstr "Erreur lors de la désactivation du service Ubuntu Pro %s : %s"
 #: src/sysmanage_agent/operations/ubuntu_pro_operations.py:229
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
-msgstr "Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
+msgstr ""
+"Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
 
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
@@ -3265,7 +3279,8 @@ msgstr "Échec de l'enregistrement, réessayage dans %s secondes..."
 #: src/sysmanage_agent/registration/client_registration.py:437
 #, python-format
 msgid "Error loading stored auth data: %s"
-msgstr "Erreur lors du chargement des données d'authentification stockées : %s"
+msgstr ""
+"Erreur lors du chargement des données d'authentification stockées : %s"
 
 #: src/sysmanage_agent/registration/client_registration.py:456
 #, python-format
@@ -3326,8 +3341,8 @@ msgstr "Échec de l’obtention du doigté du serveur : %s"
 #: src/sysmanage_agent/registration/registration_manager.py:145
 msgid "Certificate-based authentication requires manual host approval"
 msgstr ""
-"L'authentification basée sur le certificat requiert une approbation manuelle "
-"du hôte"
+"L'authentification basée sur le certificat requiert une approbation manuelle"
+" du hôte"
 
 #: src/sysmanage_agent/registration/registration_manager.py:148
 msgid "Please approve this host in the SysManage web interface"
@@ -3409,8 +3424,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #, python-format
 #~ msgid "Database manager initialized with path: %s"
-#~ msgstr ""
-#~ "Initialisation du gestionnaire de base de données avec le chemin : %s"
+#~ msgstr "Initialisation du gestionnaire de base de données avec le chemin : %s"
 
 #~ msgid "Database tables created successfully"
 #~ msgstr "Paquets libvirt installés avec succès"
@@ -3525,8 +3539,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgstr "%d paquets collectés avec succès via winget REST API"
 
 #~ msgid "Fetching Chocolatey catalog via community repository API"
-#~ msgstr ""
-#~ "Récupération du catalogue Chocolatey via l'API du dépôt communautaire"
+#~ msgstr "Récupération du catalogue Chocolatey via l'API du dépôt communautaire"
 
 #, python-format
 #~ msgid ""
@@ -3551,11 +3564,9 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgstr "Trouvé le paquet %s : %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr ""
-#~ "Passer le rôle en double : %s avec le service %s (déjà possède le paquet "
-#~ "%s)"
+#~ "Passer le rôle en double : %s avec le service %s (déjà possède le paquet %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3613,8 +3624,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Détection des mises à jour terminée : %d mises à jour trouvées (%d "
-#~ "sécurité, %d système, %d application)"
+#~ "Détection des mises à jour terminée : %d mises à jour trouvées (%d sécurité,"
+#~ " %d système, %d application)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3829,8 +3840,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgstr "Lot de paquets terminé %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
 #~ "Exécution de la collecte de certificats en mode non privilégié - certains "
 #~ "certificats peuvent ne pas être accessibles"
@@ -3861,19 +3872,18 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Queued command acknowledgment for message: %s"
 #~ msgstr ""
-#~ "Ajout d'une confirmation de commande en file d'attente pour le message : "
-#~ "%s"
+#~ "Ajout d'une confirmation de commande en file d'attente pour le message : %s"
 
 #, python-format
 #~ msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 #~ msgstr ""
-#~ "Ignorer le message d'erreur obsolète [%s] provenant de %s (enregistrement "
-#~ "à %s)"
+#~ "Ignorer le message d'erreur obsolète [%s] provenant de %s (enregistrement à "
+#~ "%s)"
 
 #~ msgid "Stored host_id cleared from database"
 #~ msgstr ""
-#~ "Enregistrements d'approbation d'hôte et données associées effacés de la "
-#~ "base de données"
+#~ "Enregistrements d'approbation d'hôte et données associées effacés de la base"
+#~ " de données"
 
 #~ msgid "Disconnecting to trigger re-registration..."
 #~ msgstr "Déconnexion pour triggrer la réenregistrement..."
@@ -3902,8 +3912,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #, python-format
 #~ msgid "Task created from queue_outbound_message: %s"
-#~ msgstr ""
-#~ "Tâche créée à partir de la file d'attente queue_outbound_message : %s"
+#~ msgstr "Tâche créée à partir de la file d'attente queue_outbound_message : %s"
 
 #~ msgid "Starting inbound queue processing"
 #~ msgstr "Connexion établie, démarrage du traitement de la file d'attente"
@@ -3920,8 +3929,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Process outbound queue called, current running status: %s"
 #~ msgstr ""
-#~ "Appel du traitement sortant de la file d'attente, statut actuel en "
-#~ "cours : %s"
+#~ "Appel du traitement sortant de la file d'attente, statut actuel en cours : "
+#~ "%s"
 
 #~ msgid "Queue processor already running, exiting"
 #~ msgstr "Le processeur de la file d'attente est déjà en cours, sortie"
@@ -3944,8 +3953,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d messages bloqués récupérés"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Création de la tâche de traitement de la file d'attente sortante depuis "
 #~ "on_connection_established"
@@ -3959,8 +3967,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ "Traitement sortant de la file d'attente déjà en cours, non démarrage "
 #~ "supplémentaire"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Création de la tâche de traitement de la file d'attente entrante depuis "
 #~ "on_connection_established"
@@ -3998,8 +4005,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "Package collection is disabled - scheduler will not run"
 #~ msgstr ""
-#~ "La collecte des paquets est désactivée - le planificateur ne s'exécutera "
-#~ "pas"
+#~ "La collecte des paquets est désactivée - le planificateur ne s'exécutera pas"
 
 #~ msgid "Running initial package collection at startup"
 #~ msgstr "Collecte initiale des paquets en cours au démarrage"
@@ -4167,8 +4173,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Synchronisation des métriques personnalisées : %d active(s), %d ignoré(e)"
-#~ "(s) (non valide(s))"
+#~ "Synchronisation des métriques personnalisées : %d active(s), %d ignoré(e)(s)"
+#~ " (non valide(s))"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4264,16 +4270,16 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Starting release-upgrade (job %s): %s -> %s"
 #~ msgstr ""
-#~ "Lancement de la mise à niveau vers une nouvelle version (t€che %s) : %s "
-#~ "-> %s"
+#~ "Lancement de la mise à niveau vers une nouvelle version (t€che %s) : %s -> "
+#~ "%s"
 
 #~ msgid "Sent antivirus status update to server"
 #~ msgstr "Envoi de l'état antivirus mis à jour au serveur"
 
 #~ msgid "Sent commercial antivirus status update to server"
 #~ msgstr ""
-#~ "Envoyé la mise à jour détaillant l’état du logiciel antivirus commercial "
-#~ "au serveur"
+#~ "Envoyé la mise à jour détaillant l’état du logiciel antivirus commercial au "
+#~ "serveur"
 
 #~ msgid "Attaching Ubuntu Pro subscription..."
 #~ msgstr "Attachement de l'abonnement Ubuntu Pro..."
@@ -4324,8 +4330,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Attente de reconnexion pour envoyer les résultats de mise à jour "
-#~ "(tentative %d/%d)"
+#~ "Attente de reconnexion pour envoyer les résultats de mise à jour (tentative "
+#~ "%d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Nouveau scan des mises à jour disponibles après la fin du lot"
@@ -4485,8 +4491,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgstr "Enregistrement reçu mais approbation en attente"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
 #~ "Succès de l'enregistrement mais aucun host_id fourni - l'approbation peut "
 #~ "venir séparément"
@@ -4497,8 +4502,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #, python-format
 #~ msgid "Host approval information stored successfully. Host ID: %s"
-#~ msgstr ""
-#~ "Informations d'approbation d'hôte stockées avec succès. Host ID : %s"
+#~ msgstr "Informations d'approbation d'hôte stockées avec succès. Host ID : %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
@@ -4519,8 +4523,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "Host approval records and related data cleared from database"
 #~ msgstr ""
-#~ "Enregistrements d'approbation d'hôte et données associées effacés de la "
-#~ "base de données"
+#~ "Enregistrements d'approbation d'hôte et données associées effacés de la base"
+#~ " de données"
 
 #~ msgid "Corrupt database entries cleaned up"
 #~ msgstr "Les entrées corrompues de la base de données ont été nettoyées"
@@ -4669,8 +4673,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
 #~ "Microsoft Defender for Endpoint détecté sur macOS (version : %s, activé : "
 #~ "%s, sous licence : %s)"
@@ -4767,8 +4771,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
 #~ msgstr ""
-#~ "Résultat de la commande Chocolatey : returncode=%d, stdout='%s', "
-#~ "stderr='%s'"
+#~ "Résultat de la commande Chocolatey : returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -4802,8 +4805,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
 #~ msgstr ""
-#~ "Le déploiement d'OpenTelemetry sur %s n'est pas actuellement pris en "
-#~ "charge. Installation manuelle requise."
+#~ "Le déploiement d'OpenTelemetry sur %s n'est pas actuellement pris en charge."
+#~ " Installation manuelle requise."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -5131,8 +5134,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "Network setup attempted but may need manual verification"
 #~ msgstr ""
-#~ "Configuration réseau tentée mais vérification manuelle peut être "
-#~ "nécessaire"
+#~ "Configuration réseau tentée mais vérification manuelle peut être nécessaire"
 
 #~ msgid "Network setup timed out"
 #~ msgstr "Délai de configuration réseau dépassé"
@@ -5144,8 +5146,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM n'est pas disponible sur ce système. Assurez-vous que /dev/kvm existe "
-#~ "et que la virtualisation CPU est activée dans le BIOS."
+#~ "KVM n'est pas disponible sur ce système. Assurez-vous que /dev/kvm existe et"
+#~ " que la virtualisation CPU est activée dans le BIOS."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM est déjà initialisé et prêt à l'emploi"
@@ -5241,8 +5243,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "Error configuring persistent nested virtualization: %s"
 #~ msgstr ""
-#~ "Erreur lors de la configuration persistante de virtualisation imbriquée: "
-#~ "%s"
+#~ "Erreur lors de la configuration persistante de virtualisation imbriquée: %s"
 
 #~ msgid "KVM kernel modules loaded with nested virtualization enabled"
 #~ msgstr "Modules KVM chargés avec virtualisation imbriquée activée"
@@ -5323,8 +5324,8 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Mise à jour du statut de virtualisation mise en file d'attente pour envoi "
-#~ "au serveur"
+#~ "Mise à jour du statut de virtualisation mise en file d'attente pour envoi au"
+#~ " serveur"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img non trouvé, tentative d'installation : %s"
@@ -5332,25 +5333,21 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 # LXD default profile configuration
 #~ msgid "Configuring LXD default profile for container compatibility"
 #~ msgstr ""
-#~ "Configuration du profil par défaut LXD pour la compatibilité des "
-#~ "conteneurs"
+#~ "Configuration du profil par défaut LXD pour la compatibilité des conteneurs"
 
 #~ msgid "Could not set security.nesting on default profile: %s"
-#~ msgstr ""
-#~ "Impossible de définir security.nesting sur le profil par défaut : %s"
+#~ msgstr "Impossible de définir security.nesting sur le profil par défaut : %s"
 
 #~ msgid "LXD default profile configured with security.nesting=true"
 #~ msgstr "Profil par défaut LXD configuré avec security.nesting=true"
 
 #~ msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
 #~ msgstr ""
-#~ "Mise à jour de l'agent sur l'hôte enfant : type=%s, nom=%s, "
-#~ "distribution=%s"
+#~ "Mise à jour de l'agent sur l'hôte enfant : type=%s, nom=%s, distribution=%s"
 
 #~ msgid "Unsupported child distribution for agent update: %s"
 #~ msgstr ""
-#~ "Distribution enfant non prise en charge pour la mise à jour de l'agent : "
-#~ "%s"
+#~ "Distribution enfant non prise en charge pour la mise à jour de l'agent : %s"
 
 #~ msgid "Child agent updated successfully: %s"
 #~ msgstr "Agent enfant mis à jour avec succès : %s"

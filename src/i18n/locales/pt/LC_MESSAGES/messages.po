@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1557,8 +1557,8 @@ msgstr "Erro ao lidar com a mensagem polida %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Não é possível usar o fallback HTTP: este agente não tem um host_id "
 "armazenado. A registro deve ser concluído primeiro."
@@ -1611,7 +1611,8 @@ msgstr ""
 "obsolescencia: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Registro do host está pendente de aprovação. Continuará tentando "
 "periodicamente."
@@ -1657,8 +1658,8 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"Transmissão %s: solicitação de atualização do inventário, mas data_collector "
-"não possui send_software_inventory_update"
+"Transmissão %s: solicitação de atualização do inventário, mas data_collector"
+" não possui send_software_inventory_update"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1675,8 +1676,8 @@ msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr ""
-"Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do "
-"loop de recepção para permitir reconexão"
+"Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do"
+" loop de recepção para permitir reconexão"
 
 #: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
@@ -2103,9 +2104,15 @@ msgstr "Erro ao adicionar repositório NetBSD: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "O gerenciamento de child hosts requer Pro+ (caminho do engine)."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
 msgstr "Perfil de configuração solicitado, mas nenhum executor está instalado"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "Recusando uma especificação de configuração inutilizável: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2261,8 +2268,8 @@ msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr ""
-"Executar gpg como um usuário Windows específico não é suportado pelo agente; "
-"importada no keyring atual em vez disso."
+"Executar gpg como um usuário Windows específico não é suportado pelo agente;"
+" importada no keyring atual em vez disso."
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2585,13 +2592,13 @@ msgstr "Homebrew já está instalado"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "A instalação do Homebrew requer intervenção manual. Por favor, instale "
-"usando: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
-"Homebrew/install/HEAD/install.sh)\""
+"usando: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3479,8 +3486,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "%d pacotes coletados com sucesso da API REST do winget"
 
 #~ msgid "Fetching Chocolatey catalog via community repository API"
-#~ msgstr ""
-#~ "Buscando catálogo do Chocolatey via API do repositório da comunidade"
+#~ msgstr "Buscando catálogo do Chocolatey via API do repositório da comunidade"
 
 #, python-format
 #~ msgid ""
@@ -3505,8 +3511,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Encontrado pacote %s: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Ignorando papel duplicado: %s com serviço %s (já tenho o pacote %s)"
 
 #, python-format
@@ -3659,8 +3664,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig não encontrado, criando para prevenir o desligamento "
-#~ "automático do WSL em %s"
+#~ ".wslconfig não encontrado, criando para prevenir o desligamento automático "
+#~ "do WSL em %s"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3715,8 +3720,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Found %d available updates during initial check"
-#~ msgstr ""
-#~ "Encontradas %d atualizações disponíveis durante verificação periódica"
+#~ msgstr "Encontradas %d atualizações disponíveis durante verificação periódica"
 
 #~ msgid "No updates found during initial check"
 #~ msgstr "Nenhuma atualização encontrada durante a verificação inicial"
@@ -3772,8 +3776,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Lote de pacotes concluído %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
 #~ "Executando coleta de certificados em modo sem privilégios - alguns "
 #~ "certificados podem não estar acessíveis"
@@ -3877,8 +3881,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d mensagens travadas recuperadas"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Criando tarefa de processamento da fila de saída a partir de "
 #~ "on_connection_established"
@@ -3888,11 +3891,9 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr ""
-#~ "Processador de fila de saída já está em execução, não iniciando outro"
+#~ msgstr "Processador de fila de saída já está em execução, não iniciando outro"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Criando tarefa de processamento da fila de entrada a partir de "
 #~ "on_connection_established"
@@ -3917,8 +3918,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Found %d available updates during periodic check"
-#~ msgstr ""
-#~ "Encontradas %d atualizações disponíveis durante verificação periódica"
+#~ msgstr "Encontradas %d atualizações disponíveis durante verificação periódica"
 
 # Agent startup and connection
 #~ msgid "Starting package collection"
@@ -4112,8 +4112,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "Removendo chave GPG %s (impressão digital %s) para target=%s, "
-#~ "has_private=%s"
+#~ "Removendo chave GPG %s (impressão digital %s) para target=%s, has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "Regras NAT já configuradas em before.rules"
@@ -4246,8 +4245,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Aguardando reconexão para enviar resultados de atualização (tentativa %d/"
-#~ "%d)"
+#~ "Aguardando reconexão para enviar resultados de atualização (tentativa %d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Reescaneando atualizações disponíveis após conclusão do lote"
@@ -4407,8 +4405,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Registro recebido mas aprovação pendente"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
 #~ "Sucesso no registro mas nenhum host_id fornecido - aprovação pode vir "
 #~ "separadamente"
@@ -4419,19 +4416,18 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Host approval information stored successfully. Host ID: %s"
-#~ msgstr ""
-#~ "Informações de aprovação de host armazenadas com sucesso. Host ID: %s"
+#~ msgstr "Informações de aprovação de host armazenadas com sucesso. Host ID: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "Sistema_info colocado na fila após aprovação para atualizar conexão do "
-#~ "back-end"
+#~ "Sistema_info colocado na fila após aprovação para atualizar conexão do back-"
+#~ "end"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
 #~ msgstr ""
-#~ "Excluídos %d registro(s) antigo(s) de aprovação de host antes de "
-#~ "armazenar nova aprovação"
+#~ "Excluídos %d registro(s) antigo(s) de aprovação de host antes de armazenar "
+#~ "nova aprovação"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
@@ -4487,8 +4483,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
 #~ msgstr ""
-#~ "Diretório do sistema existe, usando caminho do banco de dados do sistema: "
-#~ "%s"
+#~ "Diretório do sistema existe, usando caminho do banco de dados do sistema: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -4574,11 +4569,11 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint detectado no macOS (versão: %s, "
-#~ "habilitado: %s, licenciado: %s)"
+#~ "Microsoft Defender for Endpoint detectado no macOS (versão: %s, habilitado: "
+#~ "%s, licenciado: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4602,8 +4597,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
 #~ msgstr ""
-#~ "PowerShell não encontrado (não está no Windows ou PowerShell não "
-#~ "instalado)"
+#~ "PowerShell não encontrado (não está no Windows ou PowerShell não instalado)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4667,8 +4661,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Resultado do comando Winget: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Resultado do comando Winget: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
@@ -4833,8 +4826,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
 #~ msgstr ""
-#~ "Não foi possível atualizar metadados do fwupd (pode precisar de "
-#~ "privilégios)"
+#~ "Não foi possível atualizar metadados do fwupd (pode precisar de privilégios)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Nenhuma atualização de firmware disponível"
@@ -4871,8 +4863,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Servidor HTTP de instalação automática iniciado em %s:%d"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
-#~ msgstr ""
-#~ "Porta HTTP %d já em uso, a instalação automática ainda pode funcionar"
+#~ msgstr "Porta HTTP %d já em uso, a instalação automática ainda pode funcionar"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "Servidor HTTP de instalação automática parado"
@@ -4896,8 +4887,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Instalação automática detectada: install.conf foi acessado"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
-#~ msgstr ""
-#~ "Tempo esgotado aguardando a instalação automática buscar install.conf"
+#~ msgstr "Tempo esgotado aguardando a instalação automática buscar install.conf"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 #~ msgstr ""
@@ -4978,8 +4968,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Rede padrão configurada"
 
 #~ msgid "Network setup attempted but may need manual verification"
-#~ msgstr ""
-#~ "Configuração de rede tentada mas pode precisar de verificação manual"
+#~ msgstr "Configuração de rede tentada mas pode precisar de verificação manual"
 
 #~ msgid "Network setup timed out"
 #~ msgstr "Tempo esgotado na configuração de rede"
@@ -4991,8 +4980,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM não está disponível neste sistema. Certifique-se de que /dev/kvm "
-#~ "existe e a virtualização de CPU está habilitada no BIOS."
+#~ "KVM não está disponível neste sistema. Certifique-se de que /dev/kvm existe "
+#~ "e a virtualização de CPU está habilitada no BIOS."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM já está inicializado e pronto para uso"
@@ -5163,16 +5152,14 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Padrão para raiz FreeBSD: /dev/sda4"
 
 #~ msgid "Virtualization status update queued for sending to server"
-#~ msgstr ""
-#~ "Atualização de status de virtualização em fila para envio ao servidor"
+#~ msgstr "Atualização de status de virtualização em fila para envio ao servidor"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img não encontrado, tentará instalar: %s"
 
 # LXD default profile configuration
 #~ msgid "Configuring LXD default profile for container compatibility"
-#~ msgstr ""
-#~ "Configurando perfil padrão do LXD para compatibilidade de contêineres"
+#~ msgstr "Configurando perfil padrão do LXD para compatibilidade de contêineres"
 
 #~ msgid "Could not set security.nesting on default profile: %s"
 #~ msgstr "Não foi possível definir security.nesting no perfil padrão: %s"

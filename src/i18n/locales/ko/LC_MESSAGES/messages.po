@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -320,8 +320,7 @@ msgstr "ipconfig /all이 실패했습니다. 반환 코드: %d"
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
 msgid "Failed to get Windows network info via ipconfig: %s"
-msgstr ""
-"ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데 실패했습니다: %s"
+msgstr "ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데 실패했습니다: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
@@ -598,9 +597,7 @@ msgstr "pkgin 패키지 수집 중 오류: %s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
-"dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 "
-"dnf 래퍼)"
+msgstr "dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 dnf 래퍼)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
@@ -725,8 +722,8 @@ msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
 msgstr ""
-"PID %(pid)d은(는) 이제 '%(expected)s'이(가) 아니라 '%(actual)s'입니다(프로세"
-"스가 재사용되었을 수 있음). 종료가 거부되었습니다"
+"PID %(pid)d은(는) 이제 '%(expected)s'이(가) 아니라 '%(actual)s'입니다(프로세스가 재사용되었을 수 "
+"있음). 종료가 거부되었습니다"
 
 #: src/sysmanage_agent/collection/process_collection.py:180
 #, python-format
@@ -1553,11 +1550,9 @@ msgstr "폴링된 메시지 %s 처리 중 오류가 발생했습니다"
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
-msgstr ""
-"HTTPFallback을 사용할 수 없습니다: 이 에이전트에는 저장된 host_id가 없습니"
-"다. 등록부터 완료해야 합니다."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
+msgstr "HTTPFallback을 사용할 수 없습니다: 이 에이전트에는 저장된 host_id가 없습니다. 등록부터 완료해야 합니다."
 
 #: src/sysmanage_agent/communication/http_polling.py:186
 #, python-format
@@ -1566,9 +1561,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"WebSocket 대신 HTTP 폴링을 사용합니다: 이 네트워크는 WebSocket 업그레이드를 "
-"거부했습니다. 명령은 최대 몇 초 지연이 발생할 수 있습니다. %s에서 WebSocket "
-"업그레이드를 허용하여 즉시 전송을 복구하세요"
+"WebSocket 대신 HTTP 폴링을 사용합니다: 이 네트워크는 WebSocket 업그레이드를 거부했습니다. 명령은 최대 몇 초 지연이"
+" 발생할 수 있습니다. %s에서 WebSocket 업그레이드를 허용하여 즉시 전송을 복구하세요"
 
 #: src/sysmanage_agent/communication/http_polling.py:201
 #, python-format
@@ -1605,7 +1599,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "메시지 타임스탬프 확인을 위한 메시지 타임스탬프 파싱 실패: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr "호스트 등록이 승인 대기 중입니다. 주기적으로 다시 시도합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:364
@@ -1624,9 +1619,8 @@ msgid ""
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 — 호스"
-"트 ID를 제거하지 않고 재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다"
-"시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
+"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 — 호스트 ID를 제거하지 않고 "
+"재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
@@ -1634,8 +1628,8 @@ msgid ""
 "host_not_registered persisted (%(n)d strikes) — treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) — 이 호스트를 실제로 "
-"사라진 것으로 처리합니다. 저장된 host_id를 제거하고 재등록합니다."
+"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) — 이 호스트를 실제로 사라진 것으로 처리합니다. 저장된 "
+"host_id를 제거하고 재등록합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
@@ -1648,8 +1642,7 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"%s: 인벤토리 갱신 요청되었으나 data_collector 는 "
-"send_software_inventory_update 를 지원하지 않음"
+"%s: 인벤토리 갱신 요청되었으나 data_collector 는 send_software_inventory_update 를 지원하지 않음"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1665,9 +1658,7 @@ msgstr "%s: 알 수 없는 액션 '%s' — 무시됨"
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
-msgstr ""
-"메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용"
-"하기 위해 수신 루프를 종료합니다"
+msgstr "메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용하기 위해 수신 루프를 종료합니다"
 
 #: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
@@ -1768,8 +1759,7 @@ msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
 msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시"
-"됨"
+">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시됨"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -2093,9 +2083,15 @@ msgstr "NetBSD 저장소 추가 오류: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
 msgstr "요청된 구성 프로필에 대해 실행기가 설치되지 않았습니다"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "사용 불가능한 구성 사양을 거부합니다: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2249,9 +2245,7 @@ msgstr "gpg 삭제 실패 (rc=%s): %s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr ""
-"Windows 사용자를 특정하여 gpg를 실행하는 것은 에이전트에서 지원하지 않습니"
-"다; 현재 키링에 가져옵니다."
+msgstr "Windows 사용자를 특정하여 gpg를 실행하는 것은 에이전트에서 지원하지 않습니다; 현재 키링에 가져옵니다."
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2321,8 +2315,7 @@ msgstr "컴퓨터 이름 변경 실패: %s"
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr ""
-"호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
+msgstr "호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:276
 #, python-format
@@ -2571,13 +2564,12 @@ msgstr "Homebrew는 이미 설치되어 있습니다"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3327,8 +3319,7 @@ msgstr "정리 오류에도 불구하고 계속 진행..."
 #: src/sysmanage_agent/registration/registration_manager.py:522
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
-msgstr ""
-"%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
+msgstr "%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
 
 #: src/sysmanage_agent/registration/registration_manager.py:536
 #, python-format
@@ -3487,10 +3478,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "%s 패키지: %s v%s를 찾았습니다."
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr ""
-#~ "중복 역할 건너뛰기: %s (서비스 %s와 함께 이미 패키지 %s가 있습니다.)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr "중복 역할 건너뛰기: %s (서비스 %s와 함께 이미 패키지 %s가 있습니다.)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3547,9 +3536,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
-#~ msgstr ""
-#~ "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로"
-#~ "그램)"
+#~ msgstr "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로그램)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3634,17 +3621,14 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "Windows Update 감지됨: '%s', UpdateID='%s'"
 
 #~ msgid "Removing lowercase vmidletimeout, will add vmIdleTimeout"
-#~ msgstr ""
-#~ "lowercase vmidletimeout 제거할 예정입니다, vmIdleTimeout을 추가합니다"
+#~ msgstr "lowercase vmidletimeout 제거할 예정입니다, vmIdleTimeout을 추가합니다"
 
 #~ msgid "Removing lowercase autostop, will add autoStop"
 #~ msgstr "lowercase autostop 제거함, autoStop 추가 예정"
 
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-#~ msgstr ""
-#~ ".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생"
-#~ "성 중..."
+#~ msgstr ".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생성 중..."
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3751,11 +3735,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "패키지 배치(%s) 완료"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
-#~ msgstr ""
-#~ "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있"
-#~ "음"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
+#~ msgstr "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있음"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "시스템에서 SSL 인증서 수집 중"
@@ -3853,8 +3835,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d개의 멈춘 메시지 복구됨"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established에서 아웃바운드 대기열 처리 작업 생성"
 
 #, python-format
@@ -3862,11 +3843,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr ""
-#~ "아웃바운드 대기열 프로세서가 이미 실행 중이므로 다시 시작하지 않습니다"
+#~ msgstr "아웃바운드 대기열 프로세서가 이미 실행 중이므로 다시 시작하지 않습니다"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established에서 인바운드 대기열 처리 작업 생성"
 
 #, python-format
@@ -3898,8 +3877,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "에이전트가 성공적으로 업데이트되었습니다"
 
 #~ msgid "Package collection is disabled - scheduler will not run"
-#~ msgstr ""
-#~ "패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
+#~ msgstr "패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
 
 #~ msgid "Running initial package collection at startup"
 #~ msgstr "시작 시 초기 패키지 수집을 실행 중"
@@ -4364,11 +4342,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "등록은 완료되었지만 승인이 대기 중입니다"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
-#~ msgstr ""
-#~ "등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 "
-#~ "있습니다"
+#~ "Registration success but no host_id provided - approval may come separately"
+#~ msgstr "등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 있습니다"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4379,8 +4354,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "호스트 승인 정보 성공적으로 저장됨. Host ID: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
-#~ msgstr ""
-#~ "승인 후 백엔드 연결을 업데이트하기 위해 system_info를 대기열에 추가함"
+#~ msgstr "승인 후 백엔드 연결을 업데이트하기 위해 system_info를 대기열에 추가함"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -4409,9 +4383,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
-#~ msgstr ""
-#~ "서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재"
-#~ "등록을 트리거합니다..."
+#~ msgstr "서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재등록을 트리거합니다..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4521,11 +4493,10 @@ msgstr "WSL 지원 확인 오류: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이"
-#~ "선스: %s)"
+#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이선스: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4548,8 +4519,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "소프트웨어 인벤토리 수집 완료: %d개 패키지 발견"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-#~ msgstr ""
-#~ "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
+#~ msgstr "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4648,9 +4618,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
-#~ msgstr ""
-#~ "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니"
-#~ "다."
+#~ msgstr "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니다."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4797,9 +4765,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정"
-#~ "도 소요될 수 있습니다."
+#~ msgstr "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정도 소요될 수 있습니다."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "자동 설치 HTTP 요청: %s에서 %s"
@@ -4926,8 +4892,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU "
-#~ "가상화가 활성화되어 있는지 확인하세요."
+#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU 가상화가 활성화되어 있는지 확인하세요."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM이 이미 초기화되어 사용할 준비가 되었습니다"
@@ -5025,8 +4990,7 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "중첩 가상화가 활성화된 상태로 KVM 커널 모듈이 로드되었습니다"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
-#~ msgstr ""
-#~ " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
+#~ msgstr " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5077,12 +5041,10 @@ msgstr "WSL 지원 확인 오류: %s"
 
 # libguestfs-tools (guestmount) support
 #~ msgid "guestmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "guestunmount not found. Install libguestfs-tools package."
-#~ msgstr ""
-#~ "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "Found FreeBSD root: %s"
 #~ msgstr "FreeBSD 루트 발견: %s"

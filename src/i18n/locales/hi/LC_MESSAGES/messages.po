@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-26 14:20-0400\n"
+"POT-Creation-Date: 2026-08-27 09:29-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -63,7 +63,8 @@ msgstr "संदेश %s को डिसीरियलाइज़ करन
 #: src/database/queue_manager.py:583
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
-msgstr "संदेश %s (प्रकार: %s) अधिकतम पुनः प्रयास से अधिक, विफल के रूप में चिह्नित"
+msgstr ""
+"संदेश %s (प्रकार: %s) अधिकतम पुनः प्रयास से अधिक, विफल के रूप में चिह्नित"
 
 #: src/security/certificate_store.py:68
 #, python-brace-format
@@ -316,7 +317,8 @@ msgstr "Windows लॉजिकल डिस्क जानकारी प्�
 #, python-format
 msgid "ipconfig /all failed with return code: %d"
 msgstr ""
-"ipconfig /all के बाद फ़ाइल कोड: %d से वापसी कोड सुफलतापूर्वक प्राप्त होने में विफल हुए:"
+"ipconfig /all के बाद फ़ाइल कोड: %d से वापसी कोड सुफलतापूर्वक प्राप्त होने "
+"में विफल हुए:"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
@@ -599,8 +601,8 @@ msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
 msgstr ""
-"dnf उपलब्ध होने पर होस्ट पर yum संग्रह छोड़ा जा रहा है (RHEL/Fedora 8+ पर yum, dnf "
-"का रैपर है)"
+"dnf उपलब्ध होने पर होस्ट पर yum संग्रह छोड़ा जा रहा है (RHEL/Fedora 8+ पर "
+"yum, dnf का रैपर है)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:69
@@ -725,8 +727,8 @@ msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
 msgstr ""
-"PID %(pid)d अब '%(actual)s' है, '%(expected)s' नहीं (प्रक्रिया पुनः उपयोग हुई हो "
-"सकती है); समाप्ति अस्वीकृत"
+"PID %(pid)d अब '%(actual)s' है, '%(expected)s' नहीं (प्रक्रिया पुनः उपयोग "
+"हुई हो सकती है); समाप्ति अस्वीकृत"
 
 #: src/sysmanage_agent/collection/process_collection.py:180
 #, python-format
@@ -1559,11 +1561,11 @@ msgstr "पुलिश्ड मेसेज %s के हाथांकन �
 
 #: src/sysmanage_agent/communication/http_polling.py:176
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
-"HTTP फॉलबैक का इस्तेमाल नहीं किया जा सकता: यह एजेंट में कोई भी stored host_id नहीं है। "
-"पंजीकरण पहले पूरा होना चाहिए."
+"HTTP फॉलबैक का इस्तेमाल नहीं किया जा सकता: यह एजेंट में कोई भी stored "
+"host_id नहीं है। पंजीकरण पहले पूरा होना चाहिए."
 
 #: src/sysmanage_agent/communication/http_polling.py:186
 #, python-format
@@ -1572,9 +1574,10 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"HTTP पॉलिंग का इस्तेमाल WebSocket के बजाय किया जा रहा है: यह नेटवर्क WebSocket "
-"अपग्रेड को इजाजत नहीं दे रहा है। कमांड्स कुछ सेकंड की देरी के साथ पहुंचेंगे। WebSocket अपग्रेड "
-"को %s इजाजत देने से तुरंत डिलीवरी को पुन: स्थापित किया जा सकता है।"
+"HTTP पॉलिंग का इस्तेमाल WebSocket के बजाय किया जा रहा है: यह नेटवर्क "
+"WebSocket अपग्रेड को इजाजत नहीं दे रहा है। कमांड्स कुछ सेकंड की देरी के साथ "
+"पहुंचेंगे। WebSocket अपग्रेड को %s इजाजत देने से तुरंत डिलीवरी को पुन: "
+"स्थापित किया जा सकता है।"
 
 #: src/sysmanage_agent/communication/http_polling.py:201
 #, python-format
@@ -1584,7 +1587,8 @@ msgstr "पॉल विफल (%s); पुन: प्रयास करने 
 #: src/sysmanage_agent/communication/http_polling.py:212
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr ""
-"इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण किया जाए"
+"इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण "
+"किया जाए"
 
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
@@ -1612,8 +1616,10 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "स्टेल चेक के लिए संदेश टाइमस्टॉप को पढ़ने में विफल: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
-msgstr "होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
+msgstr ""
+"होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
 
 #: src/sysmanage_agent/communication/message_handler.py:364
 msgid "Server reports missing hostname in message. This is a bug."
@@ -1631,9 +1637,9 @@ msgid ""
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"सर्वर ने host_not_registered (strike %(n)d/%(limit)d) रिपोर्ट किया — होस्ट आइडी "
-"को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता है, तब ही "
-"पुनः रजिस्टर करेंगे;"
+"सर्वर ने host_not_registered (strike %(n)d/%(limit)d) रिपोर्ट किया — होस्ट "
+"आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
+" है, तब ही पुनः रजिस्टर करेंगे;"
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
@@ -1641,8 +1647,8 @@ msgid ""
 "host_not_registered persisted (%(n)d strikes) — treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered जारी (%(n)d स्ट्राइक) — इस होस्ट को वास्तव में गया समझते हैं; "
-"संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
+"host_not_registered जारी (%(n)d स्ट्राइक) — इस होस्ट को वास्तव में गया समझते"
+" हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
@@ -1655,8 +1661,8 @@ msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
 msgstr ""
-"ब्रॉडकास्ट %s: इन्वेंटरी रिफ्रेश का अनुरोध किया गया लेकिन data_collector में "
-"send_software_inventory_update नहीं है"
+"ब्रॉडकास्ट %s: इन्वेंटरी रिफ्रेश का अनुरोध किया गया लेकिन data_collector में"
+" send_software_inventory_update नहीं है"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
@@ -1673,8 +1679,8 @@ msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr ""
-"संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; receive "
-"loop को exit करने के लिए आवश्यकता है reconnect"
+"संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; "
+"receive loop को exit करने के लिए आवश्यकता है reconnect"
 
 #: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
@@ -1830,7 +1836,8 @@ msgstr "क्षमता रिपोर्ट बनाने में व�
 #: src/sysmanage_agent/core/agent_utils.py:441
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
-msgstr "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
+msgstr ""
+"स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
 #: src/sysmanage_agent/core/agent_utils.py:478
 msgid "Generic command missing nested command_type"
@@ -1908,7 +1915,9 @@ msgstr "%s के लिए सेवा स्थिति त्रुटि: 
 #: src/sysmanage_agent/core/agent_utils.py:951
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
-msgstr "इन-फ्लाइट जर्नल के लिए सिंथेटिक command_result को कतार में डालने में विफल: %s"
+msgstr ""
+"इन-फ्लाइट जर्नल के लिए सिंथेटिक command_result को कतार में डालने में विफल: "
+"%s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2100,9 +2109,16 @@ msgstr "NetBSD अनुभाग जोड़ने में त्रुट�
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "चाइल्ड होस्ट प्रबंधन के लिए Pro+ (इंजन पथ) आवश्यक है।"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:129
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
 msgid "Config profile requested but no executor is installed"
-msgstr "कॉन्फ़िगर प्रोफ़ाइल अनुरोध किया गया लेकिन कोई एक्ज़ीक्यूटर स्थापित नहीं है"
+msgstr ""
+"कॉन्फ़िगर प्रोफ़ाइल अनुरोध किया गया लेकिन कोई एक्ज़ीक्यूटर स्थापित नहीं है"
+
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#, python-format
+msgid "Refusing an unusable config spec: %s"
+msgstr "एक अनुपयोगी कॉन्फ़िगरेशन स्पेसिफ़ाई को अस्वीकार कर रहा है: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:203
 #, python-format
@@ -2113,7 +2129,8 @@ msgstr "Echec de la persistance des m\\u00e9triques personnalis\\u00e9es: %s"
 #, python-format
 msgid "Failed to load persisted custom metrics: %s"
 msgstr ""
-"Echec du chargement des m\\u00e9triques personnalis\\u00e9es persistantes: %s"
+"Echec du chargement des m\\u00e9triques personnalis\\u00e9es persistantes: "
+"%s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:265
 #, python-format
@@ -2137,14 +2154,12 @@ msgstr "script stdout एकल संख्या मूल्य नहीं 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:384
 #, python-format
 msgid "Custom-metrics scheduler error: %s"
-msgstr ""
-"\\u00c9chec du planificateur de m\\u00e9triques personnalis\\u00e9es: %s"
+msgstr "\\u00c9chec du planificateur de m\\u00e9triques personnalis\\u00e9es: %s"
 
 #: src/sysmanage_agent/operations/custom_metrics_operations.py:421
 #, python-format
 msgid "Failed to send custom metric samples: %s"
-msgstr ""
-"Echec de l'envoi d'exemples de m\\u00e9triques personnalis\\u00e9es: %s"
+msgstr "Echec de l'envoi d'exemples de m\\u00e9triques personnalis\\u00e9es: %s"
 
 #: src/sysmanage_agent/operations/firewall_collector.py:61
 #, python-format
@@ -2213,8 +2228,7 @@ msgstr "समय समाप्त"
 #: src/sysmanage_agent/operations/gpg_operations.py:120
 #, python-format
 msgid "Could not create GNUPGHOME %s for user %s: %s"
-msgstr ""
-"\\u00c9\\u00bav \\u00e0 cr\\u00e9er GNUPGHOME %s pour l'utilisateur %s: %s"
+msgstr "\\u00c9\\u00bav \\u00e0 cr\\u00e9er GNUPGHOME %s pour l'utilisateur %s: %s"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:224
 msgid "Missing required parameter 'armored_key'"
@@ -2236,7 +2250,9 @@ msgstr "कुंजी इम्पोर्ट कर ली और सत्�
 
 #: src/sysmanage_agent/operations/gpg_operations.py:270
 msgid "gpg import returned success but fingerprint not found"
-msgstr "gpg import सफलतापूर्वक रिटर्न कर दिया गया है लेकिन प्रिंटफिन्गरप्रिंट नहीं मिला"
+msgstr ""
+"gpg import सफलतापूर्वक रिटर्न कर दिया गया है लेकिन प्रिंटफिन्गरप्रिंट नहीं "
+"मिला"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:276
 #, python-format
@@ -2261,8 +2277,8 @@ msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr ""
-"विशेष Windows उपयोक्ता के रूप में gpg को अनुबंध द्वारा समर्थित नहीं है; इसको वर्तमान "
-"keyring में इम्पोर्ट कर लिया गया है।"
+"विशेष Windows उपयोक्ता के रूप में gpg को अनुबंध द्वारा समर्थित नहीं है; इसको"
+" वर्तमान keyring में इम्पोर्ट कर लिया गया है।"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2332,7 +2348,8 @@ msgstr "कंप्यूटर का नाम बदलने में व�
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr "होस्टनाम %s में बदला गया। परिवर्तन प्रभावी होने के लिए रीबूट आवश्यक है।"
+msgstr ""
+"होस्टनाम %s में बदला गया। परिवर्तन प्रभावी होने के लिए रीबूट आवश्यक है।"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:276
 #, python-format
@@ -2581,13 +2598,13 @@ msgstr "Homebrew पहले से ही इनस्टॉल किया �
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew इंस्टॉलेशन के लिए मैनुअल हस्तक्षेप की आवश्यकता है। कृपया इसका उपयोग करके इंस्टॉल "
-"करें: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew इंस्टॉलेशन के लिए मैनुअल हस्तक्षेप की आवश्यकता है। कृपया इसका उपयोग"
+" करके इंस्टॉल करें: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3283,7 +3300,8 @@ msgstr "सर्वर फिंगरप्रिंट प्राप्त 
 
 #: src/sysmanage_agent/registration/registration_manager.py:145
 msgid "Certificate-based authentication requires manual host approval"
-msgstr "Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
+msgstr ""
+"Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
 
 #: src/sysmanage_agent/registration/registration_manager.py:148
 msgid "Please approve this host in the SysManage web interface"
@@ -3378,7 +3396,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr "संदेश %s विफल (प्रयास %d/%d), %d सेकंड में पुनः प्रयास के लिए निर्धारित"
+#~ msgstr ""
+#~ "संदेश %s विफल (प्रयास %d/%d), %d सेकंड में पुनः प्रयास के लिए निर्धारित"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3387,7 +3406,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 # Message Queue Recovery
 #, python-format
 #~ msgid "Recovered stuck message %s (type: %s), will retry"
-#~ msgstr "अटका हुआ संदेश %s (प्रकार: %s) पुनर्प्राप्त किया गया, पुनः प्रयास किया जाएगा"
+#~ msgstr ""
+#~ "अटका हुआ संदेश %s (प्रकार: %s) पुनर्प्राप्त किया गया, पुनः प्रयास किया जाएगा"
 
 #, python-format
 #~ msgid "Recovered %d stuck messages"
@@ -3479,7 +3499,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #~ msgid "Fetching Chocolatey catalog via community repository API"
 #~ msgstr ""
-#~ "कम्युनिटी रिपॉजिटरी API के माध्यम से Chocolatey कैटलॉग प्राप्त किया जा रहा है"
+#~ "कम्युनिटी रिपॉजिटरी API के माध्यम से Chocolatey कैटलॉग प्राप्त किया जा रहा "
+#~ "है"
 
 #, python-format
 #~ msgid ""
@@ -3503,11 +3524,10 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "%s पैकेज खोजा गया: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr ""
-#~ "डुप्लिकेट रोल समर्थन की छूट: %s जो सर्विस %s के साथ मिलता है (हमेशा package %s "
-#~ "प्राप्त होता है)"
+#~ "डुप्लिकेट रोल समर्थन की छूट: %s जो सर्विस %s के साथ मिलता है (हमेशा package "
+#~ "%s प्राप्त होता है)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3564,7 +3584,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgid ""
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
-#~ msgstr "अपडेट पहचान पूर्ण: %d अपडेट मिले (%d सुरक्षा, %d सिस्टम, %d ऐप्लिकेशन)"
+#~ msgstr ""
+#~ "अपडेट पहचान पूर्ण: %d अपडेट मिले (%d सुरक्षा, %d सिस्टम, %d ऐप्लिकेशन)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3657,7 +3678,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-#~ msgstr ".wslconfig नहीं पाया, WSL auto-shutdown से रोकने के लिए %s पर बनाते हैं"
+#~ msgstr ""
+#~ ".wslconfig नहीं पाया, WSL auto-shutdown से रोकने के लिए %s पर बनाते हैं"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3717,14 +3739,16 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr "सुरक्षा निरीक्षण के प्रारंभिक संग्रह के दौरान %d सर्टिफिकेट पाए और भेजे गए"
+#~ msgstr ""
+#~ "सुरक्षा निरीक्षण के प्रारंभिक संग्रह के दौरान %d सर्टिफिकेट पाए और भेजे गए"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "सिस्टम पर कोई प्रमाणपत्र नहीं मिला"
 
 #, python-format
 #~ msgid "Found and sent %d server roles during initial collection"
-#~ msgstr "सुरक्षा संग्रह के शुरूआती चित्रण में %d सर्वर भूमिकाओं को पाया और भेजा"
+#~ msgstr ""
+#~ "सुरक्षा संग्रह के शुरूआती चित्रण में %d सर्वर भूमिकाओं को पाया और भेजा"
 
 #~ msgid "No server roles found during initial collection"
 #~ msgstr "प्रारंभिक संग्रहण के दौरान कोई server roles नहीं मिले"
@@ -3762,11 +3786,11 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "Packages batch %s complete"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "गैर-विशेषाधिकार प्राप्त मोड में प्रमाणपत्र संग्रह चल रहा है - कुछ प्रमाणपत्र पहुंच योग्य "
-#~ "नहीं हो सकते"
+#~ "गैर-विशेषाधिकार प्राप्त मोड में प्रमाणपत्र संग्रह चल रहा है - कुछ प्रमाणपत्र"
+#~ " पहुंच योग्य नहीं हो सकते"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "System से SSL certificates संग्रह कर रहे हैं"
@@ -3797,7 +3821,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #, python-format
 #~ msgid "Ignoring stale error message [%s] from %s (registration at %s)"
-#~ msgstr "पुराने त्रुटि संदेश [%s] को छोड़ दिया जा रहा है (से %s) (पंजीकरण %s पर)"
+#~ msgstr ""
+#~ "पुराने त्रुटि संदेश [%s] को छोड़ दिया जा रहा है (से %s) (पंजीकरण %s पर)"
 
 #~ msgid "Stored host_id cleared from database"
 #~ msgstr "होस्ट स्वीकृति रिकॉर्ड और संबंधित डेटा डेटाबेस से साफ़ किए गए"
@@ -3864,8 +3889,7 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d अटके हुए संदेश पुनर्प्राप्त किए गए"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established से बाहरी कोई प्रोसेसिंग टास्क बना रहा है"
 
 #, python-format
@@ -3873,10 +3897,10 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr "आउटबाउंड कार्यक्रम परसेप्टर अनूठे चल रहा है, दूसरा नहीं शुरू किया जाएगा"
+#~ msgstr ""
+#~ "आउटबाउंड कार्यक्रम परसेप्टर अनूठे चल रहा है, दूसरा नहीं शुरू किया जाएगा"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established से आगंतक कोई प्रोसेसिंग टास्क बना रहा है"
 
 #, python-format
@@ -4040,7 +4064,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "%s का संग्रह %.2f सेकंड में पूर्ण"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr "Windows System Event Log (यह 10-30 सेकंड्स ले सकता है)... संग्रह कर रहे हैं"
+#~ msgstr ""
+#~ "Windows System Event Log (यह 10-30 सेकंड्स ले सकता है)... संग्रह कर रहे हैं"
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4090,14 +4115,15 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "GPG कुंजी %s (प्रिंटफिन्गरप्रिंट %s) तारगेट=%s, has_private=%s के लिए हटा दी जा "
-#~ "रही है"
+#~ "GPG कुंजी %s (प्रिंटफिन्गरप्रिंट %s) तारगेट=%s, has_private=%s के लिए हटा दी"
+#~ " जा रही है"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "NAT rules पहले.rules में पहले से ही निर्दिष्ट किए गए हैं"
 
 #~ msgid "UFW not installed; skipping LXD bridge firewall config"
-#~ msgstr "UFW नहीं लगाया गया है; LXD ब्रिड्ज फाइरवॉल कन्फिग से छोड़ दिया जा रहा है"
+#~ msgstr ""
+#~ "UFW नहीं लगाया गया है; LXD ब्रिड्ज फाइरवॉल कन्फिग से छोड़ दिया जा रहा है"
 
 #, python-format
 #~ msgid "Configuring UFW firewall for LXD bridge: %s"
@@ -4383,12 +4409,13 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "queued system_info प्रत्यावरण अद्यतन के लिए backend connection update करने की "
-#~ "तैयारी में है"
+#~ "queued system_info प्रत्यावरण अद्यतन के लिए backend connection update करने "
+#~ "की तैयारी में है"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
-#~ msgstr "नई स्वीकृति संग्रहीत करने से पहले %d पुरानी होस्ट स्वीकृति रिकॉर्ड हटाए गए"
+#~ msgstr ""
+#~ "नई स्वीकृति संग्रहीत करने से पहले %d पुरानी होस्ट स्वीकृति रिकॉर्ड हटाए गए"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
@@ -4411,8 +4438,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "सर्वर निश्चित करता है कि होस्ट पंजीकृत नहीं है। संग्रहित host_id को साफ करें और पुन: "
-#~ "पंजीकरण के लिए घोषणा करें..."
+#~ "सर्वर निश्चित करता है कि होस्ट पंजीकृत नहीं है। संग्रहित host_id को साफ करें"
+#~ " और पुन: पंजीकरण के लिए घोषणा करें..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4522,8 +4549,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
 #~ "macOS पर Microsoft Defender for Endpoint मिला (संस्करण: %s, सक्षम: %s, "
 #~ "लाइसेंस: %s)"
@@ -4649,7 +4676,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
 #~ msgstr ""
-#~ "%s पर OpenTelemetry परिनियोजन वर्तमान में समर्थित नहीं है। मैनुअल इंस्टॉलेशन आवश्यक।"
+#~ "%s पर OpenTelemetry परिनियोजन वर्तमान में समर्थित नहीं है। मैनुअल इंस्टॉलेशन"
+#~ " आवश्यक।"
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4773,7 +4801,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "fwupd फर्मवेयर अपडेट का पता लगा रहे हैं"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
-#~ msgstr "fwupd मेटाडेटा को रीफ्रेश नहीं कर सके (विशेषाधिकार की आवश्यकता हो सकती है)"
+#~ msgstr ""
+#~ "fwupd मेटाडेटा को रीफ्रेश नहीं कर सके (विशेषाधिकार की आवश्यकता हो सकती है)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "कोई फर्मवेयर अपडेट उपलब्ध नहीं"
@@ -4797,8 +4826,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "OpenBSD ऑटोइंस्टॉल प्रगति पर है। VM स्वचालित रूप से इंस्टॉल और रीबूट होगा। इसमें "
-#~ "10-15 मिनट लग सकते हैं।"
+#~ "OpenBSD ऑटोइंस्टॉल प्रगति पर है। VM स्वचालित रूप से इंस्टॉल और रीबूट होगा। "
+#~ "इसमें 10-15 मिनट लग सकते हैं।"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "ऑटोइंस्टॉल HTTP अनुरोध: %s से %s"
@@ -4834,10 +4863,13 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "ऑटोइंस्टॉल पता चला: install.conf एक्सेस किया गया"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
-#~ msgstr "ऑटोइंस्टॉल द्वारा install.conf प्राप्त करने की प्रतीक्षा में समय समाप्त"
+#~ msgstr ""
+#~ "ऑटोइंस्टॉल द्वारा install.conf प्राप्त करने की प्रतीक्षा में समय समाप्त"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
-#~ msgstr "पासवर्ड एन्क्रिप्ट नहीं हो सका, प्लेन टेक्स्ट का उपयोग हो रहा है (अनुशंसित नहीं)"
+#~ msgstr ""
+#~ "पासवर्ड एन्क्रिप्ट नहीं हो सका, प्लेन टेक्स्ट का उपयोग हो रहा है (अनुशंसित "
+#~ "नहीं)"
 
 #~ msgid "Port already in use"
 #~ msgstr "पोर्ट पहले से उपयोग में है"
@@ -4913,7 +4945,9 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "डिफ़ॉल्ट नेटवर्क कॉन्फ़िगर किया गया"
 
 #~ msgid "Network setup attempted but may need manual verification"
-#~ msgstr "नेटवर्क सेटअप का प्रयास किया गया लेकिन मैन्युअल सत्यापन की आवश्यकता हो सकती है"
+#~ msgstr ""
+#~ "नेटवर्क सेटअप का प्रयास किया गया लेकिन मैन्युअल सत्यापन की आवश्यकता हो सकती "
+#~ "है"
 
 #~ msgid "Network setup timed out"
 #~ msgstr "नेटवर्क सेटअप का समय समाप्त"
@@ -4925,8 +4959,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "इस सिस्टम पर KVM उपलब्ध नहीं है। सुनिश्चित करें कि /dev/kvm मौजूद है और BIOS में CPU "
-#~ "वर्चुअलाइजेशन सक्षम है।"
+#~ "इस सिस्टम पर KVM उपलब्ध नहीं है। सुनिश्चित करें कि /dev/kvm मौजूद है और BIOS"
+#~ " में CPU वर्चुअलाइजेशन सक्षम है।"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM पहले से इनिशियलाइज़ है और उपयोग के लिए तैयार है"
@@ -5024,7 +5058,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "KVM कर्नेल मॉड्यूल नेस्टेड वर्चुअलाइजेशन सक्षम के साथ लोड हुए"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
-#~ msgstr " - स्थायित्व के लिए /etc/modprobe.d/kvm.conf में कॉन्फ़िगरेशन सहेजा गया"
+#~ msgstr ""
+#~ " - स्थायित्व के लिए /etc/modprobe.d/kvm.conf में कॉन्फ़िगरेशन सहेजा गया"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5109,7 +5144,8 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 #~ msgstr "डिफ़ॉल्ट प्रोफ़ाइल पर security.nesting सेट नहीं कर सका: %s"
 
 #~ msgid "LXD default profile configured with security.nesting=true"
-#~ msgstr "LXD डिफ़ॉल्ट प्रोफ़ाइल security.nesting=true के साथ कॉन्फ़िगर किया गया"
+#~ msgstr ""
+#~ "LXD डिफ़ॉल्ट प्रोफ़ाइल security.nesting=true के साथ कॉन्फ़िगर किया गया"
 
 #~ msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
 #~ msgstr "चाइल्ड होस्ट पर एजेंट अपडेट हो रहा है: प्रकार=%s, नाम=%s, वितरण=%s"
