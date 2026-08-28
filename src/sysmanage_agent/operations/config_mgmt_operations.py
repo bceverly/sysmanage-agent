@@ -40,10 +40,12 @@ import json
 import os
 import platform
 import shutil
+import stat
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.i18n import _
+from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.sysmanage_agent.operations import config_mgmt_locator as locator
 from src.sysmanage_agent.operations import config_mgmt_readers as readers
 from src.sysmanage_agent.operations import config_mgmt_results as results
@@ -127,6 +129,18 @@ class ConfigMgmtOperations:
         check_mode = bool(parameters.get("check_mode"))
         timeout = int(parameters.get("timeout") or DEFAULT_TIMEOUT_SECONDS)
 
+        # Echoed onto every outcome below. The server records the run from the
+        # RESULT message, and nothing in that message carries the command's
+        # parameters, so without this the stored run has no profile name and no
+        # profile id -- which is why the profile column was always empty and
+        # why a stored profile could not be linked to the runs it produced.
+        # Same shape as package_compliance_operations, which echoes them too.
+        echo = {
+            key: parameters.get(key)
+            for key in ("profile_id", "profile_name")
+            if parameters.get(key) is not None
+        }
+
         # A server-supplied SPEC takes precedence. It is how any engine beyond
         # the two the agent knows natively gets driven -- see config_mgmt_spec
         # for why that indirection exists. ansible-core and DSC keep their
@@ -135,18 +149,22 @@ class ConfigMgmtOperations:
         # still works when the server has not started sending specs.
         spec = parameters.get("spec")
         if spec:
-            return await self._apply_with_spec(spec, timeout)
+            return {**await self._apply_with_spec(spec, timeout), **echo}
 
         executor = locator.find_executor()
         if not executor:
             self.logger.warning(
                 _("Config profile requested but no executor is installed")
             )
-            return self._failure(REASON_NO_EXECUTOR)
+            return {**self._failure(REASON_NO_EXECUTOR), **echo}
 
         if platform.system() == "Windows":
-            return await self._apply_with_dsc(executor, profile, check_mode, timeout)
-        return await self._apply_with_ansible(executor, profile, check_mode, timeout)
+            outcome = await self._apply_with_dsc(executor, profile, check_mode, timeout)
+        else:
+            outcome = await self._apply_with_ansible(
+                executor, profile, check_mode, timeout
+            )
+        return {**outcome, **echo}
 
     @staticmethod
     def _failure(reason: str, **extra) -> Dict[str, Any]:
@@ -197,7 +215,9 @@ class ConfigMgmtOperations:
         )
 
     async def _apply_with_spec(
-        self, spec: Dict[str, Any], timeout: int
+        self,
+        spec: Dict[str, Any],
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, floor is 3.9
     ) -> Dict[str, Any]:
         """Run a server-supplied execution spec.
 
@@ -249,7 +269,11 @@ class ConfigMgmtOperations:
             self.logger.debug("Could not remove %s", workdir)
 
     async def _apply_with_ansible(
-        self, executor: str, profile: Dict[str, Any], check_mode: bool, timeout: int
+        self,
+        executor: str,
+        profile: Dict[str, Any],
+        check_mode: bool,
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, floor is 3.9
     ) -> Dict[str, Any]:
         """Run a playbook against localhost via a temp file."""
         playbook = profile.get("playbook")
@@ -259,14 +283,16 @@ class ConfigMgmtOperations:
         env = _ansible_env()
         cwd, env = _safe_cwd_and_env(env)
 
-        # 0700 dir: a profile can carry secrets, and a world-readable temp file
-        # would expose them to every local user for the life of the run.
+        # Owner-only dir: a profile can carry secrets, and a world-readable
+        # temp file would expose them to every local user for the life of the
+        # run. mkdtemp already promises this; the chmod restates it so the
+        # guarantee survives someone swapping in a plain mkdir.
         workdir = tempfile.mkdtemp(prefix="sysmanage-cfg-")
-        os.chmod(workdir, 0o700)
+        os.chmod(workdir, stat.S_IRWXU)
         path = os.path.join(workdir, "profile.yml")
         try:
-            with open(path, "w", encoding="utf-8") as handle:
-                handle.write(str(playbook))
+            async with aiofiles.open(path, "w", encoding="utf-8") as handle:
+                await handle.write(str(playbook))
 
             argv = [
                 executor,
@@ -306,7 +332,11 @@ class ConfigMgmtOperations:
                 self.logger.debug("Could not remove %s", target)
 
     async def _apply_with_dsc(
-        self, executor: str, profile: Dict[str, Any], check_mode: bool, timeout: int
+        self,
+        executor: str,
+        profile: Dict[str, Any],
+        check_mode: bool,
+        timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, floor is 3.9
     ) -> Dict[str, Any]:
         """Apply a DSC v3 config document over stdin.
 

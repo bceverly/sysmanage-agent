@@ -96,28 +96,41 @@ def _dig(document: Any, path: Optional[str]) -> Any:
     return current
 
 
-def _from_document(document: Any, rules: Dict[str, Any], code: int) -> Dict[str, Any]:
-    """Read a JSON document using spec-supplied field names."""
-    if document is None:
-        # A failing run may print nothing at all -- dsc does exactly this --
-        # so the exit code has to carry the verdict when the body is missing.
-        return {
-            "success": code == 0,
-            "changed": False,
-            "tasks": [],
-            "recap": _empty_recap(),
-            "exit_code": code,
-            "unparsed_lines": 0,
-            "reason": "no_output" if code != 0 else None,
-        }
+def _no_output_result(code: int) -> Dict[str, Any]:
+    """The verdict when a run produced no parsable body at all.
 
+    A failing run may print nothing -- dsc does exactly this -- so the exit
+    code has to carry the verdict when the body is missing.
+    """
+    return {
+        "success": code == 0,
+        "changed": False,
+        "tasks": [],
+        "recap": _empty_recap(),
+        "exit_code": code,
+        "unparsed_lines": 0,
+        "reason": "no_output" if code != 0 else None,
+    }
+
+
+def _entries_of(document: Any, rules: Dict[str, Any]) -> List[Any]:
+    """The per-resource entries in a document, however the engine nests them."""
     entries = _dig(document, rules.get("entries_path"))
     if isinstance(entries, dict):
         # Salt keys its entries by state id; the values are what matter.
         entries = list(entries.values())
-    if not isinstance(entries, list):
-        entries = []
+    return entries if isinstance(entries, list) else []
 
+
+def _status_of(ok: bool, changed: bool) -> str:
+    """The task status word for one entry."""
+    if not ok:
+        return "failed"
+    return "changed" if changed else "ok"
+
+
+def _tasks_of(entries: List[Any], rules: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One task record per entry, in the shape the server ingests."""
     changed_key = rules.get("changed_key") or "changed"
     success_key = rules.get("success_key")
     # Values of the per-entry success field that do NOT mean failure. Salt uses
@@ -125,34 +138,48 @@ def _from_document(document: Any, rules: Dict[str, Any], code: int) -> Dict[str,
     # bool reports every useful dry run as a failure, so the spec lists what
     # counts instead of the reader guessing.
     ok_values = rules.get("success_ok_values", [True, None])
+    # Some engines express "changed" by the entry EXISTING at all rather than
+    # by a field: Chef's report lists only updated resources, so every entry in
+    # it is a change and none carries a changed flag.
+    changed_when_present = bool(rules.get("changed_when_present"))
+    name_key = rules.get("name_key") or "name"
+    message_key = rules.get("message_key")
 
     tasks: List[Dict[str, Any]] = []
-    any_changed = False
-    any_failed = False
     for entry in entries:
         if not isinstance(entry, dict):
             continue
-        # Some engines express "changed" by the entry EXISTING at all rather
-        # than by a field: Chef's report lists only updated resources, so
-        # every entry in it is a change and none carries a changed flag.
-        if rules.get("changed_when_present"):
-            changed = True
-        else:
-            changed = bool(_dig(entry, changed_key))
-        ok = True
-        if success_key is not None:
-            ok = _dig(entry, success_key) in ok_values
-        any_changed = any_changed or changed
-        any_failed = any_failed or not ok
+        changed = True if changed_when_present else bool(_dig(entry, changed_key))
+        ok = True if success_key is None else _dig(entry, success_key) in ok_values
         tasks.append(
             {
                 "host": "localhost",
-                "task": _dig(entry, rules.get("name_key") or "name"),
-                "status": ("failed" if not ok else "changed" if changed else "ok"),
+                "task": _dig(entry, name_key),
+                "status": _status_of(ok, changed),
                 "changed": changed,
-                "msg": _dig(entry, rules.get("message_key")),
+                "msg": _dig(entry, message_key),
             }
         )
+    return tasks
+
+
+def _recap_of(tasks: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Counts by status, in the recap shape the server stores."""
+    return {
+        "ok": sum(1 for t in tasks if t["status"] == "ok"),
+        "changed": sum(1 for t in tasks if t["status"] == "changed"),
+        "failed": sum(1 for t in tasks if t["status"] == "failed"),
+        "skipped": 0,
+        "unreachable": 0,
+    }
+
+
+def _from_document(document: Any, rules: Dict[str, Any], code: int) -> Dict[str, Any]:
+    """Read a JSON document using spec-supplied field names."""
+    if document is None:
+        return _no_output_result(code)
+
+    tasks = _tasks_of(_entries_of(document, rules), rules)
 
     # A document-level failure flag (dsc's hadErrors) when the spec names one.
     #
@@ -161,19 +188,13 @@ def _from_document(document: Any, rules: Dict[str, Any], code: int) -> Dict[str,
     # a failure. Found by replaying real Salt captures through the reader.
     failed_key = rules.get("failed_key")
     doc_failed = bool(_dig(document, failed_key)) if failed_key else False
-    success = code == 0 and not any_failed and not doc_failed
+    any_failed = any(t["status"] == "failed" for t in tasks)
 
     return {
-        "success": success,
-        "changed": any_changed,
+        "success": code == 0 and not any_failed and not doc_failed,
+        "changed": any(t["changed"] for t in tasks),
         "tasks": tasks,
-        "recap": {
-            "ok": sum(1 for t in tasks if t["status"] == "ok"),
-            "changed": sum(1 for t in tasks if t["status"] == "changed"),
-            "failed": sum(1 for t in tasks if t["status"] == "failed"),
-            "skipped": 0,
-            "unreachable": 0,
-        },
+        "recap": _recap_of(tasks),
         "exit_code": code,
         "unparsed_lines": 0,
     }

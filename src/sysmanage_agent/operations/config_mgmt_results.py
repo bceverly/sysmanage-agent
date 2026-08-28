@@ -72,6 +72,59 @@ def _empty_recap() -> Dict[str, int]:
     }
 
 
+def _decode_line(line: str):
+    """One stdout line as a record dict, or None when it is not one.
+
+    Ansible warnings and deprecations share this stream, so an undecodable
+    line is ordinary noise rather than a fault.
+    """
+    try:
+        record = json.loads(line)
+    except (ValueError, TypeError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
+def _task_of(record: Dict[str, Any]) -> Dict[str, Any]:
+    """One task record in the shape the server ingests."""
+    return {
+        KEY_HOST: record.get(KEY_HOST),
+        KEY_TASK: record.get(KEY_TASK),
+        KEY_STATUS: record.get(KEY_STATUS),
+        KEY_CHANGED: bool(record.get(KEY_CHANGED)),
+        KEY_MSG: record.get(KEY_MSG),
+    }
+
+
+def _read_lines(stdout: str):
+    """Split stdout into tasks, a recap if one arrived, and a noise count."""
+    tasks: List[Dict[str, Any]] = []
+    recap = _empty_recap()
+    saw_recap = False
+    unparsed = 0
+
+    for raw in (stdout or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        record = _decode_line(line)
+        if record is None:
+            unparsed += 1
+            continue
+
+        kind = record.get(KEY_TYPE)
+        if kind == TYPE_TASK:
+            tasks.append(_task_of(record))
+        elif kind == TYPE_RECAP:
+            saw_recap = True
+            for status in recap:
+                recap[status] = int(record.get(status) or 0)
+        else:
+            unparsed += 1
+
+    return tasks, recap, saw_recap, unparsed
+
+
 def parse_stream(stdout: str, exit_code: int = 0) -> Dict[str, Any]:
     """Turn the executor's stdout into a structured result.
 
@@ -80,42 +133,7 @@ def parse_stream(stdout: str, exit_code: int = 0) -> Dict[str, Any]:
     also die before emitting any recap (bad playbook, missing interpreter), and
     then the ONLY evidence of failure is the exit code.
     """
-    tasks: List[Dict[str, Any]] = []
-    recap = _empty_recap()
-    saw_recap = False
-    unparsed = 0
-
-    for line in (stdout or "").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except (ValueError, TypeError):
-            # Ansible warnings/deprecations share this stream. Not fatal.
-            unparsed += 1
-            continue
-        if not isinstance(record, dict):
-            unparsed += 1
-            continue
-
-        kind = record.get(KEY_TYPE)
-        if kind == TYPE_TASK:
-            tasks.append(
-                {
-                    KEY_HOST: record.get(KEY_HOST),
-                    KEY_TASK: record.get(KEY_TASK),
-                    KEY_STATUS: record.get(KEY_STATUS),
-                    KEY_CHANGED: bool(record.get(KEY_CHANGED)),
-                    KEY_MSG: record.get(KEY_MSG),
-                }
-            )
-        elif kind == TYPE_RECAP:
-            saw_recap = True
-            for status in recap:
-                recap[status] = int(record.get(status) or 0)
-        else:
-            unparsed += 1
+    tasks, recap, saw_recap, unparsed = _read_lines(stdout)
 
     # Derive from the tasks when the recap never arrived, so a truncated run
     # still reports what it managed to do.

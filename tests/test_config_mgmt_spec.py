@@ -20,8 +20,20 @@ become a command.
 
 import os
 import stat
+import sys
+
+import pytest
 
 from src.sysmanage_agent.operations import config_mgmt_spec as spec_mod
+
+# Windows has no POSIX mode bits: os.chmod there toggles the read-only flag and
+# nothing else, so st_mode always reports group/other read. Asserting the
+# POSIX bits on Windows tests the platform, not our code. The equivalent
+# guarantee on Windows comes from the per-user ACL on the temp directory,
+# which is not ours to set and not observable through st_mode.
+posix_permissions = pytest.mark.skipif(
+    sys.platform == "win32", reason="POSIX mode bits do not exist on Windows"
+)
 
 
 def spec(**over):
@@ -70,6 +82,7 @@ class TestMaterialisation:
         assert argv[2] == written
         assert os.path.isfile(written)
 
+    @posix_permissions
     def test_written_files_are_not_readable_by_other_users(self, tmp_path):
         # Profiles carry variables -- passwords, keys. This is the exposure.
         spec_mod.materialise(spec(), str(tmp_path))
@@ -125,6 +138,7 @@ class TestMaterialisation:
 
 
 class TestWorkdir:
+    @posix_permissions
     def test_the_workdir_is_private(self):
         workdir = spec_mod.make_workdir()
         try:
