@@ -477,8 +477,15 @@ class RegistrationManager:
                 # agent logged a cleanup it had not performed.
                 session.execute(text("DELETE FROM host_approval"))
 
-                # Clear any pending script executions since they're tied to the old host
-                session.execute(text("DELETE FROM script_execution"))
+                # Clear any pending script executions since they're tied to
+                # the old host. The table is script_executionS -- the singular
+                # name here raised "no such table", and because SQLite aborts
+                # the whole transaction on error, it ROLLED BACK the
+                # host_approval delete above. The agent then kept its previous
+                # host_id across every restart, so the server saw one host and
+                # the agent believed it was another. Found 2026-08-28 by a
+                # real round-trip, not by a test.
+                session.execute(text("DELETE FROM script_executions"))
 
                 # Clear any queued messages with host_id data
                 session.execute(

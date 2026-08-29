@@ -190,3 +190,107 @@ class TestEngineAgnosticism:
         ]
         for engine in ("puppet", "salt", "chef", "hadErrors", "updated_resources"):
             assert engine not in literals, f"{engine} is hardcoded in the readers"
+
+
+# The real thing, trimmed from a puppet 8.10.0 --noop run on 2026-08-28. Every
+# awkward part is deliberate: the Ruby object tag on the root, the mapping
+# (not list) of resource statuses, `changed: false` sitting next to
+# `out_of_sync: true`, and the nested tagged event.
+PUPPET_NOOP_REPORT = """--- !ruby/object:Puppet::Transaction::Report
+host: gdr-t14.theeverlys.lan
+resource_statuses:
+  File[/tmp/probe]:
+    title: "/tmp/probe"
+    resource: File[/tmp/probe]
+    failed: false
+    changed: false
+    out_of_sync: true
+    skipped: false
+    events:
+    - !ruby/object:Puppet::Transaction::Event
+      property: ensure
+      previous_value: absent
+      desired_value: present
+      status: noop
+  File[/tmp/already-there]:
+    title: "/tmp/already-there"
+    failed: false
+    changed: false
+    out_of_sync: false
+    skipped: false
+    events: []
+"""
+
+PUPPET_NOOP_RULES = {
+    "format": "yaml_file",
+    "report_glob": "last_run_report.yaml",
+    "entries_path": "resource_statuses",
+    "changed_key": "out_of_sync",
+    "name_key": "title",
+}
+PUPPET_NOOP = {"engine": "puppet", "result": PUPPET_NOOP_RULES}
+
+
+class TestYamlFileShape:
+    """puppet --noop writes its per-resource detail only as Ruby-tagged YAML.
+
+    This shape exists because the spec used to declare json_file for that
+    report: json.load raised on the first line, the reader fell back to "no
+    output", and every puppet check run reported a clean host with zero tasks.
+    Nothing errored -- drift simply did not exist for puppet.
+    """
+
+    @staticmethod
+    def _write(tmp_path, text=PUPPET_NOOP_REPORT):
+        (tmp_path / "last_run_report.yaml").write_text(text)
+        return str(tmp_path)
+
+    def test_a_ruby_tagged_report_is_read_not_discarded(self, tmp_path):
+        out = readers.read(PUPPET_NOOP, 0, "", "", self._write(tmp_path))
+        assert out["changed"] is True, "the whole bug: this used to be False"
+        assert out["success"] is True
+
+    def test_out_of_sync_is_what_counts_not_changed(self, tmp_path):
+        # In --noop nothing IS changed, so reading `changed` would report every
+        # dry run as converged. Only the out-of-sync resource is a finding.
+        out = readers.read(PUPPET_NOOP, 0, "", "", self._write(tmp_path))
+        names = [t["task"] for t in out["tasks"] if t["changed"]]
+        assert names == ["/tmp/probe"]
+
+    def test_every_resource_is_reported_not_only_the_drifting_one(self, tmp_path):
+        # The converged resource still belongs in the recap, or "2 of 3 in
+        # sync" becomes unanswerable.
+        out = readers.read(PUPPET_NOOP, 0, "", "", self._write(tmp_path))
+        assert (out["recap"]["changed"], out["recap"]["ok"]) == (1, 1)
+
+    def test_tasks_are_named_so_drift_can_track_them_across_runs(self, tmp_path):
+        # An unnamed task is dropped by the drift reconciler, so a nameless
+        # parse would look like success here and still yield no findings.
+        out = readers.read(PUPPET_NOOP, 0, "", "", self._write(tmp_path))
+        assert all(t["task"] for t in out["tasks"])
+
+    def test_the_loader_does_not_construct_tagged_objects(self, tmp_path):
+        # The report is written by a process on the managed host, so the tag
+        # must degrade to plain data rather than instantiate what it names.
+        # unsafe_load would attempt the Ruby class; this must not.
+        evil = (
+            "--- !ruby/object:Puppet::Transaction::Report\n"
+            "resource_statuses:\n"
+            "  X:\n"
+            "    title: x\n"
+            "    out_of_sync: true\n"
+        )
+        out = readers.read(PUPPET_NOOP, 0, "", "", self._write(tmp_path, evil))
+        task = out["tasks"][0]
+        assert isinstance(task["msg"], dict)
+        assert task["task"] == "x"
+
+    def test_an_unparseable_report_falls_back_rather_than_raising(self, tmp_path):
+        out = readers.read(PUPPET_NOOP, 1, "", "", self._write(tmp_path, "a: [1, 2\n"))
+        assert out["success"] is False
+        assert out["reason"] == "no_output"
+
+    def test_a_yaml_spec_with_no_report_falls_back_to_the_exit_code(self, tmp_path):
+        out = readers.read(PUPPET_NOOP, 1, "", "", str(tmp_path))
+        assert out["success"] is False
+        assert out["reason"] == "no_output"

@@ -96,3 +96,52 @@ class TestEcho:
         assert out["success"] is False
         assert out["changed"] is True
         assert out["exit_code"] == 2
+
+
+class TestCheckModeEcho:
+    """check_mode has to come back on EVERY engine, not just ansible-core.
+
+    The server treats a check-mode run as the drift report itself, so a result
+    that does not say it was one produces no findings at all. Only the built-in
+    ansible path set it, which meant drift worked for ansible-core and silently
+    did nothing for every spec-driven engine -- puppet, chef and salt all ran,
+    all reported, and all produced zero findings. Confirmed live 2026-08-28.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_spec_driven_check_run_says_it_was_one(self, monkeypatch):
+        obj = make()
+
+        async def fake_spec(_spec, _timeout):
+            # Spec-driven engines report no check_mode of their own; the server
+            # encodes it into the argv, so the agent is the only place that
+            # still knows.
+            return {"success": True, "changed": True}
+
+        monkeypatch.setattr(obj, "_apply_with_spec", fake_spec)
+        out = await obj.apply_config_profile(
+            {"spec": {"argv": ["x"]}, "check_mode": True, **IDS}
+        )
+        assert out["check_mode"] is True, "without this the run yields no drift finding"
+
+    @pytest.mark.asyncio
+    async def test_a_live_spec_run_is_not_reported_as_a_check(self, monkeypatch):
+        # The dangerous direction: a live run mislabelled as a check would file
+        # the changes it just MADE as drift to be remediated.
+        obj = make()
+
+        async def fake_spec(_spec, _timeout):
+            return {"success": True, "changed": True}
+
+        monkeypatch.setattr(obj, "_apply_with_spec", fake_spec)
+        out = await obj.apply_config_profile({"spec": {"argv": ["x"]}, **IDS})
+        assert out["check_mode"] is False
+
+    @pytest.mark.asyncio
+    async def test_a_run_with_no_executor_still_reports_its_mode(self, monkeypatch):
+        monkeypatch.setattr(ops.locator, "find_executor", lambda: None)
+        out = await make().apply_config_profile(
+            {"profile": {"playbook": "x"}, "check_mode": True}
+        )
+        assert out["success"] is False
+        assert out["check_mode"] is True

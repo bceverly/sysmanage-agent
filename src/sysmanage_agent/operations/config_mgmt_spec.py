@@ -67,11 +67,18 @@ FORMAT_JSON_LINES = "json_lines"  # ansible: our callback, one object per line
 FORMAT_JSON_STDOUT = "json_stdout"  # dsc, salt: one document on stdout
 FORMAT_JSON_FILE = "json_file"  # chef: newest *.json under a directory
 FORMAT_EXIT_CODE = "exit_code"  # puppet: meaning carried in the exit bits
+# puppet --noop: the per-resource detail exists ONLY in last_run_report.yaml.
+# A fifth shape rather than teaching json_file to sniff its input: the point of
+# naming the shapes is that a spec says what it expects, so a report that fails
+# to parse is a visible error instead of a silent empty result -- which is
+# exactly how puppet drift went missing (see config_mgmt_readers._load_yaml).
+FORMAT_YAML_FILE = "yaml_file"
 
 RESULT_FORMATS = (
     FORMAT_JSON_LINES,
     FORMAT_JSON_STDOUT,
     FORMAT_JSON_FILE,
+    FORMAT_YAML_FILE,
     FORMAT_EXIT_CODE,
 )
 

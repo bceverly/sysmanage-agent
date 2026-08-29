@@ -140,6 +140,17 @@ class ConfigMgmtOperations:
             for key in ("profile_id", "profile_name")
             if parameters.get(key) is not None
         }
+        # check_mode too, and for a sharper reason than the ids: the server
+        # treats a check-mode run AS the drift report, so a run that does not
+        # say it was one produces no findings at all. Only the built-in
+        # ansible path used to set it, which meant drift silently worked for
+        # ansible-core and silently did nothing for every spec-driven engine
+        # (puppet, chef, salt) -- confirmed live 2026-08-28.
+        #
+        # Reporting the REQUESTED value is accurate because check mode is
+        # encoded into the spec's argv by the server, so an engine that ran
+        # from a check-mode spec did not change anything.
+        echo["check_mode"] = check_mode
 
         # A server-supplied SPEC takes precedence. It is how any engine beyond
         # the two the agent knows natively gets driven -- see config_mgmt_spec

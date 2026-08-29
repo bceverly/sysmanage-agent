@@ -19,6 +19,8 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
+import yaml
+
 from src.sysmanage_agent.operations import config_mgmt_results as results
 from src.sysmanage_agent.operations import config_mgmt_spec as spec_mod
 
@@ -40,6 +42,8 @@ def read(
         parsed = _from_document(_load(stdout), rules, code)
     elif fmt == spec_mod.FORMAT_JSON_FILE:
         parsed = _from_document(_load_newest(workdir, rules), rules, code)
+    elif fmt == spec_mod.FORMAT_YAML_FILE:
+        parsed = _from_document(_load_newest(workdir, rules, _load_yaml), rules, code)
     else:
         parsed = _from_exit_code(rules, code)
 
@@ -56,13 +60,48 @@ def _load(text: str) -> Optional[Any]:
         return None
 
 
-def _load_newest(workdir: str, rules: Dict[str, Any]) -> Optional[Any]:
-    """The most recent JSON report a run dropped in a directory.
+class _TagTolerantLoader(yaml.SafeLoader):
+    """A SafeLoader that reads tagged nodes as plain data.
+
+    Puppet's report is Ruby-serialised YAML: the root carries
+    ``!ruby/object:Puppet::Transaction::Report`` and inner nodes carry their own
+    tags, which makes plain ``safe_load`` raise on the very first line.
+
+    Still SafeLoader-derived on purpose -- an unknown tag degrades to the dict,
+    list or scalar underneath it and NOTHING is instantiated from the document.
+    ``yaml.unsafe_load`` would parse the same file by constructing whatever
+    Ruby class the tag names, which is arbitrary object construction driven by
+    a file written by a process on the managed host.
+    """
+
+
+def _ignore_tag(loader, _tag_suffix, node):
+    """Return a tagged node's underlying container, dropping the tag."""
+    if isinstance(node, yaml.MappingNode):
+        return loader.construct_mapping(node, deep=True)
+    if isinstance(node, yaml.SequenceNode):
+        return loader.construct_sequence(node, deep=True)
+    return loader.construct_scalar(node)
+
+
+_TagTolerantLoader.add_multi_constructor("", _ignore_tag)
+
+
+def _load_yaml(handle) -> Optional[Any]:
+    """Parse a YAML report, tolerating engine-specific tags."""
+    return yaml.load(handle, Loader=_TagTolerantLoader)  # nosec B506 - see class
+
+
+def _load_newest(workdir: str, rules: Dict[str, Any], parse=json.load) -> Optional[Any]:
+    """The most recent report a run dropped in a directory.
 
     Chef's JsonFile handler names its report with a timestamp rather than
     writing to stdout, so the reader takes the newest match instead of a fixed
     path. ``report_glob`` is spec-supplied; the agent does not know Chef's
     naming convention.
+
+    ``parse`` selects the document syntax, so the same newest-file search
+    serves both the JSON and YAML shapes.
     """
     pattern = rules.get("report_glob") or "*.json"
     candidates = sorted(
@@ -74,8 +113,8 @@ def _load_newest(workdir: str, rules: Dict[str, Any]) -> Optional[Any]:
         return None
     try:
         with open(candidates[0], "r", encoding="utf-8") as handle:
-            return json.load(handle)
-    except (OSError, ValueError):
+            return parse(handle)
+    except (OSError, ValueError, yaml.YAMLError):
         return None
 
 

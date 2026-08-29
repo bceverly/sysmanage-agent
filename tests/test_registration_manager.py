@@ -527,7 +527,7 @@ class TestDatabaseCleanupActuallyRuns:
         session.execute(
             text("CREATE TABLE host_approval (host_id TEXT, approved INTEGER)")
         )
-        session.execute(text("CREATE TABLE script_execution (id INTEGER)"))
+        session.execute(text("CREATE TABLE script_executions (id INTEGER)"))
         session.execute(text("CREATE TABLE message_queue (message_data TEXT)"))
         for host_id in (
             "aabeadb6-8cc4-4449-bb92-4be7b8e42c51",
@@ -538,7 +538,7 @@ class TestDatabaseCleanupActuallyRuns:
             session.execute(
                 text("INSERT INTO host_approval VALUES (:h, 1)"), {"h": host_id}
             )
-        session.execute(text("INSERT INTO script_execution VALUES (1)"))
+        session.execute(text("INSERT INTO script_executions VALUES (1)"))
         session.execute(text('INSERT INTO message_queue VALUES (\'{"host_id": "x"}\')'))
         session.commit()
         try:
@@ -571,7 +571,7 @@ class TestDatabaseCleanupActuallyRuns:
         with self._patched(seeded_db):
             await RegistrationManager(agent).clear_stored_host_id()
 
-        for table in ("host_approval", "script_execution", "message_queue"):
+        for table in ("host_approval", "script_executions", "message_queue"):
             count = self._count(seeded_db, table)
             assert count == 0, f"{table} still has {count} row(s)"
 
