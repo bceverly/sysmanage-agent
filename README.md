@@ -38,6 +38,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - 📊 **System Monitoring**: CPU, memory, disk, network metrics collection
 - ⚡ **Command Execution**: Remote command execution with security controls
 - 🔧 **Package Management**: Remote software installation, updates, and OS version upgrade detection
+- ⚙️ **Configuration Management**: applies desired-state profiles locally — pull-style, so no inbound ports and no SSH — via `ansible-core` on POSIX or the vendored DSC v3 engine on Windows, reporting per-task changed/ok/failed back over the same connection
 - 💓 **Health Monitoring**: Automatic heartbeat and status reporting
 - 🌍 **Multi-language Support**: Native support for 14 languages
 - 🏃‍♂️ **Lightweight**: Minimal resource footprint and dependencies
