@@ -188,3 +188,21 @@ class TestBounds:
     def test_a_result_within_the_cap_is_not_flagged_truncated(self):
         out = qpr.run_pack(pack(q("few", "SELECT 1 AS n")))
         assert by_name(out)["few"]["truncated"] is False
+
+
+class TestCorrelation:
+    """The server correlates results to a run it opened at dispatch time."""
+
+    def test_the_run_id_is_echoed_back(self):
+        """Without this the measurements return and the server discards every
+        one of them, because it cannot tell which run they belong to. Not a
+        partial failure -- a total loss that looks like a successful run on
+        the agent side. Found on the first live round trip, 2026-09-21."""
+        out = qpr.run_pack(pack(q("n", "SELECT 1 AS n"), run_id="run-123"))
+        assert out["run_id"] == "run-123"
+
+    def test_a_pack_with_no_run_id_still_returns_a_result(self):
+        """An ad-hoc run (S5) has no run row; the key is present and None
+        rather than absent, so the consumer reads one shape either way."""
+        out = qpr.run_pack(pack(q("n", "SELECT 1 AS n")))
+        assert out["run_id"] is None

@@ -212,6 +212,14 @@ def run_pack(pack: Mapping[str, Any], config: Optional[Any] = None) -> Dict[str,
         )
 
     return {
+        # ECHOED, not generated: the server opened a run row before queuing
+        # this command and correlates the results by that id. Leaving it out
+        # is not a partial failure -- the measurements come back, the server
+        # cannot tell which run they belong to, and it discards all of them.
+        # That is exactly what happened on the first live round trip
+        # (2026-09-21): both hosts ran all three queries and the server logged
+        # "results arrived for run None ... 3 result(s) discarded".
+        "run_id": pack.get("run_id"),
         "pack_name": pack.get("pack_name"),
         "pack_id": pack.get("pack_id"),
         "shared_pack_id": pack.get("shared_pack_id"),
