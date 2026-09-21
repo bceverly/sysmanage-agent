@@ -301,3 +301,55 @@ class TestSourceCheckoutTier:
             return_value="3.5.1.10",
         ):
             assert version.get_agent_version() == "3.5.1.10"
+
+
+class TestRootOwnedCheckout:
+    """A privileged agent must still know its version.
+
+    git refuses to operate on a repository owned by another user — "detected
+    dubious ownership" — and exits non-zero. The agent normally runs as ROOT
+    from a checkout owned by an operator, which is exactly how
+    ``make start-privileged`` deploys it, so every privileged agent reported
+    its version as ``unknown``. Measured on OpenBSD 7.9 on 2026-09-21: the
+    same checkout resolved correctly as the owning user moments earlier.
+    """
+
+    def test_the_repo_is_trusted_for_this_invocation(self):
+        _reset_cache()
+        seen = {}
+
+        def fake_run(argv, **kwargs):
+            seen["argv"] = argv
+            seen["cwd"] = kwargs.get("cwd")
+            return _make_completed("v3.8.0.1")
+
+        with patch(
+            "src.sysmanage_agent.core.version._is_source_checkout", return_value=True
+        ), patch(
+            "src.sysmanage_agent.core.version.subprocess.run", side_effect=fake_run
+        ):
+            assert version.get_agent_version() == "v3.8.0.1-dev"
+
+        root = str(version._repo_root())  # pylint: disable=protected-access
+        assert "-c" in seen["argv"]
+        assert f"safe.directory={root}" in seen["argv"]
+
+    def test_only_this_path_is_trusted_not_a_wildcard(self):
+        """A global or wildcard exception would make every repository on the
+        host trusted by root — far more than reading one version needs."""
+        _reset_cache()
+        seen = {}
+
+        def fake_run(argv, **_kwargs):
+            seen["argv"] = argv
+            return _make_completed("v3.8.0.1")
+
+        with patch(
+            "src.sysmanage_agent.core.version._is_source_checkout", return_value=True
+        ), patch(
+            "src.sysmanage_agent.core.version.subprocess.run", side_effect=fake_run
+        ):
+            version.get_agent_version()
+
+        assert "safe.directory=*" not in seen["argv"]
+        assert "--global" not in seen["argv"]

@@ -41,6 +41,7 @@ import logging
 import os
 import platform
 import re
+import subprocess
 import socket
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
@@ -159,18 +160,33 @@ def build_os_version(collector) -> List[Dict[str, Any]]:
     info = collector.get_os_version_info() or {}
     os_info = info.get("os_info") or {}
     release = _os_release()
+
+    # macOS: osquery reports platform ``darwin`` and the plain release number.
+    # Our collector reports ``macos`` and a marketing-prefixed string
+    # ("Sequoia 15.6"), so a pack written the osquery way -- ``WHERE platform
+    # = 'darwin'`` -- matched nothing, and the version was both prefixed and
+    # a patch level behind (15.6 where the host was on 15.6.1). Measured on
+    # macOS 15.6.1, 2026-09-21.
+    mac_platform = None
+    mac_version = None
+    if platform.system() == "Darwin":
+        mac_platform = "darwin"
+        mac_version = platform.mac_ver()[0] or None
+
     return [
         {
             "name": os_info.get("distribution") or info.get("platform"),
-            "version": release.get("VERSION")
+            "version": mac_version
+            or release.get("VERSION")
             or os_info.get("distribution_version")
             or info.get("platform_release"),
             "codename": os_info.get("distribution_codename")
             or release.get("VERSION_CODENAME"),
-            "platform": release.get("ID")
+            "platform": mac_platform
+            or release.get("ID")
             or (info.get("platform") or "").lower()
             or None,
-            "platform_like": release.get("ID_LIKE") or None,
+            "platform_like": release.get("ID_LIKE") or mac_platform or None,
             "arch": info.get("machine_architecture"),
             "build": info.get("platform_version"),
         }
@@ -291,6 +307,47 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
     return out
 
 
+# ``inet <addr> netmask 0x<hex>`` as BSD ifconfig prints it.
+_IFCONFIG_INET = re.compile(
+    r"^\s*inet\s+(\d+\.\d+\.\d+\.\d+)\s+netmask\s+0x([0-9a-fA-F]{8})", re.M
+)
+
+
+def _ipv4_masks_from_ifconfig() -> Dict[str, str]:
+    """{address: dotted-quad mask} for IPv4, read from ``ifconfig``.
+
+    OpenBSD only. Measured on OpenBSD 7.9 on 2026-09-21: psutil returns
+    ``netmask=None`` for EVERY IPv4 address there while filling IPv6 masks
+    correctly -- a gap in its BSD implementation, not in the OS, which prints
+    the mask perfectly well. NetBSD 10.1 and Linux both populate it, so this
+    fallback is needed on exactly one platform.
+
+    Without it, ``interface_addresses.mask`` is silently NULL for every v4
+    address on a first-class platform, and a pack asking which addresses sit
+    on a given subnet cannot answer there.
+    """
+    try:
+        result = subprocess.run(  # nosec B603, B607
+            ["ifconfig", "-a"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    if result.returncode != 0:
+        return {}
+
+    masks = {}
+    for address, hex_mask in _IFCONFIG_INET.findall(result.stdout):
+        value = int(hex_mask, 16)
+        masks[address] = ".".join(
+            str((value >> shift) & 0xFF) for shift in (24, 16, 8, 0)
+        )
+    return masks
+
+
 def build_interface_addresses(_collector=None) -> List[Dict[str, Any]]:
     """osquery ``interface_addresses`` — ONE ROW PER ADDRESS, from the OS.
 
@@ -314,16 +371,31 @@ def build_interface_addresses(_collector=None) -> List[Dict[str, Any]]:
     import psutil  # noqa: PLC0415
 
     families = {_socket.AF_INET, _socket.AF_INET6}
+    interfaces = psutil.net_if_addrs() or {}
+
+    # Only shell out when psutil actually left a v4 mask empty, so Linux,
+    # NetBSD, macOS and Windows never pay for a subprocess they do not need.
+    fallback: Dict[str, str] = {}
+    if any(
+        addr.family == _socket.AF_INET and not getattr(addr, "netmask", None)
+        for addrs in interfaces.values()
+        for addr in addrs
+    ):
+        fallback = _ipv4_masks_from_ifconfig()
+
     out = []
-    for name, addrs in (psutil.net_if_addrs() or {}).items():
+    for name, addrs in interfaces.items():
         for addr in addrs:
             if addr.family not in families:
                 continue
+            mask = getattr(addr, "netmask", None)
+            if mask is None and addr.family == _socket.AF_INET:
+                mask = fallback.get(addr.address)
             out.append(
                 {
                     "interface": name,
                     "address": addr.address or None,
-                    "mask": getattr(addr, "netmask", None),
+                    "mask": mask,
                     "broadcast": getattr(addr, "broadcast", None),
                     "point_to_point": getattr(addr, "ptp", None),
                 }
@@ -419,7 +491,21 @@ _PACKAGE_TABLE_MANAGERS = {
     "deb_packages": {"apt", "dpkg"},
     "rpm_packages": {"dnf", "yum", "rpm", "zypper"},
     "homebrew_packages": {"brew", "homebrew"},
-    "programs": {"winget", "chocolatey", "msi", "windows"},
+    # osquery's ``programs`` IS the Windows registry uninstall list -- the
+    # Add/Remove Programs view. It is not the winget catalogue.
+    #
+    # This set used to be {"winget", "chocolatey", "msi", "windows"} and the
+    # real manager value is ``windows_registry``, which matched NONE of them,
+    # so the table reported winget's 204 packages while excluding all 195
+    # registry-installed programs. Measured on Windows 11 (26220) on
+    # 2026-09-21. Chocolatey and MSI installs register in the uninstall keys
+    # too, so reading the registry covers them rather than needing their own
+    # entries.
+    #
+    # winget and microsoft_store packages are not lost: they are carried by
+    # ``sysmanage_packages``, the portable table, which is exactly what it is
+    # for.
+    "programs": {"windows_registry"},
 }
 
 
@@ -434,7 +520,12 @@ def _packages_for(collector, table: str) -> List[Dict[str, Any]]:
         if table in ("deb_packages", "rpm_packages"):
             row["arch"] = pkg.get("architecture")
         if table == "programs":
-            row["publisher"] = pkg.get("source")
+            # The PUBLISHER, not the source. This read ``source`` and so
+            # reported "winget_repository" -- a package origin -- in a column
+            # osquery fills with the software vendor ("Igor Pavlov",
+            # "Microsoft Corporation"). The inventory carries the real value;
+            # it simply was not being read.
+            row["publisher"] = pkg.get("publisher")
         rows.append(row)
     return rows
 

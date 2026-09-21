@@ -177,28 +177,41 @@ class TestDetectPkginUpdates:
     """Tests for _detect_pkgin_updates method."""
 
     def test_detect_pkgin_updates_success_root(self, detector):
-        """Test successful pkgin update detection as root."""
-        mock_update_result = Mock()
-        mock_update_result.returncode = 0
+        """Successful pkgin update detection as root.
 
-        mock_list_result = Mock()
-        mock_list_result.returncode = 0
-        mock_list_result.stdout = "vim-9.0.1 Text editor\n"
+        Rewritten 2026-09-21: this used to feed the INSTALLED-package list and
+        assert that the installed version was the "update", which is the
+        defect it should have caught -- ``pkgin list -u`` is not an upgrade
+        list, so every installed package was reported as upgradable. It now
+        feeds the ``pkgin -n upgrade`` dry run and asserts the real target
+        version.
+        """
+        dry_run = Mock(
+            returncode=0,
+            stderr="",
+            stdout="""calculating dependencies...done.\n\n1 packages to refresh:\nbrotli-1.2.0\n\n1 packages to upgrade:\nvim-9.1.0\n""",
+        )
+        installed = Mock(returncode=0, stderr="", stdout="vim-9.0.1 Text editor\n")
+        refresh = Mock(returncode=0, stderr="", stdout="")
 
         def mock_run(cmd, **_kwargs):
-            if "update" in cmd:
-                return mock_update_result
-            return mock_list_result
+            if "upgrade" in cmd:
+                return dry_run
+            if "list" in cmd:
+                return installed
+            return refresh
 
         with patch("os.geteuid", return_value=0):  # Running as root
             with patch.object(detector, "_command_exists", return_value=False):
                 with patch("subprocess.run", side_effect=mock_run):
                     detector._detect_pkgin_updates()
 
+        # ONE update: the refreshed package is a rebuild at the same version.
         assert len(detector.available_updates) == 1
         update = detector.available_updates[0]
         assert update["package_name"] == "vim"
         assert update["current_version"] == "9.0.1"
+        assert update["available_version"] == "9.1.0"
         assert update["package_manager"] == "pkgin"
 
     def test_detect_pkgin_updates_success_non_root_doas(self, detector):
@@ -249,25 +262,45 @@ class TestBsdPkginUpdateDetection:
     """Tests for NetBSD pkgin package manager update detection (comprehensive)."""
 
     def test_detect_pkgin_updates_success(self, bsd_detector):
-        """Test successful pkgin update detection."""
-        mock_update = Mock(returncode=0, stderr="")
-        mock_list = Mock(
+        """Only packages in the "to upgrade" section count as updates."""
+        dry_run = Mock(
             returncode=0,
-            stdout="""vim-9.0.1 Text editor
-python311-3.11.6 Python programming language
-""",
+            stderr="",
+            stdout=(
+                "calculating dependencies...done.\n"
+                "\n"
+                "2 packages to upgrade:\n"
+                "vim-9.1.0\n"
+                "python311-3.11.9\n"
+                "\n"
+                "1 packages to install:\n"
+                "libfoo-1.0\n"
+            ),
         )
+        installed = Mock(
+            returncode=0,
+            stderr="",
+            stdout=(
+                "vim-9.0.1 Text editor\n"
+                "python311-3.11.6 Python programming language\n"
+            ),
+        )
+        refresh = Mock(returncode=0, stderr="", stdout="")
 
         def mock_run(cmd, **_kwargs):
-            if "update" in cmd:
-                return mock_update
-            return mock_list
+            if "upgrade" in cmd:
+                return dry_run
+            if "list" in cmd:
+                return installed
+            return refresh
 
         with patch("os.geteuid", return_value=0):
             with patch.object(bsd_detector, "_command_exists", return_value=False):
                 with patch("subprocess.run", side_effect=mock_run):
                     bsd_detector._detect_pkgin_updates()
 
+        # TWO, not three: "packages to install" are new dependencies, not
+        # updates to something already on the host.
         assert len(bsd_detector.available_updates) == 2
 
     def test_detect_pkgin_updates_with_doas(self, bsd_detector):

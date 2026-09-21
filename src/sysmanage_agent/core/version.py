@@ -77,7 +77,29 @@ def _from_git() -> str | None:
     the rc script left it, quite possibly a different repository or none —
     and would answer about the wrong tree or not at all.
     """
-    out = _try_run_in(["git", "describe", "--tags", "--abbrev=0"], _repo_root())
+    root = _repo_root()
+    # ``-c safe.directory=<root>``: git refuses to operate on a repository
+    # owned by another user ("detected dubious ownership") and exits non-zero.
+    # The agent normally runs as ROOT from a checkout owned by an operator --
+    # which is exactly how ``make start-privileged`` deploys it -- so every
+    # privileged agent reported its version as "unknown". Measured on OpenBSD
+    # 7.9 on 2026-09-21; the same checkout resolved correctly as the owning
+    # user moments earlier.
+    #
+    # Scoped to THIS path for THIS invocation: no global config is written and
+    # nothing else on the host becomes trusted. The path is derived from this
+    # module's own ``__file__``, so it is the code that is already executing.
+    out = _try_run_in(
+        [
+            "git",
+            "-c",
+            f"safe.directory={root}",
+            "describe",
+            "--tags",
+            "--abbrev=0",
+        ],
+        root,
+    )
     return out + "-dev" if out else None
 
 

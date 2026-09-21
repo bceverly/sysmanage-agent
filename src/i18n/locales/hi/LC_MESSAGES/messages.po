@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-21 15:30-0400\n"
+"POT-Creation-Date: 2026-09-21 17:20-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -888,103 +888,88 @@ msgstr "उपलब्ध अपडेट का निहितार्थ �
 msgid "Failed to install package %s: %s"
 msgstr "पैकेज %s इंस्टॉल करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:111
+#: src/sysmanage_agent/collection/update_detection_bsd.py:114
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "pkg अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:142
-#, python-format
-msgid "pkgin update failed (code %d): %s"
-msgstr "pkgin अपडेट विफल (कोड %d): %s"
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:198
-#, python-format
-msgid "pkgin list -u failed (code %d): %s"
-msgstr "pkgin list -u विफल (कोड %d): %s"
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:217
-#, python-format
-msgid "Failed to detect pkgin updates: %s"
-msgstr "pkgin अपडेट का निहितार्थ नहीं पता चल सका: %s"
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:255
+#: src/sysmanage_agent/collection/update_detection_bsd.py:152
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "पैकेज अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:303
+#: src/sysmanage_agent/collection/update_detection_bsd.py:200
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD अपग्रेड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:318
+#: src/sysmanage_agent/collection/update_detection_bsd.py:215
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD अपग्रेड 30 मिनट के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:417
+#: src/sysmanage_agent/collection/update_detection_bsd.py:314
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD अपग्रेड विफल हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:430
+#: src/sysmanage_agent/collection/update_detection_bsd.py:327
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD अपग्रेड इंस्टॉल विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:436
+#: src/sysmanage_agent/collection/update_detection_bsd.py:333
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD अपग्रेड की समय सीमा समाप्त हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:498
+#: src/sysmanage_agent/collection/update_detection_bsd.py:395
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch कमांड एक्ज़िट कोड %d के साथ विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:501
+#: src/sysmanage_agent/collection/update_detection_bsd.py:398
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:504
+#: src/sysmanage_agent/collection/update_detection_bsd.py:401
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD सिस्टम अपडेशन डिटेक्शन 30 मिनट के बाद टाइमआउट हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:509
+#: src/sysmanage_agent/collection/update_detection_bsd.py:406
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "OpenBSD प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:526
+#: src/sysmanage_agent/collection/update_detection_bsd.py:423
 msgid "Failed to get current OpenBSD version"
 msgstr "वर्तमान OpenBSD संस्करण प्राप्त करने में विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:575
+#: src/sysmanage_agent/collection/update_detection_bsd.py:472
 msgid "Could not parse OpenBSD version from website"
 msgstr "वेबसाइट से OpenBSD संस्करण पार्स नहीं हो सका"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:579
+#: src/sysmanage_agent/collection/update_detection_bsd.py:476
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "OpenBSD वेबसाइट से अद्यतन खोजने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:585
+#: src/sysmanage_agent/collection/update_detection_bsd.py:482
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "OpenBSD संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:755
+#: src/sysmanage_agent/collection/update_detection_bsd.py:652
 msgid "syspatch command failed"
 msgstr "syspatch कमांड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:757
-#: src/sysmanage_agent/collection/update_detection_bsd.py:778
+#: src/sysmanage_agent/collection/update_detection_bsd.py:654
+#: src/sysmanage_agent/collection/update_detection_bsd.py:675
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "सिसपैच अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:768
+#: src/sysmanage_agent/collection/update_detection_bsd.py:665
 msgid "syspatch command timed out"
 msgstr "syspatch कमांड टाईम-आउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:774
+#: src/sysmanage_agent/collection/update_detection_bsd.py:671
 msgid "syspatch timed out after 10 minutes"
 msgstr ""
 "syspatch \\u0928\\u093e\\u0930 \\u0924\\u0947 \\u0915\\u094b \\u0926\\u0940 "
@@ -993,13 +978,13 @@ msgstr ""
 "\\u092c\\u094d\\u0930\\u0947\\u0915\\u094d\\u0930\\u0928 "
 "\\u091a\\u093f\\u0932\\u094b"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:919
+#: src/sysmanage_agent/collection/update_detection_bsd.py:816
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "असमर्थित पैकेज प्रबंधक: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:975
+#: src/sysmanage_agent/collection/update_detection_bsd.py:872
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1069,6 +1054,21 @@ msgstr ""
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
 msgstr "macOS संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:103
+#, python-format
+msgid "pkgin update failed (code %d): %s"
+msgstr "pkgin अपडेट विफल (कोड %d): %s"
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:196
+#, python-format
+msgid "pkgin -n upgrade failed (code %d): %s"
+msgstr "प्कज़िन -n अपग्रेड फ़ेल हुआ (कोड %d): %s"
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:214
+#, python-format
+msgid "Failed to detect pkgin updates: %s"
+msgstr "pkgin अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:66
 #, python-format
@@ -1939,7 +1939,7 @@ msgid "Failed to load configuration file: %s"
 msgstr "सेटिंग्ज़ फाइल को लोड करने में विफलता: %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/core/version.py:179
+#: src/sysmanage_agent/core/version.py:201
 msgid "Could not determine agent version, using 'unknown'"
 msgstr "Agent version का निर्धारण नहीं कर सका, 'unknown' का प्रयोग कर रहे हैं"
 
@@ -3392,6 +3392,10 @@ msgstr "WSL स्थिति जाँच में समयबाहुल�
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
+
+#, python-format
+#~ msgid "pkgin list -u failed (code %d): %s"
+#~ msgstr "pkgin list -u विफल (कोड %d): %s"
 
 #, python-format
 #~ msgid "Failed to detect FreeBSD version upgrades: %s"

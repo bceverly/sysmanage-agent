@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-21 15:30-0400\n"
+"POT-Creation-Date: 2026-09-21 17:20-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -891,113 +891,98 @@ msgstr ""
 msgid "Failed to install package %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:111
+#: src/sysmanage_agent/collection/update_detection_bsd.py:114
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:142
-#, python-format
-msgid "pkgin update failed (code %d): %s"
-msgstr ""
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:198
-#, python-format
-msgid "pkgin list -u failed (code %d): %s"
-msgstr ""
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:217
-#, python-format
-msgid "Failed to detect pkgin updates: %s"
-msgstr ""
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:255
+#: src/sysmanage_agent/collection/update_detection_bsd.py:152
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:303
+#: src/sysmanage_agent/collection/update_detection_bsd.py:200
 msgid "OpenBSD upgrade failed"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:318
+#: src/sysmanage_agent/collection/update_detection_bsd.py:215
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:417
+#: src/sysmanage_agent/collection/update_detection_bsd.py:314
 msgid "FreeBSD upgrade failed"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:430
+#: src/sysmanage_agent/collection/update_detection_bsd.py:327
 msgid "FreeBSD upgrade install failed"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:436
+#: src/sysmanage_agent/collection/update_detection_bsd.py:333
 msgid "FreeBSD upgrade timed out"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:498
+#: src/sysmanage_agent/collection/update_detection_bsd.py:395
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:501
+#: src/sysmanage_agent/collection/update_detection_bsd.py:398
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:504
+#: src/sysmanage_agent/collection/update_detection_bsd.py:401
 msgid "OpenBSD system update detection timed out"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:509
+#: src/sysmanage_agent/collection/update_detection_bsd.py:406
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:526
+#: src/sysmanage_agent/collection/update_detection_bsd.py:423
 msgid "Failed to get current OpenBSD version"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:575
+#: src/sysmanage_agent/collection/update_detection_bsd.py:472
 msgid "Could not parse OpenBSD version from website"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:579
+#: src/sysmanage_agent/collection/update_detection_bsd.py:476
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:585
+#: src/sysmanage_agent/collection/update_detection_bsd.py:482
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:755
+#: src/sysmanage_agent/collection/update_detection_bsd.py:652
 msgid "syspatch command failed"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:757
-#: src/sysmanage_agent/collection/update_detection_bsd.py:778
+#: src/sysmanage_agent/collection/update_detection_bsd.py:654
+#: src/sysmanage_agent/collection/update_detection_bsd.py:675
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:768
+#: src/sysmanage_agent/collection/update_detection_bsd.py:665
 msgid "syspatch command timed out"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:774
+#: src/sysmanage_agent/collection/update_detection_bsd.py:671
 msgid "syspatch timed out after 10 minutes"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:919
+#: src/sysmanage_agent/collection/update_detection_bsd.py:816
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:975
+#: src/sysmanage_agent/collection/update_detection_bsd.py:872
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1063,6 +1048,21 @@ msgstr ""
 #: src/sysmanage_agent/collection/update_detection_macos.py:603
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
+msgstr ""
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:103
+#, python-format
+msgid "pkgin update failed (code %d): %s"
+msgstr ""
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:196
+#, python-format
+msgid "pkgin -n upgrade failed (code %d): %s"
+msgstr ""
+
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:214
+#, python-format
+msgid "Failed to detect pkgin updates: %s"
 msgstr ""
 
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:66
@@ -1906,7 +1906,7 @@ msgstr ""
 msgid "Failed to load configuration file: %s"
 msgstr ""
 
-#: src/sysmanage_agent/core/version.py:179
+#: src/sysmanage_agent/core/version.py:201
 msgid "Could not determine agent version, using 'unknown'"
 msgstr ""
 

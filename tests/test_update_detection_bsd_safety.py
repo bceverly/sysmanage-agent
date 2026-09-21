@@ -80,3 +80,70 @@ def test_the_pkg_check_uses_the_remote_catalogue():
     ]
     assert version_calls, "the pkg version check did not run"
     assert "-vRl" in version_calls[0]
+
+
+class TestPkginReportsOnlyRealUpgrades:
+    """``pkgin list -u`` is not an upgrade list — pkgin has no such flag.
+
+    It ignores ``-u`` and prints the plain installed-package list, byte for
+    byte identical to ``pkgin list``. So every installed package was reported
+    as having an update available. Measured on NetBSD 10.1 on 2026-09-21: 184
+    "updates" on a host with 184 packages installed and 16 genuinely
+    upgradable. The old parser's ``available_version: "available"`` placeholder
+    was the tell — the command it read cannot say what you would move to.
+    """
+
+    DRY_RUN = (
+        "calculating dependencies...done.\n"
+        "\n"
+        "31 packages to refresh:\n"
+        "brotli-1.2.0\n"
+        "gmake-4.4.1\n"
+        "\n"
+        "16 packages to upgrade:\n"
+        "chromium-149.0.7827.155nb1\n"
+        "gcc12-libs-12.5.0nb4\n"
+        "openssl-3.6.3\n"
+        "\n"
+        "3 packages to install:\n"
+        "libfoo-1.0\n"
+        "\n"
+        "0 to remove, 31 to refresh, 16 to upgrade, 3 to install\n"
+    )
+
+    def _parse(self):
+        detector = BSDUpdateDetector()
+        return detector._parse_pkgin_upgrade_output(  # pylint: disable=protected-access
+            self.DRY_RUN
+        )
+
+    def test_only_the_upgrade_section_is_read(self):
+        """A refresh is a rebuild at the SAME version and an install is a new
+        dependency; counting either overstates what an operator must do."""
+        names = [u["package_name"] for u in self._parse()]
+        assert names == ["chromium", "gcc12-libs", "openssl"]
+        assert "brotli" not in names and "libfoo" not in names
+
+    def test_the_target_version_is_real_not_a_placeholder(self):
+        by_name = {u["package_name"]: u for u in self._parse()}
+        assert by_name["openssl"]["available_version"] == "3.6.3"
+
+    def test_a_hyphenated_package_name_splits_at_the_version(self):
+        """pkgsrc names contain hyphens: 'gcc12-libs-12.5.0nb4' is the package
+        gcc12-libs at 12.5.0nb4, not gcc12 at 'libs-12.5.0nb4'."""
+        by_name = {u["package_name"]: u for u in self._parse()}
+        assert by_name["gcc12-libs"]["available_version"] == "12.5.0nb4"
+
+    def test_nothing_to_upgrade_yields_nothing(self):
+        detector = BSDUpdateDetector()
+        out = detector._parse_pkgin_upgrade_output(  # pylint: disable=protected-access
+            "calculating dependencies...done.\n\n0 to remove, 0 to upgrade\n"
+        )
+        assert out == []
+
+    def test_escalation_lives_in_one_place(self):
+        detector = BSDUpdateDetector()
+        with patch("os.geteuid", return_value=0):
+            assert detector._pkgin_privileged(  # pylint: disable=protected-access
+                ["-n", "upgrade"]
+            ) == ["pkgin", "-n", "upgrade"]

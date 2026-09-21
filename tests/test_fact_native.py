@@ -591,3 +591,159 @@ class TestOsVersionPlatformIsTheDistribution:
             row = fn.build_os_version(FakeOS())[0]
         assert row["platform"]
         assert row["platform_like"] is None
+
+
+class TestOpenBsdIpv4MaskFallback:
+    """psutil leaves every IPv4 netmask empty on OpenBSD.
+
+    Measured on OpenBSD 7.9 on 2026-09-21: v6 masks come back correctly and
+    every v4 mask is None, while ``ifconfig`` prints them perfectly well. That
+    is a gap in psutil's BSD implementation, not in the OS — and it left
+    ``interface_addresses.mask`` silently NULL for every v4 address on a
+    first-class platform. NetBSD 10.1 and Linux both populate it, so the
+    fallback is needed on exactly one platform and must not cost the others a
+    subprocess.
+    """
+
+    IFCONFIG = (
+        "qwx0: flags=808843\n"
+        "\tinet 192.168.4.152 netmask 0xffffff00 broadcast 192.168.4.255\n"
+        "lo0: flags=8049\n"
+        "\tinet 127.0.0.1 netmask 0xff000000\n"
+    )
+
+    def _addrs(self, netmask):
+        import socket as _socket
+        from collections import namedtuple
+
+        Snic = namedtuple("Snic", "family address netmask broadcast ptp")
+        return {"qwx0": [Snic(_socket.AF_INET, "192.168.4.152", netmask, None, None)]}
+
+    def test_the_hex_mask_is_converted_to_dotted_quad(self):
+        from unittest.mock import patch
+
+        import psutil
+
+        with patch.object(psutil, "net_if_addrs", return_value=self._addrs(None)):
+            with patch.object(fn.subprocess, "run") as run:
+                run.return_value.returncode = 0
+                run.return_value.stdout = self.IFCONFIG
+                rows = fn.build_interface_addresses()
+        assert rows[0]["mask"] == "255.255.255.0"
+
+    def test_no_subprocess_when_psutil_already_supplied_the_mask(self):
+        """Linux, NetBSD, macOS and Windows must not pay for ifconfig."""
+        from unittest.mock import patch
+
+        import psutil
+
+        with patch.object(
+            psutil, "net_if_addrs", return_value=self._addrs("255.255.255.0")
+        ):
+            with patch.object(fn.subprocess, "run") as run:
+                rows = fn.build_interface_addresses()
+        run.assert_not_called()
+        assert rows[0]["mask"] == "255.255.255.0"
+
+    def test_a_missing_ifconfig_leaves_the_mask_null_rather_than_raising(self):
+        """Reporting NULL is honest; crashing collection is not."""
+        from unittest.mock import patch
+
+        import psutil
+
+        with patch.object(psutil, "net_if_addrs", return_value=self._addrs(None)):
+            with patch.object(fn.subprocess, "run", side_effect=OSError("no ifconfig")):
+                rows = fn.build_interface_addresses()
+        assert rows[0]["mask"] is None
+
+
+class TestMacOsOsVersion:
+    """osquery calls macOS ``darwin`` and reports the plain release number.
+
+    Our collector reported ``macos`` and a marketing-prefixed version
+    ("Sequoia 15.6"), so a pack written the osquery way --
+    ``WHERE platform = 'darwin'`` -- matched nothing, and the version was a
+    patch level behind the host (15.6 on a 15.6.1 machine). Measured on macOS
+    15.6.1, 2026-09-21.
+    """
+
+    def _row(self, system="Darwin", mac_ver="15.6.1"):
+        from unittest.mock import patch
+
+        with patch.object(fn.platform, "system", return_value=system), patch.object(
+            fn.platform, "mac_ver", return_value=(mac_ver, ("", "", ""), "")
+        ), patch("builtins.open", side_effect=OSError("no os-release")):
+            return fn.build_os_version(FakeOS())[0]
+
+    def test_platform_is_darwin_not_macos(self):
+        assert self._row()["platform"] == "darwin"
+
+    def test_version_is_the_release_number_without_the_marketing_name(self):
+        assert self._row()["version"] == "15.6.1"
+
+    def test_other_platforms_are_untouched(self):
+        """The correction must be macOS-only — Linux already agreed with
+        osquery, and the BSDs did too."""
+        row = self._row(system="FreeBSD", mac_ver="")
+        assert row["platform"] != "darwin"
+
+
+class TestWindowsPrograms:
+    """osquery's ``programs`` is the Windows registry uninstall list.
+
+    Two defects, both measured on Windows 11 (26220) on 2026-09-21:
+
+    * the manager filter was {"winget", "chocolatey", "msi", "windows"} and
+      the real value is ``windows_registry``, which matched NONE of them — so
+      the table reported winget's 204 packages and excluded all 195
+      registry-installed programs; and
+    * ``publisher`` was filled from ``source``, reporting "winget_repository"
+      — a package origin — where osquery reports the software vendor.
+
+    Neither failed. The table returned plausible rows that described the wrong
+    thing.
+    """
+
+    class FakeInventory:
+        def get_software_inventory(self):
+            return {
+                "software_packages": [
+                    {
+                        "package_name": "7-Zip 25.01 (arm64)",
+                        "version": "25.01",
+                        "package_manager": "windows_registry",
+                        "source": "windows_installer",
+                        "publisher": "Igor Pavlov",
+                    },
+                    {
+                        "package_name": "7-Zip",
+                        "version": "25.01",
+                        "package_manager": "winget",
+                        "source": "winget_repository",
+                        "publisher": "Igor Pavlov",
+                    },
+                    {
+                        "package_name": "Some Store App",
+                        "version": "1.0",
+                        "package_manager": "microsoft_store",
+                        "source": "microsoft_store",
+                        "publisher": "Contoso",
+                    },
+                ]
+            }
+
+    def test_only_registry_installed_programs_are_reported(self):
+        rows = fn.build_programs(self.FakeInventory())
+        assert [r["name"] for r in rows] == ["7-Zip 25.01 (arm64)"]
+
+    def test_publisher_is_the_vendor_not_the_package_source(self):
+        rows = fn.build_programs(self.FakeInventory())
+        assert rows[0]["publisher"] == "Igor Pavlov"
+        assert rows[0]["publisher"] != "windows_installer"
+
+    def test_winget_and_store_packages_survive_in_the_portable_table(self):
+        """They are not lost — sysmanage_packages is exactly what carries
+        package managers osquery has no table for."""
+        rows = fn.build_sysmanage_packages(self.FakeInventory())
+        names = {r["name"] for r in rows}
+        assert {"7-Zip", "Some Store App"} <= names

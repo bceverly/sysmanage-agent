@@ -48,11 +48,14 @@ logger = logging.getLogger(__name__)
 from .update_detection_base import (  # pylint: disable=wrong-import-position
     UpdateDetectorBase,
 )
+from .update_detection_pkgin import (  # pylint: disable=wrong-import-position
+    PkginUpdateMixin,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class BSDUpdateDetector(UpdateDetectorBase):
+class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
     """BSD-specific update detection methods."""
 
     def _detect_pkg_updates(self):
@@ -109,112 +112,6 @@ class BSDUpdateDetector(UpdateDetectorBase):
 
         except Exception as error:
             logger.exception(_("Failed to detect pkg updates: %s"), str(error))
-
-    def _collect_pkgin_update_command(self):
-        """Determine the correct pkgin update command based on privilege level.
-
-        Returns:
-            list: The command to run for pkgin update.
-        """
-        is_root = os.geteuid() == 0
-
-        if is_root:
-            return ["pkgin", "update"]
-        if self._command_exists("doas"):
-            return ["doas", "pkgin", "update"]
-        if self._command_exists("sudo"):
-            return ["sudo", "-n", "pkgin", "update"]
-        return ["pkgin", "update"]
-
-    def _process_pkgin_update_repo(self):
-        """Run pkgin update to refresh the package repository.
-
-        Logs warnings on failure but does not raise, allowing stale data checks.
-        """
-        update_cmd = self._collect_pkgin_update_command()
-
-        update_result = subprocess.run(  # nosec B603, B607
-            update_cmd, capture_output=True, text=True, timeout=60, check=False
-        )
-
-        if update_result.returncode != 0:
-            logger.warning(
-                _("pkgin update failed (code %d): %s"),
-                update_result.returncode,
-                (
-                    update_result.stderr.strip()
-                    if update_result.stderr
-                    else "No error message"
-                ),
-            )
-        else:
-            logger.debug("pkgin update completed successfully")
-
-    def _parse_pkgin_update_line(self, line):
-        """Parse a single line of pkgin list -u output into an update dict.
-
-        Args:
-            line: A single output line from pkgin list -u.
-
-        Returns:
-            dict or None: An update dict if the line was parsed, None otherwise.
-        """
-        if not line.strip() or line.startswith("pkg_summary"):
-            return None
-
-        match = re.match(
-            r"^(\w[\w+.-]*)-(\d[^\s]*)\s+",  # NOSONAR
-            line,
-        )
-        if match:
-            return {
-                "package_name": match.group(1),
-                "current_version": match.group(2),
-                "available_version": "available",  # pkgin list -u doesn't show target version
-                "package_manager": "pkgin",
-                "is_security_update": False,
-                "is_system_update": False,
-            }
-        return None
-
-    def _detect_pkgin_updates(self):
-        """Detect updates from NetBSD pkgin."""
-        logger.debug("=== PKGIN DETECTION START ===")
-        try:
-            logger.debug("Detecting pkgin updates")
-
-            self._process_pkgin_update_repo()
-
-            result = subprocess.run(  # nosec B603, B607
-                ["pkgin", "list", "-u"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-
-            if result.returncode != 0:
-                logger.warning(
-                    _("pkgin list -u failed (code %d): %s"),
-                    result.returncode,
-                    result.stderr.strip() if result.stderr else "No error message",
-                )
-                return
-
-            if result.stdout.strip():
-                update_count = 0
-                for line in result.stdout.strip().split("\n"):
-                    update = self._parse_pkgin_update_line(line)
-                    if update:
-                        self.available_updates.append(update)
-                        update_count += 1
-
-                if update_count > 0:
-                    logger.info("Found %d pkgin updates", update_count)
-
-            logger.debug("=== PKGIN DETECTION END ===")
-        except Exception as error:
-            logger.exception(_("Failed to detect pkgin updates: %s"), str(error))
 
     # Helper methods
 
