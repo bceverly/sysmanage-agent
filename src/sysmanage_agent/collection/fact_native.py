@@ -40,6 +40,7 @@ A pack written against osquery must get osquery's meaning or NOTHING.  So:
 import logging
 import os
 import platform
+import socket
 from typing import Any, Callable, Dict, List, Mapping, Sequence
 
 from src.sysmanage_agent.core.fact_schema import (
@@ -336,6 +337,23 @@ def _packages_for(collector, table: str) -> List[Dict[str, Any]]:
     return rows
 
 
+# osquery's ``listening_ports.protocol`` is the IANA IP PROTOCOL NUMBER --
+# 6 for TCP, 17 for UDP -- while psutil reports the SOCKET TYPE
+# (SOCK_STREAM = 1, SOCK_DGRAM = 2). Emitting the socket type is a silent
+# wrong answer of the worst kind: ``WHERE protocol = 6``, which is what a
+# published osquery pack writes for TCP, matches NOTHING, and ``protocol = 1``
+# (ICMP, in IANA terms) matches every TCP socket. The query succeeds either
+# way. Found on the first live round trip, 2026-09-21, when a FreeBSD host
+# reported sshd on port 22 with protocol 1.
+#
+# ``family`` needs no such map: psutil's AddressFamily values ARE the OS
+# AF_* constants, which is exactly what osquery reports.
+_IP_PROTOCOL = {
+    int(socket.SOCK_STREAM): int(socket.IPPROTO_TCP),
+    int(socket.SOCK_DGRAM): int(socket.IPPROTO_UDP),
+}
+
+
 def can_enumerate_sockets() -> bool:
     """Can this process see EVERY listening socket, not just its own?
 
@@ -369,7 +387,7 @@ def build_listening_ports(_collector=None) -> List[Dict[str, Any]]:
                 "pid": conn.pid,
                 "port": conn.laddr.port,
                 "address": conn.laddr.ip,
-                "protocol": conn.type,
+                "protocol": _IP_PROTOCOL.get(conn.type),
                 "family": conn.family,
                 "fd": getattr(conn, "fd", None),
             }

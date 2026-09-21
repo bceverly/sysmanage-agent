@@ -336,3 +336,79 @@ def test_listening_ports_is_served_when_privileged(monkeypatch):
     assert fs.build_fact_coverage("linux")["served"]["listening_ports"] == (
         fs.PROVIDER_NATIVE
     )
+
+
+class TestListeningPortProtocol:
+    """``protocol`` is the IANA IP protocol number, not the socket type.
+
+    The trap: psutil reports SOCK_STREAM (1) / SOCK_DGRAM (2); osquery reports
+    IPPROTO_TCP (6) / IPPROTO_UDP (17). A published pack filters TCP with
+    ``WHERE protocol = 6``. Emit the socket type and that matches NOTHING
+    while ``protocol = 1`` -- ICMP, in IANA terms -- matches every TCP socket.
+    The query succeeds either way, which is what makes it worth a test.
+
+    Found in the field on 2026-09-21: a FreeBSD host reported sshd on port 22
+    with protocol 1.
+    """
+
+    def _rows(self, conns):
+        # psutil is imported INSIDE the builder, so the patch has to land on
+        # the psutil module rather than on fact_native's namespace.
+        from unittest.mock import patch
+
+        import psutil
+
+        with patch.object(psutil, "net_connections", return_value=conns):
+            # The builder directly: collect() swallows builder exceptions by
+            # design, which would turn a real failure here into an empty list
+            # and a passing test that asserts nothing.
+            return fn.build_listening_ports()
+
+    def _conn(self, sock_type, port=22):
+        import socket as _socket
+        from collections import namedtuple
+
+        import psutil
+
+        Addr = namedtuple("Addr", "ip port")
+        Conn = namedtuple("Conn", "fd family type laddr raddr status pid")
+        return Conn(
+            fd=7,
+            family=_socket.AF_INET,
+            type=sock_type,
+            laddr=Addr("0.0.0.0", port),
+            raddr=None,
+            status=psutil.CONN_LISTEN,
+            pid=1234,
+        )
+
+    def test_a_tcp_socket_reports_protocol_6(self):
+        import socket as _socket
+
+        rows = self._rows([self._conn(_socket.SOCK_STREAM)])
+        assert rows and rows[0]["protocol"] == int(_socket.IPPROTO_TCP)
+
+    def test_a_udp_socket_reports_protocol_17(self):
+        import socket as _socket
+
+        rows = self._rows([self._conn(_socket.SOCK_DGRAM, port=53)])
+        assert rows and rows[0]["protocol"] == int(_socket.IPPROTO_UDP)
+
+    def test_the_socket_type_is_never_emitted_as_the_protocol(self):
+        import socket as _socket
+
+        rows = self._rows(
+            [self._conn(_socket.SOCK_STREAM), self._conn(_socket.SOCK_DGRAM, 53)]
+        )
+        assert {r["protocol"] for r in rows} == {
+            int(_socket.IPPROTO_TCP),
+            int(_socket.IPPROTO_UDP),
+        }
+
+    def test_family_is_passed_through_because_it_already_matches(self):
+        """psutil's AddressFamily values ARE the OS AF_* constants, which is
+        what osquery reports — so a map here would be the bug."""
+        import socket as _socket
+
+        rows = self._rows([self._conn(_socket.SOCK_STREAM)])
+        assert rows[0]["family"] == int(_socket.AF_INET)
