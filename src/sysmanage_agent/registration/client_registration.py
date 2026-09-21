@@ -123,7 +123,7 @@ class ClientRegistration:
             suppressed = detect_suppressed(
                 handlers, build_excluded=build_excluded_from_env()
             )
-            return build_capability_report(handlers, suppressed)
+            return build_capability_report(handlers, suppressed, self.config)
         except Exception:  # pylint: disable=broad-except
             self.logger.warning(
                 "Could not build the agent capability report; registering "

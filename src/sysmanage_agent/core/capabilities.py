@@ -48,9 +48,30 @@ baseline agent advertises everything it can route, so nothing regresses for
 hosts that already exist.
 """
 
+import platform
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from src.sysmanage_agent.core.capability_probes import INAPPLICABLE_REASONS
+from src.sysmanage_agent.core.fact_schema import build_fact_coverage
+
+
+def _fact_coverage(config) -> Dict[str, Any]:
+    """Fact coverage for this host, providers bootstrapped first.
+
+    The bootstrap is imported HERE rather than at module scope on purpose:
+    ``collection`` imports ``core``, so a top-level import the other way would
+    close the cycle.  It is also the reason the call sits in this function and
+    not in the caller -- the report is built on two paths (registration and a
+    live query), and an unbootstrapped registry does not fail, it quietly
+    advertises a host with no facts at all.
+    """
+    from src.sysmanage_agent.collection.fact_providers import (  # noqa: PLC0415
+        bootstrap_fact_providers,
+    )
+
+    bootstrap_fact_providers(config)
+    return build_fact_coverage(platform.system().lower())
+
 
 # Bump when an older server would MISREAD the report — changed semantics for an
 # existing key, or a key it must understand to be correct.  Not when a
@@ -190,12 +211,19 @@ def ungrouped_commands(available: Iterable[str]) -> List[str]:
 def build_capability_report(
     handlers: Mapping[str, Any],
     suppressed: Optional[Mapping[str, str]] = None,
+    config: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Describe what this agent build can actually do.
 
     ``handlers`` is the live command-handler map — pass
     ``MessageProcessor._get_command_handlers()``.  Deriving from it is the
     whole point: see the module docstring.
+
+    ``config`` is the agent's ConfigManager, used only for the Phase 21.1 fact
+    section -- it decides whether this host has opted into the osquery fact
+    provider.  Optional, and its absence means the floor provider rather than
+    an error: a report built before config is available is still a correct
+    report, it simply advertises native coverage.
 
     ``suppressed`` is ``{command: reason_code}`` for commands this build routes
     but this HOST cannot deliver — see ``capability_probes.detect_suppressed``.
@@ -273,4 +301,18 @@ def build_capability_report(
         "unavailable": dict(sorted(unavailable.items())),
         "partial": dict(sorted(partial.items())),
         "not_applicable": dict(sorted(not_applicable.items())),
+        # Phase 21.1 S1.  Added WITHOUT bumping CAPABILITY_SCHEMA_VERSION, and
+        # that is the correct call rather than an oversight: the version gates
+        # whether an older server can still READ the report, and this key is
+        # purely additive -- normalize_report keeps only fields it knows, so a
+        # server that has never heard of "facts" drops it and computes
+        # ``limited`` exactly as before.  Bumping would be actively harmful:
+        # MAX_SUPPORTED_SCHEMA_VERSION REJECTS a newer report outright, so
+        # every host would read as unknown-capability until the server caught
+        # up -- the same reasoning recorded for ``not_applicable`` above.
+        #
+        # Fact coverage also stays OUT of the ``limited`` rule.  An agent that
+        # serves no fact tables is not a degraded agent; it is an agent whose
+        # providers have not shipped yet.
+        "facts": _fact_coverage(config),
     }

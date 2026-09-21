@@ -319,7 +319,15 @@ class MessageProcessor:
             suppressed = detect_suppressed(
                 handlers, build_excluded=build_excluded_from_env()
             )
-            report = build_capability_report(handlers, suppressed)
+            # Reached through the agent, and defensively: this method is
+            # called on doubles that carry only the handler map.  A missing
+            # config is not an error state for the fact section -- it means
+            # the floor provider, which is the correct answer when nobody has
+            # opted this host into osquery.
+            agent = getattr(self, "agent", None)
+            report = build_capability_report(
+                handlers, suppressed, getattr(agent, "config", None)
+            )
             return {"success": True, "result": report}
         except Exception as error:  # pylint: disable=broad-except
             self.logger.error(_("Failed to build capability report: %s"), error)

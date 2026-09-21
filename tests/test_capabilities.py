@@ -126,6 +126,10 @@ def test_unknown_capabilities_do_not_need_a_schema_bump():
 def _bare_registration():
     reg = ClientRegistration.__new__(ClientRegistration)
     reg.logger = logging.getLogger("test")
+    # __new__ skips __init__, so nothing it sets exists here.  The Phase 21.1
+    # fact section reads config to decide the osquery opt-in, and None is a
+    # real state for it -- "no config" means the floor provider, not an error.
+    reg.config = None
     return reg
 
 

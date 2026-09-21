@@ -158,3 +158,24 @@ collection:
     network_interfaces: true
     user_accounts: true
     system_metrics: true
+
+# Endpoint fact substrate (ROADMAP Phase 21.1)
+# The agent serves a set of osquery-schema fact tables so a query written once
+# runs everywhere.  Two providers can fill them:
+#
+#   native   — always present, every supported platform including OpenBSD and
+#              NetBSD, which have no osquery port at all.  This is the floor
+#              and needs no configuration.
+#   osquery  — used only where osqueryd exists AND you opt in below.  Wider
+#              and better tested, so it is preferred per table when healthy.
+#
+# Selection is PER TABLE, not per host: a build missing the package tables
+# (FreeBSD's port, for one) still serves users and mounts through osquery
+# while packages come from the native provider.  A broken osquery costs
+# fidelity, never coverage — the agent falls back rather than going dark.
+#
+# Off by default on purpose: a host that merely happens to have osquery
+# installed should not silently change where its facts come from.
+facts:
+  osquery:
+    enabled: false

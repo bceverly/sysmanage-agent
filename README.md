@@ -33,7 +33,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 ### Key Features
 
 - 🔄 **Real-time Communication**: WebSocket-based connection for instant responsiveness
-- 🖥️ **Cross-platform Support**: Linux, Windows, macOS, FreeBSD, OpenBSD
+- 🖥️ **Cross-platform Support**: Linux, Windows, macOS, FreeBSD, OpenBSD, NetBSD
 - 🔐 **Secure by Design**: Encrypted communication with mTLS validation, no inbound ports required
 - 📊 **System Monitoring**: CPU, memory, disk, network metrics collection
 - ⚡ **Command Execution**: Remote command execution with security controls
@@ -51,6 +51,7 @@ SysManage Agent is a headless Python application designed to be installed on rem
 - 🍎 **macOS**: Intel and Apple Silicon
 - 🔒 **FreeBSD**: Latest stable versions
 - 🛡️ **OpenBSD**: Latest stable versions
+- 🚩 **NetBSD**: Latest stable versions
 
 ## Installation
 
