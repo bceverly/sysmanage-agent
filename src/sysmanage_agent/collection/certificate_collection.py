@@ -426,16 +426,28 @@ class CertificateCollector:
             glob.glob(os.path.join(cert_dir, "**", pattern), recursive=True)
         )
 
+        # DEDUPED, because ``**`` with recursive=True also matches ZERO
+        # directories -- so the second glob re-finds every file the first one
+        # already returned, and each top-level certificate is processed twice.
+        # It only surfaced as duplicate ROWS because the dedupe downstream
+        # keys on fingerprint_sha256, which openssl does not give us here, so
+        # the "no fingerprint, include it anyway" path appended both copies.
+        # Measured on FreeBSD 14.4, 2026-09-21: two identical rows for
+        # /usr/local/share/certs/ca-root-nss.crt.
+        #
+        # Sorted so the order is stable run to run, which keeps a diff of two
+        # collections meaningful.
+        cert_files = sorted(set(cert_files))
+
         for cert_file in cert_files:
             self._process_single_certificate(cert_file, certificates, seen_fingerprints)
 
     def _process_single_certificate(
         self, cert_file: str, certificates: List[Dict[str, Any]], seen_fingerprints: set
     ) -> None:
-        """Process a single certificate file."""
+        """Process one certificate FILE, which may hold many certificates."""
         try:
-            cert_info = self._extract_certificate_info(cert_file)
-            if cert_info:
+            for cert_info in self._extract_certificates_from_file(cert_file):
                 fingerprint = cert_info.get("fingerprint_sha256")
                 if fingerprint and fingerprint not in seen_fingerprints:
                     seen_fingerprints.add(fingerprint)
@@ -577,8 +589,78 @@ class CertificateCollector:
                     )
                     continue
 
-    def _extract_certificate_info(self, cert_file: str) -> Optional[Dict[str, Any]]:
-        """Extract certificate information using OpenSSL."""
+    # A PEM file may hold ONE certificate or hundreds. ``openssl x509 -in``
+    # reads only the first, so a CA bundle came back as a single row --
+    # measured on FreeBSD 14.4 on 2026-09-21, ``ca-root-nss.crt`` holds 118
+    # certificates and we reported 1. Every trust anchor after the first was
+    # invisible to the inventory.
+    _PEM_BEGIN = "-----BEGIN CERTIFICATE-----"
+    _PEM_END = "-----END CERTIFICATE-----"
+
+    # A bound, because each certificate costs one openssl invocation and a
+    # pathological file should not stall collection. Exceeding it is LOGGED --
+    # a silently clipped inventory is a wrong answer, not a slow one.
+    MAX_CERTS_PER_FILE = 500
+
+    def _split_pem_bundle(self, text: str) -> List[str]:
+        """Each PEM certificate block in ``text``, in file order."""
+        blocks = []
+        start = text.find(self._PEM_BEGIN)
+        while start != -1 and len(blocks) < self.MAX_CERTS_PER_FILE:
+            end = text.find(self._PEM_END, start)
+            if end == -1:
+                break
+            end += len(self._PEM_END)
+            blocks.append(text[start:end] + "\n")
+            start = text.find(self._PEM_BEGIN, end)
+        return blocks
+
+    def _extract_certificates_from_file(self, cert_file: str) -> List[Dict[str, Any]]:
+        """EVERY certificate in ``cert_file``, not just the first.
+
+        Falls back to the single-certificate path for anything that is not a
+        readable PEM bundle -- DER files, keystores and unreadable paths all
+        still go through ``_extract_certificate_info`` unchanged.
+        """
+        try:
+            with open(cert_file, "r", encoding="utf-8", errors="replace") as handle:
+                text = handle.read()
+        except OSError:
+            single = self._extract_certificate_info(cert_file)
+            return [single] if single else []
+
+        blocks = self._split_pem_bundle(text)
+        if len(blocks) <= 1:
+            single = self._extract_certificate_info(cert_file)
+            return [single] if single else []
+
+        if text.count(self._PEM_BEGIN) > self.MAX_CERTS_PER_FILE:
+            self.logger.warning(
+                _(
+                    "Certificate bundle %s holds more than %d certificates; "
+                    "reporting the first %d"
+                ),
+                cert_file,
+                self.MAX_CERTS_PER_FILE,
+                self.MAX_CERTS_PER_FILE,
+            )
+
+        out = []
+        for pem in blocks:
+            info = self._extract_certificate_info(cert_file, pem=pem)
+            if info:
+                out.append(info)
+        return out
+
+    def _extract_certificate_info(
+        self, cert_file: str, pem: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Extract certificate information using OpenSSL.
+
+        ``pem`` is one certificate's PEM text, supplied when this file is a
+        bundle; openssl then reads it from stdin so each certificate in the
+        bundle is described in its own right.
+        """
         try:
             # Use openssl command (OpenBSD also uses openssl command despite having LibreSSL)
             openssl_cmd = "openssl"
@@ -587,8 +669,10 @@ class CertificateCollector:
             cmd = [
                 openssl_cmd,
                 "x509",
-                "-in",
-                cert_file,
+                # No ``-in`` when a PEM block is supplied: openssl reads stdin,
+                # which is how each certificate of a bundle gets parsed on its
+                # own rather than only the first.
+                *([] if pem is not None else ["-in", cert_file]),
                 "-noout",
                 "-subject",
                 "-issuer",
@@ -601,7 +685,12 @@ class CertificateCollector:
             ]
 
             result = subprocess.run(  # nosec B603
-                cmd, capture_output=True, text=True, timeout=10, check=False
+                cmd,
+                input=pem,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
             )
 
             if result.returncode != 0:

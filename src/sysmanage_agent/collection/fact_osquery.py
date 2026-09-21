@@ -40,6 +40,7 @@ it means the two cannot be compared directly, which is what
 
 import json
 import logging
+import platform
 import shutil
 import subprocess  # nosec B404 - fixed argv, no shell; see _run
 from typing import Any, Dict, List, Optional, Sequence, Set
@@ -78,6 +79,49 @@ _QUERY_TIMEOUT_SECONDS = 60
 # holds the RocksDB lock.  Pointing the two at one path is how you get "IO
 # error: lock hold by current process" on a host where both are wanted.
 _FLAGS = ("--json", "--disable_extensions")
+
+# Tables this platform's osquery build HAS but must not be used for, keyed by
+# ``platform.system().lower()``.
+#
+# This is not defensiveness in the abstract. Measured on FreeBSD
+# 14.4-RELEASE-p8 with the 5.23.0 port on 2026-09-21: ``listening_ports``
+# returned 459 rows of which 425 had ``port = 0``, while emitting
+# ``kinfo_getfile(): No such process`` to stderr. The real listeners on that
+# host were 22, 123, 443, 514, 3000 and 43045, which the NATIVE provider
+# reported correctly.
+#
+# The table is present and the probe says healthy, so nothing in the ordinary
+# path would decline it -- and because osquery is preferred when healthy,
+# enabling it on FreeBSD would REPLACE correct native data with garbage. That
+# is the "fragile leg" the phase plan predicted, arriving exactly where it was
+# predicted: a port carrying seven downstream patches from a personal fork.
+#
+# Named, not detected. A data-quality heuristic would be guessing at what
+# garbage looks like; a named table with a measured reason is auditable, and
+# it is removed the day the port is fixed.
+_DENYLIST: Dict[str, Dict[str, str]] = {
+    "freebsd": {
+        # Measured 2026-09-21: 0 rows on a host whose CA bundle holds 118
+        # certificates, which the native provider reads. An empty answer from
+        # a table that HAS the data available is the worst kind -- it is
+        # indistinguishable from "this host has no certificates".
+        "certificates": (
+            "the FreeBSD osquery port returns 0 certificates on a host with a "
+            "118-certificate CA bundle; the native provider reads them"
+        ),
+        "listening_ports": (
+            "the FreeBSD osquery port returns mostly port=0 rows "
+            "(measured 425 of 459 on 5.23.0); the native provider is correct"
+        ),
+    },
+}
+
+
+def denied_tables(platform_name: Optional[str] = None) -> Dict[str, str]:
+    """{table: reason} this platform must not read through osquery."""
+    name = (platform_name or platform.system()).lower()
+    return dict(_DENYLIST.get(name, {}))
+
 
 # Memoised: build_fact_coverage() probes every table, and shelling out per
 # table would mean sixteen subprocess launches per report.
@@ -141,10 +185,23 @@ def available_tables(refresh: bool = False) -> Set[str]:
         logger.info("osquery unavailable for fact collection: %s", exc)
         names = set()
     # sysmanage_* tables are ours by definition; osquery never serves them.
+    # Denylisted tables are dropped HERE rather than at query time, so they
+    # never enter the served set and coverage reports them against the native
+    # provider -- the host keeps the table, and keeps a correct answer.
+    denied = denied_tables()
+    for table, reason in denied.items():
+        if table in names:
+            logger.info(
+                "osquery has %s on this platform but it is denylisted: %s",
+                table,
+                reason,
+            )
     _available_tables = {
         name
         for name in names
-        if name in FACT_TABLES and not name.startswith("sysmanage_")
+        if name in FACT_TABLES
+        and not name.startswith("sysmanage_")
+        and name not in denied
     }
     return _available_tables
 

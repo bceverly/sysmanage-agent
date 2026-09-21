@@ -65,11 +65,27 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 ["pkg", "update", "-q"], capture_output=True, timeout=60, check=False
             )
 
+            # ``-R`` compares against the REMOTE repository catalogue that
+            # ``pkg update`` just refreshed. Without it, pkg compares against
+            # the ports INDEX instead -- and on a host with no ports tree it
+            # fetches that index over the network. Measured on FreeBSD 14.4 on
+            # 2026-09-21: over 400 SECONDS without -R, 6 seconds with it.
+            #
+            # The 30s timeout below therefore fired every single time, the
+            # exception was logged, and the host reported ZERO available
+            # updates while 28 packages were actually out of date. Silently
+            # up-to-date is the worst possible wrong answer for an update
+            # detector.
+            #
+            # That -R was the intent all along is provable from the parser
+            # underneath: it matches "remote has X", which ONLY the -R form
+            # emits. The INDEX form says "index has X", so even a run that
+            # completed would have matched nothing.
             result = subprocess.run(  # nosec B603, B607
-                ["pkg", "version", "-vl", "<"],
+                ["pkg", "version", "-vRl", "<"],
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=120,
                 check=False,
             )
 

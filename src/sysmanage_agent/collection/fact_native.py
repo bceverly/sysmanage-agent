@@ -40,8 +40,9 @@ A pack written against osquery must get osquery's meaning or NOTHING.  So:
 import logging
 import os
 import platform
+import re
 import socket
-from typing import Any, Callable, Dict, List, Mapping, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from src.sysmanage_agent.core.fact_schema import (
     PROVIDER_NATIVE,
@@ -200,12 +201,36 @@ def build_processes(collector) -> List[Dict[str, Any]]:
     return out
 
 
+# ``CN = value`` inside an X.509 distinguished name, in either of the two
+# spacings OpenSSL emits ("CN = x" and "CN=x").
+_CN_IN_DN = re.compile(r"(?:^|,)\s*CN\s*=\s*([^,]+)")
+
+
+def common_name_of(subject: Optional[str]) -> Optional[str]:
+    """The CN component of a distinguished name.
+
+    osquery's ``certificates.common_name`` is the subject's CN, not the whole
+    DN. Our collector leaves ``certificate_name`` unset for certificates read
+    out of a bundle -- measured on FreeBSD 14.4, every certificate in
+    ``/usr/local/share/certs/ca-root-nss.crt`` came back with a full subject
+    and a NULL name -- so the column shipped empty and a pack matching on
+    ``common_name`` matched nothing.
+
+    Derived, not invented: the CN really is in the subject we already hold.
+    """
+    if not subject:
+        return None
+    found = _CN_IN_DN.search(subject)
+    return found.group(1).strip() if found else None
+
+
 def build_certificates(collector) -> List[Dict[str, Any]]:
     """osquery ``certificates``.
 
     ``self_signed`` is DERIVED as subject == issuer, which is osquery's own
     definition rather than an invention, so the column carries its real
-    meaning instead of a null.
+    meaning instead of a null.  ``common_name`` is derived the same way -- see
+    ``common_name_of``.
     """
     out = []
     for cert in collector.collect_certificates() or []:
@@ -213,7 +238,7 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
         issuer = cert.get("issuer")
         out.append(
             {
-                "common_name": cert.get("certificate_name"),
+                "common_name": cert.get("certificate_name") or common_name_of(subject),
                 "subject": subject,
                 "issuer": issuer,
                 "ca": int(bool(cert.get("is_ca"))),
@@ -228,46 +253,85 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
     return out
 
 
-def build_interface_addresses(collector) -> List[Dict[str, Any]]:
-    """osquery ``interface_addresses`` — ONE ROW PER ADDRESS.
+def build_interface_addresses(_collector=None) -> List[Dict[str, Any]]:
+    """osquery ``interface_addresses`` — ONE ROW PER ADDRESS, from the OS.
 
-    Our collector carries v4 and v6 on the same interface record; osquery's
-    shape is one row each, and a pack counting addresses would be wrong if we
-    collapsed them.
+    Read from ``psutil.net_if_addrs`` rather than the hardware inventory,
+    which is shaped for a different question and lost rows osquery has. Two
+    ways, both measured on FreeBSD 14.4 on 2026-09-21:
+
+    * LOOPBACK was absent. osquery reported ``lo0`` with 127.0.0.1, ::1 and
+      fe80::1%lo0; we reported none of them. A pack checking whether a service
+      is bound to loopback -- a normal security question -- got a confidently
+      empty answer.
+    * The inventory holds ONE v4 and ONE v6 per interface, so a second address
+      on the same interface simply vanished. osquery emits every address.
+
+    Each address carries its OWN mask. The previous code reused the v4 subnet
+    mask for the v4 row and left v6 masked NULL, which was right to refuse --
+    but the real fix is reading the mask that belongs to each address.
     """
+    import socket as _socket  # noqa: PLC0415
+
+    import psutil  # noqa: PLC0415
+
+    families = {_socket.AF_INET, _socket.AF_INET6}
     out = []
-    for iface in (collector.get_hardware_info() or {}).get("network_interfaces") or []:
-        name = iface.get("name")
-        if iface.get("ipv4_address"):
+    for name, addrs in (psutil.net_if_addrs() or {}).items():
+        for addr in addrs:
+            if addr.family not in families:
+                continue
             out.append(
                 {
                     "interface": name,
-                    "address": iface.get("ipv4_address"),
-                    "mask": iface.get("subnet_mask"),
+                    "address": addr.address or None,
+                    "mask": getattr(addr, "netmask", None),
+                    "broadcast": getattr(addr, "broadcast", None),
+                    "point_to_point": getattr(addr, "ptp", None),
                 }
             )
-        if iface.get("ipv6_address"):
-            # No mask: the collector's subnet_mask is the v4 one, and reusing
-            # it here would state something false about the v6 address.
-            out.append({"interface": name, "address": iface.get("ipv6_address")})
     return out
 
 
-def build_mounts(collector) -> List[Dict[str, Any]]:
-    """osquery ``mounts``.
+def build_mounts(_collector=None) -> List[Dict[str, Any]]:
+    """osquery ``mounts`` — the MOUNT TABLE, read from the OS.
 
-    The block/inode columns stay NULL: the collector reports a byte size, not
-    a block count, and dividing by an assumed block size would put a specific
-    wrong number where a pack expects a real one.
+    Not the storage-device inventory, which is what this used to read. The two
+    look interchangeable and are not: a disk is not a mount. Measured on
+    FreeBSD 14.4 on 2026-09-21, the device list produced raw devices with no
+    mount point (``/dev/da0``, type ``raw``) and reported ``type`` as
+    ``unknown`` for every real filesystem, because a ZFS dataset has no
+    "file system" field in a disk inventory. A pack asking the natural
+    question -- ``WHERE type = 'zfs'`` -- matched NOTHING, and the query
+    succeeded. osquery reported all 27 mounts with their true types.
+
+    ``psutil.disk_partitions`` is getmntinfo(2) on the BSDs, /proc/mounts on
+    Linux and GetLogicalDriveStrings on Windows, which is the same source
+    osquery reads.
+
+    ``all=True`` on purpose: osquery's ``mounts`` includes devfs, procfs and
+    fdescfs, and filtering to "real" disks would silently drop rows osquery
+    has.
+
+    The block/inode columns stay NULL. They could be filled from
+    ``disk_usage``, but that is a ``statvfs`` per mount and blocks on an
+    unreachable network mount -- turning one unavailable NFS server into a
+    hung fact collection on every interval.
     """
-    return [
-        {
-            "device": dev.get("name"),
-            "path": dev.get("mount_point"),
-            "type": dev.get("file_system"),
-        }
-        for dev in (collector.get_hardware_info() or {}).get("storage_devices") or []
-    ]
+    import psutil  # noqa: PLC0415
+
+    out = []
+    for part in psutil.disk_partitions(all=True):
+        out.append(
+            {
+                "device": part.device or None,
+                "path": part.mountpoint or None,
+                "type": part.fstype or None,
+                # osquery's ``flags`` is the mount option string.
+                "flags": getattr(part, "opts", None) or None,
+            }
+        )
+    return out
 
 
 def build_system_info(collector) -> List[Dict[str, Any]]:
@@ -467,8 +531,13 @@ def register_native_provider() -> None:
     _register_table("user_groups", UserAccessCollector, build_user_groups)
     _register_table("os_version", OSInfoCollector, build_os_version)
     _register_table("system_info", HardwareCollector, build_system_info)
-    _register_table("interface_addresses", HardwareCollector, build_interface_addresses)
-    _register_table("mounts", HardwareCollector, build_mounts)
+    # No collector: addresses come from the OS, not the hardware inventory.
+    _register_table(
+        "interface_addresses", lambda: None, lambda _c: build_interface_addresses()
+    )
+    # No collector: the mount table comes from the OS, not from the hardware
+    # inventory -- see build_mounts.
+    _register_table("mounts", lambda: None, lambda _c: build_mounts())
     _register_table("processes", ProcessCollector, build_processes)
     _register_table("certificates", CertificateCollector, build_certificates)
     _register_table(
@@ -500,7 +569,18 @@ def register_native_provider() -> None:
 
 
 def collect(tables: Sequence[str]) -> Dict[str, List[Dict[str, Any]]]:
-    """Build the requested tables. Unknown/unregistered tables are skipped."""
+    """Build the requested tables. Unknown/unregistered tables are skipped.
+
+    Registers first if nothing has. ``NATIVE_TABLES`` is filled by
+    ``register_native_provider()``, so a caller that collects without
+    bootstrapping used to get ``{}`` for every table -- not an error, just
+    silence, which reads as "this host has no facts" and is wrong in the
+    direction that looks like data. The conformance harness did exactly that
+    on 2026-09-21 and reported the native provider as empty on a FreeBSD box
+    that serves 1,116 packages.
+    """
+    if not NATIVE_TABLES:
+        register_native_provider()
     collected: Dict[str, List[Dict[str, Any]]] = {}
     cache: Dict[Any, Any] = {}
     for table in tables:

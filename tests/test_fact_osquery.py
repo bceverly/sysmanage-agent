@@ -320,3 +320,51 @@ def test_the_sql_is_one_argv_element_never_a_shell_string():
             fo._run("SELECT 1")  # pylint: disable=protected-access
     assert seen["argv"][-1] == "SELECT 1"
     assert seen["shell"] is False
+
+
+class TestDenylist:
+    """Tables this osquery build HAS but must not be used for.
+
+    Measured on FreeBSD 14.4 with the 5.23.0 port: ``listening_ports``
+    returned 459 rows, 425 of them with ``port = 0``, while the native
+    provider reported the six real listeners correctly. The table is present
+    and the probe says healthy, so nothing else in the path would decline it
+    -- and osquery is PREFERRED when healthy, so without this the fragile
+    FreeBSD leg would replace correct data with garbage.
+    """
+
+    def test_freebsd_listening_ports_is_denied(self):
+        denied = fo.denied_tables("freebsd")
+        assert "listening_ports" in denied
+        assert "port=0" in denied["listening_ports"]
+
+    def test_linux_is_not_affected(self):
+        """The denylist is per platform: Linux's listening_ports is fine."""
+        assert fo.denied_tables("linux") == {}
+
+    def test_a_denied_table_never_enters_the_served_set(self):
+        """Dropped at discovery, not at query time, so coverage reports it
+        against the native provider and the host keeps a correct answer."""
+        rows = registry_rows("users", "listening_ports", "os_version")
+        with patch.object(fo, "platform") as fake_platform:
+            fake_platform.system.return_value = "FreeBSD"
+            with patch.object(fo.shutil, "which", return_value="/usr/bin/osqueryi"):
+                with patch.object(fo.subprocess, "run", fake_run(rows)):
+                    tables = fo.available_tables()
+        assert "users" in tables and "os_version" in tables
+        assert "listening_ports" not in tables
+
+    def test_the_denied_table_still_gets_served_natively(self):
+        """The point of the whole exercise: coverage must not lose the table,
+        it must stop reading it through the broken provider."""
+        fn.register_native_provider()
+        rows = registry_rows("users", "listening_ports")
+        with patch.object(fo, "platform") as fake_platform:
+            fake_platform.system.return_value = "FreeBSD"
+            with patch.object(fo.shutil, "which", return_value="/usr/bin/osqueryi"):
+                with patch.object(fo.subprocess, "run", fake_run(rows)):
+                    fo.register_osquery_provider(enabled=True)
+        coverage = fs.build_fact_coverage("freebsd")
+        assert coverage["served"]["users"] == fs.PROVIDER_OSQUERY
+        # Native, or unsupported for privilege — but NEVER osquery.
+        assert coverage["served"].get("listening_ports") != fs.PROVIDER_OSQUERY
