@@ -82,6 +82,14 @@ PRIVILEGE_SENSITIVE = ("listening_ports", "processes")
 # a pack author needs to know the two providers answer differently here, and
 # hiding it would make the report look cleaner than the world is.
 KNOWN_PLATFORM_DIFFERENCES = {
+    ("linux", "processes"): (
+        "Linux keeps only TASK_COMM_LEN-1 (15) characters of a process name "
+        "in comm, which is what osquery reports; psutil reads the full name "
+        "from the arguments -- 'gnome-terminal-server' vs 'gnome-terminal-'. "
+        "Same trap as FreeBSD, different width. A pack matching "
+        "processes.name exactly WILL differ by provider; prefer LIKE, or "
+        "match on path."
+    ),
     ("freebsd", "processes"): (
         "FreeBSD's kernel keeps only MAXCOMLEN (19) characters of a process "
         "name, which is what osquery reports; psutil reads the full name from "

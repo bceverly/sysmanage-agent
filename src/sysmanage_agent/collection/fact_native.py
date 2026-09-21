@@ -122,17 +122,55 @@ def build_user_groups(collector) -> List[Dict[str, Any]]:
     return out
 
 
+def _os_release() -> Dict[str, str]:
+    """``/etc/os-release`` as a dict, empty where there is none."""
+    out: Dict[str, str] = {}
+    for path in ("/etc/os-release", "/usr/lib/os-release"):
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                for line in handle:
+                    key, _, value = line.partition("=")
+                    if value:
+                        out[key.strip()] = value.strip().strip('"').strip("'")
+            break
+        except OSError:
+            continue
+    return out
+
+
 def build_os_version(collector) -> List[Dict[str, Any]]:
-    """osquery ``os_version`` — exactly one row."""
+    """osquery ``os_version`` — exactly one row.
+
+    ``platform`` is the DISTRIBUTION, not the kernel. osquery reports
+    ``ubuntu``/``debian``/``rhel`` on Linux, taken from os-release ``ID``; we
+    reported ``linux``, so the documented osquery idiom
+    ``WHERE platform = 'ubuntu'`` matched nothing here while the query
+    succeeded. Measured against osquery 5.20.0 on Ubuntu 26.04, 2026-09-21.
+
+    On the BSDs, macOS and Windows the two already agree -- osquery's platform
+    there IS ``freebsd``/``darwin``/``windows`` -- which is why only the Linux
+    leg needed this and why the FreeBSD comparison showed ``os_version``
+    agreeing all along.
+
+    ``version`` follows the same rule: osquery reports os-release ``VERSION``
+    ("26.04.1 LTS (Resolute Raccoon)"), not ``VERSION_ID`` ("26.04").
+    ``platform_like`` comes from ``ID_LIKE`` and was previously always NULL.
+    """
     info = collector.get_os_version_info() or {}
     os_info = info.get("os_info") or {}
+    release = _os_release()
     return [
         {
             "name": os_info.get("distribution") or info.get("platform"),
-            "version": os_info.get("distribution_version")
+            "version": release.get("VERSION")
+            or os_info.get("distribution_version")
             or info.get("platform_release"),
-            "codename": os_info.get("distribution_codename"),
-            "platform": (info.get("platform") or "").lower() or None,
+            "codename": os_info.get("distribution_codename")
+            or release.get("VERSION_CODENAME"),
+            "platform": release.get("ID")
+            or (info.get("platform") or "").lower()
+            or None,
+            "platform_like": release.get("ID_LIKE") or None,
             "arch": info.get("machine_architecture"),
             "build": info.get("platform_version"),
         }

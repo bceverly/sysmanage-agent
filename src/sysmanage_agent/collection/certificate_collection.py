@@ -759,8 +759,20 @@ class CertificateCollector:
             )
         elif line.startswith("serial="):
             cert_info["serial_number"] = line[7:].strip()
-        elif line.startswith("SHA256 Fingerprint="):
-            cert_info["fingerprint_sha256"] = line[19:].strip().replace(":", "").lower()
+        elif "fingerprint=" in line.lower():
+            # OpenSSL 1.x printed "SHA256 Fingerprint=", OpenSSL 3.x prints
+            # "sha256 Fingerprint=". The old check was an exact
+            # ``startswith("SHA256 Fingerprint=")``, so on every OpenSSL 3 host
+            # -- which is all of them now -- it never matched and the
+            # fingerprint stayed None.
+            #
+            # Nothing failed, because the caller treats a missing fingerprint
+            # as "include it anyway": the DEDUPE simply stopped deduping. That
+            # is why the same certificate appeared once per file it lives in,
+            # and why /etc/ssl/certs yielded 243 rows for 121 certificates.
+            cert_info["fingerprint_sha256"] = (
+                line.split("=", 1)[1].strip().replace(":", "").lower()
+            )
 
     def _parse_subject_line(self, line: str, cert_info: Dict[str, Any]) -> None:
         """Parse the subject line from OpenSSL output."""

@@ -544,3 +544,50 @@ class TestCertificateCommonName:
         """``O = ...`` must not match: a substring search for 'CN' would find
         the one inside 'FNMT-RCM'."""
         assert fn.common_name_of("C = ES, O = FNMT-RCM") is None
+
+
+class TestOsVersionPlatformIsTheDistribution:
+    """osquery's ``os_version.platform`` is the DISTRIBUTION, not the kernel.
+
+    It reports ``ubuntu``/``debian``/``rhel`` from os-release ``ID``. We
+    reported ``linux``, so ``WHERE platform = 'ubuntu'`` -- the documented
+    osquery idiom -- matched nothing here while the query succeeded. Measured
+    against osquery 5.20.0 on Ubuntu 26.04, 2026-09-21.
+    """
+
+    RELEASE = (
+        'NAME="Ubuntu"\n'
+        'VERSION="26.04.1 LTS (Resolute Raccoon)"\n'
+        "ID=ubuntu\n"
+        "ID_LIKE=debian\n"
+        'VERSION_ID="26.04"\n'
+        "VERSION_CODENAME=resolute\n"
+    )
+
+    def _row(self):
+        from unittest.mock import mock_open, patch
+
+        with patch("builtins.open", mock_open(read_data=self.RELEASE)):
+            return fn.build_os_version(FakeOS())[0]
+
+    def test_platform_is_the_distro_id(self):
+        assert self._row()["platform"] == "ubuntu"
+
+    def test_platform_like_is_populated(self):
+        """It was always NULL before, so a pack keying on the family had
+        nothing to match."""
+        assert self._row()["platform_like"] == "debian"
+
+    def test_version_is_the_full_version_string(self):
+        """osquery reports VERSION, not VERSION_ID."""
+        assert self._row()["version"] == "26.04.1 LTS (Resolute Raccoon)"
+
+    def test_a_host_with_no_os_release_still_reports_a_platform(self):
+        """The BSDs, macOS and Windows have no /etc/os-release and already
+        agreed with osquery — that path must keep working."""
+        from unittest.mock import patch
+
+        with patch("builtins.open", side_effect=OSError("no such file")):
+            row = fn.build_os_version(FakeOS())[0]
+        assert row["platform"]
+        assert row["platform_like"] is None

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-21 12:41-0400\n"
+"POT-Creation-Date: 2026-09-21 15:30-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -98,27 +98,36 @@ msgstr "Timeout bij het extraheren van certificaten uit keychain: %s"
 msgid "Failed to scan certificate directory %s: %s"
 msgstr "Kan certificaatdirectory %s niet scannen: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:480
+#: src/sysmanage_agent/collection/certificate_collection.py:492
 #, python-format
 msgid "Error collecting Windows certificates: %s"
 msgstr "Fout bij verzamelen van Windows-certificaten: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:520
+#: src/sysmanage_agent/collection/certificate_collection.py:532
 #, python-format
 msgid "Timeout querying Windows certificate store: %s"
 msgstr "Timeout bij het query'en naar Windows-certificaatopslagplaats: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:524
+#: src/sysmanage_agent/collection/certificate_collection.py:536
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
 msgstr "Mislukt om Windows-certificaatopslag op te halen %s: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:615
+#: src/sysmanage_agent/collection/certificate_collection.py:640
+#, python-format
+msgid ""
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
+msgstr ""
+"Certificaatbundel %s bevat meer dan %d certificaten; rapportage van de "
+"eerste %d"
+
+#: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
 msgstr "Time-out bij extraheren van certificaatinfo uit: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:620
+#: src/sysmanage_agent/collection/certificate_collection.py:709
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
 msgstr "OpenSSL/LibreSSL niet gevonden, certificaat overgeslagen: %s"
@@ -881,118 +890,113 @@ msgstr "Mislukt om beschikbare updates te detecteren: %s"
 msgid "Failed to install package %s: %s"
 msgstr "Kan pakket %s niet installeren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:95
+#: src/sysmanage_agent/collection/update_detection_bsd.py:111
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "Mislukt om pkg-updates te detecteren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:126
+#: src/sysmanage_agent/collection/update_detection_bsd.py:142
 #, python-format
 msgid "pkgin update failed (code %d): %s"
 msgstr "pkgin-update mislukt (code %d): %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:182
+#: src/sysmanage_agent/collection/update_detection_bsd.py:198
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
 msgstr "pkgin list -u mislukt (code %d): %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:201
+#: src/sysmanage_agent/collection/update_detection_bsd.py:217
 #, python-format
 msgid "Failed to detect pkgin updates: %s"
 msgstr "Mislukt om pkgin-updates te detecteren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:239
+#: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "Mislukt om pkg updates toe te passen: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:287
+#: src/sysmanage_agent/collection/update_detection_bsd.py:303
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD-upgrade mislukt"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:302
+#: src/sysmanage_agent/collection/update_detection_bsd.py:318
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD-upgrade is na 30 minuten uitgestapt"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:401
+#: src/sysmanage_agent/collection/update_detection_bsd.py:417
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD-upgrade mislukt"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:414
+#: src/sysmanage_agent/collection/update_detection_bsd.py:430
 msgid "FreeBSD upgrade install failed"
 msgstr "Installatie van FreeBSD-upgrade mislukt"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:420
+#: src/sysmanage_agent/collection/update_detection_bsd.py:436
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD-upgrade verstreken tijd"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:482
+#: src/sysmanage_agent/collection/update_detection_bsd.py:498
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch-opdracht mislukt met afsluitcode %d"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:485
+#: src/sysmanage_agent/collection/update_detection_bsd.py:501
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:488
+#: src/sysmanage_agent/collection/update_detection_bsd.py:504
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD-systeemupdate detectie is uitgestapt na 30 minuten"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:493
+#: src/sysmanage_agent/collection/update_detection_bsd.py:509
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "Mislukt om OpenBSD-systeemupdates te detecteren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:510
+#: src/sysmanage_agent/collection/update_detection_bsd.py:526
 msgid "Failed to get current OpenBSD version"
 msgstr "Kan huidige OpenBSD-versie niet ophalen"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:559
+#: src/sysmanage_agent/collection/update_detection_bsd.py:575
 msgid "Could not parse OpenBSD version from website"
 msgstr "Kan OpenBSD-versie niet van website ontleden"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:563
+#: src/sysmanage_agent/collection/update_detection_bsd.py:579
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "Mislukt om OpenBSD website voor updates te controleren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:569
+#: src/sysmanage_agent/collection/update_detection_bsd.py:585
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "Mislukt om OpenBSD-versieopwaarderingen te detecteren: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:620
-#, python-format
-msgid "Failed to detect FreeBSD version upgrades: %s"
-msgstr "Mislukt om FreeBSD-versieopwaarderingen te detecteren: %s"
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:748
+#: src/sysmanage_agent/collection/update_detection_bsd.py:755
 msgid "syspatch command failed"
 msgstr "syspatch-opdracht mislukt"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:750
-#: src/sysmanage_agent/collection/update_detection_bsd.py:771
+#: src/sysmanage_agent/collection/update_detection_bsd.py:757
+#: src/sysmanage_agent/collection/update_detection_bsd.py:778
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Mislukt om syspatch updates toe te passen: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:761
+#: src/sysmanage_agent/collection/update_detection_bsd.py:768
 msgid "syspatch command timed out"
 msgstr "syspatch-opdracht verstreken"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:767
+#: src/sysmanage_agent/collection/update_detection_bsd.py:774
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch verstreken na 10 minuten"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:912
+#: src/sysmanage_agent/collection/update_detection_bsd.py:919
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Niet-ondersteunde pakketbeheerder: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:968
+#: src/sysmanage_agent/collection/update_detection_bsd.py:975
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -3385,6 +3389,10 @@ msgstr "Timeout bij controle van WSL-status"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
+
+#, python-format
+#~ msgid "Failed to detect FreeBSD version upgrades: %s"
+#~ msgstr "Mislukt om FreeBSD-versieopwaarderingen te detecteren: %s"
 
 #, python-format
 #~ msgid "Database manager initialized with path: %s"

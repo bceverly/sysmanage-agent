@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-21 12:41-0400\n"
+"POT-Creation-Date: 2026-09-21 15:30-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -96,27 +96,34 @@ msgstr "타임아웃으로 인해 키체인에서 캐릭터증명서 추출 실�
 msgid "Failed to scan certificate directory %s: %s"
 msgstr "인증서 디렉터리 %s 스캔 실패: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:480
+#: src/sysmanage_agent/collection/certificate_collection.py:492
 #, python-format
 msgid "Error collecting Windows certificates: %s"
 msgstr "Windows 인증서 수집 중 오류: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:520
+#: src/sysmanage_agent/collection/certificate_collection.py:532
 #, python-format
 msgid "Timeout querying Windows certificate store: %s"
 msgstr "타임아웃으로 인해 Windows 인증 저장소 쿼리 실패: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:524
+#: src/sysmanage_agent/collection/certificate_collection.py:536
 #, python-format
 msgid "Failed to query Windows certificate store %s: %s"
 msgstr "Windows 인증서 저장소 %s를 쿼리하는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:615
+#: src/sysmanage_agent/collection/certificate_collection.py:640
+#, python-format
+msgid ""
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
+msgstr "인증서 번들 %s은 %d개 이상의 인증서를 포함합니다; 첫 번째 %d개를 보고합니다"
+
+#: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
 msgstr "인증서 정보 추출 시간 초과: %s"
 
-#: src/sysmanage_agent/collection/certificate_collection.py:620
+#: src/sysmanage_agent/collection/certificate_collection.py:709
 #, python-format
 msgid "OpenSSL/LibreSSL not found, skipping certificate: %s"
 msgstr "OpenSSL/LibreSSL 찾을 수 없음, 인증서 건너뜀: %s"
@@ -875,118 +882,113 @@ msgstr "사용 가능한 업데이트 감지 실패: %s"
 msgid "Failed to install package %s: %s"
 msgstr "패키지 %s 설치 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:95
+#: src/sysmanage_agent/collection/update_detection_bsd.py:111
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "pkg 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:126
+#: src/sysmanage_agent/collection/update_detection_bsd.py:142
 #, python-format
 msgid "pkgin update failed (code %d): %s"
 msgstr "pkgin 업데이트 실패 (코드 %d): %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:182
+#: src/sysmanage_agent/collection/update_detection_bsd.py:198
 #, python-format
 msgid "pkgin list -u failed (code %d): %s"
 msgstr "pkgin list -u 실패 (코드 %d): %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:201
+#: src/sysmanage_agent/collection/update_detection_bsd.py:217
 #, python-format
 msgid "Failed to detect pkgin updates: %s"
 msgstr "pkgin 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:239
+#: src/sysmanage_agent/collection/update_detection_bsd.py:255
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "pkg 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:287
+#: src/sysmanage_agent/collection/update_detection_bsd.py:303
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD 업그레이드 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:302
+#: src/sysmanage_agent/collection/update_detection_bsd.py:318
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD 업그레이드 시간 초과 (30분 경과)"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:401
+#: src/sysmanage_agent/collection/update_detection_bsd.py:417
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD 업그레이드 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:414
+#: src/sysmanage_agent/collection/update_detection_bsd.py:430
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD 업그레이드 설치 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:420
+#: src/sysmanage_agent/collection/update_detection_bsd.py:436
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD 업그레이드 시간 초과"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:482
+#: src/sysmanage_agent/collection/update_detection_bsd.py:498
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch 명령 종료 코드 %d로 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:485
+#: src/sysmanage_agent/collection/update_detection_bsd.py:501
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatchstderr:\\ %s\\"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:488
+#: src/sysmanage_agent/collection/update_detection_bsd.py:504
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD 시스템 업데이트 감지 시간 초과"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:493
+#: src/sysmanage_agent/collection/update_detection_bsd.py:509
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "OpenBSD 시스템 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:510
+#: src/sysmanage_agent/collection/update_detection_bsd.py:526
 msgid "Failed to get current OpenBSD version"
 msgstr "현재 OpenBSD 버전 가져오기 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:559
+#: src/sysmanage_agent/collection/update_detection_bsd.py:575
 msgid "Could not parse OpenBSD version from website"
 msgstr "웹사이트에서 OpenBSD 버전을 구문 분석할 수 없음"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:563
+#: src/sysmanage_agent/collection/update_detection_bsd.py:579
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "OpenBSD 웹사이트에서 업데이트 확인 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:569
+#: src/sysmanage_agent/collection/update_detection_bsd.py:585
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "OpenBSD 버전 업그레이드 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:620
-#, python-format
-msgid "Failed to detect FreeBSD version upgrades: %s"
-msgstr "FreeBSD 버전 업그레이드 감지 실패: %s"
-
-#: src/sysmanage_agent/collection/update_detection_bsd.py:748
+#: src/sysmanage_agent/collection/update_detection_bsd.py:755
 msgid "syspatch command failed"
 msgstr "syspatch 명령 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:750
-#: src/sysmanage_agent/collection/update_detection_bsd.py:771
+#: src/sysmanage_agent/collection/update_detection_bsd.py:757
+#: src/sysmanage_agent/collection/update_detection_bsd.py:778
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "syspatch 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:761
+#: src/sysmanage_agent/collection/update_detection_bsd.py:768
 msgid "syspatch command timed out"
 msgstr "syspatch 명령이 시간 초과되었습니다"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:767
+#: src/sysmanage_agent/collection/update_detection_bsd.py:774
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch가 10분 후 시간 초과됨"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:912
+#: src/sysmanage_agent/collection/update_detection_bsd.py:919
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "지원되지 않는 패키지 관리자: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:968
+#: src/sysmanage_agent/collection/update_detection_bsd.py:975
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -3347,6 +3349,10 @@ msgstr "WSL 상태 확인이 시간 초과되었습니다"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL 지원 확인 오류: %s"
+
+#, python-format
+#~ msgid "Failed to detect FreeBSD version upgrades: %s"
+#~ msgstr "FreeBSD 버전 업그레이드 감지 실패: %s"
 
 #, python-format
 #~ msgid "Database manager initialized with path: %s"
