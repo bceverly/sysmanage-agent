@@ -1462,7 +1462,7 @@ msgstr "收集角色时出错：%s"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:53
 msgid "Failed to send periodic software inventory data"
-msgstr "发送定期软件库存数据失败"
+msgstr "无法发送定期软件清单数据"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:77
 msgid "Failed to send periodic user access data"
@@ -1636,12 +1636,12 @@ msgstr "清除存储的host_id时出错：%s"
 msgid ""
 "Broadcast %s: inventory refresh requested but data_collector lacks "
 "send_software_inventory_update"
-msgstr "广播 %s: 请求刷新库存，但 data_collector 缺少 send_software_inventory_update 功能"
+msgstr "广播 %s：请求刷新清单，但 data_collector 缺少 send_software_inventory_update"
 
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
-msgstr "广播 %s: 无法刷新库存: %s"
+msgstr "广播 %s：清单刷新失败：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format

@@ -1377,7 +1377,7 @@ msgstr "فشل تحديث العمليات بعد الإنهاء: %s"
 #: src/sysmanage_agent/communication/data_collector.py:345
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
-msgstr "خطأ جمع/إرسال مخزون البرمجيات: %s"
+msgstr "خطأ في جمع/إرسال قائمة البرمجيات: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:352
 #, python-format

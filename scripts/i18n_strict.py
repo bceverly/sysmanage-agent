@@ -58,6 +58,15 @@ import unicodedata
 from collections import OrderedDict
 from pathlib import Path
 
+# The terminology table the translation service writes WITH: one home, same
+# relative path in every repo, so the gate can never enforce words the
+# translator was never given.  Optional so a repo mid-sync still runs.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    import i18n_glossary
+except ImportError:  # pragma: no cover - repo mid-sync
+    i18n_glossary = None
+
 REPO = Path(__file__).resolve().parent.parent
 ALLOW_FILE = REPO / "i18n-allow.txt"
 
@@ -476,6 +485,79 @@ def check_po(surface, allow):
     return english, wrong
 
 
+def glossary_hits(src: str, value: str, lang: str):
+    """(term, forbidden form) pairs where a translation took the wrong sense.
+
+    Deny-first ON PURPOSE.  Requiring the canonical word instead would mean
+    asserting a substring across thirteen morphologically rich languages --
+    German compounds it, Russian declines it, Arabic prefixes the article --
+    so a "must contain" rule fails on correct translations, and a gate that
+    cries wolf gets allow-listed into uselessness.  The forbidden forms are
+    the opposite: each one was MEASURED coming back from the service meaning
+    something else (在庫 for inventory, 艦隊 for fleet, الضيوف for hosts), and
+    none of them has an innocent reading in a sysadmin UI.
+
+    Matching is case-insensitive and substring-based, because these languages
+    inflect and compound: "Bestände" must be caught inside "Paketbestände".
+    """
+    if i18n_glossary is None:
+        return []
+    hits = []
+    for term, pat in i18n_glossary.patterns():
+        if not pat.search(src):
+            continue
+        spec = i18n_glossary.TERMS.get(term, {})
+        # A value carrying the agreed word is right BY DEFINITION, whatever
+        # else it contains.  Checking this first is what lets Arabic مضيف pass
+        # while still catching a bare الضيوف.
+        canonical = spec.get("canonical", {}).get(lang)
+        if canonical and canonical.lower() in value.lower():
+            continue
+        for bad in spec.get("forbid", {}).get(lang, ()):
+            if i18n_glossary.forbidden_matcher(bad).search(value):
+                hits.append((term, bad))
+    return hits
+
+
+def gather_glossary():
+    """Wrong-sense violations across every surface.
+
+    A SEPARATE pass rather than a fourth return value from check_json /
+    check_po: those feed the requeue and wrong-language baseline machinery,
+    and widening their contract to carry an unrelated category is how that
+    machinery acquires a bug.  This walks the same surfaces and stays out of
+    the way.
+    """
+    if i18n_glossary is None:
+        return []
+    out = []
+    for surface in SURFACES:
+        if surface["kind"] == "po":
+            for lang, path in po_files(surface):
+                for msgid, msgstr in read_po(path).items():
+                    if msgstr.startswith(TODO):
+                        continue
+                    for term, bad in glossary_hits(msgid, msgstr, lang):
+                        out.append(
+                            (surface["name"], lang, path, msgid, msgid, term, bad)
+                        )
+            continue
+        locales = json_locales(surface)
+        if EN not in locales:
+            continue
+        _, en = locales[EN]
+        for lang, (path, loc) in sorted(locales.items()):
+            if lang == EN:
+                continue
+            for key, value in loc.items():
+                src = en.get(key)
+                if src is None or value.startswith(TODO) or not value.strip():
+                    continue
+                for term, bad in glossary_hits(src, value, lang):
+                    out.append((surface["name"], lang, path, key, src, term, bad))
+    return out
+
+
 def gather(allow):
     english, stale, wrong = [], [], []
     for surface in SURFACES:
@@ -589,6 +671,17 @@ def do_requeue(english, stale):
     return total
 
 
+GLOSS_HINT = (
+    "  Wrong sense? The term is defined in scripts/i18n_glossary.py;\n"
+    "      retranslate (the service now sends the canonical word), or\n"
+    "      fix the value by hand. Widespread new term? Add it there.\n"
+)
+
+OK_MESSAGE = (
+    "OK: no English-identical, stale, wrong-language or wrong-sense translations"
+)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", action="store_true")
@@ -603,6 +696,7 @@ def main() -> int:
 
     allow = Allow(ALLOW_FILE)
     english, stale, wrong = gather(allow)
+    gloss = gather_glossary()
 
     known_wrong = load_lang_baseline()
     current_wrong = {_lang_identity(r) for r in wrong}
@@ -645,14 +739,21 @@ def main() -> int:
             # reported "converged; 0 queued" while 21 wrong-language entries
             # sat untouched — a requeue that silently does nothing is exactly
             # the failure this loop exists to prevent.
-            if not (english or stale or wrong):
+            # Wrong-sense rows are requeued alongside the rest: the failure
+            # hint promises it, and re-translating is the fix now that the
+            # service is handed the canonical word for every term.  Their
+            # tuples carry two extra fields, so trim to the shape do_requeue
+            # reads.
+            if not (english or stale or wrong or gloss):
                 break
-            total += do_requeue(english + wrong, stale)
+            total += do_requeue(english + wrong + [r[:5] for r in gloss], stale)
             english, stale, wrong = gather(allow)
+            gloss = gather_glossary()
         else:
             print(
                 f"FAIL: still {len(english)} English / {len(stale)} stale / "
-                f"{len(wrong)} wrong-script after 6 requeue rounds",
+                f"{len(wrong)} wrong-script / {len(gloss)} wrong-sense after "
+                "6 requeue rounds",
                 file=sys.stderr,
             )
             return 1
@@ -673,10 +774,21 @@ def main() -> int:
         if len(rows) > args.limit:
             print(f"  ... and {len(rows) - args.limit} more", file=sys.stderr)
 
-    if english or stale or wrong:
+    if gloss:
+        print("\nWRONG SENSE (domain glossary):", file=sys.stderr)
+        for row in gloss[: args.limit]:
+            name, lang, _path, key, _src, term, bad = row
+            print(
+                f"  {name} {lang} {key}: '{term}' rendered as '{bad}'",
+                file=sys.stderr,
+            )
+        if len(gloss) > args.limit:
+            print(f"  ... and {len(gloss) - args.limit} more", file=sys.stderr)
+
+    if english or stale or wrong or gloss:
         print(
             f"\nFAIL: {len(english)} English-identical, {len(stale)} stale, "
-            f"{len(wrong)} wrong-language.\n"
+            f"{len(wrong)} wrong-language, {len(gloss)} wrong-sense.\n"
             "  Queue them for translation:  python3 scripts/i18n_strict.py --requeue\n"
             "  Then:                        make translate SERVICE=http://<gpu-box>:8765\n"
             + (
@@ -695,12 +807,13 @@ def main() -> int:
                 if stale
                 else ""
             )
-            + "  Intentionally-English value? Add a tight rule to i18n-allow.txt.",
+            + "  Intentionally-English value? Add a tight rule to i18n-allow.txt.\n"
+            + (GLOSS_HINT if gloss else ""),
             file=sys.stderr,
         )
         return 1
 
-    print("OK: no English-identical, stale or wrong-language translations")
+    print(OK_MESSAGE)
     return 0
 
 
