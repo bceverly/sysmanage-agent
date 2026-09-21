@@ -274,17 +274,56 @@ def test_self_signed_is_derived_the_way_osquery_defines_it():
 
 def test_one_row_per_address_not_one_per_interface():
     """osquery's shape is a row per ADDRESS; collapsing v4 and v6 onto one row
-    would make any pack that counts addresses wrong."""
-    rows = fn.build_interface_addresses(FakeHardware())
-    assert [r["address"] for r in rows] == ["10.0.0.5", "fe80::1"]
-    # the v4 mask must not be restated on the v6 row
+    would make any pack that counts addresses wrong.
+
+    Driven through psutil rather than the hardware collector since 2026-09-21:
+    the collector could hold only ONE address per family per interface, so a
+    second address vanished, and it omitted loopback entirely. The PROPERTY
+    this test guards is unchanged — only the source it reads.
+    """
+    import socket as _socket
+    from collections import namedtuple
+    from unittest.mock import patch
+
+    import psutil
+
+    Snic = namedtuple("Snic", "family address netmask broadcast ptp")
+    addrs = {
+        "eth0": [
+            Snic(_socket.AF_INET, "10.0.0.5", "255.255.255.0", None, None),
+            Snic(_socket.AF_INET, "10.0.0.6", "255.255.255.0", None, None),
+            Snic(_socket.AF_INET6, "fe80::1", "ffff:ffff:ffff:ffff::", None, None),
+            # A link-layer address is not an interface_address in osquery.
+            Snic(psutil.AF_LINK, "aa:bb:cc:dd:ee:ff", None, None, None),
+        ]
+    }
+    with patch.object(psutil, "net_if_addrs", return_value=addrs):
+        rows = fn.build_interface_addresses()
+    assert [r["address"] for r in rows] == ["10.0.0.5", "10.0.0.6", "fe80::1"]
+    # Each address carries ITS OWN mask, rather than the v4 one being
+    # restated on the v6 row.
     assert rows[0]["mask"] == "255.255.255.0"
-    assert rows[1].get("mask") is None
+    assert rows[2]["mask"] == "ffff:ffff:ffff:ffff::"
 
 
 def test_mounts_leaves_block_counts_null_rather_than_deriving_them():
-    row = fn.build_mounts(FakeHardware())[0]
+    """Block/inode counts stay NULL: filling them means a statvfs per mount,
+    which blocks on an unreachable network mount and turns one dead NFS
+    server into a hung collection every interval."""
+    from collections import namedtuple
+    from unittest.mock import patch
+
+    import psutil
+
+    Part = namedtuple("Part", "device mountpoint fstype opts")
+    with patch.object(
+        psutil,
+        "disk_partitions",
+        return_value=[Part("/dev/wd0a", "/", "ffs", "rw,local")],
+    ):
+        row = fn.build_mounts()[0]
     assert row["device"] == "/dev/wd0a" and row["type"] == "ffs"
+    assert row["path"] == "/" and row["flags"] == "rw,local"
     assert row.get("blocks") is None and row.get("blocks_size") is None
 
 
@@ -412,3 +451,96 @@ class TestListeningPortProtocol:
 
         rows = self._rows([self._conn(_socket.SOCK_STREAM)])
         assert rows[0]["family"] == int(_socket.AF_INET)
+
+
+def test_collect_registers_itself_rather_than_answering_nothing():
+    """An unregistered registry must not read as "this host has no facts".
+
+    ``NATIVE_TABLES`` is filled by ``register_native_provider()``. A caller
+    that collected without bootstrapping got ``{}`` back -- no error, just
+    silence, which is wrong in the direction that looks like data. The
+    conformance harness did exactly that and reported the native provider
+    empty on a host serving 1,116 packages.
+    """
+    fn.NATIVE_TABLES.clear()
+    try:
+        rows = fn.collect(["os_version"])
+        assert rows.get(
+            "os_version"
+        ), "collect() answered nothing from an empty registry"
+    finally:
+        fn.register_native_provider()
+
+
+class TestMountsAreTheMountTable:
+    """``mounts`` is the mount table, not the storage-device inventory.
+
+    The two look interchangeable and are not. Measured on FreeBSD 14.4 on
+    2026-09-21, reading the device inventory produced raw devices with no
+    mount point and ``type`` of ``unknown`` for every real filesystem, so
+    ``WHERE type = 'zfs'`` matched nothing while the query succeeded. osquery
+    reported all 27 mounts with true types.
+    """
+
+    def test_every_row_has_a_path_and_a_type(self):
+        rows = fn.build_mounts()
+        assert rows, "no mounts on a running host"
+        assert all(r["path"] for r in rows)
+        assert all(r["type"] for r in rows)
+
+    def test_no_row_reports_type_unknown(self):
+        """The exact symptom the FreeBSD comparison exposed."""
+        rows = fn.build_mounts()
+        assert not [r for r in rows if r["type"] == "unknown"]
+
+    def test_the_root_filesystem_is_present(self):
+        rows = fn.build_mounts()
+        assert any(r["path"] in ("/", "C:\\") for r in rows)
+
+
+class TestInterfaceAddressesIncludeLoopback:
+    """Loopback is an address like any other.
+
+    It was absent entirely: osquery reported lo0 with 127.0.0.1, ::1 and
+    fe80::1%lo0 while we reported none of them, so a pack asking whether a
+    service is bound to loopback -- an ordinary security question -- got a
+    confidently empty answer.
+    """
+
+    def test_loopback_is_reported(self):
+        rows = fn.build_interface_addresses()
+        loopback = [r for r in rows if r["address"] in ("127.0.0.1", "::1")]
+        assert loopback, "loopback address missing from interface_addresses"
+
+    def test_each_address_carries_its_own_mask(self):
+        """The old code reused the v4 mask for v4 and left v6 NULL; the fix is
+        reading the mask that belongs to each address."""
+        rows = fn.build_interface_addresses()
+        v4 = [r for r in rows if r["address"] == "127.0.0.1"]
+        assert v4 and v4[0]["mask"]
+
+    def test_one_row_per_address(self):
+        """osquery's shape. An interface with several addresses must not
+        collapse to one row -- the inventory held only one per family, so the
+        extras simply vanished."""
+        rows = fn.build_interface_addresses()
+        assert len(rows) >= len({r["interface"] for r in rows})
+
+
+class TestCertificateCommonName:
+    def test_the_cn_is_pulled_out_of_the_subject(self):
+        assert (
+            fn.common_name_of("C = ES, O = FNMT-RCM, CN = AC RAIZ FNMT-RCM")
+            == "AC RAIZ FNMT-RCM"
+        )
+
+    def test_both_openssl_spacings_work(self):
+        assert fn.common_name_of("CN=example.com,O=Acme") == "example.com"
+
+    def test_a_subject_with_no_cn_is_none_not_a_guess(self):
+        assert fn.common_name_of("C = US, O = NoCommonName") is None
+
+    def test_an_organisation_name_is_not_mistaken_for_a_cn(self):
+        """``O = ...`` must not match: a substring search for 'CN' would find
+        the one inside 'FNMT-RCM'."""
+        assert fn.common_name_of("C = ES, O = FNMT-RCM") is None

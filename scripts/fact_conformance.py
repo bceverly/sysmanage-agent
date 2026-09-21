@@ -49,6 +49,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # pylint: disable=wrong-import-position
 from src.sysmanage_agent.collection import fact_native, fact_osquery  # noqa: E402
+from src.sysmanage_agent.collection.fact_providers import (  # noqa: E402
+    bootstrap_fact_providers,
+)
 from src.sysmanage_agent.core import fact_schema  # noqa: E402
 
 # What makes a row THE SAME ROW.  Chosen to be what a pack would join or group
@@ -74,11 +77,26 @@ IDENTIFYING = {
 # provider.  A difference here is a finding about how the harness was run.
 PRIVILEGE_SENSITIVE = ("listening_ports", "processes")
 
+# Differences that are neither provider's fault and will never go away, keyed
+# by (platform, table).  Reported WITH the explanation rather than suppressed:
+# a pack author needs to know the two providers answer differently here, and
+# hiding it would make the report look cleaner than the world is.
+KNOWN_PLATFORM_DIFFERENCES = {
+    ("freebsd", "processes"): (
+        "FreeBSD's kernel keeps only MAXCOMLEN (19) characters of a process "
+        "name, which is what osquery reports; psutil reads the full name from "
+        "the arguments -- 'gnome-session-binary' vs 'gnome-session-binar'. A "
+        "pack matching processes.name exactly WILL differ by provider here; "
+        "prefer LIKE, or match on path."
+    ),
+}
+
 
 def shared_tables(requested):
     """Tables both providers serve here, plus why each of the rest is out."""
     platform_name = fact_native.platform_name()
     osquery_has = fact_osquery.available_tables()
+    denied = fact_osquery.denied_tables(platform_name)
     both, skipped = [], {}
     for table in requested:
         if table not in fact_schema.FACT_TABLES:
@@ -87,6 +105,12 @@ def shared_tables(requested):
             skipped[table] = f"not applicable on {platform_name}"
         elif table not in IDENTIFYING:
             skipped[table] = "sysmanage extension: no osquery counterpart"
+        elif table in denied:
+            # Distinct from "the build does not have it": the table IS there
+            # and we refuse to read it. Saying the wrong one would send an
+            # operator looking for a missing feature instead of at a
+            # deliberate, measured decision.
+            skipped[table] = f"denylisted on this platform — {denied[table]}"
         elif table not in osquery_has:
             skipped[table] = "this osquery build does not have it"
         else:
@@ -134,15 +158,19 @@ def report(results, skipped, limit):
             )
             continue
         disagreed += 1
-        note = (
-            " (privilege-sensitive: run both as root)"
-            if row["privilege_sensitive"]
-            else ""
-        )
+        known = KNOWN_PLATFORM_DIFFERENCES.get((fact_native.platform_name(), table))
+        if known:
+            note = " (known platform difference)"
+        elif row["privilege_sensitive"]:
+            note = " (privilege-sensitive: run both as root)"
+        else:
+            note = ""
         print(
             f"  DIFFER   {table}: {len(row['native_only'])} native-only, "
             f"{len(row['osquery_only'])} osquery-only{note}"
         )
+        if known:
+            print(f"             note: {known}")
         for label in ("native_only", "osquery_only"):
             for value in row[label][:limit]:
                 print(f"             {label[:-5]:8} {value}")
@@ -176,6 +204,12 @@ def main():
             file=sys.stderr,
         )
         return 2
+
+    # Register the providers before collecting anything. Without this the
+    # native side answers with an empty registry and the whole report reads
+    # "native has nothing, osquery has everything" -- a confident, entirely
+    # wrong conclusion about a provider that works.
+    bootstrap_fact_providers(None)
 
     requested = args.tables or sorted(fact_schema.FACT_TABLES)
     tables, skipped = shared_tables(requested)

@@ -426,6 +426,19 @@ class CertificateCollector:
             glob.glob(os.path.join(cert_dir, "**", pattern), recursive=True)
         )
 
+        # DEDUPED, because ``**`` with recursive=True also matches ZERO
+        # directories -- so the second glob re-finds every file the first one
+        # already returned, and each top-level certificate is processed twice.
+        # It only surfaced as duplicate ROWS because the dedupe downstream
+        # keys on fingerprint_sha256, which openssl does not give us here, so
+        # the "no fingerprint, include it anyway" path appended both copies.
+        # Measured on FreeBSD 14.4, 2026-09-21: two identical rows for
+        # /usr/local/share/certs/ca-root-nss.crt.
+        #
+        # Sorted so the order is stable run to run, which keeps a diff of two
+        # collections meaningful.
+        cert_files = sorted(set(cert_files))
+
         for cert_file in cert_files:
             self._process_single_certificate(cert_file, certificates, seen_fingerprints)
 
