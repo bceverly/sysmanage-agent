@@ -48,7 +48,7 @@ def test_version_upgrade_detection_runs_nothing_mutating():
         "src.sysmanage_agent.collection.update_detection_bsd.subprocess.run"
     ) as run:
         detector._detect_freebsd_version_upgrades()  # pylint: disable=protected-access
-    assert not (_argv_pairs(run.call_args_list) & MUTATING)
+    assert _argv_pairs(run.call_args_list).isdisjoint(MUTATING)
 
 
 def test_version_upgrade_detection_claims_nothing_without_evidence():
