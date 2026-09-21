@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-27 09:29-0400\n"
+"POT-Creation-Date: 2026-09-21 12:41-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1805,90 +1805,90 @@ msgstr "패키지 수집 스케줄러 오류: %s"
 msgid "Auth failed with status %s: %s"
 msgstr "인증 실패 상태 코드: %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:325
+#: src/sysmanage_agent/core/agent_utils.py:333
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:478
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:549
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:597
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:622
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:732
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:739
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:745
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:811
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:850
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:893
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:951
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
@@ -1910,7 +1910,7 @@ msgid "Failed to load configuration file: %s"
 msgstr "구성 파일을 불러오는데 실패했습니다: %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/core/version.py:115
+#: src/sysmanage_agent/core/version.py:179
 msgid "Could not determine agent version, using 'unknown'"
 msgstr "에이전트 버전을 결정할 수 없음, 'unknown' 사용"
 
@@ -2083,12 +2083,12 @@ msgstr "NetBSD 저장소 추가 오류: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "자식 호스트 관리에는 Pro+ (엔진 경로) 가 필요합니다."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:168
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:247
 msgid "Config profile requested but no executor is installed"
 msgstr "요청된 구성 프로필에 대해 실행기가 설치되지 않았습니다"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:240
 #, python-format
 msgid "Refusing an unusable config spec: %s"
 msgstr "사용 불가능한 구성 사양을 거부합니다: %s"
@@ -2698,6 +2698,15 @@ msgstr "패키지 업데이트 실행 오류: %s"
 msgid "Error triggering update detection: %s"
 msgstr "업데이트 감지 트리거 오류: %s"
 
+#: src/sysmanage_agent/operations/query_pack_operations.py:49
+msgid "The query pack has no queries."
+msgstr "쿼리 팩에 쿼리가 없습니다."
+
+#: src/sysmanage_agent/operations/query_pack_operations.py:56
+#, python-format
+msgid "Failed to run query pack: %s"
+msgstr "%s 실행에 실패했습니다: 쿼리 팩에 쿼리가 없습니다."
+
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
 msgid "Unsupported distribution: %s"
@@ -3282,7 +3291,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "호스트 승인 알림 처리 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:254
-#: src/sysmanage_agent/registration/registration_manager.py:499
+#: src/sysmanage_agent/registration/registration_manager.py:506
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "호스트 승인 기록 삭제 오류: %s"
@@ -3312,16 +3321,16 @@ msgstr "저장된 host_id를 동기적으로 검색하는 중 오류: %s"
 msgid "Error retrieving host approval: %s"
 msgstr "호스트 승인 가져오기 오류: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:501
+#: src/sysmanage_agent/registration/registration_manager.py:508
 msgid "Continuing despite cleanup error..."
 msgstr "정리 오류에도 불구하고 계속 진행..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:522
+#: src/sysmanage_agent/registration/registration_manager.py:529
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:536
+#: src/sysmanage_agent/registration/registration_manager.py:543
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr " 데이터베이스 정리 중 오류: %s"

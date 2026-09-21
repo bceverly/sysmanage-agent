@@ -24,7 +24,7 @@ import logging
 from typing import Any, Optional
 
 from src.sysmanage_agent.collection import fact_native, fact_osquery
-from src.sysmanage_agent.core.fact_schema import clear_providers
+from src.sysmanage_agent.core.fact_schema import clear_providers, has_providers
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,12 @@ def bootstrap_fact_providers(config: Optional[Any] = None, force: bool = False) 
     config reload that could have flipped the opt-in.
     """
     global _bootstrapped  # pylint: disable=global-statement
-    if _bootstrapped and not force:
+    # Both conditions, and the second is the load-bearing one: the flag alone
+    # goes stale if anything clears the registry, and a stale flag means this
+    # returns early leaving a host that advertises no facts at all while every
+    # collector on it works perfectly. That failure is silent, which is
+    # exactly the class of bug this slice keeps running into.
+    if _bootstrapped and not force and has_providers():
         return
     if force:
         clear_providers()

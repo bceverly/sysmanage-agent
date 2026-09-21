@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-27 09:29-0400\n"
+"POT-Creation-Date: 2026-09-21 12:41-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1858,90 +1858,90 @@ msgstr "Erreur du planificateur de collecte de paquets : %s"
 msgid "Auth failed with status %s: %s"
 msgstr "Authentification échouée avec le statut %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:325
+#: src/sysmanage_agent/core/agent_utils.py:333
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Échec de la construction du rapport des capacités : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID d'exécution de script %s déjà traité, doublon ignoré"
 
-#: src/sysmanage_agent/core/agent_utils.py:478
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "Commande générique manquant du command_type imbriqué"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Type de commande inconnu : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:549
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Échec de la collecte des paquets Homebrew : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erreur lors de la vérification de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "Aucun UUID d'exécution fourni, impossible de suivre"
 
-#: src/sysmanage_agent/core/agent_utils.py:597
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID d'exécution %s existe déjà dans la base de données"
 
-#: src/sysmanage_agent/core/agent_utils.py:622
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erreur lors du stockage de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erreur dans le gestionnaire de contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:732
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Échec de %s sur le service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:739
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Délai dépassé pour le contrôle de service de %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:745
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erreur de contrôle de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:811
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Échec de la mise à jour des rôles après le contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:850
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erreur dans le gestionnaire d'état de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:893
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Délai dépassé pour l'état du service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erreur d'état de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:951
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -1965,7 +1965,7 @@ msgid "Failed to load configuration file: %s"
 msgstr "Échec de chargement du fichier de configuration : %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/core/version.py:115
+#: src/sysmanage_agent/core/version.py:179
 msgid "Could not determine agent version, using 'unknown'"
 msgstr "Impossible de déterminer la version de l'agent, 'unknown' utilisé"
 
@@ -2138,12 +2138,12 @@ msgstr "Erreur lors de l'ajout du dépôt NetBSD : %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "La gestion des hôtes enfants nécessite Pro+ (chemin du moteur)."
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:168
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:247
 msgid "Config profile requested but no executor is installed"
 msgstr "Profil de configuration demandé mais aucun exécuteur n'est installé"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:240
 #, python-format
 msgid "Refusing an unusable config spec: %s"
 msgstr "Refusant une spécification de configuration inutilisable : %s"
@@ -2768,6 +2768,15 @@ msgstr "Erreur lors de la mise à jour du package : %s"
 msgid "Error triggering update detection: %s"
 msgstr "Erreur lors du déclenchement de la détection de mises à jour : %s"
 
+#: src/sysmanage_agent/operations/query_pack_operations.py:49
+msgid "The query pack has no queries."
+msgstr "Le pack de requêtes n'a pas de requêtes."
+
+#: src/sysmanage_agent/operations/query_pack_operations.py:56
+#, python-format
+msgid "Failed to run query pack: %s"
+msgstr "Échec de l'exécution du pack de requêtes : %s"
+
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
 msgid "Unsupported distribution: %s"
@@ -3361,7 +3370,7 @@ msgstr ""
 "Erreur lors du traitement de la notification d'approbation de l'hôte : %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:254
-#: src/sysmanage_agent/registration/registration_manager.py:499
+#: src/sysmanage_agent/registration/registration_manager.py:506
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr ""
@@ -3393,18 +3402,18 @@ msgstr "Erreur lors de la récupération synchrone du host_id stocké : %s"
 msgid "Error retrieving host approval: %s"
 msgstr "Erreur lors de l'obtention de l'approbation de l'hôte : %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:501
+#: src/sysmanage_agent/registration/registration_manager.py:508
 msgid "Continuing despite cleanup error..."
 msgstr "Poursuite malgré l'erreur de nettoyage..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:522
+#: src/sysmanage_agent/registration/registration_manager.py:529
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
 "Trouvé %d entrées corrompues dans la table host_approval, nettoyage en "
 "cours..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:536
+#: src/sysmanage_agent/registration/registration_manager.py:543
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "Erreur pendant le nettoyage de la base de données : %s"

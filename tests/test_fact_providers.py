@@ -122,3 +122,22 @@ def test_force_re_runs_it_for_a_flipped_opt_in():
                 Config(**{fp.OSQUERY_ENABLED_KEY: True}), force=True
             )
     assert fs.PROVIDER_OSQUERY in fs.registered_providers("users")
+
+
+def test_a_cleared_registry_is_re_bootstrapped_not_left_empty():
+    """The flag alone would go stale here.
+
+    Anything that clears the registry after a bootstrap -- a test, a reload --
+    would otherwise leave the flag saying "done" while nothing is registered,
+    and the next capability report would advertise a host with no facts at all
+    while every collector on it works. Silent, and wrong in the direction that
+    looks like success.
+    """
+    fp.bootstrap_fact_providers(None)
+    assert fs.has_providers()
+
+    fs.clear_providers()
+    assert not fs.has_providers()
+
+    fp.bootstrap_fact_providers(None)
+    assert fs.registered_providers("os_version") == (fs.PROVIDER_NATIVE,)

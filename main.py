@@ -54,6 +54,9 @@ from src.sysmanage_agent.operations.config_mgmt_operations import (
 from src.sysmanage_agent.operations.custom_metrics_operations import (
     CustomMetricsOperations,
 )
+from src.sysmanage_agent.operations.query_pack_operations import (
+    QueryPackOperations,
+)
 from src.sysmanage_agent.operations.script_operations import ScriptOperations
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 from src.sysmanage_agent.operations.update_manager import UpdateManager
@@ -188,6 +191,7 @@ class SysManageAgent(
         self.custom_metrics_ops = CustomMetricsOperations(self)
         self.child_host_ops = ChildHostOperations(self)
         self.config_mgmt_ops = ConfigMgmtOperations(self)
+        self.query_pack_ops = QueryPackOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)

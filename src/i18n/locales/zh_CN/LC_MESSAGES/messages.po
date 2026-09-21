@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-27 09:29-0400\n"
+"POT-Creation-Date: 2026-09-21 12:41-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1798,90 +1798,90 @@ msgstr "软件包收集调度器错误：%s"
 msgid "Auth failed with status %s: %s"
 msgstr "身份验证失败，状态为%s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:325
+#: src/sysmanage_agent/core/agent_utils.py:333
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "构建能力报告失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:441
+#: src/sysmanage_agent/core/agent_utils.py:450
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:478
+#: src/sysmanage_agent/core/agent_utils.py:487
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:499
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:549
+#: src/sysmanage_agent/core/agent_utils.py:558
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 软件包失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:568
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检查执行UUID时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:591
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:597
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:622
+#: src/sysmanage_agent/core/agent_utils.py:631
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存储执行 UUID 时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
+#: src/sysmanage_agent/core/agent_utils.py:696
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:732
+#: src/sysmanage_agent/core/agent_utils.py:741
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "对服务 %s 执行 %s 失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:739
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:745
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:811
+#: src/sysmanage_agent/core/agent_utils.py:820
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:850
+#: src/sysmanage_agent/core/agent_utils.py:859
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:893
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:951
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "无法将合成的 command_result 加入正在执行的日志队列：%s"
@@ -1903,7 +1903,7 @@ msgid "Failed to load configuration file: %s"
 msgstr "加载配置文件失败：%s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/core/version.py:115
+#: src/sysmanage_agent/core/version.py:179
 msgid "Could not determine agent version, using 'unknown'"
 msgstr "无法确定代理版本，使用 'unknown'"
 
@@ -2076,12 +2076,12 @@ msgstr "添加NetBSD仓库时出错：%s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "子主机管理需要 Pro+ (引擎路径)。"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:143
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:216
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:168
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:247
 msgid "Config profile requested but no executor is installed"
 msgstr "请求配置文件，但没有安装执行器"
 
-#: src/sysmanage_agent/operations/config_mgmt_operations.py:209
+#: src/sysmanage_agent/operations/config_mgmt_operations.py:240
 #, python-format
 msgid "Refusing an unusable config spec: %s"
 msgstr "拒绝不可用的配置规范: %s"
@@ -2691,6 +2691,15 @@ msgstr "运行包更新时出错：%s"
 msgid "Error triggering update detection: %s"
 msgstr "触发更新检测时出错：%s"
 
+#: src/sysmanage_agent/operations/query_pack_operations.py:49
+msgid "The query pack has no queries."
+msgstr "查询包中没有查询。"
+
+#: src/sysmanage_agent/operations/query_pack_operations.py:56
+#, python-format
+msgid "Failed to run query pack: %s"
+msgstr "查询包运行失败：%s"
+
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
 msgid "Unsupported distribution: %s"
@@ -3275,7 +3284,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "处理主机批准通知时出错：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:254
-#: src/sysmanage_agent/registration/registration_manager.py:499
+#: src/sysmanage_agent/registration/registration_manager.py:506
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "清除主机批准记录时出错：%s"
@@ -3305,16 +3314,16 @@ msgstr "同步检索已存储 host_id 时出错：%s"
 msgid "Error retrieving host approval: %s"
 msgstr "获取主机批准时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:501
+#: src/sysmanage_agent/registration/registration_manager.py:508
 msgid "Continuing despite cleanup error..."
 msgstr "尽管出现清理错误，仍继续进行……"
 
-#: src/sysmanage_agent/registration/registration_manager.py:522
+#: src/sysmanage_agent/registration/registration_manager.py:529
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "在 host_approval 表中发现 %d 个损坏条目，正在清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:536
+#: src/sysmanage_agent/registration/registration_manager.py:543
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "数据库清理过程中出错：%s"

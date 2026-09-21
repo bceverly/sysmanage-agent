@@ -134,6 +134,11 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # config-management executor at all, and merging them would report the
     # whole group degraded for the wrong reason.
     "config_management": ("apply_config_profile",),
+    # Phase 21.1 S4.  Its own group, and deliberately NOT folded into
+    # "inventory": a host serves fact tables (inventory) whether or not it can
+    # run a PACK over them, and merging the two would report the whole
+    # inventory group degraded on a build that simply predates query packs.
+    "query_packs": ("run_query_pack",),
     "shell": ("execute_shell",),
     # ``get_capabilities`` answers a live "what can you do?" query over the
     # existing server-initiated channel.  Grouped under diagnostics because

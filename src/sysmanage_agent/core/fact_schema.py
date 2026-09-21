@@ -428,6 +428,18 @@ def registered_providers(table: str) -> Tuple[str, ...]:
     return tuple(p for p in PROVIDER_ORDER if p in registered)
 
 
+def has_providers() -> bool:
+    """Is anything registered at all?
+
+    Exists because a boolean "we bootstrapped" flag kept elsewhere can go
+    stale the moment someone calls ``clear_providers`` -- and a stale flag
+    means the bootstrap declines to re-register, leaving a host that serves
+    nothing while every collector on it works. Asking the registry cannot go
+    stale, so the bootstrap asks.
+    """
+    return bool(_PROVIDERS)
+
+
 def clear_providers() -> None:
     """Drop every registration — for tests, and for agent restart paths."""
     _PROVIDERS.clear()

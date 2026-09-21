@@ -116,6 +116,10 @@ class SystemOperationsDelegator:
         """Apply a desired-state configuration profile (Phase 20.1)."""
         return await self.config_mgmt_ops.apply_config_profile(parameters)
 
+    async def run_query_pack(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Run a query pack against this host's facts (Phase 21.1 S4)."""
+        return await self.query_pack_ops.run_query_pack(parameters)
+
     # Phase 10.2 step 7 close-out (2026-05-14): the legacy
     # ``deploy_opentelemetry`` / ``remove_opentelemetry`` /
     # ``attach_to_graylog`` delegators here used to route to
