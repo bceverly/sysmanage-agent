@@ -564,10 +564,30 @@ class TestOsVersionPlatformIsTheDistribution:
         "VERSION_CODENAME=resolute\n"
     )
 
-    def _row(self):
-        from unittest.mock import mock_open, patch
+    def _row(self, release=None):
+        """Drive ``_os_release`` directly rather than patching ``open``.
 
-        with patch("builtins.open", mock_open(read_data=self.RELEASE)):
+        Patching ``builtins.open`` catches every file read in the call, not
+        just os-release: on macOS ``build_os_version`` also calls
+        ``platform.mac_ver()``, which reads SystemVersion.plist in BINARY
+        mode and chokes on a string mock. The seam is the os-release reader,
+        so that is what the test should replace -- and doing so makes this
+        class platform-independent, which is the point of a unit test.
+        """
+        from unittest.mock import patch
+
+        parsed = {}
+        if release is None:
+            for line in self.RELEASE.splitlines():
+                key, _, value = line.partition("=")
+                if value:
+                    parsed[key.strip()] = value.strip().strip('"')
+        else:
+            parsed = release
+
+        with patch.object(fn.platform, "system", return_value="Linux"), patch.object(
+            fn, "_os_release", return_value=parsed
+        ):
             return fn.build_os_version(FakeOS())[0]
 
     def test_platform_is_the_distro_id(self):
@@ -583,12 +603,9 @@ class TestOsVersionPlatformIsTheDistribution:
         assert self._row()["version"] == "26.04.1 LTS (Resolute Raccoon)"
 
     def test_a_host_with_no_os_release_still_reports_a_platform(self):
-        """The BSDs, macOS and Windows have no /etc/os-release and already
-        agreed with osquery — that path must keep working."""
-        from unittest.mock import patch
-
-        with patch("builtins.open", side_effect=OSError("no such file")):
-            row = fn.build_os_version(FakeOS())[0]
+        """The BSDs and Windows have no /etc/os-release and already agreed
+        with osquery — that path must keep working."""
+        row = self._row(release={})
         assert row["platform"]
         assert row["platform_like"] is None
 
@@ -672,7 +689,7 @@ class TestMacOsOsVersion:
 
         with patch.object(fn.platform, "system", return_value=system), patch.object(
             fn.platform, "mac_ver", return_value=(mac_ver, ("", "", ""), "")
-        ), patch("builtins.open", side_effect=OSError("no os-release")):
+        ), patch.object(fn, "_os_release", return_value={}):
             return fn.build_os_version(FakeOS())[0]
 
     def test_platform_is_darwin_not_macos(self):
