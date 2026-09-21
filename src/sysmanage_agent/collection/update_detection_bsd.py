@@ -65,11 +65,27 @@ class BSDUpdateDetector(UpdateDetectorBase):
                 ["pkg", "update", "-q"], capture_output=True, timeout=60, check=False
             )
 
+            # ``-R`` compares against the REMOTE repository catalogue that
+            # ``pkg update`` just refreshed. Without it, pkg compares against
+            # the ports INDEX instead -- and on a host with no ports tree it
+            # fetches that index over the network. Measured on FreeBSD 14.4 on
+            # 2026-09-21: over 400 SECONDS without -R, 6 seconds with it.
+            #
+            # The 30s timeout below therefore fired every single time, the
+            # exception was logged, and the host reported ZERO available
+            # updates while 28 packages were actually out of date. Silently
+            # up-to-date is the worst possible wrong answer for an update
+            # detector.
+            #
+            # That -R was the intent all along is provable from the parser
+            # underneath: it matches "remote has X", which ONLY the -R form
+            # emits. The INDEX form says "index has X", so even a run that
+            # completed would have matched nothing.
             result = subprocess.run(  # nosec B603, B607
-                ["pkg", "version", "-vl", "<"],
+                ["pkg", "version", "-vRl", "<"],
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=120,
                 check=False,
             )
 
@@ -572,53 +588,44 @@ class BSDUpdateDetector(UpdateDetectorBase):
         logger.info("=== Finished OpenBSD version upgrade detection ===")
 
     def _detect_freebsd_version_upgrades(self):
-        """Detect FreeBSD version upgrades using freebsd-update."""
-        try:
-            # Check for available upgrades
-            result = subprocess.run(  # nosec B603, B607
-                ["freebsd-update", "upgrade", "-r", "RELEASE"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+        """Detect FreeBSD version upgrades.
 
-            if (
-                "upgrade" in result.stdout.lower()
-                or "available" in result.stdout.lower()
-            ):
-                # Get current version
-                version_result = subprocess.run(  # nosec B603, B607
-                    ["uname", "-r"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    check=False,
-                )
-                current_version = (
-                    version_result.stdout.strip()
-                    if version_result.returncode == 0
-                    else "Unknown"
-                )
+        WHAT THIS USED TO DO, AND WHY IT HAD TO STOP
+        --------------------------------------------
+        It ran ``freebsd-update upgrade -r RELEASE`` -- inside a DETECTION
+        path. Three things wrong with that, in rising order of seriousness:
 
-                self.available_updates.append(
-                    {
-                        "package_name": "freebsd-release",
-                        "current_version": current_version,
-                        "available_version": "Next Release",
-                        "package_manager": "freebsd-upgrade",
-                        "is_security_update": True,  # Always security for OS upgrades
-                        "is_system_update": True,
-                        "update_size": 800000000,  # ~800MB estimate
-                        "repository": "freebsd-release",
-                        "requires_reboot": True,
-                    }
-                )
+        * ``-r RELEASE`` is a literal placeholder, not a release. The command
+          was malformed and could never succeed.
+        * ``upgrade`` is interactive, so it sat waiting for input until the
+          30-second timeout. Measured on FreeBSD 14.4 on 2026-09-21: it fired
+          on every collection cycle, logging an exception each time.
+        * ``upgrade`` is not a QUERY. ``freebsd-update upgrade -r X`` fetches
+          an entire operating-system release into /var/db/freebsd-update and
+          stages it for installation. A detector must not mutate the host it
+          is describing, and this one only escaped doing so because it was
+          malformed and timed out.
 
-        except Exception as error:
-            logger.exception(
-                _("Failed to detect FreeBSD version upgrades: %s"), str(error)
-            )
+        The result check was ``"upgrade" in stdout``, which matches usage text
+        and most error messages, so a run that DID return would have reported
+        a release upgrade available on no evidence at all.
+
+        WHAT REPLACES IT
+        ----------------
+        Nothing here, deliberately. "Is there a newer FreeBSD release?" is not
+        answerable from the host: it needs the release catalogue, which is
+        exactly what the Phase 14.3 OS-lifecycle registry holds server-side
+        (``shared_os_lifecycle``, offline-updatable, one copy). The agent
+        reports the release it IS running -- already carried in
+        ``os_version`` / the fact substrate -- and the server compares.
+
+        Reporting nothing is the honest answer, and it is strictly better than
+        what this did before: nothing, slowly, with a hazard attached.
+        """
+        logger.debug(
+            "FreeBSD release-upgrade availability is determined server-side "
+            "from the OS-lifecycle registry, not by probing the host"
+        )
 
     def detect_updates(self):
         """Detect all updates from BSD sources."""
