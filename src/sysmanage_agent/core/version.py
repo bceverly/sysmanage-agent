@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from importlib.metadata import version as pkg_version
+from pathlib import Path
 
 from src.i18n import _
 
@@ -26,6 +27,11 @@ _CACHED_VERSION: dict[str, str] = {}
 
 def _try_run(argv: list[str]) -> str | None:
     """Run a command with a 5s timeout and return stdout on rc=0, else None."""
+    return _try_run_in(argv, None)
+
+
+def _try_run_in(argv: list[str], cwd) -> str | None:
+    """``_try_run`` with an explicit working directory."""
     try:
         result = subprocess.run(  # nosec B603 - args are hardcoded constants
             argv,
@@ -33,6 +39,7 @@ def _try_run(argv: list[str]) -> str | None:
             text=True,
             timeout=5,
             check=False,
+            cwd=cwd,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -40,6 +47,38 @@ def _try_run(argv: list[str]) -> str | None:
         return None
     out = result.stdout.strip()
     return out or None
+
+
+def _repo_root() -> Path:
+    """The checkout root, derived from this file's own location.
+
+    ``src/sysmanage_agent/core/version.py`` — four levels up is the repo.
+    """
+    return Path(__file__).resolve().parents[3]
+
+
+def _is_source_checkout() -> bool:
+    """Are we running from a git working tree rather than an install?
+
+    A packaged agent (.deb/.rpm/pkg/pip) never ships ``.git``, so this is
+    unambiguous in both directions.
+    """
+    try:
+        return (_repo_root() / ".git").exists()
+    except OSError:
+        return False
+
+
+def _from_git() -> str | None:
+    """The checkout's own tag, with a ``-dev`` suffix.
+
+    Run with ``cwd`` pinned to the repo root. Without that, ``git describe``
+    inherits the agent's working directory — which for a service is wherever
+    the rc script left it, quite possibly a different repository or none —
+    and would answer about the wrong tree or not at all.
+    """
+    out = _try_run_in(["git", "describe", "--tags", "--abbrev=0"], _repo_root())
+    return out + "-dev" if out else None
 
 
 def _from_os_package_manager() -> str | None:
@@ -74,6 +113,8 @@ def get_agent_version() -> str:
     Get the sysmanage-agent version string.
 
     Resolution order:
+    0. A git checkout describes ITSELF — an installed package on the same
+       box must not shadow the code that is actually running.
     1. ``importlib.metadata`` — works for ``pip install`` deployments.
     2. OS package manager (dpkg / rpm / pkg) — works for the .deb / .rpm /
        pkg packages we ship via GitHub releases (the typical install
@@ -88,6 +129,28 @@ def get_agent_version() -> str:
     """
     if "value" in _CACHED_VERSION:
         return _CACHED_VERSION["value"]
+
+    # 0. A source checkout answers for ITSELF, before anything installed.
+    #
+    # Without this, a dev box that ALSO has the agent package installed
+    # reports the package's version forever: steps 1 and 2 below both find a
+    # record that a ``git pull`` cannot touch, because it does not come from
+    # the code. Observed 2026-09-21 on a FreeBSD host running a current
+    # checkout — it advertised the Phase 21.1 fact coverage built that day
+    # while reporting 3.5.1.10, the version of a pkg installed months earlier.
+    #
+    # That is not merely cosmetic: the server compares agent_version against
+    # the latest release, so a stale string makes a fully up-to-date host look
+    # like it needs an upgrade it has already had.
+    #
+    # Safe in production by construction: a packaged install has no ``.git``,
+    # so this step is invisible there and the order below is unchanged.
+    if _is_source_checkout():
+        git_first = _from_git()
+        if git_first:
+            _CACHED_VERSION["value"] = git_first
+            logger.info("Agent version from source checkout: %s", git_first)
+            return git_first
 
     # 1. importlib.metadata (pip installs)
     try:
@@ -104,12 +167,13 @@ def get_agent_version() -> str:
         logger.info("Agent version from OS package manager: %s", os_pkg_version)
         return os_pkg_version
 
-    # 3. git describe (source checkout)
-    git_out = _try_run(["git", "describe", "--tags", "--abbrev=0"])
+    # 3. git describe — reached when there is no ``.git`` beside the source
+    # but git can still describe the working directory (a vendored tree, say).
+    git_out = _from_git()
     if git_out:
-        _CACHED_VERSION["value"] = git_out + "-dev"
-        logger.info("Agent version from git: %s", _CACHED_VERSION["value"])
-        return _CACHED_VERSION["value"]
+        _CACHED_VERSION["value"] = git_out
+        logger.info("Agent version from git: %s", git_out)
+        return git_out
 
     _CACHED_VERSION["value"] = "unknown"
     logger.warning(_("Could not determine agent version, using 'unknown'"))
