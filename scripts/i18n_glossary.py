@@ -344,6 +344,75 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "ru": ["запасы", "склад"],
         },
     },
+    # ---- Phase 21.1 vocabulary -------------------------------------------
+    # The phase plan called for these ("the glossary now carries the
+    # vocabulary"), and without them each string was translated in isolation:
+    # the same concept came back worded differently across the UI, and short
+    # mostly-placeholder strings had no domain anchor at all.
+    "query pack": {
+        "canonical": {
+            "de": "Abfragepaket",
+            # Dutch uses "query" as the ordinary word for a database query --
+            # the same reason queryPacks.query is blessed for nl.
+            "nl": "query-pakket",
+            "fr": "pack de requêtes",
+            "es": "paquete de consultas",
+            "it": "pacchetto di query",
+            "pt": "pacote de consultas",
+            "ru": "пакет запросов",
+            "ja": "クエリパック",
+            "ko": "쿼리 팩",
+            "zh_CN": "查询包",
+            "zh_TW": "查詢包",
+            "hi": "क्वेरी पैक",
+            "ar": "حزمة استعلامات",
+        },
+        "forbid": {},
+    },
+    "live query": {
+        # "Live" here means run-right-now, NOT alive. The forbids below are
+        # the readings that make it mean a query that is breathing.
+        "canonical": {
+            "de": "Live-Abfrage",
+            "nl": "live query",
+            "fr": "requête en direct",
+            "es": "consulta en vivo",
+            "it": "query in tempo reale",
+            "pt": "consulta ao vivo",
+            "ru": "запрос в реальном времени",
+            "ja": "ライブクエリ",
+            "ko": "라이브 쿼리",
+            "zh_CN": "实时查询",
+            "zh_TW": "即時查詢",
+            "hi": "लाइव क्वेरी",
+            "ar": "استعلام مباشر",
+        },
+        "forbid": {
+            "zh_CN": ["活查询"],
+            "zh_TW": ["活查詢"],
+        },
+    },
+    "fact table": {
+        # The osquery-schema tables the agent serves. "Fact table" is settled
+        # data-warehousing vocabulary, so these are the established renderings
+        # rather than anything invented here.
+        "canonical": {
+            "de": "Faktentabelle",
+            "nl": "feitentabel",
+            "fr": "table de faits",
+            "es": "tabla de hechos",
+            "it": "tabella dei fatti",
+            "pt": "tabela de fatos",
+            "ru": "таблица фактов",
+            "ja": "ファクトテーブル",
+            "ko": "팩트 테이블",
+            "zh_CN": "事实表",
+            "zh_TW": "事實表",
+            "hi": "तथ्य तालिका",
+            "ar": "جدول الحقائق",
+        },
+        "forbid": {},
+    },
     "fleet": {
         # No settled native term in most of these; the English word is the
         # canonical form rather than a naval one.
