@@ -18,9 +18,23 @@ These tests pin the two properties that matter: detection runs no mutating
 command, and the pkg check uses the REMOTE catalogue.
 """
 
+import sys
 from unittest.mock import patch
 
+import pytest
+
 from src.sysmanage_agent.collection.update_detection_bsd import BSDUpdateDetector
+
+# ``os.geteuid`` is POSIX-only. The sibling file test_update_detection_bsd.py
+# skips ENTIRELY on Windows for that reason, but almost nothing here needs it:
+# the parse tests and the "a detector must not mutate the host" guard are
+# plain Python and are worth running on every platform, since a regression
+# there would be just as real on Windows. So the skip is on the ONE test that
+# touches geteuid rather than on the file.
+_POSIX_ONLY = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="os.geteuid is POSIX-only; the escalation prefix is a BSD concern",
+)
 
 # Anything here would change the machine rather than describe it.
 MUTATING = {
@@ -141,6 +155,7 @@ class TestPkginReportsOnlyRealUpgrades:
         )
         assert out == []
 
+    @_POSIX_ONLY
     def test_escalation_lives_in_one_place(self):
         detector = BSDUpdateDetector()
         with patch("os.geteuid", return_value=0):
