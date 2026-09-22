@@ -235,6 +235,11 @@ GLOSSARY: Dict[str, str] = {
     "recommendation": "prescriptive guidance the product derives",
     "advisor": "the component that produces recommendations",
     "query pack": "a bundle of osquery queries collected together",
+    "not assessable": "we could not measure this host, so there is no verdict "
+    "to give. NOT a passing result, NOT a failing one, and NOT the same as "
+    "finding nothing wrong",
+    "not evaluated": "this host was neither selected nor ruled out, because a "
+    "field the filter tests was never reported by it",
     # -- product shape ------------------------------------------------------
     "edition": "which product variant is licensed: Community, Professional "
     "or Enterprise",
@@ -443,6 +448,54 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "ar": "جدول الحقائق",
         },
         "forbid": {},
+    },
+    "not assessable": {
+        # The single most dangerous phrase in Phase 21.1 to get wrong. It must
+        # not come back meaning "compliant", "clean", "passed", "none found",
+        # "not applicable" or "failed" -- every one of those is a VERDICT, and
+        # the whole point of the phrase is that no verdict was reached. The
+        # canonical forms below all mean "could not be assessed/evaluated".
+        "canonical": {
+            "de": "nicht bewertbar",
+            "nl": "niet te beoordelen",
+            "fr": "non \u00e9valuable",
+            "es": "no evaluable",
+            "it": "non valutabile",
+            "pt": "n\u00e3o avali\u00e1vel",
+            "ru": "\u043d\u0435\u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e \u043e\u0446\u0435\u043d\u0438\u0442\u044c",
+            "ja": "\u8a55\u4fa1\u4e0d\u80fd",
+            "ko": "\ud3c9\uac00 \ubd88\uac00",
+            "zh_CN": "\u65e0\u6cd5\u8bc4\u4f30",
+            "zh_TW": "\u7121\u6cd5\u8a55\u4f30",
+            "hi": "\u0906\u0915\u0932\u0928 \u0938\u0902\u092d\u0935 \u0928\u0939\u0940\u0902",
+            "ar": "\u063a\u064a\u0631 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0642\u064a\u064a\u0645",
+        },
+        # Renderings that turn "we do not know" into an all-clear, which is the
+        # exact failure this phase exists to prevent.
+        "forbid": {
+            "de": ["konform", "sauber", "bestanden"],
+            "nl": ["conform", "schoon", "geslaagd"],
+            "fr": ["conforme", "propre"],
+            "es": ["conforme", "limpio", "sin problemas"],
+            "it": ["conforme", "pulito"],
+            "pt": ["conforme", "limpo"],
+            "ru": [
+                "\u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442",
+                "\u0447\u0438\u0441\u0442\u043e",
+            ],
+            "ja": [
+                "\u9069\u5408",
+                "\u554f\u984c\u306a\u3057",
+                "\u8a72\u5f53\u306a\u3057",
+            ],
+            "ko": [
+                "\uc900\uc218",
+                "\ubb38\uc81c \uc5c6\uc74c",
+                "\ud574\ub2f9 \uc5c6\uc74c",
+            ],
+            "zh_CN": ["\u5408\u89c4", "\u65e0\u95ee\u9898", "\u4e0d\u9002\u7528"],
+            "zh_TW": ["\u5408\u898f", "\u7121\u554f\u984c", "\u4e0d\u9069\u7528"],
+        },
     },
     "fleet": {
         # No settled native term in most of these; the English word is the
