@@ -675,6 +675,13 @@ def register_native_provider() -> None:
     _register_table(
         "sysmanage_available_updates", UpdateDetector, build_available_updates
     )
+    # Parameterized -- see PARAMETERIZED_TABLES. Registered here so the
+    # coverage advertisement reports it like any other table (this agent CAN
+    # serve it on every platform); the factory/builder pair is never called,
+    # because ``collect`` intercepts the table before the NATIVE_TABLES lookup.
+    _register_table(
+        "sysmanage_file_state", lambda: None, lambda _c: _PARAMETERIZED_BUILDER
+    )
     # Registered on every platform: build_fact_coverage() checks applicability
     # FIRST, so a table this OS cannot have is reported not_applicable rather
     # than served.  A host that CAN have them but has none -- deb_packages on
@@ -697,7 +704,42 @@ def register_native_provider() -> None:
     )
 
 
-def collect(tables: Sequence[str]) -> Dict[str, List[Dict[str, Any]]]:
+# Tables whose CONTENT depends on something that travels with the dispatch
+# rather than on the host alone. Every other contract table answers "what is
+# true here"; a watch list answers "what is true about THESE paths", and the
+# paths are policy the server holds. Kept as an explicit set rather than a
+# signature probe so the special case is greppable.
+PARAMETERIZED_TABLES = frozenset({"sysmanage_file_state"})
+
+# Sentinel returned by the registered builder for a parameterized table, so a
+# future caller that reaches it through NATIVE_TABLES instead of ``collect``
+# fails loudly here rather than silently reporting an empty table.
+_PARAMETERIZED_BUILDER = None
+
+
+def _build_parameterized(table: str, params: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Build one parameterized table from the dispatch's own parameters.
+
+    An absent or empty parameter is NOT an error: it means the server assigned
+    no watch list to this host, and the honest answer is zero rows. The
+    consumer is what must distinguish "nothing watched" from "everything
+    watched matched" -- see the differ, which refuses to call two empty watch
+    lists identical.
+    """
+    if table == "sysmanage_file_state":
+        from src.sysmanage_agent.collection.fact_file_state import (  # noqa: PLC0415
+            build_file_state,
+        )
+
+        return build_file_state(params.get("paths") or [])
+    logger.warning("no builder for parameterized table %s", table)
+    return []
+
+
+def collect(
+    tables: Sequence[str],
+    table_params: Optional[Mapping[str, Mapping[str, Any]]] = None,
+) -> Dict[str, List[Dict[str, Any]]]:
     """Build the requested tables. Unknown/unregistered tables are skipped.
 
     Registers first if nothing has. ``NATIVE_TABLES`` is filled by
@@ -713,6 +755,12 @@ def collect(tables: Sequence[str]) -> Dict[str, List[Dict[str, Any]]]:
     collected: Dict[str, List[Dict[str, Any]]] = {}
     cache: Dict[Any, Any] = {}
     for table in tables:
+        if table in PARAMETERIZED_TABLES:
+            params = (table_params or {}).get(table) or {}
+            collected[table] = _rows(
+                lambda tb=table, pr=params: _build_parameterized(tb, pr)
+            )
+            continue
         registration = NATIVE_TABLES.get(table)
         if registration is None:
             continue

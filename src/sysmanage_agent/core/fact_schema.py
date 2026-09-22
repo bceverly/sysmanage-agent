@@ -56,7 +56,12 @@ from typing import Callable, Dict, List, Optional, Tuple
 # know about.  Independent of CAPABILITY_SCHEMA_VERSION on purpose: the fact
 # contract will move at a different pace from the command taxonomy, and tying
 # them would force a bump of one for a change in the other.
-FACT_CONTRACT_VERSION = 1
+# v2 (21.1 S7) added ``sysmanage_file_state``.  Nothing GATES on this number --
+# it is recorded on runs and findings so a mixed-version fleet is legible --
+# but a consumer of a table added after v1 must require a POSITIVE
+# advertisement for it rather than assuming an older agent simply had nothing
+# to report.  See host_facts.serves() on the server.
+FACT_CONTRACT_VERSION = 2
 
 # Providers.  A table is served by exactly one on a given host.
 PROVIDER_OSQUERY = "osquery"
@@ -123,6 +128,16 @@ FACT_TABLES: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     # osquery models installed software, not PENDING updates, and update
     # detection is a large part of this agent.
     "sysmanage_available_updates": ("sysmanage", ANY_PLATFORM),
+    # Ours, and NOT osquery's `file`/`hash` pair, for one decisive reason:
+    # osquery's `file` returns NO ROW for a path that does not exist, and no
+    # row for one it could not read either.  Absent, unreadable and
+    # never-asked-for are then the same observation -- which is precisely the
+    # ambiguity this phase exists to remove, in the feature whose whole job is
+    # reporting real differences.  Our table carries an explicit `state` per
+    # WATCHED path instead, so "the file is gone" and "we were not allowed to
+    # look" stay distinguishable from each other and from "we never watched
+    # it".  Content is never collected -- see FACT_COLUMNS below.
+    "sysmanage_file_state": ("sysmanage", ANY_PLATFORM),
 }
 
 
@@ -365,6 +380,28 @@ FACT_COLUMNS: Dict[str, Tuple[str, ...]] = {
         "package_manager",
         "is_security",
         "source",
+    ),
+    # One row per WATCHED path, always -- including paths that are absent or
+    # unreadable, which is the entire point of the table.
+    #
+    # THERE IS NO CONTENT COLUMN, BY DESIGN.  A hash answers "did this change"
+    # without ever moving the file off the host, so watching /etc/shadow or a
+    # private key cannot leak it into the server database, its API responses,
+    # its backups or its logs.  The cost is that drift says THAT a file
+    # changed, not WHAT changed in it; that trade was made deliberately.
+    "sysmanage_file_state": (
+        "path",  # as DECLARED in the watch list, not as resolved
+        "state",  # present | absent | unreadable | not_a_file
+        "sha256",  # NULL unless state == present and type == regular
+        "size",
+        "mode",  # octal string, e.g. "0644"
+        "uid",
+        "gid",
+        "owner",  # resolved name where the platform can; NULL otherwise
+        "group_name",  # osquery says groupname; ours is explicit
+        "mtime",  # epoch seconds
+        "type",  # regular | directory | symlink | other
+        "target",  # symlink target, NULL otherwise
     ),
 }
 

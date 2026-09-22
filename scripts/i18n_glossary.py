@@ -240,6 +240,14 @@ GLOSSARY: Dict[str, str] = {
     "finding nothing wrong",
     "not evaluated": "this host was neither selected nor ruled out, because a "
     "field the filter tests was never reported by it",
+    "watch list": "the set of file paths a host checks each collection. NOT a "
+    "list of people being observed, and NOT a wish list",
+    "watched file": "a file on a host whose checksum is collected so changes "
+    "to it can be detected",
+    "blind spot": "something we could not measure, so no verdict about it "
+    "exists. NOT a fault in the thing, and NOT a clean result",
+    "not compared": "we did not examine this, so we cannot say whether it "
+    "matches. NOT a statement that it differs, and NOT that it agrees",
     # -- product shape ------------------------------------------------------
     "edition": "which product variant is licensed: Community, Professional "
     "or Enterprise",
@@ -496,6 +504,60 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "zh_CN": ["\u5408\u89c4", "\u65e0\u95ee\u9898", "\u4e0d\u9002\u7528"],
             "zh_TW": ["\u5408\u898f", "\u7121\u554f\u984c", "\u4e0d\u9069\u7528"],
         },
+    },
+    "blind spot": {
+        # The phrase an operator reads next to a drift result, so getting it
+        # wrong reverses the meaning of the whole report. It must not come
+        # back as "fault", "defect", "error" or "problem" -- a blind spot is
+        # not a finding ABOUT the thing, it is the absence of one.
+        "canonical": {
+            "de": "nicht einsehbarer Bereich",
+            "nl": "blinde vlek",
+            "fr": "angle mort",
+            "es": "punto ciego",
+            "it": "punto cieco",
+            "pt": "ponto cego",
+            "ru": "\u0441\u043b\u0435\u043f\u0430\u044f \u0437\u043e\u043d\u0430",
+            "ja": "\u672a\u78ba\u8a8d\u7bc4\u56f2",
+            "ko": "\ud655\uc778 \ubd88\uac00 \uc601\uc5ed",
+            "zh_CN": "\u76d1\u63a7\u76f2\u533a",
+            "zh_TW": "\u76e3\u63a7\u76f2\u5340",
+            "hi": "\u0905\u0928\u0926\u0947\u0916\u093e \u0915\u094d\u0937\u0947\u0924\u094d\u0930",
+            "ar": "\u0645\u0646\u0637\u0642\u0629 \u063a\u064a\u0631 \u0645\u0631\u0626\u064a\u0629",
+        },
+        "forbid": {
+            "de": ["Fehler", "Defekt"],
+            "nl": ["fout", "defect"],
+            "fr": ["erreur", "d\u00e9faut"],
+            "es": ["error", "fallo"],
+            "it": ["errore", "difetto"],
+            "pt": ["erro", "falha"],
+            "ru": ["\u043e\u0448\u0438\u0431\u043a\u0430"],
+            "ja": ["\u30a8\u30e9\u30fc", "\u6b20\u9665"],
+            "ko": ["\uc624\ub958", "\uacb0\ud568"],
+            "zh_CN": ["\u9519\u8bef", "\u7f3a\u9677"],
+            "zh_TW": ["\u932f\u8aa4", "\u7f3a\u9677"],
+        },
+    },
+    "watch list": {
+        # "Watch list" in the surveillance sense is the wrong register in
+        # every one of these; what is meant is a monitored SET OF FILES.
+        "canonical": {
+            "de": "\u00dcberwachungsliste",
+            "nl": "bewakingslijst",
+            "fr": "liste de surveillance",
+            "es": "lista de vigilancia",
+            "it": "elenco di controllo",
+            "pt": "lista de monitoramento",
+            "ru": "\u0441\u043f\u0438\u0441\u043e\u043a \u043d\u0430\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u044f",
+            "ja": "\u76e3\u8996\u30ea\u30b9\u30c8",
+            "ko": "\uac10\uc2dc \ubaa9\ub85d",
+            "zh_CN": "\u76d1\u63a7\u5217\u8868",
+            "zh_TW": "\u76e3\u63a7\u6e05\u55ae",
+            "hi": "\u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u0938\u0942\u091a\u0940",
+            "ar": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629",
+        },
+        "forbid": {},
     },
     "fleet": {
         # No settled native term in most of these; the English word is the

@@ -71,7 +71,12 @@ REASON_NOT_COVERED = "not_covered"
 MAX_ROWS_PER_QUERY = 10000
 
 
-def _materialize(store: FactStore, tables: Sequence[str], coverage) -> Dict[str, str]:
+def _materialize(
+    store: FactStore,
+    tables: Sequence[str],
+    coverage,
+    table_params=None,
+) -> Dict[str, str]:
     """Build the requested tables. Returns {table: reason} for those we cannot.
 
     The provider is chosen per table by the coverage advertisement, so this
@@ -105,7 +110,7 @@ def _materialize(store: FactStore, tables: Sequence[str], coverage) -> Dict[str,
         if provider == PROVIDER_OSQUERY:
             collected.update(fact_osquery.collect(provider_tables))
         else:
-            collected.update(fact_native.collect(provider_tables))
+            collected.update(fact_native.collect(provider_tables, table_params))
 
     for table in wanted:
         rows = collected.get(table)
@@ -191,7 +196,10 @@ def run_pack(pack: Mapping[str, Any], config: Optional[Any] = None) -> Dict[str,
     results: List[Dict[str, Any]] = []
     store = FactStore()
     try:
-        refused = _materialize(store, needed, coverage)
+        # Parameters the SERVER holds as policy and the host cannot know --
+        # currently the file watch list. Absent for every pack that does not
+        # use a parameterized table, which is all of them before S7.
+        refused = _materialize(store, needed, coverage, pack.get("table_params") or {})
         for query in queries:
             results.append(_run_one(store, query, refused))
     finally:
