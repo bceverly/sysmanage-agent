@@ -23,6 +23,7 @@ The .po driver needs polib (pip install polib); JSON needs only the stdlib.
 
 from __future__ import annotations
 
+import ast
 import argparse
 import json
 import os
@@ -100,6 +101,34 @@ def _service_ok(service: str) -> bool:
         return False
 
 
+def _unwrap_envelope(value):
+    """The string the service meant to send, or ``None`` when it did not send one.
+
+    A reply sometimes carries the service's own envelope -- ``{"original":
+    ..., "translated": ...}`` -- where the translation belongs, either as a
+    mapping or as that mapping's repr.  Seventeen docs values shipped to
+    production as the literal text ``{'original': '...', 'translated':
+    '...'}``, and every gate passed them: an envelope is not a gap, not a
+    ``[TODO]`` and not English-identical, so nothing downstream had a reason
+    to look.  Unwrap what can be unwrapped, and refuse the rest so a bad reply
+    leaves a VISIBLE gap rather than prose no reader can use.
+    """
+    if isinstance(value, dict):
+        inner = value.get("translated")
+        return inner if isinstance(inner, str) and inner.strip() else None
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not (text.startswith("{") and text.endswith("}") and "translated" in text):
+        return value
+    for parse in (json.loads, ast.literal_eval):
+        try:
+            return _unwrap_envelope(parse(text))
+        except (ValueError, SyntaxError):
+            continue
+    return None
+
+
 def translate_to(
     service: str, texts: List[str], lang: str, client_batch: int
 ) -> List[str]:
@@ -127,7 +156,8 @@ def translate_to(
             # strings used to be re-sent over the network forever.
             # An older service omits "status"; assume ok so this still works.
             status = (item.get("status") or {}).get(lang, "ok")
-            out.append((item["translations"][lang], status == "ok"))
+            text = _unwrap_envelope(item["translations"].get(lang))
+            out.append((text or "", status == "ok" and text is not None))
         print(f"      …{min(i + client_batch, len(texts))}/{len(texts)}", flush=True)
     return out
 

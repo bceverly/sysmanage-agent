@@ -155,6 +155,25 @@ def is_placeholder(text: str) -> bool:
     return bool(_PLACEHOLDER_VALUE.match(text or ""))
 
 
+# The translation service answers with an envelope, {"original": ..,
+# "translated": ..}, and the string inside it is what belongs in the catalog.
+# When the envelope itself lands there instead, nothing else notices: it is
+# not [TODO], not English-identical, not wrong-script, not a placeholder, and
+# it even carries the markup of its source.  17 such values shipped to the
+# docs site on 2026-09-22 reading "{'original': 'A live query in flight...',
+# 'translated': 'Eine laufende...'}".  The client now unwraps these
+# (translate_i18n._unwrap_envelope); this is the gate that keeps one from
+# reaching a reader again if some other producer does the same thing.
+_ENVELOPE_VALUE = re.compile(
+    r"^\s*\{\s*['\"](?:original|translated)['\"]\s*:.*\}\s*$", re.S
+)
+
+
+def is_envelope(text: str) -> bool:
+    """True if the value is a serialized service reply, not the translation."""
+    return bool(_ENVELOPE_VALUE.match(text or ""))
+
+
 def is_prose(text: str) -> bool:
     text = (text or "").strip()
     if not text or _NOT_PROSE.match(text):
@@ -454,6 +473,10 @@ def check_json(surface, allow, hashes):
             # mean "may be in any language at all".
             if is_placeholder(value) and not is_placeholder(src):
                 # Same remedy as wrong-language: it is not a translation at all.
+                wrong.append((surface["name"], lang, path, key, src))
+                continue
+            if is_envelope(value) and not is_envelope(src):
+                # Likewise: a reply envelope is not a translation at all.
                 wrong.append((surface["name"], lang, path, key, src))
                 continue
             if wrong_script(lang, value, src):
