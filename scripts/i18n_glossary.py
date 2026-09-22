@@ -344,6 +344,37 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "ru": ["запасы", "склад"],
         },
     },
+    "agent": {
+        # The product's most central noun, and it was NOT glossed until
+        # 2026-09-22. Asked cold, the service renders it 代理人 -- an agent in
+        # the HUMAN sense, a representative or broker -- which is the same
+        # everyday-meaning trap as inventory->warehouse stock.
+        #
+        # The canonicals below are what the catalogs ALREADY use (measured:
+        # zh_CN 代理 x53, zh_TW 代理 x41, ja エージェント x52, ko 에이전트 x48),
+        # so this pins existing wording rather than churning ~50 strings per
+        # locale to satisfy a preference.
+        "canonical": {
+            "de": "Agent",
+            "nl": "agent",
+            "fr": "agent",
+            "es": "agente",
+            "it": "agente",
+            "pt": "agente",
+            "ru": "агент",
+            "ja": "エージェント",
+            "ko": "에이전트",
+            "zh_CN": "代理",
+            "zh_TW": "代理",
+            "hi": "एजेंट",
+            "ar": "وكيل",
+        },
+        "forbid": {
+            # A person acting on someone's behalf, not a program.
+            "zh_CN": ["代理人"],
+            "zh_TW": ["代理人"],
+        },
+    },
     # ---- Phase 21.1 vocabulary -------------------------------------------
     # The phase plan called for these ("the glossary now carries the
     # vocabulary"), and without them each string was translated in isolation:
