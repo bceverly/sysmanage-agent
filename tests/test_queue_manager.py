@@ -265,7 +265,7 @@ class TestMessageQueueManager:
         """Old FAILED rows are collected; recent ones are kept.
 
         Delivered messages are removed at acknowledgement, so cleanup is no
-        longer about them — it exists so failures, which ARE retained for
+        longer about them -- it exists so failures, which ARE retained for
         diagnosis, do not accumulate for ever.
         """
         old_msg_id = queue_manager.enqueue_message(
@@ -312,7 +312,7 @@ class TestMessageQueueManager:
         assert queue_manager.get_message(msg_id) is not None
 
     def test_pending_messages_are_never_collected(self, queue_manager):
-        """Undelivered work must survive cleanup — losing it loses the message.
+        """Undelivered work must survive cleanup -- losing it loses the message.
 
         This is the property the whole queue exists to provide, so it gets an
         explicit test rather than being implied by the status filter.

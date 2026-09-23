@@ -32,7 +32,7 @@ _DEFAULT_CAP: Any = object()
 # Seconds between the priming pass and the measured pass for CPU sampling.
 _CPU_SAMPLE_INTERVAL = 0.5
 
-# Fields pulled in a single ``oneshot()`` to minimise per-process syscalls.
+# Fields pulled in a single ``oneshot()`` to minimize per-process syscalls.
 _PROC_ATTRS = [
     "pid",
     "ppid",
@@ -59,12 +59,12 @@ class ProcessCollector:
 
         ``processes`` is sorted by CPU% then memory% (descending) and capped at
         ``limit``; ``truncated`` is True when the cap dropped rows.
-        Blocking (it sleeps for a CPU sample) — call via a thread executor.
+        Blocking (it sleeps for a CPU sample) -- call via a thread executor.
 
         ``limit=None`` returns EVERY process. The default keeps the existing
-        behaviour for the operator-facing snapshot, where the cap exists so a
+        behavior for the operator-facing snapshot, where the cap exists so a
         busy host does not flood the server. The FACT TABLE needs the
-        uncapped list: it is materialised into local SQLite and only a pack's
+        uncapped list: it is materialized into local SQLite and only a pack's
         QUERY RESULT travels, so the flood argument does not apply -- while a
         capped table silently answers "not running" for a process that is.
         The cap is applied after the (already complete) enumeration, so
@@ -161,7 +161,7 @@ class ProcessCollector:
         """Terminate ``pid``.
 
         ``force`` sends SIGKILL instead of SIGTERM.  ``expected_name`` is an
-        optional safety check — if given and the live process name doesn't
+        optional safety check -- if given and the live process name doesn't
         match, the kill is refused (guards against PID reuse between the
         snapshot the operator saw and now).
         """
@@ -202,7 +202,7 @@ class ProcessCollector:
                 "error": _("Access denied terminating PID %d") % pid,
             }
         except psutil.NoSuchProcess:
-            # Already gone between lookup and signal — treat as success.
+            # Already gone between lookup and signal -- treat as success.
             exited = True
 
         self.logger.info(

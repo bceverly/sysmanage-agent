@@ -17,7 +17,7 @@ which builds packages for its native platform and stages them into a local
 `~/dev/sysmanage-docs/repo/` tree. You run this on as many machines as needed to cover
 all target platforms. Each run is additive -- existing packages from other platforms
 are preserved. When done, you publish the staged tree to Cloudflare R2 (Step 7).
-Packages are **no longer committed to the sysmanage-docs git repo** — that `repo/`
+Packages are **no longer committed to the sysmanage-docs git repo** -- that `repo/`
 tree is gitignored and lives on R2 only.
 
 ## Prerequisites
@@ -347,7 +347,7 @@ ls -la repo/agent/sbom/
 
 ### Step 7: Publish the staged packages to Cloudflare R2
 
-Packages live on Cloudflare R2 (`https://repo.sysmanage.org`), **not** in git —
+Packages live on Cloudflare R2 (`https://repo.sysmanage.org`), **not** in git --
 `repo/` is gitignored in sysmanage-docs. Push the staged tree up with the same R2
 credentials CI uses (the `R2_*` secrets, or your rclone `r2` remote). The sync is
 additive; run `make prune-repo` separately for version retention.

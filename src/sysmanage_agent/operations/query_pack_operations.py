@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Query-pack command handling — ROADMAP Phase 21.1, slice S4.
+"""Query-pack command handling -- ROADMAP Phase 21.1, slice S4.
 
 The thin seam between a dispatched ``run_query_pack`` command and
 ``collection/query_pack_runner``, which does the work. Split the way every
@@ -11,7 +11,7 @@ about commands; this knows the command envelope and nothing about SQL.
 
 WHY THE WORK GOES TO A THREAD
 -----------------------------
-Running a pack materialises tables from real collectors -- reading the account
+Running a pack materializes tables from real collectors -- reading the account
 database, enumerating packages, stat-ing mounts -- and that is seconds of
 blocking, synchronous work. On the event loop it would stall the agent's
 WebSocket, its heartbeat and every other command for the duration, which on a

@@ -3,20 +3,20 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-In-memory fact store — ROADMAP Phase 21.1, slice S2.
+In-memory fact store -- ROADMAP Phase 21.1, slice S2.
 
 WHY THIS EXISTS
 ---------------
 A query pack is SQL.  On a host running ``osqueryd`` the daemon executes it;
-on a host without one — every BSD, because osquery has no port there at all —
+on a host without one -- every BSD, because osquery has no port there at all --
 something else has to, or those platforms get no facts and the advisor goes
 silent on them.
 
 That something is ``sqlite3``, which is in the Python standard library and
 which this agent already runs on (``agent.db``).  The native provider
-materialises the contracted tables into an in-memory database and the SAME
+materializes the contracted tables into an in-memory database and the SAME
 pack SQL executes against it.  So a pack is written once, against osquery's
-schema, and runs unmodified on OpenBSD and NetBSD — no second dialect, and no
+schema, and runs unmodified on OpenBSD and NetBSD -- no second dialect, and no
 new dependency on any platform.
 
 UNTRUSTED SQL
@@ -32,7 +32,7 @@ Two guards, because one is not enough:
   the driver rather than run as two statements.
 
 The store is in-memory and rebuilt per collection, so there is nothing
-persistent to corrupt — but "the blast radius is small" is not a reason to let
+persistent to corrupt -- but "the blast radius is small" is not a reason to let
 a tenant's SQL write anything at all.
 """
 
@@ -52,7 +52,7 @@ _READ_ONLY_ACTIONS = frozenset(
 
 
 class FactStore:
-    """Contract tables materialised into SQLite, queryable with pack SQL."""
+    """Contract tables materialized into SQLite, queryable with pack SQL."""
 
     def __init__(self) -> None:
         self._conn = sqlite3.connect(":memory:")
@@ -65,7 +65,7 @@ class FactStore:
         """Create ``table`` with its CONTRACT columns and insert ``rows``.
 
         Columns come from the contract, not from the rows, so a column no
-        provider fills reads as NULL rather than failing the query — which is
+        provider fills reads as NULL rather than failing the query -- which is
         what lets a published pack select a column we do not populate and
         still run.  Keys in a row that are not contract columns are ignored:
         a collector growing a new field must not break every pack on the host.
@@ -115,10 +115,26 @@ class FactStore:
         try:
             cursor = self._conn.execute(sql, tuple(params or ()))
             return [dict(row) for row in cursor.fetchall()]
+        except sqlite3.Warning as exc:
+            # A MULTI-STATEMENT execute raises sqlite3.Warning on CPython 3.9
+            # and 3.10, and sqlite3.ProgrammingError from 3.11. Warning does
+            # NOT inherit from DatabaseError, so on the older interpreters a
+            # caller doing the documented ``except sqlite3.DatabaseError``
+            # would sail straight past "SELECT 1; DROP TABLE users" -- the
+            # refusal would be raised and then not caught. The agent still
+            # supports 3.9, so normalize it rather than document two contracts.
+            raise sqlite3.ProgrammingError(str(exc)) from exc
         finally:
             # Lifted immediately: materialize() legitimately writes, and a
-            # store left authorised read-only could not be rebuilt.
-            self._conn.set_authorizer(None)
+            # store left authorized read-only could not be rebuilt.
+            #
+            # A PERMISSIVE CALLBACK, not None. ``set_authorizer(None)`` only
+            # resets from CPython 3.11 onward; on 3.9 and 3.10 it leaves the
+            # old authorizer installed, so the FIRST query would permanently
+            # deny every later materialize() and the store could never be
+            # rebuilt -- a live defect on those interpreters, not just a test
+            # one. Verified against 3.10.15 and 3.11.10.
+            self._conn.set_authorizer(_allow_everything)
 
     def close(self) -> None:
         self._conn.close()
@@ -133,3 +149,8 @@ class FactStore:
 def _authorizer(action: int, *_args: Any) -> int:
     """Permit reads, refuse everything else."""
     return sqlite3.SQLITE_OK if action in _READ_ONLY_ACTIONS else sqlite3.SQLITE_DENY
+
+
+def _allow_everything(*_args: Any) -> int:
+    """The reset authorizer -- see the note in ``query``'s finally block."""
+    return sqlite3.SQLITE_OK

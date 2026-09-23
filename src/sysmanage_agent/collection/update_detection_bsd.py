@@ -68,7 +68,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                 ["pkg", "update", "-q"], capture_output=True, timeout=60, check=False
             )
 
-            # ``-R`` compares against the REMOTE repository catalogue that
+            # ``-R`` compares against the REMOTE repository catalog that
             # ``pkg update`` just refreshed. Without it, pkg compares against
             # the ports INDEX instead -- and on a host with no ports tree it
             # fetches that index over the network. Measured on FreeBSD 14.4 on
@@ -510,7 +510,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
         WHAT REPLACES IT
         ----------------
         Nothing here, deliberately. "Is there a newer FreeBSD release?" is not
-        answerable from the host: it needs the release catalogue, which is
+        answerable from the host: it needs the release catalog, which is
         exactly what the Phase 14.3 OS-lifecycle registry holds server-side
         (``shared_os_lifecycle``, offline-updatable, one copy). The agent
         reports the release it IS running -- already carried in

@@ -81,7 +81,7 @@ def generate_plist():
                 if dir_path not in src_files:
                     src_files.append(dir_path)
 
-            # Add file entries — skip generated artifacts.
+            # Add file entries -- skip generated artifacts.
             for file in sorted(files):
                 if Path(file).suffix in SKIP_FILE_EXTS:
                     continue

@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""add sent_package_snapshot — what the server already has, so we can send deltas
+"""add sent_package_snapshot -- what the server already has, so we can send deltas
 
 Revision ID: e5f6a7b8c9d0
 Revises: d4e5f6a7b8c9

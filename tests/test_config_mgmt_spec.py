@@ -77,7 +77,7 @@ class TestValidation:
 
 class TestMaterialisation:
     def test_the_profile_is_written_and_substituted_into_argv(self, tmp_path):
-        argv, _ = spec_mod.materialise(spec(), str(tmp_path))
+        argv, _ = spec_mod.materialize(spec(), str(tmp_path))
         written = os.path.join(str(tmp_path), "site.pp")
         assert argv[2] == written
         assert os.path.isfile(written)
@@ -85,14 +85,14 @@ class TestMaterialisation:
     @posix_permissions
     def test_written_files_are_not_readable_by_other_users(self, tmp_path):
         # Profiles carry variables -- passwords, keys. This is the exposure.
-        spec_mod.materialise(spec(), str(tmp_path))
+        spec_mod.materialize(spec(), str(tmp_path))
         mode = os.stat(os.path.join(str(tmp_path), "site.pp")).st_mode
         assert not mode & stat.S_IRGRP
         assert not mode & stat.S_IROTH
 
     def test_extra_files_are_written_too(self, tmp_path):
         # Chef needs a client.rb alongside the recipe.
-        spec_mod.materialise(
+        spec_mod.materialize(
             spec(files=[{"name": "client.rb", "content": "log_level :warn"}]),
             str(tmp_path),
         )
@@ -101,14 +101,14 @@ class TestMaterialisation:
     def test_a_file_name_cannot_escape_the_workdir(self, tmp_path):
         # basename() the name: a spec is server-supplied, but a traversal in
         # one must not be able to overwrite /etc/anything.
-        spec_mod.materialise(
+        spec_mod.materialize(
             spec(files=[{"name": "../../evil.conf", "content": "x"}]), str(tmp_path)
         )
         assert os.path.isfile(os.path.join(str(tmp_path), "evil.conf"))
         assert not os.path.exists(os.path.join(str(tmp_path), "..", "..", "evil.conf"))
 
     def test_workdir_is_substituted(self, tmp_path):
-        argv, _ = spec_mod.materialise(
+        argv, _ = spec_mod.materialize(
             spec(argv=["chef-client", "--config", "{workdir}/client.rb"]), str(tmp_path)
         )
         assert argv[2] == f"{tmp_path}/client.rb"
@@ -116,22 +116,22 @@ class TestMaterialisation:
     def test_stdin_can_carry_the_profile(self, tmp_path):
         # DSC needs this: PowerShell 5.1 strips the quotes out of an inline
         # JSON argument and dsc then dies parsing it as YAML.
-        _, stdin = spec_mod.materialise(
+        _, stdin = spec_mod.materialize(
             spec(stdin="@profile", profile={"name": "c.json", "content": '{"a":1}'}),
             str(tmp_path),
         )
         assert stdin == b'{"a":1}'
 
     def test_stdin_can_be_a_literal(self, tmp_path):
-        _, stdin = spec_mod.materialise(spec(stdin="hello"), str(tmp_path))
+        _, stdin = spec_mod.materialize(spec(stdin="hello"), str(tmp_path))
         assert stdin == b"hello"
 
     def test_no_stdin_by_default(self, tmp_path):
-        _, stdin = spec_mod.materialise(spec(), str(tmp_path))
+        _, stdin = spec_mod.materialize(spec(), str(tmp_path))
         assert stdin is None
 
     def test_a_spec_with_no_profile_still_works(self, tmp_path):
-        argv, _ = spec_mod.materialise(
+        argv, _ = spec_mod.materialize(
             {"argv": ["salt-call", "--local", "state.apply"]}, str(tmp_path)
         )
         assert argv == ["salt-call", "--local", "state.apply"]
@@ -204,7 +204,7 @@ class TestPlaceholdersAndLayout:
         # Salt's minion config needs root_dir to point at the workdir. argv-only
         # substitution left a literal "{workdir}" in the file, and salt-call
         # died with "expected str, bytes or os.PathLike object, not dict".
-        spec_mod.materialise(
+        spec_mod.materialize(
             spec(files=[{"name": "minion", "content": "root_dir: {workdir}\n"}]),
             str(tmp_path),
         )
@@ -216,7 +216,7 @@ class TestPlaceholdersAndLayout:
         # The profile is the operator's own text. Rewriting braces inside it
         # would corrupt a manifest that legitimately contains them.
         body = "notify { 'literal {workdir} stays': }"
-        spec_mod.materialise(
+        spec_mod.materialize(
             spec(profile={"name": "site.pp", "content": body}), str(tmp_path)
         )
         assert (tmp_path / "site.pp").read_text(encoding="utf-8") == body
@@ -224,7 +224,7 @@ class TestPlaceholdersAndLayout:
     def test_a_nested_profile_path_is_created(self, tmp_path):
         # Chef resolves a runlist to cookbooks/<name>/recipes/default.rb, so
         # the spec must be able to nest rather than being flattened.
-        argv, _ = spec_mod.materialise(
+        argv, _ = spec_mod.materialize(
             spec(
                 profile={
                     "name": "cookbooks/profile/recipes/default.rb",
@@ -239,7 +239,7 @@ class TestPlaceholdersAndLayout:
 
     def test_a_nested_name_still_cannot_escape_the_workdir(self, tmp_path):
         # Nesting is allowed; traversal is not.
-        spec_mod.materialise(
+        spec_mod.materialize(
             spec(profile={"name": "../../../etc/evil.conf", "content": "x"}),
             str(tmp_path),
         )

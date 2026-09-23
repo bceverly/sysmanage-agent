@@ -57,7 +57,7 @@ class TestCollectProcesses:
     """Tests for ProcessCollector.collect_processes."""
 
     def test_normalises_and_scales_cpu(self, collector):
-        """A process row is normalised and CPU% is scaled by core count."""
+        """A process row is normalized and CPU% is scaled by core count."""
         proc = _fake_proc(1234, "python3", cpu=80.0, mem=2.5, rss=2048)
         with patch.object(
             process_collection.psutil, "process_iter", return_value=[proc]

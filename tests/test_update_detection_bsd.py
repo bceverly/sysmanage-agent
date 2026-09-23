@@ -402,7 +402,7 @@ class TestDetectOpenbsdSystemUpdates:
     """Tests for _detect_openbsd_system_updates method."""
 
     def test_detect_openbsd_system_updates_available(self, detector):
-        """Test OpenBSD system update detection with patches available — one
+        """Test OpenBSD system update detection with patches available -- one
         update per erratum, keyed by the syspatch patch id."""
         mock_result = Mock()
         mock_result.returncode = 0

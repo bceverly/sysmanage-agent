@@ -26,7 +26,7 @@ shape.  ``REASON_BUILD_EXCLUDED`` is reserved for it.
 DESIGN RULES
 ------------
 1. **A probe may only ever REMOVE a capability.**  It can never add one, so a
-   broken probe degrades to today's behaviour plus a false negative, never to
+   broken probe degrades to today's behavior plus a false negative, never to
    claiming something the agent cannot do.
 2. **Be conservative.**  A missing probe is fine (the capability stays
    advertised, as now); a wrong probe silently disables a working feature,
@@ -156,7 +156,7 @@ _REQUIRED_LOCATORS: Dict[str, Tuple[Callable[..., bool], str]] = {
 def _distro_ids(os_release_path: str = "/etc/os-release") -> frozenset:
     """``{ID}`` plus ``ID_LIKE`` entries from os-release, lowercased.
 
-    A file read, not a subprocess, so it still honours design rule 3.  Empty on
+    A file read, not a subprocess, so it still honors design rule 3.  Empty on
     any platform without the file (macOS, the BSDs, Windows), which makes every
     _REQUIRED_DISTROS entry inapplicable there -- correct, since all of them are
     Linux-distribution facilities.  ID_LIKE is included so Ubuntu derivatives

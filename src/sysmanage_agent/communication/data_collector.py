@@ -424,7 +424,7 @@ class DataCollector(DataCollectorSendersMixin):
         self.logger.debug("Data collector started")
 
         # Wait for the WebSocket handshake to complete before the
-        # first collection — otherwise ``_collect_and_send_periodic_data``
+        # first collection -- otherwise ``_collect_and_send_periodic_data``
         # sees ``self.agent.connected == False`` and bails silently,
         # which is why fresh installs show "OS Updated: never" on the
         # server even hours after the agent connected.  Poll briefly
@@ -510,7 +510,7 @@ class DataCollector(DataCollectorSendersMixin):
 
         The cooldown is deliberately short relative to the collection interval:
         a genuine reason to re-request (the server really did lose the catalog)
-        must still be honoured promptly, so this caps a storm rather than
+        must still be honored promptly, so this caps a storm rather than
         suppressing legitimate traffic.  Skipping is also SAFE-BY-DESIGN only
         because it is time-bounded -- an unbounded "already sent it" cache would
         have HIDDEN the very bug that motivated this.
@@ -697,7 +697,7 @@ class DataCollector(DataCollectorSendersMixin):
     ):
         """Send a delta if the plan allows one; return None to fall through.
 
-        Returning None rather than raising or signalling is what keeps the
+        Returning None rather than raising or signaling is what keeps the
         caller readable: EVERY way a delta can be declined -- the plan says
         full, the diff is empty, or the send itself failed -- ends with the
         full-catalog path, which is always correct and merely larger.

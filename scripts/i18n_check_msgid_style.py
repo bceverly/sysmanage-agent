@@ -18,7 +18,7 @@ English default.  On 2026-08-05 an audit found 40 call sites written as::
 
 which asks gettext for a locale literally named "OpenBAO sealed successfully".
 That raises ``FileNotFoundError`` inside ``get_translation``, falls back to
-``NullTranslations``, and returns the msgid verbatim — so **every one of those
+``NullTranslations``, and returns the msgid verbatim -- so **every one of those
 endpoints returned ``"message": "openbao.sealed"`` to every client in every
 language, including English**, and the .po translations could never be reached.
 
@@ -36,9 +36,9 @@ THE TWO CHECKS
 --------------
 1. **Source (AST).**  Every ``_()`` / ``ngettext()`` call is inspected:
    * a msgid argument that looks like a dotted identifier (``openbao.sealed``)
-     is an error — gettext msgids are English prose;
+     is an error -- gettext msgids are English prose;
    * a second positional argument to ``_()`` that is a string literal and is not
-     a locale code (``de``, ``zh_CN``) is an error — that slot is the language.
+     a locale code (``de``, ``zh_CN``) is an error -- that slot is the language.
    AST, not regex: the original grep missed 8 of the 40 sites purely because
    black had wrapped them across lines.
 
@@ -61,7 +61,7 @@ import sys
 from pathlib import Path
 
 # A gettext msgid should be English prose.  This is the shape of a lookup key:
-# all-lowercase dotted segments, no spaces.  Deliberately strict — it must not
+# all-lowercase dotted segments, no spaces.  Deliberately strict -- it must not
 # fire on real prose that happens to contain a period ("Done. Restarting.")
 # because that has a space, nor on a sentence ending in a period.
 KEY_SHAPED = re.compile(r"^[a-z0-9_]+(?:\.[a-z0-9_]+)+$")
@@ -101,13 +101,13 @@ def _callee(node: ast.Call) -> str | None:
 
 # The escape hatch, for a msgid that is genuinely dynamic at the call site.
 # It must still be marked with N_ wherever the text is DEFINED, or it will not
-# be in the catalog — this only silences the call site.  Requiring a reason
+# be in the catalog -- this only silences the call site.  Requiring a reason
 # keeps it from becoming a reflex.
-SUPPRESS = re.compile(r"#\s*i18n:\s*dynamic\b\s*(?:[-—]\s*\S+)")
+SUPPRESS = re.compile(r"#\s*i18n:\s*dynamic\b\s*(?:-{1,2}\s*\S+)")
 
 
 def _suppressed(lines: list[str], lineno: int) -> bool:
-    """True if the call carries ``# i18n: dynamic — <reason>`` on or above it."""
+    """True if the call carries ``# i18n: dynamic -- <reason>`` on or above it."""
     for idx in (lineno - 1, lineno - 2):
         if 0 <= idx < len(lines) and SUPPRESS.search(lines[idx]):
             return True
@@ -117,7 +117,7 @@ def _suppressed(lines: list[str], lineno: int) -> bool:
 def _is_gettext_internal(node: ast.Call) -> bool:
     """``translation.gettext(message)`` inside the i18n package itself.
 
-    Those ARE the gettext API being called with a variable, by definition —
+    Those ARE the gettext API being called with a variable, by definition --
     flagging them would mean the module that implements ``_()`` can never
     satisfy the gate that guards ``_()``.
     """
@@ -136,7 +136,7 @@ def _const_str(node: ast.expr) -> str | None:
 
 
 def collect_marked(root: Path) -> set[str]:
-    """Names assigned from ``N_("...")`` — legitimately deferred msgids.
+    """Names assigned from ``N_("...")`` -- legitimately deferred msgids.
 
     ``_(SOME_CONST)`` is only safe when the constant's text was marked with
     ``N_`` at its definition, because that is what puts it in the .pot.  These
@@ -196,14 +196,14 @@ def check_sources(root: Path) -> list[str]:
                     # xgettext only extracts STRING LITERALS.  `_(SOME_CONST)`
                     # puts nothing in the .pot, so the msgid never reaches a
                     # catalog and gettext returns the constant's value verbatim
-                    # — in every language, English included.  This is how
+                    # -- in every language, English included.  This is how
                     # `_(OPENBAO_NOT_RUNNING_KEY)` shipped the literal
                     # "openbao.not_running" to users from 4 call sites, with
                     # every gate green: msgcmp cannot miss a msgid that was
                     # never extracted in the first place.
                     problems.append(
                         f"{path}:{node.lineno}: msgid of {_callee(node)}() is not "
-                        f"a string literal ({ast.dump(arg)[:60]}…) — xgettext "
+                        f"a string literal ({ast.dump(arg)[:60]}…) -- xgettext "
                         "cannot extract it, so it can never be translated"
                     )
                 elif KEY_SHAPED.match(value):
@@ -217,7 +217,7 @@ def check_sources(root: Path) -> list[str]:
                 if value is not None and not LOCALE_CODE.match(value):
                     problems.append(
                         f"{path}:{node.lineno}: positional arg {lang_idx} of "
-                        f"{_callee(node)}() is the LANGUAGE, but got {value!r} — "
+                        f"{_callee(node)}() is the LANGUAGE, but got {value!r} -- "
                         "this is not an i18next-style English default"
                     )
     return problems
@@ -254,7 +254,7 @@ Then re-sync and re-fill the catalogs:
     make i18n-compile-backend
 
 If a catalog already holds translations keyed on the OLD dotted msgid, discard
-them — they are translations OF THE KEY (German literally had
+them -- they are translations OF THE KEY (German literally had
 "openbao.bereits_laufen"), not of the English.
 
 NOTE: the frontend's t('some.key', 'English default') IS correct i18next and is
@@ -276,7 +276,7 @@ def main() -> int:
 
     if problems:
         print(
-            f"FAIL: {len(problems)} gettext msgid-style problem(s) — a lookup key "
+            f"FAIL: {len(problems)} gettext msgid-style problem(s) -- a lookup key "
             "is being used where English prose belongs.",
             file=sys.stderr,
         )

@@ -46,7 +46,7 @@ from typing import Dict, Optional, Tuple
 # Above this share of the catalog, a full send is cheaper than the diff.
 MAX_DELTA_FRACTION = 0.30
 
-# However well deltas are going, re-synchronise this often.  Bounds how long a
+# However well deltas are going, re-synchronize this often.  Bounds how long a
 # missed change can persist, and costs one full send a week.
 FULL_RECONCILE_AFTER_DAYS = 7
 
@@ -62,7 +62,7 @@ REASON_CHANGED = "changed"
 
 
 def _index(package_managers: Dict[str, list]) -> Dict[Tuple[str, str], str]:
-    """{(manager, name): version} — the identity the server stores."""
+    """{(manager, name): version} -- the identity the server stores."""
     out = {}
     for manager, packages in (package_managers or {}).items():
         for pkg in packages or []:
@@ -150,7 +150,7 @@ def build_delta_plan(
     if not server_fingerprint or server_fingerprint != snapshot_fingerprint:
         return {**plan, "mode": MODE_FULL, "reason": REASON_FINGERPRINT_MISMATCH}
 
-    # Periodic re-synchronisation, so drift cannot accumulate indefinitely.
+    # Periodic re-synchronization, so drift cannot accumulate indefinitely.
     if snapshot_sent_at is not None:
         sent_at = snapshot_sent_at
         if sent_at.tzinfo is None:

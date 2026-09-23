@@ -7,7 +7,7 @@ the default `.git/hooks/` which is not version-controlled).
 ## Installation
 
 Run `make install-hooks` from the repo root once after cloning.  It
-sets `core.hooksPath = .githooks` for this clone — idempotent, safe to
+sets `core.hooksPath = .githooks` for this clone -- idempotent, safe to
 re-run.  `make install-dev` runs `make install-hooks` automatically as
 its last step, so for most contributors there's nothing to do beyond
 the normal setup workflow.
@@ -25,5 +25,5 @@ run will fail the same way so the bypass only delays the fix.
 ## Bypassing the install (not recommended)
 
 If for any reason you don't want the hooks active in your clone, run
-`git config --unset core.hooksPath` — but please don't push without
+`git config --unset core.hooksPath` -- but please don't push without
 running `make lint` first, or CI will reject the change anyway.

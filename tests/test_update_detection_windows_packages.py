@@ -6,7 +6,7 @@
 Tests for sysmanage_agent.collection.update_detection_windows_packages.
 
 The mixin parses winget/choco/scoop output via column-positional logic.
-Mocked at the subprocess level — the parsing helpers are exercised both
+Mocked at the subprocess level -- the parsing helpers are exercised both
 directly (pure-text parsing) and through the orchestration methods.
 """
 
@@ -91,7 +91,7 @@ class TestFieldExtraction:
 
 
 # ---------------------------------------------------------------------------
-# Line parsing — column-aware and fallback
+# Line parsing -- column-aware and fallback
 # ---------------------------------------------------------------------------
 
 
@@ -121,7 +121,7 @@ class TestParseWingetLine:
 
 
 # ---------------------------------------------------------------------------
-# _process_winget_update_line — early-return arms
+# _process_winget_update_line -- early-return arms
 # ---------------------------------------------------------------------------
 
 
@@ -149,7 +149,7 @@ class TestProcessWingetUpdateLine:
 
 
 # ---------------------------------------------------------------------------
-# _detect_winget_updates — orchestration
+# _detect_winget_updates -- orchestration
 # ---------------------------------------------------------------------------
 
 
@@ -255,7 +255,7 @@ class TestDetectScoopUpdates:
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_scoop_updates()
-        # One match — git:Update.
+        # One match -- git:Update.
         assert any(u["package_name"] == "git:" for u in detector.available_updates)
 
     def test_subprocess_exception_logged(self, detector):
@@ -267,12 +267,12 @@ class TestDetectScoopUpdates:
 
 
 # ---------------------------------------------------------------------------
-# _detect_microsoft_store_updates — placeholder
+# _detect_microsoft_store_updates -- placeholder
 # ---------------------------------------------------------------------------
 
 
 class TestDetectMicrosoftStoreUpdates:
     def test_just_logs(self, detector):
-        # Placeholder — no side effects expected.
+        # Placeholder -- no side effects expected.
         detector._detect_microsoft_store_updates()
         assert detector.available_updates == []

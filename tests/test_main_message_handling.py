@@ -192,7 +192,7 @@ class TestHandleServerError:
     async def test_unknown_error_code_only_logs_top_level(self):
         agent = _agent()
         agent.last_registration_time = None
-        # Doesn't dispatch anywhere — just logs the top-level "Server error" line.
+        # Doesn't dispatch anywhere -- just logs the top-level "Server error" line.
         await agent._handle_server_error(
             {"error_type": "completely_new_code", "message": "?"}
         )
@@ -233,7 +233,7 @@ class TestHandleHostNotRegistered:
         agent.needs_registration = False
         agent.running = True
 
-        # Must not raise — we still want to mark for re-registration.
+        # Must not raise -- we still want to mark for re-registration.
         await agent._handle_host_not_registered()
         agent.logger.error.assert_called()
         # State still mutated despite the clear failure.
@@ -291,7 +291,7 @@ class TestCreateSslContext:
 
 
 # ---------------------------------------------------------------------------
-# _autostart_child_hosts — exception is logged, not raised
+# _autostart_child_hosts -- exception is logged, not raised
 # ---------------------------------------------------------------------------
 
 

@@ -99,7 +99,7 @@ class ServerEndpoint:
         if url:
             split = urlsplit(url if "//" in url else f"//{url}")
             scheme = (split.scheme or "").lower()
-            # The websocket schemes are accepted and normalised to their HTTP
+            # The websocket schemes are accepted and normalized to their HTTP
             # equivalents.  This is not hypothetical: six of the seven shipped
             # config templates say ``url: "wss://sysmanage.example.com:8443"``.
             # Treating an unrecognised scheme as "fall back to use_https" would

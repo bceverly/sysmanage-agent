@@ -19,7 +19,7 @@ survive translation.  Found 2026-08-14 in sysmanage-docs, after a routine
 ``make translate``:
 
   * ``docs.admin.airgap.collection_cycle.step_request`` carries 20 tags in
-    English (10 ``<code>`` pairs) and NONE in Arabic — every command in that
+    English (10 ``<code>`` pairs) and NONE in Arabic -- every command in that
     step renders as ordinary prose for Arabic readers.
   * 660 such values across 13 locales, accumulated over years of runs.
 
@@ -30,13 +30,13 @@ maintainer never sees it at all.
 WHAT IT CHECKS
 --------------
 For every entry whose English contains markup, the multiset of tags in the
-translation must equal the multiset in English — same tag names, same number of
+translation must equal the multiset in English -- same tag names, same number of
 opening and closing tags of each.  Order is deliberately NOT compared: word
 order legitimately differs between languages, so a translator moving
 ``<code>foo</code>`` to the other end of a sentence is correct, while dropping
 it is not.
 
-It cannot catch a tag whose SCOPE moved — the Hindi
+It cannot catch a tag whose SCOPE moved -- the Hindi
 ``server_quickstart.before.ports`` kept both ``<strong>`` tags but wrapped the
 whole sentence instead of the port number, so the entire bullet rendered bold.
 Counts matched, and nothing in the string says what the emphasis was meant to
@@ -214,7 +214,7 @@ def main() -> int:
             print("[OK] nothing to requeue")
             return 0
         # Same requeue used by i18n_strict, so .po and JSON are handled
-        # identically here and there -- one implementation, one behaviour.
+        # identically here and there -- one implementation, one behavior.
         items = [
             (s, lang, path, key, en) for s, lang, path, key, en, _, _ in violations
         ]
@@ -257,7 +257,7 @@ def main() -> int:
     if fixed:
         print(
             f"\nFAIL: {len(fixed)} baseline "
-            f"{'entry' if len(fixed) == 1 else 'entries'} are now clean — "
+            f"{'entry' if len(fixed) == 1 else 'entries'} are now clean -- "
             "the ratchet must tighten.\n"
         )
         for surface, lang, key in sorted(fixed)[: args.limit]:

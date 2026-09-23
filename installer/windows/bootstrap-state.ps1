@@ -9,7 +9,7 @@
 # --------------------
 # "The MSI succeeded but the service is absent" used to be a SILENT state.
 # msiexec returned 0, Add/Remove Programs showed the agent installed, and the
-# only evidence that nothing would ever enrol was a WARNING buried in
+# only evidence that nothing would ever enroll was a WARNING buried in
 # install.log.  Nothing a fleet tool could query, and nothing that would ever
 # reach an operator who did not already suspect a problem.
 #
@@ -18,7 +18,7 @@
 #
 #   * HKLM:\SOFTWARE\SysManage\Agent  -- machine-readable, survives reboots,
 #     and is what a management tool (including SysManage itself, once a host
-#     enrols) can read to answer "did this install actually finish?".
+#     enrolls) can read to answer "did this install actually finish?".
 #   * The Application event log, source "SysManageAgent" -- what an
 #     administrator looks at without being told to.
 #

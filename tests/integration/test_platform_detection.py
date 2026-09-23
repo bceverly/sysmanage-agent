@@ -24,7 +24,7 @@ import pytest
 
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 
-# Set of OS names we care about — keep this in sync with the workflow
+# Set of OS names we care about -- keep this in sync with the workflow
 # matrix.  The integration suite needs to know "what host am I on" so
 # OS-specific tests can opt themselves in/out.
 KNOWN_BSDS = {"FreeBSD", "OpenBSD", "NetBSD"}
@@ -33,7 +33,7 @@ KNOWN_OSES = {"Linux", "Darwin", "Windows"} | KNOWN_BSDS
 
 @pytest.mark.integration
 def test_platform_system_is_recognised():
-    """The agent is meant to run on a known OS family — assert that."""
+    """The agent is meant to run on a known OS family -- assert that."""
     actual = platform.system()
     assert actual in KNOWN_OSES, (
         f"platform.system()={actual!r} is not in our supported set; "
@@ -81,7 +81,7 @@ def test_is_running_privileged_returns_bool():
 @pytest.mark.integration
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX-only check")
 def test_unprivileged_runner_is_unprivileged():
-    """A normal CI runner runs as a non-root user — verify the detector agrees.
+    """A normal CI runner runs as a non-root user -- verify the detector agrees.
 
     GitHub-hosted runners run as `runner` (uid 1001 on Linux).  BSD QEMU
     images for cross-platform-actions run as `runner` too.  None are root.

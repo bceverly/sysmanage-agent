@@ -523,7 +523,7 @@ class TestMessageHandlerEnhanced:  # pylint: disable=too-many-public-methods
     @pytest.mark.asyncio
     async def test_handle_host_not_registered_single_strike_preserves_identity(self):
         """A single (potentially spurious) host_not_registered must NOT wipe the
-        host's identity — it reconnects with host_id intact so the server can
+        host's identity -- it reconnects with host_id intact so the server can
         re-resolve the tenant."""
         self.mock_agent.bump_host_not_registered_strike.return_value = 1
 

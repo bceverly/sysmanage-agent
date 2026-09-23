@@ -313,7 +313,7 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
 
         When set, the agent includes this key in its initial /host/register
         POST.  The server validates against the RegistrationKey table and
-        — if the key is valid and ``auto_approve=True`` — skips the manual
+        -- if the key is valid and ``auto_approve=True`` -- skips the manual
         approval gate and enrolls the host into the key's access group.
 
         Read from ``security.registration_key`` in the YAML config.
@@ -329,7 +329,7 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
 
         When set, the agent includes this token in its initial /host/register
         POST.  On a multi-tenant server the token both authorizes the
-        registration and selects which tenant the host enrols into — the
+        registration and selects which tenant the host enrolls into -- the
         server creates the host's record in that tenant's database and binds
         host->tenant.  Ignored by single-tenant (OSS) servers.
 

@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Native fact provider — ROADMAP Phase 21.1, slice S2.
+Native fact provider -- ROADMAP Phase 21.1, slice S2.
 
 WHAT THIS IS
 ------------
@@ -16,7 +16,7 @@ WHY IT SHIPS BEFORE THE OSQUERY PROVIDER
 ----------------------------------------
 osquery has no port on OpenBSD or NetBSD and no package table on any BSD, so
 if the osquery provider landed first those hosts would go from "collected
-natively today" to "no facts at all" — and nothing would notice until an
+natively today" to "no facts at all" -- and nothing would notice until an
 advisor rule returned nothing for them, which reads as compliant.  This
 provider is therefore the floor everywhere, and osquery is an accelerator on
 the platforms that have it.
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 def _rows(builder: Callable[[], Sequence[Mapping[str, Any]]]) -> List[Dict[str, Any]]:
     """Run a builder, turning a collector failure into an empty table.
 
-    Callers must NOT read this as "measured, found none" — the coverage report
+    Callers must NOT read this as "measured, found none" -- the coverage report
     is what says whether a table is served at all, and a provider that throws
     is reported unsupported there.  This only keeps one broken collector from
     taking down the whole collection pass.
@@ -93,7 +93,7 @@ def build_users(collector) -> List[Dict[str, Any]]:
 
 
 def build_groups(collector) -> List[Dict[str, Any]]:
-    """osquery ``groups`` — note `groupname`, not `group_name`."""
+    """osquery ``groups`` -- note `groupname`, not `group_name`."""
     return [
         {"gid": grp.get("gid"), "groupname": grp.get("group_name")}
         for grp in (collector.get_user_groups() or [])
@@ -101,7 +101,7 @@ def build_groups(collector) -> List[Dict[str, Any]]:
 
 
 def build_user_groups(collector) -> List[Dict[str, Any]]:
-    """osquery ``user_groups`` — (uid, gid) membership pairs.
+    """osquery ``user_groups`` -- (uid, gid) membership pairs.
 
     Our collector gives group NAMES per user, so the names are resolved
     through the group table.  A name that does not resolve yields no row: a
@@ -140,7 +140,7 @@ def _os_release() -> Dict[str, str]:
 
 
 def build_os_version(collector) -> List[Dict[str, Any]]:
-    """osquery ``os_version`` — exactly one row.
+    """osquery ``os_version`` -- exactly one row.
 
     ``platform`` is the DISTRIBUTION, not the kernel. osquery reports
     ``ubuntu``/``debian``/``rhel`` on Linux, taken from os-release ``ID``; we
@@ -379,7 +379,7 @@ def _ipv4_masks_from_ifconfig() -> Dict[str, str]:
 
 
 def build_interface_addresses(_collector=None) -> List[Dict[str, Any]]:
-    """osquery ``interface_addresses`` — ONE ROW PER ADDRESS, from the OS.
+    """osquery ``interface_addresses`` -- ONE ROW PER ADDRESS, from the OS.
 
     Read from ``psutil.net_if_addrs`` rather than the hardware inventory,
     which is shaped for a different question and lost rows osquery has. Two
@@ -434,7 +434,7 @@ def build_interface_addresses(_collector=None) -> List[Dict[str, Any]]:
 
 
 def build_mounts(_collector=None) -> List[Dict[str, Any]]:
-    """osquery ``mounts`` — the MOUNT TABLE, read from the OS.
+    """osquery ``mounts`` -- the MOUNT TABLE, read from the OS.
 
     Not the storage-device inventory, which is what this used to read. The two
     look interchangeable and are not: a disk is not a mount. Measured on
@@ -468,7 +468,7 @@ def build_mounts(_collector=None) -> List[Dict[str, Any]]:
     # about the host, so putting it back is exact rather than a guess.
     #
     # LINUX ONLY, deliberately. That substitution lives in psutil's Linux
-    # backend; on a platform where the same behaviour is not verified, an
+    # backend; on a platform where the same behavior is not verified, an
     # empty device could mean something else entirely, and emitting "none"
     # there would INVENT a fact -- the failure this phase exists to prevent.
     # Found by the S3 conformance run, 2026-09-23 (4 mounts, device only).
@@ -492,7 +492,7 @@ def build_mounts(_collector=None) -> List[Dict[str, Any]]:
 
 
 def build_system_info(collector) -> List[Dict[str, Any]]:
-    """osquery ``system_info`` — exactly one row.
+    """osquery ``system_info`` -- exactly one row.
 
     ``physical_memory`` is BYTES in osquery and megabytes in our collector, so
     it is converted rather than copied.  ``cpu_type`` is the machine
@@ -516,7 +516,7 @@ def build_system_info(collector) -> List[Dict[str, Any]]:
 
 
 def build_available_updates(collector) -> List[Dict[str, Any]]:
-    """``sysmanage_available_updates`` — osquery models installed software,
+    """``sysmanage_available_updates`` -- osquery models installed software,
     not pending updates, so this table is ours."""
     payload = collector.get_available_updates() or {}
     return [
@@ -539,7 +539,7 @@ _PACKAGE_TABLE_MANAGERS = {
     "rpm_packages": {"dnf", "yum", "rpm", "zypper"},
     "homebrew_packages": {"brew", "homebrew"},
     # osquery's ``programs`` IS the Windows registry uninstall list -- the
-    # Add/Remove Programs view. It is not the winget catalogue.
+    # Add/Remove Programs view. It is not the winget catalog.
     #
     # This set used to be {"winget", "chocolatey", "msi", "windows"} and the
     # real manager value is ``windows_registry``, which matched NONE of them,
@@ -614,6 +614,16 @@ def can_enumerate_sockets() -> bool:
         return False
 
 
+# ``socket.AF_UNIX`` does not exist on Windows, and referencing it there is an
+# AttributeError rather than a graceful absence. The value is 1 on every POSIX
+# platform and osquery reports family "1" for a unix socket everywhere, so the
+# fallback is the contract's own answer rather than a guess. Production never
+# reached the attribute on Windows (psutil rejects kind="unix" there and the
+# caller returns early), but a mocked test did -- and a constant that only
+# resolves on some platforms is a trap regardless of who trips it first.
+_AF_UNIX = int(getattr(socket, "AF_UNIX", 1))
+
+
 def _unix_listeners() -> List[Dict[str, Any]]:
     """AF_UNIX listening sockets, shaped exactly as osquery reports them.
 
@@ -657,7 +667,7 @@ def _unix_listeners() -> List[Dict[str, Any]]:
                 "port": 0,
                 "address": "",
                 "protocol": 0,
-                "family": int(socket.AF_UNIX),
+                "family": _AF_UNIX,
                 "path": path,
                 "fd": getattr(conn, "fd", None),
             }

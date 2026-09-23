@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Run a query pack against this host's facts — ROADMAP Phase 21.1, slice S4.
+"""Run a query pack against this host's facts -- ROADMAP Phase 21.1, slice S4.
 
 S1-S3 built the substrate: a contract of osquery-schema tables, a native
 provider that fills them everywhere, an osquery provider that fills them
@@ -80,7 +80,7 @@ def _materialize(
     """Build the requested tables. Returns {table: reason} for those we cannot.
 
     The provider is chosen per table by the coverage advertisement, so this
-    honours exactly the same decision the server was told about -- a host that
+    honors exactly the same decision the server was told about -- a host that
     advertised ``users: osquery`` reads users through osquery here.
     """
     served = (coverage or {}).get("served") or {}
@@ -127,7 +127,7 @@ def _materialize(
 
 
 def _run_one(store: FactStore, query: Mapping[str, Any], refused: Mapping[str, str]):
-    """Execute one query. Never raises — a bad query fails only itself."""
+    """Execute one query. Never raises -- a bad query fails only itself."""
     name = str(query.get("name") or "")
     required = list(query.get("required_tables") or [])
 

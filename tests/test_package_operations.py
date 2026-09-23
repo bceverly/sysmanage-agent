@@ -43,7 +43,7 @@ class TestPackageOperations:
             return_value=mock_host_approval
         )
 
-        # Mock send_message — the agent's outbound queue path.  Both
+        # Mock send_message -- the agent's outbound queue path.  Both
         # _send_installation_completion and _send_installation_status_update
         # go through this; tests assert send_message rather than the
         # removed call_server_api HTTP helper.

@@ -13,7 +13,7 @@ phases.
 Why this lives in the agent test suite rather than the Pro+ engine:
 the Pro+ ``container_engine`` ships *plan-builder* tests that lock
 down the shape of the plans (argv, timeout, description envelope).
-This integration test closes the loop — it confirms that an
+This integration test closes the loop -- it confirms that an
 apply_deployment_plan invocation actually drives a container through
 its states on a host where LXD is installed.  The plans the engine
 emits and the plans this test builds are byte-equivalent (same
@@ -31,7 +31,7 @@ The legacy agent class ``LxdOperations`` that the original ROADMAP
 Phase 4 line 938 test drove was removed during the Phase 2 migration
 to the Pro+ ``container_engine``.  This rewrite tests the same
 *observable* lifecycle but routes through ``apply_deployment_plan``
-— the current runtime path.
+-- the current runtime path.
 """
 
 # pylint: disable=missing-function-docstring,redefined-outer-name,protected-access
@@ -78,7 +78,7 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
         not _lxd_available(),
-        reason="LXD daemon not available — install lxd and run `lxc list` once before running this suite",
+        reason="LXD daemon not available -- install lxd and run `lxc list` once before running this suite",
     ),
 ]
 
@@ -132,7 +132,7 @@ def _build_lxd_plan(action: str, container_name: str) -> dict:
     ``build_lxd_delete_plan`` output shape exactly.
 
     Keeping this inline in the test (vs. importing the engine) means
-    the agent test suite has no Pro+ dependency — the test ships in
+    the agent test suite has no Pro+ dependency -- the test ships in
     OSS agents and runs on every LXD-equipped host without needing
     the Pro+ binary installed.  If the engine's plan shape ever
     drifts from this template the engine-side plan-builder tests
@@ -182,7 +182,7 @@ def deployment() -> GenericDeployment:
 
     ``apply_deployment_plan`` only reaches into ``self.agent`` for the
     ``install_package`` / ``uninstall_packages`` / ``message_processor``
-    hooks — none of those fire for plans that contain only ``commands``,
+    hooks -- none of those fire for plans that contain only ``commands``,
     which is the only shape this test exercises.  So a bare Mock is
     enough.
     """
@@ -202,7 +202,7 @@ def alpine_container() -> Iterator[str]:
 
     Container name is randomised so concurrent test runs don't
     collide on a shared LXD daemon.  The image is pinned to
-    ``images:alpine/3.20`` for reproducibility — bump deliberately
+    ``images:alpine/3.20`` for reproducibility -- bump deliberately
     if the upstream image drops.
     """
     name = f"sysmanage-test-{uuid.uuid4().hex[:8]}"
@@ -231,7 +231,7 @@ def alpine_container() -> Iterator[str]:
     try:
         yield name
     finally:
-        # Best-effort cleanup — even if the test killed/deleted the
+        # Best-effort cleanup -- even if the test killed/deleted the
         # container, ``--force`` is idempotent against missing.
         subprocess.run(
             ["lxc", "delete", name, "--force"], capture_output=True, check=False
@@ -250,7 +250,7 @@ def _run(deployment: GenericDeployment, plan: dict) -> dict:
     Python 3.14 (it raises ``RuntimeError`` when there is no running
     or current loop), so we always spin a fresh loop, run the
     coroutine to completion, and tear it down.  This works
-    identically on 3.9–3.14 and keeps the test synchronous so the
+    identically on 3.9-3.14 and keeps the test synchronous so the
     polling helpers like ``_wait_for_state`` can sit alongside it
     without an ``@pytest.mark.asyncio`` wrapper.
     """
@@ -328,7 +328,7 @@ class TestLxdLifecycle:
         """Idempotency contract: lxc returns non-zero when asked to
         stop an already-stopped container, and the plan-builder uses
         ``ignore_errors=False`` for lifecycle calls.  Server-side
-        callers are expected to verify state before dispatch — this
+        callers are expected to verify state before dispatch -- this
         test locks in that the agent surfaces the failure rather than
         masking it."""
         subprocess.run(
@@ -349,7 +349,7 @@ class TestLxdLifecycle:
         injection through apply_deployment_plan."""
         # Hand-roll a plan with a tainted name (skipping the safe-name
         # validation the engine would normally apply).  The plan
-        # *itself* is well-formed — the test asserts that even when
+        # *itself* is well-formed -- the test asserts that even when
         # the agent runs such a plan, lxc exits non-zero on the bad
         # name and no shell expansion happens.
         plan = {
@@ -376,7 +376,7 @@ class TestLxdLifecycle:
             canary_fh.write("intact")
         try:
             _run(deployment, plan)
-            # Canary must still exist — if shell expansion had run,
+            # Canary must still exist -- if shell expansion had run,
             # `rm -rf` would have deleted it.
             assert os.path.exists(
                 canary

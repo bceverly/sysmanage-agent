@@ -8,7 +8,7 @@ Tests for the thin script-execution shim.
 The agent's script_operations.py was reduced in Phase 5 to a translator
 that reformats legacy ``execute_script`` messages into deploy plans for
 the existing apply_deployment_plan handler.  These tests cover the new
-shape only — shell detection / subprocess management is now the server's
+shape only -- shell detection / subprocess management is now the server's
 job and is exercised in:
   * sysmanage-professional-plus/module-source/automation_engine tests
   * sysmanage/tests/test_script_plan_builder.py

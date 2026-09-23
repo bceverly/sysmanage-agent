@@ -36,7 +36,7 @@ class SystemOperations:  # pylint: disable=too-many-instance-attributes
         self.system_control = SystemControl(agent_instance)
         self.package_ops = PackageOperations(agent_instance)
         # ``self.otel_ops`` (legacy OpenTelemetryOperations) was
-        # removed in the Phase 10.2 step 7 close-out — every OTEL
+        # removed in the Phase 10.2 step 7 close-out -- every OTEL
         # operation now flows through the Pro+ observability_engine
         # plan-builders + apply_deployment_plan.
         self.repo_ops = ThirdPartyRepositoryOperations(agent_instance)

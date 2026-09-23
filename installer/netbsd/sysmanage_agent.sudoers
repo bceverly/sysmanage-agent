@@ -4,7 +4,7 @@
 # Permissions: 0440 (enforced by package installer)
 #
 # The agent runs as the ``sysmanage-agent`` user when ``sysmanage_agent_user``
-# is set in /etc/rc.conf — see installer/netbsd/sysmanage_agent.rc.
+# is set in /etc/rc.conf -- see installer/netbsd/sysmanage_agent.rc.
 #
 # That account is deliberately NOT the bare "sysmanage" account: these grants
 # are root-equivalent in practice (install(1), chmod(1), chown(8), sed(1) with
@@ -23,7 +23,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_add *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_delete *
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
-# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# rsync is the snapshot + restore workhorse -- without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/rsync

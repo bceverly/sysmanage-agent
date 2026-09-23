@@ -119,7 +119,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             expected_sha256: hex digest the content must match. If provided and
                 the SHA-256 of the content doesn't match, the deployment is
                 rejected without touching the filesystem. After the atomic
-                rename, the on-disk file's hash is verified to match — if not,
+                rename, the on-disk file's hash is verified to match -- if not,
                 the deployment is rolled back from backup (or the file is
                 removed if no backup existed).
             backup: bool, default False. If True and the target path already
@@ -148,7 +148,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             except PermissionError:
                 # Agent can't create the parent dir as its unprivileged
                 # user (e.g. /var/mirror/<name> when /var/mirror is
-                # root-owned).  Don't fail here — ``_write_via_sudo``
+                # root-owned).  Don't fail here -- ``_write_via_sudo``
                 # uses ``install -D`` which creates intermediate
                 # directories as root, so a missing parent is fine
                 # as long as we fall through to that path.
@@ -250,7 +250,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
         where the agent runs as the unprivileged ``sysmanage-agent`` user).
         Triggered by ``PermissionError`` from the unprivileged path OR when
         the spec declares root ownership and the directory isn't agent-
-        writable — keeps the unprivileged fast path for user-owned drops.
+        writable -- keeps the unprivileged fast path for user-owned drops.
         """
         try:
             file_descriptor, tmp_path = tempfile.mkstemp(
@@ -275,7 +275,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             # ``newline=""`` disables Python's universal-newlines
             # translation on the write side.  Without it, Python in
             # text mode on Windows converts every ``\n`` in ``content``
-            # to ``\r\n`` on disk — which then breaks the post-write
+            # to ``\r\n`` on disk -- which then breaks the post-write
             # SHA-256 verification (the server computed the hash from
             # the LF-only bytes; the on-disk bytes have extra CRs).
             # Same fix applies regardless of whether content itself
@@ -291,7 +291,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 if content and not content.endswith("\n"):
                     await temp_file.write("\n")
             os.chmod(tmp_path, mode)
-            # os.chown is Unix-only — Python doesn't even expose the
+            # os.chown is Unix-only -- Python doesn't even expose the
             # attribute on Windows.  Skip it there; the file's owner is
             # whatever the agent process is running as, which is what we
             # want anyway (Windows uses ACLs, not numeric UID/GID, and
@@ -302,7 +302,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             # ``os.replace`` rather than ``os.rename``: rename refuses
             # to overwrite an existing destination on Windows
             # (WinError 183), which breaks every re-deploy.  replace
-            # is the documented cross-platform atomic rename — same
+            # is the documented cross-platform atomic rename -- same
             # semantics as rename on POSIX, allows replace on Windows.
             os.replace(tmp_path, dest_path)
         except PermissionError:
@@ -340,7 +340,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             # ``newline=""`` disables Python's universal-newlines
             # translation on the write side.  Without it, Python in
             # text mode on Windows converts every ``\n`` in ``content``
-            # to ``\r\n`` on disk — which then breaks the post-write
+            # to ``\r\n`` on disk -- which then breaks the post-write
             # SHA-256 verification (the server computed the hash from
             # the LF-only bytes; the on-disk bytes have extra CRs).
             # Same fix applies regardless of whether content itself
@@ -355,7 +355,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 await temp_file.write(content)
                 if content and not content.endswith("\n"):
                     await temp_file.write("\n")
-            # 0o600 — staging file lives in /tmp briefly before
+            # 0o600 -- staging file lives in /tmp briefly before
             # ``sudo install`` copies it to dest_path with the spec's
             # final mode.  Owner-only on the staged copy denies other
             # /tmp users a read window even though the destination
@@ -392,7 +392,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 # ``$TEMP`` / ``$TMP`` and falls back to the platform
                 # default (``/tmp`` on Unix, ``%TEMP%`` on Windows)
                 # without a hardcoded literal.  We use this only as
-                # ``cwd=`` for the subprocess — no temp file is
+                # ``cwd=`` for the subprocess -- no temp file is
                 # created here.
                 shim_cwd = tempfile.gettempdir()
             shim_env = os.environ.copy()

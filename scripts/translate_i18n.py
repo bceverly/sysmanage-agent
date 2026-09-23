@@ -4,11 +4,11 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-translate_i18n.py — idempotent i18n translation backfill for THIS project,
+translate_i18n.py -- idempotent i18n translation backfill for THIS project,
 via the SysManage GPU translation service.
 
 Finds the untranslated strings in this repo's locale store, batch-translates the
-gaps through the service, and writes them back — only ever sending strings that
+gaps through the service, and writes them back -- only ever sending strings that
 are NOT yet translated, so re-running is cheap and resumable.  The service lives
 in the sysmanage repo at ``scripts/translation-service/`` (run it on the GPU box).
 
@@ -63,7 +63,7 @@ TARGET_LANGS = [
 # English because it couldn't translate safely".
 _HAS_LETTER = re.compile(r"[^\W\d_]", re.UNICODE)
 
-# Placeholder/markup tokens — used to distinguish a placeholder-fallback
+# Placeholder/markup tokens -- used to distinguish a placeholder-fallback
 # (identical output because the service couldn't translate a {{…}}/%s/<tag>
 # safely) from a legitimately-identical term (acronyms like URL/IPv4 or words
 # the model keeps as-is, e.g. "Details"). Only the former is held back to retry.
@@ -199,7 +199,7 @@ def _allow():
 
     Returning None here silently disabled the allow-list for the WHOLE pass.
     On 2026-08-05 this resolver probed ``scripts/scripts/i18n_strict.py`` (the
-    parent was already ``scripts/``), found nothing, and fell back to None — so
+    parent was already ``scripts/``), found nothing, and fell back to None -- so
     every intentionally-English value was re-sent to the service on every run
     AND counted as a permanent gap by ``--check``, while ``i18n_strict.py``,
     which reads the same list correctly, reported OK.  Two gates, two answers,
@@ -238,7 +238,7 @@ def _needs_translation(key: str, en_src: str, value, lang: str) -> bool:
     The second half is the whole point: `make translate` used to look ONLY for
     gaps, so a string that came back English once was invisible to every
     subsequent run and stayed English forever.  There is deliberately NO
-    minimum length — a short label is as user-facing as a paragraph, and a
+    minimum length -- a short label is as user-facing as a paragraph, and a
     length floor is an invisible exemption nobody reviews.  Values that should
     stay English belong in i18n-allow.txt, where the decision is explicit.
     """
@@ -272,7 +272,7 @@ def run_json(
     for lang in langs:
         path = base / template.format(lang=lang)
         if not path.exists():
-            print(f"  {lang}: file missing ({path}) — skipped", flush=True)
+            print(f"  {lang}: file missing ({path}) -- skipped", flush=True)
             continue
         doc = json.loads(path.read_text(encoding="utf-8"))
         lang_flat = _flatten(doc)
@@ -347,11 +347,11 @@ def run_po(
     try:
         import polib  # noqa: PLC0415
     except ImportError:
-        sys.exit("ERROR: the .po driver needs polib — run: pip install polib")
+        sys.exit("ERROR: the .po driver needs polib -- run: pip install polib")
     for lang in langs:
         path = base / template.format(lang=lang)
         if not path.exists():
-            print(f"  {lang}: file missing ({path}) — skipped", flush=True)
+            print(f"  {lang}: file missing ({path}) -- skipped", flush=True)
             continue
         po = polib.pofile(str(path))
         # Same self-heal for gettext: an allow-listed msgid with an empty
@@ -375,7 +375,7 @@ def run_po(
                     flush=True,
                 )
 
-        # Empty msgstr OR one left identical to the msgid — the latter was
+        # Empty msgstr OR one left identical to the msgid -- the latter was
         # invisible to every previous run, so it stayed English forever.
         gap_entries = [
             e
@@ -428,7 +428,7 @@ def scan_gaps(
 ) -> Dict[str, List[str]]:
     """Re-read the locale files on disk and return {lang: [untranslated keys]}.
 
-    Authoritative — reads what was actually written, so it reflects strings the
+    Authoritative -- reads what was actually written, so it reflects strings the
     service held back (placeholder fallbacks) as well as any never filled."""
     result: Dict[str, List[str]] = {}
     if fmt == "json":
@@ -484,12 +484,12 @@ def enforce_no_gaps(base: Path, template: str, langs: List[str], fmt: str) -> No
     """Exit NON-ZERO, loudly, if any locale still has untranslated strings.
 
     Wired into ``make translate`` so an incomplete locale set fails the build
-    instead of quietly sliding through — translations must be 100%."""
+    instead of quietly sliding through -- translations must be 100%."""
     offenders = {l: ks for l, ks in scan_gaps(base, template, langs, fmt).items() if ks}
     if not offenders:
         print(
             f"[OK] {PROJECT}: 0 untranslated gaps in {len(langs)} locale(s).\n"
-            "  (Gaps only — this does NOT check translation QUALITY.  Run\n"
+            "  (Gaps only -- this does NOT check translation QUALITY.  Run\n"
             "   `make i18n-strict` for English-identical / stale / wrong-language.)",
             flush=True,
         )
@@ -499,7 +499,7 @@ def enforce_no_gaps(base: Path, template: str, langs: List[str], fmt: str) -> No
     lines = [
         "",
         sep,
-        f"  ✗✗✗  TRANSLATION INCOMPLETE — {PROJECT}: {total} untranslated string(s) "
+        f"  ✗✗✗  TRANSLATION INCOMPLETE -- {PROJECT}: {total} untranslated string(s) "
         f"in {len(offenders)} locale(s)  ✗✗✗",
         sep,
     ]
@@ -545,7 +545,7 @@ def main() -> None:
         "--check",
         action="store_true",
         help="offline completeness gate: scan locales and exit non-zero if any gap "
-        "remains. NO service calls, NO writes — safe for CI / release hooks.",
+        "remains. NO service calls, NO writes -- safe for CI / release hooks.",
     )
     args = ap.parse_args()
 
@@ -562,10 +562,10 @@ def main() -> None:
 
     print(f"project={PROJECT} format={FORMAT} base={base}", flush=True)
 
-    # Offline completeness gate — no service, no writes.  Scans the files on
+    # Offline completeness gate -- no service, no writes.  Scans the files on
     # disk and exits non-zero (loudly) if anything is still untranslated.
     if args.check:
-        print("mode=check (offline — no service calls, no writes)", flush=True)
+        print("mode=check (offline -- no service calls, no writes)", flush=True)
         enforce_no_gaps(base, FILE_TEMPLATE, langs, FORMAT)
         return
 

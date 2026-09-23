@@ -3,13 +3,13 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Watched-file state — ROADMAP Phase 21.1, slice S7.
+Watched-file state -- ROADMAP Phase 21.1, slice S7.
 
 WHAT THIS COLLECTS, AND WHAT IT DELIBERATELY DOES NOT
 -----------------------------------------------------
 A sha256 and the stat metadata for each path in a watch list. **Never the file
 contents.** That single decision is what lets an operator watch
-``/etc/shadow``, a private key or a licence file without those bytes landing in
+``/etc/shadow``, a private key or a license file without those bytes landing in
 the server's database, its API responses, its backups or its logs. The cost is
 real and was accepted knowingly: drift can say THAT a file changed, not WHAT
 changed inside it.

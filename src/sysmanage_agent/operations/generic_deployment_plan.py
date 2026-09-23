@@ -239,7 +239,7 @@ class GenericDeploymentPlanMixin:
                     }
                 )
             else:
-                # uninstall_packages takes a list — wrap the single entry
+                # uninstall_packages takes a list -- wrap the single entry
                 # so the manager hint flows through.
                 result = await self.agent.uninstall_packages(
                     {
@@ -312,17 +312,17 @@ class GenericDeploymentPlanMixin:
 
         timeout = int(spec.get("timeout", 60))
         description = spec.get("description") or " ".join(argv)
-        # Phase 11 B7 — engine plan-description envelope.  Pro+ engines
+        # Phase 11 B7 -- engine plan-description envelope.  Pro+ engines
         # may emit ``description_key`` + ``description_params`` alongside
         # the legacy English ``description`` so the OSS frontend can
         # localize the description.  We pass these through verbatim
-        # (no validation, no rendering) — the OSS resolver decides how
+        # (no validation, no rendering) -- the OSS resolver decides how
         # to display them.
         description_key = spec.get("description_key")
         description_params = spec.get("description_params")
         run_argv = list(argv)
         # ``os.geteuid`` is Unix-only.  On Windows ``spec.get("sudo")``
-        # is meaningless anyway — there's no sudo — so short-circuit
+        # is meaningless anyway -- there's no sudo -- so short-circuit
         # the whole branch when ``geteuid`` isn't available.
         if spec.get("sudo") and hasattr(os, "geteuid") and os.geteuid() != 0:
             run_argv = ["sudo", "-n"] + run_argv
@@ -371,7 +371,7 @@ class GenericDeploymentPlanMixin:
 
         Cancelled by ``_exec_plan_command``'s ``finally`` block once the
         subprocess returns or times out.  No try/except for
-        ``CancelledError`` here — the journal is stateless from the
+        ``CancelledError`` here -- the journal is stateless from the
         watchdog's perspective (``journal_heartbeat`` is a single
         atomic file write owned by ``_exec_plan_command``'s lifetime),
         so we let the cancellation propagate naturally.  This satisfies
@@ -550,7 +550,7 @@ class GenericDeploymentPlanMixin:
         Run each {service, action} pair through the agent's service control.
 
         Groups by action so we issue one service_control call per action
-        with a list of services — matches the existing handler shape.
+        with a list of services -- matches the existing handler shape.
         """
         # Group: {action: [service, ...]}
         grouped: Dict[str, list] = {}

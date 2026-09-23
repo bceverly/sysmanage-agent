@@ -169,7 +169,7 @@ class SysManageAgent(
 
         # Phase 19: let registration advertise what this build can route.
         # Wired here rather than passed to ClientRegistration's constructor
-        # because registration is built earlier (above) — the handler map does
+        # because registration is built earlier (above) -- the handler map does
         # not exist yet at that point.
         self.registration.capability_provider = (
             self.message_processor.get_command_handlers
@@ -333,7 +333,7 @@ class SysManageAgent(
 
     @staticmethod
     def _reset_root_handlers(root_logger: logging.Logger) -> None:
-        """Detach and close every existing root handler (close before remove —
+        """Detach and close every existing root handler (close before remove --
         removeHandler alone leaks the open log file)."""
         for handler in root_logger.handlers[:]:
             handler.close()
@@ -355,7 +355,7 @@ class SysManageAgent(
             or self.config.get_log_native_target(),
             identifier=overrides.get("native_identifier")
             or self.config.get_log_native_identifier(),
-            # Remote-syslog forwarding (Phase 14.5) — only used when the target
+            # Remote-syslog forwarding (Phase 14.5) -- only used when the target
             # is ``syslog_remote``; ignored by the local sinks.
             host=overrides.get("syslog_host") or self.config.get_log_syslog_host(),
             port=overrides.get("syslog_port") or self.config.get_log_syslog_port(),
@@ -477,7 +477,7 @@ class SysManageAgent(
             http_url = endpoint.base_url()
 
             # One SSL context builder for the whole agent -- it is also what
-            # honours ca_bundle, so a corporate TLS-inspecting proxy works here
+            # honors ca_bundle, so a corporate TLS-inspecting proxy works here
             # without anyone having to disable verification.
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
 
@@ -597,7 +597,7 @@ class SysManageAgent(
         return self.host_not_registered_strikes
 
     def reset_host_not_registered_strikes(self) -> None:
-        """Clear the strike count — the server has proven it recognizes this host."""
+        """Clear the strike count -- the server has proven it recognizes this host."""
         self.host_not_registered_strikes = 0
 
     async def _handle_server_error(self, data: Dict[str, Any]) -> None:
@@ -652,7 +652,7 @@ class SysManageAgent(
         Deliberately NOT folded into ServerEndpoint.ssl_context(): this path can
         upgrade to mutual TLS with a client certificate, which the plain REST
         calls never do.  It starts from the shared context so ``ca_bundle`` is
-        honoured here too -- an estate behind a TLS-inspecting proxy needs the
+        honored here too -- an estate behind a TLS-inspecting proxy needs the
         WebSocket to trust that CA just as much as the REST calls do.
         """
         ssl_context = ServerEndpoint(self.config).ssl_context()
@@ -684,7 +684,7 @@ class SysManageAgent(
 
     async def _queue_cleanup_loop(self):
         """Periodically purge old completed queue messages so the local agent DB
-        doesn't grow without bound (the queue is otherwise never pruned — this
+        doesn't grow without bound (the queue is otherwise never pruned -- this
         was observed to reach 21 GB).  Runs daily; first pass after a short delay
         so it doesn't compete with startup."""
         await asyncio.sleep(300)  # let startup settle
@@ -702,7 +702,7 @@ class SysManageAgent(
         sender_task = asyncio.create_task(self.message_handler.message_sender())
         receiver_task = asyncio.create_task(self.message_handler.message_receiver())
         update_checker_task = asyncio.create_task(self.update_checker())
-        # data_collector() is the LOOP variant — it waits for the
+        # data_collector() is the LOOP variant -- it waits for the
         # initial sleep (5 min) BEFORE collecting, which gives the
         # WebSocket handshake time to complete.  Previously this
         # scheduled the one-shot ``_collect_and_send_periodic_data``

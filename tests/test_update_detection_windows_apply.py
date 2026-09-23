@@ -323,7 +323,7 @@ class TestApplyWingetUpdates:
         mock_process.kill = Mock()
 
         # This patches the shared `time` module's time() GLOBALLY, so every
-        # time.time() call draws from side_effect — including the ones inside
+        # time.time() call draws from side_effect -- including the ones inside
         # logging.makeRecord() when the code logs (line 143, and again in the
         # timeout branch).  How many such calls precede `start_time` varies by
         # Python version, so a fixed/repeating VALUE list is unusable: it either

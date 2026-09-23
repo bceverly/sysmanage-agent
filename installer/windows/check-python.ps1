@@ -24,7 +24,7 @@
 # 2. Standalone, with no arguments -- from bootstrap-task.ps1, or from the Pro+
 #    provisioning first-boot script, or by an operator recovering an install.
 #    The MSI transaction is over, so everything installs normally.  This is the
-#    historical behaviour and is deliberately the DEFAULT, so existing callers
+#    historical behavior and is deliberately the DEFAULT, so existing callers
 #    (notably virtualization_engine's windows_unattend.pxi, which invokes this
 #    script with no arguments) keep working untouched.
 #

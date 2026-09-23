@@ -473,7 +473,7 @@ class TestCertificateStoreError:
                 with pytest.raises(PermissionError):
                     cert_store.store_certificates(cert_data)
 
-                # Clean up — restore owner-only rwx so rmtree can
+                # Clean up -- restore owner-only rwx so rmtree can
                 # traverse the test fixture dir.  0o700 satisfies
                 # semgrep's "no widely-permissive chmod" rule while
                 # remaining traversable; 0o644 would block rmtree.

@@ -10,7 +10,7 @@ highest numeric tag across both against every on-disk version marker that
 ships with the running app or with package metadata that isn't
 already auto-bumped by the release workflow.  Local git tags are included
 because a tag just created with ``git tag`` shows there immediately, before
-it has propagated to (and un-cached from) the GitHub tags API — so running
+it has propagated to (and un-cached from) the GitHub tags API -- so running
 ``make lint-version-fix`` right after tagging still sees the new version.
 
 Run as ``make lint-version`` (read-only check) or
@@ -32,7 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # (path relative to repo root, handler kind)
 #
-# Files in packaging/* are intentional stubs at 0.0.0 — CI bumps them
+# Files in packaging/* are intentional stubs at 0.0.0 -- CI bumps them
 # from the git tag at release time and never commits the bumped form
 # back.  They're excluded here on purpose.
 #
@@ -50,7 +50,7 @@ TRACKED_FILES = [
 def _api_tags() -> list[str]:
     """Tag names from the GitHub tags API (page 1, up to 100).
 
-    Returns an empty list on any curl/network/parse failure — the caller falls
+    Returns an empty list on any curl/network/parse failure -- the caller falls
     back to local git tags, and soft-skips only when both sources are empty.
     """
     if not shutil.which("curl"):
@@ -71,8 +71,8 @@ def _api_tags() -> list[str]:
 
 def _local_git_tags() -> list[str]:
     """Local git tags.  A tag just created with ``git tag`` appears here
-    immediately — before it has propagated to (and un-cached from) the GitHub
-    API — so ``make lint-version-fix`` right after tagging sees the new version.
+    immediately -- before it has propagated to (and un-cached from) the GitHub
+    API -- so ``make lint-version-fix`` right after tagging sees the new version.
     Empty on any failure (e.g. a CI shallow checkout without tags), leaving the
     API as the source of truth there.
     """
@@ -98,7 +98,7 @@ def fetch_highest_tag() -> str | None:
     Considers the union of the GitHub tags API and local git tags so a
     just-created local tag isn't missed while the API is still stale/cached.
     Returns None when neither source yields a parseable tag (e.g. offline CI
-    with a shallow checkout) — callers treat None as a soft-skip so
+    with a shallow checkout) -- callers treat None as a soft-skip so
     ``make lint`` doesn't block development.
     """
 
@@ -247,7 +247,7 @@ def main() -> int:
     for rel, kind in TRACKED_FILES:
         path = REPO_ROOT / rel
         if not path.exists():
-            print(f"  ?  {rel}  (missing — skipping)")
+            print(f"  ?  {rel}  (missing -- skipping)")
             continue
         reader, writer = HANDLERS[kind]
         actual = reader(path)

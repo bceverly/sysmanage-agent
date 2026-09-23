@@ -144,7 +144,7 @@ class GpgOperations:
         (root/host) user.
 
         Returns ``(returncode, stdout, stderr)``.  Never raises for the
-        subprocess itself timing out — a timeout returns rc=124 with a note in
+        subprocess itself timing out -- a timeout returns rc=124 with a note in
         stderr.  ``gpg_args`` must NOT contain the armored key material; pass
         the key via a temp file instead.
         """
@@ -153,7 +153,7 @@ class GpgOperations:
         if run_as_user:
             # Build a shell command line for su.  Every argument is quoted so a
             # fingerprint or path with odd characters can't break out.  The key
-            # material is never here — only paths/fingerprints/flags.
+            # material is never here -- only paths/fingerprints/flags.
             inner = " ".join(_shell_quote(a) for a in [gpg_path, *gpg_args])
             if gnupghome:
                 inner = f"GNUPGHOME={_shell_quote(gnupghome)} {inner}"
@@ -287,7 +287,7 @@ class GpgOperations:
     ):
         """Import ``armored_key`` via a transient 0600 temp file.
 
-        Writes the material to a mode-0600 temp file (via the mkstemp fd — not
+        Writes the material to a mode-0600 temp file (via the mkstemp fd -- not
         the sync builtin open(), which blocks the event loop), chowns it to the
         target user when importing into another user's keyring, runs
         ``gpg --batch --import``, and ALWAYS unlinks the temp file.  Returns
@@ -375,7 +375,7 @@ class GpgOperations:
         )
 
         # Delete the secret key first if it exists.  A "no secret key" error is
-        # not a failure — the public-key delete below is the real gate.
+        # not a failure -- the public-key delete below is the real gate.
         if has_private:
             await self._run_gpg(
                 gpg_path,
@@ -423,9 +423,9 @@ class GpgOperations:
         """Resolve the GNUPGHOME + any limitation note for a target.
 
         Returns ``(gnupghome, note, error)``:
-          * host-level (no target_username): (None, None, None) — gpg uses the
+          * host-level (no target_username): (None, None, None) -- gpg uses the
             current user's default keyring.
-          * Windows + target_username: (None, <limitation note>, None) — we
+          * Windows + target_username: (None, <limitation note>, None) -- we
             can't run as another Windows user, so import into the current
             keyring and flag it.
           * Unix + target_username: resolve home, ensure ~/.gnupg; on unknown

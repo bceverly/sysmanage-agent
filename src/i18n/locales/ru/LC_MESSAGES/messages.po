@@ -1643,22 +1643,22 @@ msgstr "Сервер не смог добавить сообщение в оче
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "Сервер сообщил о ошибке host_not_registered (недействительно %(n)d/%(limit)d"
-" раза) — переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
+" раза) -- переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
 "определить этот хост из индекса его тенанта; перезарегистрирую только если "
 "ошибка сохранится."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered сохранилась (%(n)d нарушений) — считаю этот хост "
+"host_not_registered сохранилась (%(n)d нарушений) -- считаю этот хост "
 "действительно отсутствующим; сбрасываю сохранённый host_id и "
 "перезарегистрируюсь."
 
@@ -1683,8 +1683,8 @@ msgstr "Рассылка %s: обновление инвентаря не уда
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "Рассылка %s: неизвестное действие '%s' — игнорируется"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "Рассылка %s: неизвестное действие '%s' -- игнорируется"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

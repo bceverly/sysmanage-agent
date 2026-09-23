@@ -48,7 +48,7 @@ class MessageHandlerQueueMixin:
 
         # Priority mapping based on message type.
         #
-        # ``system_info`` is the WebSocket registration handshake — it
+        # ``system_info`` is the WebSocket registration handshake -- it
         # binds the connection to a host on the server, populates
         # ``connection.hostname`` / ``connection.host_id``, and unlocks
         # processing for every other inbound message type.  It MUST go
@@ -356,7 +356,7 @@ class MessageHandlerQueueMixin:
 
         # Prune completed history.  ``cleanup_old_messages`` has existed (and been
         # unit-tested) since the queue landed, but NOTHING in the agent ever
-        # called it — so message_queue grew without bound for the life of the
+        # called it -- so message_queue grew without bound for the life of the
         # process.  A dev agent reached 11.3 GB in eight days (112,798 completed
         # outbound rows, 83% of it available_packages_batch at ~122 KB each),
         # which is what finally surfaced it: the screenshot VM ran out of disk
@@ -461,8 +461,8 @@ class MessageHandlerQueueMixin:
         }
 
     # Delivered messages are now removed at acknowledgement (see
-    # queue_manager.mark_completed), so this window only governs FAILED rows —
-    # kept for diagnosis — and any legacy ``completed`` rows written by an older
+    # queue_manager.mark_completed), so this window only governs FAILED rows --
+    # kept for diagnosis -- and any legacy ``completed`` rows written by an older
     # agent before that change.
     QUEUE_RETENTION_DAYS = 7
 
@@ -473,7 +473,7 @@ class MessageHandlerQueueMixin:
         """Delete completed queue history older than the retention window.
 
         Best-effort: a failure here must never stop message processing, but it
-        IS logged — silent failure is how this went unnoticed in the first
+        IS logged -- silent failure is how this went unnoticed in the first
         place.
         """
         try:

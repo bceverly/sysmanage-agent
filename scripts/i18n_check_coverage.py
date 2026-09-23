@@ -13,19 +13,19 @@ is wrong, the ``.pot`` and the ``.po`` agree perfectly about a catalog that is
 missing whole files, and every gate stays green.
 
 That is not hypothetical.  The Pro+ engines were originally single ``.pyx``
-files.  The 1000-line-per-file cap later split them into ``.pxi`` includes —
+files.  The 1000-line-per-file cap later split them into ``.pxi`` includes --
 and ``.pxi`` was never added to the extractor's glob.  Cython resolves
 ``include`` at COMPILE time, so xgettext reading the ``.pyx`` sees none of it.
 650 strings across 16 engines dropped out of the extractor's view on the day of
 the split.  Nothing failed: the existing translations sat in the catalogs, so
 runtime was fine, and ``--check`` compared a ``.pxi``-blind pot to a
-``.pxi``-blind po and pronounced them in sync.  The damage was latent — any NEW
+``.pxi``-blind po and pronounced them in sync.  The damage was latent -- any NEW
 string in a ``.pxi`` could never be translated, and the next ``--extract``
 would have marked all 650 obsolete and dropped them from the ``.mo``.
 
 HOW IT CHECKS
 -------------
-It does NOT re-derive the extractor's file list — comparing the extractor to a
+It does NOT re-derive the extractor's file list -- comparing the extractor to a
 second copy of its own configuration would reproduce the same blind spot.
 Instead it runs ``xgettext`` over EVERY plausible source file and compares the
 msgids that come back against the catalog.  Anything xgettext can find in the
@@ -170,7 +170,7 @@ def check() -> int:
             if not found:
                 # No catalog AND nothing to extract: this surface simply has no
                 # translatable text.  Let xgettext be the judge of that rather
-                # than a substring guess — every engine defines a `def _(s)`
+                # than a substring guess -- every engine defines a `def _(s)`
                 # translator shim, so "contains _(" is not evidence of a string.
                 continue
             problems.append(
@@ -197,7 +197,7 @@ def check() -> int:
         print(
             "\nHow to fix\n"
             "----------\n"
-            "Usually the extractor's file glob has drifted from reality — a new\n"
+            "Usually the extractor's file glob has drifted from reality -- a new\n"
             "file extension, a new directory, or code moved into an include that\n"
             "the extractor does not read.  Widen the extractor's source list, then\n"
             "re-extract and translate:\n"
@@ -206,7 +206,7 @@ def check() -> int:
             "  make translate SERVICE=http://<gpu-box>:8765\n"
             "  make i18n-compile-backend\n"
             "\n"
-            "If a string genuinely should not ship, do not silence it here — stop\n"
+            "If a string genuinely should not ship, do not silence it here -- stop\n"
             "wrapping it in _().\n",
             file=sys.stderr,
         )
@@ -221,7 +221,7 @@ def main() -> int:
     if subprocess.run(  # nosec B603 B607
         ["sh", "-c", "command -v xgettext"], capture_output=True, check=False
     ).returncode:
-        print("[skip] i18n-check-coverage: GNU gettext not installed — skipped")
+        print("[skip] i18n-check-coverage: GNU gettext not installed -- skipped")
         return 0
     return check()
 

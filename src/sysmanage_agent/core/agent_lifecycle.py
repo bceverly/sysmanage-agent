@@ -10,7 +10,7 @@ this agent thinks it is, start the pre-connection background services, and
 report which authentication it will actually use.
 
 Extracted from main.py for two reasons.  ``run()`` had grown to a cognitive
-complexity of 18 against a limit of 15 (SonarQube, main.py:870) — it was doing
+complexity of 18 against a limit of 15 (SonarQube, main.py:870) -- it was doing
 banner logging, service start-up, registration, certificate reporting and the
 reconnect loop in one body.  And main.py sits against a hard 1000-line gate, so
 the extraction has to leave the file rather than just move within it.
@@ -56,7 +56,7 @@ class AgentLifecycleMixin:
         # Phase 12.7: launch the public-IP refresh service.  Fires an immediate
         # fetch so the first heartbeat carries the value, then re-fetches every
         # 24h to catch dynamic-IP rotations.  On airgapped agents the fetch
-        # silently returns None and the heartbeat just omits public_ip — no
+        # silently returns None and the heartbeat just omits public_ip -- no
         # penalty.
         try:
             self._public_ip_task = asyncio.create_task(public_ip_refresh_service())

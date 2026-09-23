@@ -251,7 +251,7 @@ class MessageQueueManager:
 
             # DELETE, don't mark.  A delivered message has no reader: the only
             # references to QueueStatus.COMPLETED anywhere in the agent were
-            # this write, the retention delete, and an is_completed property —
+            # this write, the retention delete, and an is_completed property --
             # nothing ever loaded one back.  Retaining them cost 10.75 GB in
             # eight days on a dev host while the entire rest of the database was
             # under 10 MB, and the queue's whole purpose is to survive a
@@ -368,8 +368,8 @@ class MessageQueueManager:
                 query = query.filter(MessageQueue.direction == direction)
 
             # COUNT in SQL.  This used to be ``query.all()`` followed by four
-            # Python passes, which materialises every row INCLUDING its
-            # message_data blob just to produce four integers — ~11 GB of RAM
+            # Python passes, which materializes every row INCLUDING its
+            # message_data blob just to produce four integers -- ~11 GB of RAM
             # against the database that prompted this audit.  It survived only
             # because nothing in the agent currently calls it.
             by_status = dict(
@@ -450,7 +450,7 @@ class MessageQueueManager:
           * ``script_executions`` exists to reject a duplicate result for an
             execution the agent has already reported.  The server will not
             re-send a months-old execution, so the ledger only has to cover a
-            recent window — but nothing ever deleted from it, so it grew by one
+            recent window -- but nothing ever deleted from it, so it grew by one
             row per script run for the life of the agent.
           * ``installation_request_tracking`` correlates an install request with
             its outcome.  Rows are marked completed/failed and keep the full
@@ -490,7 +490,7 @@ class MessageQueueManager:
 
         Best-effort: VACUUM needs a write lock and rewrites the whole file, so
         it can fail on a busy database.  That is not worth failing a
-        maintenance pass over — the next prune will try again.
+        maintenance pass over -- the next prune will try again.
         """
         try:
             with self.get_session() as session:

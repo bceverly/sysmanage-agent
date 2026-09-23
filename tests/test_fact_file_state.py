@@ -2,13 +2,13 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.collection.fact_file_state`` — Phase 21.1 S7.
+"""Tests for ``sysmanage_agent.collection.fact_file_state`` -- Phase 21.1 S7.
 
 The property under test is the one the whole phase exists for: a watched path
 that we did not measure must never be indistinguishable from one we measured
-and found unchanged. osquery's own ``file`` table fails this — it returns no
+and found unchanged. osquery's own ``file`` table fails this -- it returns no
 row for a missing file, no row for an unreadable one, and no row for a path
-nobody asked about — which is why this table exists instead of reusing it.
+nobody asked about -- which is why this table exists instead of reusing it.
 """
 
 import os

@@ -3,7 +3,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""The English catalogue must translate English to itself.
+"""The English catalog must translate English to itself.
 
 WHY THIS EXISTS
 ---------------
@@ -45,7 +45,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 
-# Only real source catalogues.  Build trees under installer/dist/ contain copies
+# Only real source catalogs.  Build trees under installer/dist/ contain copies
 # staged for packaging; they are outputs, not something anyone edits.
 EXCLUDED_PARTS = ("installer/dist/", ".venv/", "node_modules/", "build/")
 
@@ -76,9 +76,9 @@ def mismatches(path: Path) -> list[tuple[str, str]]:
         )
         return [(a, b) for a, b in pairs if a and b and a != b]
 
-    catalogue = polib.pofile(str(path))
+    catalog = polib.pofile(str(path))
     bad = []
-    for entry in catalogue:
+    for entry in catalog:
         if entry.obsolete or not entry.msgid:
             continue
         # An empty msgstr is a GAP, not a scramble: gettext falls back to the
@@ -98,13 +98,13 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    catalogues = english_catalogues(REPO)
-    if not catalogues:
-        print("[OK] no English catalogues found")
+    catalogs = english_catalogues(REPO)
+    if not catalogs:
+        print("[OK] no English catalogs found")
         return 0
 
     total_bad = 0
-    for path in catalogues:
+    for path in catalogs:
         bad = mismatches(path)
         rel = path.relative_to(REPO)
         if not bad:
@@ -115,11 +115,11 @@ def main() -> int:
         if args.fix:
             import polib  # noqa: PLC0415
 
-            catalogue = polib.pofile(str(path))
-            for entry in catalogue:
+            catalog = polib.pofile(str(path))
+            for entry in catalog:
                 if entry.msgid and entry.msgstr and entry.msgstr != entry.msgid:
                     entry.msgstr = entry.msgid
-            catalogue.save(str(path))
+            catalog.save(str(path))
             print(f"[FIXED] {rel}: {len(bad)} entries reset to identity")
             continue
 

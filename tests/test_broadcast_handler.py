@@ -64,7 +64,7 @@ async def test_broadcast_unknown_action_does_not_raise():
 @pytest.mark.asyncio
 async def test_broadcast_inventory_failure_logged_not_raised():
     """If the inventory collector raises, the broadcast handler must
-    swallow the exception and log it — propagating would crash the
+    swallow the exception and log it -- propagating would crash the
     receive loop and disconnect the agent."""
     handler, agent = _make_handler()
     agent.data_collector.send_software_inventory_update = AsyncMock(
@@ -79,7 +79,7 @@ async def test_broadcast_inventory_failure_logged_not_raised():
 @pytest.mark.asyncio
 async def test_dispatch_routes_broadcast_to_handler():
     """Sanity:  the dispatcher must route ``message_type=broadcast``
-    to the new handler — without that, the new code path is dead."""
+    to the new handler -- without that, the new code path is dead."""
     handler, _ = _make_handler()
     handler._handle_broadcast_message = AsyncMock()
     await handler._dispatch_received_message(

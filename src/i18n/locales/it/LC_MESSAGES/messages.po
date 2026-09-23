@@ -1648,11 +1648,11 @@ msgstr "Il server non ha potuto inserire il messaggio in coda: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Il server ha segnalato host_not_registered (colpo %(n)d/%(limit)d) — "
+"Il server ha segnalato host_not_registered (colpo %(n)d/%(limit)d) -- "
 "riaggancio SENZA scartare l'host_id in modo che il server possa risolvere di"
 " nuovo questa istanza dal suo indice tenant; ririgistrerò solo se la "
 "situazione persiste."
@@ -1660,10 +1660,10 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered persistito (%(n)d colpi) — considero questa istanza come"
+"host_not_registered persistito (%(n)d colpi) -- considero questa istanza come"
 " effettivamente scomparsa; elimino l'host_id memorizzato e ririgistro"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1687,7 +1687,7 @@ msgstr "Broadcast %s: aggiornamento inventario non riuscito: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Broadcast %s: azione sconosciuta '%s' - ignorata"
 
 #: src/sysmanage_agent/communication/message_handler.py:569

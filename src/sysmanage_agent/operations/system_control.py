@@ -267,7 +267,7 @@ class SystemControl:
         method and target version and recorded a ``ReleaseUpgradeJob``; here the
         agent runs the matching non-interactive upgrade command.  These are
         long-running and usually reboot the host, so the agent kicks the upgrade
-        off and reports the launch result — job status is finalized on the next
+        off and reports the launch result -- job status is finalized on the next
         check-in.
         """
         method = parameters.get("method")

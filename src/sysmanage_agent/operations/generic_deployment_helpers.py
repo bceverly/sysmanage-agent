@@ -63,7 +63,7 @@ def _decode_command_output(stream: bytes, argv: Optional[List[str]] = None) -> s
     Tries UTF-8 first.  Falls back to UTF-16LE when the bytes look like
     UTF-16LE output (argv[0] is ``wsl.exe`` / ``wsl``, the bytes start
     with the UTF-16LE BOM, or the UTF-8 decode produced a string littered
-    with null characters — the smoking-gun signature of UTF-16LE bytes
+    with null characters -- the smoking-gun signature of UTF-16LE bytes
     decoded as UTF-8).  Last resort is latin-1, which never fails.
 
     Args:

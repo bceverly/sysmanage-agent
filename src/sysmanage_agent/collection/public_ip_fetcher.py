@@ -13,29 +13,29 @@ heartbeats.  The server uses this IP for GeoLite2 geo-resolution
 section in ROADMAP.md).
 
 Design:
-  * **Three-endpoint fallback** — try each in order until one returns
+  * **Three-endpoint fallback** -- try each in order until one returns
     a valid IP string.  Each request gets a tight 5s timeout so a
     slow or hung endpoint can't stall the agent.
-  * **Module-level cache** — a single ``PublicIPCache`` instance with
+  * **Module-level cache** -- a single ``PublicIPCache`` instance with
     an async refresh + a sync read.  Refresh is called once at agent
     startup (so the first heartbeat carries a value) and then by a
     background task every ``DEFAULT_REFRESH_INTERVAL_SECONDS`` (24h).
-  * **Silent skip when unreachable** — air-gapped agents legitimately
+  * **Silent skip when unreachable** -- air-gapped agents legitimately
     can't reach the echo endpoints; we log and leave the cache empty.
     The heartbeat payload simply omits ``public_ip`` in that case and
     the server's geo-resolver leaves the host's geo columns alone.
-  * **Re-validates each fetch** — even from trusted endpoints, we
+  * **Re-validates each fetch** -- even from trusted endpoints, we
     parse the response body with ``ipaddress.ip_address`` and reject
     anything that doesn't validate as IPv4 or IPv6.  Defends against
     a malicious or compromised echo endpoint returning garbage.
 
 Public surface:
-  * ``async refresh()`` — refetch from the endpoints, update cache,
+  * ``async refresh()`` -- refetch from the endpoints, update cache,
     log result.  Safe to call concurrently (internal lock).
-  * ``get()`` — synchronous read of the cached value (or None).
+  * ``get()`` -- synchronous read of the cached value (or None).
     Heartbeat construction is sync, so this is what the
     ``create_heartbeat_message`` payload uses.
-  * ``public_ip_refresh_service()`` — async loop that calls
+  * ``public_ip_refresh_service()`` -- async loop that calls
     ``refresh()`` at startup and then every refresh interval.
     Launched as an ``asyncio.create_task`` by the agent's run loop.
 """
@@ -80,7 +80,7 @@ class PublicIPCache:
     The async refresh is single-flight via an ``asyncio.Lock`` so two
     overlapping refreshes (startup + first scheduled tick racing) can't
     each hit the echo endpoints.  The sync ``get`` reads the current
-    value with no lock — Python attribute reads are atomic for a single
+    value with no lock -- Python attribute reads are atomic for a single
     string reference, and stale-by-one-cycle is fine.
     """
 
@@ -108,7 +108,7 @@ class PublicIPCache:
                 )
                 self._ip = new_ip
             elif new_ip is None and self._ip is None:
-                # Quiet at debug — happens every refresh on airgapped
+                # Quiet at debug -- happens every refresh on airgapped
                 # agents and we don't want to spam the log.
                 logger.debug(
                     "Public IP fetch returned no result from any echo "
@@ -117,7 +117,7 @@ class PublicIPCache:
             return self._ip
 
 
-# Module-level singleton — the agent has one public IP.
+# Module-level singleton -- the agent has one public IP.
 _cache = PublicIPCache()
 
 

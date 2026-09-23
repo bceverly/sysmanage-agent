@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Certificate FILE handling — bundles, and finding each file once.
+"""Certificate FILE handling -- bundles, and finding each file once.
 
 Split out of ``test_certificate_collection_advanced.py``, which had reached
 the repository's 1000-line ceiling. Both classes here guard defects found on
@@ -75,7 +75,7 @@ class TestPemBundlesAreFullyRead:
 
     Measured on FreeBSD 14.4 on 2026-09-21: ``ca-root-nss.crt`` holds 118
     certificates and the collector reported ONE. Every trust anchor after the
-    first was invisible to the inventory, and nothing failed — a bundle simply
+    first was invisible to the inventory, and nothing failed -- a bundle simply
     looked like a single certificate.
     """
 
@@ -117,7 +117,7 @@ class TestPemBundlesAreFullyRead:
         assert len(blocks) == 3
 
     def test_each_certificate_in_a_bundle_is_parsed_separately(self):
-        """openssl is invoked per block, with the PEM on stdin — otherwise it
+        """openssl is invoked per block, with the PEM on stdin -- otherwise it
         re-reads the file and describes the first certificate every time."""
         collector = CertificateCollector()
         seen_inputs = []
@@ -141,7 +141,7 @@ class TestPemBundlesAreFullyRead:
 
     def test_a_single_certificate_file_takes_the_original_path(self):
         """DER files, keystores and one-cert PEMs must behave exactly as
-        before — the bundle handling is additive, not a rewrite."""
+        before -- the bundle handling is additive, not a rewrite."""
         collector = CertificateCollector()
         with patch("builtins.open", mock_open(read_data=self._bundle(1))):
             with patch.object(
@@ -173,7 +173,7 @@ class TestFingerprintParsing:
 
     OpenSSL 1.x printed ``SHA256 Fingerprint=``; OpenSSL 3.x prints
     ``sha256 Fingerprint=``. The parser matched the old spelling exactly, so
-    on every OpenSSL 3 host the fingerprint stayed None — and since the caller
+    on every OpenSSL 3 host the fingerprint stayed None -- and since the caller
     treats "no fingerprint" as "include it anyway", the dedupe silently
     stopped deduping. Measured on Ubuntu 26.04: /etc/ssl/certs yielded 243
     rows for 121 certificates, each one appearing once per file it lives in.

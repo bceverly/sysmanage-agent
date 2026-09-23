@@ -6,7 +6,7 @@
 Tests for sysmanage_agent.collection.update_detection_windows_install.
 
 Trivial mixin: two methods that shell out to winget/choco. Mocked at the
-subprocess level — verifies argv, success/failure shapes, and error
+subprocess level -- verifies argv, success/failure shapes, and error
 messages.
 """
 
@@ -25,7 +25,7 @@ from src.sysmanage_agent.collection.update_detection_windows_install import (
 
 @pytest.fixture
 def installer():
-    """The mixin can be exercised on a bare instance — none of these methods
+    """The mixin can be exercised on a bare instance -- none of these methods
     touch other class state."""
 
     class _Bag(WindowsPackageInstallerMixin):

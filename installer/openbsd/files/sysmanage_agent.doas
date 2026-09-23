@@ -4,7 +4,7 @@
 #
 # Install via the port post-install: copy this file to /etc/doas.d/sysmanage-agent
 # (or append its contents to /etc/doas.conf).  OpenBSD doesn't read
-# /etc/doas.d by default — the operator must include it from
+# /etc/doas.d by default -- the operator must include it from
 # /etc/doas.conf with:  permit nopass keepenv _sysmanage as root
 # or paste these lines directly.
 #
@@ -23,7 +23,7 @@ permit nopass _sysmanage as root cmd /usr/sbin/syspatch
 permit nopass _sysmanage as root cmd /usr/sbin/sysupgrade
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
-# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# rsync is the snapshot + restore workhorse -- without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with a
 # "doas: command not permitted" error.
 permit nopass _sysmanage as root cmd /usr/local/bin/rsync

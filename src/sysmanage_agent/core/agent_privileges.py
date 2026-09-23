@@ -21,7 +21,7 @@ from typing import Optional
 # message_handler.create_basic_info_message), and the sudoers path
 # inside the function spawns ``sudo -n systemctl is-active
 # sysmanage-agent`` as a fallback whenever the sudoers file isn't
-# directly readable — which is the default state (mode 0440, root-
+# directly readable -- which is the default state (mode 0440, root-
 # owned) when the agent runs as the unprivileged ``sysmanage-agent``
 # user.  Without this cache we burn one fork+exec+pam-session per
 # heartbeat (observed: multiple per second on a healthy agent), which
@@ -53,12 +53,12 @@ def is_running_privileged() -> bool:
     with a sudoers fragment that permits passwordless ``apt``/``systemctl``/
     etc.  Code that shells out to root-only commands MUST still prefix
     those commands with ``sudo`` (or use a helper such as
-    ``linux_update_applicators._sudo_prefix()``) — do NOT use this flag
+    ``linux_update_applicators._sudo_prefix()``) -- do NOT use this flag
     as a "skip sudo when True" signal.  The flag exists for the server's
     benefit (the heartbeat reports it so the server knows whether the
-    agent can fulfil privileged operations); it is not a euid check.
+    agent can fulfill privileged operations); it is not a euid check.
 
-    Result is cached for the lifetime of the process — privileges
+    Result is cached for the lifetime of the process -- privileges
     cannot change without a restart and the sudoers-file probe is too
     expensive to repeat on every heartbeat.
 

@@ -2,12 +2,12 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.core.fact_schema`` — Phase 21.1 S1.
+"""Tests for ``sysmanage_agent.core.fact_schema`` -- Phase 21.1 S1.
 
 The load-bearing test is EXHAUSTIVENESS: every contract table must land in
 exactly one of served / unsupported / not_applicable.  If a table can fall
 through all three, a consumer sees no rows for it and cannot tell "never
-measured" from "measured, found nothing" — and "found nothing" is what gets
+measured" from "measured, found nothing" -- and "found nothing" is what gets
 rendered as compliant.  That ambiguity is the defect this slice exists to
 prevent, so it is tested directly rather than implied.
 """

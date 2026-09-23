@@ -39,7 +39,7 @@ jobs:
         uses: vmactions/openbsd-vm@18edb32f4e48dae5865d7b8b3a9587bc01218a20 # v1.4.4
         env:
           # The user-controllable workflow input goes through an env var and is
-          # forwarded into the VM via `envs:` below — NEVER interpolated into the
+          # forwarded into the VM via `envs:` below -- NEVER interpolated into the
           # run: script (that is a shell-injection sink; semgrep
           # run-shell-injection).  matrix.openbsd-version is a fixed allow-list
           # value (7.8/7.9) and is safe to interpolate directly.

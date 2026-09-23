@@ -7,7 +7,7 @@ Per-directory pytest config for tests/integration/.
 
 Some files in this folder only make sense on a specific OS family.  We
 ``collect_ignore`` them on platforms where they would otherwise have
-to be skipped at collection or runtime — this keeps the default test
+to be skipped at collection or runtime -- this keeps the default test
 run "passed only / 0 skipped" on every platform while still letting
 the dedicated BSD VM workflow run them by setting ``BSD_VM_TESTS=1``.
 """

@@ -60,7 +60,7 @@ class PackageComplianceOperations:
             constraints: list of dicts with keys:
                 - id (str)
                 - package_name (str, required)
-                - package_manager (str, optional — None = any manager)
+                - package_manager (str, optional -- None = any manager)
                 - constraint_type (REQUIRED | BLOCKED)
                 - version_op (str, optional)
                 - version (str, optional)
@@ -102,7 +102,7 @@ class PackageComplianceOperations:
 
     def _collect_installed_packages(self) -> List[Dict[str, Any]]:
         """Pull the live software inventory from the agent's existing
-        registration collector — same source the agent uses for
+        registration collector -- same source the agent uses for
         periodic ``software_inventory_update`` messages.  Normalize
         each entry to ``{name, version, manager}`` to match the
         server's evaluator schema."""
@@ -130,7 +130,7 @@ class PackageComplianceOperations:
 
 
 # ----------------------------------------------------------------------
-# Pure-Python evaluator — mirrors backend/services/package_compliance.py
+# Pure-Python evaluator -- mirrors backend/services/package_compliance.py
 # ----------------------------------------------------------------------
 
 

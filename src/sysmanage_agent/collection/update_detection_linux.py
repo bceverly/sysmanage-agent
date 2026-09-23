@@ -294,7 +294,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             shape produced by the BSD and Windows detectors.
         """
         # `package_names` / `package_managers` exist purely for cross-
-        # platform signature symmetry — see docstring.  Discard them
+        # platform signature symmetry -- see docstring.  Discard them
         # explicitly so static analysers don't flag them as unused.
         del package_names, package_managers
 

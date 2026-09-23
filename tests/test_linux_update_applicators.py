@@ -260,7 +260,7 @@ class TestApplyDnfUpdates:
 
 
 # ---------------------------------------------------------------------------
-# apply_fwupd_updates  (firmware — special: skips when no device_id)
+# apply_fwupd_updates  (firmware -- special: skips when no device_id)
 # ---------------------------------------------------------------------------
 
 
@@ -377,7 +377,7 @@ class TestApplyFedoraReleaseUpdates:
                 [_pkg("fedora", available="Fedora 41")], results
             )
         assert "Fedora Release Upgrade" in results["failed_updates"]
-        # Only one subprocess call (download) — reboot was skipped.
+        # Only one subprocess call (download) -- reboot was skipped.
         assert run.call_count == 1
 
     def test_exception(self):
@@ -428,7 +428,7 @@ class TestApplyOpensuseReleaseUpdates:
 
 
 # ---------------------------------------------------------------------------
-# _sudo_prefix — privilege-escalation helper
+# _sudo_prefix -- privilege-escalation helper
 # ---------------------------------------------------------------------------
 
 

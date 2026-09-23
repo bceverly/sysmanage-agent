@@ -17,12 +17,12 @@
 # when ``update`` is the FIRST argument.  But the
 # repository_mirroring_engine's setup_install plan runs
 # ``apt-get -o Dpkg::Options::=--force-confold update`` (and the same
-# ``-o`` prefix on ``install``) — the option sits before the
+# ``-o`` prefix on ``install``) -- the option sits before the
 # subcommand, so the positional rule never matches and sudo denies
 # with "user not allowed to run" / "I'm afraid I can't do that".
 # Bare-binary grant matches what the engine's docstring already
 # assumes ("authorizes specific binaries: apt-get, dnf, zypper, pkg")
-# and the same philosophy used for sed/rm/install below — the agent's
+# and the same philosophy used for sed/rm/install below -- the agent's
 # own code decides the argv; sudoers is the "which binary" gate.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get *
@@ -116,7 +116,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/umount, /bin/umount
 # arguments (it accepts them only at the end of a single argument
 # and not inside path components).  The earlier form of these rules
 # tried to restrict ``sed -i`` and ``rm -f`` to the apt sources.list.d
-# tree using ``/etc/apt/sources.list.d/*`` patterns — but that wildcard
+# tree using ``/etc/apt/sources.list.d/*`` patterns -- but that wildcard
 # now causes the line to be silently rejected by sudo, so every plan
 # that touches a repo file fails with "user not allowed to run".  The
 # rules below grant the bare binaries.  The agent's own code restricts
@@ -128,7 +128,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 # Generic file deployment via ``sudo install`` (used by repository
 # mirror apply, agent config push, and any other plan that uses the
 # ``generic_deployment.deploy_files`` step).  Wildcards-in-argv
-# constraints have been removed for the same reason as above —
+# constraints have been removed for the same reason as above --
 # trust the agent's own path validation rather than sudoers patterns
 # that newer sudo no longer accepts.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install

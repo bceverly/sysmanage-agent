@@ -33,7 +33,7 @@ load_rc_config ${name}
 # main.py never reads argv), so the agent fell back to its built-in search --
 # SYSMANAGE_CONFIG, then /etc/sysmanage-agent.yaml, then ./sysmanage-agent.yaml
 # -- and never read the path this script verifies exists in its prestart.
-# These are the variables main.py and src/database/init.py actually honour;
+# These are the variables main.py and src/database/init.py actually honor;
 # without SYSMANAGE_DB_PATH the SQLite database resolves to the process
 # working directory.
 export SYSMANAGE_CONFIG="${sysmanage_agent_config}"

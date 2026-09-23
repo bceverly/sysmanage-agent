@@ -5,10 +5,10 @@
 """Tests for ``sysmanage_agent.core.version`` agent-version resolution.
 
 Covers the resolution order:
-0. a git checkout describing ITSELF (added 2026-09-21 — see
+0. a git checkout describing ITSELF (added 2026-09-21 -- see
    ``TestSourceCheckoutTier``)
 1. ``importlib.metadata`` (pip installs)
-2. OS package manager — dpkg / rpm / pkg (the .deb/.rpm/FreeBSD pkg
+2. OS package manager -- dpkg / rpm / pkg (the .deb/.rpm/FreeBSD pkg
    shipped via GitHub releases, which don't drop a Python dist-info)
 3. ``git describe --tags`` with ``-dev`` suffix (source checkouts)
 4. ``"unknown"`` fallback
@@ -40,7 +40,7 @@ def not_a_checkout(request):
     These are TIER tests: each one asserts what a given tier answers, so the
     tier has to be controlled rather than inherited from wherever the suite
     happens to be running.  Without this they pass in a release tarball and
-    fail in a working tree — and it was a working tree that surfaced the bug
+    fail in a working tree -- and it was a working tree that surfaced the bug
     the checkout tier exists to fix.
     """
     if "checkout" in request.node.name:
@@ -220,8 +220,8 @@ class TestSourceCheckoutTier:
     """A checkout answers for ITSELF, ahead of anything installed.
 
     The bug, seen on a live FreeBSD host 2026-09-21: it was running a current
-    checkout — its capability report carried the Phase 21.1 fact coverage
-    built that day — while reporting ``3.5.1.10``, the version of a pkg
+    checkout -- its capability report carried the Phase 21.1 fact coverage
+    built that day -- while reporting ``3.5.1.10``, the version of a pkg
     installed months earlier.  A ``git pull`` could never fix it, because the
     string was not coming from the code.
     """
@@ -248,7 +248,7 @@ class TestSourceCheckoutTier:
 
     def test_checkout_describes_its_own_tree_not_the_working_directory(self):
         """``cwd`` is pinned to the repo root.  A service's working directory
-        is wherever its rc script left it — quite possibly another repo."""
+        is wherever its rc script left it -- quite possibly another repo."""
         _reset_cache()
         seen = {}
 
@@ -268,7 +268,7 @@ class TestSourceCheckoutTier:
 
     def test_a_checkout_with_no_tags_falls_through_rather_than_lying(self):
         """A shallow clone has no tags.  That is not a reason to report
-        nothing — the installed package is still a true answer."""
+        nothing -- the installed package is still a true answer."""
         _reset_cache()
 
         def fake_run(argv, **_kwargs):
@@ -306,8 +306,8 @@ class TestSourceCheckoutTier:
 class TestRootOwnedCheckout:
     """A privileged agent must still know its version.
 
-    git refuses to operate on a repository owned by another user — "detected
-    dubious ownership" — and exits non-zero. The agent normally runs as ROOT
+    git refuses to operate on a repository owned by another user -- "detected
+    dubious ownership" -- and exits non-zero. The agent normally runs as ROOT
     from a checkout owned by an operator, which is exactly how
     ``make start-privileged`` deploys it, so every privileged agent reported
     its version as ``unknown``. Measured on OpenBSD 7.9 on 2026-09-21: the
@@ -336,7 +336,7 @@ class TestRootOwnedCheckout:
 
     def test_only_this_path_is_trusted_not_a_wildcard(self):
         """A global or wildcard exception would make every repository on the
-        host trusted by root — far more than reading one version needs."""
+        host trusted by root -- far more than reading one version needs."""
         _reset_cache()
         seen = {}
 

@@ -31,9 +31,9 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>0:devel/py-websockets@${PY_FLAVOR
 		${PYTHON_PKGNAMEPREFIX}packaging>0:devel/py-packaging@${PY_FLAVOR} \
 		sudo:security/sudo
 
-# python:...,run — NO_BUILD means python is only needed at RUN time.
+# python:...,run -- NO_BUILD means python is only needed at RUN time.
 # Deliberately NO ``USE_PYTHON=autoplist``: autoplist generates the packing
-# list for setuptools-installed modules, and this port has no setup.py at all —
+# list for setuptools-installed modules, and this port has no setup.py at all --
 # it stages a source tree by hand below.  The two mechanisms together produce
 # an empty or wrong plist.
 USES=		python:3.9+,run shebangfix
@@ -61,12 +61,12 @@ USE_RC_SUBR=	sysmanage-agent
 # It needs %%PREFIX%% substituted, which SUB_FILES performs from SUB_LIST.
 SUB_FILES=	pkg-message
 
-# PYTHON_CMD is NOT in the default SUB_LIST — USES=python contributes
+# PYTHON_CMD is NOT in the default SUB_LIST -- USES=python contributes
 # PYTHON_VERSION, PYTHON_VER, PYTHON_SUFFIX and friends, but not the
 # interpreter path.  Without this line USE_RC_SUBR leaves the literal
 # string %%PYTHON_CMD%% in the installed rc.d script, and the service
 # fails at exec with no useful message.  Nothing catches it: the port
-# builds, packages, passes check-plist and stage-qa, and installs — the
+# builds, packages, passes check-plist and stage-qa, and installs -- the
 # placeholder only bites when the service is STARTED.  Found 2026-08-10
 # via `sh -x` on the installed rc script.
 SUB_LIST+=	PYTHON_CMD=${PYTHON_CMD}
@@ -93,12 +93,12 @@ do-install:
 # (Installed live under ${PREFIX}/etc/sudoers.d, not as an inert example: the
 # agent's DEFAULT user is now unprivileged, so it needs the grants to work.)
 #
-# NOTE: pkg-plist has NO comment syntax — every line there is an entry, so this
+# NOTE: pkg-plist has NO comment syntax -- every line there is an entry, so this
 # rationale lives here.  Six explanatory lines in pkg-plist were turned into
 # six bogus file paths by check-plist and pkg-create on 2026-08-10.
 #
 # The ${SED} rewrites the account name for releases up to and including
-# 3.5.1.9, whose shipped policy grants the bare ``sysmanage`` account — the
+# 3.5.1.9, whose shipped policy grants the bare ``sysmanage`` account -- the
 # same account the sysmanage SERVER port creates for its web application.  On a
 # host running both ports that would hand a network-facing service
 # root-equivalent sudo, which is the exact outcome this deployment exists to
@@ -110,13 +110,13 @@ do-install:
 		> ${STAGEDIR}${PREFIX}/etc/sudoers.d/sysmanage-agent
 # Writable state.  get_database_path_from_config() falls back to
 # ``os.getcwd()/agent.db`` and daemon(8) -c makes the cwd /, so an unprivileged
-# agent cannot create its SQLite database at all — and a root one silently
+# agent cannot create its SQLite database at all -- and a root one silently
 # writes /agent.db.  The rc script points SYSMANAGE_DB_PATH and
 # SYSMANAGE_LOG_DIR at these directories.
 	${MKDIR} ${STAGEDIR}/var/db/${PORTNAME} ${STAGEDIR}/var/log/${PORTNAME}
 
 # ``src`` is ~290 files that change every release, so they cannot be enumerated
-# by hand in pkg-plist — an unlisted staged file fails stage-qa, which is what
+# by hand in pkg-plist -- an unlisted staged file fails stage-qa, which is what
 # the hand-written 3-line plist would have done on the first real build.
 # Appending the staged tree to ${TMPPLIST} is the in-tree idiom for a generated
 # file set.  pkg-plist keeps the fixed entries (main.py, alembic.ini, @sample).

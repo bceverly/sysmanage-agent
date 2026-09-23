@@ -18,7 +18,7 @@ Two defects produced exactly that, and both are pinned here.
 
 2. The shipped sudoers granted systemctl only as ``/bin/systemctl``.  sudoers
    matches the LITERAL path, and on merged-/usr distros ``/bin`` is a symlink to
-   ``usr/bin``, so the rule never authorised the ``/usr/bin/systemctl`` the
+   ``usr/bin``, so the rule never authorized the ``/usr/bin/systemctl`` the
    agent actually invokes via PATH.
 """
 

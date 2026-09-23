@@ -6,7 +6,7 @@
 Tests for sysmanage_agent.collection.update_detection_windows_system.
 
 The mixin shells out to PowerShell for Windows Update detection.  Mocked
-at the subprocess level — exercises:
+at the subprocess level -- exercises:
 
 - _detect_windows_system_updates (success / ERROR: prefix / timeout / exception)
 - _parse_windows_update_output (single update / list / null / invalid JSON)
@@ -72,7 +72,7 @@ class TestExtractCategoryText:
 
 
 # ---------------------------------------------------------------------------
-# _classify_windows_update — security vs regular
+# _classify_windows_update -- security vs regular
 # ---------------------------------------------------------------------------
 
 
@@ -248,7 +248,7 @@ class TestDetectWindowsSystemUpdates:
 
 
 # ---------------------------------------------------------------------------
-# _run_windows_update_query — non-Windows path
+# _run_windows_update_query -- non-Windows path
 # ---------------------------------------------------------------------------
 
 

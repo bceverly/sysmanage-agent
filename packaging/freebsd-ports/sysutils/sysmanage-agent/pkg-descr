@@ -11,5 +11,5 @@ Features:
   * Declarative deployment plans driven by the SysManage server
   * Auto-discovery of SysManage servers on the LAN
 
-The agent runs as a system service and requires no inbound ports — all
+The agent runs as a system service and requires no inbound ports -- all
 communication is agent-initiated, simplifying firewall configuration.

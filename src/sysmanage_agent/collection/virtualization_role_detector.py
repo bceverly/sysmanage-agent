@@ -38,7 +38,7 @@ DEV_VMM_PATH = "/dev/vmm"
 class VirtualizationHostDetector:
     """Detect parent-host roles: LXD, WSL, VMM, KVM, bhyve.
 
-    Mirrors the public surface of the legacy detector verbatim — the
+    Mirrors the public surface of the legacy detector verbatim -- the
     only intentional difference is the module path.  Behavior is
     identical so unit tests written against the legacy class also pass
     against this one (after the import swap).

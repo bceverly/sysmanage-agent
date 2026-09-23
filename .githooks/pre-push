@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-push hook — runs `make lint` in the repo root and blocks the push
+# Pre-push hook -- runs `make lint` in the repo root and blocks the push
 # if linting fails.  Designed to be installed via `core.hooksPath` in
 # the sysmanage / sysmanage-agent / sysmanage-professional-plus repos.
 #
@@ -11,7 +11,7 @@
 #     points at the failing tool and reminds about --no-verify for
 #     genuine emergencies.
 #
-# Pre-push is the right moment for this — pre-commit runs on every
+# Pre-push is the right moment for this -- pre-commit runs on every
 # `git commit` and would slow down the WIP-commit-often workflow,
 # whereas pre-push runs once per push to remote.  CI-style coverage
 # without the per-commit tax.
@@ -86,7 +86,7 @@ fi
 #      core.hooksPath ~/.git-hooks`), other repos without a lint
 #      target shouldn't be punished.
 #   2. Lets us add the hook to a new repo by simply landing a
-#      Makefile + lint target there — no per-repo config dance.
+#      Makefile + lint target there -- no per-repo config dance.
 #   3. The check is fast (a grep) so the overhead is negligible.
 if [ ! -f Makefile ] || ! grep -qE '^lint:[[:space:]]*' Makefile; then
     exit 0
@@ -115,7 +115,7 @@ run_make_lint() {
 if run_make_lint; then
     echo ""
     echo "============================================================"
-    echo " Pre-push: lint clean — pushing."
+    echo " Pre-push: lint clean -- pushing."
     echo "============================================================"
     exit 0
 fi

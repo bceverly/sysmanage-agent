@@ -20,7 +20,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk del *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/apk upgrade *
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
-# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# rsync is the snapshot + restore workhorse -- without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rsync

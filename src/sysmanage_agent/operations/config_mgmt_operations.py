@@ -21,7 +21,7 @@ and the UI never branch on platform.
 OBSERVED BEHAVIOUR, NOT ASSUMED (both validated against real binaries,
 ansible-core 2.21.3 and dsc 3.2.3, 2026-08-26):
 
-* ``dsc`` writes its structured logs to STDERR with ANSI colour codes, and its
+* ``dsc`` writes its structured logs to STDERR with ANSI color codes, and its
   results as one JSON document on STDOUT.  Merging the streams corrupts the
   parse -- so the two are captured separately, and only stdout is parsed.
 * A failing ``dsc`` run exits non-zero and prints NOTHING to stdout, so its
@@ -199,7 +199,7 @@ class ConfigMgmtOperations:
     ) -> Optional[Tuple[int, str, str]]:
         """Run argv, return (rc, stdout, stderr), or None on timeout.
 
-        stdout and stderr are kept SEPARATE. dsc writes ANSI-coloured logs to
+        stdout and stderr are kept SEPARATE. dsc writes ANSI-colored logs to
         stderr, and folding them into stdout corrupts the JSON parse.
         """
         proc = await asyncio.create_subprocess_exec(
@@ -250,7 +250,7 @@ class ConfigMgmtOperations:
 
         workdir = spec_mod.make_workdir()
         try:
-            argv, stdin_bytes = spec_mod.materialise(spec, workdir)
+            argv, stdin_bytes = spec_mod.materialize(spec, workdir)
             # Resolve the engine's own binary to the path we actually found,
             # so a spec never has to guess where it lives.
             argv[0] = executable

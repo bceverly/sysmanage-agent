@@ -53,7 +53,7 @@ def get_translation(language: Optional[str] = None) -> gettext.GNUTranslations:
 def _(message: str, language: Optional[str] = None) -> str:
     """Translate a message.
 
-    NOTE: ``language`` is the SECOND positional argument — this is NOT the
+    NOTE: ``language`` is the SECOND positional argument -- this is NOT the
     i18next ``t(key, englishDefault)`` signature.  Passing English there asks
     gettext for a locale by that name, falls back to ``NullTranslations`` and
     returns the msgid verbatim.  ``make lint`` gates against it
@@ -68,7 +68,7 @@ def N_(message: str) -> str:  # NOSONAR  # pylint: disable=invalid-name
 
     (The name is not snake_case on purpose, hence the suppressions above:
     ``N_`` is the GNU gettext convention for a no-op extraction marker and
-    is recognised by xgettext, pybabel, poedit and every translator tool.
+    is recognized by xgettext, pybabel, poedit and every translator tool.
     Renaming it would also mean changing ``--keyword=N_`` / ``-k N_`` in
     the extractors, and would make the code less recognisable, not more.)
 
@@ -76,7 +76,7 @@ def N_(message: str) -> str:  # NOSONAR  # pylint: disable=invalid-name
     only ever see string *literals*, so a message held in a module constant
     (``_MSG_HOSTNAME_CHANGED = "..."`` then ``_(_MSG_HOSTNAME_CHANGED)``) is
     never extracted, never reaches a catalog, and renders English in all 13
-    locales forever — silently, since no gate can miss a msgid that was never
+    locales forever -- silently, since no gate can miss a msgid that was never
     extracted.  Wrapping the DEFINITION in ``N_`` puts the text in the .pot
     (pybabel is passed ``-k N_``) while leaving the value an ordinary string;
     the ``_()`` at the call site resolves it against the current locale.

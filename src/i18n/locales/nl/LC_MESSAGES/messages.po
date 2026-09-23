@@ -1633,11 +1633,11 @@ msgstr "Server kan bericht niet in wachtrij plaatsen: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) — verbinding "
+"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) -- verbinding "
 "herstellen ZONDER het host_id te verwijderen zodat de server deze host kan "
 "opnieuw oplossen uit zijn tenant-index; zal alleen opnieuw registreren als "
 "dit blijft voorkomen."
@@ -1645,10 +1645,10 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_niet_geregistreerd bleef bestaan (%(n)d aanvallen) — deze host "
+"host_niet_geregistreerd bleef bestaan (%(n)d aanvallen) -- deze host "
 "beschouwen als echt verdwenen; verwijder stored host_id en registreer "
 "opnieuw."
 
@@ -1673,8 +1673,8 @@ msgstr "Uitzending %s: vernieuwing van inventaris mislukt: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "Broadcast %s: onbekende actie '%s' — genegeerd"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "Broadcast %s: onbekende actie '%s' -- genegeerd"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

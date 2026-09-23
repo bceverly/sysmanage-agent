@@ -205,7 +205,7 @@
 
       Before this, a host without Python got: install refused -> no venv ->
       no service -> MSI still exits 0.  "Installation completed successfully"
-      with nothing that would ever enrol.
+      with nothing that would ever enroll.
     -->
     <CustomAction Id="CheckPython"
                   Directory="INSTALLFOLDER"

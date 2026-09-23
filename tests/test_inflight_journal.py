@@ -13,7 +13,7 @@ Covers:
     * reconcile_inflight_journal startup hook: enqueues synthetic
       command_result for dead PIDs via the message handler
 
-Tests do NOT spawn long-running subprocesses — Popen / create_subprocess_exec
+Tests do NOT spawn long-running subprocesses -- Popen / create_subprocess_exec
 is either mocked or run with a trivial, cross-platform ``python -c`` no-op
 (the POSIX ``true``/``false`` binaries are absent on Windows).
 """
@@ -40,7 +40,7 @@ def isolated_journal_dir(tmp_path, monkeypatch):
     """Point the journal module at an isolated tmp directory.
 
     Patches both HOME (POSIX) and USERPROFILE (Windows) so the journal_dir()
-    helper resolves to a sandbox we own — no risk of touching the real
+    helper resolves to a sandbox we own -- no risk of touching the real
     ~/.sysmanage-agent/inflight/ that production agents use.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
@@ -114,7 +114,7 @@ class TestJournalSetPid:
 
     def test_no_op_when_journal_missing(self, isolated_journal_dir):
         """journal_set_pid is a silent no-op when the file is gone."""
-        # Should not raise — silent no-op for journals that have already
+        # Should not raise -- silent no-op for journals that have already
         # been cleared by a fast-exiting subprocess.
         inflight_journal.journal_set_pid("nonexistent", 1234)
 
@@ -160,7 +160,7 @@ class TestJournalClear:
 
     def test_clear_idempotent(self, isolated_journal_dir):
         """journal_clear is idempotent: calling on a missing file is fine."""
-        # Should not raise — calling twice or for a non-existent message
+        # Should not raise -- calling twice or for a non-existent message
         # is a normal happy-path occurrence.
         inflight_journal.journal_clear("never-existed")
         inflight_journal.journal_clear("never-existed")
@@ -254,7 +254,7 @@ class TestScanInflightOnStartup:
             working_dir=None,
             pid=99999999,
         )
-        # No callback — should still classify and remove.
+        # No callback -- should still classify and remove.
         result = inflight_journal.scan_inflight_on_startup(None)
         assert "dead-2" in result["dead"]
         assert not (isolated_journal_dir / "dead-2.json").exists()
@@ -265,7 +265,7 @@ class TestScanInflightOnStartup:
         bad = isolated_journal_dir / "garbage.json"
         bad.write_text("{not valid json", encoding="utf-8")
         result = inflight_journal.scan_inflight_on_startup(None)
-        # The corrupt file is silently dropped — neither classified as
+        # The corrupt file is silently dropped -- neither classified as
         # live nor as a real dead entry that needs a synthetic result.
         assert not bad.exists()
         assert result == {"live": [], "dead": []}
@@ -292,7 +292,7 @@ class TestScanInflightOnStartup:
         def boom(_payload):
             raise RuntimeError("queue full")
 
-        # Should not raise — the scan logs and moves on.
+        # Should not raise -- the scan logs and moves on.
         result = inflight_journal.scan_inflight_on_startup(boom)
         assert "dead-cb" in result["dead"]
         # File is still cleaned up even though the callback failed.
@@ -313,7 +313,7 @@ class TestApplyDeploymentPlanJournalIntegration:
     async def test_journal_cleared_on_clean_plan_exit(self, isolated_journal_dir):
         """A successful plan run leaves no journal file behind."""
         # Use a real trivial subprocess so create_subprocess_exec actually
-        # spawns and exits — a no-op ``python -c ""`` returns immediately and
+        # spawns and exits -- a no-op ``python -c ""`` returns immediately and
         # works on every platform (the POSIX ``true`` binary is absent on
         # Windows), so the test neither hangs nor depends on a Unix shell.
         result = await self.deployment.apply_deployment_plan(

@@ -70,7 +70,7 @@ class LinuxPackageCollector(BasePackageCollector):
         """Collect packages from APT (Ubuntu/Debian).
 
         ``apt-cache dumpavail`` is the ENTIRE available-package universe with
-        descriptions — hundreds of MB of text on Ubuntu (universe/multiverse).
+        descriptions -- hundreds of MB of text on Ubuntu (universe/multiverse).
         We STREAM it: parse the subprocess output stanza-by-stanza and store in
         batches, so peak memory stays flat instead of holding the whole dump +
         parsed list + ORM objects at once (which OOM-killed the agent on small
@@ -276,8 +276,8 @@ class LinuxPackageCollector(BasePackageCollector):
         """Yield ``{name, version, description}`` dicts from an apt-cache
         dumpavail line stream, one stanza at a time.
 
-        Accepts any iterable of lines — a live ``Popen.stdout`` or an in-memory
-        ``io.StringIO`` — so the multi-hundred-MB dump never has to live in
+        Accepts any iterable of lines -- a live ``Popen.stdout`` or an in-memory
+        ``io.StringIO`` -- so the multi-hundred-MB dump never has to live in
         memory all at once.  Description fields span continuation lines that
         start with a space; they're joined with spaces (matching the previous
         list-based parser).
@@ -287,7 +287,7 @@ class LinuxPackageCollector(BasePackageCollector):
         for raw in line_stream:
             line = raw.rstrip("\n")
             if not line.strip():
-                # Stanza boundary — emit the package we just finished.
+                # Stanza boundary -- emit the package we just finished.
                 record = self._dumpavail_record(stanza)
                 if record is not None:
                     yield record
@@ -340,7 +340,7 @@ class LinuxPackageCollector(BasePackageCollector):
     def _parse_apt_dumpavail_output(self, output: str) -> List[Dict[str, str]]:
         """Parse a full apt-cache dumpavail string into package dicts.
 
-        Thin wrapper over the streaming :meth:`_iter_apt_dumpavail` — kept for
+        Thin wrapper over the streaming :meth:`_iter_apt_dumpavail` -- kept for
         callers/tests that already hold the whole output as a string.
         """
         return list(self._iter_apt_dumpavail(io.StringIO(output)))

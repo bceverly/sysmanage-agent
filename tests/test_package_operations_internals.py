@@ -46,7 +46,7 @@ class TestPackageOperationsInternals:
             return_value=mock_host_approval
         )
 
-        # Mock send_message — the agent's outbound queue path.  Both
+        # Mock send_message -- the agent's outbound queue path.  Both
         # _send_installation_completion and _send_installation_status_update
         # go through this; tests assert send_message rather than the
         # removed call_server_api HTTP helper.
@@ -307,7 +307,7 @@ class TestPackageOperationsInternals:
     @pytest.mark.asyncio
     async def test_send_installation_completion_queue_returns_falsy(self):
         """If send_message returns falsy (queue rejected the row), the
-        method still returns normally — error is logged, not raised."""
+        method still returns normally -- error is logged, not raised."""
         self.mock_agent.send_message = AsyncMock(return_value=False)
 
         await self.package_ops._send_installation_completion(

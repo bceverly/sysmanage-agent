@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Pre-commit hook — refuses commits whose staged Python files would be
+# Pre-commit hook -- refuses commits whose staged Python files would be
 # reformatted by black.  This is the upstream-most defense against the
 # "black silently rewrote my working tree but I forgot to git add" gap
-# that ``make lint``'s auto-fix behaviour can otherwise mask.
+# that ``make lint``'s auto-fix behavior can otherwise mask.
 #
 # Pairs with the ``pre-push`` hook (which runs the full ``make lint``):
 #   * pre-commit fires per commit, only on staged .py files, just runs
-#     ``black --check`` — cheap, fast, blocks bad commits before they
+#     ``black --check`` -- cheap, fast, blocks bad commits before they
 #     even land in history.
-#   * pre-push fires once per push, runs the full lint chain — catches
+#   * pre-push fires once per push, runs the full lint chain -- catches
 #     anything that slipped through (e.g. ``--no-verify`` commits, or
 #     drift introduced by an editor between commit and push).
 #
@@ -49,7 +49,7 @@ fi
 
 # Resolve python from the project venv if present; fall back to
 # system python3 (so the hook still works for contributors who
-# haven't created a venv yet — they'll see a clear ImportError if
+# haven't created a venv yet -- they'll see a clear ImportError if
 # black isn't installed, which is the right hint).
 if [ -x .venv/bin/python ]; then
     PYTHON=.venv/bin/python

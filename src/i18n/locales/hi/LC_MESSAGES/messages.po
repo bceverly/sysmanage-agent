@@ -1636,21 +1636,21 @@ msgstr "सर्वर ने संदेश को पंजीकरण क�
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"सर्वर ने host_not_registered (strike %(n)d/%(limit)d) रिपोर्ट किया — होस्ट "
+"सर्वर ने host_not_registered (strike %(n)d/%(limit)d) रिपोर्ट किया -- होस्ट "
 "आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
 " है, तब ही पुनः रजिस्टर करेंगे;"
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered जारी (%(n)d स्ट्राइक) — इस होस्ट को वास्तव में गया समझते"
+"host_not_registered जारी (%(n)d स्ट्राइक) -- इस होस्ट को वास्तव में गया समझते"
 " हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1674,8 +1674,8 @@ msgstr "बेµटा %s: सेजेन चात्शी ॥॰: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "बेµटा %s: प्साॆ '%s' — दें"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "बेµटा %s: प्साॆ '%s' -- दें"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

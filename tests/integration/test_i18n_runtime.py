@@ -79,7 +79,7 @@ def test_set_language_for_all_supported_locales_does_not_raise():
     try:
         for loc in locales:
             set_language(loc)
-            # Lookup *something* — the missing-.mo fallback is the
+            # Lookup *something* -- the missing-.mo fallback is the
             # path most BSD/macOS hosts will take in CI, so this also
             # smoke-tests NullTranslations.
             assert _("VM name is required")

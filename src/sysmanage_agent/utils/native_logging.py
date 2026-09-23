@@ -5,8 +5,8 @@
 """Platform-native log handler selection for the SysManage agent.
 
 Returns an OS-native ``logging.Handler`` so the agent integrates with the host's
-logging system — systemd journal (``journalctl``), syslog, or the Windows Event
-Log — in addition to its rotating file log.  Opt-in via config; returns ``None``
+logging system -- systemd journal (``journalctl``), syslog, or the Windows Event
+Log -- in addition to its rotating file log.  Opt-in via config; returns ``None``
 (the caller keeps file logging and prints a notice) when the requested sink is
 unavailable, so a missing optional dependency never stops the agent.
 """
@@ -39,8 +39,8 @@ def build_native_handler(  # pylint: disable=too-many-arguments,too-many-return-
     syslog), the Windows Event Log on Windows, and syslog on macOS/BSD.
     ``syslog_remote`` forwards over the network to ``host``:``port`` (Phase 14.5)
     and uses ``facility`` / ``protocol`` (udp|tcp).  Returns ``None`` if the sink
-    can't be created (missing ``systemd``/``pywin32``, no syslog socket, or —
-    for ``syslog_remote`` — no host).
+    can't be created (missing ``systemd``/``pywin32``, no syslog socket, or --
+    for ``syslog_remote`` -- no host).
     """
     system = system or platform.system()
     target = (target or "auto").lower()
@@ -71,7 +71,7 @@ def _syslog_remote_handler(
 ) -> Optional[logging.Handler]:
     """SysLogHandler forwarding to a REMOTE host:port over UDP/TCP (Phase 14.5).
 
-    ``None`` when no host is configured or the socket can't be created — the
+    ``None`` when no host is configured or the socket can't be created -- the
     caller keeps file logging, so a bad remote target never stops the agent.
     """
     if not host:
@@ -157,7 +157,7 @@ def _eventlog_handler(identifier: str, system: str) -> Optional[logging.Handler]
         handler = logging.handlers.NTEventLogHandler(identifier)
     except Exception:  # pylint: disable=broad-exception-caught
         return None
-    # NTEventLogHandler doesn't raise when pywin32 is missing — it warns and
+    # NTEventLogHandler doesn't raise when pywin32 is missing -- it warns and
     # leaves ``_welu`` as None (a non-functional handler).  Reject that.
     if getattr(handler, "_welu", None) is None:
         return None

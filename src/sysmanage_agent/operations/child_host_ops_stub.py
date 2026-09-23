@@ -28,7 +28,7 @@ is a stub object that:
 * Returns ``{"success": False, "error": _("child host management
   requires Pro+"), "code": "feature_not_licensed"}`` for write/lifecycle
   commands.  In Pro+ deployments the server doesn't send these
-  command_types — it sends ``apply_deployment_plan`` instead — so this
+  command_types -- it sends ``apply_deployment_plan`` instead -- so this
   branch only fires in OSS-only deployments where the user shouldn't
   be hitting child-host endpoints anyway.
 
@@ -41,7 +41,7 @@ The methods are ``async`` because the dispatcher in
 ``agent_utils._dispatch_command`` unconditionally awaits the handler
 (``return await handler(parameters)``).  Each method opens with a
 single ``await asyncio.sleep(0)`` to genuinely yield to the event loop
-once — that satisfies static analyzers (no ``async`` without ``await``)
+once -- that satisfies static analyzers (no ``async`` without ``await``)
 at near-zero runtime cost, and avoids per-method linter suppressions.
 """
 
@@ -83,7 +83,7 @@ class ChildHostOperations:
     async def check_virtualization_support(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Capability probe — returns an empty/no-types dict.
+        """Capability probe -- returns an empty/no-types dict.
 
         The Pro+ engine's ``build_check_virtualization_support_plan``
         is the live path; this stub only fires in OSS-only
@@ -100,7 +100,7 @@ class ChildHostOperations:
         }
 
     async def list_child_hosts(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Empty listing — the active reporter bypasses this method.
+        """Empty listing -- the active reporter bypasses this method.
 
         ``communication/child_host_reporter.ChildHostReporter`` runs
         the listing shell directly and ships ``child_host_list_update``
@@ -124,7 +124,7 @@ class ChildHostOperations:
         ``autostart=true`` and ran ``vm start <name>`` for each.  Under
         the engine path, vm-bhyve's own rc.d script (enabled by
         ``build_bhyve_init_plan``) auto-starts those VMs at parent boot
-        — no agent-side action needed.  This stub method exists so
+        -- no agent-side action needed.  This stub method exists so
         ``main.py:_autostart_child_hosts`` doesn't AttributeError on
         startup; it intentionally does nothing.
         """
@@ -132,115 +132,115 @@ class ChildHostOperations:
         return None
 
     # ------------------------------------------------------------------
-    # Write / lifecycle ops — all return feature-not-licensed
+    # Write / lifecycle ops -- all return feature-not-licensed
     # ------------------------------------------------------------------
 
     async def create_child_host(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``create_child_host`` — returns ``feature_not_licensed``."""
+        """Stub for ``create_child_host`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def enable_wsl(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``enable_wsl`` — returns ``feature_not_licensed``."""
+        """Stub for ``enable_wsl`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def initialize_lxd(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``initialize_lxd`` — returns ``feature_not_licensed``."""
+        """Stub for ``initialize_lxd`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def initialize_vmm(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``initialize_vmm`` — returns ``feature_not_licensed``."""
+        """Stub for ``initialize_vmm`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def initialize_kvm(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``initialize_kvm`` — returns ``feature_not_licensed``."""
+        """Stub for ``initialize_kvm`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def initialize_bhyve(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``initialize_bhyve`` — returns ``feature_not_licensed``."""
+        """Stub for ``initialize_bhyve`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def disable_bhyve(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``disable_bhyve`` — returns ``feature_not_licensed``."""
+        """Stub for ``disable_bhyve`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def enable_kvm_modules(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``enable_kvm_modules`` — returns ``feature_not_licensed``."""
+        """Stub for ``enable_kvm_modules`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def disable_kvm_modules(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``disable_kvm_modules`` — returns ``feature_not_licensed``."""
+        """Stub for ``disable_kvm_modules`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def start_child_host(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``start_child_host`` — returns ``feature_not_licensed``."""
+        """Stub for ``start_child_host`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def stop_child_host(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``stop_child_host`` — returns ``feature_not_licensed``."""
+        """Stub for ``stop_child_host`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def restart_child_host(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``restart_child_host`` — returns ``feature_not_licensed``."""
+        """Stub for ``restart_child_host`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def delete_child_host(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``delete_child_host`` — returns ``feature_not_licensed``."""
+        """Stub for ``delete_child_host`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def update_child_agent(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``update_child_agent`` — returns ``feature_not_licensed``."""
+        """Stub for ``update_child_agent`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def setup_kvm_networking(
         self, _parameters: Dict[str, Any]
     ) -> Dict[str, Any]:  # NOSONAR - async required by dispatcher interface
-        """Stub for ``setup_kvm_networking`` — returns ``feature_not_licensed``."""
+        """Stub for ``setup_kvm_networking`` -- returns ``feature_not_licensed``."""
         await asyncio.sleep(0)
         return _feature_not_licensed()
 
     async def list_kvm_networks(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Read-only network list — empty in stub."""
+        """Read-only network list -- empty in stub."""
         await asyncio.sleep(0)
         return {"success": True, "networks": []}

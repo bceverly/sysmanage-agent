@@ -52,7 +52,7 @@ def _try_run_in(argv: list[str], cwd) -> str | None:
 def _repo_root() -> Path:
     """The checkout root, derived from this file's own location.
 
-    ``src/sysmanage_agent/core/version.py`` — four levels up is the repo.
+    ``src/sysmanage_agent/core/version.py`` -- four levels up is the repo.
     """
     return Path(__file__).resolve().parents[3]
 
@@ -73,8 +73,8 @@ def _from_git() -> str | None:
     """The checkout's own tag, with a ``-dev`` suffix.
 
     Run with ``cwd`` pinned to the repo root. Without that, ``git describe``
-    inherits the agent's working directory — which for a service is wherever
-    the rc script left it, quite possibly a different repository or none —
+    inherits the agent's working directory -- which for a service is wherever
+    the rc script left it, quite possibly a different repository or none --
     and would answer about the wrong tree or not at all.
     """
     root = _repo_root()
@@ -108,7 +108,7 @@ def _from_os_package_manager() -> str | None:
 
     Covers the case where the agent was installed via .deb / .rpm / pkg
     but the package didn't drop a Python ``dist-info/METADATA`` directory
-    (which is the typical state for native OS packages — they don't run
+    (which is the typical state for native OS packages -- they don't run
     pip, so ``importlib.metadata`` can't see the version).
     """
     # Debian/Ubuntu: dpkg-query -W -f='${Version}' sysmanage-agent
@@ -135,15 +135,15 @@ def get_agent_version() -> str:
     Get the sysmanage-agent version string.
 
     Resolution order:
-    0. A git checkout describes ITSELF — an installed package on the same
+    0. A git checkout describes ITSELF -- an installed package on the same
        box must not shadow the code that is actually running.
-    1. ``importlib.metadata`` — works for ``pip install`` deployments.
-    2. OS package manager (dpkg / rpm / pkg) — works for the .deb / .rpm /
+    1. ``importlib.metadata`` -- works for ``pip install`` deployments.
+    2. OS package manager (dpkg / rpm / pkg) -- works for the .deb / .rpm /
        pkg packages we ship via GitHub releases (the typical install
        method for child hosts created via the Pro+ engine plans, where
        the package doesn't drop a Python ``dist-info`` for
        ``importlib.metadata``).
-    3. ``git describe --tags`` with a ``-dev`` suffix — running from a
+    3. ``git describe --tags`` with a ``-dev`` suffix -- running from a
        source checkout.
     4. ``"unknown"`` fallback.
 
@@ -158,7 +158,7 @@ def get_agent_version() -> str:
     # reports the package's version forever: steps 1 and 2 below both find a
     # record that a ``git pull`` cannot touch, because it does not come from
     # the code. Observed 2026-09-21 on a FreeBSD host running a current
-    # checkout — it advertised the Phase 21.1 fact coverage built that day
+    # checkout -- it advertised the Phase 21.1 fact coverage built that day
     # while reporting 3.5.1.10, the version of a pkg installed months earlier.
     #
     # That is not merely cosmetic: the server compares agent_version against
@@ -189,7 +189,7 @@ def get_agent_version() -> str:
         logger.info("Agent version from OS package manager: %s", os_pkg_version)
         return os_pkg_version
 
-    # 3. git describe — reached when there is no ``.git`` beside the source
+    # 3. git describe -- reached when there is no ``.git`` beside the source
     # but git can still describe the working directory (a vendored tree, say).
     git_out = _from_git()
     if git_out:

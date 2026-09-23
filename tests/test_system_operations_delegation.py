@@ -193,13 +193,13 @@ class TestSystemOperationsDelegation:  # pylint: disable=too-many-public-methods
     # The 7 OTEL delegation tests (deploy/remove/start/stop/restart_*
     # _opentelemetry_service / connect/disconnect_opentelemetry_grafana)
     # were removed in the Phase 10.2 step 7 close-out (2026-05-14)
-    # alongside the methods they exercised — every OTEL operation
+    # alongside the methods they exercised -- every OTEL operation
     # now flows server-side through the Pro+ observability_engine
     # plan-builders + apply_deployment_plan.  Engine-side coverage
     # lives in the sysmanage repo's tests/services/test_observability_shim.py
     # and the Pro+ repo's module-source/observability_engine/.
 
-    # NOTE: Antivirus delegation tests removed in Phase 3 — SystemOperations
+    # NOTE: Antivirus delegation tests removed in Phase 3 -- SystemOperations
     # no longer has an antivirus_ops attribute. The open-source server now
     # builds declarative deploy plans via backend/services/av_plan_builder.py
     # and dispatches them via the apply_deployment_plan handler.
@@ -330,7 +330,7 @@ class TestSystemOperationsDelegation:  # pylint: disable=too-many-public-methods
             assert result is False
             mock_check.assert_called_once_with("https://random-site.com/")
 
-    # NOTE: Firewall delegation tests removed in Phase 3 — SystemOperations
+    # NOTE: Firewall delegation tests removed in Phase 3 -- SystemOperations
     # no longer has a firewall_ops attribute. The open-source server now
     # builds declarative deploy plans via backend/services/firewall_plan_builder.py
     # and dispatches them via the apply_deployment_plan handler.
@@ -420,7 +420,7 @@ class TestSystemOperationsDelegation:  # pylint: disable=too-many-public-methods
         assert self.system_ops.system_control is not None
         assert self.system_ops.package_ops is not None
         # antivirus_ops and firewall_ops removed in Phase 3.
-        # otel_ops removed in the Phase 10.2 step 7 close-out — engine
+        # otel_ops removed in the Phase 10.2 step 7 close-out -- engine
         # path replaces it.
         assert self.system_ops.repo_ops is not None
         assert self.system_ops.ubuntu_pro_ops is not None
@@ -514,10 +514,10 @@ class TestSystemOperationsDelegation:  # pylint: disable=too-many-public-methods
 
     # NOTE: OTEL deploy/remove/service-control/grafana-connection
     # exception tests removed in the Phase 10.2 step 7 close-out
-    # (2026-05-14) — every OTEL operation routes server-side through
+    # (2026-05-14) -- every OTEL operation routes server-side through
     # the Pro+ engine + apply_deployment_plan now.
     # NOTE: deploy_firewall / deploy_antivirus exception tests removed in
-    # Phase 3 — those delegators no longer exist on SystemOperations.
+    # Phase 3 -- those delegators no longer exist on SystemOperations.
 
     @pytest.mark.asyncio
     async def test_create_host_group_exception(self):
@@ -657,10 +657,10 @@ class TestSystemOperationsDelegation:  # pylint: disable=too-many-public-methods
             assert "Rescan failed" in str(excinfo.value)
 
     # NOTE: enable/disable/remove_antivirus exception tests removed in
-    # Phase 3 — those delegators no longer exist on SystemOperations.
+    # Phase 3 -- those delegators no longer exist on SystemOperations.
 
     # NOTE: enable/disable/restart_firewall exception tests removed in
-    # Phase 3 — those delegators no longer exist on SystemOperations.
+    # Phase 3 -- those delegators no longer exist on SystemOperations.
 
     # ========== Return Value Validation Tests ==========
 

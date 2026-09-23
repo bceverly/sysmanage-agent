@@ -13,7 +13,7 @@ Tests the delegator mixin classes that forward calls to appropriate handlers:
 - MiscDelegator
 - AgentDelegatorMixin
 
-(FirewallDelegator was removed in Phase 3 — see comment in agent_delegators.py.)
+(FirewallDelegator was removed in Phase 3 -- see comment in agent_delegators.py.)
 """
 
 # pylint: disable=protected-access,too-many-public-methods
@@ -223,7 +223,7 @@ class TestSystemOperationsDelegator:
     # Phase 10.2 step 7 close-out (2026-05-14): tests for
     # ``test_deploy_opentelemetry``, ``test_remove_opentelemetry``,
     # and ``test_attach_to_graylog`` are removed.  The delegators
-    # they exercised are gone — every observability operation now
+    # they exercised are gone -- every observability operation now
     # flows through the Pro+ engine's plan-builders +
     # apply_deployment_plan path.  Engine-path coverage lives in
     # the sysmanage repo at ``tests/services/test_observability_shim.py``

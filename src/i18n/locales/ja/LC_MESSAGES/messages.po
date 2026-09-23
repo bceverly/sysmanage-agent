@@ -1617,20 +1617,20 @@ msgstr "サーバーがメッセージのキューに追加に失敗しました
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"サーバーから host_not_registered (ストライク %(n)d/%(limit)d) が報告されました — "
+"サーバーから host_not_registered (ストライク %(n)d/%(limit)d) が報告されました -- "
 "ホストIDを破棄せずに再接続します。サーバーがこのホストをテナントインデックスから再解決できるように; 再登録は、これが継続する場合のみ行います。"
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered が持続しました (%(n)d ストライク) — このホストを本当に消失したものとして扱います。保存された "
+"host_not_registered が持続しました (%(n)d ストライク) -- このホストを本当に消失したものとして扱います。保存された "
 "host_id をクリアし、再登録します。"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1653,8 +1653,8 @@ msgstr "%s: インベントリ更新に失敗しました: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "%s: 無効なアクション'%s' — 応答なし"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "%s: 無効なアクション'%s' -- 応答なし"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

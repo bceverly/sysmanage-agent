@@ -41,7 +41,7 @@ BABEL_CFG = REPO_ROOT / "babel.cfg"
 # Hard limits, locked at zero (Phase 10 close-out, May 2026): every
 # code-extracted msgid must be translated in every locale, and no
 # fuzzy entries are tolerated.  CI fails on any drift.  If you need
-# to bypass temporarily, fix the strings instead — the auto-translate
+# to bypass temporarily, fix the strings instead -- the auto-translate
 # tooling in ``scripts/`` can fill new keys across all 14 locales.
 FUZZY_BUDGET = 0
 MISSING_BUDGET = 0
@@ -60,7 +60,7 @@ def parse_po_msgids(po_path: Path) -> tuple[set[str], int]:
 
     A msgid counts as "translated" when the corresponding msgstr is
     non-empty AND the entry is not flagged ``fuzzy``.  We don't shell out
-    to msggrep — pure-Python parser works for our PO files (no plurals,
+    to msggrep -- pure-Python parser works for our PO files (no plurals,
     no contexts in current usage).
     """
     text = po_path.read_text(encoding="utf-8")
@@ -242,7 +242,7 @@ def _clear_fuzzy(po_path: Path) -> None:
 
 def _seed_english(po_path: Path) -> None:
     """English is the SOURCE, never a translation target (``make translate``
-    deliberately skips it), so seed ``msgstr = msgid`` for every empty entry —
+    deliberately skips it), so seed ``msgstr = msgid`` for every empty entry --
     otherwise the ``en`` locale fails the completeness check on new strings."""
     if shutil.which("msgen"):
         subprocess.run(  # nosec B603 B607
@@ -269,7 +269,7 @@ def cmd_merge() -> int:
         po_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.po"
         # --no-fuzzy-matching: never let msgmerge GUESS a translation from a
         # similar string (guesses land `fuzzy`, which `make translate` skips and
-        # validate rejects) — new strings become honest empty gaps instead.
+        # validate rejects) -- new strings become honest empty gaps instead.
         cmd = [
             "msgmerge",
             "--update",
@@ -296,7 +296,7 @@ def cmd_compile() -> int:
             cmd = ["msgfmt", "-o", str(mo_path), str(po_path)]
             subprocess.run(cmd, check=True)  # nosec B603
         except (FileNotFoundError, OSError):
-            # msgfmt (GNU gettext) not installed — fall back to pure-Python polib
+            # msgfmt (GNU gettext) not installed -- fall back to pure-Python polib
             # so packaging works on platforms without gettext (e.g. Windows MSI).
             import polib  # noqa: PLC0415
 
@@ -348,7 +348,7 @@ def cmd_validate() -> int:
         return 1
     # stdout, deliberately.  Failures go to stderr, but a SUCCESS report on
     # stderr makes "passing" and "produced no output at all" look identical
-    # — that is how `make i18n-validate` got mistaken for a dead target
+    # -- that is how `make i18n-validate` got mistaken for a dead target
     # (2026-08-05).  Aligned across all four repos.
     print("\nOK: every code msgid is translated and fuzzy budget respected")
     return 0
@@ -359,7 +359,7 @@ def cmd_strip_fuzzy() -> int:
     flag AND empty its msgstr.
 
     A fuzzy msgstr is msgmerge's GUESS carried over from a different (similar)
-    string — NOT a real translation.  ``msgfmt`` already drops fuzzy entries from
+    string -- NOT a real translation.  ``msgfmt`` already drops fuzzy entries from
     the compiled ``.mo`` (so they render English at runtime), but a NON-EMPTY
     fuzzy msgstr hides the gap from the completeness check, so a wrong/absent
     translation ships silently.  Emptying makes the gap honest: ``make translate``

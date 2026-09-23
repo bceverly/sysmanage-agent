@@ -211,7 +211,7 @@ def configure_lxd_firewall(logger: logging.Logger, bridge_name: str = "lxdbr0") 
     Returns: {success: bool, message: str, error?: str}
     Skipped silently with success=True if UFW isn't installed (the host
     likely uses firewalld, in which case the operator must configure NAT
-    via firewalld zones manually — not in scope here).
+    via firewalld zones manually -- not in scope here).
     """
     if not _ufw_available():
         logger.info("UFW not installed; skipping LXD bridge firewall config")

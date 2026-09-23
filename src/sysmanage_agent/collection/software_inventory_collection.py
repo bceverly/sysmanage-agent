@@ -145,7 +145,7 @@ class SoftwareInventoryCollector:
             # ``SoftwareInventoryCollector`` keeps the same platform
             # collector instance for the lifetime of the agent, every
             # reconnect (which re-runs the initial-inventory burst) was
-            # piling another full snapshot onto the previous one — the
+            # piling another full snapshot onto the previous one -- the
             # symptom on theol9 was the per-cycle count climbing
             # 376 → 752 → 1128 → 1504 → 1880 → 2256 → ... and the same
             # packages being re-sent to the server with each tick.

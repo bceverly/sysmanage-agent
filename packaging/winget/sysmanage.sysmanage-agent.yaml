@@ -1,4 +1,4 @@
-# sysmanage-agent winget manifest — Phase 11.8 stub.
+# sysmanage-agent winget manifest -- Phase 11.8 stub.
 #
 # This single-file (singleton) form is acceptable for early submissions
 # per https://learn.microsoft.com/en-us/windows/package-manager/package/manifest.
@@ -28,13 +28,13 @@
 # build-and-release.yml (Phase 11.8 follow-up; see the
 # ``winget-manifest`` job that currently DRY-RUNs only).
 #
-# Microsoft Store submission is a separate, sandboxed pipeline — see
+# Microsoft Store submission is a separate, sandboxed pipeline -- see
 # ROADMAP.md §11.8 Mac-App-Store-and-Microsoft-Store note.
 PackageIdentifier: sysmanage.sysmanage-agent
 PackageVersion: 0.0.0
 PackageLocale: en-US
 # ``Publisher`` MUST match the MSI's ARP metadata (``Manufacturer``
-# in the WiX source) — winget's post-install Installation Verification
+# in the WiX source) -- winget's post-install Installation Verification
 # step compares the manifest against the Add/Remove Programs entry and
 # rejects mismatches.  The WiX source declares
 # ``Manufacturer="SysManage"`` at ``installer/windows/sysmanage-agent.wxs:9``;

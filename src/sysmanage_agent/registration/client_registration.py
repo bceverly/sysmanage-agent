@@ -54,7 +54,7 @@ class ClientRegistration:
         # Phase 19 capability advertisement.  A callable returning the live
         # command-handler map, wired by the agent AFTER MessageProcessor is
         # constructed (this object is built first, so it cannot be a ctor arg).
-        # Left None in tests and for any caller that has no agent — the field
+        # Left None in tests and for any caller that has no agent -- the field
         # is then simply omitted rather than guessed at, because advertising a
         # capability set we cannot verify is worse than advertising none.
         self.capability_provider = None
@@ -78,7 +78,7 @@ class ClientRegistration:
         except AttributeError:
             # Older config-manager builds don't have the helper.  Treat
             # the absent key as "no registration key configured" rather
-            # than crashing — back-compat with pre-Phase-8.1 deployments.
+            # than crashing -- back-compat with pre-Phase-8.1 deployments.
             return None
 
     def _get_enrollment_token_from_config(self) -> Optional[str]:
@@ -111,7 +111,7 @@ class ClientRegistration:
 
         Never fabricates: with no provider wired there is no way to know what
         this build routes, and an invented set would defeat the point of the
-        feature.  Failure to build one is logged and treated the same way —
+        feature.  Failure to build one is logged and treated the same way --
         registration must not fail because capability reporting did.
         """
         if self.capability_provider is None:
@@ -176,7 +176,7 @@ class ClientRegistration:
         registration_key = self._get_registration_key_from_config()
         if registration_key:
             basic_info["registration_key"] = registration_key
-            # Log presence only — never the value or its length, both of
+            # Log presence only -- never the value or its length, both of
             # which leak information about the secret.
             self.logger.info("Including registration_key in registration data")
 
@@ -187,7 +187,7 @@ class ClientRegistration:
         enrollment_token = self._get_enrollment_token_from_config()
         if enrollment_token:
             basic_info["enrollment_token"] = enrollment_token
-            # Log presence only — never the value or its length.
+            # Log presence only -- never the value or its length.
             self.logger.info("Including enrollment_token in registration data")
 
         # Debug logging
@@ -201,7 +201,7 @@ class ClientRegistration:
         logger.info("Is privileged: %s", is_privileged)
         logger.info("Enabled shells: %s", enabled_shells)
         # Safe: the second argument is the boolean ``token is not
-        # None``, never the token value itself — only the presence
+        # None``, never the token value itself -- only the presence
         # check is logged.  Semgrep's Pro rule pattern-matches on
         # several keywords ("token", "credential", "secret", etc.) in
         # the format string regardless of what's actually substituted,
@@ -258,8 +258,8 @@ class ClientRegistration:
         # Phase 13.1: include the stored host_id so a multi-tenant server can
         # route this host's inventory to its TENANT database (the host record
         # was created there at registration).  ``get_host_id`` returns None on
-        # the very first registration cycle (no id yet) — that path is the HTTP
-        # /host/register call, which creates the id — so this only attaches once
+        # the very first registration cycle (no id yet) -- that path is the HTTP
+        # /host/register call, which creates the id -- so this only attaches once
         # the host is registered, exactly where tenant routing needs it.
         host_id = self.get_host_id()
         if host_id:
@@ -299,9 +299,9 @@ class ClientRegistration:
             # was "for development".  Registration is the agent's FIRST contact
             # with the server and is unauthenticated, so it is the single worst
             # request to leave unverified: anyone in the path could impersonate
-            # the server and enrol the host into their own fleet.
+            # the server and enroll the host into their own fleet.
             #
-            # It now uses the shared context, which verifies by default, honours
+            # It now uses the shared context, which verifies by default, honors
             # ca_bundle for TLS-inspecting proxies, and only disables
             # verification when an administrator explicitly asks for it.
             endpoint = ServerEndpoint(self.config)

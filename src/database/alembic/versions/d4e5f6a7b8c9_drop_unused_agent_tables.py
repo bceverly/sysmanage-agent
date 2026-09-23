@@ -10,14 +10,14 @@ Create Date: 2026-08-06 00:00:00.000000
 
 Both tables were declared and migrated but never used:
 
-  * ``queue_metrics`` — intended for queue performance statistics.  Nothing in
+  * ``queue_metrics`` -- intended for queue performance statistics.  Nothing in
     the agent ever wrote a row; the only references outside the model were a
     comment in an old migration and a ``__repr__`` unit test.
-  * ``vmm_build_cache`` — intended to cache VMM build artifacts so they were not
+  * ``vmm_build_cache`` -- intended to cache VMM build artifacts so they were not
     rebuilt.  Zero references anywhere outside the model definition.
 
 Found by a 2026-08-06 audit of what the agent database actually holds.  Both
-were empty on the audited host, and being empty they cost nothing at runtime —
+were empty on the audited host, and being empty they cost nothing at runtime --
 but they are schema surface that has to be migrated, reasoned about and kept
 consistent for something no code path touches.
 

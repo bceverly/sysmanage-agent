@@ -1658,11 +1658,11 @@ msgstr "Le serveur n'a pas pu mettre en file d'attente le message : %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Le serveur a signalé host_not_registered (strike %(n)d/%(limit)d) — se "
+"Le serveur a signalé host_not_registered (strike %(n)d/%(limit)d) -- se "
 "reconnectant SANS désactiver l'identifiant de l'hote afin que le serveur "
 "puisse résolver cet hote depuis son index de locataires ; se recréera "
 "uniquement si cela persiste."
@@ -1670,10 +1670,10 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered persistant (%(n)d coups) — considérant cet hote comme "
+"host_not_registered persistant (%(n)d coups) -- considérant cet hote comme "
 "définitivement disparu ; effaçant l'identifiant de l'hote stocké et se "
 "recréant."
 
@@ -1698,7 +1698,7 @@ msgstr "Diffusion de %s : la mise à jour du catalogue a échoué : %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Diffusion de %s : action inconnue '%s' - ignorée"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
@@ -4220,7 +4220,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 #~ msgstr "Les règles NAT sont déjà configurées dans before.rules"
 
 #~ msgid "UFW not installed; skipping LXD bridge firewall config"
-#~ msgstr "UFW non installé—configuration de pare-feu du pont LXD ignorée"
+#~ msgstr "UFW non installé--configuration de pare-feu du pont LXD ignorée"
 
 #, python-format
 #~ msgid "Configuring UFW firewall for LXD bridge: %s"

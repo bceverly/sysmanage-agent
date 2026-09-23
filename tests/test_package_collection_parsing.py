@@ -733,7 +733,7 @@ Description: Apache HTTP Server
     def test_package_collection_error_handling(self, linux_package_collector):
         """Test error handling in various package collection scenarios."""
 
-        # Test command failure — dumpavail is streamed via Popen now, so mock
+        # Test command failure -- dumpavail is streamed via Popen now, so mock
         # that too (otherwise the real apt-cache would run).
         with patch("subprocess.run") as mock_run, patch(
             "subprocess.Popen"

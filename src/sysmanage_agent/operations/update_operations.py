@@ -34,7 +34,7 @@ class UpdateOperations:
             # ``get_available_updates`` shells out to the system package
             # manager (``dnf check-update``, ``yum check-update``,
             # ``apt-get -s upgrade``, etc.) and on a fresh OL9 host the
-            # full pass takes 3+ minutes — long enough that the asyncio
+            # full pass takes 3+ minutes -- long enough that the asyncio
             # event loop can't service the WebSocket keepalive ping/pong
             # from the server, which then closes the connection with a
             # 1011 internal error.  The agent reconnects, the

@@ -46,7 +46,7 @@ class TestParseLivepatchOutput:
     """Tests for OSInfoCollector._parse_livepatch_output."""
 
     def test_full_status(self, collector):
-        """A complete status JSON is normalised with fixes split to a list."""
+        """A complete status JSON is normalized with fixes split to a list."""
         out = collector._parse_livepatch_output(_FULL)
         assert out["enabled"] is True
         assert out["client_version"] == "10.6.1"

@@ -2,12 +2,12 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.core.capabilities`` — Phase 19 advertisement.
+"""Tests for ``sysmanage_agent.core.capabilities`` -- Phase 19 advertisement.
 
 The load-bearing test here is the DRIFT GUARD: the capability taxonomy is
 derived from the agent's real command-handler map, and the entire feature is
 worthless if the two ever disagree.  A capability list that lies is worse than
-no list, because the server gates dispatch on it — an advertised-but-absent
+no list, because the server gates dispatch on it -- an advertised-but-absent
 capability turns a clear "not supported" into the runtime failure this exists
 to prevent, and an unadvertised-but-present one silently makes a working
 feature unreachable.
@@ -36,12 +36,12 @@ def _live_command_types():
     Read from the source of ``_get_command_handlers`` rather than by
     constructing an agent: the handlers are bound methods on a fully wired
     agent (config, DB, sockets), and none of that is needed to know which
-    command TYPES exist.  Parsing keeps the test honest — it fails when a
+    command TYPES exist.  Parsing keeps the test honest -- it fails when a
     handler is added and left ungrouped, which is the drift we care about.
     """
     src = Path(_HANDLER_SRC).read_text(encoding="utf-8")
     block = re.search(r"def _get_command_handlers.*?\n        \}", src, re.S)
-    assert block, "could not locate _get_command_handlers — did it move?"
+    assert block, "could not locate _get_command_handlers -- did it move?"
     return re.findall(r'^\s+"([a-z_]+)":', block.group(0), re.M)
 
 
@@ -59,7 +59,7 @@ def test_no_group_claims_a_command_that_does_not_exist():
     """Drift guard, direction 2: a renamed or deleted handler must not linger.
 
     A group naming a command the agent cannot route would advertise a
-    capability that is not there — the server would dispatch and the host
+    capability that is not there -- the server would dispatch and the host
     would answer "Unknown command type".
     """
     live = set(_live_command_types())
@@ -110,7 +110,7 @@ def test_partial_support_is_reported_not_hidden():
 
 
 def test_reasons_are_codes_not_prose():
-    """Translation belongs server-side, where the catalogs are — an agent has
+    """Translation belongs server-side, where the catalogs are -- an agent has
     no business deciding what language an operator reads."""
     report = build_capability_report({})
     for reason in report["unavailable"].values():
@@ -118,7 +118,7 @@ def test_reasons_are_codes_not_prose():
 
 
 def test_unknown_capabilities_do_not_need_a_schema_bump():
-    """Adding a capability must not require a server change — only a change of
+    """Adding a capability must not require a server change -- only a change of
     SHAPE does.  Guards against someone bumping the version out of habit."""
     assert CAPABILITY_SCHEMA_VERSION == 1
 
@@ -142,7 +142,7 @@ def test_registration_omits_capabilities_when_it_cannot_derive_them():
 
 
 def test_a_broken_provider_does_not_break_registration():
-    """Capability reporting is not worth failing enrollment over — a host that
+    """Capability reporting is not worth failing enrollment over -- a host that
     cannot register is strictly worse than one with unknown capabilities."""
     reg = _bare_registration()
 

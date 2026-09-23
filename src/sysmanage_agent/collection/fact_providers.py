@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Fact provider bootstrap — ROADMAP Phase 21.1, slice S3.
+"""Fact provider bootstrap -- ROADMAP Phase 21.1, slice S3.
 
 The registry in ``fact_schema`` starts EMPTY, and an empty registry is not a
 neutral state: ``build_fact_coverage`` correctly reports every table as

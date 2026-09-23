@@ -11,7 +11,7 @@ scanning-settings:
     - "node_modules"
     - "dist"
     - "build"
-    # Packaging staging dir — holds stale copies of requirements.txt.
+    # Packaging staging dir -- holds stale copies of requirements.txt.
     - "build-temp"
     - "__pycache__"
     - ".tox"
@@ -27,7 +27,7 @@ report:
         # (RHEL9/OL9 cp39) CANNOT install 3.14 (it requires >=3.10) and no
         # 3.13.x backport of the fix exists, so the 3.9 branch stays on 3.13.x
         # and this advisory is an accepted, unavoidable cp39-only gap.
-        # NOTE: "66704" is a placeholder — replace with the real advisory id(s)
+        # NOTE: "66704" is a placeholder -- replace with the real advisory id(s)
         # shown in the safetycli.com web UI, and set the same ignore there (the
         # cloud policy overrides this local file for authenticated scans).
         "66704":

@@ -16,7 +16,7 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sysmanage-agent
 
-# Security hardening — note that NoNewPrivileges is intentionally NOT
+# Security hardening -- note that NoNewPrivileges is intentionally NOT
 # set here.  The agent is designed around a "non-root user + sudoers
 # NOPASSWD allowlist" privilege model (see sysmanage-agent.sudoers):
 # the agent runs as ``sysmanage-agent``, but every privileged
@@ -40,7 +40,7 @@ LimitNPROC=512
 Environment="PYTHONUNBUFFERED=1"
 Environment="SYSMANAGE_CONFIG=/etc/sysmanage-agent.yaml"
 Environment="PATH=/opt/sysmanage-agent/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-# HOME override — see Ubuntu service file for rationale.
+# HOME override -- see Ubuntu service file for rationale.
 # (RHEL family doesn't use /nonexistent by default, but pinning
 # HOME here keeps every distro's agent unit identical.)
 Environment="HOME=/opt/sysmanage-agent"

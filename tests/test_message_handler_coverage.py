@@ -98,7 +98,7 @@ class TestMessageHandler(
         """Test queuing outbound system info message.
 
         ``system_info`` carries Priority.URGENT so it always drains
-        before other queued messages — the registration handshake must
+        before other queued messages -- the registration handshake must
         complete on the server side first or non-handshake messages
         land with no hostname and are dropped.
         """

@@ -282,10 +282,10 @@ class BasePackageCollector:
         """Replace stored packages for ``manager`` from an ITERATOR of dicts.
 
         Same end result as :meth:`_store_packages` (delete-then-insert in one
-        transaction) but never materialises the whole package list: it flushes
+        transaction) but never materializes the whole package list: it flushes
         + expunges every ``batch_size`` rows so peak memory stays flat
         regardless of catalog size.  ``apt-cache dumpavail`` is the entire
-        Ubuntu universe with descriptions — building the full list (and all the
+        Ubuntu universe with descriptions -- building the full list (and all the
         ORM objects) at once OOM-killed the agent on small hosts.
         """
         collection_date = datetime.now(timezone.utc)
@@ -319,7 +319,7 @@ class BasePackageCollector:
                     if pending >= batch_size:
                         # Push this batch to the DB and drop the Python objects
                         # so the session's identity map doesn't grow unbounded.
-                        # Still one transaction — committed at the end.
+                        # Still one transaction -- committed at the end.
                         session.flush()
                         session.expunge_all()
                         pending = 0

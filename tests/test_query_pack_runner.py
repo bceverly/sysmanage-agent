@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``collection.query_pack_runner`` — Phase 21.1 S4.
+"""Tests for ``collection.query_pack_runner`` -- Phase 21.1 S4.
 
 What is actually at risk here is not "does the SQL run". It is that a pack is
 TENANT-AUTHORED from this slice on, and that the substrate's safety property
@@ -11,7 +11,7 @@ survives execution:
   * a write must be refused, by this agent, regardless of what the server let
     through (the server's engine is the other half, not a substitute);
   * a query whose tables this host does not serve must come back
-    ``not_covered`` with a reason, never as zero rows — zero rows is an answer,
+    ``not_covered`` with a reason, never as zero rows -- zero rows is an answer,
     and it is the wrong one; and
   * one bad query must fail only itself. A pack is a batch, and a batch that
     aborts on its first error loses the measurements that did succeed.

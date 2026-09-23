@@ -9,28 +9,28 @@
 # VERIFIED 2026-08-08: websockets 16.0 works fine on cp310+ (tested on Linux,
 # and the FreeBSD port runs against 16.0 because ports ignore this file
 # entirely and declare their own dependencies).  The cap is NOT about API
-# compatibility — it is purely about cp39 wheel availability.  ci.yml runs a
+# compatibility -- it is purely about cp39 wheel availability.  ci.yml runs a
 # 3.9 leg off THIS file, so relaxing it here breaks CI, not just packaging.
 websockets>=15.0.1,<16
 PyYAML>=6.0.2
 # aiohttp: the PYSEC-2026-2104..2113 fix is in 3.14.x, which requires Python >=3.10;
 # the agent's 3.9 leg (RHEL9/OL9 cp39) can only reach 3.13.x (no backport of the
-# fix exists — an accepted gap until cp39 is dropped).  Express this as a BARE
+# fix exists -- an accepted gap until cp39 is dropped).  Express this as a BARE
 # FLOOR, NOT a ``; python_version`` marker: the COPR/RPM vendor step runs
 # ``pip download --python-version 3.9.21``, and pip evaluates env markers against
-# the BUILD HOST's interpreter (3.12), not the target — so a ``>= '3.10'`` marker
+# the BUILD HOST's interpreter (3.12), not the target -- so a ``>= '3.10'`` marker
 # is wrongly ACTIVE during the 3.9 wheel pass and pulls 3.14.x (no cp39 wheel) →
 # build fails.  A bare floor instead lets pip's Requires-Python metadata pick the
 # right version per target automatically: verified to resolve to 3.14.1 on the
 # 3.10+ passes (the fix) and 3.13.5 on 3.9.  Same constraint as the
-# python_multipart note below — prod deps must not gate on python_version markers.
+# python_multipart note below -- prod deps must not gate on python_version markers.
 aiohttp>=3.13.5
 cryptography>=48.0.1  # 45.0.7-47.x buffer overflow + DNS name-constraint CVEs; 48.0.1 fixes GHSA-537c-gmf6-5ccf (48.0.0 affected). Supports cp39.
 psutil>=5.9.0
 bcrypt>=4.0.0
 aiofiles>=24.1.0
 # defusedxml is used by package_collector_windows when parsing the
-# Chocolatey API XML response — even though Chocolatey is a trusted
+# Chocolatey API XML response -- even though Chocolatey is a trusted
 # endpoint, parsing untrusted XML via stdlib ``xml.etree`` is the
 # pattern semgrep ``use-defused-xml`` (correctly) flags.  defusedxml
 # rejects external-entity references + billion-laughs payloads.
@@ -39,7 +39,7 @@ defusedxml>=0.7.1
 # the 0.0.20 DoS + form-parser-bypass CVE chain that affected the
 # server.  Removed because:
 #   1. ``pip download --python-version 3.9.21`` evaluates env markers
-#      against the CI HOST's python (3.12), not the target — so a
+#      against the CI HOST's python (3.12), not the target -- so a
 #      ``; python_version >= '3.10'`` gate doesn't actually skip the
 #      pin in the Python-3.9 wheel-download passes that the RPM
 #      builder uses.  pip then can't find a 0.0.27+ wheel for cp39
@@ -53,13 +53,13 @@ defusedxml>=0.7.1
 SQLAlchemy>=2.0.43
 alembic>=1.16.5
 # Transitive but SHIPPED at runtime, so pinned to their patched releases:
-#   Mako  — pulled by alembic (migration templates).  PYSEC-2026-2617 fixed in 1.3.12.
-#   idna  — pulled by aiohttp (via yarl) for hostname handling.  PYSEC-2026-215
+#   Mako  -- pulled by alembic (migration templates).  PYSEC-2026-2617 fixed in 1.3.12.
+#   idna  -- pulled by aiohttp (via yarl) for hostname handling.  PYSEC-2026-215
 #           fixed in 3.15.
 Mako>=1.3.12
 idna>=3.15
 
-# packaging — imported directly by
+# packaging -- imported directly by
 # src/sysmanage_agent/operations/package_compliance_operations.py.  It was never
 # declared, so only the FreeBSD port (which lists py-packaging in RUN_DEPENDS)
 # actually got it; every pip-installed platform fell through the module's
@@ -81,7 +81,7 @@ babel>=2.12.0  # pybabel CLI for i18n-validate
 # black is dev-only (``make lint``).  CVE-2026-32274 (arbitrary file writes
 # via crafted ``--python-cell-magics`` cache filename) is fixed in 26.3.1+,
 # which requires Python >=3.10.  Older patched releases for 3.9 don't
-# exist — so we install black ONLY on Py 3.10+, and skip it on Py 3.9.
+# exist -- so we install black ONLY on Py 3.10+, and skip it on Py 3.9.
 # The 3.9 CI jobs run ``pip install`` + ``pytest`` but not ``make lint``;
 # lint runs on 3.10+ only.
 black>=26.3.1; python_version >= '3.10'
@@ -90,7 +90,7 @@ isort>=5.12.0
 bandit>=1.8.6
 safety>=3.6.1,<4.0.0
 # semgrep 1.137+ requires Python >=3.10; agent CI matrix includes 3.9.
-# 1.162.0 relaxed tomli~=2.0.1 → ~=2.4.0 (compatible with pip-audit) — used
+# 1.162.0 relaxed tomli~=2.0.1 → ~=2.4.0 (compatible with pip-audit) -- used
 # on >=3.10.  On 3.9, 1.136.0 is the last release; the older tomli pin
 # is fine because the agent doesn't ship pip-audit (see Makefile).
 semgrep>=1.162.0; python_version >= '3.10'
@@ -99,7 +99,7 @@ typer>=0.9.0,<0.24.0
 # pytest 9.x (which carries the PYSEC tmp-dir advisory fix) requires Python
 # >=3.10, so the agent's 3.9 CI leg can't install it.  On 3.10+ we take the
 # fixed 9.0.3+; on 3.9 we stay on the newest 3.9-compatible pytest (8.4.x) and
-# accept that dev-tool-only medium advisory — pytest is never shipped with the
+# accept that dev-tool-only medium advisory -- pytest is never shipped with the
 # agent, and no 3.9-compatible release carries the fix.
 pytest>=9.0.3; python_version >= '3.10'
 pytest>=8.4.2,<9; python_version < '3.10'
@@ -109,7 +109,7 @@ pytest-xdist>=3.0.0
 coverage>=7.0.0
 
 # --- Transitive security pins for DEV / CI tooling only (safety, semgrep,
-#     selenium, requests) — NOT shipped with the agent runtime.  Pinned to their
+#     selenium, requests) -- NOT shipped with the agent runtime.  Pinned to their
 #     patched releases so the dependency scanners come back clean. ---
 # urllib3 2.7 dropped Python 3.9, so the 3.9 leg can't take >=2.7.0 (its ceiling
 # is the 2.6.x line).  Split like aiohttp/pytest: latest fix on 3.10+, highest
@@ -118,7 +118,7 @@ coverage>=7.0.0
 urllib3>=2.7.0; python_version >= '3.10'
 urllib3>=2.5.0,<2.7; python_version < '3.10'
 # ujson's PYSEC fix (5.13.0) and Authlib's (1.7.2) both require Python >=3.10, so
-# pin them ONLY on the 3.10+ leg — where the dependency scanners actually run.  On
+# pin them ONLY on the 3.10+ leg -- where the dependency scanners actually run.  On
 # 3.9 they resolve transitively via semgrep/safety to their newest 3.9-compatible
 # releases (ujson 5.11.x / Authlib 1.6.x); those aren't scanned there, so the gap
 # is inert.  An explicit 3.9 floor is avoided so it can't fight the tools' own pins.

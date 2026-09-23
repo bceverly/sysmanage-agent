@@ -4,7 +4,7 @@
 # Permissions: 0440 (enforced by package installer)
 
 # Allow non-interactive sudo.
-# (``Defaults:sysmanage-agent !requiretty`` was removed — sudo 1.9.x
+# (``Defaults:sysmanage-agent !requiretty`` was removed -- sudo 1.9.x
 # dropped the ``requiretty`` flag entirely; non-interactive sudo is
 # the default behavior now.)
 
@@ -12,7 +12,7 @@
 #
 # Bare-binary grant rather than per-subcommand.  sudo matches argv
 # positionally, so a rule like ``/usr/bin/dnf install *`` only matches
-# when ``install`` is the first argument — the moment the engine
+# when ``install`` is the first argument -- the moment the engine
 # prepends an option (as the apt-get and zypper setup_install plans
 # already do with ``-o``/``--non-interactive``), the positional rule
 # stops matching and sudo denies.  Granting the bare binary matches
@@ -27,7 +27,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/rpm -e *
 # Firmware updates via fwupd (apply_fwupd_updates).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/fwupdmgr update *
 
-# Snap / Flatpak — rare on RHEL family but supported when installed.
+# Snap / Flatpak -- rare on RHEL family but supported when installed.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/snap refresh *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/flatpak update -y *
 
@@ -45,7 +45,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm, /usr/bin/rm
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/install
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
-# rsync is the snapshot + restore workhorse — without it,
+# rsync is the snapshot + restore workhorse -- without it,
 # ``snapshot`` plans fail at the live-tree -> .snapshots/<id>/ copy
 # with sudo's "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo

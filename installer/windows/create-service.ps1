@@ -92,7 +92,7 @@ try {
         Write-Log "  2. Re-run the SysManage Agent MSI installer"
         Write-Log ""
         # The state that used to be invisible.  Anything reading the registry
-        # key or the event log now learns the agent will never enrol.
+        # key or the event log now learns the agent will never enroll.
         Set-StateIfAvailable -State 'Pending' -Detail (
             'No virtual environment, so the service was not registered. ' +
             'The deferred bootstrap task should finish this; if it does not, ' +

@@ -15,7 +15,7 @@ jobs=1
 unsafe-load-any-extension=no
 
 [MESSAGES CONTROL]
-# Shared SysManage pylint disable baseline — byte-identical across all four
+# Shared SysManage pylint disable baseline -- byte-identical across all four
 # repos (sysmanage, sysmanage-agent, sysmanage-professional-plus, sysmanage-docs).
 # Real-bug rules stay ENABLED: used-before-assignment, unused-import,
 # unused-variable, bare-except.
@@ -104,7 +104,7 @@ const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
 [FORMAT]
-# Maximum number of lines in a module — 1000 total lines, the maintainability
+# Maximum number of lines in a module -- 1000 total lines, the maintainability
 # limit applied uniformly across all SysManage repositories.
 max-module-lines=1000
 

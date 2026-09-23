@@ -63,7 +63,7 @@ def _load(text: str) -> Optional[Any]:
 class _TagTolerantLoader(yaml.SafeLoader):
     """A SafeLoader that reads tagged nodes as plain data.
 
-    Puppet's report is Ruby-serialised YAML: the root carries
+    Puppet's report is Ruby-serialized YAML: the root carries
     ``!ruby/object:Puppet::Transaction::Report`` and inner nodes carry their own
     tags, which makes plain ``safe_load`` raise on the very first line.
 

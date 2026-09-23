@@ -5,13 +5,13 @@ name: SonarCloud
 # WHY a dedicated workflow instead of the tag-triggered ci.yml:
 # A tag checkout is detached-HEAD with GITHUB_REF=refs/tags/vX.Y.Z, so the
 # scanner auto-detected the *tag* as the branch and filed each analysis under
-# a throwaway ``refs/tags/vX.Y.Z`` branch — the MAIN branch never got
+# a throwaway ``refs/tags/vX.Y.Z`` branch -- the MAIN branch never got
 # re-analyzed (it sat stale from 2026-05-12 onward, with ~30 junk tag
 # branches piling up in SonarCloud).  Scanning on push to ``main`` (a
 # long-lived branch, GITHUB_REF=refs/heads/main) keeps the main-branch
 # dashboard + README badges current.  ``sonar.branch.name=main`` is forced
 # below for zero ambiguity.  Unlike the old job, this one does NOT silently
-# skip when SONAR_TOKEN is missing — a misconfigured token fails loudly.
+# skip when SONAR_TOKEN is missing -- a misconfigured token fails loudly.
 
 on:
   push:

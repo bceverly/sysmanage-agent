@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Endpoint fact schema contract — ROADMAP Phase 21.1, slice S1.
+Endpoint fact schema contract -- ROADMAP Phase 21.1, slice S1.
 
 WHAT THIS IS
 ------------
@@ -15,7 +15,7 @@ provider (S3), the query packs (S4) and the engines that consume the facts
 
 WHY THE NAMES ARE OSQUERY'S
 ---------------------------
-Where osquery has a table, the contract IS osquery's table and column names —
+Where osquery has a table, the contract IS osquery's table and column names --
 verified against ``osquery/osquery/specs`` on 2026-09-21, not recalled.  The
 value being bought in this phase is the QUERY ECOSYSTEM (published packs, CIS
 content, the rules Phase 21.2 will carry); a schema of our own invention would
@@ -27,7 +27,7 @@ WHY SOME NAMES ARE OURS
 osquery has NO spec directory for any BSD (the set is darwin, linux, linwin,
 macwin, posix, sleuthkit, utility, windows) and there is no ``pkg_packages``.
 So even on FreeBSD, where the port exists, osquery offers no package
-inventory — and installed packages are exactly what ``vuln_engine`` matches
+inventory -- and installed packages are exactly what ``vuln_engine`` matches
 CVEs against.  Facts osquery does not model get a ``sysmanage_`` prefix.  That
 prefix is a promise: we never squat on an osquery name with different
 semantics, because a pack that reads ``deb_packages`` must get deb packages or
@@ -43,8 +43,8 @@ measured-empty must never be the same value anywhere above this line.
 
 WHERE THE TRUTH COMES FROM
 --------------------------
-Coverage is DERIVED from the provider registry — the same registry the
-collectors register into — never hand-maintained, for the reason
+Coverage is DERIVED from the provider registry -- the same registry the
+collectors register into -- never hand-maintained, for the reason
 ``capabilities.py`` gives at length: a capability list that lies is worse than
 none.  At S1 the registry is empty by design, so a host honestly reports that
 it serves no tables yet; S2 and S3 fill it in.
@@ -79,7 +79,7 @@ REASON_PROVIDER_FAILED = "provider_failed"  # registered, but unhealthy here
 # 22" reads as safe, and a pack cannot tell a true negative from a blind spot.
 REASON_INSUFFICIENT_PRIVILEGE = "insufficient_privilege"
 
-# Reasons that mean "this is not a gap in the agent" — the table does not exist
+# Reasons that mean "this is not a gap in the agent" -- the table does not exist
 # on this operating system at all.  Mirrors capability_probes.INAPPLICABLE_
 # REASONS so the two taxonomies read the same way.
 INAPPLICABLE_FACT_REASONS = frozenset({REASON_WRONG_PLATFORM})
@@ -112,7 +112,7 @@ FACT_TABLES: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     "listening_ports": ("osquery", ANY_PLATFORM),
     "processes": ("osquery", ANY_PLATFORM),
     "certificates": ("osquery", ANY_PLATFORM),
-    # specs/posix/ — no Windows equivalent under this name.
+    # specs/posix/ -- no Windows equivalent under this name.
     "mounts": ("osquery", ("linux", "darwin", "freebsd", "openbsd", "netbsd")),
     # Per-platform package tables, kept at their osquery names so published
     # packs keep working where osquery runs.
@@ -123,7 +123,7 @@ FACT_TABLES: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     # Ours, and the reason the BSDs are not second-class: ONE installed-package
     # table every platform populates.  Our packs and vuln_engine read this, so
     # package facts are portable even where osquery has no package table at
-    # all — which is every BSD, port or no port.
+    # all -- which is every BSD, port or no port.
     "sysmanage_packages": ("sysmanage", ANY_PLATFORM),
     # osquery models installed software, not PENDING updates, and update
     # detection is a large part of this agent.
@@ -143,11 +143,11 @@ FACT_TABLES: Dict[str, Tuple[str, Tuple[str, ...]]] = {
 
 # ---------------------------------------------------------------------------
 # Columns.  For an osquery-named table these are OSQUERY'S OWN columns, taken
-# from `osquery/osquery/specs` on 2026-09-21 — a pack that selects a column we
+# from `osquery/osquery/specs` on 2026-09-21 -- a pack that selects a column we
 # do not fill must get NULL, never an error, so the full column list is
 # declared even where no provider populates all of it.  Getting a name wrong
 # here is worse than omitting the table: the query succeeds and returns the
-# wrong thing.  Two that catch people out — osquery says `directory`, not
+# wrong thing.  Two that catch people out -- osquery says `directory`, not
 # `home_directory`, and `groupname`, not `group_name`.
 # ---------------------------------------------------------------------------
 FACT_COLUMNS: Dict[str, Tuple[str, ...]] = {
@@ -363,7 +363,7 @@ FACT_COLUMNS: Dict[str, Tuple[str, ...]] = {
         "package_family_name",
         "upgrade_code",
     ),
-    # Ours.  Kept deliberately narrow — every platform must be able to fill
+    # Ours.  Kept deliberately narrow -- every platform must be able to fill
     # every column, or the table stops being the portable one.
     "sysmanage_packages": (
         "name",
@@ -478,7 +478,7 @@ def has_providers() -> bool:
 
 
 def clear_providers() -> None:
-    """Drop every registration — for tests, and for agent restart paths."""
+    """Drop every registration -- for tests, and for agent restart paths."""
     _PROVIDERS.clear()
 
 
@@ -522,7 +522,7 @@ def _choose_provider(registered):
 def build_fact_coverage(platform_name: str) -> Dict[str, object]:
     """What this host serves, and why it does not serve the rest.
 
-    Every contract table lands in exactly one bucket — see THE SAFETY PROPERTY
+    Every contract table lands in exactly one bucket -- see THE SAFETY PROPERTY
     in the module docstring.  ``not_applicable`` is kept out of
     ``unsupported`` so a Windows host does not read as having a gap for
     ``mounts``, which is not a table it could ever serve.

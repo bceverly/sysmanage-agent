@@ -125,7 +125,7 @@ class SystemOperationsDelegator:
     # ``attach_to_graylog`` delegators here used to route to
     # ``operations/opentelemetry_operations.py`` and
     # ``operations/graylog_attachment.py``.  Both modules are
-    # deleted now — every observability operation goes through the
+    # deleted now -- every observability operation goes through the
     # Pro+ ``observability_engine`` plan-builders + ``apply_deployment_plan``
     # path.  The matching WS-command handlers in agent_utils.py are
     # also gone; an OSS-tier host that receives a stale

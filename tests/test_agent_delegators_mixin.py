@@ -45,7 +45,7 @@ class MockDelegatorClass(AgentDelegatorMixin):
 
 
 # NOTE: TestFirewallDelegator was removed in Phase 3. The agent no longer
-# has a FirewallDelegator mixin — the open-source server now sends
+# has a FirewallDelegator mixin -- the open-source server now sends
 # apply_deployment_plan messages and the agent runs them via the existing
 # generic deployment handler (see test_generic_deployment.TestApplyDeploymentPlan).
 
@@ -269,7 +269,7 @@ class TestDelegatorErrorHandling:
         with pytest.raises(Exception, match="Update check failed"):
             await delegator.check_updates()
 
-    # NOTE: test_firewall_ops_exception_propagation removed in Phase 3 —
+    # NOTE: test_firewall_ops_exception_propagation removed in Phase 3 --
     # firewall ops are no longer dispatched through the agent delegator.
 
     @pytest.mark.asyncio

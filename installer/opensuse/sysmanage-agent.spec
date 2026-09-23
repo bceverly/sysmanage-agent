@@ -60,7 +60,7 @@ Requires(pre):  shadow
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-# Optional: KVM host tooling — required when this agent manages KVM
+# Optional: KVM host tooling -- required when this agent manages KVM
 # child hosts via the SysManage server's Pro+ virtualization_engine.
 # Recommends rather than Requires so non-virt hosts don't pull libvirt.
 Recommends:     genisoimage

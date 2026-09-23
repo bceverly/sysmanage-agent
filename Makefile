@@ -209,7 +209,7 @@ else
 		echo "Active hooks:"; \
 		ls -1 .githooks/ 2>/dev/null | grep -v '^README' | sed 's/^/  /' || true; \
 	else \
-		echo "[INFO] Not in a git working tree — skipping hook install."; \
+		echo "[INFO] Not in a git working tree -- skipping hook install."; \
 	fi
 endif
 
@@ -681,8 +681,8 @@ else
 endif
 
 # Python linting
-# The FreeBSD port skeleton is never built by CI — it is rendered and
-# tarballed — so three defects sat in it unnoticed until a 2026-08-07 review
+# The FreeBSD port skeleton is never built by CI -- it is rendered and
+# tarballed -- so three defects sat in it unnoticed until a 2026-08-07 review
 # ahead of a possible ports-tree submission: pre-2021 $FreeBSD$/Created-by
 # keywords, USE_PYTHON=autoplist on a NO_BUILD hand-install port, and a
 # 3-line pkg-plist against ~290 staged files.  This catches that class on
@@ -711,7 +711,7 @@ endif
 # i18n-allow.txt.  Mirrors the same target in the other three repos.
 # Gate the SHAPE of gettext msgids.  pybabel only extracts string LITERALS, so
 # a msgid held in a module constant (or a lookup key used as the msgid) never
-# reaches a catalog and renders English — or leaks the raw key — in every
+# reaches a catalog and renders English -- or leaks the raw key -- in every
 # locale, with every other i18n gate green.  Mark deferred msgids with N_().
 # The extractor must SEE every file with translatable text (see the script).
 i18n-check-coverage: setup-venv
@@ -721,7 +721,7 @@ i18n-check-msgid-style: setup-venv
 	@$(PYTHON) scripts/i18n_check_msgid_style.py \
 		--source-root src --locales src/i18n/locales
 
-# Guard: the ENGLISH catalogue must translate English to itself.
+# Guard: the ENGLISH catalog must translate English to itself.
 # On 2026-08-13, 347 entries in the agent's en.po had msgstrs belonging to other
 # msgids -- "Error detecting antivirus" rendered as "Error detecting partitions"
 # -- and because `make translate` translates the English msgstr, all 13 locales
@@ -773,7 +773,7 @@ translate-dry: setup-venv
 	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/translate_i18n.py --dry-run
 
-# Offline completeness GATE — no service, no writes, no network.  Fails loudly
+# Offline completeness GATE -- no service, no writes, no network.  Fails loudly
 # (non-zero) if any locale string is still untranslated.  Safe for CI / release.
 translate-check: setup-venv
 	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
@@ -783,7 +783,7 @@ i18n-compile: setup-venv
 	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/i18n_validate.py --compile
 
-# Compile .mo from the committed .po BEFORE any package is built — every
+# Compile .mo from the committed .po BEFORE any package is built -- every
 # installer payload bundles src/i18n/locales/, and .mo is gitignored (never
 # committed).  Declared as an EXTRA prerequisite on each installer (Make merges
 # prerequisites across rules; recipes live at their definitions), so one line
@@ -798,7 +798,7 @@ i18n-strip-fuzzy: setup-venv
 # Format Python code
 # Auto-fix-with-tripwire: black still runs (so ``make lint`` doubles as a
 # fix-it command), but a pre-flight ``--check`` makes ``make lint`` FAIL if
-# black actually reformatted anything — so un-formatted code can't slip through
+# black actually reformatted anything -- so un-formatted code can't slip through
 # locally and then get rejected by CI's ``black --check``.  Matches sysmanage.
 format-python: setup-venv clean-whitespace
 	@echo "Formatting Python code..."
@@ -821,7 +821,7 @@ else
 	if [ "$$black_drift" != "0" ]; then \
 		echo ""; \
 		echo "[FAIL] black reformatted files in your working tree."; \
-		echo "       The fix was applied locally — commit it before pushing"; \
+		echo "       The fix was applied locally -- commit it before pushing"; \
 		echo "       (CI runs 'black --check' against committed code)."; \
 		echo ""; \
 		exit 1; \

@@ -6,7 +6,7 @@ on:
   # ubuntu/macos/windows).  This workflow runs the *exhaustive*
   # Python-version matrix (3.9 through 3.14) plus the full lint
   # suite + coverage badge updates only when an installer is being
-  # cut — that's the moment a regression in any of those dimensions
+  # cut -- that's the moment a regression in any of those dimensions
   # actually gates a release.  The same trigger satisfies
   # ``build-and-release.yml``'s wait-on-check step, which polls for
   # these check names against the tag's commit SHA.

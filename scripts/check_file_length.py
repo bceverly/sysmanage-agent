@@ -43,7 +43,7 @@ def tracked_files() -> list:
 
 
 def line_count(path: str) -> int:
-    """Newlines in the file — what ``wc -l < file`` reports."""
+    """Newlines in the file -- what ``wc -l < file`` reports."""
     return Path(path).read_bytes().count(b"\n")
 
 

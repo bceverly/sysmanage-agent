@@ -20,12 +20,12 @@ from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
 
 if TYPE_CHECKING:
-    # Type-only import — only mypy / pyright evaluates this block;
+    # Type-only import -- only mypy / pyright evaluates this block;
     # the runtime interpreter skips it entirely (TYPE_CHECKING is
     # always False at runtime).  Bandit's B405 rule does a textual
     # match on the import statement without flow analysis, so the
     # ``# nosec B405`` annotation documents that no actual XML parse
-    # ever uses this import — the runtime parser is defusedxml
+    # ever uses this import -- the runtime parser is defusedxml
     # (``DET.fromstring`` above).
     import xml.etree.ElementTree as ET  # nosec B405  # noqa: N811  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 
@@ -251,7 +251,7 @@ class WindowsPackageCollector(BasePackageCollector):
         Extracts package name and version from the Atom feed entries using
         the OData namespace conventions.
         """
-        # Phase 11 hardening — parse via defusedxml so XXE / billion-laughs
+        # Phase 11 hardening -- parse via defusedxml so XXE / billion-laughs
         # in a hijacked Chocolatey response can't escalate.  ``ET`` is
         # only kept around for the ``ET.Element`` type annotation below.
         root = DET.fromstring(xml_data)

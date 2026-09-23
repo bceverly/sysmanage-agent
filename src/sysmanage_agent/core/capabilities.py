@@ -3,13 +3,13 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Agent capability advertisement — ROADMAP Phase 19.
+Agent capability advertisement -- ROADMAP Phase 19.
 
 WHY THIS EXISTS
 ---------------
 Not every platform can run the *full* agent.  A native library may have no
 build for a given architecture, or a very old target OS may lack a
-prerequisite — alpine/freebsd/openbsd/netbsd already run reduced-capability
+prerequisite -- alpine/freebsd/openbsd/netbsd already run reduced-capability
 agents today.  Without advertisement the server happily dispatches a command
 the agent cannot route, and the operator learns about it as a runtime failure
 ("Unknown command type: ...") long after the fact.
@@ -21,7 +21,7 @@ The capability set is DERIVED from the agent's own command-handler map
 same dict ``_dispatch_command`` routes on, so "advertised" and "actually
 dispatchable" are the same set by construction.  A hand-written list would
 drift the moment a handler is renamed or a build drops one, and a capability
-list that lies is worse than none — it is exactly the silent-degradation this
+list that lies is worse than none -- it is exactly the silent-degradation this
 feature exists to prevent.
 
 WHAT IS SENT
@@ -29,13 +29,13 @@ WHAT IS SENT
 ``build_capability_report`` returns both views, because they serve different
 consumers and neither substitutes for the other:
 
-* ``commands`` — the exact command types this build can route.  The SERVER
+* ``commands`` -- the exact command types this build can route.  The SERVER
   gates dispatch on this; precision matters more than legibility.
-* ``capabilities`` — those commands folded into human-meaningful GROUPS
+* ``capabilities`` -- those commands folded into human-meaningful GROUPS
   ("packages", "virtualization", ...).  The UI shows these; 67 raw command
   names is not a thing an operator can read, and groups survive a handler
   being renamed.
-* ``unavailable`` — group -> machine-readable reason CODE, never prose.
+* ``unavailable`` -- group -> machine-readable reason CODE, never prose.
   Translation happens server-side where the catalogs live; an agent has no
   business deciding what language an operator reads.
 
@@ -73,13 +73,13 @@ def _fact_coverage(config) -> Dict[str, Any]:
     return build_fact_coverage(platform.system().lower())
 
 
-# Bump when an older server would MISREAD the report — changed semantics for an
+# Bump when an older server would MISREAD the report -- changed semantics for an
 # existing key, or a key it must understand to be correct.  Not when a
 # capability is added, which is the normal case.
 #
 # ``not_applicable`` was added WITHOUT a bump, deliberately.  A server that has
 # never heard of it drops the key (normalize_report keeps only known fields)
-# and computes ``limited = unavailable or partial`` exactly as before — and
+# and computes ``limited = unavailable or partial`` exactly as before -- and
 # that answer is now CORRECT, because inapplicable groups have already been
 # removed from those two by the time they are sent.  Bumping would have been
 # actively worse: MAX_SUPPORTED_SCHEMA_VERSION rejects a newer report outright,
@@ -205,7 +205,7 @@ def command_to_group() -> Dict[str, str]:
 def ungrouped_commands(available: Iterable[str]) -> List[str]:
     """Command types this build routes that no group claims.
 
-    Not an error — a new handler simply has not been grouped yet, and it is
+    Not an error -- a new handler simply has not been grouped yet, and it is
     still gated correctly because gating reads ``commands``.  Surfaced so the
     drift is visible instead of silent; a test asserts it stays empty.
     """
@@ -220,7 +220,7 @@ def build_capability_report(
 ) -> Dict[str, Any]:
     """Describe what this agent build can actually do.
 
-    ``handlers`` is the live command-handler map — pass
+    ``handlers`` is the live command-handler map -- pass
     ``MessageProcessor._get_command_handlers()``.  Deriving from it is the
     whole point: see the module docstring.
 
@@ -231,7 +231,7 @@ def build_capability_report(
     report, it simply advertises native coverage.
 
     ``suppressed`` is ``{command: reason_code}`` for commands this build routes
-    but this HOST cannot deliver — see ``capability_probes.detect_suppressed``.
+    but this HOST cannot deliver -- see ``capability_probes.detect_suppressed``.
     Shipping a handler answers "was this code built?"; it does not answer "will
     it work here".  Every build carries ``initialize_bhyve``, including on
     Linux.  Suppressed commands are removed from ``commands`` (so the dispatch

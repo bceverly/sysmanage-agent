@@ -69,8 +69,8 @@ The Agent supports 14 languages. To contribute:
 `make lint` runs an **offline** i18n completeness gate (`translate-check`,
 no translation service required) alongside `i18n-validate`, so an
 untranslated string fails locally at `pre-push` rather than in CI. Fill
-gaps with your local model rig — `make translate SERVICE=http://<host>:8765`
-— then re-run `make lint`.
+gaps with your local model rig -- `make translate SERVICE=http://<host>:8765`
+-- then re-run `make lint`.
 
 ---
 
@@ -92,5 +92,5 @@ We follow the [Contributor Covenant Code of Conduct](https://www.contributor-cov
 
 - Discuss large enhancements via issue first.
 - Keep your PR small and focused.
-- Let’s make SysManage Agent stronger together—thank you for your support!
+- Let’s make SysManage Agent stronger together--thank you for your support!
 

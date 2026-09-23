@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for OSInfoCollector image-mode (bootc / rpm-ostree) detection — Phase 17.3."""
+"""Tests for OSInfoCollector image-mode (bootc / rpm-ostree) detection -- Phase 17.3."""
 
 import json
 from unittest.mock import patch
@@ -65,7 +65,7 @@ class _FakeProc:
 
 
 class TestImageModeNormalizers:
-    """The static parsers — no subprocess/mocking needed."""
+    """The static parsers -- no subprocess/mocking needed."""
 
     @pytest.fixture
     def collector(self):

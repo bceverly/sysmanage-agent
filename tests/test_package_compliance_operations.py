@@ -133,7 +133,7 @@ class TestEvaluator:
 
 
 # ------------------------------------------------------------------
-# Operation class — tests the agent-side wrapper around _evaluate
+# Operation class -- tests the agent-side wrapper around _evaluate
 # ------------------------------------------------------------------
 
 

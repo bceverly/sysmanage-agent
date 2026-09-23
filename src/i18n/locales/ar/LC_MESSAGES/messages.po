@@ -1622,21 +1622,21 @@ msgstr "لفشل خادم تحميل الرسالة: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"الخادم أبلغ عن حالة host_not_registered (الضربة %(n)d/%(limit)d) — إعادة "
+"الخادم أبلغ عن حالة host_not_registered (الضربة %(n)d/%(limit)d) -- إعادة "
 "الاتصال WITHOUT إلغاء host_id حتى يتمكن الخادم من إعادة تحديد هذا العميل من "
 "مؤشر المستأجر الخاص به؛ سيتم التسجيل مجدداً فقط إذا استمرت هذه الحالة."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"استمرار حالة host_not_registered (%(n)d ضربات) — التعامل مع هذا العميل على "
+"استمرار حالة host_not_registered (%(n)d ضربات) -- التعامل مع هذا العميل على "
 "أنه غير موجود فعلياً؛ إزالة host_id المخزن وإعادة التسجيل."
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1660,8 +1660,8 @@ msgstr "بث %s: فشل تحديث المخزون البرمجي: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "بث %s: إجراء غير معروف '%s' — تم تجاهله"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "بث %s: إجراء غير معروف '%s' -- تم تجاهله"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

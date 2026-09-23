@@ -2,14 +2,14 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.collection.fact_native`` — Phase 21.1 S2.
+"""Tests for ``sysmanage_agent.collection.fact_native`` -- Phase 21.1 S2.
 
 These are FIDELITY tests, not coverage tests.  A pack written against osquery
 must get osquery's meaning or nothing at all, so the cases that matter are the
 ones where our collector's field is nearly-but-not-quite the osquery column:
 ``home_directory`` vs ``directory``, ``group_name`` vs ``groupname``, and
 ``is_system_user``, which is NOT ``is_hidden`` however much it reads like it.
-A wrong mapping does not fail loudly — the query succeeds and answers about
+A wrong mapping does not fail loudly -- the query succeeds and answers about
 the wrong thing.
 """
 
@@ -282,7 +282,7 @@ def test_one_row_per_address_not_one_per_interface():
     Driven through psutil rather than the hardware collector since 2026-09-21:
     the collector could hold only ONE address per family per interface, so a
     second address vanished, and it omitted loopback entirely. The PROPERTY
-    this test guards is unchanged — only the source it reads.
+    this test guards is unchanged -- only the source it reads.
     """
     import socket as _socket
     from collections import namedtuple
@@ -449,7 +449,7 @@ class TestListeningPortProtocol:
 
     def test_family_is_passed_through_because_it_already_matches(self):
         """psutil's AddressFamily values ARE the OS AF_* constants, which is
-        what osquery reports — so a map here would be the bug."""
+        what osquery reports -- so a map here would be the bug."""
         import socket as _socket
 
         rows = self._rows([self._conn(_socket.SOCK_STREAM)])
@@ -798,7 +798,7 @@ class TestOsVersionPlatformIsTheDistribution:
 
     def test_a_host_with_no_os_release_still_reports_a_platform(self):
         """The BSDs and Windows have no /etc/os-release and already agreed
-        with osquery — that path must keep working."""
+        with osquery -- that path must keep working."""
         row = self._row(release={})
         assert row["platform"]
         assert row["platform_like"] is None
@@ -809,7 +809,7 @@ class TestOpenBsdIpv4MaskFallback:
 
     Measured on OpenBSD 7.9 on 2026-09-21: v6 masks come back correctly and
     every v4 mask is None, while ``ifconfig`` prints them perfectly well. That
-    is a gap in psutil's BSD implementation, not in the OS — and it left
+    is a gap in psutil's BSD implementation, not in the OS -- and it left
     ``interface_addresses.mask`` silently NULL for every v4 address on a
     first-class platform. NetBSD 10.1 and Linux both populate it, so the
     fallback is needed on exactly one platform and must not cost the others a
@@ -893,7 +893,7 @@ class TestMacOsOsVersion:
         assert self._row()["version"] == "15.6.1"
 
     def test_other_platforms_are_untouched(self):
-        """The correction must be macOS-only — Linux already agreed with
+        """The correction must be macOS-only -- Linux already agreed with
         osquery, and the BSDs did too."""
         row = self._row(system="FreeBSD", mac_ver="")
         assert row["platform"] != "darwin"
@@ -905,11 +905,11 @@ class TestWindowsPrograms:
     Two defects, both measured on Windows 11 (26220) on 2026-09-21:
 
     * the manager filter was {"winget", "chocolatey", "msi", "windows"} and
-      the real value is ``windows_registry``, which matched NONE of them — so
+      the real value is ``windows_registry``, which matched NONE of them -- so
       the table reported winget's 204 packages and excluded all 195
       registry-installed programs; and
     * ``publisher`` was filled from ``source``, reporting "winget_repository"
-      — a package origin — where osquery reports the software vendor.
+      -- a package origin -- where osquery reports the software vendor.
 
     Neither failed. The table returned plausible rows that described the wrong
     thing.
@@ -953,7 +953,7 @@ class TestWindowsPrograms:
         assert rows[0]["publisher"] != "windows_installer"
 
     def test_winget_and_store_packages_survive_in_the_portable_table(self):
-        """They are not lost — sysmanage_packages is exactly what carries
+        """They are not lost -- sysmanage_packages is exactly what carries
         package managers osquery has no table for."""
         rows = fn.build_sysmanage_packages(self.FakeInventory())
         names = {r["name"] for r in rows}

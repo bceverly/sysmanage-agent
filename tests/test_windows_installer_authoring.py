@@ -49,7 +49,7 @@ def test_check_python_custom_action_defers_to_a_task():
     Result on a clean host was 1618 for both the VC++ redistributable and
     Python, no interpreter, no venv, no service -- and msiexec still exited 0,
     so Add/Remove Programs showed the agent installed while nothing would ever
-    enrol.
+    enroll.
     """
     root = ET.parse(MSI_WXS).getroot()
     actions = [

@@ -5,15 +5,15 @@
 """
 Strict i18n gate: fail on translations that are English, or gone stale.
 
-The existing completeness checks ask one question — "is the value present and
-not ``[TODO]``?" — so two whole classes of broken translation sail past them:
+The existing completeness checks ask one question -- "is the value present and
+not ``[TODO]``?" -- so two whole classes of broken translation sail past them:
 
   ENGLISH   The value is byte-identical to its English source with no marker.
             Renders English in every locale, forever, and every gate is green.
             A cross-repo audit on 2026-08-04 found 2,733 of these.
 
   STALE     The English was edited *after* the translation was made, so the
-            locale still carries text describing the old behaviour.  Found in
+            locale still carries text describing the old behavior.  Found in
             the docs, e.g. a German string still saying "Add one key to
             /etc/sysmanage.yaml" long after the English became "Set the role
             from the web UI".
@@ -28,14 +28,14 @@ matter of effort:
 
   * **JSON / TS bundles** key on a stable dotted path with the English as a
     *value*.  Editing that value leaves every translation untouched and
-    silently wrong — nothing about the file records that they no longer
+    silently wrong -- nothing about the file records that they no longer
     correspond.  So this tool keeps a sidecar of
     ``sha256(english)`` per key and calls a translation stale when the
     recorded hash no longer matches.
 
 ESCAPE HATCH: ``i18n-allow.txt`` (same syntax as the docs repo's
 ``no-translate.txt``) lists keys that are *intentionally* identical to English
-— product names, CLI snippets, protocol tokens.  Prefer a tight rule over a
+-- product names, CLI snippets, protocol tokens.  Prefer a tight rule over a
 broad glob; a rule that suppresses real prose is how this rots again.
 
 Usage:
@@ -131,7 +131,7 @@ EN = "en"
 # Anything containing a letter is translatable until an allow-list rule says
 # otherwise.  There is deliberately NO length threshold: "Login" is as much a
 # user-facing string as a paragraph, and a threshold is an invisible exemption
-# that nobody ever reviews — which is how 2,733 English values accumulated
+# that nobody ever reviews -- which is how 2,733 English values accumulated
 # behind green gates in the first place.  Only genuine non-prose is excluded
 # here (pure punctuation or digits, a bare URL); everything else that should
 # stay English is a deliberate, visible entry in the allow-list.
@@ -182,7 +182,7 @@ def is_prose(text: str) -> bool:
 
 
 # Locales whose translations must be written in a specific script.  A value in
-# some OTHER script is not a translation at all — it is the service having
+# some OTHER script is not a translation at all -- it is the service having
 # answered in the wrong language, and BOTH other checks pass it because it
 # differs from English and carries no [TODO].  Found 2026-08-05: the Arabic
 # locale held Chinese text in 52 places and Hindi held Korean/Japanese in 6.
@@ -239,8 +239,8 @@ def wrong_script(lang: str, text: str, source: str = None) -> bool:
     so a wholly-Chinese Arabic value was caught (52 of those, 2026-08-05) but a
     MIXED one was not: mostly-correct Arabic with Chinese spliced into the
     middle intersects {ARABIC} and passed.  410 such values were live in
-    sysmanage-docs when this was found — ar 275, hi 50, de 40, ru 16, es 13,
-    fr 9, pt 4, nl 2, it 1 — and `make i18n-strict` was green throughout.
+    sysmanage-docs when this was found -- ar 275, hi 50, de 40, ru 16, es 13,
+    fr 9, pt 4, nl 2, it 1 -- and `make i18n-strict` was green throughout.
 
     Latin is already excluded by scripts_used, so product names, paths and CLI
     snippets still pass.  A locale with no expectation (the Latin-script
@@ -278,7 +278,7 @@ class Allow:
         de,nl: re:Status
 
     which matters more than it looks: "Status" and "Version" ARE the German
-    word, so demanding a different string there is wrong — but Spanish should
+    word, so demanding a different string there is wrong -- but Spanish should
     say "Estado", and an unscoped rule would silently bless the English in
     every locale.  Cognates are the main reason this scoping exists.
     """
@@ -301,7 +301,7 @@ class Allow:
             # Strip a trailing inline comment.  The convention in these files is
             # two-or-more spaces before the '#', which keeps a '#' that is part
             # of a pattern intact.  Not doing this makes the comment text part
-            # of the regex, so the rule matches nothing — the docs repo had 23
+            # of the regex, so the rule matches nothing -- the docs repo had 23
             # rules silently dead that way.
             line = re.sub(r"\s{2,}#.*$", "", line).strip()
             scope = None
@@ -331,7 +331,7 @@ class Allow:
         if any(live(s) and fnmatch.fnmatch(key, k) for s, k in self.keys):
             return True
         # fullmatch, NOT search.  "This value is untranslatable" means the WHOLE
-        # value is a path/URL/identifier — not that a sentence happens to
+        # value is a path/URL/identifier -- not that a sentence happens to
         # mention one.  With search, `re://` exempted "Enterprise buyers buy
         # teams. Here's ours." because some sibling rule matched a substring,
         # which is precisely the "broad rule swallows the prose next to it"
@@ -448,7 +448,7 @@ def check_json(surface, allow, hashes):
     All three returns are 3-tuples.  This one used to return a 2-tuple, which
     was not a style nit: ``gather`` unpacks three, so any JSON surface without
     an ``en`` locale crashed the whole gate with a ValueError instead of being
-    skipped.  (``check_po`` returns TWO by design — a .po msgid IS the English,
+    skipped.  (``check_po`` returns TWO by design -- a .po msgid IS the English,
     so a .po translation cannot go stale.)
     """
     locales = json_locales(surface)
@@ -462,7 +462,7 @@ def check_json(surface, allow, hashes):
         for key, value in loc.items():
             src = en.get(key)
             if src is None or value.startswith(TODO) or not value.strip():
-                continue  # absent / already queued — the completeness gate owns these
+                continue  # absent / already queued -- the completeness gate owns these
             # The allow-list is consulted FIRST, including for wrong-script.
             # It has to be: a language picker legitimately renders native
             # names ("ko - 한국어") in every locale, and with the script check
@@ -646,7 +646,7 @@ def do_requeue(english, stale):
             # Key on the MSGID, not the msgstr.  Matching the msgstr only
             # works when it happens to equal the msgid (the English-identical
             # case) and silently does nothing for a wrong-language entry,
-            # whose msgstr is the very text being replaced — that bug left 21
+            # whose msgstr is the very text being replaced -- that bug left 21
             # Arabic entries holding Chinese while reporting "converged".
             # Line-wise because gettext wraps long entries across
             # continuation lines.
@@ -741,7 +741,7 @@ def main() -> int:
             print(
                 f"\nFAIL: {len(fixed_wrong)} wrong-language baseline "
                 f"{'entry' if len(fixed_wrong) == 1 else 'entries'} are "
-                "now clean — the ratchet must tighten.\n"
+                "now clean -- the ratchet must tighten.\n"
                 "  Drop them:  python3 scripts/i18n_strict.py --prune-language\n",
                 file=sys.stderr,
             )
@@ -753,14 +753,14 @@ def main() -> int:
         # Loop until the gate is clean.  A single pass is NOT guaranteed to
         # converge: re-reading a rewritten file can surface values the first
         # gather did not report, and a requeue that silently leaves violations
-        # behind is worse than useless — it reports success and the overnight
+        # behind is worse than useless -- it reports success and the overnight
         # translation run then misses them.
         total = 0
         for _round in range(6):
             # ``wrong`` MUST be in both the loop condition and the call.  It was
             # omitted from each at first, so the loop exited immediately and
             # reported "converged; 0 queued" while 21 wrong-language entries
-            # sat untouched — a requeue that silently does nothing is exactly
+            # sat untouched -- a requeue that silently does nothing is exactly
             # the failure this loop exists to prevent.
             # Wrong-sense rows are requeued alongside the rest: the failure
             # hint promises it, and re-translating is the fix now that the
@@ -790,7 +790,7 @@ def main() -> int:
     ):
         if not rows:
             continue
-        print(f"\n{label} — {len(rows)} value(s):", file=sys.stderr)
+        print(f"\n{label} -- {len(rows)} value(s):", file=sys.stderr)
         for surface, lang, _p, key, src in rows[: args.limit]:
             print(f"  {surface:<10} {lang:<6} {key}", file=sys.stderr)
             print("      " + src[:88].replace("\n", " "), file=sys.stderr)

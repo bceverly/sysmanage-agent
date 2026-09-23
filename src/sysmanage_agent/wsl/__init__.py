@@ -9,9 +9,9 @@ Houses the post-cutover home for WSL-related agent functionality that
 previously lived in ``operations/_virtualization_windows.py`` and
 ``operations/child_host_collector.py``:
 
-* ``capability`` — WSL availability/version detection + blocker
+* ``capability`` -- WSL availability/version detection + blocker
   identification (BIOS virt missing, Virtual Machine Platform missing).
-* ``keepalive`` — ``~/.wslconfig`` management + per-distro
+* ``keepalive`` -- ``~/.wslconfig`` management + per-distro
   ``sleep infinity`` Popen lifecycle that prevents WSL distros from
   auto-shutting-down (workaround for WSL 2.6.x regression).
 

@@ -16,7 +16,7 @@ agent restarts:
        metadata, the spawned PID, and a heartbeat timestamp.
     2. While the subprocess is running, a watchdog refreshes
        ``last_heartbeat_at`` every 30 seconds.
-    3. On a clean exit we delete the journal entry — the result is being
+    3. On a clean exit we delete the journal entry -- the result is being
        sent normally.
     4. On the next agent startup we walk the directory and classify each
        leftover entry: live PIDs are left alone (re-emit a "still running"
@@ -126,7 +126,7 @@ def journal_write(
             (stored verbatim so a future restart could in principle re-
             attempt the work).
         command_argv: The argv list of the subprocess.  Stored for forensic
-            value — if the journal entry is later flagged as dead, an admin
+            value -- if the journal entry is later flagged as dead, an admin
             can grep ``inflight/`` to see what was running.
         working_dir: The CWD the subprocess was launched in (or None).
         pid: Optional initial PID to write.  Left None when the journal is
@@ -179,7 +179,7 @@ def journal_heartbeat(message_id: str) -> None:
     """Refresh the ``last_heartbeat_at`` timestamp on a journal entry.
 
     Called from a watchdog asyncio task every ``HEARTBEAT_INTERVAL_SECONDS``
-    while the subprocess is alive.  Silently no-ops if the entry is gone —
+    while the subprocess is alive.  Silently no-ops if the entry is gone --
     the subprocess may have just exited and ``journal_clear`` may have
     raced ahead.
     """
@@ -221,7 +221,7 @@ def is_pid_alive(pid: Optional[int]) -> bool:
     On POSIX (Linux, macOS, *BSD) ``os.kill(pid, 0)`` succeeds iff a
     process with that PID is alive AND the calling user has permission to
     signal it.  ``EPERM`` means the process exists but belongs to another
-    user — still a live PID, so we treat that as alive.
+    user -- still a live PID, so we treat that as alive.
 
     On Windows we open the process with PROCESS_QUERY_LIMITED_INFORMATION
     via ``ctypes``.  A non-zero handle plus a successful close means alive;
@@ -242,7 +242,7 @@ def is_pid_alive(pid: Optional[int]) -> bool:
 def _is_pid_alive_posix(pid: int) -> bool:
     """POSIX ``os.kill(pid, 0)`` liveness probe.
 
-    ``signal=0`` is a no-op on POSIX — the call only performs the
+    ``signal=0`` is a no-op on POSIX -- the call only performs the
     permission + existence check that ``kill(2)`` does before delivery,
     without actually sending a signal.  This is the standard
     cross-platform liveness probe (used by ``psutil``, ``supervisor``,
@@ -292,7 +292,7 @@ def _is_pid_alive_windows(pid: int) -> bool:
         return False
     try:
         # GetExitCodeProcess returns STILL_ACTIVE (259) if the process
-        # has not exited.  We don't actually need the exit code here —
+        # has not exited.  We don't actually need the exit code here --
         # holding a valid handle is itself proof of liveness.
         return True
     finally:
@@ -347,7 +347,7 @@ def scan_inflight_on_startup(
         enqueue_command_result: Callable that consumes one synthetic
             command_result dict and queues it for delivery to the server.
             Typically ``lambda msg: agent.message_handler.queue_outbound_message(msg)``.
-            Optional — when None we just classify and clean up dead
+            Optional -- when None we just classify and clean up dead
             entries (used by tests and by the no-network startup path).
 
     Returns:
@@ -365,7 +365,7 @@ def scan_inflight_on_startup(
             continue
         payload = _load_journal(entry)
         if payload is None:
-            # Unreadable / corrupt journal file — treat it as dead so we
+            # Unreadable / corrupt journal file -- treat it as dead so we
             # don't carry it forward, and remove it.
             _safe_unlink(entry)
             continue
@@ -382,7 +382,7 @@ def scan_inflight_on_startup(
             continue
         LOGGER.warning(
             "In-flight subprocess died across agent restart: "
-            "message_id=%s pid=%s — emitting synthetic command_result",
+            "message_id=%s pid=%s -- emitting synthetic command_result",
             message_id,
             pid,
         )

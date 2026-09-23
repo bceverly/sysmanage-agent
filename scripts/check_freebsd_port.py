@@ -3,7 +3,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Static validation of the FreeBSD port skeleton — ROADMAP Phase 19.
+"""Static validation of the FreeBSD port skeleton -- ROADMAP Phase 19.
 
 WHY THIS EXISTS
 ---------------
@@ -12,14 +12,14 @@ it, and that is all.  Reviewing it on 2026-08-07 ahead of a possible ports-tree
 submission turned up three defects that only a build would otherwise have
 caught, and a committer would have bounced on sight:
 
-* ``# $FreeBSD$`` and ``# Created by:`` — removed when FreeBSD moved to git in
+* ``# $FreeBSD$`` and ``# Created by:`` -- removed when FreeBSD moved to git in
   2021, and still present here.
 * ``USE_PYTHON=autoplist`` on a ``NO_BUILD`` port with a hand-written
   ``do-install``.  autoplist generates the packing list for setuptools-
   installed modules; this port has no setup.py at all.  The two mechanisms
   together produce a wrong plist.
 * ``pkg-plist`` listed 3 files while ``do-install`` staged the whole
-  ``backend`` and ``alembic`` trees — every unlisted staged file fails
+  ``backend`` and ``alembic`` trees -- every unlisted staged file fails
   stage-qa.
 * ``MASTER_SITES``/``DISTFILES``/``DIST_SUBDIR`` declared alongside
   ``USE_GITHUB=yes``, which derives all three.
@@ -77,8 +77,8 @@ FRAMEWORK_SUBS = frozenset(
 def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
     """Defects that only bite when the SERVICE IS STARTED.
 
-    Everything else this checker looks at — and portlint, check-plist,
-    stage-qa and poudriere too — inspects a package at rest.  All of them
+    Everything else this checker looks at -- and portlint, check-plist,
+    stage-qa and poudriere too -- inspects a package at rest.  All of them
     passed a sysmanage package that could not start.  The two rules here are
     the two failures that cost the most to find, each reduced to the textual
     signature that would have caught it.
@@ -89,15 +89,15 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
 
     # The %%TOKEN%% rule applies to EVERY substituted file, not just rc
     # scripts.  It was originally gated on ". /etc/rc.subr", so a
-    # %%PORTVERSION%% in files/pkg-message.in — PORTVERSION is not a default
-    # SUB_LIST member — sailed straight through on 2026-08-10.  An
+    # %%PORTVERSION%% in files/pkg-message.in -- PORTVERSION is not a default
+    # SUB_LIST member -- sailed straight through on 2026-08-10.  An
     # unsubstituted token in a package message is merely embarrassing; in the
     # bootstrap wrapper it would be a command that cannot run.
     is_rc = ". /etc/rc.subr" in body
 
     # Scan the CODE, not the prose.  The comment explaining why -u must not be
     # there necessarily quotes ``-u ${name}_user``, so matching raw text reports
-    # the fixed script as broken — the mirror image of the ${TMPPLIST} check
+    # the fixed script as broken -- the mirror image of the ${TMPPLIST} check
     # below, where a comment made a dead check look alive.  Either way the rule
     # has to read what the shell reads.
     code = "\n".join(
@@ -112,7 +112,7 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
     #     daemon[85969]: initgroups(sysmanage,253): Operation not permitted
     # Both drops are no-ops when the user is root, so this hides completely
     # until someone runs the service as anyone else.  Found 2026-08-10, and
-    # only because daemon(8) logs to syslog by default — ``service onestart``
+    # only because daemon(8) logs to syslog by default -- ``service onestart``
     # itself said nothing but "failed to start".
     if name_match:
         user_var = f"{name_match.group(1)}_user"
@@ -122,14 +122,14 @@ def _rc_script_problems(path: Path, body: str, makefile: str) -> list[str]:
             found.append(
                 f"files/{path.name}: sets ${{{user_var}}} (an rc.subr knob that "
                 "already runs the command under su) AND passes -u to daemon; the "
-                "second drop fails in initgroups() for any non-root user — drop "
+                "second drop fails in initgroups() for any non-root user -- drop "
                 "the -u"
             )
 
     # A %%TOKEN%% with no SUB_LIST entry is installed literally.  The rc script
     # then execs the string "%%PYTHON_CMD%%", which is not a program, and the
     # service fails with nothing useful anywhere.  The port builds, packages,
-    # passes check-plist and stage-qa, and installs — found 2026-08-10 only by
+    # passes check-plist and stage-qa, and installs -- found 2026-08-10 only by
     # running ``sh -x`` on the INSTALLED rc script.
     declared = set(re.findall(r"SUB_LIST\s*[+?]?=\s*([^\n]*)", makefile))
     provided = set()
@@ -167,7 +167,7 @@ def _subfiles_exist(port_dir: Path, makefile: str) -> list[str]:
         if not (port_dir / "files" / f"{name}.in").is_file():
             found.append(
                 f"Makefile: '{name}' is listed in SUB_FILES/USE_RC_SUBR but "
-                f"files/{name}.in does not exist — the build dies at configure"
+                f"files/{name}.in does not exist -- the build dies at configure"
             )
     return found
 
@@ -191,7 +191,7 @@ def _pkgjsons_drift(port_dir: Path) -> list[str]:
         origin = Path(*rel.parts)
         if not origin.is_file():
             found.append(
-                f"files/packagejsons/{rel}: no matching {origin} in the repo — "
+                f"files/packagejsons/{rel}: no matching {origin} in the repo -- "
                 "PKGJSONSDIR must mirror the real source tree"
             )
             continue
@@ -217,12 +217,12 @@ def _problems(port_dir: Path) -> list[str]:
         if dead in text:
             found.append(
                 f"Makefile: contains '{dead}', removed when FreeBSD moved to git "
-                "in 2021 — a committer will reject this"
+                "in 2021 -- a committer will reject this"
             )
 
     # files/ TOO, not just the Makefile.  ``$FreeBSD$`` sat in both rc scripts
     # for months while this checker passed the ports, because it only ever read
-    # Makefile — a gate that inspects one file cannot speak for a directory.
+    # Makefile -- a gate that inspects one file cannot speak for a directory.
     # Found 2026-08-09 in a committer's own triage diff, which is the expensive
     # way to learn it.
     files_dir = port_dir / "files"
@@ -252,7 +252,7 @@ def _problems(port_dir: Path) -> list[str]:
         if re.search(r"^NO_BUILD\s*=\s*yes", text, re.M) or "do-install:" in text:
             found.append(
                 "Makefile: USE_PYTHON=autoplist together with NO_BUILD/do-install "
-                "— autoplist is for setuptools-installed modules; a hand-staged "
+                "-- autoplist is for setuptools-installed modules; a hand-staged "
                 "tree needs an explicit plist (or a TMPPLIST append)"
             )
 
@@ -262,7 +262,7 @@ def _problems(port_dir: Path) -> list[str]:
     if "do-install:" in text:
         # Strip comments first.  Checking the raw text let the explanatory
         # COMMENT about ${TMPPLIST} satisfy the check while the actual append
-        # was gone — a gate that cannot fail for the right reason is worse than
+        # was gone -- a gate that cannot fail for the right reason is worse than
         # no gate, so match the redirect in real recipe lines only.
         code = "\n".join(
             line for line in text.splitlines() if not line.lstrip().startswith("#")
@@ -295,7 +295,7 @@ def _problems(port_dir: Path) -> list[str]:
             if re.search(rf"^{var}\s*\??=", text, re.M):
                 found.append(
                     f"Makefile: {var}= is set alongside USE_GITHUB=yes, which "
-                    "derives it — remove one or they can disagree about the "
+                    "derives it -- remove one or they can disagree about the "
                     "fetched distfile (use += with a :group tag to ADD a "
                     "distfile)"
                 )
@@ -304,7 +304,7 @@ def _problems(port_dir: Path) -> list[str]:
     # version of each port, so `py312-alembic>=1.16.5` against a tree carrying
     # 1.16.2 makes this port permanently unbuildable for everyone: the floor is
     # unmet, the framework falls back to a source build, and that build still
-    # produces 1.16.2.  Found on a real ports tree on 2026-08-08 — portlint
+    # produces 1.16.2.  Found on a real ports tree on 2026-08-08 -- portlint
     # passes it, because portlint does not resolve versions.  Floors are
     # meaningful in requirements.txt and meaningless-to-harmful in a port; the
     # right way to require a newer dependency is to update THAT port in the
@@ -317,7 +317,7 @@ def _problems(port_dir: Path) -> list[str]:
                 found.append(
                     f"Makefile: dependency '{match.group(1)}' declares a version "
                     f"floor (>={match.group(2)}); FreeBSD carries one version per "
-                    "port, so an unmet floor makes the port unbuildable — use >0"
+                    "port, so an unmet floor makes the port unbuildable -- use >0"
                 )
 
     if plist.is_file():
@@ -330,14 +330,14 @@ def _problems(port_dir: Path) -> list[str]:
         # line becomes a file path: check-plist reports "Missing: # ..." and
         # pkg-create fails with "Unable to access file .../usr/local/# ...".
         # This checker used to skip '#' lines as comments, which is what let
-        # six of them reach a real build on 2026-08-10 — a gate that shares the
+        # six of them reach a real build on 2026-08-10 -- a gate that shares the
         # bug it is meant to catch is worse than no gate.  Use @comment if a
         # note really has to live in the plist.
         for entry in raw:
             if entry.startswith("#"):
                 found.append(
                     f"pkg-plist: '{entry[:50]}' starts with '#', but pkg-plist "
-                    "has no comment syntax — it will be treated as a file path "
+                    "has no comment syntax -- it will be treated as a file path "
                     "(use @comment, or move the note to the Makefile)"
                 )
         entries = [e for e in raw if not e.startswith("#")]

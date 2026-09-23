@@ -21,7 +21,7 @@
 # non-fatal (winget-pkgs PR #375773: Return="check" was rolling the entire
 # install back).  Net effect: msiexec says "Installation completed
 # successfully", Get-Service SysManageAgent says the service does not exist,
-# and nothing ever enrols.
+# and nothing ever enrolls.
 #
 # This script is registered as a SYSTEM scheduled task by check-python.ps1 and
 # runs once msiexec is gone, where installing Python is an ordinary operation.

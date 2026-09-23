@@ -105,7 +105,7 @@ def validate(spec: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def materialise(
+def materialize(
     spec: Dict[str, Any], workdir: str
 ) -> Tuple[List[str], Optional[bytes]]:
     """Write the spec's files and resolve its argv and stdin.
@@ -156,7 +156,7 @@ def _write_relative(workdir: str, name: str, content: str) -> str:
 
     Nested names are allowed because some engines require a layout (Chef wants
     cookbooks/<name>/recipes/default.rb). Anything that resolves outside the
-    workdir is collapsed to its basename rather than honoured: a spec is
+    workdir is collapsed to its basename rather than honored: a spec is
     server-supplied, but a traversal in one must not be able to overwrite
     /etc/anything.
     """

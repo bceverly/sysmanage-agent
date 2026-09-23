@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.core.fact_store`` — Phase 21.1 S2.
+"""Tests for ``sysmanage_agent.core.fact_store`` -- Phase 21.1 S2.
 
 Two properties carry this module.  The first is that a column no provider
 fills reads as NULL, because that is what lets a PUBLISHED osquery pack run
@@ -77,6 +77,41 @@ def test_reads_still_work_after_a_refusal(store):
         store.query("DELETE FROM users")
     store.materialize("groups", [{"gid": 0, "groupname": "root"}])
     assert store.query("SELECT groupname FROM groups") == [{"groupname": "root"}]
+
+
+def test_the_store_survives_many_refusals(store):
+    """Guards a defect that only existed on CPython 3.9 and 3.10.
+
+    ``set_authorizer(None)`` does not reset before 3.11: the read-only
+    authorizer stayed installed, so the FIRST query permanently denied every
+    later materialize() and the store could never be rebuilt. One refused pack
+    would have taken the whole collection pass down with it on those
+    interpreters, for the rest of the process's life.
+
+    Looping rather than asserting once: the bug was cumulative state, and a
+    single round trip is exactly what the original test did and missed.
+    """
+    for i in range(3):
+        store.materialize("users", [{"uid": i, "username": f"u{i}"}])
+        with pytest.raises(sqlite3.DatabaseError):
+            store.query("DELETE FROM users")
+        assert store.query("SELECT COUNT(*) AS n FROM users")[0]["n"] == 1
+        store.query("SELECT 1 AS ok")
+        store._conn.execute("DROP TABLE users")  # pylint: disable=protected-access
+
+
+def test_multi_statement_refusal_is_a_database_error(store):
+    """The documented contract, on every supported interpreter.
+
+    3.9 and 3.10 raise ``sqlite3.Warning`` for a multi-statement execute and
+    3.11+ raise ``ProgrammingError``. Warning does NOT inherit DatabaseError,
+    so a caller following this method's docstring would have caught nothing on
+    the older ones -- "SELECT 1; DROP TABLE users" refused, then the refusal
+    itself missed.
+    """
+    store.materialize("users", [{"uid": 0, "username": "root"}])
+    with pytest.raises(sqlite3.DatabaseError):
+        store.query("SELECT 1; DROP TABLE users")
 
 
 def test_parameters_are_bound_not_interpolated(store):

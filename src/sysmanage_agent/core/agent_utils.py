@@ -361,7 +361,7 @@ class MessageProcessor:
             "check_reboot_status": lambda params: self.agent.check_reboot_status(),
             # Phase 19: answer "what can you do?" on demand.  The set is
             # already sent at registration and with SYSTEM_INFO, but those are
-            # snapshots -- an operator debugging "why is this action greyed
+            # snapshots -- an operator debugging "why is this action grayed
             # out?" needs to ask the RUNNING agent, not read what it said when
             # it last enrolled.  Deliberately a command over the existing
             # server-initiated channel rather than a local listener: the agent
@@ -702,10 +702,10 @@ class MessageProcessor:
         """Execute one service control action for one service.
 
         Picks the correct service manager for the host:
-            systemctl  — most modern Linux distros
-            rc-service / rc-update — Alpine, Gentoo (OpenRC)
-            launchctl  — macOS
-            sc.exe     — Windows
+            systemctl  -- most modern Linux distros
+            rc-service / rc-update -- Alpine, Gentoo (OpenRC)
+            launchctl  -- macOS
+            sc.exe     -- Windows
         Falls back to systemctl if nothing else is present (preserving the
         previous behavior on hosts where the platform probe is inconclusive).
 

@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-osquery fact provider — ROADMAP Phase 21.1, slice S3.
+osquery fact provider -- ROADMAP Phase 21.1, slice S3.
 
 WHAT THIS IS
 ------------
@@ -207,7 +207,7 @@ def available_tables(refresh: bool = False) -> Set[str]:
 
 
 def reset_cache() -> None:
-    """Forget the probed table set — for tests and for agent restart paths."""
+    """Forget the probed table set -- for tests and for agent restart paths."""
     global _available_tables  # pylint: disable=global-statement
     _available_tables = None
 

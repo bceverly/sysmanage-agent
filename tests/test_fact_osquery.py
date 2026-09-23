@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Tests for ``sysmanage_agent.collection.fact_osquery`` — Phase 21.1 S3.
+"""Tests for ``sysmanage_agent.collection.fact_osquery`` -- Phase 21.1 S3.
 
 osquery is not installed on CI runners and is not installable on two of the
 platforms this agent supports, so every test here drives a FAKE ``osqueryi``.
@@ -366,5 +366,5 @@ class TestDenylist:
                     fo.register_osquery_provider(enabled=True)
         coverage = fs.build_fact_coverage("freebsd")
         assert coverage["served"]["users"] == fs.PROVIDER_OSQUERY
-        # Native, or unsupported for privilege — but NEVER osquery.
+        # Native, or unsupported for privilege -- but NEVER osquery.
         assert coverage["served"].get("listening_ports") != fs.PROVIDER_OSQUERY

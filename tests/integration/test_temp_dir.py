@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Integration tests for the agent's tempdir-resolution behaviour.
+Integration tests for the agent's tempdir-resolution behavior.
 
 We recently refactored ``script_operations._build_plan`` (and its
 server-side sibling ``script_plan_builder``) to construct the script
@@ -52,14 +52,14 @@ def test_build_plan_posix_path_is_under_tempdir():
         tempfile.gettempdir() + os.sep
     ) or script_path.startswith(tempfile.gettempdir() + "/"), (
         f"script_path={script_path!r} is not under gettempdir()="
-        f"{tempfile.gettempdir()!r} — refactor regressed?"
+        f"{tempfile.gettempdir()!r} -- refactor regressed?"
     )
     assert script_path.endswith(".sh"), f"unexpected script suffix in {script_path!r}"
 
 
 @pytest.mark.integration
 def test_build_plan_unique_paths_per_call():
-    """Each _build_plan() call uses a fresh uuid4().hex — paths must differ."""
+    """Each _build_plan() call uses a fresh uuid4().hex -- paths must differ."""
     shell = "powershell" if sys.platform == "win32" else "bash"
     plan_a = ScriptOperations._build_plan(
         "echo a", shell, 30
@@ -68,6 +68,6 @@ def test_build_plan_unique_paths_per_call():
         "echo b", shell, 30
     )  # pylint: disable=protected-access
     assert plan_a["files"][0]["path"] != plan_b["files"][0]["path"], (
-        "Two consecutive _build_plan() calls produced the same script path — "
+        "Two consecutive _build_plan() calls produced the same script path -- "
         "uuid4().hex collision or the path is not being randomised."
     )

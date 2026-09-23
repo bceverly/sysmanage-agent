@@ -10,13 +10,13 @@ that does not depend on the legacy ``operations/child_host_*`` cluster.
 
 Responsibilities (mirroring the legacy collector's public surface):
 
-* :meth:`send_child_hosts_update` — runs the same hypervisor-listing
+* :meth:`send_child_hosts_update` -- runs the same hypervisor-listing
   shell that the engine's ``build_list_child_hosts_plan`` emits, parses
   the section-delimited stdout, enriches bhyve rows from
   ``/vm/metadata/<name>.json``, and ships a ``child_host_list_update``
   message to the server.
 
-* :meth:`child_host_heartbeat` — periodic 60 s loop calling
+* :meth:`child_host_heartbeat` -- periodic 60 s loop calling
   :meth:`send_child_hosts_update`.  On Windows hosts it also drives
   the WSL keep-alive lifecycle (``~/.wslconfig`` + per-distro
   ``sleep infinity`` Popen) via :class:`WslKeepalive`.
@@ -33,12 +33,12 @@ Switching from the legacy collector is a one-line import change in
     self.child_host_collector = ChildHostReporter(agent_instance)
 
 The legacy collector and this reporter MUST NOT both be wired in
-concurrently — they each ship periodic ``child_host_list_update``
+concurrently -- they each ship periodic ``child_host_list_update``
 messages and would generate duplicates.
 
 The hypervisor-listing shell is duplicated from the engine here so the
 reporter doesn't need the engine ``.so`` to be loadable on the agent
-side (which would be odd — the engine is server-side Pro+ binary, not
+side (which would be odd -- the engine is server-side Pro+ binary, not
 agent-side).  When the engine adds new sections in the future, mirror
 the change here.
 """

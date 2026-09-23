@@ -132,7 +132,7 @@ def test_any_one_alternative_tool_is_enough():
 def test_ungoverned_commands_are_never_touched():
     """A command with no declared requirement stays advertised.
 
-    A missing probe must degrade to today's behaviour, not to suppression.
+    A missing probe must degrade to today's behavior, not to suppression.
     """
     assert (
         detect_suppressed(

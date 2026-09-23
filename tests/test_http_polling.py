@@ -10,7 +10,7 @@ command came back and was dispatched, and the proxy logged a POST rather than a
 CONNECT -- which is the whole reason this path survives where a WebSocket
 Upgrade is refused.
 
-These tests pin the behaviours that end-to-end run cannot cheaply cover: what
+These tests pin the behaviors that end-to-end run cannot cheaply cover: what
 happens when a poll FAILS.
 """
 
@@ -70,7 +70,7 @@ async def test_a_successful_poll_marks_its_batch_delivered():
 
 @pytest.mark.asyncio
 async def test_received_commands_go_through_the_websocket_dispatcher():
-    """Same function the receive loop calls, so behaviour cannot diverge."""
+    """Same function the receive loop calls, so behavior cannot diverge."""
     agent = make_agent()
     dispatched = []
 

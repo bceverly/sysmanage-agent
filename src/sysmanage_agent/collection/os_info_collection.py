@@ -411,7 +411,7 @@ class OSInfoCollector:
         )
         lp_block = kernel_entry.get("Livepatch", {}) if kernel_entry else {}
 
-        # ``Fixes`` may be a newline-delimited string or a list; normalise to a
+        # ``Fixes`` may be a newline-delimited string or a list; normalize to a
         # de-duplicated list of non-empty lines.
         raw_fixes = lp_block.get("Fixes")
         if isinstance(raw_fixes, str):
@@ -655,7 +655,7 @@ class OSInfoCollector:
 
         Tries ``platform.freedesktop_os_release()`` first (Python 3.10+).
         Falls back to parsing ``/etc/os-release`` manually for older
-        Pythons — Oracle Linux 9, RHEL 9, CentOS Stream 9 and Amazon
+        Pythons -- Oracle Linux 9, RHEL 9, CentOS Stream 9 and Amazon
         Linux 2023 ship Python 3.9 by default, where the new API is
         absent.  Without the fallback, ``os_info`` returned ``{}`` on
         every RHEL-family host and the server's "Operating System"
@@ -681,7 +681,7 @@ class OSInfoCollector:
                 os_info["ubuntu_pro"] = self._get_ubuntu_pro_info()
 
         # Phase 17.3: image-mode (bootc / rpm-ostree) detection. Rides the same
-        # os_info payload (and thus the os_version_update message) — no separate
+        # os_info payload (and thus the os_version_update message) -- no separate
         # collection hook. Always sets is_image_mode so the server can flip the
         # flag off if a host leaves image mode.
         os_info.update(self._collect_image_mode_info())

@@ -274,7 +274,7 @@ def _make_test_ca() -> bytes:
 def test_session_kwargs_enables_environment_proxies():
     """aiohttp ignores HTTPS_PROXY unless trust_env is set.
 
-    Without this the "honours your existing proxy configuration" promise is
+    Without this the "honors your existing proxy configuration" promise is
     simply false, and it fails in the environments hardest to debug.
     """
     kwargs = endpoint({"url": "https://e.com"}).session_kwargs()

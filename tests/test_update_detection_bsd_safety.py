@@ -5,7 +5,7 @@
 """A detector must not mutate the host it describes (FreeBSD).
 
 ``_detect_freebsd_version_upgrades`` used to run
-``freebsd-update upgrade -r RELEASE`` — inside a detection path.
+``freebsd-update upgrade -r RELEASE`` -- inside a detection path.
 
 ``freebsd-update upgrade`` is not a query: it fetches an entire operating
 system release into /var/db/freebsd-update and stages it for install. It is
@@ -15,7 +15,7 @@ collection cycle and logged an exception. It only avoided mutating the host
 because it was malformed enough to fail.
 
 These tests pin the two properties that matter: detection runs no mutating
-command, and the pkg check uses the REMOTE catalogue.
+command, and the pkg check uses the REMOTE catalog.
 """
 
 import sys
@@ -67,7 +67,7 @@ def test_version_upgrade_detection_runs_nothing_mutating():
 
 def test_version_upgrade_detection_claims_nothing_without_evidence():
     """It used to decide on ``"upgrade" in stdout``, which matches usage text
-    and most error messages — a release upgrade reported on no evidence."""
+    and most error messages -- a release upgrade reported on no evidence."""
     detector = BSDUpdateDetector()
     detector.available_updates = []
     with patch("src.sysmanage_agent.collection.update_detection_bsd.subprocess.run"):
@@ -97,14 +97,14 @@ def test_the_pkg_check_uses_the_remote_catalogue():
 
 
 class TestPkginReportsOnlyRealUpgrades:
-    """``pkgin list -u`` is not an upgrade list — pkgin has no such flag.
+    """``pkgin list -u`` is not an upgrade list -- pkgin has no such flag.
 
     It ignores ``-u`` and prints the plain installed-package list, byte for
     byte identical to ``pkgin list``. So every installed package was reported
     as having an update available. Measured on NetBSD 10.1 on 2026-09-21: 184
     "updates" on a host with 184 packages installed and 16 genuinely
     upgradable. The old parser's ``available_version: "available"`` placeholder
-    was the tell — the command it read cannot say what you would move to.
+    was the tell -- the command it read cannot say what you would move to.
     """
 
     DRY_RUN = (

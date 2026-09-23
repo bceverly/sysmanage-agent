@@ -172,7 +172,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             "is_user_installed": True,
         }
 
-        # The Tracking column IS the snap's channel — keep it structured (and,
+        # The Tracking column IS the snap's channel -- keep it structured (and,
         # for backward compatibility, still reflect it in ``source``).
         if len(parts) >= 4:
             package["channel"] = parts[3]
@@ -220,7 +220,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
         Columns (from the ``--digests --format`` template below) are:
         Repository, Tag, Digest, ID.  Container images are reported through the
-        software-inventory pipeline as ``package_manager="oci"`` — name =
+        software-inventory pipeline as ``package_manager="oci"`` -- name =
         repository, version = tag, and the registry manifest **digest** (the
         immutable pin) reuses the ``revision`` field (Phase 17.2 / 17.1 column).
 

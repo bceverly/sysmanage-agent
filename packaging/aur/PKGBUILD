@@ -1,6 +1,6 @@
 # Maintainer: Bryan Everly <bryan@theeverlys.com>
 #
-# AUR package — Phase 11.8 stub.
+# AUR package -- Phase 11.8 stub.
 #
 # pkgver is bumped to the release tag value by the ``aur`` job in
 # build-and-release.yml at publish time; do not hand-edit when releasing.
@@ -68,7 +68,7 @@ LAUNCH_EOF
     install -m 0644 installer/opensuse/sysmanage-agent.service \
         "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
 
-    # Example config — package owns this path via the ``backup=()`` entry
+    # Example config -- package owns this path via the ``backup=()`` entry
     # so pacman keeps user edits on upgrade.
     install -d "${pkgdir}/etc"
     install -m 0640 sysmanage-agent-system.yaml \

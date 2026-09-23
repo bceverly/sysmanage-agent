@@ -1648,11 +1648,11 @@ msgstr "Server konnte Nachricht nicht in Warteschlange legen: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Der Server hat host_not_registered gemeldet (Strike %(n)d/%(limit)d) – "
+"Der Server hat host_not_registered gemeldet (Strike %(n)d/%(limit)d) - "
 "Verbindung neu herstellen OHNE Ablaufen des host_id, damit der Server dieses"
 " Host aus seinem Tenant-Index erneut auflösen kann; Registrierung wird nur "
 "erfolgen, wenn es anhält."
@@ -1660,10 +1660,10 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered hat sich angehalten (%(n)d Strikes) – Diesen Host als "
+"host_not_registered hat sich angehalten (%(n)d Strikes) - Diesen Host als "
 "definitiv verloren betrachten; Speichergespeichertes host_id bereinigen und "
 "neu registrieren."
 
@@ -1688,7 +1688,7 @@ msgstr "Broadcast %s: Inventuraktualisierung fehlgeschlagen: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Broadcast %s: unbekannte Aktion '%s' - ignoriert"
 
 #: src/sysmanage_agent/communication/message_handler.py:569

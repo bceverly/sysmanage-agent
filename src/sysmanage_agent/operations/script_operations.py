@@ -5,9 +5,9 @@
 """
 Thin script-execution shim for the SysManage agent.
 
-Phase 5 migration (ROADMAP §5.1): all script orchestration — saved-script
+Phase 5 migration (ROADMAP §5.1): all script orchestration -- saved-script
 library, version history, multi-host execution, multi-shell selection,
-scheduled triggers, approval workflows — now lives in the server-side
+scheduled triggers, approval workflows -- now lives in the server-side
 Pro+ ``automation_engine`` Cython module.  The open-source server has
 its own ``script_plan_builder`` for ad-hoc one-shot runs.
 
@@ -16,7 +16,7 @@ the agent already knows how to run via ``apply_deployment_plan`` (Phase 3
 generic deployment handlers, ROADMAP §8.6).
 
 This file used to contain ~328 lines of agent-side shell pathfinding,
-script-file creation, subprocess invocation, and timeout handling — all
+script-file creation, subprocess invocation, and timeout handling -- all
 of which are now redundant because the server picks the shell and the
 target script path before sending the plan.
 
@@ -55,7 +55,7 @@ class ScriptOperations:
                 for older server builds that didn't send shell_type).
             timeout: per-script timeout in seconds; default 300, capped at
                 the agent's configured maximum.
-            working_directory: ignored — server-built deploy plans don't
+            working_directory: ignored -- server-built deploy plans don't
                 support cwd today; the script body should ``cd`` itself
                 before doing the work.
 
@@ -80,7 +80,7 @@ class ScriptOperations:
                 )
                 timeout = max_timeout
         except Exception:  # nosec B110
-            # Config not available (e.g. tests with stub agents) — keep
+            # Config not available (e.g. tests with stub agents) -- keep
             # the requested timeout as-is.
             pass
 
@@ -158,7 +158,7 @@ class ScriptOperations:
     def _extract_legacy_shape(result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Reshape an ``apply_deployment_plan`` result into the legacy
-        ``execute_script`` response shape so callers see no behaviour change.
+        ``execute_script`` response shape so callers see no behavior change.
         """
         if not result.get("success"):
             return {

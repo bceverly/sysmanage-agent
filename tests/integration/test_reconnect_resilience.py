@@ -13,7 +13,7 @@ exponential curve?
 
 The tests target ``SysManageAgent._handle_connection_error()`` directly
 because driving the full ``run()`` loop in a test would require booting
-a real server, a real config, and a real DB — too much surface for
+a real server, a real config, and a real DB -- too much surface for
 what's fundamentally a "did the math change?" check.
 
 Tagged ``@pytest.mark.integration`` so the existing CI workflow that
@@ -38,7 +38,7 @@ def reconnect_agent(agent):
     """Adapt the shared `agent` fixture for reconnect-resilience tests.
 
     Stubs out the message-handler hook so on_connection_lost() is a
-    no-op — we don't want to test message-pipeline cleanup here, just
+    no-op -- we don't want to test message-pipeline cleanup here, just
     the backoff math and the loop-control return value.
 
     Also forces ``should_auto_reconnect()`` to True so the helper
@@ -86,14 +86,14 @@ class TestReconnectBackoffMath:
                 delays.append(sleep_mock.call_args.args[0])
         assert reconnect_agent.connection_failures == 6
         # Each step's lower bound (delay * 0.5) must exceed the previous
-        # step's upper bound (delay * 1.5 / 2) — IF the implementation is
+        # step's upper bound (delay * 1.5 / 2) -- IF the implementation is
         # truly exponential.  Express it without jitter assumptions:
         # successive expected values are 0.02, 0.04, 0.08, 0.16, 0.32, 0.64
         exp_centers = [0.02, 0.04, 0.08, 0.16, 0.32, 0.64]
         for actual, center in zip(delays, exp_centers):
             assert _JITTER_LO * center <= actual < _JITTER_HI * center, (
                 f"step delay {actual:.4f}s not in jitter band around {center:.4f}s "
-                f"— exponential backoff may have regressed"
+                f"-- exponential backoff may have regressed"
             )
 
     @pytest.mark.asyncio
@@ -172,7 +172,7 @@ class TestReconnectLoopControl:
         self, reconnect_agent
     ):
         """If on_connection_lost itself raises, the reconnect path must
-        still proceed — losing the cleanup hook is bad, losing the
+        still proceed -- losing the cleanup hook is bad, losing the
         whole agent is worse."""
         reconnect_agent.message_handler.on_connection_lost = AsyncMock(
             side_effect=RuntimeError("simulated cleanup failure")

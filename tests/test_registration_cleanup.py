@@ -79,7 +79,7 @@ def test_the_tables_the_cleanup_targets_exist_in_the_schema(session):
 
 
 def test_a_bad_table_name_would_roll_back_the_whole_cleanup(session):
-    """Why one wrong name broke everything, pinned as behaviour.
+    """Why one wrong name broke everything, pinned as behavior.
 
     The deletes share a transaction. If a later statement raises, the earlier
     ones are undone -- which is exactly how a stale host_approval row survived
@@ -94,7 +94,7 @@ def test_a_bad_table_name_would_roll_back_the_whole_cleanup(session):
     session.rollback()
 
     remaining = session.execute(text("SELECT COUNT(*) FROM host_approval")).scalar()
-    assert remaining == 1, "the stale row survives — this is the production bug"
+    assert remaining == 1, "the stale row survives -- this is the production bug"
 
 
 def test_the_corrected_sequence_actually_clears_the_stale_row(session):

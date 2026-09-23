@@ -145,7 +145,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
     @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
     def test_get_basic_registration_info_no_enrollment_token(self, mock_priv):
         """No enrollment token configured → the field is absent (server-scoped,
-        unchanged single-tenant behaviour)."""
+        unchanged single-tenant behavior)."""
         mock_priv.return_value = False
         self.client_reg.network_utils.get_hostname.return_value = "h"
         self.client_reg.network_utils.get_ip_addresses.return_value = (
@@ -178,7 +178,7 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
 
     @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
     def test_get_system_info_no_host_id_before_registration(self, mock_priv):
-        """Before registration (no stored id), SYSTEM_INFO omits host_id — the
+        """Before registration (no stored id), SYSTEM_INFO omits host_id -- the
         first /host/register call is what creates the id server-side."""
         mock_priv.return_value = False
         self.client_reg.network_utils.get_hostname.return_value = "h"

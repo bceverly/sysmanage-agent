@@ -151,7 +151,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         # resolve it to (country, subdivision, city, lat/lon) via the
         # GeoLite2 chain.  ``public_ip_fetcher.get()`` returns the
         # last value fetched by the background refresh service (or
-        # None on airgapped agents — server-side just skips the geo
+        # None on airgapped agents -- server-side just skips the geo
         # update in that case).
         payload = {
             "agent_status": "healthy",
@@ -240,7 +240,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             http_url = endpoint.base_url()
 
             # One SSL context builder for the whole agent -- it is also what
-            # honours ca_bundle, so a corporate TLS-inspecting proxy works here
+            # honors ca_bundle, so a corporate TLS-inspecting proxy works here
             # without anyone having to remember to disable verification.
             timeout = aiohttp.ClientTimeout(total=5)  # 5 second timeout
 
@@ -378,8 +378,8 @@ class MessageHandler(MessageHandlerQueueMixin):
         enrollment-token use on every reconnect, and once the token is exhausted a
         token-less re-registration lands server-scoped (the phantom duplicate).
 
-        So we tolerate a few strikes, reconnecting WITHOUT dropping our identity —
-        which lets the server re-resolve us from the still-present host_id — and
+        So we tolerate a few strikes, reconnecting WITHOUT dropping our identity --
+        which lets the server re-resolve us from the still-present host_id -- and
         only treat the host as genuinely gone (clear + re-register) once the error
         PERSISTS.  Any inbound message the server only sends to a recognized host
         resets the strike count (see _dispatch_received_message)."""
@@ -388,7 +388,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         if strikes < HOST_NOT_REGISTERED_STRIKE_LIMIT:
             self.logger.warning(
                 _(
-                    "Server reported host_not_registered (strike %(n)d/%(limit)d) — "
+                    "Server reported host_not_registered (strike %(n)d/%(limit)d) -- "
                     "reconnecting WITHOUT discarding host_id so the server can "
                     "re-resolve this host from its tenant index; will re-register "
                     "only if it persists."
@@ -401,7 +401,7 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         self.logger.warning(
             _(
-                "host_not_registered persisted (%(n)d strikes) — treating this host "
+                "host_not_registered persisted (%(n)d strikes) -- treating this host "
                 "as genuinely gone; clearing stored host_id and re-registering."
             ),
             {"n": strikes},
@@ -442,7 +442,7 @@ class MessageHandler(MessageHandlerQueueMixin):
                                   visible in agent logs / journalctl.
           (anything else)         Logged as warning, no action taken.
 
-        New broadcast actions are added by name here — keeping the
+        New broadcast actions are added by name here -- keeping the
         dispatch in one place makes the supported-actions list easy to
         document and audit."""
         broadcast_id = data.get("broadcast_id", "unknown")
@@ -479,11 +479,11 @@ class MessageHandler(MessageHandlerQueueMixin):
                 )
         elif action == "banner":
             message = data.get("message") or "(no message)"
-            # Structural diagnostic marker, not user prose — keep untranslated.
+            # Structural diagnostic marker, not user prose -- keep untranslated.
             self.logger.info("[BANNER] %s", message)
         else:
             self.logger.warning(
-                _("Broadcast %s: unknown action '%s' — ignored"),
+                _("Broadcast %s: unknown action '%s' -- ignored"),
                 broadcast_id,
                 action,
             )
@@ -551,7 +551,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         traffic, and inbound commands silently disappear forever
         (observed: ``'NoneType' object has no attribute 'recv'`` race
         when ``self.agent.websocket`` is cleared mid-loop by another
-        coroutine — the resulting ``AttributeError`` was being
+        coroutine -- the resulting ``AttributeError`` was being
         swallowed and the agent stopped processing all server
         commands until manual restart).
         """
@@ -591,7 +591,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             )
             self.agent.connected = False
             self.agent.websocket = None
-            # Returning normally here is intentional — the outer
+            # Returning normally here is intentional -- the outer
             # ``_run_agent_tasks`` waits with FIRST_COMPLETED and ``run()``
             # reconnects via _handle_connection_error.
         except Exception as error:
@@ -603,7 +603,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             # Re-raise so ``_run_agent_tasks`` sees the failure via
             # ``task.exception()`` and propagates it to ``run()``'s
             # connection-error handler.  Previously this was swallowed,
-            # leaving the receiver task dead but the sender alive — the
+            # leaving the receiver task dead but the sender alive -- the
             # net effect was inbound commands silently disappearing
             # until the agent was manually restarted.
             raise

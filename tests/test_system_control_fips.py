@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Tests for SystemControl.fips_change — FIPS enable/disable execution (Phase 14.4).
+Tests for SystemControl.fips_change -- FIPS enable/disable execution (Phase 14.4).
 """
 
 from unittest.mock import AsyncMock, Mock

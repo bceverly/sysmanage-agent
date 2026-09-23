@@ -3,7 +3,7 @@
 # See the LICENSE file in the project root for the full terms.
 
 """
-Fact substrate on the BSDs — ROADMAP Phase 21.1, exit-gate evidence.
+Fact substrate on the BSDs -- ROADMAP Phase 21.1, exit-gate evidence.
 
 These run inside the QEMU VMs spun up by .github/workflows/bsd-tests.yml,
 which is the ONLY place the phase's central claim can be tested: *the
@@ -15,15 +15,15 @@ pytest invocation still works in the cross-platform matrix.
 WHY THESE EXIST AS A SEPARATE FILE
 ----------------------------------
 The existing BSD integration tests check uname, package managers, rc.d and
-pty — generic platform sanity from earlier phases. Nothing touched the fact
+pty -- generic platform sanity from earlier phases. Nothing touched the fact
 substrate, so dispatching bsd-tests.yml would have run 24 tests that say
 nothing about 21.1 and reported success.
 
 EVERY TEST IS MARKED ``integration``
 ------------------------------------
 The workflow selects on ``-m integration`` and prints "No agent tests tagged
-@pytest.mark.integration — exiting clean" when nothing matches, then PASSES.
-An unmarked test here would not run and the job would stay green — the same
+@pytest.mark.integration -- exiting clean" when nothing matches, then PASSES.
+An unmarked test here would not run and the job would stay green -- the same
 empty-green failure as the screenshot tier bug. The marker is load-bearing,
 not decoration; ``test_this_module_is_marked_for_the_bsd_workflow`` asserts it
 of every test in the file rather than trusting review to catch a missing one.
@@ -35,7 +35,6 @@ import importlib
 import inspect
 import json
 import platform
-import socket
 import sys
 
 import pytest
@@ -82,7 +81,7 @@ def test_this_module_is_marked_for_the_bsd_workflow():
         for name, obj in vars(module).items()
         if name.startswith("test_") and inspect.isfunction(obj)
     ]
-    assert tests, "no tests found — this assertion would pass vacuously"
+    assert tests, "no tests found -- this assertion would pass vacuously"
     for name, func in tests:
         marks = {m.name for m in getattr(func, "pytestmark", [])}
         assert "integration" in marks, f"{name} is not marked integration"
@@ -132,7 +131,7 @@ def test_freebsd_osquery_table_inventory_is_recorded(tmp_path):
     # exactly why sysmanage_packages exists.
     for pkg_table in ("deb_packages", "rpm_packages", "homebrew_packages"):
         assert pkg_table not in available, (
-            f"{pkg_table} appeared in the FreeBSD port — the premise for "
+            f"{pkg_table} appeared in the FreeBSD port -- the premise for "
             "sysmanage_packages has changed; re-read ROADMAP 21.1 S2."
         )
 
@@ -214,7 +213,7 @@ def test_users_and_os_version_are_not_empty():
     provider is reporting 'measured, found nothing' about a populated host --
     the exact confusion this phase exists to remove."""
     collected = fact_native.collect(["users", "os_version"])
-    assert collected["users"], "no users on a BSD — root must exist"
+    assert collected["users"], "no users on a BSD -- root must exist"
     assert any(r.get("username") == "root" for r in collected["users"])
     assert collected["os_version"], "os_version is empty"
     assert collected["os_version"][0].get("name")
@@ -228,7 +227,7 @@ def test_sysmanage_packages_serves_where_osquery_has_no_package_table(substrate)
     on FreeBSD, OpenBSD or NetBSD."""
     assert "sysmanage_packages" in substrate["served"]
     rows = fact_native.collect(["sysmanage_packages"])["sysmanage_packages"]
-    assert rows, "no packages found on a BSD — the package collector is silent"
+    assert rows, "no packages found on a BSD -- the package collector is silent"
     assert any(r.get("name") for r in rows)
 
 
@@ -236,7 +235,7 @@ def test_sysmanage_packages_serves_where_osquery_has_no_package_table(substrate)
 @bsd_only
 def test_a_pack_written_against_osquery_runs_here():
     """End to end, and the whole portability claim in one test: contract rows
-    materialised into SQLite and queried with osquery-dialect SQL, on a
+    materialized into SQLite and queried with osquery-dialect SQL, on a
     platform osquery cannot run on."""
     collected = fact_native.collect(["users", "os_version"])
     with FactStore() as store:
@@ -304,9 +303,9 @@ def test_listening_ports_does_not_claim_unix_sockets_it_never_looked_at(substrat
     if "listening_ports" not in substrate["served"]:
         pytest.skip("listening_ports is not served here (needs root); nothing to check")
     rows = fact_native.collect(["listening_ports"])["listening_ports"]
-    unix = [r for r in rows if r.get("family") == int(socket.AF_UNIX)]
+    unix = [r for r in rows if r.get("family") == fn._AF_UNIX]
     for row in unix:
         assert row.get(
             "path"
-        ), "an AF_UNIX row must carry its path — that is its identity"
+        ), "an AF_UNIX row must carry its path -- that is its identity"
         assert row.get("port") == 0

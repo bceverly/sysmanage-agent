@@ -34,7 +34,7 @@ load_rc_config $name
 # SYSMANAGE_CONFIG, then /etc/sysmanage-agent.yaml, then ./sysmanage-agent.yaml
 # -- and never looked at the path this script had just verified exists.
 # SYSMANAGE_CONFIG / _DB_PATH / _LOG_DIR are the overrides main.py and
-# src/database/init.py actually honour.  Without _DB_PATH the SQLite database
+# src/database/init.py actually honor.  Without _DB_PATH the SQLite database
 # resolves to the process working directory.
 export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
 export SYSMANAGE_DB_PATH="${sysmanage_agent_dbpath}"

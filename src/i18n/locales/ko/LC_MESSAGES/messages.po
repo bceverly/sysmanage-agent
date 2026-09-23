@@ -1617,20 +1617,20 @@ msgstr "서버가 메시지를 대기열에 추가하지 못했습니다: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 — 호스트 ID를 제거하지 않고 "
+"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 -- 호스트 ID를 제거하지 않고 "
 "재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) — 이 호스트를 실제로 사라진 것으로 처리합니다. 저장된 "
+"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) -- 이 호스트를 실제로 사라진 것으로 처리합니다. 저장된 "
 "host_id를 제거하고 재등록합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1653,8 +1653,8 @@ msgstr "%s: 인벤토리 갱신 실패: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "%s: 알 수 없는 액션 '%s' — 무시됨"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "%s: 알 수 없는 액션 '%s' -- 무시됨"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

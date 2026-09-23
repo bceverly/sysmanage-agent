@@ -16,7 +16,7 @@ Windows runners.
 import os
 import platform
 import shutil
-import subprocess  # nosec B404 — only used to check installed binaries
+import subprocess  # nosec B404 -- only used to check installed binaries
 
 import pytest
 
@@ -49,7 +49,7 @@ def test_bsd_package_manager_is_present():
     }[platform.system()]
     assert (
         shutil.which(expected) is not None
-    ), f"{expected} not on PATH on {platform.system()} — runner image regressed?"
+    ), f"{expected} not on PATH on {platform.system()} -- runner image regressed?"
 
 
 @pytest.mark.integration
@@ -57,7 +57,7 @@ def test_bsd_package_manager_is_present():
 def test_rc_d_directory_exists():
     """All three BSDs use rc.d-style service scripts under /etc/rc.d."""
     assert os.path.isdir("/etc/rc.d"), (
-        "/etc/rc.d missing on a BSD — service-management code paths in the "
+        "/etc/rc.d missing on a BSD -- service-management code paths in the "
         "agent will break here.  Image regression?"
     )
 
@@ -86,7 +86,9 @@ def test_freebsd_specific_only_on_freebsd():
         pytest.skip("FreeBSD-only.")
     # /usr/local is FreeBSD's primary ports/pkg prefix.  If it's missing
     # something is very wrong.
-    assert os.path.isdir("/usr/local"), "FreeBSD missing /usr/local — pkg layout broken"
+    assert os.path.isdir(
+        "/usr/local"
+    ), "FreeBSD missing /usr/local -- pkg layout broken"
 
 
 @pytest.mark.integration
@@ -99,7 +101,7 @@ def test_openbsd_specific_only_on_openbsd():
     # is the conventional override location for service flags.
     assert os.path.isfile("/etc/rc.conf") or os.path.isdir(
         "/etc"
-    ), "OpenBSD missing /etc/rc.conf — image regression?"
+    ), "OpenBSD missing /etc/rc.conf -- image regression?"
 
 
 @pytest.mark.integration
@@ -109,4 +111,4 @@ def test_netbsd_specific_only_on_netbsd():
     if platform.system() != "NetBSD":
         pytest.skip("NetBSD-only.")
     # NetBSD's pkgsrc convention puts user-installed binaries under /usr/pkg.
-    assert os.path.isdir("/usr/pkg"), "NetBSD missing /usr/pkg — pkgsrc layout broken"
+    assert os.path.isdir("/usr/pkg"), "NetBSD missing /usr/pkg -- pkgsrc layout broken"

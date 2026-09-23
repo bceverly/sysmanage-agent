@@ -1613,19 +1613,19 @@ msgstr "伺服器無法將消息加入隊列：%s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) — 重新連接而不丟棄 "
+"伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
 "host_id，以便伺服器可以從其租戶索引中重新解析此主機；如果問題持續將重新註冊。"
 
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
-msgstr "主機未註冊狀態持續 (%(n)d 次警告) — 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
+msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
@@ -1646,8 +1646,8 @@ msgstr "廣播 %s：存貨刷新失敗：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
-msgstr "廣播 %s：未知操作 '%s' — 忽略"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
+msgstr "廣播 %s：未知操作 '%s' -- 忽略"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""

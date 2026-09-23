@@ -10,10 +10,10 @@ Pull-style makes every host its own controller, so a profile carrying a stray
 would spend the Phase 19 "agent->server, 443 only, no inbound" guarantee at the
 point where it is least visible.  It is asserted rather than trusted.
 
-The rest of these pin behaviour that was OBSERVED against real binaries
+The rest of these pin behavior that was OBSERVED against real binaries
 (ansible-core 2.21.3, dsc 3.2.3) rather than assumed:
 
-  * dsc logs to stderr with ANSI colour and results to stdout, so the streams
+  * dsc logs to stderr with ANSI color and results to stdout, so the streams
     must stay separate or the JSON parse dies;
   * a failing dsc run prints NOTHING to stdout, so its verdict has to come
     from the exit code;
@@ -238,7 +238,7 @@ class TestDscInvocation:
 
     @pytest.mark.asyncio
     async def test_streams_are_captured_separately(self):
-        # dsc writes ANSI-coloured logs to stderr; folding them into stdout
+        # dsc writes ANSI-colored logs to stderr; folding them into stdout
         # corrupts the JSON parse.
         captured = {}
         await self._run(

@@ -116,7 +116,7 @@ class PkginUpdateMixin:
     # into "gcc12-libs" and "12.5.0nb4" rather than at the first hyphen.
     _PKGSRC_NAME_VERSION = re.compile(r"^(.+)-(\d[^\s]*)$")
 
-    # "16 packages to upgrade:" — the only section that describes an UPDATE to
+    # "16 packages to upgrade:" -- the only section that describes an UPDATE to
     # something already installed. "refresh" is a rebuild at the same version
     # and "install" is a new dependency; counting either as an available
     # update would overstate what an operator has to do.

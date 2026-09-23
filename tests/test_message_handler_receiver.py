@@ -409,7 +409,7 @@ class TestMessageHandlerReceiver:  # pylint: disable=too-many-public-methods
         Unexpected exceptions are re-raised so the outer connection
         lifecycle reconnects (rather than the receiver task quietly
         dying while the sender keeps the WS pumping outbound traffic
-        — which leaves inbound commands silently disappearing).  See
+        -- which leaves inbound commands silently disappearing).  See
         the matching docstring in ``MessageHandler.message_receiver``.
         """
         self.mock_agent.websocket.recv.side_effect = Exception("Unexpected error")

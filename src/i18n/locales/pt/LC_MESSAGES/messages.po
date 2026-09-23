@@ -1633,11 +1633,11 @@ msgstr "Servidor não conseguiu enfileirar mensagem: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) — reconnecting "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
 "WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"O servidor relatou host_não_cadastrado (strike %(n)d/%(limit)d) — "
+"O servidor relatou host_não_cadastrado (strike %(n)d/%(limit)d) -- "
 "reconectando SEM descartar o host_id para que o servidor possa resolver "
 "novamente este host a partir do seu index de locatário; re-cadastraremos "
 "apenas se persistir."
@@ -1645,10 +1645,10 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:404
 #, python-format
 msgid ""
-"host_not_registered persisted (%(n)d strikes) — treating this host as "
+"host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_não_cadastrado persistiu (%(n)d strikes) — tratando esta máquina como "
+"host_não_cadastrado persistiu (%(n)d strikes) -- tratando esta máquina como "
 "genuinamente ausente; limpando o host_id armazenado e recadastrando"
 
 #: src/sysmanage_agent/communication/message_handler.py:415
@@ -1672,7 +1672,7 @@ msgstr "Transmissão %s: falha na atualização do inventário: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
-msgid "Broadcast %s: unknown action '%s' — ignored"
+msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Transmissão %s: ação desconhecida '%s' - ignorada"
 
 #: src/sysmanage_agent/communication/message_handler.py:569

@@ -1,4 +1,4 @@
-# i18n "intentionally English" allow-list — the escape hatch for the strict
+# i18n "intentionally English" allow-list -- the escape hatch for the strict
 # gate in scripts/i18n_strict.py (mirrors sysmanage-docs/assets/locales/
 # no-translate.txt, which predates it).
 #
@@ -14,7 +14,7 @@
 # Full-line comments start with '#'.
 #
 # Keep rules TIGHT.  A broad glob silently re-opens the hole this gate exists
-# to close — prefer three exact keys over one wildcard that also swallows the
+# to close -- prefer three exact keys over one wildcard that also swallows the
 # prose next to them.  Anchor value regexes with ^ and $.
 
 # --- shell / package-manager invocations quoted verbatim in the UI ----------
@@ -27,13 +27,13 @@ re:^(Ubuntu Pro|Launchpad|COPR|openSUSE Build Service|Homebrew|winget)$
 re:^(bootc|rpm-ostree|osquery|Ansible|Velociraptor|Wazuh)$
 
 # --- identifier lists and unit abbreviations that carry no prose -------------
-# "DNF (Fedora/RHEL/CentOS 8+)" — package manager + distro names, all proper.
+# "DNF (Fedora/RHEL/CentOS 8+)" -- package manager + distro names, all proper.
 re:^DNF \(Fedora/RHEL/CentOS 8\+\)$
-# "WSL: Ubuntu-24.04, LXD: ubuntu:24.04" — image identifiers, copied verbatim.
+# "WSL: Ubuntu-24.04, LXD: ubuntu:24.04" -- image identifiers, copied verbatim.
 re:^WSL: [\w.\-]+, LXD: [\w.:\-]+$
-# "{{minutes}}m {{seconds}}s" — interpolation plus conventional unit letters.
+# "{{minutes}}m {{seconds}}s" -- interpolation plus conventional unit letters.
 re:^\{\{minutes\}\}m \{\{seconds\}\}s$
-# "{{target}} (Professional)" — the parenthetical is a licence tier name.
+# "{{target}} (Professional)" -- the parenthetical is a license tier name.
 re:^\{\{target\}\} \((Community|Professional|Enterprise)\)$
 
 # --- shells, hypervisors, protocols, package managers -----------------------

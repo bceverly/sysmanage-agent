@@ -317,12 +317,12 @@ def _reset_privilege_cache():
 
     The runtime cache is correct for production (privileges can't change
     without a restart) but it leaks across tests that mock
-    ``os.geteuid`` / ``pwd.getpwuid`` / etc. — once the first test under
+    ``os.geteuid`` / ``pwd.getpwuid`` / etc. -- once the first test under
     a given mock landed a value in the cache, every subsequent test
     sees that value regardless of its own mocks.  Resetting before
     each test gives each test a fresh slate.
     """
-    # Late import — top-level imports run before conftest's i18n
+    # Late import -- top-level imports run before conftest's i18n
     # passthrough patch installs, and agent_utils transitively imports
     # ``src.i18n``.  Pulling the reset hook in here keeps the conftest
     # importable on a cold start; the per-test cost is one attribute
@@ -411,7 +411,7 @@ def _close_orphaned_log_handlers():
     list and ORPHANS the agent's file handler: it is no longer on
     ``root.handlers`` (so iterating the root logger can't find it) but is still
     open.  It then leaks as an ``unclosed file`` ResourceWarning when the garbage
-    collector finalizes it — a hard error under the warnings-as-errors policy.
+    collector finalizes it -- a hard error under the warnings-as-errors policy.
 
     Find it via logging's global handler registry (``logging._handlerList``)
     instead, matching by file name so pytest's own ``/dev/null`` capture handler
@@ -419,7 +419,7 @@ def _close_orphaned_log_handlers():
     """
     root = logging.getLogger()
     # logging's global registry of every live handler (incl. ones detached
-    # from the root logger) — the only place the orphaned handler is reachable.
+    # from the root logger) -- the only place the orphaned handler is reachable.
     for ref in list(logging._handlerList):  # pylint: disable=protected-access
         handler = ref() if callable(ref) else ref
         if not isinstance(handler, logging.FileHandler):
@@ -448,7 +448,7 @@ def _gc_collect_quiet():
     object becomes unreachable without being closed, ``gc.collect()``
     triggers ``BaseEventLoop.__del__`` which calls ``warnings.warn``
     with ``ResourceWarning`` for the unclosed loop *and* its two
-    self-pipe sockets — three warnings that the warnings-as-errors
+    self-pipe sockets -- three warnings that the warnings-as-errors
     policy turns into hard failures via pytest's unraisable-exception
     hook.
 

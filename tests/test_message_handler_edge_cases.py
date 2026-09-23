@@ -44,7 +44,7 @@ class TestMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
         """Test automatic priority mapping based on message type.
 
         ``system_info`` is URGENT because it is the WebSocket
-        registration handshake — it must drain before any other queued
+        registration handshake -- it must drain before any other queued
         message on a fresh connection or the server processes the
         non-handshake messages with a NULL hostname and discards them.
         """

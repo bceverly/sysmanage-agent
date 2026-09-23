@@ -33,7 +33,7 @@ which is the exact hole this work set out to close.
 
 WHAT IS ALLOWED TO DIFFER
 -------------------------
-Nothing but the licence header, preserved verbatim from the target so a repo
+Nothing but the license header, preserved verbatim from the target so a repo
 with different licensing keeps its own.  The body is copied whole.
 
 Usage:
@@ -59,10 +59,10 @@ TARGETS = ["sysmanage-docs", "sysmanage"]
 
 
 def split_header(text):
-    """(licence header, everything from the first non-comment line onward).
+    """(license header, everything from the first non-comment line onward).
 
     The header is the shebang plus the contiguous comment block that carries the
-    copyright/licence -- the part that must NOT be copied between repos with
+    copyright/license -- the part that must NOT be copied between repos with
     different licensing.  The canonical file's own explanatory comments live
     below it and DO travel, because they are the documentation.
     """
@@ -72,14 +72,14 @@ def split_header(text):
     end = 1 if lines[0].startswith("#!") else 0
     while end < len(lines) and lines[end].startswith("#"):
         end += 1
-        # Stop at the blank line that ends the licence block.
+        # Stop at the blank line that ends the license block.
         if end < len(lines) and not lines[end].startswith("#"):
             break
     return "".join(lines[:end]), "".join(lines[end:])
 
 
 def render(canonical_text, target_text):
-    """Canonical body wearing the target's licence header."""
+    """Canonical body wearing the target's license header."""
     _, canon_body = split_header(canonical_text)
     target_header, _ = split_header(target_text)
     return target_header + canon_body

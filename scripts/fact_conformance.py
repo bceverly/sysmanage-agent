@@ -3,7 +3,7 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 """
-Fact provider conformance harness — ROADMAP Phase 21.1, slice S3.
+Fact provider conformance harness -- ROADMAP Phase 21.1, slice S3.
 
 WHAT IT ANSWERS
 ---------------
@@ -163,7 +163,7 @@ def shared_tables(requested):
             # and we refuse to read it. Saying the wrong one would send an
             # operator looking for a missing feature instead of at a
             # deliberate, measured decision.
-            skipped[table] = f"denylisted on this platform — {denied[table]}"
+            skipped[table] = f"denylisted on this platform -- {denied[table]}"
         elif table not in osquery_has:
             skipped[table] = "this osquery build does not have it"
         else:
@@ -251,7 +251,7 @@ def main():
 
     if not fact_osquery.osquery_path():
         print(
-            "osqueryi not found — this harness compares a live osquery against "
+            "osqueryi not found -- this harness compares a live osquery against "
             "the native provider, so there is nothing to compare here.\n"
             "Run it on a host with osquery installed (Linux, macOS, FreeBSD).",
             file=sys.stderr,

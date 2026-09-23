@@ -9,12 +9,12 @@ Post-cutover home for the WSL keep-alive logic that previously lived
 in ``communication/child_host_collector.ChildHostCollector``.  Two
 distinct concerns the engine path doesn't replicate:
 
-1. **``~/.wslconfig`` management** — write ``[wsl2] vmIdleTimeout=-1``
+1. **``~/.wslconfig`` management** -- write ``[wsl2] vmIdleTimeout=-1``
    and ``[wsl] autoStop=false`` so the WSL VM doesn't auto-shutdown
    when idle.  Run ``wsl --shutdown`` after editing so the new config
    takes effect on the next boot.
 
-2. **Per-distro ``sleep infinity`` Popen** — workaround for the
+2. **Per-distro ``sleep infinity`` Popen** -- workaround for the
    WSL 2.6.x regression (`microsoft/wsl#13416`) where WSL distros
    shut down even with active systemd services.  Maintain a long-lived
    ``wsl -d <distro> -- sleep infinity`` subprocess per distro;
@@ -25,7 +25,7 @@ Both behaviors are silently no-ops on non-Windows hosts.
 Design notes
 ------------
 
-* The class is intentionally agent-instance-free — no reference to
+* The class is intentionally agent-instance-free -- no reference to
   ``SysManageAgent`` is required.  This makes it easy to instantiate
   from any subsystem (data collector, role detector, a future
   dedicated WSL service) without circular imports.
@@ -56,12 +56,12 @@ class WslKeepalive:
 
     Public methods used by callers:
 
-    * :meth:`ensure_wslconfig` — idempotent; returns True if the file
+    * :meth:`ensure_wslconfig` -- idempotent; returns True if the file
       was modified (caller should restart WSL).
-    * :meth:`restart_wsl` — runs ``wsl --shutdown``.
-    * :meth:`ensure_keepalive_processes` — starts/restarts/cleans up
+    * :meth:`restart_wsl` -- runs ``wsl --shutdown``.
+    * :meth:`ensure_keepalive_processes` -- starts/restarts/cleans up
       the per-distro ``sleep infinity`` Popen handles.
-    * :meth:`stop_all_keepalive_processes` — graceful shutdown for the
+    * :meth:`stop_all_keepalive_processes` -- graceful shutdown for the
       whole set (call from agent shutdown hook).
     """
 
@@ -78,9 +78,9 @@ class WslKeepalive:
         """Write/repair ``~/.wslconfig``; return True if a write happened.
 
         Sets:
-        * ``[wsl2] vmIdleTimeout=-1`` — prevents WSL VM from shutting
+        * ``[wsl2] vmIdleTimeout=-1`` -- prevents WSL VM from shutting
           down when idle.
-        * ``[wsl] autoStop=false`` — workaround for the WSL 2.6.x
+        * ``[wsl] autoStop=false`` -- workaround for the WSL 2.6.x
           regression (https://github.com/microsoft/wsl/issues/13416).
 
         Uses ``configparser.RawConfigParser`` with ``optionxform = str``

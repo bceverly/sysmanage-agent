@@ -261,7 +261,7 @@ GLOSSARY: Dict[str, str] = {
     # repositories); rarer false friends are deliberately left out, because an
     # entry for a word we never ship is prompt spent on nothing.
     "service": "a background program managed by the operating system. NOT "
-    "customer service or a favour",
+    "customer service or a favor",
     "default": "the preset value used when none is given. NOT failing to pay " "a debt",
     "log": "a record of events the software writes. NOT a piece of wood",
     "load": "how busy a machine is. NOT cargo or freight",
@@ -692,7 +692,7 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "dispatch": ("dispatched", "dispatching"),
     "ingestion": ("ingest", "ingested"),
     "provisioning": ("provision", "provisioned"),
-    "enrollment": ("enroll", "enrolled", "enrolment"),
+    "enrollment": ("enroll", "enrolled", "enrollment"),
     "discovery": ("discover", "discovered"),
     "remediation": ("remediate", "remediated"),
     "compliance": ("compliant", "non-compliant"),
@@ -748,7 +748,7 @@ def forbidden_matcher(form: str) -> re.Pattern:
 
 
 def patterns() -> List[Tuple[str, re.Pattern]]:
-    """(term, matcher) pairs — the gate walks these to find terms in sources."""
+    """(term, matcher) pairs -- the gate walks these to find terms in sources."""
     return _PATTERNS
 
 

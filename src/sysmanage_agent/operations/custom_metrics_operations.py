@@ -302,7 +302,7 @@ class CustomMetricsOperations:
 
         Returns ``(returncode, stdout, stderr)``.  A timeout returns rc=124
         with a note in stderr.  The script body is passed as a single argv
-        element (``-c``) — never via a shell string — so there is no shell
+        element (``-c``) -- never via a shell string -- so there is no shell
         interpolation of the script content by us.
         """
         proc = await asyncio.create_subprocess_exec(

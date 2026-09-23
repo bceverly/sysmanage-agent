@@ -14,17 +14,17 @@ parsing the engine's ``build_check_virtualization_support_plan``
 doesn't replicate.
 
 Public surface:
-* :func:`check_wsl_support` — full capability dict suitable for
+* :func:`check_wsl_support` -- full capability dict suitable for
   ``host.virtualization_capabilities['wsl']``.
-* :func:`check_hyperv_support` — Hyper-V availability via PowerShell.
-* :func:`detect_wsl_blockers` — identifies BIOS virtualization +
+* :func:`check_hyperv_support` -- Hyper-V availability via PowerShell.
+* :func:`detect_wsl_blockers` -- identifies BIOS virtualization +
   Virtual Machine Platform feature failure modes from ``wsl --status``
   output.  Used by :func:`check_wsl_support` and the role detector.
-* :func:`parse_wsl_version` — WSL 1 vs WSL 2 default-version parsing.
+* :func:`parse_wsl_version` -- WSL 1 vs WSL 2 default-version parsing.
 
 Decoder: WSL output is UTF-16LE on Windows.  We import the canonical
 :func:`generic_deployment._decode_command_output` helper rather than
-duplicating the heuristic — single source of truth for that quirk.
+duplicating the heuristic -- single source of truth for that quirk.
 """
 
 import logging
@@ -50,9 +50,9 @@ def detect_wsl_blockers(output_lower: str, result: Dict[str, Any]) -> bool:
     Updates ``result`` in place with the specific failure mode and
     returns True if a blocker was found.  Recognized blockers:
 
-    * BIOS virtualization disabled — ``"bios"`` and ``"virtualization"``
+    * BIOS virtualization disabled -- ``"bios"`` and ``"virtualization"``
       both appear in the output.  Sets ``needs_bios_virtualization``.
-    * Virtual Machine Platform Windows feature missing —
+    * Virtual Machine Platform Windows feature missing --
       ``"virtual machine platform"`` appears.  Sets ``needs_enable``.
     """
     if "bios" in output_lower and "virtualization" in output_lower:
@@ -74,7 +74,7 @@ def parse_wsl_version(output: str, result: Dict[str, Any]) -> None:
 
     Sets ``result['default_version']`` and ``result['version']``.
     Falls back to 2 when the output doesn't carry an unambiguous marker
-    — modern Windows installations default to WSL 2.
+    -- modern Windows installations default to WSL 2.
     """
     if "Default Version: 2" in output or "Default Version: WSL 2" in output:
         result["default_version"] = 2

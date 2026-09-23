@@ -4,7 +4,7 @@
 # Permissions: 0440 (enforced by package installer)
 #
 # The agent runs as the ``sysmanage-agent`` user when ``sysmanage_agent_user``
-# is set in /etc/rc.conf — see installer/freebsd/sysmanage-agent.rc.
+# is set in /etc/rc.conf -- see installer/freebsd/sysmanage-agent.rc.
 # When the operator runs the agent as root no sudo is needed; this
 # file is only consulted under the non-root deployment.
 
@@ -16,7 +16,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg upgrade *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
-# rsync is the snapshot + restore workhorse — without it, ``snapshot``
+# rsync is the snapshot + restore workhorse -- without it, ``snapshot``
 # plans fail at the live-tree -> .snapshots/<id>/ copy with the
 # "user not allowed to run" error.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/rsync

@@ -26,8 +26,8 @@ def _fake_subprocess_exec():
     macOS/Python 3.12's ``ThreadedChildWatcher`` interacts poorly with the
     per-test ``event_loop`` fixture in conftest.py, causing real subprocess
     spawns to non-deterministically return the wrong returncode.  The plan
-    tests don't actually exercise real exec — they exercise the success/
-    failure plumbing — so we stub the spawner instead of touching the OS.
+    tests don't actually exercise real exec -- they exercise the success/
+    failure plumbing -- so we stub the spawner instead of touching the OS.
 
     Returncode is derived from argv[0]'s basename: ``true`` -> 0,
     ``false`` -> 1, anything else -> 0.
@@ -67,12 +67,12 @@ _CURRENT_GID = _real_os.getgid() if hasattr(_real_os, "getgid") else 0
 def file_deploy_mocks():
     """Provide consolidated mocks for file deployment tests.
 
-    ``os.chown`` is Unix-only — on Windows the attribute literally
+    ``os.chown`` is Unix-only -- on Windows the attribute literally
     doesn't exist on the os module, and ``unittest.mock.patch``
     refuses to patch a missing attribute unless told to with
     ``create=True``.  The production code in ``_write_atomic``
     guards chown behind ``hasattr(os, "chown")`` so this test-side
-    ``create=True`` doesn't materially change behaviour — it just
+    ``create=True`` doesn't materially change behavior -- it just
     teaches the patch context manager to install a mock at the
     name and tear it down cleanly afterwards.
     """
@@ -84,7 +84,7 @@ def file_deploy_mocks():
         patch(f"{_MOD}.os.chown", create=True) as chown,
         patch(f"{_MOD}.os.chmod") as chmod,
         # Production uses ``os.replace`` (cross-platform atomic rename
-        # — same as rename on POSIX, allows overwrite on Windows).
+        # -- same as rename on POSIX, allows overwrite on Windows).
         # Keep the fixture key name ``rename`` so test bodies don't
         # have to change.
         patch(f"{_MOD}.os.replace") as rename,
@@ -180,7 +180,7 @@ class TestDeployFiles:
             )
 
         assert result["success"] is True
-        # The chown mock was never called — confirms we took the
+        # The chown mock was never called -- confirms we took the
         # Windows-safe branch instead of the unguarded path.
         file_deploy_mocks["chown"].assert_not_called()
 
@@ -304,7 +304,7 @@ class TestDeployFiles:
         reason=(
             "os.chown is Unix-only; the production code skips the call "
             "via hasattr(os, 'chown') on Windows, so the chown mock is "
-            "never invoked there.  The Windows-safe behaviour is "
+            "never invoked there.  The Windows-safe behavior is "
             "covered by test_deploy_files_skips_chown_when_unavailable."
         ),
     )
@@ -388,7 +388,7 @@ class TestDeployFiles:
 
 
 # ============================================================================
-# SHA-256 verification (Section 8.6 — file integrity)
+# SHA-256 verification (Section 8.6 -- file integrity)
 # ============================================================================
 
 
@@ -528,7 +528,7 @@ class TestSha256Verification:
 
 
 # ============================================================================
-# Backup/rollback (Section 8.6 — rollback support)
+# Backup/rollback (Section 8.6 -- rollback support)
 # ============================================================================
 
 
@@ -688,9 +688,9 @@ class TestApplyDeploymentPlan:
     async def test_plan_command_timeout_kills_process(self):
         """A command exceeding its timeout is killed and reported as failure."""
         # ``/bin/sleep`` isn't on Windows.  Use ``python -c
-        # "import time; time.sleep(5)"`` — Python is by definition on
+        # "import time; time.sleep(5)"`` -- Python is by definition on
         # PATH wherever this test suite runs (we ARE Python), and the
-        # behaviour (sleep 5 seconds, timeout at 1) is identical to
+        # behavior (sleep 5 seconds, timeout at 1) is identical to
         # the sleep binary.  ``sys.executable`` is the absolute path
         # to the Python interpreter the test runner is using; works
         # on Linux, macOS, and Windows alike.
@@ -783,10 +783,10 @@ class TestApplyDeploymentPlan:
 
 
 class TestImageModePlanExecution:
-    """Phase 17.3 — the image_mode_engine's stage/apply/rollback plans are
+    """Phase 17.3 -- the image_mode_engine's stage/apply/rollback plans are
     plain ``{commands: [{argv, timeout, ignore_errors, description}]}`` plans,
     so they execute through the SAME ``apply_deployment_plan`` path the 17.1/
-    17.2 repoint plans use — no bespoke agent handler. These tests pin that the
+    17.2 repoint plans use -- no bespoke agent handler. These tests pin that the
     engine's plan shapes run, and that the reboot step's ``ignore_errors`` keeps
     a dropped connection from failing the action."""
 
@@ -817,7 +817,7 @@ class TestImageModePlanExecution:
     @pytest.mark.asyncio
     async def test_apply_plan_reboot_failure_is_ignored(self):
         """The reboot step (ignore_errors=True) must not fail the action even
-        when it 'fails' — the connection drops as the host reboots."""
+        when it 'fails' -- the connection drops as the host reboots."""
         plan = {
             "commands": [
                 {"argv": ["sudo", "rpm-ostree", "upgrade"], "ignore_errors": False},

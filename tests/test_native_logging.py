@@ -129,7 +129,7 @@ class TestSyslogRemoteHandler:
     """Tests for _syslog_remote_handler (Phase 14.5 remote forwarding)."""
 
     def test_no_host_returns_none(self):
-        """Without a host there is nothing to forward to — no handler."""
+        """Without a host there is nothing to forward to -- no handler."""
         assert (
             native_logging._syslog_remote_handler("ident", None, 514, None, None)
             is None
@@ -153,7 +153,7 @@ class TestSyslogRemoteHandler:
         assert kwargs["facility"] == logging.handlers.SysLogHandler.LOG_USER
 
     def test_tcp_and_facility_and_port(self):
-        """protocol=tcp → SOCK_STREAM; a named facility resolves; port honoured."""
+        """protocol=tcp → SOCK_STREAM; a named facility resolves; port honored."""
         fake = MagicMock(spec=logging.Handler)
         syslog_cls = _mock_syslog(fake)
         with patch.object(native_logging.logging.handlers, "SysLogHandler", syslog_cls):
@@ -189,7 +189,7 @@ class TestSyslogRemoteHandler:
         assert syslog_cls.call_args.kwargs["address"] == ("loghost", 514)
 
     def test_socket_error_returns_none(self):
-        """A failed TCP connect (OSError) yields None — file logging survives."""
+        """A failed TCP connect (OSError) yields None -- file logging survives."""
         with patch.object(
             native_logging.logging.handlers,
             "SysLogHandler",

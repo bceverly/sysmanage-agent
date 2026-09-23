@@ -382,7 +382,7 @@ class TestTestSudoAccess:
 
 
 # ============================================================================
-# Section 8.6 additions — enable/disable + platform-aware service control
+# Section 8.6 additions -- enable/disable + platform-aware service control
 # ============================================================================
 
 
