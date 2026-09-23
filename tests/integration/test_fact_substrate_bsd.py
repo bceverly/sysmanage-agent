@@ -303,7 +303,11 @@ def test_listening_ports_does_not_claim_unix_sockets_it_never_looked_at(substrat
     if "listening_ports" not in substrate["served"]:
         pytest.skip("listening_ports is not served here (needs root); nothing to check")
     rows = fact_native.collect(["listening_ports"])["listening_ports"]
-    unix = [r for r in rows if r.get("family") == fn._AF_UNIX]
+    unix = [
+        r
+        for r in rows
+        if r.get("family") == fact_native._AF_UNIX  # pylint: disable=protected-access
+    ]
     for row in unix:
         assert row.get(
             "path"
