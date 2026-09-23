@@ -316,8 +316,10 @@ class TestPackageManagerDetection:
         """Test BSD package manager detection."""
         collector = BSDSoftwareInventoryCollector()
 
-        with patch.object(collector, "_command_exists") as mock_exists:
-            mock_exists.side_effect = lambda cmd: cmd in ["pkg", "pkg_info"]
+        with patch.object(collector, "_command_exists") as mock_exists, patch.object(
+            collector, "_pkg_info_path", return_value="/usr/sbin/pkg_info"
+        ):
+            mock_exists.side_effect = lambda cmd: cmd == "pkg"
             managers = collector.detect_package_managers()
 
         assert "pkg" in managers

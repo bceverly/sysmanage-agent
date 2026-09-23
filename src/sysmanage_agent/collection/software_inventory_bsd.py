@@ -13,8 +13,10 @@ Handles software inventory collection for BSD systems including:
 """
 
 import logging
+import os
 import platform
 import re
+import shutil
 import subprocess  # nosec B404
 from typing import List
 
@@ -24,6 +26,13 @@ from src.sysmanage_agent.collection.software_inventory_base import (
 )
 
 logger = logging.getLogger(__name__)
+
+# pkg_info is part of the BASE system on OpenBSD and NetBSD and lives in
+# /usr/sbin, which is not on every PATH: NetBSD's default for a non-root login
+# (_PATH_DEFPATH) is /usr/bin:/bin:/usr/pkg/bin:/usr/local/bin.  Looked up by
+# bare name, it is simply "not installed", and the host reports an EMPTY
+# package inventory -- "measured, found nothing" -- rather than an error.
+_PKG_INFO_FALLBACK_PATHS = ("/usr/sbin/pkg_info", "/usr/pkg/sbin/pkg_info")
 
 
 class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
@@ -41,7 +50,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
         if self._command_exists("pkg"):
             managers.append("pkg")
-        if self._command_exists("pkg_info"):
+        if self._pkg_info_path():
             managers.append("pkg_info")
         if self._command_exists("make"):
             managers.append("ports")
@@ -50,9 +59,24 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         logger.debug("Detected package managers: %s", ", ".join(managers))
         return managers
 
+    @staticmethod
+    def _pkg_info_path():
+        """Absolute path to pkg_info, or None -- PATH first, then the base system."""
+        found = shutil.which("pkg_info")
+        if found:
+            return found
+        for candidate in _PKG_INFO_FALLBACK_PATHS:
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
+        return None
+
     def collect_packages(self):
         """Collect packages from all detected BSD package managers."""
         managers = self.detect_package_managers()
+        if not managers:
+            # Every BSD has a package tool; finding none means the lookup
+            # failed, and an empty inventory would read as "no packages".
+            logger.warning(_("No packages detected or unsupported package manager"))
 
         if "pkg" in managers:
             self._collect_pkg_packages()
@@ -111,7 +135,7 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
 
             # Use pkg_info -a to list all installed packages
             result = subprocess.run(
-                ["pkg_info", "-a"],  # nosec B603, B607
+                [self._pkg_info_path() or "pkg_info", "-a"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,

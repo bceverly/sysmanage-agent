@@ -40,7 +40,9 @@ class TestDetectPackageManagers:
 
     def test_detect_pkg_available(self, collector):
         """Test detection when pkg is available."""
-        with patch.object(collector, "_command_exists") as mock_exists:
+        with patch.object(collector, "_command_exists") as mock_exists, patch.object(
+            collector, "_pkg_info_path", return_value=None
+        ):
             mock_exists.side_effect = lambda cmd: cmd == "pkg"
             result = collector.detect_package_managers()
 
@@ -48,15 +50,37 @@ class TestDetectPackageManagers:
 
     def test_detect_pkg_info_available(self, collector):
         """Test detection when pkg_info is available."""
-        with patch.object(collector, "_command_exists") as mock_exists:
-            mock_exists.side_effect = lambda cmd: cmd == "pkg_info"
+        with patch.object(
+            collector, "_command_exists", return_value=False
+        ), patch.object(collector, "_pkg_info_path", return_value="/usr/sbin/pkg_info"):
             result = collector.detect_package_managers()
 
-        assert "pkg_info" in result
+        assert result == ["pkg_info"]
+
+    def test_pkg_info_path_prefers_path_lookup(self, collector):
+        """A pkg_info on PATH wins over the base-system locations."""
+        with patch("shutil.which", return_value="/opt/bin/pkg_info"):
+            assert collector._pkg_info_path() == "/opt/bin/pkg_info"
+
+    def test_pkg_info_path_falls_back_to_sbin(self, collector):
+        """NetBSD's non-root PATH omits /usr/sbin; pkg_info must still be found."""
+        with patch("shutil.which", return_value=None), patch(
+            "os.path.isfile", side_effect=lambda p: p == "/usr/sbin/pkg_info"
+        ), patch("os.access", return_value=True):
+            assert collector._pkg_info_path() == "/usr/sbin/pkg_info"
+
+    def test_pkg_info_path_none_when_absent(self, collector):
+        """No pkg_info anywhere resolves to None, not a bare name."""
+        with patch("shutil.which", return_value=None), patch(
+            "os.path.isfile", return_value=False
+        ):
+            assert collector._pkg_info_path() is None
 
     def test_detect_ports_available(self, collector):
         """Test detection when make is available (ports)."""
-        with patch.object(collector, "_command_exists") as mock_exists:
+        with patch.object(collector, "_command_exists") as mock_exists, patch.object(
+            collector, "_pkg_info_path", return_value=None
+        ):
             mock_exists.side_effect = lambda cmd: cmd == "make"
             result = collector.detect_package_managers()
 
@@ -64,7 +88,9 @@ class TestDetectPackageManagers:
 
     def test_detect_multiple_managers(self, collector):
         """Test detection when multiple managers available."""
-        with patch.object(collector, "_command_exists", return_value=True):
+        with patch.object(
+            collector, "_command_exists", return_value=True
+        ), patch.object(collector, "_pkg_info_path", return_value="/usr/sbin/pkg_info"):
             result = collector.detect_package_managers()
 
         assert "pkg" in result
@@ -73,10 +99,21 @@ class TestDetectPackageManagers:
 
     def test_detect_no_managers(self, collector):
         """Test detection when no managers available."""
-        with patch.object(collector, "_command_exists", return_value=False):
+        with patch.object(
+            collector, "_command_exists", return_value=False
+        ), patch.object(collector, "_pkg_info_path", return_value=None):
             result = collector.detect_package_managers()
 
         assert result == []
+
+    def test_collect_packages_warns_when_no_manager(self, collector):
+        """No package tool on a BSD is a failed lookup, and must say so."""
+        with patch.object(collector, "detect_package_managers", return_value=[]), patch(
+            "src.sysmanage_agent.collection.software_inventory_bsd.logger"
+        ) as mock_logger:
+            collector.collect_packages()
+
+        mock_logger.warning.assert_called_once()
 
     def test_detect_managers_cached(self, collector):
         """Test that package managers are cached after first detection."""
