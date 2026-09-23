@@ -111,6 +111,48 @@ class TestCollectProcesses:
         assert truncated is True
         assert len(procs) == 2  # capped
 
+    def test_no_cap_returns_every_process(self, collector, monkeypatch):
+        """``limit=None`` is what the FACT TABLE asks for.
+
+        The operator snapshot is capped so a busy host does not flood the
+        server, and inheriting that cap made the fact table report exactly
+        1,000 processes as if they were all of them -- sorted by resource use,
+        so the idle daemons a security pack asks about were dropped first.
+        """
+        monkeypatch.setattr(process_collection, "MAX_PROCESSES", 2)
+        procs_in = [_fake_proc(i, f"p{i}", cpu=float(i)) for i in range(5)]
+        with patch.object(
+            process_collection.psutil, "process_iter", return_value=procs_in
+        ), patch.object(
+            process_collection.psutil, "cpu_count", return_value=1
+        ), patch.object(
+            process_collection.time, "sleep"
+        ):
+            procs, truncated = collector.collect_processes(limit=None)
+        assert len(procs) == 5
+        assert truncated is False
+
+    def test_the_default_cap_is_read_at_call_time(self, collector, monkeypatch):
+        """Guards the sentinel.
+
+        Writing the signature as ``limit=MAX_PROCESSES`` binds the value at
+        IMPORT, so monkeypatching the module attribute stops working and the
+        cap silently becomes unconfigurable. That broke
+        test_truncation_flag_and_cap the moment the parameter was added.
+        """
+        monkeypatch.setattr(process_collection, "MAX_PROCESSES", 3)
+        procs_in = [_fake_proc(i, f"p{i}", cpu=float(i)) for i in range(5)]
+        with patch.object(
+            process_collection.psutil, "process_iter", return_value=procs_in
+        ), patch.object(
+            process_collection.psutil, "cpu_count", return_value=1
+        ), patch.object(
+            process_collection.time, "sleep"
+        ):
+            procs, truncated = collector.collect_processes()
+        assert len(procs) == 3
+        assert truncated is True
+
     def test_skips_vanished_process(self, collector):
         """A process that disappears mid-scan is skipped, not fatal."""
         good = _fake_proc(1, "ok", cpu=5.0)

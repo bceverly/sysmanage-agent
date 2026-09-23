@@ -26,6 +26,9 @@ from src.i18n import _
 # want to see/kill); truncation is logged, never silent.
 MAX_PROCESSES = 1000
 
+# "caller said nothing", distinct from ``None`` which means "no cap".
+_DEFAULT_CAP: Any = object()
+
 # Seconds between the priming pass and the measured pass for CPU sampling.
 _CPU_SAMPLE_INTERVAL = 0.5
 
@@ -49,12 +52,23 @@ class ProcessCollector:
     def __init__(self, logger: Optional[logging.Logger] = None):
         self.logger = logger or logging.getLogger(__name__)
 
-    def collect_processes(self) -> Tuple[List[Dict[str, Any]], bool]:
+    def collect_processes(
+        self, limit: Optional[int] = _DEFAULT_CAP
+    ) -> Tuple[List[Dict[str, Any]], bool]:
         """Return ``(processes, truncated)`` for the current host.
 
         ``processes`` is sorted by CPU% then memory% (descending) and capped at
-        ``MAX_PROCESSES``; ``truncated`` is True when the cap dropped rows.
+        ``limit``; ``truncated`` is True when the cap dropped rows.
         Blocking (it sleeps for a CPU sample) — call via a thread executor.
+
+        ``limit=None`` returns EVERY process. The default keeps the existing
+        behaviour for the operator-facing snapshot, where the cap exists so a
+        busy host does not flood the server. The FACT TABLE needs the
+        uncapped list: it is materialised into local SQLite and only a pack's
+        QUERY RESULT travels, so the flood argument does not apply -- while a
+        capped table silently answers "not running" for a process that is.
+        The cap is applied after the (already complete) enumeration, so
+        lifting it costs no extra syscalls.
         """
         # Pass 1: prime cpu_percent() so the second read reflects real usage.
         primed = []
@@ -86,14 +100,22 @@ class ProcessCollector:
             reverse=True,
         )
 
-        truncated = len(processes) > MAX_PROCESSES
+        # Resolved HERE, not in the signature: a default argument binds at
+        # import, which silently broke the existing test's
+        # ``monkeypatch.setattr(process_collection, "MAX_PROCESSES", 2)``.
+        # The sentinel keeps the cap monkeypatchable while still letting a
+        # caller ask for no cap at all with ``limit=None``.
+        if limit is _DEFAULT_CAP:
+            limit = MAX_PROCESSES
+
+        truncated = limit is not None and len(processes) > limit
         if truncated:
             self.logger.info(
                 "Process snapshot truncated from %d to %d (cap)",
                 len(processes),
-                MAX_PROCESSES,
+                limit,
             )
-            processes = processes[:MAX_PROCESSES]
+            processes = processes[:limit]
 
         return processes, truncated
 

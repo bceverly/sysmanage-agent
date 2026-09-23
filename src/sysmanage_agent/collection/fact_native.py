@@ -239,7 +239,14 @@ def build_processes(collector) -> List[Dict[str, Any]]:
     ``uid``/``gid`` stay NULL: the collector reports a username, and resolving
     it to a uid here would be a guess on any host with a directory service.
     """
-    processes, _truncated = collector.collect_processes()
+    # limit=None: the operator snapshot is capped at 1,000 by resource use so
+    # a busy host does not flood the server. Inherited here that cap made the
+    # fact table LIE -- 1,000 rows presented as the whole truth, with the
+    # low-CPU daemons dropped first, which are exactly the ones a security
+    # pack asks about. A pack running "WHERE name = 'sshd'" got a confident
+    # "not running". The conformance run on 2026-09-23 showed it as an exact
+    # 1,000 against osquery's 1,048, every native pid a subset of osquery's.
+    processes, _truncated = collector.collect_processes(limit=None)
     out = []
     for proc in processes or []:
         out.append(
@@ -278,6 +285,29 @@ def common_name_of(subject: Optional[str]) -> Optional[str]:
     return found.group(1).strip() if found else None
 
 
+def _osquery_serial(serial: Optional[str]) -> Optional[str]:
+    """The serial as osquery renders it.
+
+    osquery formats the serial with OpenSSL's ``BN_bn2hex``, which returns a
+    bare ``"0"`` for a zero serial. The native side reads ``openssl x509
+    -serial``, whose command-line output pads to whole bytes and prints
+    ``00``. Same certificate, two spellings, and a pack filtering
+    ``serial = '0'`` matches one provider and not the other.
+
+    Leading zeros are otherwise PRESERVED by both -- "02" for Buypass Class 2
+    Root CA, "0DD3E3BC6CF96BB1" for ANF Secure Server Root CA -- so this
+    normalizes the all-zero case ONLY. A general lstrip("0") would rewrite
+    those two into values neither provider reports, turning 122 agreeing rows
+    into 122 disagreeing ones. Found by the S3 conformance run, 2026-09-23.
+    """
+    if serial is None:
+        return None
+    text = str(serial).strip()
+    if text and set(text) == {"0"}:
+        return "0"
+    return text
+
+
 def build_certificates(collector) -> List[Dict[str, Any]]:
     """osquery ``certificates``.
 
@@ -301,7 +331,7 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
                 "not_valid_after": cert.get("not_after"),
                 "key_usage": cert.get("key_usage"),
                 "path": cert.get("file_path"),
-                "serial": cert.get("serial_number"),
+                "serial": _osquery_serial(cert.get("serial_number")),
             }
         )
     return out
@@ -430,11 +460,28 @@ def build_mounts(_collector=None) -> List[Dict[str, Any]]:
     """
     import psutil  # noqa: PLC0415
 
+    # psutil's LINUX backend contains, verbatim, ``if device == 'none':
+    # device = ''`` (psutil._pslinux.disk_partitions). The kernel spells it
+    # ``none`` in both /proc/mounts and /proc/self/mountinfo -- for
+    # /sys/fs/pstore and the systemd credential tmpfs mounts -- and that is
+    # what osquery reports. The blank is psutil's normalization, not a fact
+    # about the host, so putting it back is exact rather than a guess.
+    #
+    # LINUX ONLY, deliberately. That substitution lives in psutil's Linux
+    # backend; on a platform where the same behaviour is not verified, an
+    # empty device could mean something else entirely, and emitting "none"
+    # there would INVENT a fact -- the failure this phase exists to prevent.
+    # Found by the S3 conformance run, 2026-09-23 (4 mounts, device only).
+    restore_none = platform.system() == "Linux"
+
     out = []
     for part in psutil.disk_partitions(all=True):
+        device = part.device or None
+        if device is None and restore_none:
+            device = "none"
         out.append(
             {
-                "device": part.device or None,
+                "device": device,
                 "path": part.mountpoint or None,
                 "type": part.fstype or None,
                 # osquery's ``flags`` is the mount option string.
@@ -567,6 +614,57 @@ def can_enumerate_sockets() -> bool:
         return False
 
 
+def _unix_listeners() -> List[Dict[str, Any]]:
+    """AF_UNIX listening sockets, shaped exactly as osquery reports them.
+
+    WHY THIS EXISTS (found by the S3 conformance run, 2026-09-23). The inet
+    pass below cannot produce these for two independent reasons: psutil's
+    ``kind="inet"`` excludes AF_UNIX outright, and psutil reports every unix
+    socket with ``status == CONN_NONE``, so the ``CONN_LISTEN`` filter would
+    drop all of them even if the kind were widened.
+
+    The result was the phase's OWN central failure, inside the substrate: the
+    table advertised itself SERVED while never looking at unix sockets at all,
+    so ``SELECT path FROM listening_ports WHERE family = 1`` answered "no rows"
+    -- indistinguishable from "measured, and there are none" -- on a host
+    running 1,538 of them. A pack asking which daemon owns a socket got a
+    confident, wrong, empty answer.
+
+    A unix socket with a bound path IS the listener; an empty ``laddr`` is a
+    connected or anonymous socket and osquery does not list those either.
+    """
+    import psutil  # noqa: PLC0415
+
+    out: List[Dict[str, Any]] = []
+    try:
+        conns = psutil.net_connections(kind="unix")
+    except (psutil.Error, OSError, NotImplementedError, ValueError):
+        # A platform whose psutil cannot enumerate unix sockets must not cost
+        # us the inet rows as well; the caller still gets a real answer for
+        # the families we can see.
+        logger.debug("psutil cannot enumerate unix sockets on this platform")
+        return out
+    for conn in conns:
+        path = conn.laddr if isinstance(conn.laddr, str) else ""
+        if not path:
+            continue
+        out.append(
+            {
+                "pid": conn.pid,
+                # osquery reports 0/0/"" for these three on AF_UNIX; the path
+                # carries the identity. Matching it exactly is what lets one
+                # pack run against either provider.
+                "port": 0,
+                "address": "",
+                "protocol": 0,
+                "family": int(socket.AF_UNIX),
+                "path": path,
+                "fd": getattr(conn, "fd", None),
+            }
+        )
+    return out
+
+
 def build_listening_ports(_collector=None) -> List[Dict[str, Any]]:
     """osquery ``listening_ports`` via psutil, which the agent already uses."""
     import psutil  # noqa: PLC0415
@@ -585,6 +683,7 @@ def build_listening_ports(_collector=None) -> List[Dict[str, Any]]:
                 "fd": getattr(conn, "fd", None),
             }
         )
+    out.extend(_unix_listeners())
     return out
 
 

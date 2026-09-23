@@ -63,9 +63,21 @@ IDENTIFYING = {
     "groups": ("groupname", "gid"),
     "user_groups": ("uid", "gid"),
     "interface_addresses": ("interface", "address"),
-    "listening_ports": ("port", "protocol", "address"),
+    # ``path`` is load-bearing, not decoration: an AF_UNIX row carries its
+    # identity THERE and reports port 0, protocol 0 and an empty address. With
+    # only the first three columns every unix socket on the host collapses to
+    # the same ('0', '0', '') tuple, so the 2026-09-23 run printed 920
+    # indistinguishable rows and said nothing about which sockets differed.
+    "listening_ports": ("port", "protocol", "address", "path"),
     "processes": ("pid", "name"),
-    "certificates": ("common_name", "path"),
+    # NOT ``path``: the two providers answer "where did I read this" with
+    # different conventions -- native names the individual .pem it parsed,
+    # osquery names the ca-certificates.crt bundle it read every cert out of
+    # (122 distinct native paths against 1 for osquery). Including it made
+    # every single row differ and hid whether they agree on which
+    # CERTIFICATES exist, which is the question. common_name + serial is a
+    # real identity both providers populate: 122/121 disagreements became 7/6.
+    "certificates": ("common_name", "serial"),
     "mounts": ("device", "path", "type"),
     "deb_packages": ("name", "version", "arch"),
     "rpm_packages": ("name", "version", "release"),
@@ -89,6 +101,39 @@ KNOWN_PLATFORM_DIFFERENCES = {
         "Same trap as FreeBSD, different width. A pack matching "
         "processes.name exactly WILL differ by provider; prefer LIKE, or "
         "match on path."
+    ),
+    ("linux", "certificates"): (
+        "PATH CONVENTION, not missing data. The native provider walks "
+        "/etc/ssl/certs and reports the individual .pem it parsed; osquery "
+        "reads the ca-certificates.crt bundle and reports THAT path for every "
+        "certificate inside it. Both are truthful answers to 'where did I "
+        "read this' and neither is convertible into the other, so the "
+        "comparison identifies on common_name + serial instead. "
+        "One real difference survives and native is the more complete side: "
+        "it reports CN=ubuntu from /etc/ssl/certs/ssl-cert-snakeoil.pem, a "
+        "host certificate that is NOT in the CA bundle and which osquery "
+        "therefore never sees. For certificate-expiry monitoring that is the "
+        "host's own TLS identity -- exactly the cert you want tracked."
+    ),
+    ("linux", "listening_ports"): (
+        "Two structural differences remain, both from HOW each provider "
+        "enumerates rather than from what is true. (1) AF_PACKET sockets "
+        "(family 17, protocol carrying an ethertype such as 2054=ARP or "
+        "34958=EAPOL): visible to osquery, and psutil offers no way to "
+        "enumerate them on any platform. (2) NAMESPACES: osquery derives this "
+        "table from process_open_sockets, which walks /proc/<pid>/fd across "
+        "every process, so as root it crosses into containers and reports "
+        "their in-container paths (/etc/pacman.d/gnupg/S.dirmngr from an Arch "
+        "container on a host with no pacman). psutil reads the HOST's socket "
+        "table, so it reports host-namespace sockets only. On a container "
+        "host osquery will therefore report strictly more AF_UNIX rows -- "
+        "7,758 process_open_sockets entries against 200 in /proc/net/unix on "
+        "the 2026-09-23 box. Matching it would mean reimplementing the "
+        "/proc/<pid>/fd walk: root-only, Linux-only, and squarely against the "
+        "portability this provider exists for. "
+        "Native reports zero rows osquery does not have, on either count. "
+        "A pack COUNTING rows in listening_ports will differ by provider on "
+        "Linux; filter on family, or on port/path, rather than counting."
     ),
     ("freebsd", "processes"): (
         "FreeBSD's kernel keeps only MAXCOMLEN (19) characters of a process "

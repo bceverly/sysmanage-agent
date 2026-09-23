@@ -172,7 +172,10 @@ def test_tables_without_a_provider_stay_honestly_unsupported():
 
 
 class FakeProcs:
-    def collect_processes(self):
+    # ``limit`` mirrors the real ProcessCollector signature: the fact provider
+    # passes limit=None to get the COMPLETE table, and a fake that refuses the
+    # keyword fails with a TypeError that looks nothing like the real bug.
+    def collect_processes(self, limit=None):  # pylint: disable=unused-argument
         return (
             [
                 {
@@ -470,6 +473,197 @@ def test_collect_registers_itself_rather_than_answering_nothing():
         ), "collect() answered nothing from an empty registry"
     finally:
         fn.register_native_provider()
+
+
+class TestMountsDeviceMatchesTheKernel:
+    """A blank device on Linux is psutil's doing, not the host's.
+
+    psutil._pslinux.disk_partitions contains, verbatim, ``if device ==
+    'none': device = ''``. The kernel spells it ``none`` in /proc/mounts and
+    /proc/self/mountinfo -- /sys/fs/pstore and the systemd credential tmpfs
+    mounts -- and osquery reports ``none``. Four rows on a stock Ubuntu box
+    differed on nothing but that.
+    """
+
+    def _rows(self, device, system):
+        from collections import namedtuple
+        from unittest.mock import patch
+
+        import psutil
+
+        Part = namedtuple("Part", "device mountpoint fstype opts")
+        parts = [Part(device, "/sys/fs/pstore", "pstore", "rw")]
+        with patch.object(psutil, "disk_partitions", return_value=parts), patch.object(
+            fn.platform, "system", return_value=system
+        ):
+            return fn.build_mounts()
+
+    def test_a_blank_device_is_reported_as_none_on_linux(self):
+        assert self._rows("", "Linux")[0]["device"] == "none"
+
+    def test_a_real_device_is_never_rewritten(self):
+        assert self._rows("/dev/nvme0n1p2", "Linux")[0]["device"] == "/dev/nvme0n1p2"
+
+    @pytest.mark.parametrize("system", ["FreeBSD", "OpenBSD", "NetBSD", "Darwin"])
+    def test_other_platforms_are_left_alone(self, system):
+        """The substitution is in psutil's LINUX backend. Elsewhere an empty
+        device could mean something else, and emitting "none" would invent a
+        fact -- which is the failure this phase exists to prevent."""
+        assert self._rows("", system)[0]["device"] is None
+
+
+class TestCertificateSerialMatchesOsquery:
+    """``serial`` must be spelled the way osquery spells it.
+
+    osquery formats it with OpenSSL's BN_bn2hex, which returns a bare "0" for
+    a zero serial; the native side reads ``openssl x509 -serial``, whose
+    output pads to whole bytes and prints "00". Seven certificates on a stock
+    Ubuntu trust store have serial 0, so a pack filtering ``serial = '0'``
+    matched one provider and not the other.
+
+    The trap this guards is the OBVIOUS fix: a general ``lstrip("0")`` also
+    rewrites "02" (Buypass Class 2 Root CA) and "0DD3E3BC6CF96BB1" (ANF Secure
+    Server Root CA) into values NEITHER provider reports, turning 122 agreeing
+    rows into 122 disagreeing ones. Both providers preserve leading zeros
+    everywhere except the all-zero case.
+    """
+
+    @pytest.mark.parametrize(
+        ("given", "expected"),
+        [
+            ("00", "0"),
+            ("0", "0"),
+            ("0000", "0"),
+            ("02", "02"),
+            ("0DD3E3BC6CF96BB1", "0DD3E3BC6CF96BB1"),
+            ("5EC3B7A6437FA4E0", "5EC3B7A6437FA4E0"),
+            ("", ""),
+            (None, None),
+        ],
+    )
+    def test_only_the_all_zero_serial_is_rewritten(self, given, expected):
+        assert fn._osquery_serial(given) == expected
+
+    def test_leading_zeros_are_never_stripped_in_general(self):
+        """Stated separately because it is the regression that would hurt:
+        these two are the certificates a naive strip would corrupt."""
+        for serial in (
+            "02",
+            "0DD3E3BC6CF96BB1",
+            "066C9FCF99BF8C0A39E2F0788A43E696365BCA",
+        ):
+            assert fn._osquery_serial(serial) == serial
+
+    def test_the_builder_actually_applies_it(self):
+        """The tests above exercise the helper in ISOLATION.
+
+        Reverting the one-line call in build_certificates left every one of
+        them green -- a suite that looks like coverage and guards nothing. So
+        assert the wiring, not just the function: this is the test that fails
+        if the call site goes away.
+        """
+
+        class _Collector:
+            def collect_certificates(self):
+                return [
+                    {
+                        "certificate_name": "Go Daddy Root Certificate Authority - G2",
+                        "subject": "CN=Go Daddy",
+                        "issuer": "CN=Go Daddy",
+                        "serial_number": "00",
+                        "file_path": "/etc/ssl/certs/gd.pem",
+                    },
+                    {
+                        "certificate_name": "ANF Secure Server Root CA",
+                        "subject": "CN=ANF",
+                        "issuer": "CN=ANF",
+                        "serial_number": "0DD3E3BC6CF96BB1",
+                        "file_path": "/etc/ssl/certs/anf.pem",
+                    },
+                ]
+
+        rows = fn.build_certificates(_Collector())
+        serials = [r["serial"] for r in rows]
+        assert serials == ["0", "0DD3E3BC6CF96BB1"]
+
+
+class TestUnixDomainListeners:
+    """AF_UNIX sockets belong in ``listening_ports``, shaped as osquery ships them.
+
+    Found by the S3 conformance run on 2026-09-23. psutil's ``kind="inet"``
+    excludes AF_UNIX, AND psutil reports every unix socket with
+    ``status == CONN_NONE`` -- so the CONN_LISTEN filter would drop them even
+    if the kind were widened. The table advertised itself SERVED while never
+    looking, so a query about unix sockets returned no rows on a host running
+    1,538 of them: "measured, found none" for something never measured, which
+    is the one confusion this phase exists to remove.
+
+    Mocked so it runs on EVERY platform. The BSD integration test covers the
+    same ground but needs a BSD and root, and a 90-minute QEMU job is the
+    slowest imaginable place to learn this regressed.
+    """
+
+    def _rows(self, inet=(), unix=()):
+        from unittest.mock import patch
+
+        import psutil
+
+        def by_kind(kind="inet"):
+            return list(unix) if kind == "unix" else list(inet)
+
+        with patch.object(psutil, "net_connections", side_effect=by_kind):
+            return fn.build_listening_ports()
+
+    def _unix_conn(self, path, pid=42):
+        from collections import namedtuple
+
+        import psutil
+
+        Conn = namedtuple("Conn", "fd family type laddr raddr status pid")
+        return Conn(7, 1, 1, path, None, psutil.CONN_NONE, pid)
+
+    def test_a_bound_path_is_reported(self):
+        rows = self._rows(unix=[self._unix_conn("/run/dbus/system_bus_socket")])
+        assert len(rows) == 1
+        assert rows[0]["path"] == "/run/dbus/system_bus_socket"
+
+    def test_it_matches_osquery_exactly_for_the_other_columns(self):
+        """osquery reports port 0, protocol 0 and an empty address for AF_UNIX;
+        the path carries the identity. Matching it is what lets ONE pack run
+        against either provider."""
+        rows = self._rows(unix=[self._unix_conn("/tmp/x.sock")])
+        assert rows[0]["port"] == 0
+        assert rows[0]["protocol"] == 0
+        assert rows[0]["address"] == ""
+        assert rows[0]["family"] == 1
+
+    def test_an_anonymous_socket_is_not_a_listener(self):
+        """An empty laddr is a connected or anonymous socket. osquery does not
+        list those either, and inventing rows for them would be drift on every
+        comparison."""
+        assert self._rows(unix=[self._unix_conn("")]) == []
+
+    def test_inet_rows_survive_when_unix_enumeration_fails(self):
+        """A platform whose psutil cannot enumerate unix sockets must not cost
+        us the inet rows as well -- the caller still gets a real answer for the
+        families we CAN see."""
+        from collections import namedtuple
+        from unittest.mock import patch
+
+        import psutil
+
+        Addr = namedtuple("Addr", "ip port")
+        Conn = namedtuple("Conn", "fd family type laddr raddr status pid")
+        inet = [Conn(3, 2, 1, Addr("0.0.0.0", 22), None, psutil.CONN_LISTEN, 1)]
+
+        def by_kind(kind="inet"):
+            if kind == "unix":
+                raise NotImplementedError("no unix socket support here")
+            return inet
+
+        with patch.object(psutil, "net_connections", side_effect=by_kind):
+            rows = fn.build_listening_ports()
+        assert [r["port"] for r in rows] == [22]
 
 
 class TestMountsAreTheMountTable:
