@@ -309,25 +309,30 @@ def test_one_row_per_address_not_one_per_interface():
     assert rows[2]["mask"] == "ffff:ffff:ffff:ffff::"
 
 
-def test_mounts_leaves_block_counts_null_rather_than_deriving_them():
-    """Block/inode counts stay NULL: filling them means a statvfs per mount,
-    which blocks on an unreachable network mount and turns one dead NFS
-    server into a hung collection every interval."""
+def test_mounts_never_statvfs_a_network_mount():
+    """Block/inode counts are measured only for local filesystem types: a
+    statvfs blocks on an unreachable network mount, which would turn one dead
+    NFS server into a hung collection every interval. (Until 2026-09-23 they
+    were NULL for every mount; see test_fact_native_mounts.py.)"""
+    import os
     from collections import namedtuple
     from unittest.mock import patch
 
     import psutil
 
     Part = namedtuple("Part", "device mountpoint fstype opts")
-    with patch.object(
-        psutil,
-        "disk_partitions",
-        return_value=[Part("/dev/wd0a", "/", "ffs", "rw,local")],
-    ):
-        row = fn.build_mounts()[0]
-    assert row["device"] == "/dev/wd0a" and row["type"] == "ffs"
-    assert row["path"] == "/" and row["flags"] == "rw,local"
-    assert row.get("blocks") is None and row.get("blocks_size") is None
+    parts = [
+        Part("/dev/wd0a", "/", "ffs", "rw,local"),
+        Part("nas:/export", "/mnt/nas", "nfs", "rw"),
+    ]
+    with patch.object(psutil, "disk_partitions", return_value=parts), patch.object(
+        os, "statvfs", side_effect=OSError
+    ) as statvfs:
+        rows = fn.build_mounts()
+    assert rows[0]["device"] == "/dev/wd0a" and rows[0]["type"] == "ffs"
+    assert rows[0]["path"] == "/" and rows[0]["flags"] == "rw,local"
+    statvfs.assert_called_once_with("/")  # the ffs root, never the NFS mount
+    assert rows[1].get("blocks") is None
 
 
 def test_physical_memory_is_bytes_and_cpu_type_is_the_arch():

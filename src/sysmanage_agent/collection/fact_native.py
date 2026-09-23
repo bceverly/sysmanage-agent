@@ -39,6 +39,7 @@ A pack written against osquery must get osquery's meaning or NOTHING.  So:
 
 import logging
 import os
+from datetime import datetime, timezone
 import platform
 import re
 import subprocess
@@ -308,6 +309,29 @@ def _osquery_serial(serial: Optional[str]) -> Optional[str]:
     return text
 
 
+def _osquery_epoch(value) -> Optional[str]:
+    """A certificate date as osquery reports it: epoch seconds, as text.
+
+    The collector hands over ISO-8601. Passing that through broke every pack
+    written the osquery way -- ``CAST(not_valid_after AS INTEGER)`` turns
+    "2030-12-31T09:37:37+00:00" into 2030, so every certificate read as long
+    expired (found by the 21.2 S0 spike, 2026-09-23). Unparseable input is
+    NULL, not a guess.
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if text.isdigit():
+        return text
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return str(int(parsed.timestamp()))
+
+
 def build_certificates(collector) -> List[Dict[str, Any]]:
     """osquery ``certificates``.
 
@@ -315,6 +339,11 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
     definition rather than an invention, so the column carries its real
     meaning instead of a null.  ``common_name`` is derived the same way -- see
     ``common_name_of``.
+
+    ``ca`` is X509_check_ca, as osquery's is: ``basic_constraints_ca`` from
+    the collector, not its path/subject heuristic ``is_ca`` (which called
+    ACCVRAIZ1, a root CA, "not a CA"). Windows records carry no
+    ``basic_constraints_ca``; there the store-based ``is_ca`` stands.
     """
     out = []
     for cert in collector.collect_certificates() or []:
@@ -325,10 +354,16 @@ def build_certificates(collector) -> List[Dict[str, Any]]:
                 "common_name": cert.get("certificate_name") or common_name_of(subject),
                 "subject": subject,
                 "issuer": issuer,
-                "ca": int(bool(cert.get("is_ca"))),
+                "ca": int(
+                    bool(
+                        cert["basic_constraints_ca"]
+                        if "basic_constraints_ca" in cert
+                        else cert.get("is_ca")
+                    )
+                ),
                 "self_signed": (int(subject == issuer) if subject and issuer else None),
-                "not_valid_before": cert.get("not_before"),
-                "not_valid_after": cert.get("not_after"),
+                "not_valid_before": _osquery_epoch(cert.get("not_before")),
+                "not_valid_after": _osquery_epoch(cert.get("not_after")),
                 "key_usage": cert.get("key_usage"),
                 "path": cert.get("file_path"),
                 "serial": _osquery_serial(cert.get("serial_number")),
@@ -453,10 +488,14 @@ def build_mounts(_collector=None) -> List[Dict[str, Any]]:
     fdescfs, and filtering to "real" disks would silently drop rows osquery
     has.
 
-    The block/inode columns stay NULL. They could be filled from
-    ``disk_usage``, but that is a ``statvfs`` per mount and blocks on an
-    unreachable network mount -- turning one unavailable NFS server into a
-    hung fact collection on every interval.
+    The block/inode columns come from ``statvfs`` -- but ONLY for the local
+    filesystem types in ``_STATVFS_SAFE_TYPES``. A ``statvfs`` on an
+    unreachable network mount blocks, turning one unavailable NFS server into
+    a hung fact collection on every interval, so network, FUSE and unknown
+    types keep NULL: "not measured for this mount", never a guess. Until
+    2026-09-23 every mount stayed NULL, and the 21.2 S0 spike showed what that
+    cost: "filesystem more than 90% full" evaluated to "does not fire" on a
+    real host whose capacity had simply never been read.
     """
     import psutil  # noqa: PLC0415
 
@@ -486,9 +525,53 @@ def build_mounts(_collector=None) -> List[Dict[str, Any]]:
                 "type": part.fstype or None,
                 # osquery's ``flags`` is the mount option string.
                 "flags": getattr(part, "opts", None) or None,
+                **_mount_capacity(part.mountpoint, part.fstype),
             }
         )
     return out
+
+
+# Filesystems whose ``statvfs`` answers from local state and cannot block on
+# a network peer. Anything else -- nfs, cifs/smbfs, 9p, fuse.* (sshfs, rclone,
+# gvfs), afs, ceph -- is left unmeasured on purpose; see build_mounts.
+_STATVFS_SAFE_TYPES = frozenset(
+    (
+        # Local disk and memory filesystems.
+        "ext2 ext3 ext4 xfs btrfs zfs f2fs jfs reiserfs vfat msdos msdosfs exfat"
+        " ntfs ntfs3 tmpfs devtmpfs ramfs ufs ffs hammer hammer2 apfs hfs lfs mfs"
+        " cd9660 iso9660 squashfs overlay"
+        # Kernel pseudo-filesystems, answered by the kernel itself. osquery
+        # reports them (as zeros); measuring them keeps the two providers
+        # comparable instead of NULL-vs-0 on every such row.
+        " proc sysfs devpts cgroup cgroup2 securityfs debugfs tracefs configfs"
+        " pstore bpf mqueue hugetlbfs efivarfs fusectl binfmt_misc nsfs devfs"
+        " fdescfs procfs linprocfs linsysfs kernfs ptyfs"
+    ).split()
+)
+
+
+def _mount_capacity(path: Optional[str], fstype: Optional[str]) -> Dict[str, Any]:
+    """osquery's block/inode columns for one mount, or {} when not measured.
+
+    ``blocks_size`` is ``f_frsize`` -- POSIX counts ``f_blocks`` in those
+    units, so ``blocks * blocks_size`` is bytes on every platform. (Linux
+    osquery reports ``f_bsize``; the two are equal there, verified against
+    osqueryi on 2026-09-23 for /, /boot, /tmp and /run.)
+    """
+    if not path or (fstype or "").lower() not in _STATVFS_SAFE_TYPES:
+        return {}
+    try:
+        st = os.statvfs(path)
+    except OSError:
+        return {}
+    return {
+        "blocks_size": st.f_frsize,
+        "blocks": st.f_blocks,
+        "blocks_free": st.f_bfree,
+        "blocks_available": st.f_bavail,
+        "inodes": st.f_files,
+        "inodes_free": st.f_ffree,
+    }
 
 
 def build_system_info(collector) -> List[Dict[str, Any]]:
@@ -784,6 +867,11 @@ def register_native_provider() -> None:
     _register_table(
         "sysmanage_available_updates", UpdateDetector, build_available_updates
     )
+    _register_table(
+        "sysmanage_process_packages",
+        lambda: None,
+        lambda _c: _process_packages(),
+    )
     # Parameterized -- see PARAMETERIZED_TABLES. Registered here so the
     # coverage advertisement reports it like any other table (this agent CAN
     # serve it on every platform); the factory/builder pair is never called,
@@ -811,6 +899,15 @@ def register_native_provider() -> None:
         can_enumerate_sockets,
         REASON_INSUFFICIENT_PRIVILEGE,
     )
+
+
+def _process_packages() -> List[Dict[str, Any]]:
+    """Kept in its own module: fact_native is near the 1,000-line limit."""
+    from src.sysmanage_agent.collection.fact_process_packages import (  # noqa: PLC0415
+        build_process_packages,
+    )
+
+    return build_process_packages()
 
 
 # Tables whose CONTENT depends on something that travels with the dispatch

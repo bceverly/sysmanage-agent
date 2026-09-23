@@ -2816,18 +2816,18 @@ jobs:
 
           ### Alpine Linux
           \`\`\`bash
-          # Download the pre-built package for your Alpine version (3.19, 3.20, or 3.21)
+          # Download the pre-built package for your Alpine version (3.20, 3.21, or 3.22)
+          # For Alpine 3.22:
+          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine322.apk
+          doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine322.apk
+
           # For Alpine 3.21:
-          wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine321.apk
-          doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine321.apk
+          # wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine321.apk
+          # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine321.apk
 
           # For Alpine 3.20:
           # wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine320.apk
           # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine320.apk
-
-          # For Alpine 3.19:
-          # wget https://github.com/$REPO/releases/download/$REF_NAME/sysmanage-agent-${VERSION}-alpine319.apk
-          # doas apk add --allow-untrusted sysmanage-agent-${VERSION}-alpine319.apk
 
           # Configure and start
           doas cp /etc/sysmanage-agent/sysmanage-agent.yaml.example /etc/sysmanage-agent/sysmanage-agent.yaml
@@ -2918,7 +2918,7 @@ jobs:
           - **CentOS/RHEL**: 9.x
           - **OpenSUSE**: Tumbleweed, Leap 15.x
           - **SUSE Linux Enterprise Server (SLES)**: 15.x
-          - **Alpine Linux**: 3.19, 3.20, 3.21 (pre-built packages available)
+          - **Alpine Linux**: 3.20, 3.21, 3.22 (pre-built packages available)
           - **macOS**: 12+ (Monterey and later)
           - **Windows**: 10 (1809+), 11, Server 2019+ (x64 and ARM64)
           - **FreeBSD**: 13.x, 14.x

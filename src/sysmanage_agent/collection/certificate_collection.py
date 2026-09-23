@@ -740,8 +740,27 @@ class CertificateCollector:
 
         # Determine if it's a CA certificate based on path, subject, or purpose
         cert_info["is_ca"] = self._detect_ca_certificate(cert_file, cert_info, output)
+        # The X.509 answer, kept apart from the heuristic above (which the
+        # Certificates tab has always shown): the fact contract's ``ca`` column
+        # means what osquery's does -- X509_check_ca -- and nothing looser.
+        cert_info["basic_constraints_ca"] = self._openssl_says_ca(output)
 
         return cert_info
+
+    @staticmethod
+    def _openssl_says_ca(purpose_output: str) -> bool:
+        """True when ``openssl x509 -purpose`` reports the certificate is a CA.
+
+        openssl derives every "<purpose> CA : Yes" line from X509_check_ca, the
+        same check osquery's ``ca`` column uses. "Any Purpose CA" is excluded:
+        it answers Yes for every certificate, leaf or not (measured 2026-09-23,
+        ssl-cert-snakeoil.pem).
+        """
+        return any(
+            line.strip().endswith("CA : Yes")
+            and not line.strip().startswith("Any Purpose")
+            for line in purpose_output.splitlines()
+        )
 
     def _parse_openssl_output_line(self, line: str, cert_info: Dict[str, Any]) -> None:
         """Parse a single line of OpenSSL output and update cert_info accordingly."""

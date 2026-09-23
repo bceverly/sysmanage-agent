@@ -61,7 +61,8 @@ from typing import Callable, Dict, List, Optional, Tuple
 # but a consumer of a table added after v1 must require a POSITIVE
 # advertisement for it rather than assuming an older agent simply had nothing
 # to report.  See host_facts.serves() on the server.
-FACT_CONTRACT_VERSION = 2
+# v3 (21.2 S0 follow-up, 2026-09-23) added ``sysmanage_process_packages``.
+FACT_CONTRACT_VERSION = 3
 
 # Providers.  A table is served by exactly one on a given host.
 PROVIDER_OSQUERY = "osquery"
@@ -138,6 +139,15 @@ FACT_TABLES: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     # look" stay distinguishable from each other and from "we never watched
     # it".  Content is never collected -- see FACT_COLUMNS below.
     "sysmanage_file_state": ("sysmanage", ANY_PLATFORM),
+    # Ours: pid -> executable -> OWNING PACKAGE, the join "a listening
+    # service's own package has a critical CVE" needs and no osquery table
+    # makes portably. Per running process, not per file -- see
+    # fact_process_packages. No Windows equivalent: an MSI does not record
+    # file ownership the way a package database does.
+    "sysmanage_process_packages": (
+        "sysmanage",
+        ("linux", "darwin", "freebsd", "openbsd", "netbsd"),
+    ),
 }
 
 
@@ -402,6 +412,17 @@ FACT_COLUMNS: Dict[str, Tuple[str, ...]] = {
         "mtime",  # epoch seconds
         "type",  # regular | directory | symlink | other
         "target",  # symlink target, NULL otherwise
+    ),
+    # One row per running process with an executable. ``state`` keeps
+    # owned / unowned / unreadable / unresolved apart -- "the agent could not
+    # see this executable" must never read as "no package owns it".
+    "sysmanage_process_packages": (
+        "pid",
+        "path",  # the executable, as the OS reports it
+        "package",
+        "version",
+        "package_manager",  # dpkg | rpm | pkg | pkg_info | homebrew
+        "state",  # owned | unowned | unreadable | unresolved
     ),
 }
 
