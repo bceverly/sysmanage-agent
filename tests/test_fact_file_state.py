@@ -129,6 +129,45 @@ class TestSymlinks:
         assert row["target"] == str(tree / "nope")
 
 
+class TestWindowsExtendedLengthTargets:
+    """``os.readlink`` on Windows returns "\\\\?\\C:\\..." for an ABSOLUTE target.
+
+    Caught by the Windows CI leg, and it is a product bug rather than a test
+    one: that prefix is a Win32 API artifact, it is absent when the link was
+    created with a RELATIVE target, and ``path`` in the same row arrives from
+    the server's watch list without it. Left in, two hosts holding identical
+    configuration differ only by how their link happened to be created, and
+    the differ calls it drift -- the exact false positive this table exists to
+    prevent.
+
+    These run on every platform, not just Windows, because the normalizer is
+    pure string work and the Windows leg is the slowest place to learn it
+    broke.
+    """
+
+    @pytest.mark.parametrize(
+        ("given", "expected"),
+        [
+            (r"\\?\C:\Users\me\config.ini", r"C:\Users\me\config.ini"),
+            (r"\\?\UNC\server\share\f.ini", r"\\server\share\f.ini"),
+            (r"C:\plain\path", r"C:\plain\path"),
+            (r"\\server\share\plain", r"\\server\share\plain"),
+            ("/etc/ssh/sshd_config", "/etc/ssh/sshd_config"),
+            ("../relative/target", "../relative/target"),
+            ("", ""),
+        ],
+    )
+    def test_only_the_extended_prefix_is_rewritten(self, given, expected):
+        assert ffs._normalize_link_target(given) == expected
+
+    def test_a_genuine_unc_target_is_not_mistaken_for_an_extended_one(self):
+        """``\\\\server\\share`` and ``\\\\?\\UNC\\server\\share`` name the same
+        place, and only the second carries the prefix. Rewriting the first
+        would corrupt a real path."""
+        unc = r"\\fileserver\configs\sshd_config"
+        assert ffs._normalize_link_target(unc) == unc
+
+
 class TestContentNeverLeavesTheHost:
     def test_there_is_no_content_column(self):
         """The security property that lets an operator watch /etc/shadow. If a

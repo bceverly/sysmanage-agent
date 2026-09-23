@@ -76,6 +76,15 @@ class FactStore:
         # Identifiers are contract constants, never user input -- the
         # authorizer below is what defends the QUERY side.
         col_sql = ", ".join(f'"{c}"' for c in cols)
+        # Both rules fire on the f-string, and neither applies. SQLite cannot
+        # parameterize an IDENTIFIER, so DDL has to interpolate; what makes it
+        # safe is that both halves are contract constants -- ``table`` was
+        # rejected above unless it is a key of FACT_TABLES, and ``cols`` comes
+        # from FACT_COLUMNS. Untrusted pack SQL never reaches here; it goes to
+        # query(), behind the authorizer. The sqlalchemy rule additionally
+        # does not apply at all: this is stdlib sqlite3, not SQLAlchemy.
+        # test_contract_identifiers_are_bare keeps the constant-ness true.
+        # nosemgrep: python.lang.security.audit.formatted-sql-query.formatted-sql-query, python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
         self._conn.execute(f'CREATE TABLE "{table}" ({col_sql})')  # nosec B608
         placeholders = ", ".join("?" for _ in cols)
         self._conn.executemany(

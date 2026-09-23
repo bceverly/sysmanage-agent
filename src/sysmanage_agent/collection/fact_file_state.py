@@ -127,6 +127,37 @@ def _empty_row(path: str, state: str) -> Dict[str, Any]:
     }
 
 
+# Windows ``os.readlink`` hands back the EXTENDED-LENGTH form of an absolute
+# target -- "\\?\\C:\\..." -- which is a Win32 API artifact, not part of the
+# link's identity. Three reasons it must not reach the fact table:
+#
+#   * It is inconsistent. A link created with a RELATIVE target comes back
+#     without the prefix, so two hosts holding the same configuration differ
+#     only in how their link happened to be created -- and get reported as
+#     drift, which is exactly the false positive this table exists to avoid.
+#   * It puts ``target`` in a different namespace from ``path`` in the SAME
+#     row. ``path`` arrives from the server's watch list unprefixed, so
+#     comparing or displaying the two together is otherwise nonsense.
+#   * An operator reading "points at \\?\\C:\\ProgramData\\..." learns nothing
+#     from the prefix; it is noise in the one field meant to say where a
+#     replaced config file now points.
+#
+# Only these two exact forms are rewritten; anything else is returned
+# untouched, so a genuine UNC path or a POSIX target is never altered.
+_WIN_EXTENDED = "\\\\?\\"  # the four characters: backslash backslash ? backslash
+_WIN_EXTENDED_UNC = _WIN_EXTENDED + "UNC\\"
+
+
+def _normalize_link_target(target: str) -> str:
+    """Windows extended-length prefix removed; every other path untouched."""
+    if target.startswith(_WIN_EXTENDED_UNC):
+        # \\?\\UNC\\server\\share  ->  \\\\server\\share
+        return "\\\\" + target[len(_WIN_EXTENDED_UNC) :]
+    if target.startswith(_WIN_EXTENDED):
+        return target[len(_WIN_EXTENDED) :]
+    return target
+
+
 def _link_info(path: str) -> Dict[str, Any]:
     """``{type, target}`` when ``path`` is itself a symlink, else empty.
 
@@ -137,7 +168,10 @@ def _link_info(path: str) -> Dict[str, Any]:
     try:
         if not stat_module.S_ISLNK(os.lstat(path).st_mode):
             return {}
-        return {"type": TYPE_SYMLINK, "target": os.readlink(path)}
+        return {
+            "type": TYPE_SYMLINK,
+            "target": _normalize_link_target(os.readlink(path)),
+        }
     except OSError:
         return {}
 

@@ -12,9 +12,11 @@ in-memory anyway" is not a reason to let it try.
 """
 
 import sqlite3
+from keyword import iskeyword
 
 import pytest
 
+from src.sysmanage_agent.core.fact_schema import FACT_COLUMNS, FACT_TABLES
 from src.sysmanage_agent.core.fact_store import FactStore
 
 
@@ -82,3 +84,29 @@ def test_parameters_are_bound_not_interpolated(store):
     assert store.query("SELECT uid FROM users WHERE username = ?", ["root"]) == [
         {"uid": 0}
     ]
+
+
+def test_contract_identifiers_are_bare():
+    """Keeps the ``# nosemgrep`` on the CREATE TABLE in materialize() honest.
+
+    SQLite cannot parameterize an identifier, so that DDL interpolates the
+    table and column names directly. What makes that safe is not the quoting
+    -- it is that both come from the contract. Nothing stops a later edit from
+    adding a name with a quote, a space or a semicolon in it, and at that point
+    the suppression would be covering a real injection rather than a false
+    positive. Assert the premise rather than trust a future reader to re-derive
+    it from two files away.
+    """
+    names = set(FACT_TABLES) | {c for cols in FACT_COLUMNS.values() for c in cols}
+    assert names
+    for name in sorted(names):
+        assert name.isidentifier(), name
+        assert not iskeyword(name), name
+
+
+def test_every_contract_table_materializes(store):
+    """The identifier check above is only worth something if these names are
+    the ones actually fed to CREATE TABLE."""
+    for table in FACT_TABLES:
+        store.materialize(table, [])
+    assert set(store.tables) == set(FACT_TABLES)
