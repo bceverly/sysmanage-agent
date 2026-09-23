@@ -12,6 +12,8 @@ rule reading them the same way reports a clean host it never inspected.
 
 # pylint: disable=protected-access,redefined-outer-name
 
+import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import psutil
@@ -68,8 +70,6 @@ def dpkg(tmp_path, monkeypatch):
     info = tmp_path / "info"
     info.mkdir()
     (info / "openssh-server.list").write_text("/.\n/usr\n/usr/sbin/sshd\n")
-    # Multi-arch package: the .list name carries ":amd64".
-    (info / "libfoo:amd64.list").write_text("/usr/lib/x86_64-linux-gnu/foo\n")
     # Pre-merged-/usr package that still records /bin.
     (info / "coreutils.list").write_text("/bin/ls\n")
     (tmp_path / "status").write_text(
@@ -82,14 +82,24 @@ def dpkg(tmp_path, monkeypatch):
 
 
 def test_dpkg_owners_with_versions_arch_suffix_and_usrmerge(dpkg):  # noqa: ARG001
-    owners = fpp._dpkg_owners(
-        {"/usr/sbin/sshd", "/usr/bin/ls", "/usr/lib/x86_64-linux-gnu/foo", "/opt/x"}
-    )
+    owners = fpp._dpkg_owners({"/usr/sbin/sshd", "/usr/bin/ls", "/opt/x"})
     assert owners["/usr/sbin/sshd"] == ("openssh-server", "1:9.6p1-3", "dpkg")
     # The process runs as /usr/bin/ls; the package recorded /bin/ls.
     assert owners["/usr/bin/ls"] == ("coreutils", "9.4-3", "dpkg")
-    assert owners["/usr/lib/x86_64-linux-gnu/foo"][0] == "libfoo"
     assert "/opt/x" not in owners
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="NTFS cannot name a file 'libfoo:amd64.list' (the colon starts an "
+    "alternate data stream); dpkg only ever runs on Linux",
+)
+def test_dpkg_multiarch_list_names_drop_the_arch(dpkg):  # noqa: ARG001
+    (Path(fpp._DPKG_INFO) / "libfoo:amd64.list").write_text(
+        "/usr/lib/x86_64-linux-gnu/foo\n"
+    )
+    owners = fpp._dpkg_owners({"/usr/lib/x86_64-linux-gnu/foo"})
+    assert owners["/usr/lib/x86_64-linux-gnu/foo"] == ("libfoo", "2.0", "dpkg")
 
 
 def test_snaps_are_owned_by_their_snap_not_by_nobody():

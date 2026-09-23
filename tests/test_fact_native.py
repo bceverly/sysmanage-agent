@@ -326,7 +326,7 @@ def test_mounts_never_statvfs_a_network_mount():
         Part("nas:/export", "/mnt/nas", "nfs", "rw"),
     ]
     with patch.object(psutil, "disk_partitions", return_value=parts), patch.object(
-        os, "statvfs", side_effect=OSError
+        os, "statvfs", side_effect=OSError, create=True
     ) as statvfs:
         rows = fn.build_mounts()
     assert rows[0]["device"] == "/dev/wd0a" and rows[0]["type"] == "ffs"

@@ -28,6 +28,7 @@ must never read "unreadable" as "unowned".
 import logging
 import os
 import platform
+import posixpath
 import shutil
 import subprocess  # nosec B404
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -228,7 +229,9 @@ def _bsd_contents_owners(paths: set, prefix: str) -> Dict[str, Owner]:
                     if line.startswith("@cwd "):
                         cwd = line[5:].strip()
                     elif line and not line.startswith("@"):
-                        full = os.path.join(cwd, line)
+                        # The package database's paths are POSIX on the host
+                        # it describes, whatever OS evaluates them.
+                        full = posixpath.join(cwd, line)
                         if full in paths and full not in owners:
                             owners[full] = (name or entry, version or None, "pkg_info")
         except OSError:

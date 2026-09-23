@@ -558,10 +558,11 @@ def _mount_capacity(path: Optional[str], fstype: Optional[str]) -> Dict[str, Any
     osquery reports ``f_bsize``; the two are equal there, verified against
     osqueryi on 2026-09-23 for /, /boot, /tmp and /run.)
     """
-    if not path or (fstype or "").lower() not in _STATVFS_SAFE_TYPES:
+    statvfs = getattr(os, "statvfs", None)  # POSIX only; Windows has no mounts table
+    if statvfs is None or not path or (fstype or "").lower() not in _STATVFS_SAFE_TYPES:
         return {}
     try:
-        st = os.statvfs(path)
+        st = statvfs(path)
     except OSError:
         return {}
     return {
