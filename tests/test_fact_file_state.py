@@ -20,14 +20,40 @@ from src.sysmanage_agent.collection import fact_file_state as ffs
 from src.sysmanage_agent.collection import fact_native as fn
 from src.sysmanage_agent.core import fact_schema as fs
 
+# ``os.geteuid`` is POSIX-only, and a ``skipif`` CONDITION is evaluated when
+# the decorator is APPLIED -- at import time -- so stacking it beneath a
+# ``sys.platform == "win32"`` guard does not help: the Windows leg died during
+# collection, before a single test in this module ran. The repo idiom is
+# ``hasattr``; this file was the one place that did not follow it.
+_IS_ROOT = os.geteuid() == 0 if hasattr(os, "geteuid") else False
+
+
+def _try_symlink(src, dst) -> bool:
+    """Create a symlink where the platform allows one; report whether it did.
+
+    Windows needs SeCreateSymbolicLinkPrivilege (or Developer Mode), so an
+    unconditional ``os.symlink`` in a fixture fails every test that uses it --
+    including the twelve here that never touch a link.
+    """
+    try:
+        os.symlink(str(src), str(dst))
+        return True
+    except (OSError, NotImplementedError, AttributeError):
+        return False
+
+
+def _require_symlink(path) -> None:
+    if not os.path.islink(str(path)):
+        pytest.skip("creating a symlink is not permitted on this platform")
+
 
 @pytest.fixture
 def tree(tmp_path):
     """A directory exercising every state the table can report."""
     (tmp_path / "config").write_text("PermitRootLogin yes\n", encoding="utf-8")
     (tmp_path / "adir").mkdir()
-    os.symlink(str(tmp_path / "config"), str(tmp_path / "link_ok"))
-    os.symlink(str(tmp_path / "nope"), str(tmp_path / "link_dangling"))
+    _try_symlink(tmp_path / "config", tmp_path / "link_ok")
+    _try_symlink(tmp_path / "nope", tmp_path / "link_dangling")
     return tmp_path
 
 
@@ -61,7 +87,7 @@ class TestStatesAreDistinguishable:
     @pytest.mark.skipif(
         sys.platform == "win32", reason="POSIX mode bits do not gate reads here"
     )
-    @pytest.mark.skipif(os.geteuid() == 0, reason="root can read anything")
+    @pytest.mark.skipif(_IS_ROOT, reason="root can read anything")
     def test_unreadable_is_not_unchanged(self, tree):
         """THE DANGEROUS ONE. An agent that loses permission on a watched file
         must not keep reporting it as stable. Unreadable is a FIXABLE gap and
@@ -88,6 +114,7 @@ class TestSymlinks:
         """A config file swapped for a symlink is exactly the drift worth
         catching, so the link is reported -- but the CONTENT at the end of it
         is what gets hashed, which is what an operator means by 'unchanged'."""
+        _require_symlink(tree / "link_ok")
         row = ffs.file_state(str(tree / "link_ok"))
         assert row["type"] == ffs.TYPE_SYMLINK
         assert row["target"] == str(tree / "config")
@@ -95,6 +122,7 @@ class TestSymlinks:
 
     def test_dangling_symlink_is_absent_but_keeps_its_target(self, tree):
         """'Deleted' and 'points at nothing' are different repairs."""
+        _require_symlink(tree / "link_dangling")
         row = ffs.file_state(str(tree / "link_dangling"))
         assert row["state"] == ffs.STATE_ABSENT
         assert row["type"] == ffs.TYPE_SYMLINK
