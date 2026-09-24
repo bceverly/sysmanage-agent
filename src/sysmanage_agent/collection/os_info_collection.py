@@ -675,6 +675,11 @@ class OSInfoCollector:
             os_info["distribution"] = os_release.get("NAME", "")
             os_info["distribution_version"] = os_release.get("VERSION_ID", "")
             os_info["distribution_codename"] = os_release.get("VERSION_CODENAME", "")
+            # Ubuntu derivatives (Mint, Pop!_OS, elementary...) carry their OWN
+            # codename above and the Ubuntu base they track here. The Ubuntu CVE
+            # feed is per Ubuntu release, so this is what a derivative matches on.
+            if os_release.get("UBUNTU_CODENAME"):
+                os_info["ubuntu_codename"] = os_release["UBUNTU_CODENAME"]
 
             distribution = os_info.get("distribution", "")
             if "ubuntu" in distribution.lower():

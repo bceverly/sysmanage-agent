@@ -186,15 +186,18 @@ openssl/focal-security 1.1.1f-1ubuntu2.21 amd64 [upgradable from: 1.1.1f-1ubuntu
 
         assert is_security is True
 
-    def test_openbsd_syspatch_always_security(self, bsd_detector):
-        """Test that OpenBSD syspatches are always security updates."""
+    def test_openbsd_syspatch_is_not_claimed_as_security(self, bsd_detector):
+        """`syspatch -c` lists patch ids only, and about half of OpenBSD errata
+        are reliability fixes -- the server classifies each from the errata
+        catalog, so the agent must not guess "security" (2026-09-24)."""
         mock_result = Mock(returncode=0, stdout="001_patch\n")
 
         with patch("subprocess.run", return_value=mock_result):
             bsd_detector._detect_openbsd_system_updates()
 
-        if bsd_detector.available_updates:
-            assert bsd_detector.available_updates[0]["is_security_update"] is True
+        assert bsd_detector.available_updates
+        assert bsd_detector.available_updates[0]["is_security_update"] is False
+        assert bsd_detector.available_updates[0]["is_system_update"] is True
 
 
 # =============================================================================

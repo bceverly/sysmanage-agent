@@ -378,6 +378,33 @@ class TestPlatformInfoCollection:
                 assert platform_name == "Linux"
                 assert release == "5.15.0"
 
+    def test_an_ubuntu_derivative_reports_its_ubuntu_base(self):
+        """Mint names itself 'wilma' but tracks Ubuntu 'noble'; the Ubuntu CVE
+        feed is per Ubuntu release, so the base is what gets matched."""
+        mint = {
+            "NAME": "Linux Mint",
+            "VERSION_ID": "22.1",
+            "VERSION_CODENAME": "xia",
+            "UBUNTU_CODENAME": "noble",
+        }
+        with patch(
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            return_value=mint,
+            create=True,
+        ):
+            os_info = self.collector._collect_linux_os_info()
+        assert os_info["distribution_codename"] == "xia"
+        assert os_info["ubuntu_codename"] == "noble"
+
+    def test_a_non_ubuntu_distribution_has_no_ubuntu_codename(self):
+        with patch(
+            "src.sysmanage_agent.collection.os_info_collection.platform.freedesktop_os_release",
+            return_value={"NAME": "Fedora Linux", "VERSION_ID": "42"},
+            create=True,
+        ):
+            os_info = self.collector._collect_linux_os_info()
+        assert "ubuntu_codename" not in os_info
+
     def test_collect_linux_os_info_ubuntu_with_pro(self):
         """Test Linux OS info collection for Ubuntu with Pro info."""
         mock_os_release = {

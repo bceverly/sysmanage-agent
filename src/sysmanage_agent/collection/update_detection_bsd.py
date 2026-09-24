@@ -373,7 +373,11 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                                 "current_version": "not installed",
                                 "available_version": patch,
                                 "package_manager": "syspatch",
-                                "is_security_update": True,  # syspatches are security fixes
+                                # NOT a security claim: `syspatch -c` lists ids
+                                # only, and about half of OpenBSD errata are
+                                # reliability fixes. The server classifies each
+                                # from the errata catalog (2026-09-24).
+                                "is_security_update": False,
                                 "is_system_update": True,  # base-system patches
                                 "requires_reboot": True,  # most syspatches require reboot
                                 "update_size_bytes": None,  # not available from syspatch -c

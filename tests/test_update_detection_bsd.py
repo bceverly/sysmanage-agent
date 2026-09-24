@@ -417,7 +417,7 @@ class TestDetectOpenbsdSystemUpdates:
         assert names == {"001_xmss", "002_ssh"}
         for update in detector.available_updates:
             assert update["package_manager"] == "syspatch"
-            assert update["is_security_update"] is True
+            assert update["is_security_update"] is False  # the server classifies
             assert update["is_system_update"] is True
             assert update["requires_reboot"] is True
             # package_name == available_version (the syspatch patch id)
@@ -469,7 +469,7 @@ class TestOpenBsdSystemUpdates:
         names = {u["package_name"] for u in bsd_detector.available_updates}
         assert names == {"001_nsd", "002_smtpd", "003_kernel"}
         for update in bsd_detector.available_updates:
-            assert update["is_security_update"] is True
+            assert update["is_security_update"] is False  # the server classifies
             assert update["is_system_update"] is True
             assert update["package_manager"] == "syspatch"
 

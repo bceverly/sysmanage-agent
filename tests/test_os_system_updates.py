@@ -262,7 +262,7 @@ No new software available.
         for update in self.detector.available_updates:
             assert update["package_manager"] == "syspatch"
             assert update["available_version"] == update["package_name"]
-            assert update["is_security_update"] is True
+            assert update["is_security_update"] is False  # the server classifies
             assert update["is_system_update"] is True
             assert update["requires_reboot"] is True
 
