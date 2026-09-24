@@ -46,6 +46,7 @@ import subprocess
 import socket
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
+from src.sysmanage_agent.collection.fact_native_columns import NATIVE_COLUMNS
 from src.sysmanage_agent.core.fact_schema import (
     PROVIDER_NATIVE,
     REASON_INSUFFICIENT_PRIVILEGE,
@@ -816,6 +817,7 @@ def _register_table(
         PROVIDER_NATIVE,
         probe or (lambda: True),
         reason or REASON_MISSING_TOOL,
+        columns=NATIVE_COLUMNS.get(table),
     )
 
 

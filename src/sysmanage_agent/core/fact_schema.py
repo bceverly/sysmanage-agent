@@ -50,7 +50,7 @@ none.  At S1 the registry is empty by design, so a host honestly reports that
 it serves no tables yet; S2 and S3 fill it in.
 """
 
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 # Bump when the TABLE SET or a table's columns change in a way a consumer must
 # know about.  Independent of CAPABILITY_SCHEMA_VERSION on purpose: the fact
@@ -438,6 +438,13 @@ def columns(table: str) -> Tuple[str, ...]:
 # MORE THAN ONE provider; PROVIDER_ORDER decides which is used.
 _PROVIDERS: Dict[str, Dict[str, Tuple[Callable[[], bool], str]]] = {}
 
+# table -> provider -> the contract columns that provider POPULATES, or None
+# for "all of them". Coverage is advertised per table, but a rule reads
+# columns: native ``mounts`` served the table for months while filling none of
+# its capacity columns, so "filesystem over 90% full" evaluated against NULLs
+# and answered "does not fire" on a real host (21.2 S0, 2026-09-23).
+_PROVIDER_COLUMNS: Dict[str, Dict[str, Optional[Tuple[str, ...]]]] = {}
+
 # Preference, highest first.  osquery wins where it is healthy because it is
 # the wider and better-tested implementation; native is the floor that makes
 # every platform work.  The ORDER is the whole mechanism behind "FreeBSD
@@ -450,6 +457,7 @@ def register_provider(
     provider: str,
     available: Callable[[], bool],
     unavailable_reason: str = REASON_MISSING_TOOL,
+    columns: Optional[Sequence[str]] = None,
 ) -> None:
     """Declare that ``provider`` can serve ``table`` when ``available()``.
 
@@ -468,10 +476,26 @@ def register_provider(
         raise KeyError(f"{table!r} is not in the v{FACT_CONTRACT_VERSION} contract")
     if provider not in (PROVIDER_OSQUERY, PROVIDER_NATIVE):
         raise ValueError(f"unknown provider {provider!r}")
+    if columns is not None:
+        unknown = set(columns) - set(FACT_COLUMNS[table])
+        if unknown:
+            # Same reasoning as the table check: an advertised column outside
+            # the contract would be trusted by a consumer and never filled.
+            raise KeyError(f"{table}: {sorted(unknown)} are not contract columns")
     _PROVIDERS.setdefault(table, {})[provider] = (
         available,
         unavailable_reason,
     )
+    _PROVIDER_COLUMNS.setdefault(table, {})[provider] = (
+        tuple(columns) if columns is not None else None
+    )
+
+
+def populated_columns(table: str, provider: str) -> Tuple[str, ...]:
+    """The columns ``provider`` fills for ``table`` -- all of them unless it
+    declared fewer."""
+    declared = _PROVIDER_COLUMNS.get(table, {}).get(provider)
+    return FACT_COLUMNS[table] if declared is None else declared
 
 
 def registered_providers(table: str) -> Tuple[str, ...]:
@@ -571,6 +595,14 @@ def build_fact_coverage(platform_name: str) -> Dict[str, object]:
         "served": served,
         "unsupported": unsupported,
         "not_applicable": not_applicable,
+        # Per served table, the columns its chosen provider actually fills. A
+        # consumer that reads a column absent here must treat it as not
+        # measured -- NOT as NULL data. Absent altogether (an older agent)
+        # means "unknown", which a new consumer must not read as "all".
+        "columns": {
+            table: list(populated_columns(table, provider))
+            for table, provider in served.items()
+        },
     }
 
 

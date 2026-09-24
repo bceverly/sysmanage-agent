@@ -192,6 +192,8 @@ GLOSSARY: Dict[str, str] = {
     # -- security ----------------------------------------------------------
     "vulnerability": "a known security weakness in software",
     "advisory": "a published security notice",
+    "erratum": "an official patch notice for an operating-system release "
+    "(OpenBSD and Red Hat publish errata). NOT an error, a mistake or a bug",
     "finding": "one detected problem",
     "severity": "how serious a finding is",
     "compliance": "conformance to a security standard",
@@ -675,6 +677,41 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "it": ["corsa a secco"],
         },
     },
+    "erratum": {
+        # An erratum is a PATCH NOTICE. Every forbidden form below means
+        # "error"/"bug" -- the sense the translator reached for on 2026-09-23,
+        # producing "5 of 10 security errors are not applied".
+        "canonical": {
+            "de": "Errata",
+            "nl": "errata",
+            "fr": "errata",
+            "es": "erratas",
+            "it": "errata",
+            "pt": "erratas",
+            "ru": "исправлени",
+            "ja": "エラータ",
+            "ko": "에라타",
+            "zh_CN": "勘误",
+            "zh_TW": "勘誤",
+            "hi": "इराटा",
+            "ar": "تصحيحات",
+        },
+        "forbid": {
+            "de": ["Fehler"],
+            "nl": ["fouten"],
+            "fr": ["erreurs"],
+            "es": ["errores"],
+            "it": ["errori"],
+            "pt": ["erros"],
+            "ru": ["ошибки", "ошибок"],
+            "ja": ["エラー"],
+            "ko": ["오류"],
+            "zh_CN": ["错误"],
+            "zh_TW": ["錯誤"],
+            "hi": ["त्रुटि", "त्रुटियों"],
+            "ar": ["أخطاء", "الأخطاء"],
+        },
+    },
 }
 
 
@@ -696,6 +733,7 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "discovery": ("discover", "discovered"),
     "remediation": ("remediate", "remediated"),
     "compliance": ("compliant", "non-compliant"),
+    "erratum": ("errata",),
 }
 
 # A batch that mentions half the product should not ship half the dictionary;
