@@ -287,6 +287,36 @@ class TestParsePkgOutput:
         assert pkg["package_name"] == "py311-pip"
         assert pkg["version"] == "23.0.1"
 
+    def test_freebsd_and_netbsd_split_at_the_last_hyphen(self, collector):
+        """pkg and pkg_install split at the LAST hyphen; a digit-led name
+        segment ("100dpi") must stay part of the name or no feed matches it."""
+        output = (
+            "xorg-fonts-100dpi-7.7_4   X.Org 100dpi bitmap fonts\n"
+            "rust-nightly-g20230801 Rust nightly\n"
+        )
+        collector._parse_pkg_output(output, "freebsd_packages")
+        collector._parse_pkg_output(
+            "font-adobe-100dpi-1.0.4nb1 Adobe fonts\n", "netbsd_packages"
+        )
+        got = [(p["package_name"], p["version"]) for p in collector.collected_packages]
+        assert got == [
+            ("xorg-fonts-100dpi", "7.7_4"),
+            ("rust-nightly", "g20230801"),
+            ("font-adobe-100dpi", "1.0.4nb1"),
+        ]
+        assert (
+            collector.collected_packages[0]["description"]
+            == "X.Org 100dpi bitmap fonts"
+        )
+
+    def test_openbsd_keeps_its_flavor_aware_split(self, collector):
+        """OpenBSD's "vim-9.1-gtk3" is name vim, version 9.1-gtk3 (a flavor)."""
+        collector._parse_pkg_output(
+            "vim-9.1.1234-gtk3 Vi IMproved\n", "openbsd_packages"
+        )
+        pkg = collector.collected_packages[0]
+        assert (pkg["package_name"], pkg["version"]) == ("vim", "9.1.1234-gtk3")
+
     def test_parse_pkg_output_multiple_packages(self, collector):
         """Test parsing multiple packages."""
         output = """nginx-1.24.0 Web server

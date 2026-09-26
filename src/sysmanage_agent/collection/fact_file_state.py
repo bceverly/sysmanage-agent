@@ -100,7 +100,7 @@ def _sha256(path: str) -> Optional[str]:
         with open(path, "rb") as handle:
             for chunk in iter(lambda: handle.read(_CHUNK), b""):
                 digest.update(chunk)
-    except (OSError, PermissionError):
+    except OSError:
         return None
     return digest.hexdigest()
 

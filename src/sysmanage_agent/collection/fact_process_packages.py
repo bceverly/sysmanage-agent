@@ -31,7 +31,7 @@ import platform
 import posixpath
 import shutil
 import subprocess  # nosec B404
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -221,22 +221,28 @@ def _bsd_contents_owners(paths: set, prefix: str) -> Dict[str, Owner]:
     for entry in os.listdir(_BSD_PKG_DB):
         contents = os.path.join(_BSD_PKG_DB, entry, "+CONTENTS")
         name, _, version = entry.rpartition("-")
-        cwd = prefix
+        owner = (name or entry, version or None, "pkg_info")
         try:
             with open(contents, encoding="utf-8", errors="replace") as fh:
-                for line in fh:
-                    line = line.rstrip("\n")
-                    if line.startswith("@cwd "):
-                        cwd = line[5:].strip()
-                    elif line and not line.startswith("@"):
-                        # The package database's paths are POSIX on the host
-                        # it describes, whatever OS evaluates them.
-                        full = posixpath.join(cwd, line)
-                        if full in paths and full not in owners:
-                            owners[full] = (name or entry, version or None, "pkg_info")
+                for full in _bsd_contents_paths(fh, prefix):
+                    if full in paths and full not in owners:
+                        owners[full] = owner
         except OSError:
             continue
     return owners
+
+
+def _bsd_contents_paths(lines: Iterable[str], prefix: str) -> Iterator[str]:
+    """Yield the absolute path of each file a +CONTENTS listing names."""
+    cwd = prefix
+    for line in lines:
+        line = line.rstrip("\n")
+        if line.startswith("@cwd "):
+            cwd = line[5:].strip()
+        elif line and not line.startswith("@"):
+            # The package database's paths are POSIX on the host it
+            # describes, whatever OS evaluates them.
+            yield posixpath.join(cwd, line)
 
 
 def _homebrew_owners(paths: set) -> Dict[str, Owner]:

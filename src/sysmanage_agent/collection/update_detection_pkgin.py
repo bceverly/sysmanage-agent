@@ -111,10 +111,38 @@ class PkginUpdateMixin:
         else:
             logger.debug("pkgin update completed successfully")
 
-    # ``name-version`` as pkgsrc spells it: the version starts at the LAST
-    # hyphen that is followed by a digit, so "gcc12-libs-12.5.0nb4" splits
-    # into "gcc12-libs" and "12.5.0nb4" rather than at the first hyphen.
-    _PKGSRC_NAME_VERSION = re.compile(r"^(.+)-(\d[^\s]*)$")
+    @staticmethod
+    def _split_pkgsrc_name_version(token):
+        """Split ``name-version`` as pkgsrc spells it, or None.
+
+        The version starts at the LAST hyphen that is followed by a digit, so
+        "gcc12-libs-12.5.0nb4" splits into "gcc12-libs" and "12.5.0nb4" rather
+        than at the first hyphen. The name must be non-empty and the version
+        may not contain whitespace. This is a linear scan rather than the
+        equivalent ``^(.+)-(\\d[^\\s]*)$`` regex, which backtracks
+        quadratically on a long token with many hyphens.
+        """
+        if token.endswith("\n"):
+            # Mirror the regex's "$", which also matches before one final
+            # newline.
+            token = token[:-1]
+        if "\n" in token:
+            return None
+        # The version may not contain whitespace, so it has to start after
+        # the last whitespace character; find that once, up front.
+        floor = 0
+        for index in range(len(token) - 1, -1, -1):
+            if token[index].isspace():
+                floor = index
+                break
+        end = len(token)
+        while True:
+            hyphen = token.rfind("-", 0, end)
+            if hyphen < max(floor, 1):
+                return None
+            if token[hyphen + 1 : hyphen + 2].isdecimal():
+                return token[:hyphen], token[hyphen + 1 :]
+            end = hyphen
 
     # "16 packages to upgrade:" -- the only section that describes an UPDATE to
     # something already installed. "refresh" is a rebuild at the same version
@@ -128,13 +156,13 @@ class PkginUpdateMixin:
         token = (line or "").strip()
         if not token or token.startswith("pkg_summary"):
             return None
-        match = self._PKGSRC_NAME_VERSION.match(token)
-        if not match:
+        split = self._split_pkgsrc_name_version(token)
+        if not split:
             return None
         return {
-            "package_name": match.group(1),
+            "package_name": split[0],
             "current_version": None,
-            "available_version": match.group(2),
+            "available_version": split[1],
             "package_manager": "pkgin",
             "is_security_update": False,
             "is_system_update": False,
@@ -158,9 +186,9 @@ class PkginUpdateMixin:
         installed = {}
         for line in result.stdout.splitlines():
             token = line.split()[0] if line.split() else ""
-            match = self._PKGSRC_NAME_VERSION.match(token)
-            if match:
-                installed[match.group(1)] = match.group(2)
+            split = self._split_pkgsrc_name_version(token)
+            if split:
+                installed[split[0]] = split[1]
         return installed
 
     def _detect_pkgin_updates(self):

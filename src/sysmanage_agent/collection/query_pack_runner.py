@@ -71,17 +71,11 @@ REASON_NOT_COVERED = "not_covered"
 MAX_ROWS_PER_QUERY = 10000
 
 
-def _materialize(
-    store: FactStore,
-    tables: Sequence[str],
-    coverage,
-    table_params=None,
-) -> Dict[str, str]:
-    """Build the requested tables. Returns {table: reason} for those we cannot.
+def _partition_tables(tables: Sequence[str], coverage):
+    """Split the requested tables into (wanted, {table: refusal reason}).
 
-    The provider is chosen per table by the coverage advertisement, so this
-    honors exactly the same decision the server was told about -- a host that
-    advertised ``users: osquery`` reads users through osquery here.
+    A table is wanted when the coverage advertisement says this host serves
+    it; anything else is refused with the advertised reason where there is one.
     """
     served = (coverage or {}).get("served") or {}
     unsupported = (coverage or {}).get("unsupported") or {}
@@ -100,7 +94,13 @@ def _materialize(
                 or not_applicable.get(table)
                 or REASON_NOT_COVERED
             )
+    return wanted, refused
 
+
+def _collect(
+    wanted: Sequence[str], served: Mapping[str, str], table_params=None
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Read the wanted tables, each through the provider that serves it."""
     by_provider: Dict[str, List[str]] = {}
     for table in wanted:
         by_provider.setdefault(served[table], []).append(table)
@@ -111,6 +111,24 @@ def _materialize(
             collected.update(fact_osquery.collect(provider_tables))
         else:
             collected.update(fact_native.collect(provider_tables, table_params))
+    return collected
+
+
+def _materialize(
+    store: FactStore,
+    tables: Sequence[str],
+    coverage,
+    table_params=None,
+) -> Dict[str, str]:
+    """Build the requested tables. Returns {table: reason} for those we cannot.
+
+    The provider is chosen per table by the coverage advertisement, so this
+    honors exactly the same decision the server was told about -- a host that
+    advertised ``users: osquery`` reads users through osquery here.
+    """
+    wanted, refused = _partition_tables(tables, coverage)
+    served = (coverage or {}).get("served") or {}
+    collected = _collect(wanted, served, table_params)
 
     for table in wanted:
         rows = collected.get(table)

@@ -857,7 +857,48 @@ class OSInfoCollector:
             "windows_version": win_ver[0] if win_ver[0] else "",
             "windows_service_pack": win_ver[1] if win_ver[1] else "",
         }
+        os_info.update(self._windows_build_facts())
         return ("Windows", system_release, os_info)
+
+    # Registry values the server needs to judge this host against Microsoft's
+    # security updates: MSRC publishes a FIXED BUILD per product ("Windows 11
+    # Version 24H2 for x64-based Systems" -> 10.0.26100.9445), so the server
+    # needs the full build (UBR included -- platform.version() stops at
+    # 10.0.26100) and what names the product. Raw values only: the server
+    # derives the product name, so a naming change needs no agent release.
+    _WINDOWS_BUILD_VALUES = {
+        "CurrentMajorVersionNumber": "windows_major",
+        "CurrentMinorVersionNumber": "windows_minor",
+        "CurrentVersion": "windows_nt_version",
+        "CurrentBuild": "windows_current_build",
+        "UBR": "windows_ubr",
+        "DisplayVersion": "windows_display_version",
+        "ReleaseId": "windows_release_id",
+        "InstallationType": "windows_installation_type",
+        "ProductName": "windows_product_name",
+        "EditionID": "windows_edition_id",
+    }
+
+    def _windows_build_facts(self) -> Dict[str, Any]:
+        """The ``_WINDOWS_BUILD_VALUES`` present on this host ({} elsewhere)."""
+        try:
+            import winreg  # pylint: disable=import-outside-toplevel,import-error
+        except ImportError:
+            return {}
+        facts: Dict[str, Any] = {}
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+            ) as key:
+                for value, field in self._WINDOWS_BUILD_VALUES.items():
+                    try:
+                        facts[field] = winreg.QueryValueEx(key, value)[0]
+                    except OSError:
+                        continue  # absent on this release (e.g. no UBR before 1607)
+        except OSError as error:
+            self.logger.debug("Windows build facts unavailable: %s", error)
+        return facts
 
     def _collect_freebsd_info(self, system_release: str) -> tuple:
         """Collect FreeBSD-specific platform information."""

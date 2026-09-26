@@ -485,6 +485,43 @@ class TestPlatformInfoCollection:
             assert os_info["windows_version"] == ""
             assert os_info["windows_service_pack"] == ""
 
+    def test_collect_windows_info_reports_the_build_facts(self):
+        """The full build and product facts the server matches MSRC fixes on."""
+        values = {
+            "CurrentMajorVersionNumber": 10,
+            "CurrentMinorVersionNumber": 0,
+            "CurrentBuild": "26100",
+            "UBR": 4652,
+            "DisplayVersion": "24H2",
+            "InstallationType": "Client",
+            "ProductName": "Windows 10 Pro",
+        }
+
+        def query(_key, name):
+            if name not in values:
+                raise OSError(name)
+            return values[name], 1
+
+        winreg = Mock()
+        winreg.OpenKey.return_value.__enter__ = Mock(return_value="key")
+        winreg.OpenKey.return_value.__exit__ = Mock(return_value=False)
+        winreg.QueryValueEx.side_effect = query
+        with patch.dict("sys.modules", {"winreg": winreg}), patch(
+            "platform.win32_ver", return_value=("10", "10.0.26100", "SP0", "")
+        ):
+            _name, _release, os_info = self.collector._collect_windows_info("10")
+        assert os_info["windows_current_build"] == "26100"
+        assert os_info["windows_ubr"] == 4652
+        assert os_info["windows_display_version"] == "24H2"
+        assert os_info["windows_installation_type"] == "Client"
+        assert "windows_release_id" not in os_info  # absent values are skipped
+
+    def test_windows_build_facts_survive_a_registry_error(self):
+        winreg = Mock()
+        winreg.OpenKey.side_effect = OSError("denied")
+        with patch.dict("sys.modules", {"winreg": winreg}):
+            assert not self.collector._windows_build_facts()
+
     def test_collect_freebsd_info_success(self):
         """Test FreeBSD info collection with freebsd-version."""
         mock_result = Mock()

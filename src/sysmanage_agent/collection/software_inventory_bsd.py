@@ -158,18 +158,35 @@ class BSDSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         except Exception as error:
             logger.exception(_("Failed to collect pkg_info packages: %s"), str(error))
 
+    # FreeBSD pkg and NetBSD pkg_install split "name-version" at the LAST
+    # hyphen: a version never contains one, a name may ("xorg-fonts-100dpi").
+    # The digit-led regex read that port as "xorg-fonts" version
+    # "100dpi-7.7_4", which no vulnerability feed can ever match. OpenBSD
+    # keeps the regex: its trailing FLAVOR ("vim-9.1-gtk3") makes the last
+    # hyphen the wrong one there.
+    _LAST_HYPHEN_SOURCES = ("freebsd_packages", "netbsd_packages")
+
+    @staticmethod
+    def _split_name_version(line: str, last_hyphen: bool):
+        """(name, version, description) from a "name-version comment" line."""
+        if last_hyphen:
+            token, _sep, description = line.partition(" ")
+            name, dash, version = token.rpartition("-")
+            if dash and name and version:
+                return name, version, description.strip()
+            return None
+        match = re.match(r"^([^-]+(?:-\D[^-]*)*)-(\d[^\s]*)\s+(.*)$", line)  # NOSONAR
+        return match.groups() if match else None
+
     def _parse_pkg_output(self, output: str, source_name: str):
-        """Parse output from BSD pkg commands (both FreeBSD and OpenBSD)."""
+        """Parse output from BSD pkg commands (FreeBSD, NetBSD and OpenBSD)."""
+        last_hyphen = source_name in self._LAST_HYPHEN_SOURCES
         for line in output.strip().split("\n"):
             if line:
                 # Format: package-version comment
-                match = re.match(
-                    r"^([^-]+(?:-\D[^-]*)*)-(\d[^\s]*)\s+(.*)$", line  # NOSONAR
-                )
-                if match:
-                    package_name = match.group(1)
-                    version = match.group(2)
-                    description = match.group(3)
+                parsed = self._split_name_version(line, last_hyphen)
+                if parsed:
+                    package_name, version, description = parsed
 
                     package = {
                         "package_name": package_name,

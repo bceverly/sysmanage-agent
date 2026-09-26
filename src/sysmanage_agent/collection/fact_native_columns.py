@@ -23,6 +23,10 @@ def _cols(names: str) -> Tuple[str, ...]:
     return tuple(names.split())
 
 
+# The package tables native collection can only fill a name and version for.
+_NAME_VERSION = "name version"
+
+
 NATIVE_COLUMNS: Dict[str, Tuple[str, ...]] = {
     "users": _cols("uid username directory shell"),
     "groups": _cols("gid groupname"),
@@ -49,8 +53,8 @@ NATIVE_COLUMNS: Dict[str, Tuple[str, ...]] = {
     "sysmanage_available_updates": _cols(
         "name current_version available_version package_manager is_security"
     ),
-    "deb_packages": _cols("name version"),
-    "rpm_packages": _cols("name version"),
-    "homebrew_packages": _cols("name version"),
-    "programs": _cols("name version"),
+    "deb_packages": _cols(_NAME_VERSION),
+    "rpm_packages": _cols(_NAME_VERSION),
+    "homebrew_packages": _cols(_NAME_VERSION),
+    "programs": _cols(_NAME_VERSION),
 }
