@@ -236,6 +236,17 @@ GLOSSARY: Dict[str, str] = {
     "dashboard": "a screen summarizing status",
     "recommendation": "prescriptive guidance the product derives",
     "advisor": "the component that produces recommendations",
+    "rule pack": "a named, versioned set of advisor rules that can be switched "
+    "on or off as a unit. NOT a physical package",
+    "proposed fix": "a change the advisor suggests and an operator must approve "
+    "before anything runs. NOT a fix that was already applied",
+    "lens": "one category of recommendations: security, performance, "
+    "availability or stability. NOT an optical lens",
+    "risk score": "impact multiplied by likelihood; withheld when the host "
+    "could not be assessed",
+    "peer group": "the hosts compared with each other, e.g. those on the same "
+    "operating system release",
+    "evidence": "the data a rule reads before it can reach a verdict",
     "query pack": "a bundle of osquery queries collected together",
     "not assessable": "we could not measure this host, so there is no verdict "
     "to give. NOT a passing result, NOT a failing one, and NOT the same as "
