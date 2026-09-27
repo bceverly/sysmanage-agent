@@ -79,6 +79,9 @@ def test_split_agrees_with_regex_on_generated_tokens():
         "-" * 100000 + "x",
         "a-" * 50000,
     ],
+    # Short ids: pytest puts the test id in PYTEST_CURRENT_TEST, and Windows
+    # rejects an environment variable over 32767 characters.
+    ids=["dash-runs-trailing-space", "all-dashes", "dash-runs"],
 )
 def test_split_is_linear_on_pathological_input(token):
     """Inputs that made the old regex backtrack quadratically return quickly."""
