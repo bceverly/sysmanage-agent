@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-21 17:20-0400\n"
+"POT-Creation-Date: 2026-09-28 12:13-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -85,7 +85,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "Plateforme non prise en charge pour la collecte des certificats : %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:921
+#: src/sysmanage_agent/communication/data_collector.py:930
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "Erreur de collecte des certificats : %s"
@@ -576,7 +576,7 @@ msgid "Failed to store sent package snapshot: %s"
 msgstr "Échec de stockage de l'image instantanée du paquet envoyé : %s"
 
 #: src/sysmanage_agent/collection/package_collector_bsd.py:40
-#: src/sysmanage_agent/collection/software_inventory_bsd.py:135
+#: src/sysmanage_agent/collection/software_inventory_bsd.py:159
 #, python-format
 msgid "Failed to collect pkg_info packages: %s"
 msgstr "Échec de la collecte des paquets pkg_info : %s"
@@ -735,12 +735,12 @@ msgstr "Erreur lors de la collecte des paquets Chocolatey via API : %s"
 msgid "Error fetching page at skip %d: %s"
 msgstr "Erreur lors de la récupération de la page au skip %d : %s"
 
-#: src/sysmanage_agent/collection/process_collection.py:149
+#: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
 msgid "No process with PID %d"
 msgstr "Aucun processus avec le PID %d"
 
-#: src/sysmanage_agent/collection/process_collection.py:160
+#: src/sysmanage_agent/collection/process_collection.py:182
 #, python-format
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
@@ -749,7 +749,7 @@ msgstr ""
 "Le PID %(pid)d est maintenant '%(actual)s', et non '%(expected)s' (le "
 "processus a peut-être été recyclé) ; arrêt refusé"
 
-#: src/sysmanage_agent/collection/process_collection.py:180
+#: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
 msgid "Access denied terminating PID %d"
 msgstr "Autorisation refusée lors de l'arrêt du PID %d"
@@ -760,6 +760,7 @@ msgid "public_ip_refresh_service iteration failed: %s"
 msgstr "échec de l'itération du service public_ip_refresh : %s"
 
 #: src/sysmanage_agent/collection/role_detection.py:161
+#: src/sysmanage_agent/collection/software_inventory_bsd.py:79
 msgid "No packages detected or unsupported package manager"
 msgstr "Aucun paquet détecté ou gestionnaire de paquets non pris en charge"
 
@@ -783,17 +784,17 @@ msgstr "Erreur lors de l'obtention des paquets pkgin : %s"
 msgid "Error getting pkg packages: %s"
 msgstr "Erreur lors de l'obtention des paquets pkg : %s"
 
-#: src/sysmanage_agent/collection/software_inventory_bsd.py:88
+#: src/sysmanage_agent/collection/software_inventory_bsd.py:112
 #, python-format
 msgid "Failed to collect FreeBSD pkg packages: %s"
 msgstr "Échec lors de la collecte des packages FreeBSD pkg : %s"
 
-#: src/sysmanage_agent/collection/software_inventory_bsd.py:128
+#: src/sysmanage_agent/collection/software_inventory_bsd.py:152
 #, python-format
 msgid "No pkg_info output found. Return code: %d"
 msgstr "Aucune sortie pkg_info trouvée. Code de retour : %d"
 
-#: src/sysmanage_agent/collection/software_inventory_bsd.py:132
+#: src/sysmanage_agent/collection/software_inventory_bsd.py:156
 #, python-format
 msgid "pkg_info stderr: %s"
 msgstr "pkg_info stderr : %s"
@@ -930,69 +931,69 @@ msgstr "Échec de l'installation de la mise à niveau FreeBSD"
 msgid "FreeBSD upgrade timed out"
 msgstr "L'upgrade FreeBSD a dépassé le délai"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:395
+#: src/sysmanage_agent/collection/update_detection_bsd.py:399
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "La commande syspatch a échoué avec le code de sortie %d"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:398
+#: src/sysmanage_agent/collection/update_detection_bsd.py:402
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:401
+#: src/sysmanage_agent/collection/update_detection_bsd.py:405
 msgid "OpenBSD system update detection timed out"
 msgstr "Détection de la mise à jour du système OpenBSD expirée"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:406
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "Échec de la détection des mises à jour du système OpenBSD : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:423
+#: src/sysmanage_agent/collection/update_detection_bsd.py:427
 msgid "Failed to get current OpenBSD version"
 msgstr "Échec de l'obtention de la version OpenBSD actuelle"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:472
+#: src/sysmanage_agent/collection/update_detection_bsd.py:476
 msgid "Could not parse OpenBSD version from website"
 msgstr "Impossible d'analyser la version OpenBSD depuis le site web"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:476
+#: src/sysmanage_agent/collection/update_detection_bsd.py:480
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr ""
 "Échec lors de la vérification du site Web OpenBSD pour les mises à jour : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:482
+#: src/sysmanage_agent/collection/update_detection_bsd.py:486
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "Échec de la détection des mises à niveau de version OpenBSD : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:652
+#: src/sysmanage_agent/collection/update_detection_bsd.py:656
 msgid "syspatch command failed"
 msgstr "Échec de la commande syspatch"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:654
-#: src/sysmanage_agent/collection/update_detection_bsd.py:675
+#: src/sysmanage_agent/collection/update_detection_bsd.py:658
+#: src/sysmanage_agent/collection/update_detection_bsd.py:679
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Échec de l'application des mises à jour syspatch : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:665
+#: src/sysmanage_agent/collection/update_detection_bsd.py:669
 msgid "syspatch command timed out"
 msgstr "la commande syspatch a échoué après un temps d'attente"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:671
+#: src/sysmanage_agent/collection/update_detection_bsd.py:675
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch a échoué après 10 minutes"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:816
+#: src/sysmanage_agent/collection/update_detection_bsd.py:820
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Gestionnaire de paquets non supporté : %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:872
+#: src/sysmanage_agent/collection/update_detection_bsd.py:876
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1065,12 +1066,12 @@ msgstr "Échec de la détection des mises à niveau de version macOS : %s"
 msgid "pkgin update failed (code %d): %s"
 msgstr "Échec de la mise à jour pkgin (code %d) : %s"
 
-#: src/sysmanage_agent/collection/update_detection_pkgin.py:196
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:224
 #, python-format
 msgid "pkgin -n upgrade failed (code %d): %s"
 msgstr "pkgin -n upgrade échoué (code %d) : %s"
 
-#: src/sysmanage_agent/collection/update_detection_pkgin.py:214
+#: src/sysmanage_agent/collection/update_detection_pkgin.py:242
 #, python-format
 msgid "Failed to detect pkgin updates: %s"
 msgstr "Échec de la détection des mises à jour pkgin : %s"
@@ -1299,188 +1300,193 @@ msgstr "Echec de l'envoi des données des hôtes enfants"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:420
+#: src/sysmanage_agent/communication/data_collector.py:429
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "Erreur de collecte/envoi des données sur les hôtes enfants : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:76
+#: src/sysmanage_agent/communication/data_collector.py:80
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Échec de l'envoi des données initiales : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:153
+#: src/sysmanage_agent/communication/data_collector.py:157
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "Échec de l’exécution du contrôle initial des mises à jour : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:173
+#: src/sysmanage_agent/communication/data_collector.py:177
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "Échec de la collecte du certificat : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:176
+#: src/sysmanage_agent/communication/data_collector.py:180
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "Échec de la collecte initiale des certificats : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:192
+#: src/sysmanage_agent/communication/data_collector.py:196
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "La collecte des rôles a échoué : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:194
+#: src/sysmanage_agent/communication/data_collector.py:198
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "Échec de la collecte initiale des rôles : %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:203
+#: src/sysmanage_agent/communication/data_collector.py:207
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "Echec de l'envoi des données initiales du répertoire tiers : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:211
+#: src/sysmanage_agent/communication/data_collector.py:215
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "Échec de l'envoi des données initiales de statut du pare-feu : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:219
+#: src/sysmanage_agent/communication/data_collector.py:223
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "Échec de l'envoi des données initiales de statut Graylog : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:226
+#: src/sysmanage_agent/communication/data_collector.py:230
 #, python-format
 msgid "Failed to send initial process data: %s"
 msgstr "Échec de l'envoi des données initiales des processus : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:232
+#: src/sysmanage_agent/communication/data_collector.py:236
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "Échec de l'envoi des données initiales des hôtes enfants : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:251
+#: src/sysmanage_agent/communication/data_collector.py:255
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "Échec de la mise à jour de la version du système d'exploitation : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:273
+#: src/sysmanage_agent/communication/data_collector.py:277
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "Échec de la mise à jour du matériel : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:295
+#: src/sysmanage_agent/communication/data_collector.py:299
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "Échec de la mise à jour de l'accès utilisateur: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:304
+#: src/sysmanage_agent/communication/data_collector.py:308
 #, python-format
 msgid "Error collecting processes: %s"
 msgstr "Erreur lors de la collecte des processus : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:311
+#: src/sysmanage_agent/communication/data_collector.py:315
 msgid "Missing required parameter: pid"
 msgstr "Paramètre obligatoire manquant : pid"
 
-#: src/sysmanage_agent/communication/data_collector.py:315
+#: src/sysmanage_agent/communication/data_collector.py:319
 #, python-format
 msgid "Invalid pid: %s"
 msgstr "pid invalide : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:329
+#: src/sysmanage_agent/communication/data_collector.py:333
 #, python-format
 msgid "Failed to refresh processes after kill: %s"
 msgstr "Échec de l'actualisation des processus après l'arrêt : %s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:345
+#: src/sysmanage_agent/communication/data_collector.py:349
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "Erreur lors de la collecte/du déploiement du patrimoine logiciel : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:352
+#: src/sysmanage_agent/communication/data_collector.py:356
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "Erreur de collecte/envoi des données d'accès utilisateur : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:358
+#: src/sysmanage_agent/communication/data_collector.py:362
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "Erreur de collecte/envoi des données matérielles : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:364
+#: src/sysmanage_agent/communication/data_collector.py:368
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "Erreur de collecte/envoi des données certificats : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:370
+#: src/sysmanage_agent/communication/data_collector.py:374
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "Erreur de collecte/envoi des données sur les rôles : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:376
+#: src/sysmanage_agent/communication/data_collector.py:380
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "Erreur de collecte/envoi des données sur la version OS : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:382
+#: src/sysmanage_agent/communication/data_collector.py:386
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "Erreur de collecte/envoi de l'êtat de redémarrage : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:389
+#: src/sysmanage_agent/communication/data_collector.py:393
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "Erreur de collecte/envoi des données sur les répertoires tiers : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:396
+#: src/sysmanage_agent/communication/data_collector.py:400
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "Erreur de collecte/envoi des données antivirus : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:402
+#: src/sysmanage_agent/communication/data_collector.py:406
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "Erreur de collecte/envoi de l'êtat du pare-feu : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:408
+#: src/sysmanage_agent/communication/data_collector.py:412
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "Erreur de collecte/envoi de l'êtat Graylog : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:414
+#: src/sysmanage_agent/communication/data_collector.py:418
 #, python-format
 msgid "Error collecting/sending process data: %s"
 msgstr "Erreur lors de la collecte/l'envoi des données de processus : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:444
+#: src/sysmanage_agent/communication/data_collector.py:423
+#, python-format
+msgid "Error collecting/sending host metrics: %s"
+msgstr "Erreur lors de la collecte ou de l'envoi des métriques de l'hôte : %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:453
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "Erreur de collecte des données initiales : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:459
+#: src/sysmanage_agent/communication/data_collector.py:468
 #, python-format
 msgid "Data collector error: %s"
 msgstr "Erreur du collecteur de données : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:684
+#: src/sysmanage_agent/communication/data_collector.py:693
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "Erreur de collecte des paquets disponibles : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:793
+#: src/sysmanage_agent/communication/data_collector.py:802
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "Erreur d'envoi du delta du paquet : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:872
+#: src/sysmanage_agent/communication/data_collector.py:881
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "Erreur lors de l'envoi des paquets paginés pour le lot %s : %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:967
+#: src/sysmanage_agent/communication/data_collector.py:976
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "Erreur de collecte des rôles : %s"
@@ -1558,6 +1564,15 @@ msgstr "Impossible d'envoyer les données de processus : hôte non approuvé"
 #: src/sysmanage_agent/communication/data_collector_senders.py:363
 msgid "Failed to send process status data"
 msgstr "Échec de l'envoi des données d'état des processus"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:374
+msgid "Cannot send host metrics: no host approval"
+msgstr ""
+"Impossible d'envoyer les métriques de l'hôte : aucune approbation de l'hôte"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:386
+msgid "Failed to send host metrics"
+msgstr "Échec de l'envoi des métriques de l'hôte"
 
 #: src/sysmanage_agent/communication/http_polling.py:81
 msgid "Could not read the stored host_id for polling"
@@ -1658,8 +1673,8 @@ msgstr "Le serveur n'a pas pu mettre en file d'attente le message : %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "Le serveur a signalé host_not_registered (strike %(n)d/%(limit)d) -- se "

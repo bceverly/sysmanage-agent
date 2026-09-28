@@ -361,3 +361,26 @@ class DataCollectorSendersMixin:
             )
         else:
             self.logger.warning(_("Failed to send process status data"))
+
+    async def _send_host_metrics_update(self):
+        """Send the five host-level resource metrics (Phase 21.5).
+
+        The server keeps a history of these for the built-in metric graphs;
+        it stores one sample per series per 15 minutes and ignores the rest,
+        so sending on every periodic run costs one small message.
+        """
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            self.logger.warning(_("Cannot send host metrics: no host approval"))
+            return
+
+        # disk_usage walks every local mount; keep it off the event loop.
+        payload = await asyncio.to_thread(self.host_metrics_collector.collect)
+        payload["host_id"] = str(host_approval.host_id)
+        message = self.agent.create_message("host_metrics", payload)
+        if await self.agent.send_message(message):
+            self.logger.debug(
+                "AGENT_DEBUG: Host metrics sent (%d series)", len(payload["metrics"])
+            )
+        else:
+            self.logger.warning(_("Failed to send host metrics"))

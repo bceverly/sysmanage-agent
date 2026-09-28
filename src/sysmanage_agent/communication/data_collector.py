@@ -23,6 +23,9 @@ from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 from src.sysmanage_agent.collection.process_collection import ProcessCollector
+from src.sysmanage_agent.collection.host_metrics_collection import (
+    HostMetricsCollector,
+)
 from src.sysmanage_agent.collection.package_delta import (
     MODE_DELTA,
     build_delta_plan,
@@ -54,6 +57,7 @@ class DataCollector(DataCollectorSendersMixin):
         self.firewall_collector = FirewallCollector(self.logger)
         self.graylog_collector = GraylogCollector(self.logger)
         self.process_collector = ProcessCollector(self.logger)
+        self.host_metrics_collector = HostMetricsCollector(self.logger)
         self.child_host_collector = ChildHostCollector(agent_instance)
         # Resend guard for the available-packages catalog.  See
         # _catalog_resend_is_pointless() for why this exists; kept in memory on
@@ -412,6 +416,11 @@ class DataCollector(DataCollectorSendersMixin):
             await self._send_process_update()
         except Exception as error:
             self.logger.error(_("Error collecting/sending process data: %s"), error)
+
+        try:
+            await self._send_host_metrics_update()
+        except Exception as error:
+            self.logger.error(_("Error collecting/sending host metrics: %s"), error)
 
         # Send child hosts (WSL/VM/container) status update
         try:

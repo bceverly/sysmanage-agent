@@ -272,6 +272,15 @@ GLOSSARY: Dict[str, str] = {
     "remedy": "the action that fixes a posture item. NOT a medicine or a "
     "legal remedy",
     "regressed": "was satisfied, and is open again because the fleet changed",
+    # -- 21.5 built-in host metrics -----------------------------------------
+    "series": "the values of one metric over time, as drawn on a chart. NOT "
+    "a TV series, a product line or a mathematical series",
+    "sample": "one recorded value of a metric at one moment. NOT a product "
+    "sample, a specimen or a statistical survey",
+    "built-in": "defined by the product itself rather than by an operator. "
+    "NOT physically built into a wall or a device",
+    "load average": "the operating system's count of runnable processes, "
+    "averaged. NOT a physical weight or cargo",
     # -- product shape ------------------------------------------------------
     "edition": "which product variant is licensed: Community, Professional "
     "or Enterprise",
@@ -760,6 +769,7 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "waiver": ("waive", "waived", "waivers"),
     "remedy": ("remedies",),
     "posture item": ("posture items",),
+    "sample": ("samples",),
 }
 
 # A batch that mentions half the product should not ship half the dictionary;
