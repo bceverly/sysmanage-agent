@@ -212,10 +212,14 @@ GLOSSARY: Dict[str, str] = {
     "certificate": "a cryptographic identity document",
     "key": "a cryptographic key. NOT a door key",
     "token": "a string proving identity or authorization",
-    "threat model": "an analysis of what an attacker could do",
+    "threat model": "the operator's description of their installation -- its "
+    "data, obligations, exposure and tolerances -- from which the applicable "
+    "security checks are chosen. NOT a model of an attacker's behavior",
     "punch list": "the set of outstanding items still to be completed. NOT "
     "anything to do with striking or hole-punching",
-    "waiver": "a recorded, deliberate decision to accept a risk",
+    "waiver": "an operator's audited, recorded acceptance of one specific "
+    "risk, with a reason. NOT a legal release of liability, and NOT a "
+    "postponement",
     "hardening": "reducing a system's attack surface",
     # -- operations --------------------------------------------------------
     "queue": "stored messages waiting to be delivered",
@@ -261,6 +265,13 @@ GLOSSARY: Dict[str, str] = {
     "exists. NOT a fault in the thing, and NOT a clean result",
     "not compared": "we did not examine this, so we cannot say whether it "
     "matches. NOT a statement that it differs, and NOT that it agrees",
+    # -- 21.4 threat model and posture --------------------------------------
+    "posture": "the installation's overall security and resilience state. NOT "
+    "a person's body posture, and NOT an attitude or opinion",
+    "posture item": "one installation-wide check on the punch list, with its " "state",
+    "remedy": "the action that fixes a posture item. NOT a medicine or a "
+    "legal remedy",
+    "regressed": "was satisfied, and is open again because the fleet changed",
     # -- product shape ------------------------------------------------------
     "edition": "which product variant is licensed: Community, Professional "
     "or Enterprise",
@@ -745,6 +756,10 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "remediation": ("remediate", "remediated"),
     "compliance": ("compliant", "non-compliant"),
     "erratum": ("errata",),
+    "threat model": ("threat-model", "threat models"),
+    "waiver": ("waive", "waived", "waivers"),
+    "remedy": ("remedies",),
+    "posture item": ("posture items",),
 }
 
 # A batch that mentions half the product should not ship half the dictionary;
