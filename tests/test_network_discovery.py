@@ -19,6 +19,7 @@ What fails silently if got wrong:
 import json
 import socket
 import struct
+import sys
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -624,7 +625,12 @@ class TestBpf:
                 raise OSError(16, "busy")
             return 99
 
-        with patch("fcntl.ioctl", return_value=struct.pack("I", 4096)) as ioctl:
+        # A stand-in fcntl, not patch("fcntl.ioctl"): Windows has no fcntl to
+        # patch, and this parser test must run everywhere.
+        fake_fcntl = MagicMock()
+        ioctl = fake_fcntl.ioctl
+        ioctl.return_value = struct.pack("I", 4096)
+        with patch.dict(sys.modules, {"fcntl": fake_fcntl}):
             assert bpf.open_device("em0", opener) == (99, 4096)
         assert tried == ["/dev/bpf", "/dev/bpf0", "/dev/bpf1"]
         assert ioctl.call_args_list[0][0][1] == bpf.BIOCSETIF
