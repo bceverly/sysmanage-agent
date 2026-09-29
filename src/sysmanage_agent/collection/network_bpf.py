@@ -30,7 +30,6 @@ frame is garbage, so ``layout()`` is chosen by platform and ``records()`` is
 pure and tested against synthetic buffers for each one.
 """
 
-import fcntl
 import os
 import platform
 import select
@@ -89,6 +88,10 @@ def open_device(
             raise
     if fd is None:
         raise OSError("no free BPF device")
+    # Imported here, not at module load: fcntl does not exist on Windows, and
+    # the collector imports this module on every platform.
+    import fcntl  # pylint: disable=import-outside-toplevel
+
     try:
         ifreq = struct.pack(f"{_IFREQ_SIZE}s", interface.encode()[:15])
         fcntl.ioctl(fd, BIOCSETIF, ifreq)

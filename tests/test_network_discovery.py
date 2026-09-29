@@ -624,13 +624,28 @@ class TestBpf:
                 raise OSError(16, "busy")
             return 99
 
-        with patch.object(
-            bpf.fcntl, "ioctl", return_value=struct.pack("I", 4096)
-        ) as ioctl:
+        with patch("fcntl.ioctl", return_value=struct.pack("I", 4096)) as ioctl:
             assert bpf.open_device("em0", opener) == (99, 4096)
         assert tried == ["/dev/bpf", "/dev/bpf0", "/dev/bpf1"]
         assert ioctl.call_args_list[0][0][1] == bpf.BIOCSETIF
         assert ioctl.call_args_list[0][0][2].startswith(b"em0\x00")
+
+    def test_the_module_imports_without_fcntl(self):
+        # Windows has no fcntl; the collector imports this module everywhere,
+        # so a top-level import crashed the agent at startup on Windows.
+        import builtins
+        import importlib
+
+        real_import = builtins.__import__
+
+        def no_fcntl(name, *args, **kwargs):
+            if name == "fcntl":
+                raise ImportError("No module named 'fcntl'")
+            return real_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", no_fcntl):
+            importlib.reload(bpf)
+        importlib.reload(bpf)
 
     def test_own_frames_are_dropped_and_others_parsed(self):
         seen = []
