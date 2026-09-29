@@ -952,6 +952,8 @@ class SysManageAgent(
         is the whole feature: demoting the fleet to polling every time the server
         restarts would be worse than the problem it solves.
         """
+        # A rejected token must not be reused on the next attempt.
+        self.auth_helper.invalidate_auth_token()
         if self._transport_state.record_websocket_failure(error, time.monotonic()):
             self.logger.warning(
                 _(

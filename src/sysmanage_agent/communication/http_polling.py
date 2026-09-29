@@ -124,13 +124,21 @@ class HttpPollingTransport:
     async def _post(self, session, endpoint, host_id, outbound):
         url = endpoint.rest_url("/api/agent/poll")
         token = await self.agent.get_auth_token()
+        # The connection token proves "an agent"; the host token proves WHICH
+        # host -- the server refuses a poll without it.
+        host_token = await self.agent.get_stored_host_token()
         payload = {"host_id": host_id, "messages": outbound}
         async with session.post(
             url,
             json=payload,
-            headers={"Authorization": f"Bearer {token}"},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "X-Host-Token": host_token or "",
+            },
             proxy=endpoint.proxy(),
         ) as response:
+            if response.status == 401:
+                self.agent.auth_helper.invalidate_auth_token()
             if response.status != 200:
                 body = (await response.text())[:200]
                 raise ConnectionError(f"poll returned HTTP {response.status}: {body}")

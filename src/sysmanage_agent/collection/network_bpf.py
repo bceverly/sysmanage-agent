@@ -32,8 +32,11 @@ pure and tested against synthetic buffers for each one.
 
 import os
 import platform
+import re
 import select
+import shutil
 import struct
+import subprocess  # nosec B404 - fixed argv, absolute path, no shell
 import threading
 from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
@@ -140,3 +143,63 @@ class BpfListener(threading.Thread):
         for frame in records(buffer, self.stamp, self.alignment):
             if len(frame) >= 12 and frame[6:12].hex(":") not in self.own_macs:
                 self.parse(frame, interface)
+
+
+# ---------------------------------------------------------------------------
+# Bridges that are only VM / jail plumbing (the BSD half of the S5 rule)
+# ---------------------------------------------------------------------------
+
+# Member interfaces that are virtual by what they are: bhyve/QEMU taps, jail
+# epairs, macOS vmnet, tunnels, loopbacks, other bridges.  A bridge whose
+# members are ALL of these carries the host's own guests, not a network the
+# operator means -- Bryan's FreeBSD box reported its `bridge1` (10.0.100.0/24)
+# as a network the day BPF first ran on it.
+_VIRTUAL_MEMBERS = (
+    "tap", "epair", "vnet", "vmenet", "tun", "lo", "bridge", "veb", "vether",
+    "pair", "vport", "feth", "utun",
+)  # fmt: skip
+_BRIDGE_NAMES = ("bridge", "veb")
+# FreeBSD/macOS: "member: tap0 flags=..."; OpenBSD/NetBSD: "\ttap0 flags=..."
+_MEMBER = re.compile(r"^\s+(?:member:\s+)?([A-Za-z][\w.]*)\s+flags=", re.MULTILINE)
+_IFCONFIG_TIMEOUT = 5
+
+
+def bridge_members(ifconfig_text: str) -> List[str]:
+    """Member interfaces named in ``ifconfig <bridge>`` output.  Pure."""
+    return _MEMBER.findall(ifconfig_text or "")
+
+
+def virtual_only_bridge(name: str, run=None) -> bool:
+    """BSDs / macOS: a bridge all of whose members are virtual.
+
+    A bridge with any physical member (``bridge0`` over ``em0``) is a real
+    network and is kept.  Anything that is not a bridge, or whose members
+    cannot be read, is kept too: skipping a real network silently is worse
+    than reporting a VM bridge.
+    """
+    if not name.lower().startswith(_BRIDGE_NAMES):
+        return False
+    text = (run or _ifconfig)(name)
+    if text is None:
+        return False
+    return all(m.lower().startswith(_VIRTUAL_MEMBERS) for m in bridge_members(text))
+
+
+def _ifconfig(name: str) -> Optional[str]:
+    binary = shutil.which("ifconfig") or next(
+        (p for p in ("/sbin/ifconfig", "/usr/sbin/ifconfig") if os.path.exists(p)),
+        None,
+    )
+    if binary is None:
+        return None
+    try:
+        result = subprocess.run(  # nosec B603 - fixed argv, absolute path
+            [binary, name],
+            capture_output=True,
+            text=True,
+            timeout=_IFCONFIG_TIMEOUT,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout if result.returncode == 0 else None

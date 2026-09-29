@@ -3460,6 +3460,16 @@ msgid "Error checking WSL support: %s"
 msgstr "Error al comprobar el soporte WSL: %s"
 
 #, python-format
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "El servidor rechazó la autenticación: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "no hay token de conexión"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u falló (código %d): %s"
 

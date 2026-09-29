@@ -686,3 +686,65 @@ class TestBpf:
             nd, "local_interfaces", return_value=[]
         ):
             assert collector.start()["arp_listen"] == reason
+
+
+FREEBSD_VM_BRIDGE = """bridge1: flags=1008843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST,LOWER_UP> metric 0 mtu 1500
+\tether 58:9c:fc:10:ff:ab
+\tinet 10.0.100.1 netmask 0xffffff00 broadcast 10.0.100.255
+\tid 00:00:00:00:00:00 priority 32768 hellotime 2 fwddelay 15
+\tmember: tap1 flags=143<LEARNING,DISCOVER,AUTOEDGE,AUTOPTP>
+\t        ifmaxaddr 0 port 5 priority 128 path cost 2000000
+\tmember: epair0a flags=143<LEARNING,DISCOVER,AUTOEDGE,AUTOPTP>
+\t        ifmaxaddr 0 port 4 priority 128 path cost 2000
+"""
+MACOS_LAN_BRIDGE = """bridge0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+\tConfiguration:
+\t\tid 0:0:0:0:0:0 priority 0 hellotime 0 fwddelay 0
+\tmember: en1 flags=3<LEARNING,DISCOVER>
+\t        ifmaxaddr 0 port 10 priority 0 path cost 0
+\tmember: en2 flags=3<LEARNING,DISCOVER>
+\t        ifmaxaddr 0 port 11 priority 0 path cost 0
+"""
+OPENBSD_MIXED_BRIDGE = """bridge0: flags=41<UP,RUNNING>
+\tindex 7 llprio 3
+\tgroups: bridge
+\tpriority 32768 hellotime 2 fwddelay 15 maxage 20 holdcnt 6 proto rstp
+\tem0 flags=3<LEARNING,DISCOVER>
+\t\tport 1 ifpriority 0 ifcost 0
+\ttap0 flags=3<LEARNING,DISCOVER>
+\t\tport 8 ifpriority 0 ifcost 0
+"""
+
+
+class TestBsdBridges:
+    """S6 follow-up: the BSD / macOS half of "skip bridges that are only VM
+    plumbing" -- Linux reads sysfs, these read the bridge's member list."""
+
+    def test_members_are_read_in_both_ifconfig_dialects(self):
+        assert bpf.bridge_members(FREEBSD_VM_BRIDGE) == ["tap1", "epair0a"]
+        assert bpf.bridge_members(MACOS_LAN_BRIDGE) == ["en1", "en2"]
+        assert bpf.bridge_members(OPENBSD_MIXED_BRIDGE) == ["em0", "tap0"]
+
+    def test_a_bridge_of_taps_and_epairs_is_skipped(self):
+        assert bpf.virtual_only_bridge("bridge1", run=lambda _n: FREEBSD_VM_BRIDGE)
+
+    def test_a_bridge_with_a_physical_member_is_kept(self):
+        assert not bpf.virtual_only_bridge("bridge0", run=lambda _n: MACOS_LAN_BRIDGE)
+        assert not bpf.virtual_only_bridge(
+            "bridge0", run=lambda _n: OPENBSD_MIXED_BRIDGE
+        )
+
+    def test_non_bridges_and_unreadable_bridges_are_kept(self):
+        calls = []
+        assert not bpf.virtual_only_bridge("em0", run=calls.append)
+        assert calls == []  # not a bridge: ifconfig is not even run
+        assert not bpf.virtual_only_bridge("bridge0", run=lambda _n: None)
+
+    def test_the_collector_uses_it_on_freebsd(self):
+        nd._bridge_cache.clear()
+        with patch.object(nd.platform, "system", return_value="FreeBSD"), patch.object(
+            nd.network_bpf, "virtual_only_bridge", return_value=True
+        ) as check:
+            assert nd.skipped_interface("bridge1")
+        check.assert_called_once_with("bridge1")
+        nd._bridge_cache.clear()

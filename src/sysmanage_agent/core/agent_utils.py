@@ -14,7 +14,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-import aiohttp
 
 from src.database.base import get_database_manager
 from src.database.models import Priority, ScriptExecution
@@ -35,6 +34,9 @@ from src.sysmanage_agent.core.async_utils import (  # noqa: F401
 # were moved to ``agent_privileges`` to keep this module small; existing
 # imports and test patch targets (e.g. ``agent_utils.is_running_privileged``)
 # must keep resolving here.
+from src.sysmanage_agent.core.auth_helper import (  # noqa: F401 - re-export
+    AuthenticationHelper,
+)
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _check_sudoers_privileges,
@@ -190,41 +192,6 @@ class PackageCollectionScheduler:
                 # Wait before next attempt instead of terminating
                 await asyncio.sleep(60)
                 continue
-
-
-class AuthenticationHelper:
-    """Handles authentication token management."""
-
-    def __init__(self, agent, logger: logging.Logger):
-        self.agent = agent
-        self.logger = logger
-
-    def build_auth_url(self) -> str:
-        """Build authentication URL from server config."""
-        return ServerEndpoint(self.agent.config).rest_url("/api/agent/auth")
-
-    async def get_auth_token(self) -> str:
-        """Get authentication token for WebSocket connection."""
-        endpoint = ServerEndpoint(self.agent.config)
-        auth_url = endpoint.rest_url("/api/agent/auth")
-
-        # Get hostname to send in header
-        system_hostname = socket.gethostname()
-
-        async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-            headers = {"x-agent-hostname": system_hostname}
-
-            async with session.post(
-                auth_url, headers=headers, proxy=endpoint.proxy()
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("connection_token", "")
-
-                raise ConnectionError(
-                    _("Auth failed with status %s: %s")
-                    % (response.status, await response.text())
-                )
 
 
 class MessageProcessor:

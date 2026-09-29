@@ -166,3 +166,47 @@ async def test_polling_refuses_to_start_without_a_registered_host_id():
 def test_error_backoff_is_longer_than_the_normal_interval():
     """A restarting server must not be polled harder than a healthy one."""
     assert ERROR_POLL_INTERVAL > DEFAULT_POLL_INTERVAL
+
+
+def _session_returning(status):
+    response = Mock(status=status)
+    response.text = AsyncMock(return_value="denied")
+    response.json = AsyncMock(return_value={"messages": [], "poll_interval": 5})
+    ctx = Mock()
+    ctx.__aenter__ = AsyncMock(return_value=response)
+    ctx.__aexit__ = AsyncMock(return_value=None)
+    session = Mock()
+    session.post = Mock(return_value=ctx)
+    return session
+
+
+@pytest.mark.asyncio
+async def test_a_poll_carries_the_hosts_own_token():
+    """The server refuses a poll that cannot prove WHICH host it is."""
+    agent = make_agent()
+    agent.get_auth_token = AsyncMock(return_value="conn")
+    agent.get_stored_host_token = AsyncMock(return_value="host-secret")
+    session = _session_returning(200)
+    endpoint = Mock()
+    endpoint.rest_url.return_value = "http://s/api/agent/poll"
+
+    await HttpPollingTransport(agent)._post(session, endpoint, "host-42", [])
+
+    headers = session.post.call_args.kwargs["headers"]
+    assert headers["Authorization"] == "Bearer conn"
+    assert headers["X-Host-Token"] == "host-secret"
+
+
+@pytest.mark.asyncio
+async def test_a_rejected_poll_forgets_the_cached_token():
+    agent = make_agent()
+    agent.get_auth_token = AsyncMock(return_value="stale")
+    agent.get_stored_host_token = AsyncMock(return_value="host-secret")
+    endpoint = Mock()
+    endpoint.rest_url.return_value = "http://s/api/agent/poll"
+
+    with pytest.raises(ConnectionError):
+        await HttpPollingTransport(agent)._post(
+            _session_returning(401), endpoint, "host-42", []
+        )
+    agent.auth_helper.invalidate_auth_token.assert_called_once()

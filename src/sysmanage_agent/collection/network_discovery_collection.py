@@ -43,6 +43,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import psutil
 
 from src.i18n import _
+from src.sysmanage_agent.collection import network_bpf
 from src.sysmanage_agent.collection.network_bpf import BpfListener
 from src.sysmanage_agent.collection.network_neighbor_cache import read_neighbor_cache
 
@@ -97,7 +98,13 @@ def _cached_virtual_bridge(name: str) -> bool:
     hit = _bridge_cache.get(name)
     if hit is not None and now - hit[0] < _BRIDGE_TTL:
         return hit[1]
-    value = platform.system() == "Linux" and virtual_only_bridge(name)
+    system = platform.system()
+    if system == "Linux":
+        value = virtual_only_bridge(name)
+    elif system in _CAPTURE_SYSTEMS:
+        value = network_bpf.virtual_only_bridge(name)
+    else:
+        value = False
     _bridge_cache[name] = (now, value)
     return value
 
@@ -105,8 +112,9 @@ def _cached_virtual_bridge(name: str) -> bool:
 def skipped_interface(name: str) -> bool:
     """Container / VM / VPN plumbing, not a network an operator means.
 
-    Named plumbing is caught by prefix; on Linux a bridge with only virtual
-    ports is caught by what it IS, whatever it is called.  Called per captured
+    Named plumbing is caught by prefix; a bridge with only virtual ports is
+    caught by what it IS, whatever it is called -- sysfs on Linux, the
+    bridge's member list from ifconfig on the BSDs and macOS.  Called per captured
     frame, so the sysfs check is cached per interface for a minute.
     """
     return name.lower().startswith(_SKIP_PREFIXES) or _cached_virtual_bridge(name)
