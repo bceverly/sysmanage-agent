@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-28 12:13-0400\n"
+"POT-Creation-Date: 2026-09-29 09:23-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -473,6 +473,25 @@ msgstr "Erro processando atualizações do fwupd: %s"
 #: src/sysmanage_agent/collection/linux_update_detectors.py:398
 msgid "Unknown Device"
 msgstr "Dispositivo Desconhecido"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#, python-format
+msgid "Network discovery capture stopped: %s"
+msgstr "Descoberta de rede: captura interrompida: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#, python-format
+msgid "Network discovery raw capture unavailable: %s"
+msgstr "Descoberta de rede: captura direta indisponível: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#, python-format
+msgid ""
+"Network discovery saw more than %d devices in one window; the rest were not "
+"recorded"
+msgstr ""
+"A descoberta de rede viu mais de %d dispositivos em uma janela; o restante "
+"não foi registrado"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:122
 msgid "Ubuntu Pro status check timed out"
@@ -1848,85 +1867,85 @@ msgstr "Autenticação falhou com o estado %s: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Falha ao construir relatório de capacidade: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:451
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID de execução de script %s já processado, ignorando duplicado"
 
-#: src/sysmanage_agent/core/agent_utils.py:487
+#: src/sysmanage_agent/core/agent_utils.py:488
 msgid "Generic command missing nested command_type"
 msgstr "Comando genérico sem command_type aninhado"
 
-#: src/sysmanage_agent/core/agent_utils.py:499
+#: src/sysmanage_agent/core/agent_utils.py:500
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo de comando desconhecido: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:558
+#: src/sysmanage_agent/core/agent_utils.py:559
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Falha ao coletar pacotes Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erro ao verificar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:591
+#: src/sysmanage_agent/core/agent_utils.py:592
 msgid "No execution UUID provided, cannot track"
 msgstr "Nenhum UUID de execução fornecido, não é possível rastrear"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:607
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID de execução %s já existe no banco de dados"
 
-#: src/sysmanage_agent/core/agent_utils.py:631
+#: src/sysmanage_agent/core/agent_utils.py:632
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erro ao armazenar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:696
+#: src/sysmanage_agent/core/agent_utils.py:697
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erro no manipulador de controlo de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:742
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Falha ao %s o serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:749
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Tempo limite excedido no controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:755
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erro de controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:820
+#: src/sysmanage_agent/core/agent_utils.py:821
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Falha ao atualizar funções após controlo de serviço: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:860
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erro no manipulador de estado de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Tempo limite excedido ao consultar o estado do serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:913
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erro de estado do serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:961
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2503,6 +2522,25 @@ msgstr "Impossível persistir configuração de encaminhamento IP: %s"
 #, python-format
 msgid "UFW rule failed: %s - %s"
 msgstr "Regra UFW falhou: %s - %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#, python-format
+msgid "Network discovery setting could not be saved: %s"
+msgstr "Não foi possível salvar a configuração de descoberta de rede: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#, python-format
+msgid "Error sending network discovery report: %s"
+msgstr "Erro ao enviar o relatório de descoberta de rede: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+msgid "Cannot send network discovery report: no host approval"
+msgstr ""
+"Não é possível enviar o relatório de descoberta de rede: host não aprovado"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+msgid "Failed to send network discovery report"
+msgstr "Falha ao enviar o relatório de descoberta de rede"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"

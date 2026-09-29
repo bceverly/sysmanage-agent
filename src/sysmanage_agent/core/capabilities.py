@@ -162,6 +162,8 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
         "ubuntu_pro_disable_service",
     ),
     "custom_metrics": ("sync_custom_metrics",),
+    # Phase 21.6: passive discovery of the devices on this host's segments.
+    "network_discovery": ("configure_network_discovery", "run_network_sweep"),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

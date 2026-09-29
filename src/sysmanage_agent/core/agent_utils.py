@@ -384,6 +384,8 @@ class MessageProcessor:
             "install_gpg_key": self.agent.install_gpg_key,
             "remove_gpg_key": self.agent.remove_gpg_key,
             "sync_custom_metrics": self.agent.sync_custom_metrics,
+            "configure_network_discovery": self.agent.configure_network_discovery,
+            "run_network_sweep": self.agent.run_network_sweep,
             "execute_command_sequence": self.agent.execute_command_sequence,
             "apply_deployment_plan": self.agent.apply_deployment_plan,
             # Phase 20.1: desired-state config profiles.  Bare reference, not

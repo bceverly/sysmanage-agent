@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-28 12:13-0400\n"
+"POT-Creation-Date: 2026-09-29 09:23-0400\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -475,6 +475,25 @@ msgstr "Ошибка обработки обновлений fwupd: %s"
 #: src/sysmanage_agent/collection/linux_update_detectors.py:398
 msgid "Unknown Device"
 msgstr "Неизвестное Устройство"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#, python-format
+msgid "Network discovery capture stopped: %s"
+msgstr "Обнаружение сети: захват остановлен: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#, python-format
+msgid "Network discovery raw capture unavailable: %s"
+msgstr "Обнаружение сети: прямой захват недоступен: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#, python-format
+msgid ""
+"Network discovery saw more than %d devices in one window; the rest were not "
+"recorded"
+msgstr ""
+"Обнаружение сети увидело более %d устройств за одно окно; остальные не "
+"записаны"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:122
 msgid "Ubuntu Pro status check timed out"
@@ -1861,85 +1880,85 @@ msgstr "Авторизация не удалась с кодом состоян�
 msgid "Failed to build capability report: %s"
 msgstr "Не удалось построить отчет о возможностях: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:451
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID выполнения скрипта %s уже обработан, дубликат пропущен"
 
-#: src/sysmanage_agent/core/agent_utils.py:487
+#: src/sysmanage_agent/core/agent_utils.py:488
 msgid "Generic command missing nested command_type"
 msgstr "У общей команды отсутствует вложенный command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:499
+#: src/sysmanage_agent/core/agent_utils.py:500
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Неизвестный тип команды: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:558
+#: src/sysmanage_agent/core/agent_utils.py:559
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Не удалось собрать пакеты Homebrew: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Ошибка проверки UUID выполнения: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:591
+#: src/sysmanage_agent/core/agent_utils.py:592
 msgid "No execution UUID provided, cannot track"
 msgstr "Не указан UUID выполнения, отслеживание невозможно"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:607
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID выполнения %s уже существует в БД"
 
-#: src/sysmanage_agent/core/agent_utils.py:631
+#: src/sysmanage_agent/core/agent_utils.py:632
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Ошибка при сохранении UUID выполнения: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:696
+#: src/sysmanage_agent/core/agent_utils.py:697
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Ошибка в обработчике управления службами: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:742
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Не удалось выполнить %s для службы %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:749
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Тайм-аут управления службой для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:755
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Ошибка управления службой для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:820
+#: src/sysmanage_agent/core/agent_utils.py:821
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Не удалось обновить роли после управления службой: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:860
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Ошибка в обработчике статуса служб: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:903
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Тайм-аут получения состояния службы %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:913
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Ошибка состояния службы для %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:961
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2514,6 +2533,24 @@ msgstr "Не удалось сохранить настройку перенап
 #, python-format
 msgid "UFW rule failed: %s - %s"
 msgstr "Правило UFW не удалось: %s - %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#, python-format
+msgid "Network discovery setting could not be saved: %s"
+msgstr "Не удалось сохранить настройку обнаружения сети: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#, python-format
+msgid "Error sending network discovery report: %s"
+msgstr "Ошибка отправки отчета об обнаружении сети: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+msgid "Cannot send network discovery report: no host approval"
+msgstr "Невозможно отправить отчет об обнаружении сети: хост не одобрен"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+msgid "Failed to send network discovery report"
+msgstr "Не удалось отправить отчет об обнаружении сети"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"
