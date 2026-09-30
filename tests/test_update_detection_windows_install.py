@@ -50,7 +50,7 @@ def _completed(returncode=0, stdout="", stderr=""):
 class TestInstallWithWinget:
     def test_success_returns_success_payload(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(0, stdout="installed"),
         ) as run:
             result = installer._install_with_winget("Microsoft.PowerToys")
@@ -63,7 +63,7 @@ class TestInstallWithWinget:
 
     def test_failure_returns_error_with_stderr(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(1, stderr="package not found"),
         ):
             result = installer._install_with_winget("Bogus.Pkg")
@@ -73,7 +73,7 @@ class TestInstallWithWinget:
 
     def test_failure_falls_back_to_stdout_when_stderr_empty(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(1, stdout="installer crashed"),
         ):
             result = installer._install_with_winget("Pkg")
@@ -81,7 +81,7 @@ class TestInstallWithWinget:
 
     def test_runs_unattended_with_an_exact_id(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(0),
         ) as run:
             installer._install_with_winget("Cisco.ClamAV")
@@ -99,14 +99,14 @@ class TestInstallWithWinget:
         # A plan re-sent to an equipped host must not fail on "nothing to do";
         # Windows may report the code signed or unsigned.
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(code, stdout="No newer package versions"),
         ):
             assert installer._install_with_winget("Cisco.ClamAV")["success"] is True
 
     def test_timeout_is_a_failure_not_a_crash(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             side_effect=subprocess.TimeoutExpired(cmd="winget", timeout=600),
         ):
             result = installer._install_with_winget("Cisco.ClamAV")
@@ -121,7 +121,7 @@ class TestInstallWithWinget:
 class TestInstallWithChoco:
     def test_success_returns_success_payload(self, installer):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             return_value=_completed(0, stdout="ok"),
         ) as run:
             result = installer._install_with_choco("git")
@@ -137,7 +137,7 @@ class TestInstallWithChoco:
             output="",
         )
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_install.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
             side_effect=err,
         ):
             result = installer._install_with_choco("git")

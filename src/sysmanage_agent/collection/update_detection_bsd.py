@@ -562,6 +562,19 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
         """Install package using pkg package manager (BSD systems)."""
         try:
             # OpenBSD uses pkg_add, FreeBSD uses pkg
+            if platform.system() == "OpenBSD" and self._openbsd_pkg_installed(
+                package_name
+            ):
+                # "pkg_add <name>" on an installed package is an UPGRADE, and
+                # one whose libraries the rest of the system does not have yet
+                # fails ("Can't install clamav-1.5.4 because of libraries",
+                # t480, 2026-09-30).  Installing means "make sure it is there";
+                # upgrading the system is not this call's business.
+                return {
+                    "success": True,
+                    "version": "unknown",
+                    "output": f"{package_name} is already installed",
+                }
             if platform.system() == "OpenBSD":
                 # Check if running as root
                 if os.geteuid() == 0:
@@ -590,6 +603,21 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                 "success": False,
                 "error": f"Failed to install {package_name}: {error.stderr or error.stdout}",
             }
+
+    @staticmethod
+    def _openbsd_pkg_installed(package_name: str) -> bool:
+        """Whether any version of ``package_name`` is installed (pkg_info -e)."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["pkg_info", "-e", f"{package_name}-*"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+        return result.returncode == 0
 
     def _install_with_pkgin(self, package_name: str) -> Dict[str, Any]:
         """Install package using pkgin package manager (NetBSD)."""

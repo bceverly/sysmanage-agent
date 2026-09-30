@@ -14,9 +14,9 @@ This module handles detection of updates from Windows package managers:
 """
 
 import logging
-import subprocess  # nosec B404
 
 from src.i18n import _
+from src.sysmanage_agent.core.bounded_subprocess import run_bounded
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +232,7 @@ class WindowsPackageDetectorMixin:
         try:
             logger.debug("Detecting winget updates")
 
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["winget", "upgrade", "--include-unknown"],
                 capture_output=True,
                 text=True,
@@ -273,7 +273,7 @@ class WindowsPackageDetectorMixin:
         try:
             logger.debug("Detecting Chocolatey updates")
 
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["choco", "outdated", "-r"],
                 capture_output=True,
                 text=True,
@@ -303,7 +303,7 @@ class WindowsPackageDetectorMixin:
         try:
             logger.debug("Detecting Scoop updates")
 
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["scoop", "status"],
                 capture_output=True,
                 text=True,

@@ -797,7 +797,9 @@ class TestBsdPackageInstallation:
         """Test OpenBSD pkg_add installation as root."""
         mock_result = Mock(returncode=0, stdout="Package added")
 
-        with patch("platform.system", return_value="OpenBSD"):
+        with patch("platform.system", return_value="OpenBSD"), patch.object(
+            bsd_detector, "_openbsd_pkg_installed", return_value=False
+        ):
             with patch("os.geteuid", return_value=0):
                 with patch("subprocess.run", return_value=mock_result) as mock_run:
                     result = bsd_detector._install_with_pkg("vim")
@@ -811,7 +813,9 @@ class TestBsdPackageInstallation:
         """Test OpenBSD pkg_add installation as non-root (using doas)."""
         mock_result = Mock(returncode=0, stdout="Package added")
 
-        with patch("platform.system", return_value="OpenBSD"):
+        with patch("platform.system", return_value="OpenBSD"), patch.object(
+            bsd_detector, "_openbsd_pkg_installed", return_value=False
+        ):
             with patch("os.geteuid", return_value=1000):
                 with patch("subprocess.run", return_value=mock_result) as mock_run:
                     result = bsd_detector._install_with_pkg("vim")
@@ -820,6 +824,21 @@ class TestBsdPackageInstallation:
         # Verify doas was used
         call_args = mock_run.call_args[0][0]
         assert "doas" in call_args
+
+    def test_install_with_pkg_openbsd_already_installed_is_not_upgraded(
+        self, bsd_detector
+    ):
+        """pkg_add on an installed package is an upgrade, which fails when the
+        system's libraries are older than the mirror's; "install" must mean
+        "make sure it is there" (t480, 2026-09-30)."""
+        with patch("platform.system", return_value="OpenBSD"), patch(
+            "subprocess.run", return_value=Mock(returncode=0, stdout="")
+        ) as mock_run:
+            result = bsd_detector._install_with_pkg("clamav")
+
+        assert result["success"] is True
+        argvs = [c[0][0] for c in mock_run.call_args_list]
+        assert argvs == [["pkg_info", "-e", "clamav-*"]]
 
     def test_install_with_pkgin_success(self, bsd_detector):
         """Test successful pkgin installation."""

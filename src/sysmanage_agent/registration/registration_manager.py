@@ -57,6 +57,8 @@ class RegistrationManager:
         self.agent = agent_instance
         self.logger = agent_instance.logger
         self.config = agent_instance.config
+        # The running initial-inventory send (see _start_initial_data_updates).
+        self._initial_data_task: Optional[asyncio.Task] = None
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
@@ -149,6 +151,24 @@ class RegistrationManager:
         )
         return False
 
+    def _start_initial_data_updates(self) -> None:
+        """Send the initial inventory in the BACKGROUND.
+
+        This runs from the websocket receive loop, which reads no further
+        server message until the handler returns.  Awaiting the whole
+        inventory here (OS, hardware, software, an update check that shells
+        out to winget/choco/Windows Update) blocked every command for as long
+        as that took -- on x13s (2026-09-30) a wedged ``choco outdated`` kept
+        the agent from receiving ANY command for 20+ minutes while its
+        heartbeats still went out.  A send already in flight is not doubled.
+        """
+        if self._initial_data_task is not None and not self._initial_data_task.done():
+            self.logger.info("Initial inventory send already running; not repeating")
+            return
+        self._initial_data_task = asyncio.create_task(
+            self.agent.send_initial_data_updates()
+        )
+
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
         try:
@@ -179,7 +199,7 @@ class RegistrationManager:
                 self.logger.info(
                     "Registration confirmed, sending initial inventory data..."
                 )
-                await self.agent.send_initial_data_updates()
+                self._start_initial_data_updates()
 
             elif host_id or host_token:
                 self.logger.info(

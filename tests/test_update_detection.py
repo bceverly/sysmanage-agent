@@ -437,7 +437,9 @@ v | Main       | nginx    | 1.20.1-1.1      | 1.21.0-1.1        | x86_64
 
         assert len(detector.available_updates) == 0
 
-    @patch("subprocess.run")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded"
+    )
     @patch("platform.system")
     def test_detect_chocolatey_updates_success(self, mock_system, mock_run):
         """Test successful Chocolatey update detection."""
@@ -474,7 +476,9 @@ python|3.11.6|3.11.7|false
 
         assert len(detector.available_updates) == 0
 
-    @patch("subprocess.run")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded"
+    )
     @patch("platform.system")
     def test_detect_winget_updates_success(self, mock_system, mock_run):
         """Test successful Winget update detection."""

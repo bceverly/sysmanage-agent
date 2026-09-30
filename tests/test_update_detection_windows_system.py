@@ -258,7 +258,7 @@ class TestRunWindowsUpdateQuery:
             "src.sysmanage_agent.collection.update_detection_windows_system.platform.system",
             return_value="Linux",
         ), patch(
-            "src.sysmanage_agent.collection.update_detection_windows_system.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_system.run_bounded",
             return_value=_completed(0, stdout="null"),
         ) as run:
             detector._run_windows_update_query()
@@ -274,7 +274,7 @@ class TestRunWindowsUpdateQuery:
 class TestDetectWindowsVersionUpgrades:
     def test_no_output_returns_silently(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_system.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_system.run_bounded",
             return_value=_completed(0, stdout=""),
         ):
             detector._detect_windows_version_upgrades()
@@ -282,7 +282,7 @@ class TestDetectWindowsVersionUpgrades:
 
     def test_subprocess_error_logged_silently(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_system.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_system.run_bounded",
             side_effect=RuntimeError("ps died"),
         ):
             detector._detect_windows_version_upgrades()

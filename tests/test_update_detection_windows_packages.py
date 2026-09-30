@@ -156,7 +156,7 @@ class TestProcessWingetUpdateLine:
 class TestDetectWingetUpdates:
     def test_subprocess_failure_returns_silently(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(1, stderr="winget missing"),
         ):
             detector._detect_winget_updates()
@@ -164,7 +164,7 @@ class TestDetectWingetUpdates:
 
     def test_no_header_returns_silently(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout="random output\nno header here"),
         ):
             detector._detect_winget_updates()
@@ -173,7 +173,7 @@ class TestDetectWingetUpdates:
     def test_happy_path_with_one_update(self, detector):
         output = WINGET_HEADER + WINGET_LINE
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_winget_updates()
@@ -188,7 +188,7 @@ class TestDetectWingetUpdates:
             + "No applicable updates.\n"
         )
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_winget_updates()
@@ -197,7 +197,7 @@ class TestDetectWingetUpdates:
 
     def test_subprocess_exception_logged_silently(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             side_effect=RuntimeError("winget exploded"),
         ):
             # Must not raise.
@@ -214,7 +214,7 @@ class TestDetectChocolateyUpdates:
         # choco outdated -r format: pkg|cur|new|pinned
         output = "git|2.40|2.42|false\nnodejs|18.0|20.0|false\n"
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_chocolatey_updates()
@@ -227,7 +227,7 @@ class TestDetectChocolateyUpdates:
     def test_short_lines_are_skipped(self, detector):
         output = "git|2.40|2.42|false\nbroken|incomplete\n"
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_chocolatey_updates()
@@ -235,7 +235,7 @@ class TestDetectChocolateyUpdates:
 
     def test_subprocess_exception_logged(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             side_effect=RuntimeError("choco died"),
         ):
             detector._detect_chocolatey_updates()
@@ -251,7 +251,7 @@ class TestDetectScoopUpdates:
         # The scoop parser fires on lines containing both ":" and "Update".
         output = "git: Update available -> 2.42\nnpm: Status OK\n"
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             return_value=_completed(0, stdout=output),
         ):
             detector._detect_scoop_updates()
@@ -260,7 +260,7 @@ class TestDetectScoopUpdates:
 
     def test_subprocess_exception_logged(self, detector):
         with patch(
-            "src.sysmanage_agent.collection.update_detection_windows_packages.subprocess.run",
+            "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded",
             side_effect=RuntimeError("scoop died"),
         ):
             detector._detect_scoop_updates()

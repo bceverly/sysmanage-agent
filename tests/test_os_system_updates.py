@@ -26,7 +26,7 @@ class TestOSSystemUpdateDetection:
         self.linux_detector = LinuxUpdateDetector()
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("subprocess.run")
+    @patch("src.sysmanage_agent.collection.update_detection_windows_system.run_bounded")
     def test_detect_windows_system_updates_success(self, mock_run, mock_platform):
         """Test Windows system update detection with available updates."""
         mock_platform.return_value = "Windows"

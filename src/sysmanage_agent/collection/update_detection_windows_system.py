@@ -17,6 +17,7 @@ import platform
 import subprocess  # nosec B404
 
 from src.i18n import _
+from src.sysmanage_agent.core.bounded_subprocess import run_bounded
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ class WindowsSystemDetectorMixin:
             """,
         ]
 
-        return subprocess.run(  # nosec B603, B607
+        return run_bounded(  # nosec B603, B607
             powershell_cmd,
             capture_output=True,
             text=True,
@@ -192,7 +193,7 @@ class WindowsSystemDetectorMixin:
             } | Select-Object Title, Size | ConvertTo-Json
             """
 
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["powershell", "-Command", powershell_cmd],
                 capture_output=True,
                 text=True,
@@ -211,7 +212,7 @@ class WindowsSystemDetectorMixin:
                         size = update.get("Size", 0)
 
                         # Get current Windows version
-                        version_result = subprocess.run(  # nosec B603, B607
+                        version_result = run_bounded(  # nosec B603, B607
                             [
                                 "powershell",
                                 "-Command",

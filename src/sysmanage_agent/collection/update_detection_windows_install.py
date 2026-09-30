@@ -14,6 +14,7 @@ This module handles installation of new packages on Windows systems:
 import logging
 import subprocess  # nosec B404
 from typing import Any, Dict
+from src.sysmanage_agent.core.bounded_subprocess import run_bounded
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class WindowsPackageInstallerMixin:
         -- a deployment plan re-sent to an equipped host must not fail on it.
         """
         try:
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 [
                     "winget", "install", "--id", package_name, "--exact",
                     "--silent", "--accept-package-agreements",
@@ -65,7 +66,7 @@ class WindowsPackageInstallerMixin:
     def _install_with_choco(self, package_name: str) -> Dict[str, Any]:
         """Install package using Chocolatey package manager."""
         try:
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["choco", "install", package_name, "-y"],
                 capture_output=True,
                 text=True,
