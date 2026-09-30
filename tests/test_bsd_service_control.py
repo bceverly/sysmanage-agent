@@ -142,3 +142,36 @@ def test_product_named_managers_reach_their_installers():
     assert detector.install_package("clamav", "pkg_add")["success"]
     fake._install_with_choco.assert_called_once_with("clamav")
     fake._install_with_pkg.assert_called_once_with("clamav")
+
+
+class TestAlreadyInState:
+    """2026-09-30: plan v5 re-sent to NetBSD/FreeBSD hosts that already ran
+    everything failed on rc.subr's "freshclamd already running? (pid=...)"."""
+
+    def test_rc_subr_wording_counts_as_done(self):
+        assert bsd.already_in_state("start", "freshclamd already running? (pid=12788).")
+        assert bsd.already_in_state(
+            "stop", "clamd not running? (check /var/run/clamd.pid)."
+        )
+        assert not bsd.already_in_state("start", "clamd: permission denied")
+        assert not bsd.already_in_state("enable", "already running")
+
+    @pytest.mark.asyncio
+    async def test_starting_a_running_service_succeeds(self):
+        agent = Mock()
+        agent.collect_roles = AsyncMock()
+        processor = MessageProcessor(agent, Mock())
+        busy = Mock(
+            returncode=1, stdout="freshclamd already running? (pid=12788).\n", stderr=""
+        )
+        with patch.object(bsd, "bsd_system", return_value="NetBSD"), patch(
+            "src.sysmanage_agent.core.agent_utils.is_running_privileged",
+            return_value=True,
+        ), patch(
+            "src.sysmanage_agent.core.agent_utils.run_command_async",
+            AsyncMock(return_value=busy),
+        ):
+            result = await processor._handle_service_control(
+                {"action": "start", "services": ["freshclamd"]}
+            )
+        assert result["success"] is True

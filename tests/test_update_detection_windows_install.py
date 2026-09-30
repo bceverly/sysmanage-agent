@@ -104,6 +104,17 @@ class TestInstallWithWinget:
         ):
             assert installer._install_with_winget("Cisco.ClamAV")["success"] is True
 
+    def test_an_installed_package_is_left_alone(self, installer):
+        # winget install of an installed ClamAV exited 0x8A150001 on x13s.
+        listed = _completed(0, stdout="ClamAV 1.5.4 Cisco.ClamAV 1.5.4 winget")
+        with patch(
+            "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",
+            return_value=listed,
+        ) as run:
+            result = installer._install_with_winget("Cisco.ClamAV")
+        assert result["success"] is True
+        assert run.call_count == 1 and run.call_args.args[0][:2] == ["winget", "list"]
+
     def test_timeout_is_a_failure_not_a_crash(self, installer):
         with patch(
             "src.sysmanage_agent.collection.update_detection_windows_install.run_bounded",

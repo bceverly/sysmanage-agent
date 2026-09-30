@@ -801,7 +801,10 @@ class MessageProcessor:
             self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
             return {"success": False, "error": error}
         result = await run_command_async(cmd, timeout=60.0)
-        if result.returncode == 0:
+        output = f"{result.stdout}\n{result.stderr}"
+        if result.returncode == 0 or bsd_service_control.already_in_state(
+            action, output
+        ):
             self.logger.info("Successfully %s service: %s", action, service)
             return {"success": True, "message": f"Service {action} successful"}
         error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"

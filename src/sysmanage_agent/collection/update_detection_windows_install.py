@@ -34,7 +34,16 @@ class WindowsPackageInstallerMixin:
         accepted up front (otherwise winget waits for a keypress nobody will
         give), and "already installed / no newer version" counted as success
         -- a deployment plan re-sent to an equipped host must not fail on it.
+        An installed package is left alone without running install at all:
+        on x13s (2026-09-30) ``winget install`` of an installed ClamAV exited
+        0x8A150001 with no message.
         """
+        if self._winget_has(package_name):
+            return {
+                "success": True,
+                "version": "unknown",
+                "output": f"{package_name} is already installed",
+            }
         try:
             result = run_bounded(  # nosec B603, B607
                 [
@@ -62,6 +71,27 @@ class WindowsPackageInstallerMixin:
                 f"{(result.stderr or result.stdout or '').strip()[-2000:]}"
             ),
         }
+
+    @staticmethod
+    def _winget_has(package_name: str) -> bool:
+        """Whether winget lists ``package_name`` (exact id) as installed."""
+        try:
+            result = run_bounded(  # nosec B603, B607
+                [
+                    "winget", "list", "--id", package_name, "--exact",
+                    "--accept-source-agreements", "--disable-interactivity",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )  # fmt: skip
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+        return (
+            result.returncode == 0
+            and package_name.lower() in (result.stdout or "").lower()
+        )
 
     def _install_with_choco(self, package_name: str) -> Dict[str, Any]:
         """Install package using Chocolatey package manager."""

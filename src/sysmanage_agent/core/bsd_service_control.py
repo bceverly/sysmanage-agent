@@ -69,6 +69,19 @@ def build_command(system: str, action: str, service: str) -> Optional[List[str]]
     return [os.path.join(NETBSD_RC_D, service), action]
 
 
+# rc.subr's own words (FreeBSD and NetBSD) when the service is already where
+# the action would put it -- "clamd already running? (pid=123)." / "clamd not
+# running? (check /var/run/clamd.pid)." -- and it exits non-zero.  A plan that
+# is re-sent to a host that already runs everything must not fail on that.
+_ALREADY = {"start": "already running", "stop": "not running"}
+
+
+def already_in_state(action: str, output: str) -> bool:
+    """Whether a failed ``action`` failed only because it was already done."""
+    marker = _ALREADY.get(action)
+    return bool(marker) and marker in (output or "")
+
+
 def _install_netbsd_rc_script(
     service: str, rc_d: str, examples: str
 ) -> Tuple[bool, str]:
