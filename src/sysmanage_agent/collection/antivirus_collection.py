@@ -15,6 +15,12 @@ from typing import Dict, Optional
 
 from src.i18n import _
 
+# What SysManage's antivirus deploy plan installs to keep signatures current
+# (sysmanage backend/services/av_plan_builder.py) -- detection must look for
+# the same names, or a working install reports "not enabled" (2026-09-30).
+MACOS_FRESHCLAM_LABEL = "org.sysmanage.freshclam"
+WINDOWS_UPDATE_TASK = "SysManage ClamAV Update"
+
 
 class AntivirusCollector:
     """Collects antivirus software information across different platforms."""
@@ -96,8 +102,12 @@ class AntivirusCollector:
         # Check for ClamAV on macOS
         clamav_info = self._check_clamav()
         if clamav_info["software_name"]:
-            # On macOS with Homebrew, check brew services for enabled status
-            if self._is_brew_service_running("clamav"):
+            # Enabled = something keeps the signatures current: the launchd
+            # job SysManage's deploy plan installs (Homebrew has no freshclam
+            # service), or a Homebrew clamav service someone set up by hand.
+            if self._is_launchd_job_loaded(
+                MACOS_FRESHCLAM_LABEL
+            ) or self._is_brew_service_running("clamav"):
                 clamav_info["enabled"] = True
             return clamav_info
 
@@ -243,7 +253,12 @@ class AntivirusCollector:
                     continue
 
                 version = self._get_clamav_windows_version(path)
-                enabled = self._is_windows_service_running("ClamAV")
+                # Enabled = the scheduled signature update SysManage's deploy
+                # plan registers (there is no freshclam service on Windows),
+                # or a clamd service someone installed by hand.
+                enabled = self._is_windows_task_enabled(
+                    WINDOWS_UPDATE_TASK
+                ) or self._is_windows_service_running("ClamAV")
 
                 return {
                     "software_name": "clamav",
@@ -446,6 +461,36 @@ class AntivirusCollector:
             self.logger.debug("Error checking service %s: %s", service_name, error)
 
         return False
+
+    def _is_windows_task_enabled(self, task_name: str) -> bool:
+        """Whether a scheduled task exists and is not disabled."""
+        try:
+            result = subprocess.run(
+                ["schtasks", "/Query", "/TN", task_name, "/FO", "CSV", "/NH"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )  # nosec B603 B607
+            return result.returncode == 0 and "Disabled" not in result.stdout
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Error checking scheduled task %s: %s", task_name, error)
+            return False
+
+    def _is_launchd_job_loaded(self, label: str) -> bool:
+        """Whether a system launchd job is loaded (macOS)."""
+        try:
+            result = subprocess.run(
+                ["launchctl", "print", f"system/{label}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )  # nosec B603 B607
+            return result.returncode == 0
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Error checking launchd job %s: %s", label, error)
+            return False
 
     def _is_windows_service_running(self, service_name: str) -> bool:
         """Check if a Windows service is running."""

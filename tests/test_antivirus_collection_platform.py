@@ -333,3 +333,56 @@ class TestDetectBsdAntivirus:
 
         # OpenBSD doesn't check rkhunter, so should return empty
         assert result["software_name"] is None
+
+
+class TestDeployedUpdatersCountAsEnabled:
+    """2026-09-30: SysManage's deploy plan keeps signatures current with a
+    launchd job (macOS) and a scheduled task (Windows) -- neither is the
+    Homebrew service or Windows service detection used to look for, so a
+    working install reported "not enabled"."""
+
+    def test_macos_launchd_job_means_enabled(self, collector):
+        found = {"software_name": "clamav", "enabled": False}
+        with patch.object(
+            collector, "_check_clamav", return_value=dict(found)
+        ), patch.object(
+            collector, "_is_launchd_job_loaded", return_value=True
+        ) as loaded, patch.object(
+            collector, "_is_brew_service_running", return_value=False
+        ):
+            assert collector._detect_macos_antivirus()["enabled"] is True
+        loaded.assert_called_once_with("org.sysmanage.freshclam")
+
+    def test_windows_update_task_means_enabled(self, collector):
+        with patch("os.path.exists", return_value=True), patch.object(
+            collector, "_get_clamav_windows_version", return_value="1.5.4"
+        ), patch.object(
+            collector, "_is_windows_task_enabled", return_value=True
+        ) as task, patch.object(
+            collector, "_is_windows_service_running", return_value=False
+        ):
+            info = collector._check_clamav_windows()
+        assert info["software_name"] == "clamav" and info["enabled"] is True
+        task.assert_called_once_with("SysManage ClamAV Update")
+
+    def test_a_disabled_task_is_not_enabled(self, collector):
+        ready = type(
+            "R",
+            (),
+            {
+                "returncode": 0,
+                "stdout": '"\\\\SysManage ClamAV Update","N/A","Disabled"',
+            },
+        )
+        with patch("subprocess.run", return_value=ready):
+            assert (
+                collector._is_windows_task_enabled("SysManage ClamAV Update") is False
+            )
+
+    def test_missing_task_or_job_is_not_enabled(self, collector):
+        missing = type("R", (), {"returncode": 1, "stdout": ""})
+        with patch("subprocess.run", return_value=missing):
+            assert (
+                collector._is_windows_task_enabled("SysManage ClamAV Update") is False
+            )
+            assert collector._is_launchd_job_loaded("org.sysmanage.freshclam") is False
