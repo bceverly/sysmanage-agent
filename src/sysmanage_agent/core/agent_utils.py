@@ -14,11 +14,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-
 from src.database.base import get_database_manager
 from src.database.models import Priority, ScriptExecution
 from src.i18n import N_, _
 from src.sysmanage_agent.collection.package_collection import PackageCollector
+from src.sysmanage_agent.core import bsd_service_control
 from src.sysmanage_agent.operations import inflight_journal
 
 # Re-export async utilities for backwards compatibility
@@ -34,10 +34,6 @@ from src.sysmanage_agent.core.async_utils import (  # noqa: F401
 # were moved to ``agent_privileges`` to keep this module small; existing
 # imports and test patch targets (e.g. ``agent_utils.is_running_privileged``)
 # must keep resolving here.
-from src.sysmanage_agent.core.auth_helper import (  # noqa: F401 - re-export
-    AuthenticationHelper,
-)
-from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _check_sudoers_privileges,
     _compute_running_privileged,
@@ -48,6 +44,10 @@ from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _test_sudo_access,
     is_running_privileged,
 )
+from src.sysmanage_agent.core.auth_helper import (  # noqa: F401 - re-export
+    AuthenticationHelper,
+)
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # pylint: enable=unused-import
 
@@ -691,6 +691,10 @@ class MessageProcessor:
         try:
             self.logger.info("Executing %s for service: %s", action, service)
 
+            bsd = bsd_service_control.bsd_system()
+            if bsd:
+                return await self._bsd_service_control_action(bsd, action, service)
+
             cmd = self._build_service_control_cmd(action, service)
             if cmd is None:
                 # No supported service manager found on this host
@@ -735,9 +739,7 @@ class MessageProcessor:
 
         Detection order: systemctl (most Linux), rc-service/rc-update (OpenRC),
         launchctl (macOS), sc.exe (Windows). The first one found on PATH wins.
-        We do NOT use the BSD `service` command because its action vocabulary
-        (e.g. `service nginx onestart`) doesn't match what we accept here;
-        BSD support is a follow-up.
+        The BSDs never reach here: ``bsd_service_control`` handles them.
         """
         # systemctl handles all five actions natively
         systemctl_path = shutil.which("systemctl")
@@ -781,6 +783,30 @@ class MessageProcessor:
             return [sc_path] + mapping[action]
 
         return None
+
+    async def _bsd_service_control_action(
+        self, system: str, action: str, service: str
+    ) -> Dict[str, Any]:
+        """One action on FreeBSD/OpenBSD/NetBSD (see bsd_service_control)."""
+        if not bsd_service_control.valid_service(service):
+            return {"success": False, "error": f"Invalid service name: {service}"}
+        cmd = bsd_service_control.build_command(system, action, service)
+        if cmd is None:  # NetBSD enable/disable: an rc.conf edit, not a command
+            ok, error = bsd_service_control.netbsd_set_enabled(
+                service, action == "enable"
+            )
+            if ok:
+                self.logger.info("Successfully %s service: %s", action, service)
+                return {"success": True, "message": f"Service {action} successful"}
+            self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
+            return {"success": False, "error": error}
+        result = await run_command_async(cmd, timeout=60.0)
+        if result.returncode == 0:
+            self.logger.info("Successfully %s service: %s", action, service)
+            return {"success": True, "message": f"Service {action} successful"}
+        error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+        self.logger.error(_("Failed to %s service %s: %s"), action, service, error_msg)
+        return {"success": False, "error": error_msg}
 
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""
